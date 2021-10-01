@@ -13,12 +13,7 @@ use draw::{PixelBuffer, Color};
 mod linear;
 use linear::{Vec2, Vec3, Mesh};
 
-const SCREEN_WIDTH: u32 = 800;
-const SCREEN_HEIGHT: u32 = 600;
-const ASPECT_RATIO: f32 = SCREEN_HEIGHT as f32 / SCREEN_WIDTH as f32;
 const BYTES_PER_PIXEL: u32 = 4;
-const SCREEN_PITCH: u32 = SCREEN_WIDTH * BYTES_PER_PIXEL;
-const PIXEL_BUFFER_SIZE: usize = (SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL) as usize;
 
 fn main() -> Result<(), String> {
 
@@ -28,17 +23,17 @@ fn main() -> Result<(), String> {
 			Vec3{ x: -0.5, y: 0.5, z:  0.5 }, Vec3{ x: 0.5, y: 0.5, z:  0.5 }, Vec3{ x: -0.5, y: -0.5, z:  0.5 }, Vec3{ x: 0.5, y: -0.5, z:  0.5 },
 		],
 		f: vec![
-			// front faces
+			// front
 			(0,1,3),(0,2,3),
-			// top faces
+			// top
 			(0,4,5),(0,1,5),
-			// bottom faces
+			// bottom
 			(2,6,7),(2,3,7),
-			// left faces
+			// left
 			(0,4,6),(0,2,6),
-			// right faces
+			// right
 			(1,5,7),(1,3,7),
-			// back faces
+			// back
 			(4,5,7),(4,6,7),
 		]
 	};
@@ -52,13 +47,19 @@ fn main() -> Result<(), String> {
 	let video_subsys = sdl_context.video()?;
 
 	let window = video_subsys
-		.window("rust-sdl2-pixel", SCREEN_WIDTH, SCREEN_HEIGHT)
-		.opengl()
-		// .fullscreen_desktop()
-		// .borderless()
-		.position_centered()
+		.window("rust-sdl2-pixel", 0, 0)
+		// .opengl()
+		.fullscreen_desktop()
+		.borderless()
+		// .position_centered()
 		.build()
 		.unwrap();
+
+	let screen_width: u32 = window.size().0;
+	let screen_height: u32 = window.size().1;
+	let aspect_ratio_how: f32 = screen_height as f32 / screen_width as f32;
+	let screen_pitch: u32 = screen_width * BYTES_PER_PIXEL;
+	let pixel_buffer_size: usize = (screen_width * screen_height * BYTES_PER_PIXEL) as usize;
 
 	sdl_context.mouse().show_cursor(false);
 
@@ -74,20 +75,20 @@ fn main() -> Result<(), String> {
 	let mut backbuffer = texture_creator
 		.create_texture_streaming(
 			sdl2::pixels::PixelFormatEnum::RGBA32,
-			SCREEN_WIDTH,
-			SCREEN_HEIGHT)
+			screen_width,
+			screen_height)
 		.unwrap();
 
 	backbuffer.update(
 		None,
-		&vec![0; PIXEL_BUFFER_SIZE],
-		SCREEN_PITCH as usize
+		&vec![0; pixel_buffer_size],
+		screen_pitch as usize
 	).unwrap();
 
 	backbuffer.set_blend_mode(sdl2::render::BlendMode::None);
 
-	let width_scale = SCREEN_WIDTH as f32 / 2.0;
-	let height_scale = SCREEN_HEIGHT as f32 / 2.0;
+	let width_scale = screen_width as f32 / 2.0;
+	let height_scale = screen_height as f32 / 2.0;
 
 	let white = Color::RGB(255, 255, 255);
 
@@ -100,13 +101,13 @@ fn main() -> Result<(), String> {
 	let mut world_space_translator = Vec3{
 		x: 0.0,
 		y: 0.0,
-		z: 1.0,
+		z: 2.0,
 	};
 
 	let mut world_space_scalar = Vec3{
-		x: 1.0,
-		y: 1.0,
-		z: 1.0,
+		x: 0.25,
+		y: 0.25,
+		z: 0.25,
 	};
 
 	'main: loop {
@@ -137,7 +138,7 @@ fn main() -> Result<(), String> {
 							}
 						},
 						Keycode::Down { .. } => {
-							if last_mouse_y < (SCREEN_HEIGHT - 25) {
+							if last_mouse_y < (screen_height - 25) {
 								last_mouse_y += 25;
 							}
 						},
@@ -147,7 +148,7 @@ fn main() -> Result<(), String> {
 							}
 						},
 						Keycode::Right { .. } => {
-							if last_mouse_x < (SCREEN_WIDTH - 25) {
+							if last_mouse_x < (screen_width - 25) {
 								last_mouse_x += 25;
 							}
 						},
@@ -225,7 +226,7 @@ fn main() -> Result<(), String> {
 			// Scale and translate
 
 			screen_vertices[i].x = (
-				world_vertices[i].x / (world_vertices[i].z) * ASPECT_RATIO + 1.0
+				world_vertices[i].x / (world_vertices[i].z) * aspect_ratio_how + 1.0
 			) * width_scale;
 
 			screen_vertices[i].y = (
@@ -246,32 +247,18 @@ fn main() -> Result<(), String> {
 
 				let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
 					pixels: bytemuck::cast_slice_mut(bytearray),
-					width: SCREEN_WIDTH,
+					width: screen_width,
 					// bytes_per_pixel: BYTES_PER_PIXEL,
 				};
 
 				for face in &mesh.f {
 
 					let c = draw::Color::RGB(
-						255,255,255
-						// (screen_vertices[face.0].x % u8::MAX as f32) as u8,
-						// (screen_vertices[face.1].x % u8::MAX as f32) as u8,
-						// (screen_vertices[face.2].x % u8::MAX as f32) as u8,
+						// 255,255,255
+						(screen_vertices[face.0].x % u8::MAX as f32) as u8,
+						(screen_vertices[face.1].x % u8::MAX as f32) as u8,
+						(screen_vertices[face.2].x % u8::MAX as f32) as u8,
 					);
-
-					// let a = Vec2{x: 5.0, y: 5.0};
-					// let b = Vec2{x: 10.0, y: 12.0};
-
-					// println!("a + b = {}", a + b);
-					// println!("b + a = {}", b + a);
-					// println!("a - b = {}", a - b);
-					// println!("b - a = {}", b - a);
-					// println!("a * b = {}", a * b);
-					// println!("b * a = {}", b * a);
-					// println!("a / b = {}", a / b);
-					// println!("b / a = {}", b / a);
-					// println!("a * 7 = {}", a * 7.0);
-					// println!("a / 2 = {}", a / 7.0);
 
 					draw::poly(
 						pixel_buffer,
@@ -297,7 +284,7 @@ fn main() -> Result<(), String> {
 
 		let frame_frequency = delta_ticks as f64 / tick_frequency as f64;
 
-		// debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
+		debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
 		// debug_print!("(frame_frequency={}", frame_frequency);
 
 		timer.delay(floor(16.666 - delta_ticks as f64, 0) as u32);
