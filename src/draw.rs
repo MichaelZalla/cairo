@@ -2,6 +2,8 @@ use core::panic;
 
 extern crate sdl2;
 
+use crate::linear::Vec2;
+
 pub struct PixelBuffer<'p> {
 	pub pixels: &'p mut [u32],
 	pub width: u32,
@@ -26,13 +28,13 @@ impl Color
 	}
 }
 
-#[inline(always)]
+// #[inline(always)]
 pub fn set_pixel(
 	buffer: &mut PixelBuffer,
 	x: u32,
 	y: u32,
-	color: Color,
-) -> () {
+	color: Color) -> ()
+{
 
 	if x > (buffer.width - 1) || y > (buffer.pixels.len() as u32 / buffer.width as u32 - 1) {
 		panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
@@ -49,15 +51,15 @@ pub fn set_pixel(
 
 }
 
-#[inline]
+// #[inline]
 pub fn line(
 	buffer: &mut PixelBuffer,
 	mut x1: u32,
 	mut y1: u32,
 	mut x2: u32,
 	mut y2: u32,
-	color: Color
-) -> () {
+	color: Color) -> ()
+{
 
 	// y = m*x + b
 	// x = (y - b) / m
@@ -136,4 +138,14 @@ pub fn line(
 
 	}
 
+}
+
+pub fn poly(
+	buffer: &mut PixelBuffer,
+	p: &[Vec2],
+	color: Color) -> ()
+{
+	line(buffer, p[0].x as u32, p[0].y as u32, p[1].x as u32, p[1].y as u32, color);
+	line(buffer, p[1].x as u32, p[1].y as u32, p[2].x as u32, p[2].y as u32, color);
+	line(buffer, p[2].x as u32, p[2].y as u32, p[0].x as u32, p[0].y as u32, color);
 }

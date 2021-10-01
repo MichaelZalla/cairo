@@ -139,13 +139,6 @@ fn main() -> Result<(), String> {
 						_ => {}
 
 					}
-					// else if keycode == Keycode::Space {
-					// 	debug_print!("space down");
-					// 	for i in 0..400 {
-					// 		canvas.pixel(i as i16, i as i16, 0xFF000FFu32)?;
-					// 	}
-					// 	canvas.present();
-					// }
 				}
 
 				Event::MouseMotion { x, y, .. } => {
@@ -185,6 +178,7 @@ fn main() -> Result<(), String> {
 		}
 
 		canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+
 		canvas.clear();
 
 		backbuffer.with_lock(
@@ -199,15 +193,18 @@ fn main() -> Result<(), String> {
 
 				for face in &mesh.f {
 
-					// debug_print!("face=({},{},{})", face.0, face.1, face.2);
+					let points: Vec<Vec2> = vec![
+						screen_vertices[face.0],
+						screen_vertices[face.1],
+						screen_vertices[face.2],
+					];
 
-					let i = screen_vertices[face.0];
-					let j = screen_vertices[face.1];
-					let k = screen_vertices[face.2];
+					draw::poly(
+						pixel_buffer,
+						points.as_slice(),
+						white);
 
-					draw::line(pixel_buffer, i.x as u32, i.y as u32, j.x as u32, j.y as u32, white);
-					draw::line(pixel_buffer, j.x as u32, j.y as u32, k.x as u32, k.y as u32, white);
-					draw::line(pixel_buffer, k.x as u32, k.y as u32, i.x as u32, i.y as u32, white);
+
 
 				}
 
