@@ -13,8 +13,9 @@ use draw::{PixelBuffer, Color};
 mod linear;
 use linear::{Vec2, Vec3, Mesh};
 
-const SCREEN_WIDTH: u32 = 640;
-const SCREEN_HEIGHT: u32 = 640;
+const SCREEN_WIDTH: u32 = 800;
+const SCREEN_HEIGHT: u32 = 600;
+const ASPECT_RATIO: f32 = SCREEN_HEIGHT as f32 / SCREEN_WIDTH as f32;
 const BYTES_PER_PIXEL: u32 = 4;
 const SCREEN_PITCH: u32 = SCREEN_WIDTH * BYTES_PER_PIXEL;
 const PIXEL_BUFFER_SIZE: usize = (SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL) as usize;
@@ -165,7 +166,7 @@ fn main() -> Result<(), String> {
 
 			// Scale and translate
 			screen_vertices[i].x = (
-				(mesh.v[i].x + last_mouse_x_worldspace) /
+				(mesh.v[i].x + last_mouse_x_worldspace) * ASPECT_RATIO /
 				(mesh.v[i].z + 2.0) +
 				1.0
 			) * width_scale;
