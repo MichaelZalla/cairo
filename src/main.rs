@@ -1,10 +1,9 @@
 extern crate sdl2;
 
-use std::time::Instant;
+use math::round::floor;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::rect::Rect;
 
 mod macros;
 
@@ -21,16 +20,6 @@ const SCREEN_PITCH: u32 = SCREEN_WIDTH * BYTES_PER_PIXEL;
 const PIXEL_BUFFER_SIZE: usize = (SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL) as usize;
 
 fn main() -> Result<(), String> {
-
-	// let window_rect: Rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	// let mut pixels: [u8; PIXEL_BUFFER_SIZE] = [0; PIXEL_BUFFER_SIZE];
-
-	// let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
-	// 	pixels: &mut pixels,
-	// 	width: SCREEN_WIDTH,
-	// 	bytes_per_pixel: BYTES_PER_PIXEL,
-	// };
 
 	let mesh: Mesh = Mesh{
 		v: vec![
@@ -61,7 +50,7 @@ fn main() -> Result<(), String> {
 
 	let window = video_subsys
 		.window("rust-sdl2-pixel", SCREEN_WIDTH, SCREEN_HEIGHT)
-		// .opengl()
+		.opengl()
 		// .fullscreen_desktop()
 		// .borderless()
 		.position_centered()
@@ -72,8 +61,10 @@ fn main() -> Result<(), String> {
 
 	let mut canvas = window
         .into_canvas()
-        .accelerated()
-		.build().unwrap();
+        // .accelerated()
+		// .present_vsync()
+		.build()
+		.unwrap();
 
 	let texture_creator = canvas.texture_creator();
 
@@ -95,15 +86,18 @@ fn main() -> Result<(), String> {
 	let width_scale = SCREEN_WIDTH as f32 / 2.0;
 	let height_scale = SCREEN_HEIGHT as f32 / 2.0;
 
-	let mut now = Instant::now();
-	let mut then: Instant;
-
 	let white = Color::RGB(255, 255, 255);
 
 	let mut last_mouse_x: u32 = 0;
 	let mut last_mouse_y: u32 = 0;
 
 	'main: loop {
+
+		// Main loop
+
+		let frame_start_ms = sdl_context.timer()?.performance_counter();
+
+		// Event polling
 
 		for event in events.poll_iter() {
 			match event {
@@ -135,20 +129,6 @@ fn main() -> Result<(), String> {
 
 			}
 		}
-
-		// Main loop
-
-		// Determine frame-rate
-
-		then = now;
-		now = Instant::now();
-
-		let delta_t_duration = now - then;
-		let seconds = delta_t_duration.as_secs_f32();
-		let milliseconds = (seconds * 1000.0) as u32;
-
-		debug_print!("Slept for {} ms.", (seconds * 1000.0) as u32);
-		debug_print!("Rendering {} frames per second...", 1000.0 / milliseconds as f64);
 
 		// Translation of vertices to screen space;
 
@@ -218,6 +198,17 @@ fn main() -> Result<(), String> {
 		canvas.copy(&backbuffer, None, None).unwrap();
 
 		canvas.present();
+
+		let timer = sdl_context.timer()?;
+		let frame_end_ms = timer.performance_counter();
+		let tick_frequency = timer.performance_frequency();
+		let delta_ms = frame_end_ms - frame_start_ms;
+
+		let elapsed = delta_ms as f64 / tick_frequency as f64;
+
+		println!("Rendering {} frames per second...", floor(1.0 / elapsed, 2));
+
+		// timer.delay(floor(16.666 - delta_ms as f64, 0) as u32);
 
 	}
 
