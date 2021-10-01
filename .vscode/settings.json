@@ -1,0 +1,7 @@
+{
+  "task.quickOpen.skip": true,
+  "triggerTaskOnSave.tasks": {
+    "Rust: cargo build": ["src/*.rs"],
+    "restart": ["src/*.rs"]
+  }
+}

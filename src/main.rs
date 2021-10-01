@@ -1,33 +1,51 @@
 extern crate sdl2;
 
+// #[macro_use]
+// extern crate lazy_static;
+
+use std::time::Instant;
+// use std::thread::sleep;
+// use std::cell::RefCell;
+// use std::sync::Mutex;
+
+// use once_cell::sync::Lazy;
+
 use sdl2::event::Event;
-use sdl2::image;
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::{Color,PixelFormatEnum};
-use sdl2::render::{Canvas, Texture};
-use sdl2::surface::Surface;
-use sdl2::video::{Window};
+use sdl2::rect::Rect;
+// use sdl2::surface::{SurfaceRef};
+
+mod macros;
+
+mod draw;
+use draw::{PixelBuffer, Color};
+
+mod linear;
+use linear::{Vec3, Mesh};
 
 const SCREEN_WIDTH: u32 = 640;
 const SCREEN_HEIGHT: u32 = 480;
+const BYTES_PER_PIXEL: u32 = 4;
+const PIXEL_BUFFER_SIZE: usize = (SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL) as usize;
 
-mod draw;
-
-#[derive(Debug, Copy, Clone)]
-struct Vec3 {
-	x: f32,
-	y: f32,
-	z: f32,
-}
-
-struct Mesh {
-	v: Vec<Vec3>,
-	f: Vec<(usize, usize, usize)>,
-}
+// static PIXELS: Lazy<Mutex<[u8; PIXEL_BUFFER_SIZE]>> = Lazy::new(|| {
+// 	let mut data: [u8; PIXEL_BUFFER_SIZE] = [0; PIXEL_BUFFER_SIZE];
+//     Mutex::new(data);
+// });
 
 fn main() -> Result<(), String> {
 
-	// let vertices: Vec<Vec3> = ;
+	let window_rect: Rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	let mut pixels: [u8; PIXEL_BUFFER_SIZE] = [0; PIXEL_BUFFER_SIZE];
+	// let mu: Mutex<[u8; PIXEL_BUFFER_SIZE]> = Mutex::new(pixels);
+
+	let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
+		// pixels: &mu,
+		pixels: &mut pixels,
+		width: SCREEN_WIDTH,
+		bytes_per_pixel: BYTES_PER_PIXEL,
+	};
 
 	let mesh: Mesh = Mesh{
 		v: vec![
@@ -59,33 +77,20 @@ fn main() -> Result<(), String> {
 	let window = video_subsys
 		.window("rust-sdl2-pixel", SCREEN_WIDTH, SCREEN_HEIGHT)
 		.position_centered()
-		// .opengl()
 		.build()
 		.unwrap();
 
-	let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
-
-	// let texture_creator = canvas.texture_creator();
-
-	// https://rust-sdl2.github.io/rust-sdl2/sdl2/video/struct.Window.html#method.surface
-	// let mut surface = window.surface(&events)?;
-
-	// ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-
-	// let surface = (window);
-	// let surface = Surface::new(SCREEN_WIDTH, SCREEN_HEIGHT, PixelFormatEnum::RGB24).unwrap();
-	// let texture = texture_creator.create_texture_from_surface(surface).unwrap();
-
-	canvas.clear();
-	canvas.present();
-
-	let mut last_mouse_x: i16 = 0;
-	let mut last_mouse_y: i16 = 0;
+	let mut last_mouse_x: u32 = 0;
+	let mut last_mouse_y: u32 = 0;
 
 	let width_scale = SCREEN_WIDTH as f32 / 2.0;
 	let height_scale = SCREEN_HEIGHT as f32 / 2.0;
 
-	let black = Color::RGB(0, 0, 0);
+	// let black = Color::RGB(0, 0, 0);
+
+	let mut now = Instant::now();
+	let mut then: Instant;
+
 	let white = Color::RGB(255, 255, 255);
 
 	'main: loop {
@@ -102,7 +107,7 @@ fn main() -> Result<(), String> {
 						break 'main;
 					}
 					// else if keycode == Keycode::Space {
-					// 	println!("space down");
+					// 	debug_print!("space down");
 					// 	for i in 0..400 {
 					// 		canvas.pixel(i as i16, i as i16, 0xFF000FFu32)?;
 					// 	}
@@ -111,8 +116,8 @@ fn main() -> Result<(), String> {
 				}
 
 				Event::MouseMotion { x, y, .. } => {
-					last_mouse_x = x as i16;
-					last_mouse_y = y as i16;
+					last_mouse_x = x as u32;
+					last_mouse_y = y as u32;
 				}
 
 				_ => {}
@@ -121,8 +126,19 @@ fn main() -> Result<(), String> {
 
 		// Main loop
 
-		canvas.set_draw_color(black);
-		canvas.clear();
+		// Determine frame-rate
+
+		then = now;
+		now = Instant::now();
+
+		let delta_t_duration = now - then;
+		let seconds = delta_t_duration.as_secs_f32();
+		let milliseconds = (seconds * 1000.0) as u32;
+
+		debug_print!("Slept for {} ms.", (seconds * 1000.0) as u32);
+		debug_print!("Rendering {} frames per second...", 1000.0 / milliseconds as f64);
+
+		let mut surface = window.surface(&events)?;
 
 		// Translation of vertices to screen space;
 
@@ -134,7 +150,7 @@ fn main() -> Result<(), String> {
 			v.x = (v.x + 1.0) * width_scale + width_scale;
 			v.y = (v.y + 1.0) * height_scale + height_scale;
 
-			println!("[x={}, y={}, z={}]", v.x, v.y, v.z);
+			// debug_print!("[x={}, y={}, z={}]", v.x, v.y, v.z);
 
 		}
 
@@ -150,9 +166,46 @@ fn main() -> Result<(), String> {
 		// 	draw::line(&canvas, jv.x as i16, jv.y as i16, iv.x as i16, iv.y as i16, white);
 		// }
 
-		draw::line(&canvas, SCREEN_WIDTH as i16 / 2, SCREEN_HEIGHT as i16 / 2, last_mouse_x, last_mouse_y, white);
+		for x in 0..SCREEN_WIDTH {
+			for y in 0..SCREEN_HEIGHT {
 
-		canvas.present();
+				let color = Color::RGB(
+					((x as i32 - last_mouse_x as i32) % 255) as u8,
+					((y as i32 - last_mouse_y as i32) % 255) as u8,
+					255,
+				);
+
+				draw::set_pixel(
+					pixel_buffer,
+					x,
+					y,
+					color);
+
+			}
+		}
+
+		draw::line(
+			pixel_buffer,
+			SCREEN_WIDTH / 2,
+			SCREEN_HEIGHT / 2,
+			last_mouse_x,
+			last_mouse_y,
+			white);
+
+		let data_as_surface = sdl2::surface::Surface::from_data(
+			pixel_buffer.pixels,
+			SCREEN_WIDTH,
+			SCREEN_HEIGHT,
+			SCREEN_WIDTH * BYTES_PER_PIXEL,
+			sdl2::pixels::PixelFormatEnum::RGBA32
+		)?;
+
+		let _ = data_as_surface.blit(
+			window_rect,
+			&mut surface,
+			None);
+
+		let _ = surface.finish();
 
 	}
 

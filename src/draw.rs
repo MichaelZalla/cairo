@@ -1,19 +1,76 @@
+// use std::{sync::Mutex};
+
+// use once_cell::sync::Lazy;
+
 extern crate sdl2;
 
-use sdl2::pixels;
-use sdl2::render::Canvas;
-use sdl2::video::Window;
+// #[derive(Debug, Clone)]
+pub struct PixelBuffer<'p> {
+	// pub pixels: &'p Mutex<[u8]>,
+	pub pixels: &'p mut [u8],
+	pub width: u32,
+	pub bytes_per_pixel: u32,
+}
 
-use sdl2::gfx::primitives::DrawRenderer;
+// impl PixelBuffer<'p> {
+
+// 	fn Copy(self: PixelBuffer) -> PixelBuffer<'p> {
+// 		PixelBuffer{
+// 			pixels: self.pixels,
+// 			width: self.width,
+// 			bytes_per_pixel: self.bytes_per_pixel,
+// 		}
+// 	}
+
+// }
+
+#[derive(Debug, Copy, Clone)]
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
+
+impl Color
+{
+	pub const fn RGB(r: u8, g: u8, b: u8) -> Color {
+		return Color { r, g, b, a: 0xff }
+	}
+	pub const fn RGBA(r: u8, g: u8, b: u8, a: u8) -> Color {
+		return Color { r, g, b, a }
+	}
+}
+
+// #[inline]
+pub fn set_pixel(
+	buffer: &mut PixelBuffer,
+	x: u32,
+	y: u32,
+	color: Color,
+) -> () {
+
+	let pixel_start = y * buffer.width * buffer.bytes_per_pixel + x * buffer.bytes_per_pixel;
+
+	// buffer.pixels.lock();
+
+	// let mut data = buffer.pixels.lock().unwrap();
+
+	buffer.pixels[(pixel_start) as usize] = color.r;
+	buffer.pixels[(pixel_start + 1) as usize] = color.g;
+	buffer.pixels[(pixel_start + 2) as usize] = color.b;
+	buffer.pixels[(pixel_start + 3) as usize] = color.a;
+
+}
 
 // #[inline]
 pub fn line(
-	canvas: &Canvas<Window>,
-	mut x1: i16,
-	mut y1: i16,
-	mut x2: i16,
-	mut y2: i16,
-	color: pixels::Color
+	buffer: &mut PixelBuffer,
+	mut x1: u32,
+	mut y1: u32,
+	mut x2: u32,
+	mut y2: u32,
+	color: Color
 ) -> () {
 
 	// y = m*x + b
@@ -35,10 +92,10 @@ pub fn line(
 
 		// Vertical line
 
-		println!("Drawing vertical line from ({},{}) to ({},{})!", x1, y1, x2, y2);
+		// dbg!("Drawing vertical line from ({},{}) to ({},{})!", x1, y1, x2, y2);
 
 		for y in y1..y2 {
-			let _ = canvas.pixel(x1, y, color);
+			set_pixel(buffer, x1, y, color);
 		}
 
 	}
@@ -46,47 +103,47 @@ pub fn line(
 
 		// Horizontal line
 
-		println!("Drawing horizontal line from ({},{}) to ({},{})!", x1, y1, x2, y2);
+		// dbg!("Drawing horizontal line from ({},{}) to ({},{})!", x1, y1, x2, y2);
 
 		for x in x1..x2 {
-			let _ = canvas.pixel(x, y1, color);
+			set_pixel(buffer, x, y1, color);
 		}
 
 	}
 	else {
 
-		let dx = x2 - x1;
-		let dy = y2 - y1;
+		let dx = x2 as i32 - x1 as i32;
+		let dy = y2 as i32 - y1 as i32;
 		let m = dy as f32 / dx as f32;
 		let b = (y1 as f32 + y2 as f32 - m * (x1 + x2) as f32) / 2.0;
 
-		// println!("m = {}, b = {}", m, b);
+		// dbg!("m = {}, b = {}", m, b);
 
 		if m.abs() > 1.0 {
 
 			if y2 < y1 {
-				let t: i16 = y1;
+				let t: u32 = y1;
 				y1 = y2;
 				y2 = t;
 			}
 
 			// Vertical-ish line
 			for y in y1..y2 {
-				let _ = canvas.pixel(((y as f32 - b) / m) as i16, y, color);
+				set_pixel(buffer, ((y as f32 - b) / m) as u32, y, color);
 			}
 
 		}
 		else {
 
 			if x2 < x1 {
-				let t: i16 = x1;
+				let t: u32 = x1;
 				x1 = x2;
 				x2 = t;
 			}
 
 			// Horizontal-ish line
 			for x in x1..x2 {
-				let _ = canvas.pixel(x, (m * x as f32 + b) as i16, color);
+				set_pixel(buffer, x, (m * x as f32 + b) as u32, color);
 			}
 
 		}
