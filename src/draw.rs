@@ -1,28 +1,10 @@
-// use std::{sync::Mutex};
-
-// use once_cell::sync::Lazy;
-
 extern crate sdl2;
 
-// #[derive(Debug, Clone)]
 pub struct PixelBuffer<'p> {
-	// pub pixels: &'p Mutex<[u8]>,
 	pub pixels: &'p mut [u8],
 	pub width: u32,
 	pub bytes_per_pixel: u32,
 }
-
-// impl PixelBuffer<'p> {
-
-// 	fn Copy(self: PixelBuffer) -> PixelBuffer<'p> {
-// 		PixelBuffer{
-// 			pixels: self.pixels,
-// 			width: self.width,
-// 			bytes_per_pixel: self.bytes_per_pixel,
-// 		}
-// 	}
-
-// }
 
 #[derive(Debug, Copy, Clone)]
 pub struct Color {
@@ -42,7 +24,7 @@ impl Color
 	}
 }
 
-// #[inline]
+#[inline]
 pub fn set_pixel(
 	buffer: &mut PixelBuffer,
 	x: u32,
@@ -52,10 +34,6 @@ pub fn set_pixel(
 
 	let pixel_start = y * buffer.width * buffer.bytes_per_pixel + x * buffer.bytes_per_pixel;
 
-	// buffer.pixels.lock();
-
-	// let mut data = buffer.pixels.lock().unwrap();
-
 	buffer.pixels[(pixel_start) as usize] = color.r;
 	buffer.pixels[(pixel_start + 1) as usize] = color.g;
 	buffer.pixels[(pixel_start + 2) as usize] = color.b;
@@ -63,7 +41,7 @@ pub fn set_pixel(
 
 }
 
-// #[inline]
+#[inline]
 pub fn line(
 	buffer: &mut PixelBuffer,
 	mut x1: u32,

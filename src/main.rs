@@ -1,19 +1,10 @@
 extern crate sdl2;
 
-// #[macro_use]
-// extern crate lazy_static;
-
 use std::time::Instant;
-// use std::thread::sleep;
-// use std::cell::RefCell;
-// use std::sync::Mutex;
-
-// use once_cell::sync::Lazy;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
-// use sdl2::surface::{SurfaceRef};
 
 mod macros;
 
@@ -26,26 +17,20 @@ use linear::{Vec3, Mesh};
 const SCREEN_WIDTH: u32 = 640;
 const SCREEN_HEIGHT: u32 = 480;
 const BYTES_PER_PIXEL: u32 = 4;
+const SCREEN_PITCH: u32 = SCREEN_WIDTH * BYTES_PER_PIXEL;
 const PIXEL_BUFFER_SIZE: usize = (SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL) as usize;
-
-// static PIXELS: Lazy<Mutex<[u8; PIXEL_BUFFER_SIZE]>> = Lazy::new(|| {
-// 	let mut data: [u8; PIXEL_BUFFER_SIZE] = [0; PIXEL_BUFFER_SIZE];
-//     Mutex::new(data);
-// });
 
 fn main() -> Result<(), String> {
 
-	let window_rect: Rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	// let window_rect: Rect = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	let mut pixels: [u8; PIXEL_BUFFER_SIZE] = [0; PIXEL_BUFFER_SIZE];
-	// let mu: Mutex<[u8; PIXEL_BUFFER_SIZE]> = Mutex::new(pixels);
+	// let mut pixels: [u8; PIXEL_BUFFER_SIZE] = [0; PIXEL_BUFFER_SIZE];
 
-	let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
-		// pixels: &mu,
-		pixels: &mut pixels,
-		width: SCREEN_WIDTH,
-		bytes_per_pixel: BYTES_PER_PIXEL,
-	};
+	// let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
+	// 	pixels: &mut pixels,
+	// 	width: SCREEN_WIDTH,
+	// 	bytes_per_pixel: BYTES_PER_PIXEL,
+	// };
 
 	let mesh: Mesh = Mesh{
 		v: vec![
@@ -76,27 +61,53 @@ fn main() -> Result<(), String> {
 
 	let window = video_subsys
 		.window("rust-sdl2-pixel", SCREEN_WIDTH, SCREEN_HEIGHT)
+		// .opengl()
+		// .fullscreen_desktop()
+		// .borderless()
 		.position_centered()
 		.build()
 		.unwrap();
 
-	let mut last_mouse_x: u32 = 0;
-	let mut last_mouse_y: u32 = 0;
+	sdl_context.mouse().show_cursor(false);
+
+	let mut canvas = window
+        .into_canvas()
+        .accelerated()
+		.build().unwrap();
+
+	let texture_creator = canvas.texture_creator();
+
+	let mut backbuffer = texture_creator
+		.create_texture_streaming(
+			sdl2::pixels::PixelFormatEnum::RGBA32,
+			SCREEN_WIDTH,
+			SCREEN_HEIGHT)
+		.unwrap();
+
+	backbuffer.update(
+		None,
+		&vec![0; PIXEL_BUFFER_SIZE],
+		SCREEN_PITCH as usize
+	).unwrap();
+
+	backbuffer.set_blend_mode(sdl2::render::BlendMode::None);
 
 	let width_scale = SCREEN_WIDTH as f32 / 2.0;
 	let height_scale = SCREEN_HEIGHT as f32 / 2.0;
-
-	// let black = Color::RGB(0, 0, 0);
 
 	let mut now = Instant::now();
 	let mut then: Instant;
 
 	let white = Color::RGB(255, 255, 255);
 
+	let mut last_mouse_x: u32 = 0;
+	let mut last_mouse_y: u32 = 0;
+
 	'main: loop {
 
 		for event in events.poll_iter() {
 			match event {
+
 				Event::Quit { .. } => break 'main,
 
 				Event::KeyDown {
@@ -121,6 +132,7 @@ fn main() -> Result<(), String> {
 				}
 
 				_ => {}
+
 			}
 		}
 
@@ -137,8 +149,6 @@ fn main() -> Result<(), String> {
 
 		debug_print!("Slept for {} ms.", (seconds * 1000.0) as u32);
 		debug_print!("Rendering {} frames per second...", 1000.0 / milliseconds as f64);
-
-		let mut surface = window.surface(&events)?;
 
 		// Translation of vertices to screen space;
 
@@ -166,46 +176,48 @@ fn main() -> Result<(), String> {
 		// 	draw::line(&canvas, jv.x as i16, jv.y as i16, iv.x as i16, iv.y as i16, white);
 		// }
 
-		for x in 0..SCREEN_WIDTH {
-			for y in 0..SCREEN_HEIGHT {
+		backbuffer.with_lock(
+            None,
+            |bytearray, _| {
 
-				let color = Color::RGB(
-					((x as i32 - last_mouse_x as i32) % 255) as u8,
-					((y as i32 - last_mouse_y as i32) % 255) as u8,
-					255,
-				);
+				let pixel_buffer_local: &mut PixelBuffer = &mut PixelBuffer{
+					pixels: bytearray,
+					width: SCREEN_WIDTH,
+					bytes_per_pixel: BYTES_PER_PIXEL,
+				};
 
-				draw::set_pixel(
-					pixel_buffer,
-					x,
-					y,
-					color);
+				for x in 0..SCREEN_WIDTH {
+					for y in 0..SCREEN_HEIGHT {
+
+						let color = Color::RGB(
+							((x as i32 - last_mouse_x as i32) % 255) as u8,
+							((y as i32 - last_mouse_y as i32) % 255) as u8,
+							255,
+						);
+
+						draw::set_pixel(
+							pixel_buffer_local,
+							x,
+							y,
+							color);
+
+					}
+				}
+
+				draw::line(
+					pixel_buffer_local,
+					SCREEN_WIDTH / 2,
+					SCREEN_HEIGHT / 2,
+					last_mouse_x,
+					last_mouse_y,
+					white);
 
 			}
-		}
+        ).unwrap();
 
-		draw::line(
-			pixel_buffer,
-			SCREEN_WIDTH / 2,
-			SCREEN_HEIGHT / 2,
-			last_mouse_x,
-			last_mouse_y,
-			white);
+		canvas.copy(&backbuffer, None, None).unwrap();
 
-		let data_as_surface = sdl2::surface::Surface::from_data(
-			pixel_buffer.pixels,
-			SCREEN_WIDTH,
-			SCREEN_HEIGHT,
-			SCREEN_WIDTH * BYTES_PER_PIXEL,
-			sdl2::pixels::PixelFormatEnum::RGBA32
-		)?;
-
-		let _ = data_as_surface.blit(
-			window_rect,
-			&mut surface,
-			None);
-
-		let _ = surface.finish();
+		canvas.present();
 
 	}
 

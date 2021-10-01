@@ -19,6 +19,13 @@
     },
     {
       "type": "cargo",
+      "command": "build",
+      "args": ["--release"],
+      "problemMatcher": ["$rustc"],
+      "label": "Rust: cargo build --release"
+    },
+    {
+      "type": "cargo",
       "command": "run",
       "args": ["--features", "debug_print_feature"],
       "problemMatcher": ["$rustc"],

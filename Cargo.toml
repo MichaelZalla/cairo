@@ -15,4 +15,10 @@ once_cell = "1.8.0"
 [dependencies.sdl2]
 version = "0.34"
 default-features = false
-features = ["gfx","image"]
+# features = ["gfx","image"]
+
+# [profile.dev]
+# opt-level = 0
+
+# [profile.release]
+# opt-level = 3
