@@ -11,6 +11,8 @@ debug_print_feature = []
 [dependencies]
 crossterm = "0.21.0"
 once_cell = "1.8.0"
+libmath = "0.2.1"
+bytemuck = "*"
 
 [dependencies.sdl2]
 version = "0.34"

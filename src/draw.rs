@@ -24,7 +24,7 @@ impl Color
 	}
 }
 
-#[inline]
+#[inline(always)]
 pub fn set_pixel(
 	buffer: &mut PixelBuffer,
 	x: u32,

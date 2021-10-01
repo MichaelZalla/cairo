@@ -144,53 +144,82 @@ fn main() -> Result<(), String> {
 
 		}
 
-		// for face in mesh.f.iter() {
-		// 	let i = face.0;
-		// 	let j = face.1;
-		// 	let k = face.2;
-		// 	let iv = screen_vertices[i];
-		// 	let jv = screen_vertices[j];
-		// 	let kv = screen_vertices[k];
-		// 	draw::line(&canvas, iv.x as i16, iv.y as i16, kv.x as i16, kv.y as i16, white);
-		// 	draw::line(&canvas, kv.x as i16, kv.y as i16, jv.x as i16, jv.y as i16, white);
-		// 	draw::line(&canvas, jv.x as i16, jv.y as i16, iv.x as i16, iv.y as i16, white);
-		// }
+		canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+		canvas.clear();
 
 		backbuffer.with_lock(
             None,
             |bytearray, _| {
 
-				let pixel_buffer_local: &mut PixelBuffer = &mut PixelBuffer{
-					pixels: bytearray,
-					width: SCREEN_WIDTH,
-					bytes_per_pixel: BYTES_PER_PIXEL,
-				};
+				// let pixel_buffer_local: &mut PixelBuffer = &mut PixelBuffer{
+				// 	pixels: bytearray,
+				// 	width: SCREEN_WIDTH,
+				// 	bytes_per_pixel: BYTES_PER_PIXEL,
+				// };
 
-				for x in 0..SCREEN_WIDTH {
-					for y in 0..SCREEN_HEIGHT {
+				let mut color = Color::RGB(0,0,0);
 
-						let color = Color::RGB(
-							((x as i32 - last_mouse_x as i32) % 255) as u8,
-							((y as i32 - last_mouse_y as i32) % 255) as u8,
-							255,
-						);
+				let u32_slice: &mut [u32] = bytemuck::cast_slice_mut(bytearray);
 
-						draw::set_pixel(
-							pixel_buffer_local,
-							x,
-							y,
-							color);
+				let mut x: u32 = 0;
+				let mut y: u32 = 0;
 
+				for pixel in u32_slice {
+
+					x += 1;
+
+					if x >= SCREEN_WIDTH {
+						x = 0;
+						y += 1;
 					}
+
+					// @NOTE(mzalla) mod is rather expensive here
+					// color.r = ((x as i32 - last_mouse_x as i32) % 255) as u8;
+					// color.g = ((y as i32 - last_mouse_y as i32) % 255) as u8;
+
+					color.r = (x % 255) as u8;
+					color.g = (y % 255) as u8;
+					color.b = ((x*y) % 255) as u8;
+
+					let r = (color.r as u32);
+					let g = (color.g as u32).rotate_left(8);
+					let b = (color.b as u32).rotate_left(16);
+					let a = (color.a as u32).rotate_left(24);
+
+					// 00000000111111110000000011111111
+
+					// dbg!(r|g|b|a);
+
+					*pixel = r|g|b|a;
+
 				}
 
-				draw::line(
-					pixel_buffer_local,
-					SCREEN_WIDTH / 2,
-					SCREEN_HEIGHT / 2,
-					last_mouse_x,
-					last_mouse_y,
-					white);
+				// for x in 0..SCREEN_WIDTH {
+				// 	for y in 0..SCREEN_HEIGHT {
+
+				// 		// draw::set_pixel(
+				// 		// 	pixel_buffer_local,
+				// 		// 	x,
+				// 		// 	y,
+				// 		// 	color);
+
+				// 		let pixel_start = y * SCREEN_PITCH + x * BYTES_PER_PIXEL;
+
+				// 		// bytearray[(pixel_start) as usize] = color.r;
+				// 		// bytearray[(pixel_start + 1) as usize] = color.g;
+				// 		// bytearray[(pixel_start + 2) as usize] = color.b;
+				// 		// bytearray[(pixel_start + 3) as usize] = color.a;
+
+				// 	}
+				// }
+
+				// draw::line(
+				// 	pixel_buffer_local,
+				// 	SCREEN_WIDTH / 2,
+				// 	SCREEN_HEIGHT / 2,
+				// 	last_mouse_x,
+				// 	last_mouse_y,
+				// 	white);
 
 			}
         ).unwrap();
