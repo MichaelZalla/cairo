@@ -7,7 +7,7 @@ use crate::linear::Vec2;
 pub struct PixelBuffer<'p> {
 	pub pixels: &'p mut [u32],
 	pub width: u32,
-	pub bytes_per_pixel: u32,
+	// pub bytes_per_pixel: u32,
 }
 
 #[derive(Debug, Copy, Clone)]
