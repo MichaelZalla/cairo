@@ -1,7 +1,7 @@
 extern crate sdl2;
 
 pub struct PixelBuffer<'p> {
-	pub pixels: &'p mut [u8],
+	pub pixels: &'p mut [u32],
 	pub width: u32,
 	pub bytes_per_pixel: u32,
 }
@@ -32,12 +32,24 @@ pub fn set_pixel(
 	color: Color,
 ) -> () {
 
-	let pixel_start = y * buffer.width * buffer.bytes_per_pixel + x * buffer.bytes_per_pixel;
+	let pixel_index = (y * buffer.width + x) as usize;
 
-	buffer.pixels[(pixel_start) as usize] = color.r;
-	buffer.pixels[(pixel_start + 1) as usize] = color.g;
-	buffer.pixels[(pixel_start + 2) as usize] = color.b;
-	buffer.pixels[(pixel_start + 3) as usize] = color.a;
+	if pixel_index >= buffer.pixels.len() {
+		println!("x={}, y={}, buffer.pixels.len()={}, pixel_index={}", x, y, buffer.pixels.len(), pixel_index);
+	}
+
+	// let pixel: *mut u32 = buffer.pixels[pixel_index] as *mut u32;
+
+	let r = (color.r as u32);
+	let g = (color.g as u32).rotate_left(8);
+	let b = (color.b as u32).rotate_left(16);
+	let a = (color.a as u32).rotate_left(24);
+
+	// unsafe {
+	// 	*pixel = r|g|b|a;
+	// }
+
+	buffer.pixels[pixel_index] = r|g|b|a;
 
 }
 

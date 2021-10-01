@@ -151,27 +151,45 @@ fn main() -> Result<(), String> {
             None,
             |bytearray, _| {
 
-				// let pixel_buffer_local: &mut PixelBuffer = &mut PixelBuffer{
-				// 	pixels: bytearray,
-				// 	width: SCREEN_WIDTH,
-				// 	bytes_per_pixel: BYTES_PER_PIXEL,
-				// };
+				let pixel_buffer_local: &mut PixelBuffer = &mut PixelBuffer{
+					pixels: bytemuck::cast_slice_mut(bytearray),
+					width: SCREEN_WIDTH,
+					bytes_per_pixel: BYTES_PER_PIXEL,
+				};
+
+				// let u32_slice = bytemuck::cast_slice_mut(bytearray);
 
 				let mut color = Color::RGB(0,0,0);
-
-				let u32_slice: &mut [u32] = bytemuck::cast_slice_mut(bytearray);
 
 				let mut x: u32 = 0;
 				let mut y: u32 = 0;
 
-				for pixel in u32_slice {
+				// for pixel in u32_slice {
 
-					x += 1;
+				// 	x += 1;
 
-					if x >= SCREEN_WIDTH {
-						x = 0;
-						y += 1;
-					}
+				// 	if x >= SCREEN_WIDTH {
+				// 		x = 0;
+				// 		y += 1;
+				// 	}
+
+				// 	color.r = (x % 255) as u8;
+				// 	color.g = (y % 255) as u8;
+				// 	color.b = ((x*y) % 255) as u8;
+
+				// 	let r = (color.r as u32);
+				// 	let g = (color.g as u32).rotate_left(8);
+				// 	let b = (color.b as u32).rotate_left(16);
+				// 	let a = (color.a as u32).rotate_left(24);
+
+				// 	*pixel = r|g|b|a;
+
+				// }
+
+				for i in 0..(SCREEN_WIDTH * SCREEN_HEIGHT) {
+
+					x = i % SCREEN_WIDTH;
+					y = i / SCREEN_WIDTH;
 
 					// @NOTE(mzalla) mod is rather expensive here
 					// color.r = ((x as i32 - last_mouse_x as i32) % 255) as u8;
@@ -181,37 +199,24 @@ fn main() -> Result<(), String> {
 					color.g = (y % 255) as u8;
 					color.b = ((x*y) % 255) as u8;
 
-					let r = (color.r as u32);
-					let g = (color.g as u32).rotate_left(8);
-					let b = (color.b as u32).rotate_left(16);
-					let a = (color.a as u32).rotate_left(24);
+					// let r = (color.r as u32);
+					// let g = (color.g as u32).rotate_left(8);
+					// let b = (color.b as u32).rotate_left(16);
+					// let a = (color.a as u32).rotate_left(24);
 
 					// 00000000111111110000000011111111
 
 					// dbg!(r|g|b|a);
 
-					*pixel = r|g|b|a;
+					draw::set_pixel(pixel_buffer_local, x, y, color);
+
+					// 	*pixel = r|g|b|a;
+					// unsafe {
+					// }
+
+					// u32_slice[i as usize] = r|g|b|a;
 
 				}
-
-				// for x in 0..SCREEN_WIDTH {
-				// 	for y in 0..SCREEN_HEIGHT {
-
-				// 		// draw::set_pixel(
-				// 		// 	pixel_buffer_local,
-				// 		// 	x,
-				// 		// 	y,
-				// 		// 	color);
-
-				// 		let pixel_start = y * SCREEN_PITCH + x * BYTES_PER_PIXEL;
-
-				// 		// bytearray[(pixel_start) as usize] = color.r;
-				// 		// bytearray[(pixel_start + 1) as usize] = color.g;
-				// 		// bytearray[(pixel_start + 2) as usize] = color.b;
-				// 		// bytearray[(pixel_start + 3) as usize] = color.a;
-
-				// 	}
-				// }
 
 				// draw::line(
 				// 	pixel_buffer_local,
