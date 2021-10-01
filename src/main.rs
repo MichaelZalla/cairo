@@ -110,8 +110,34 @@ fn main() -> Result<(), String> {
 					keycode: Some(keycode),
 					..
 				} => {
-					if keycode == Keycode::Escape {
-						break 'main;
+
+					match keycode {
+
+						Keycode::Escape { .. } => break 'main,
+
+						Keycode::Up { .. } => {
+							if last_mouse_y >= 25 {
+								last_mouse_y -= 25;
+							}
+						},
+						Keycode::Down { .. } => {
+							if last_mouse_y < (SCREEN_HEIGHT - 25) {
+								last_mouse_y += 25;
+							}
+						},
+						Keycode::Left { .. } => {
+							if last_mouse_x >= 25 {
+								last_mouse_x -= 25;
+							}
+						},
+						Keycode::Right { .. } => {
+							if last_mouse_x < (SCREEN_WIDTH - 25) {
+								last_mouse_x += 25;
+							}
+						},
+
+						_ => {}
+
 					}
 					// else if keycode == Keycode::Space {
 					// 	debug_print!("space down");
@@ -138,9 +164,21 @@ fn main() -> Result<(), String> {
 
 		for i in 0..screen_vertices_len {
 
+			let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
+			let last_mouse_y_worldspace = -1.0 * ((last_mouse_y as f32 / height_scale) - 1.0);
+
 			// Scale and translate
-			screen_vertices[i].x = (mesh.v[i].x / (mesh.v[i].z + 2.0)  + 1.0) * width_scale;
-			screen_vertices[i].y = (-1.0 * mesh.v[i].y / (mesh.v[i].z + 2.0)  + 1.0) * height_scale;
+			screen_vertices[i].x = (
+				(mesh.v[i].x + last_mouse_x_worldspace) /
+				(mesh.v[i].z + 2.0) +
+				1.0
+			) * width_scale;
+
+			screen_vertices[i].y = (
+				(-1.0 * (mesh.v[i].y + last_mouse_y_worldspace)) /
+				(mesh.v[i].z + 2.0) +
+				1.0
+			) * height_scale;
 
 			// debug_print!("screen_vertices[{}] = ({}, {})", i, screen_vertices[i].x, screen_vertices[i].y);
 

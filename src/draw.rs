@@ -1,3 +1,5 @@
+use core::panic;
+
 extern crate sdl2;
 
 pub struct PixelBuffer<'p> {
@@ -31,6 +33,10 @@ pub fn set_pixel(
 	y: u32,
 	color: Color,
 ) -> () {
+
+	if x > (buffer.width - 1) || y > (buffer.pixels.len() as u32 / buffer.width as u32 - 1) {
+		panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
+	}
 
 	let pixel_index = (y * buffer.width + x) as usize;
 
