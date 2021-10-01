@@ -11,36 +11,38 @@ mod draw;
 use draw::{PixelBuffer, Color};
 
 mod linear;
-use linear::{Vec3, Mesh};
+use linear::{Vec2, Vec3, Mesh};
 
 const SCREEN_WIDTH: u32 = 640;
-const SCREEN_HEIGHT: u32 = 480;
+const SCREEN_HEIGHT: u32 = 640;
 const BYTES_PER_PIXEL: u32 = 4;
 const SCREEN_PITCH: u32 = SCREEN_WIDTH * BYTES_PER_PIXEL;
 const PIXEL_BUFFER_SIZE: usize = (SCREEN_WIDTH * SCREEN_HEIGHT * BYTES_PER_PIXEL) as usize;
 
 fn main() -> Result<(), String> {
 
-	let mesh: Mesh = Mesh{
+	let mesh: &Mesh = &Mesh{
 		v: vec![
-			Vec3{ x: -0.5, y: 0.5, z: -0.5 }, Vec3{ x: 0.5, y: 0.5, z: -0.5 }, Vec3{ x: -0.5, y: -0.5, z: -0.5 }, Vec3{ x: -0.5, y: -0.5, z: -0.5 },
-			Vec3{ x: -0.5, y: 0.5, z:  0.5 }, Vec3{ x: 0.5, y: 0.5, z:  0.5 }, Vec3{ x: -0.5, y: -0.5, z:  0.5 }, Vec3{ x: -0.5, y: -0.5, z:  0.5 },
+			Vec3{ x: -0.5, y: 0.5, z: -0.5 }, Vec3{ x: 0.5, y: 0.5, z: -0.5 }, Vec3{ x: -0.5, y: -0.5, z: -0.5 }, Vec3{ x: 0.5, y: -0.5, z: -0.5 },
+			Vec3{ x: -0.5, y: 0.5, z:  0.5 }, Vec3{ x: 0.5, y: 0.5, z:  0.5 }, Vec3{ x: -0.5, y: -0.5, z:  0.5 }, Vec3{ x: 0.5, y: -0.5, z:  0.5 },
 		],
 		f: vec![
 			// front faces
-			(0,1,2),(1,3,2),
+			(0,1,3),(0,2,3),
 			// top faces
-			(0,4,5),(5,1,0),
+			(0,4,5),(0,1,5),
 			// bottom faces
-			(2,6,7),(7,3,2),
+			(2,6,7),(2,3,7),
 			// left faces
-			(0,4,6),(6,2,0),
+			(0,4,6),(0,2,6),
 			// right faces
-			(1,5,7),(7,3,1),
+			(1,5,7),(1,3,7),
 			// back faces
-			(4,5,6),(6,5,7),
+			(4,5,7),(4,6,7),
 		]
 	};
+
+	let screen_vertices_len = mesh.v.len();
 
 	let sdl_context = sdl2::init()?;
 
@@ -132,15 +134,15 @@ fn main() -> Result<(), String> {
 
 		// Translation of vertices to screen space;
 
-		let screen_vertices: Vec<Vec3> = mesh.v.clone();
+		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0 }; screen_vertices_len ];
 
-		for mut v in screen_vertices {
+		for i in 0..screen_vertices_len {
 
 			// Scale and translate
-			v.x = (v.x + 1.0) * width_scale + width_scale;
-			v.y = (v.y + 1.0) * height_scale + height_scale;
+			screen_vertices[i].x = (mesh.v[i].x / (mesh.v[i].z + 2.0)  + 1.0) * width_scale;
+			screen_vertices[i].y = (-1.0 * mesh.v[i].y / (mesh.v[i].z + 2.0)  + 1.0) * height_scale;
 
-			// debug_print!("[x={}, y={}, z={}]", v.x, v.y, v.z);
+			// debug_print!("screen_vertices[{}] = ({}, {})", i, screen_vertices[i].x, screen_vertices[i].y);
 
 		}
 
@@ -151,49 +153,25 @@ fn main() -> Result<(), String> {
             None,
             |bytearray, _| {
 
-				let pixel_buffer_local: &mut PixelBuffer = &mut PixelBuffer{
+				let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
 					pixels: bytemuck::cast_slice_mut(bytearray),
 					width: SCREEN_WIDTH,
 					bytes_per_pixel: BYTES_PER_PIXEL,
 				};
 
-				let mut color = Color::RGB(0,0,0);
+				for face in &mesh.f {
 
-				let mut x: u32 = 0;
-				let mut y: u32 = 0;
+					// debug_print!("face=({},{},{})", face.0, face.1, face.2);
 
-				for i in 0..(SCREEN_WIDTH * SCREEN_HEIGHT) {
+					let i = screen_vertices[face.0];
+					let j = screen_vertices[face.1];
+					let k = screen_vertices[face.2];
 
-					x = i % SCREEN_WIDTH;
-					y = i / SCREEN_WIDTH;
-
-					// @NOTE(mzalla) mod is rather expensive here
-					color.r = ((x as i32 - last_mouse_x as i32) % 255) as u8;
-					color.g = ((y as i32 - last_mouse_y as i32) % 255) as u8;
-					color.g = ((x as i32 - last_mouse_x as i32) * (y as i32 - last_mouse_y as i32) % 255) as u8;
-
-					// color.r = (x % 255) as u8;
-					// color.g = (y % 255) as u8;
-					// color.b = ((x*y) % 255) as u8;
-
-					draw::set_pixel(pixel_buffer_local, x, y, color);
-
-					// let r = (color.r as u32);
-					// let g = (color.g as u32).rotate_left(8);
-					// let b = (color.b as u32).rotate_left(16);
-					// let a = (color.a as u32).rotate_left(24);
-
-					// pixel_buffer_local.pixels[i as usize] = r|g|b|a;
+					draw::line(pixel_buffer, i.x as u32, i.y as u32, j.x as u32, j.y as u32, white);
+					draw::line(pixel_buffer, j.x as u32, j.y as u32, k.x as u32, k.y as u32, white);
+					draw::line(pixel_buffer, k.x as u32, k.y as u32, i.x as u32, i.y as u32, white);
 
 				}
-
-				draw::line(
-					pixel_buffer_local,
-					SCREEN_WIDTH / 2,
-					SCREEN_HEIGHT / 2,
-					last_mouse_x,
-					last_mouse_y,
-					white);
 
 			}
         ).unwrap();
@@ -209,7 +187,7 @@ fn main() -> Result<(), String> {
 
 		let elapsed = delta_ms as f64 / tick_frequency as f64;
 
-		println!("Rendering {} frames per second...", floor(1.0 / elapsed, 2));
+		debug_print!("Rendering {} frames per second...", floor(1.0 / elapsed, 2));
 
 		// timer.delay(floor(16.666 - delta_ms as f64, 0) as u32);
 

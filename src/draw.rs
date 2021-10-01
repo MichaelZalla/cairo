@@ -34,7 +34,7 @@ pub fn set_pixel(
 
 	let pixel_index = (y * buffer.width + x) as usize;
 
-	let r = (color.r as u32);
+	let r = color.r as u32;
 	let g = (color.g as u32).rotate_left(8);
 	let b = (color.b as u32).rotate_left(16);
 	let a = (color.a as u32).rotate_left(24);
