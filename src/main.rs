@@ -42,7 +42,7 @@ fn main() -> Result<(), String> {
 		]
 	};
 
-	let screen_vertices_len = mesh.v.len();
+	let mesh_vertices_length = mesh.v.len();
 
 	let sdl_context = sdl2::init()?;
 
@@ -93,11 +93,14 @@ fn main() -> Result<(), String> {
 	let mut last_mouse_x: u32 = 0;
 	let mut last_mouse_y: u32 = 0;
 
+	let mut timer = sdl_context.timer()?;
+	let tick_frequency = timer.performance_frequency();
+
 	'main: loop {
 
 		// Main loop
 
-		let frame_start_ms = sdl_context.timer()?.performance_counter();
+		let frame_start_ticks = timer.performance_counter();
 
 		// Event polling
 
@@ -153,12 +156,12 @@ fn main() -> Result<(), String> {
 
 		// Translation of vertices to screen space;
 
-		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0 }; screen_vertices_len ];
+		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0 }; mesh_vertices_length ];
 
-		for i in 0..screen_vertices_len {
+		let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
+		let last_mouse_y_worldspace = -1.0 * ((last_mouse_y as f32 / height_scale) - 1.0);
 
-			let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
-			let last_mouse_y_worldspace = -1.0 * ((last_mouse_y as f32 / height_scale) - 1.0);
+		for i in 0..mesh_vertices_length {
 
 			// Scale and translate
 			screen_vertices[i].x = (
@@ -215,16 +218,16 @@ fn main() -> Result<(), String> {
 
 		canvas.present();
 
-		let timer = sdl_context.timer()?;
-		let frame_end_ms = timer.performance_counter();
-		let tick_frequency = timer.performance_frequency();
-		let delta_ms = frame_end_ms - frame_start_ms;
+		let frame_end_ticks = timer.performance_counter();
 
-		let elapsed = delta_ms as f64 / tick_frequency as f64;
+		let delta_ticks = frame_end_ticks - frame_start_ticks;
 
-		debug_print!("Rendering {} frames per second...", floor(1.0 / elapsed, 2));
+		let frame_frequency = delta_ticks as f64 / tick_frequency as f64;
 
-		// timer.delay(floor(16.666 - delta_ms as f64, 0) as u32);
+		debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
+		// debug_print!("(frame_frequency={}", frame_frequency);
+
+		timer.delay(floor(16.666 - delta_ticks as f64, 0) as u32);
 
 	}
 
