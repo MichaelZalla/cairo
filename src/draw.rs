@@ -34,20 +34,10 @@ pub fn set_pixel(
 
 	let pixel_index = (y * buffer.width + x) as usize;
 
-	if pixel_index >= buffer.pixels.len() {
-		println!("x={}, y={}, buffer.pixels.len()={}, pixel_index={}", x, y, buffer.pixels.len(), pixel_index);
-	}
-
-	// let pixel: *mut u32 = buffer.pixels[pixel_index] as *mut u32;
-
 	let r = (color.r as u32);
 	let g = (color.g as u32).rotate_left(8);
 	let b = (color.b as u32).rotate_left(16);
 	let a = (color.a as u32).rotate_left(24);
-
-	// unsafe {
-	// 	*pixel = r|g|b|a;
-	// }
 
 	buffer.pixels[pixel_index] = r|g|b|a;
 
