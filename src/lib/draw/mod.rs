@@ -126,7 +126,16 @@ pub fn poly(
 	p: &[vec2::Vec2],
 	color: color::Color) -> ()
 {
-	line(buffer, p[0].x as u32, p[0].y as u32, p[1].x as u32, p[1].y as u32, color);
-	line(buffer, p[1].x as u32, p[1].y as u32, p[2].x as u32, p[2].y as u32, color);
-	line(buffer, p[2].x as u32, p[2].y as u32, p[0].x as u32, p[0].y as u32, color);
+
+	for i in 0..p.len() {
+
+		if i == p.len() - 1 {
+			line(buffer, p[i].x as u32, p[i].y as u32, p[0].x as u32, p[0].y as u32, color);
+		}
+		else {
+			line(buffer, p[i].x as u32, p[i].y as u32, p[i+1].x as u32, p[i+1].y as u32, color);
+		}
+
+	}
+
 }
