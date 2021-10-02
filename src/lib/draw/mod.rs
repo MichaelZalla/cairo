@@ -1,8 +1,6 @@
 use core::panic;
 
-extern crate sdl2;
-
-use crate::linear::Vec2;
+use super::vec::vec2;
 
 pub struct PixelBuffer<'p> {
 	pub pixels: &'p mut [u32],
@@ -142,7 +140,7 @@ pub fn line(
 
 pub fn poly(
 	buffer: &mut PixelBuffer,
-	p: &[Vec2],
+	p: &[vec2::Vec2],
 	color: Color) -> ()
 {
 	line(buffer, p[0].x as u32, p[0].y as u32, p[1].x as u32, p[1].y as u32, color);

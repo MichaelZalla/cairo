@@ -7,11 +7,11 @@ use sdl2::keyboard::Keycode;
 
 mod macros;
 
-mod draw;
-use draw::{PixelBuffer, Color};
-
-mod linear;
-use linear::{Vec2, Vec3, Mesh};
+mod lib;
+use lib::draw;
+use lib::mesh::{Mesh};
+use lib::vec::vec2::{Vec2};
+use lib::vec::vec3::{Vec3};
 
 const BYTES_PER_PIXEL: u32 = 4;
 
@@ -226,7 +226,7 @@ fn main() -> Result<(), String> {
             None,
             |bytearray, _| {
 
-				let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
+				let pixel_buffer: &mut draw::PixelBuffer = &mut draw::PixelBuffer{
 					pixels: bytemuck::cast_slice_mut(bytearray),
 					width: screen_width,
 				};
