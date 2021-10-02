@@ -1,6 +1,7 @@
 use core::panic;
 
 use super::vec::vec2;
+use super::color;
 
 pub struct PixelBuffer<'p> {
 	pub pixels: &'p mut [u32],
@@ -8,30 +9,12 @@ pub struct PixelBuffer<'p> {
 	// pub bytes_per_pixel: u32,
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    pub a: u8,
-}
-
-impl Color
-{
-	pub const fn RGB(r: u8, g: u8, b: u8) -> Color {
-		return Color { r, g, b, a: 0xff }
-	}
-	pub const fn RGBA(r: u8, g: u8, b: u8, a: u8) -> Color {
-		return Color { r, g, b, a }
-	}
-}
-
 // #[inline(always)]
 pub fn set_pixel(
 	buffer: &mut PixelBuffer,
 	x: u32,
 	y: u32,
-	color: Color) -> ()
+	color: color::Color) -> ()
 {
 
 	if x > (buffer.width - 1) || y > (buffer.pixels.len() as u32 / buffer.width as u32 - 1) {
@@ -56,7 +39,7 @@ pub fn line(
 	mut y1: u32,
 	mut x2: u32,
 	mut y2: u32,
-	color: Color) -> ()
+	color: color::Color) -> ()
 {
 
 	// y = m*x + b
@@ -141,7 +124,7 @@ pub fn line(
 pub fn poly(
 	buffer: &mut PixelBuffer,
 	p: &[vec2::Vec2],
-	color: Color) -> ()
+	color: color::Color) -> ()
 {
 	line(buffer, p[0].x as u32, p[0].y as u32, p[1].x as u32, p[1].y as u32, color);
 	line(buffer, p[1].x as u32, p[1].y as u32, p[2].x as u32, p[2].y as u32, color);

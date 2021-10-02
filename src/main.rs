@@ -8,6 +8,7 @@ use sdl2::keyboard::Keycode;
 mod macros;
 
 mod lib;
+use lib::color;
 use lib::draw;
 use lib::mesh::{Mesh};
 use lib::vec::vec2::{Vec2};
@@ -233,7 +234,7 @@ fn main() -> Result<(), String> {
 
 				for face in &mesh.f {
 
-					let c = draw::Color::RGB(
+					let c = color::Color::RGB(
 						// 255,255,255
 						(screen_vertices[face.0].x % u8::MAX as f32) as u8,
 						(screen_vertices[face.1].x % u8::MAX as f32) as u8,

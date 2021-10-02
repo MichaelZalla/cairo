@@ -9,7 +9,7 @@ use crossterm::{
 };
 use std::time::Duration;
 
-fn main() -> Result<()> {
+fn example_main() -> Result<()> {
 
 	execute!(
         stdout(),
