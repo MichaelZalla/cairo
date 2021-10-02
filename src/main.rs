@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use math::round::floor;
 
-use sdl2::{event::Event, mouse::MouseWheelDirection};
+use sdl2::{event::Event};
 use sdl2::keyboard::Keycode;
 
 mod macros;
@@ -90,8 +90,6 @@ fn main() -> Result<(), String> {
 	let width_scale = screen_width as f32 / 2.0;
 	let height_scale = screen_height as f32 / 2.0;
 
-	let white = Color::RGB(255, 255, 255);
-
 	let mut last_mouse_x: u32 = 0;
 	let mut last_mouse_y: u32 = 0;
 
@@ -158,18 +156,12 @@ fn main() -> Result<(), String> {
 					}
 				}
 
-				Event::MouseWheel {
-					direction,
-					which,
-					x,
-					y,
-					..
-				} => {
+				Event::MouseWheel { direction, y, .. } => {
 
 					match direction {
 
 						sdl2::mouse::MouseWheelDirection::Normal {} => {
-							world_space_translator.z = world_space_translator.z + (y as f32) / 4.0;
+							world_space_translator.z += (y as f32) / 4.0;
 						}
 
 						_ => {}
@@ -190,8 +182,6 @@ fn main() -> Result<(), String> {
 
 		// Translation of vertices to screen space;
 
-
-
 		let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
 		let last_mouse_y_worldspace = -1.0 * ((last_mouse_y as f32 / height_scale) - 1.0);
 
@@ -201,29 +191,22 @@ fn main() -> Result<(), String> {
 			z: 1.0,
 		};
 
-		// let worldspace_to_screenspace_translator: Vec2 = Vec2 {
-		// 	x: width_scale + last_mouse_x_worldspace,
-		// 	y: height_scale + last_mouse_y_worldspace,
-		// };
-
 		let mut world_vertices: Vec<Vec3> = vec![ Vec3{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertices_length ];
 
 		for i in 0..mesh_vertices_length {
 
 			world_vertices[i] = mesh.v[i].clone();
 
-			world_vertices[i] = world_vertices[i] * world_space_scalar;
+			world_vertices[i] *= world_space_scalar;
 
-			world_vertices[i] = world_vertices[i] + world_space_translator;
-			world_vertices[i] = world_vertices[i] + last_mouse_world_space_translator;
+			world_vertices[i] += world_space_translator;
+			world_vertices[i] += last_mouse_world_space_translator;
 
 		}
 
 		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0 }; mesh_vertices_length ];
 
 		for i in 0..mesh_vertices_length {
-
-			// Scale and translate
 
 			screen_vertices[i].x = (
 				world_vertices[i].x / (world_vertices[i].z) * aspect_ratio_how + 1.0
@@ -233,11 +216,9 @@ fn main() -> Result<(), String> {
 				(-1.0 * world_vertices[i].y) / (world_vertices[i].z) + 1.0
 			) * height_scale;
 
-			// debug_print!("screen_vertices[{}] = ({}, {})", i, screen_vertices[i].x, screen_vertices[i].y);
-
 		}
 
-		canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
+		canvas.set_draw_color(sdl2::pixels::Color::BLACK);
 
 		canvas.clear();
 
@@ -248,7 +229,6 @@ fn main() -> Result<(), String> {
 				let pixel_buffer: &mut PixelBuffer = &mut PixelBuffer{
 					pixels: bytemuck::cast_slice_mut(bytearray),
 					width: screen_width,
-					// bytes_per_pixel: BYTES_PER_PIXEL,
 				};
 
 				for face in &mesh.f {
