@@ -110,7 +110,11 @@ fn main() -> Result<(), String> {
 		z: 0.25,
 	};
 
-	let mut z_rotation_radians = 0.0;
+	let mut rotation_radians = Vec3{
+		x: 0.25,
+		y: 0.25,
+		z: 0.25,
+	};
 
 	'main: loop {
 
@@ -184,8 +188,14 @@ fn main() -> Result<(), String> {
 			}
 		}
 
-		z_rotation_radians += 0.025;
-		z_rotation_radians %= 2.0 * PI;
+		rotation_radians.z += 0.025;
+		rotation_radians.z %= 2.0 * PI;
+
+		rotation_radians.x += 0.0125;
+		rotation_radians.x %= 2.0 * PI;
+
+		rotation_radians.y += 0.00625;
+		rotation_radians.y %= 2.0 * PI;
 
 		// Translation of vertices to screen space;
 
@@ -204,7 +214,9 @@ fn main() -> Result<(), String> {
 
 			world_vertices[i] = mesh.v[i].clone();
 
-			world_vertices[i].rotate_along_z(z_rotation_radians);
+			world_vertices[i].rotate_along_z(rotation_radians.z);
+			world_vertices[i].rotate_along_x(rotation_radians.x);
+			world_vertices[i].rotate_along_y(rotation_radians.y);
 
 			world_vertices[i] *= world_space_scalar;
 

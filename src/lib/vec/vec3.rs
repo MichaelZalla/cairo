@@ -84,4 +84,24 @@ impl Vec3 {
 		self.y = (x * phi.sin()) + (y * phi.cos());
 	}
 
+	pub fn rotate_along_x(&mut self, phi: f32) -> () {
+		// X-axis rotation looks like Z-axis rotation if replace:
+		// - X axis with Y axis
+		// - Y axis with Z axis
+		// - Z axis with X axis
+		let (y, z) = (self.y, self.z);
+		self.y = y * phi.cos() - z * phi.sin();
+		self.z = y * phi.sin() + z * phi.cos();
+	}
+
+	pub fn rotate_along_y(&mut self, phi: f32) -> () {
+		// Y-axis rotation looks like Z-axis rotation if replace:
+		// - X axis with Z axis
+		// - Y axis with X axis
+		// - Zaxis with Y axis
+		let (z, x) = (self.z, self.x);
+		self.z = z * phi.cos() - x * phi.sin();
+		self.x = z * phi.sin() + x * phi.cos();
+	}
+
 }
