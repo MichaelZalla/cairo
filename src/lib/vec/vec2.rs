@@ -112,9 +112,9 @@ impl Vec2 {
 	}
 
 	fn rotate(&mut self, phi: f32) -> () {
-		let (x, y) = (self.x, self.y);
-		self.x = (x * phi.cos()) - (y * phi.sin());
-		self.y = (x * phi.sin()) + (y * phi.cos());
+		let (x, y, phi_cos, phi_sin) = (self.x, self.y, phi.cos(), phi.sin());
+		self.x = x * phi_cos - y * phi_sin;
+		self.y = x * phi_sin + y * phi_cos;
 	}
 
 }
