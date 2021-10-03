@@ -1,5 +1,6 @@
 extern crate sdl2;
 
+use std::f32::consts::{PI};
 use math::round::floor;
 
 use sdl2::{event::Event};
@@ -109,6 +110,8 @@ fn main() -> Result<(), String> {
 		z: 0.25,
 	};
 
+	let mut z_rotation_radians = 0.0;
+
 	'main: loop {
 
 		// Main loop
@@ -181,6 +184,9 @@ fn main() -> Result<(), String> {
 			}
 		}
 
+		z_rotation_radians += 0.025;
+		z_rotation_radians %= 2.0 * PI;
+
 		// Translation of vertices to screen space;
 
 		let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
@@ -198,6 +204,8 @@ fn main() -> Result<(), String> {
 
 			world_vertices[i] = mesh.v[i].clone();
 
+			world_vertices[i].rotate_along_z(z_rotation_radians);
+
 			world_vertices[i] *= world_space_scalar;
 
 			world_vertices[i] += world_space_translator;
@@ -210,18 +218,18 @@ fn main() -> Result<(), String> {
 		for i in 0..mesh_vertices_length {
 
 			screen_vertices[i].x = (
-				world_vertices[i].x / (world_vertices[i].z) * aspect_ratio_how + 1.0
+				world_vertices[i].x / world_vertices[i].z * aspect_ratio_how + 1.0
 			) * width_scale;
 
 			screen_vertices[i].y = (
-				(-1.0 * world_vertices[i].y) / (world_vertices[i].z) + 1.0
+				(-1.0 * world_vertices[i].y) / world_vertices[i].z + 1.0
 			) * height_scale;
 
 		}
 
-		canvas.set_draw_color(sdl2::pixels::Color::BLACK);
+		// canvas.set_draw_color(sdl2::pixels::Color::BLACK);
 
-		canvas.clear();
+		// canvas.clear();
 
 		backbuffer.with_lock(
             None,

@@ -1,5 +1,5 @@
-use std::ops;
 use std::fmt;
+use std::ops;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec2 {
@@ -89,9 +89,26 @@ impl ops::MulAssign<Vec2> for Vec2 {
 
 impl Vec2 {
 
-	// fn dot(&mut self, from_vec: Vec2) -> () {
-	// 	self.x  += from_vec.x;
-	// 	self.y  += from_vec.y;
-	// }
+	fn len(self) -> f32 {
+		return ((self.x.powi(2) + self.y.powi(2)) / 2.0).sqrt();
+	}
+
+	fn dot(self, rhs: Vec2) -> f32 {
+		return self.x * rhs.x + self.y * rhs.y;
+	}
+
+	fn as_normal(self) -> Vec2 {
+		let len = self.len();
+		Vec2{
+			x: self.x / len,
+			y: self.y / len,
+		}
+	}
+
+	fn normalize(&mut self) -> () {
+		let len = self.len();
+		self.x /= len;
+		self.y /= len;
+	}
 
 }
