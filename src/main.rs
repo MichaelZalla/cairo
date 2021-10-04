@@ -26,17 +26,23 @@ fn main() -> Result<(), String> {
 		],
 		f: vec![
 			// front
-			(0,1,3),(0,2,3),
+			(0,1,3),
+			(0,2,3),
 			// top
-			(0,4,5),(0,1,5),
+			(0,4,5),
+			(0,1,5),
 			// bottom
-			(2,6,7),(2,3,7),
+			(2,6,7),
+			(2,3,7),
 			// left
-			(0,4,6),(0,2,6),
+			(0,4,6),
+			(0,2,6),
 			// right
-			(1,5,7),(1,3,7),
+			(1,5,7),
+			(1,3,7),
 			// back
-			(4,5,7),(4,6,7),
+			(4,5,7),
+			(4,6,7),
 		]
 	};
 
@@ -111,9 +117,9 @@ fn main() -> Result<(), String> {
 	};
 
 	let mut rotation_radians = Vec3{
-		x: 0.25,
-		y: 0.25,
-		z: 0.25,
+		x: 0.0,
+		y: 0.0,
+		z: 0.0,
 	};
 
 	'main: loop {
@@ -254,21 +260,29 @@ fn main() -> Result<(), String> {
 
 				for face in &mesh.f {
 
-					let c = color::Color::RGB(
-						// 255,255,255
-						(screen_vertices[face.0].x % u8::MAX as f32) as u8,
-						(screen_vertices[face.1].x % u8::MAX as f32) as u8,
-						(screen_vertices[face.2].x % u8::MAX as f32) as u8,
-					);
+					// let c = color::Color::RGB(
+					// 	(screen_vertices[face.0].x % u8::MAX as f32) as u8,
+					// 	(screen_vertices[face.1].x % u8::MAX as f32) as u8,
+					// 	(screen_vertices[face.2].x % u8::MAX as f32) as u8,
+					// );
 
-					draw::poly(
+					let tri = vec![
+						screen_vertices[face.0],
+						screen_vertices[face.1],
+						screen_vertices[face.2],
+					];
+
+					let tri_slice = tri.as_slice();
+
+					// draw::poly_line(
+					// 	pixel_buffer,
+					// 	tri_slice,
+					// 	color::WHITE);
+
+					draw::triangle_fill(
 						pixel_buffer,
-						vec![
-							screen_vertices[face.0],
-							screen_vertices[face.1],
-							screen_vertices[face.2],
-						].as_slice(),
-						c);
+						tri_slice,
+						color::WHITE);
 
 				}
 

@@ -6,6 +6,9 @@ pub struct Color {
     pub a: u8,
 }
 
+pub static BLACK: Color = Color::RGB(0, 0, 0);
+pub static WHITE: Color = Color::RGB(255, 255, 255);
+
 impl Color
 {
 	pub const fn RGB(r: u8, g: u8, b: u8) -> Color {
