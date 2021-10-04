@@ -258,13 +258,17 @@ fn main() -> Result<(), String> {
 					width: screen_width,
 				};
 
-				for face in &mesh.f {
+				for (index, face) in mesh.f.iter().enumerate() {
 
-					// let c = color::Color::RGB(
-					// 	(screen_vertices[face.0].x % u8::MAX as f32) as u8,
-					// 	(screen_vertices[face.1].x % u8::MAX as f32) as u8,
-					// 	(screen_vertices[face.2].x % u8::MAX as f32) as u8,
-					// );
+					let value = (255.0 * ((index as f32) * 0.0625)) as u8;
+
+					let c = color::Color::RGB(
+						value,
+						value,
+						value,
+					);
+
+					println!("index={}, value={}, c={}", index, value, c);
 
 					let tri = vec![
 						screen_vertices[face.0],
@@ -282,7 +286,9 @@ fn main() -> Result<(), String> {
 					draw::triangle_fill(
 						pixel_buffer,
 						tri_slice,
-						color::WHITE);
+						c
+						// color::WHITE
+					);
 
 				}
 

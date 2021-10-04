@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Color {
     pub r: u8,
@@ -8,6 +10,12 @@ pub struct Color {
 
 pub static BLACK: Color = Color::RGB(0, 0, 0);
 pub static WHITE: Color = Color::RGB(255, 255, 255);
+
+impl fmt::Display for Color {
+    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(v, "(r={}, g={}, b={}, a={})", self.r, self.g, self.b, self.a)
+    }
+}
 
 impl Color
 {
