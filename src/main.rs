@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 extern crate sdl2;
 
 use std::f32::consts::{PI};
@@ -15,35 +18,49 @@ use lib::mesh::{Mesh};
 use lib::vec::vec2::{Vec2};
 use lib::vec::vec3::{Vec3};
 
+use crate::lib::color::{Color, WHITE};
+
 const BYTES_PER_PIXEL: u32 = 4;
 
 fn main() -> Result<(), String> {
 
-	let mesh: &Mesh = &Mesh{
+	let colors: Vec<Color> = vec![
+		Color::RGB(255,255,255),
+		Color::RGB(255,0,0),
+		Color::RGB(0,255,0),
+		Color::RGB(0,0,255),
+		Color::RGB(255,255,0),
+		Color::RGB(0,255,255),
+		Color::RGB(255,0,255),
+		Color::RGB(192,192,192),
+	];
+
+	let mesh: &Mesh = &mut Mesh{
 		v: vec![
 			Vec3{ x: -0.5, y: 0.5, z: -0.5 }, Vec3{ x: 0.5, y: 0.5, z: -0.5 }, Vec3{ x: -0.5, y: -0.5, z: -0.5 }, Vec3{ x: 0.5, y: -0.5, z: -0.5 },
 			Vec3{ x: -0.5, y: 0.5, z:  0.5 }, Vec3{ x: 0.5, y: 0.5, z:  0.5 }, Vec3{ x: -0.5, y: -0.5, z:  0.5 }, Vec3{ x: 0.5, y: -0.5, z:  0.5 },
 		],
 		f: vec![
 			// front
-			(0,1,3),
-			(0,2,3),
+			(1,2,0),
+			(3,2,1),
 			// top
-			(0,4,5),
-			(0,1,5),
+			(5,0,4),
+			(1,0,5),
 			// bottom
-			(2,6,7),
-			(2,3,7),
+			(3,6,2),
+			(7,6,3),
 			// left
-			(0,4,6),
-			(0,2,6),
+			(0,6,4),
+			(2,6,0),
 			// right
-			(1,5,7),
-			(1,3,7),
+			(5,3,1),
+			(7,3,5),
 			// back
-			(4,5,7),
-			(4,6,7),
-		]
+			(7,4,6),
+			(5,4,7),
+		],
+		c: Rc::new(RefCell::new(vec![-0.5; 16])),
 	};
 
 	let mesh_vertices_length = mesh.v.len();
@@ -55,10 +72,10 @@ fn main() -> Result<(), String> {
 	let video_subsys = sdl_context.video()?;
 
 	let window = video_subsys
-		.window("rust-sdl2-pixel", 0, 0)
+		.window("rust-sdl2-pixel", 800, 600)
 		// .opengl()
-		.fullscreen_desktop()
-		.borderless()
+		// .fullscreen_desktop()
+		// .borderless()
 		// .position_centered()
 		.build()
 		.unwrap();
@@ -122,6 +139,8 @@ fn main() -> Result<(), String> {
 		z: 0.0,
 	};
 
+	let mut should_render_wireframe = false;
+
 	'main: loop {
 
 		// Main loop
@@ -164,6 +183,10 @@ fn main() -> Result<(), String> {
 								last_mouse_x += 25;
 							}
 						},
+
+						Keycode::Tab { .. } => {
+							should_render_wireframe = !should_render_wireframe;
+						}
 
 						_ => {}
 
@@ -231,6 +254,25 @@ fn main() -> Result<(), String> {
 
 		}
 
+		// World-space culling
+
+		for (index, face) in mesh.f.iter().enumerate() {
+
+			let (v0, v1, v2) = (
+				world_vertices[face.0],
+				world_vertices[face.1],
+				world_vertices[face.2]
+			);
+
+			// println!("Cross-product: (v1 - v0).cross(v2 - v0) = {}", (v1 - v0).cross(v2 - v0));
+			// println!("Cross-product with dot: (v1 - v0).cross(v2 - v0).dot(v0) = {}", (v1 - v0).cross(v2 - v0).dot(v0));
+
+			mesh.c.borrow_mut()[index] = (v1 - v0).cross(v2 - v0).dot(v0);
+
+		}
+
+		//
+
 		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0 }; mesh_vertices_length ];
 
 		for i in 0..mesh_vertices_length {
@@ -260,15 +302,17 @@ fn main() -> Result<(), String> {
 
 				for (index, face) in mesh.f.iter().enumerate() {
 
-					let value = (255.0 * ((index as f32) * 0.0625)) as u8;
+					// Backface cull
 
-					let c = color::Color::RGB(
-						value,
-						value,
-						value,
-					);
+					if mesh.c.borrow_mut()[index] >= 0.0 {
+						continue;
+					}
 
-					println!("index={}, value={}, c={}", index, value, c);
+					// Rendering
+
+					let c = colors[index / 2];
+
+					// println!("index={}, value={}, c={}", index, value, c);
 
 					let tri = vec![
 						screen_vertices[face.0],
@@ -278,17 +322,21 @@ fn main() -> Result<(), String> {
 
 					let tri_slice = tri.as_slice();
 
-					// draw::poly_line(
-					// 	pixel_buffer,
-					// 	tri_slice,
-					// 	color::WHITE);
-
-					draw::triangle_fill(
-						pixel_buffer,
-						tri_slice,
-						c
-						// color::WHITE
-					);
+					if should_render_wireframe
+					{
+						draw::poly_line(
+							pixel_buffer,
+							tri_slice,
+							color::WHITE);
+					}
+					else
+					{
+						draw::triangle_fill(
+							pixel_buffer,
+							tri_slice,
+							c
+						);
+					}
 
 				}
 
