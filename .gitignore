@@ -1,1 +1,8 @@
-/target
+# data
+data
+
+# build
+target
+
+# scratch
+src/lib/term
