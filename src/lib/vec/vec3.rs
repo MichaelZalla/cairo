@@ -1,3 +1,4 @@
+use std::cmp;
 use std::ops;
 use std::fmt;
 
@@ -11,6 +12,14 @@ pub struct Vec3 {
 impl fmt::Display for Vec3 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(v, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
+impl cmp::PartialEq for Vec3 {
+	fn eq(&self, other: &Self) -> bool {
+        self.x == other.x &&
+        self.y == other.y &&
+        self.z == other.z
     }
 }
 
@@ -37,18 +46,18 @@ impl ops::Sub<Vec3> for Vec3 {
     type Output = Vec3;
     fn sub(self, rhs: Vec3) -> Vec3 {
         Vec3{
-			x: self.x + rhs.x,
-			y: self.y + rhs.y,
-			z: self.z + rhs.z,
+			x: self.x - rhs.x,
+			y: self.y - rhs.y,
+			z: self.z - rhs.z,
 		}
     }
 }
 
 impl ops::SubAssign<Vec3> for Vec3 {
     fn sub_assign(&mut self, rhs: Vec3) {
-		self.x += rhs.x;
-		self.y += rhs.y;
-		self.z += rhs.z;
+		self.x -= rhs.x;
+		self.y -= rhs.y;
+		self.z -= rhs.z;
 	}
 }
 
@@ -59,6 +68,17 @@ impl ops::Mul<Vec3> for Vec3 {
 			x: self.x * rhs.x,
 			y: self.y * rhs.y,
 			z: self.z * rhs.z,
+		}
+    }
+}
+
+impl ops::Mul<f32> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, rhs: f32) -> Vec3 {
+        Vec3{
+			x: self.x * rhs,
+			y: self.y * rhs,
+			z: self.z * rhs,
 		}
     }
 }
@@ -90,21 +110,21 @@ impl Vec3 {
 		};
 	}
 
-	fn as_normal(self) -> Vec3 {
-		let len = self.mag();
+	pub fn as_normal(self) -> Vec3 {
+		let mag = self.mag();
 		Vec3{
-			x: self.x / len,
-			y: self.y / len,
-			z: self.z / len,
+			x: self.x / mag,
+			y: self.y / mag,
+			z: self.z / mag,
 		}
 	}
 
-	fn normalize(&mut self) -> () {
-		let len = self.mag();
-		self.x /= len;
-		self.y /= len;
-		self.z /= len;
-	}
+	// fn normalize(&mut self) -> () {
+	// 	let mag = self.mag();
+	// 	self.x /= mag;
+	// 	self.y /= mag;
+	// 	self.z /= mag;
+	// }
 
 	pub fn rotate_along_z(&mut self, phi: f32) -> () {
 		let (x, y, phi_cos, phi_sin) = (self.x, self.y, phi.cos(), phi.sin());

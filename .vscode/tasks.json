@@ -8,8 +8,12 @@
       "problemMatcher": []
     },
     {
-      "type": "cargo",
-      "command": "build",
+      "type": "shell",
+      "command": "/bin/bash",
+      "args": [
+        "-l",
+        "./.vscode/build.sh"
+      ],
       "problemMatcher": ["$rustc"],
       "group": {
         "kind": "build",
@@ -18,16 +22,16 @@
       "label": "Rust: cargo build"
     },
     {
-      "type": "cargo",
-      "command": "build",
-      "args": ["--release"],
+      "type": "shell",
+      "command": "/opt/homebrew/bin/cargo",
+      "args": ["build", "--release"],
       "problemMatcher": ["$rustc"],
       "label": "Rust: cargo build --release"
     },
     {
-      "type": "cargo",
-      "command": "run",
-      "args": ["--features", "debug_print_feature"],
+      "type": "shell",
+      "command": "/opt/homebrew/bin/cargo",
+      "args": ["run", "--features", "debug_print_feature", "edition2021"],
       "problemMatcher": ["$rustc"],
       "label": "Rust: cargo run"
     }

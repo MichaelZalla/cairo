@@ -1,11 +1,11 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-
 extern crate sdl2;
 
 use std::f32::consts::{PI};
-use math::round::floor;
 
+use math::round::floor;
+use rand::Rng;
+
+// use sdl2::surface;
 use sdl2::{event::Event};
 use sdl2::keyboard::Keycode;
 
@@ -14,56 +14,43 @@ mod macros;
 mod lib;
 use lib::color;
 use lib::draw;
-use lib::mesh::{Mesh};
-use lib::vec::vec2::{Vec2};
-use lib::vec::vec3::{Vec3};
+use lib::mesh::get_mesh_from_obj;
+use lib::vec::vec2::Vec2;
+use lib::vec::vec3::Vec3;
 
-use crate::lib::color::{Color, WHITE};
+use crate::lib::color::Color;
 
 const BYTES_PER_PIXEL: u32 = 4;
 
 fn main() -> Result<(), String> {
 
-	let colors: Vec<Color> = vec![
-		Color::RGB(255,255,255),
-		Color::RGB(255,0,0),
-		Color::RGB(0,255,0),
-		Color::RGB(0,0,255),
-		Color::RGB(255,255,0),
-		Color::RGB(0,255,255),
-		Color::RGB(255,0,255),
-		Color::RGB(192,192,192),
-	];
+	let mut rng = rand::thread_rng();
 
-	let mesh: &Mesh = &mut Mesh{
-		v: vec![
-			Vec3{ x: -0.5, y: 0.5, z: -0.5 }, Vec3{ x: 0.5, y: 0.5, z: -0.5 }, Vec3{ x: -0.5, y: -0.5, z: -0.5 }, Vec3{ x: 0.5, y: -0.5, z: -0.5 },
-			Vec3{ x: -0.5, y: 0.5, z:  0.5 }, Vec3{ x: 0.5, y: 0.5, z:  0.5 }, Vec3{ x: -0.5, y: -0.5, z:  0.5 }, Vec3{ x: 0.5, y: -0.5, z:  0.5 },
-		],
-		f: vec![
-			// front
-			(1,2,0),
-			(3,2,1),
-			// top
-			(5,0,4),
-			(1,0,5),
-			// bottom
-			(3,6,2),
-			(7,6,3),
-			// left
-			(0,6,4),
-			(2,6,0),
-			// right
-			(5,3,1),
-			(7,3,5),
-			// back
-			(7,4,6),
-			(5,4,7),
-		],
-		c: Rc::new(RefCell::new(vec![-0.5; 16])),
-	};
+	let mut root_directory: String = String::new();
+
+	root_directory
+		.insert_str(0, env!("CARGO_MANIFEST_DIR"));
+
+	// let filename = "cow.obj";
+	// let filename = "cube.obj";
+	// let filename = "lamp.obj";
+	// let filename = "voxels.obj";
+	// let filename = "voxels2.obj";
+	// let filename = "teapot.obj";
+	// let filename = "teapot2.obj";
+	let filename = "minicooper.obj";
+	// let filename = "minicooper2.obj";
+	// let filename = "jeffrey.obj";
+	// let filename = "jeffrey2.obj";
+	// let filename = "jeffrey3.obj";
+
+	let obj_file_path = format!("{}{}{}", root_directory, "/data/obj/", filename).to_string();
+
+	let mesh = get_mesh_from_obj(obj_file_path);
 
 	let mesh_vertices_length = mesh.v.len();
+	let mesh_vertex_normals_length = mesh.vn.len();
+	let mesh_face_normals_length = mesh.tn.len();
 
 	let sdl_context = sdl2::init()?;
 
@@ -71,8 +58,12 @@ fn main() -> Result<(), String> {
 
 	let video_subsys = sdl_context.video()?;
 
+	let window_width: u32 = 1200;
+
+	let aspect_ratio = 16.0 / 9.0;
+
 	let window = video_subsys
-		.window("rust-sdl2-pixel", 800, 600)
+		.window("cairo", window_width, (window_width as f32 / aspect_ratio) as u32)
 		// .opengl()
 		// .fullscreen_desktop()
 		// .borderless()
@@ -85,6 +76,7 @@ fn main() -> Result<(), String> {
 	let aspect_ratio_how: f32 = screen_height as f32 / screen_width as f32;
 	let screen_pitch: u32 = screen_width * BYTES_PER_PIXEL;
 	let pixel_buffer_size: usize = (screen_width * screen_height * BYTES_PER_PIXEL) as usize;
+	let z_buffer_size: usize = (screen_width * screen_height) as usize;
 
 	sdl_context.mouse().show_cursor(false);
 
@@ -112,6 +104,13 @@ fn main() -> Result<(), String> {
 
 	backbuffer.set_blend_mode(sdl2::render::BlendMode::None);
 
+
+	let mut z_buffer: Vec<f32> = Vec::with_capacity(z_buffer_size);
+
+	for _ in 0..z_buffer_size {
+		z_buffer.push(f32::MAX);
+	}
+
 	let width_scale = screen_width as f32 / 2.0;
 	let height_scale = screen_height as f32 / 2.0;
 
@@ -119,33 +118,70 @@ fn main() -> Result<(), String> {
 	let mut last_mouse_y: u32 = 0;
 
 	let mut timer = sdl_context.timer()?;
+
 	let tick_frequency = timer.performance_frequency();
 
+	println!("{}", mesh.v[0]);
+
 	let mut world_space_translator = Vec3{
+
+		// teapot2
+		// x: 0.0,
+		// y: -1.0,
+		// z: 3.0,
+
+		// minicooper
 		x: 0.0,
-		y: 0.0,
-		z: 2.0,
+		y: -10.0,
+		z: 60.0,
+
 	};
 
-	let mut world_space_scalar = Vec3{
-		x: 0.25,
-		y: 0.25,
-		z: 0.25,
+	let world_space_scalar = Vec3{
+		x: 0.5,
+		y: 0.5,
+		z: 0.5,
 	};
 
 	let mut rotation_radians = Vec3{
-		x: 0.0,
+
+		// x: 0.0,
+		// y: 0.0,
+		// z: 0.0,
+
+		// minicooper
+		x: PI * -0.5,
 		y: 0.0,
-		z: 0.0,
+		z: PI,
+
 	};
 
 	let mut should_render_wireframe = false;
+	let mut should_render_shader = true;
+	let mut should_render_normals = false;
+	// let mut should_use_right_hand_rule = true;
+
+	let mut _frame_start_ticks: u64 = 0;
+	let mut frame_end_ticks: u64 = 0;
+
+	let mut light_vector: Vec3 = Vec3{ x: 0.0, y: 0.0, z: 1.0 };
+	let mut normalized_light_vector;
 
 	'main: loop {
 
 		// Main loop
 
-		let frame_start_ticks = timer.performance_counter();
+		_frame_start_ticks = timer.performance_counter();
+
+		if frame_end_ticks == 0 {
+			frame_end_ticks = _frame_start_ticks;
+		}
+
+		let tick_delta = _frame_start_ticks - frame_end_ticks;
+
+		let delta_t_seconds = 1.0 / tick_frequency as f32 * tick_delta as f32;
+
+		debug_print!("Slept for {} ticks, {} seconds!", tick_delta, delta_t_seconds);
 
 		// Event polling
 
@@ -163,29 +199,39 @@ fn main() -> Result<(), String> {
 
 						Keycode::Escape { .. } => break 'main,
 
-						Keycode::Up { .. } => {
-							if last_mouse_y >= 25 {
-								last_mouse_y -= 25;
-							}
+						Keycode::Down|Keycode::S { .. } => {
+							world_space_translator.y += 0.1;
 						},
-						Keycode::Down { .. } => {
-							if last_mouse_y < (screen_height - 25) {
-								last_mouse_y += 25;
-							}
+						Keycode::Up|Keycode::W { .. } => {
+							world_space_translator.y -= 0.1;
 						},
-						Keycode::Left { .. } => {
-							if last_mouse_x >= 25 {
-								last_mouse_x -= 25;
-							}
+						Keycode::Right|Keycode::D { .. } => {
+							world_space_translator.x -= 0.1;
 						},
-						Keycode::Right { .. } => {
-							if last_mouse_x < (screen_width - 25) {
-								last_mouse_x += 25;
-							}
+						Keycode::Left|Keycode::A { .. } => {
+							world_space_translator.x += 0.1;
+						},
+						Keycode::Q { .. } => {
+							world_space_translator.z += 0.1;
+						},
+						Keycode::E { .. } => {
+							world_space_translator.z -= 0.1;
 						},
 
-						Keycode::Tab { .. } => {
+						Keycode::H { .. } => {
+							// // should_use_right_hand_rule = !should_use_right_hand_rule;
+						},
+
+						Keycode::Num1 { .. } => {
 							should_render_wireframe = !should_render_wireframe;
+						}
+
+						Keycode::Num2 { .. } => {
+							should_render_shader = !should_render_shader;
+						}
+
+						Keycode::Num3 { .. } => {
+							should_render_normals = !should_render_normals;
 						}
 
 						_ => {}
@@ -217,27 +263,40 @@ fn main() -> Result<(), String> {
 			}
 		}
 
-		rotation_radians.z += 0.025;
-		rotation_radians.z %= 2.0 * PI;
-
-		rotation_radians.x += 0.0125;
-		rotation_radians.x %= 2.0 * PI;
-
-		rotation_radians.y += 0.00625;
-		rotation_radians.y %= 2.0 * PI;
-
 		// Translation of vertices to screen space;
 
-		let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
-		let last_mouse_y_worldspace = -1.0 * ((last_mouse_y as f32 / height_scale) - 1.0);
+		// let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
+		// let last_mouse_y_worldspace = -1.0 * ((last_mouse_y as f32 / height_scale) - 1.0);
 
-		let last_mouse_world_space_translator = Vec3{
-			x: last_mouse_x_worldspace,
-			y: last_mouse_y_worldspace,
-			z: 1.0,
-		};
+		// debug_print!("Last mouse position in worldspace: ({}, {})", last_mouse_x_worldspace, last_mouse_y_worldspace);
+
+		// rotation_radians.z += 0.5 * PI * delta_t_seconds;
+		// rotation_radians.z %= 2.0 * PI;
+
+		// rotation_radians.x += 0.5 * PI * delta_t_seconds;
+		// rotation_radians.x %= 2.0 * PI;
+
+		rotation_radians.y += 0.4 * PI * delta_t_seconds;
+		rotation_radians.y %= 2.0 * PI;
+
+		// rotation_radians.y = -1.0 * (last_mouse_x as f32) / 100.0;
+		// rotation_radians.y %= 2.0 * PI;
+
+		// rotation_radians.x = (last_mouse_y as f32) / 100.0;
+		// rotation_radians.x %= 2.0 * PI;
+
+		light_vector.x = -1.0 * (last_mouse_x as f32) / 20.0;
+		light_vector.y = (last_mouse_y as f32) / 20.0;
+
+		normalized_light_vector = light_vector.as_normal();
 
 		let mut world_vertices: Vec<Vec3> = vec![ Vec3{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertices_length ];
+
+		let mut world_vertex_normals: Vec<Vec3> = vec![];
+
+		if mesh_vertex_normals_length > 0 {
+			world_vertex_normals = vec![ Vec3{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertex_normals_length ];
+		}
 
 		for i in 0..mesh_vertices_length {
 
@@ -250,30 +309,24 @@ fn main() -> Result<(), String> {
 			world_vertices[i] *= world_space_scalar;
 
 			world_vertices[i] += world_space_translator;
-			world_vertices[i] += last_mouse_world_space_translator;
 
 		}
 
-		// World-space culling
+		for i in 0..mesh_vertex_normals_length {
 
-		for (index, face) in mesh.f.iter().enumerate() {
+			world_vertex_normals[i] = mesh.vn[i].clone();
 
-			let (v0, v1, v2) = (
-				world_vertices[face.0],
-				world_vertices[face.1],
-				world_vertices[face.2]
-			);
+			world_vertex_normals[i].rotate_along_z(rotation_radians.z);
+			world_vertex_normals[i].rotate_along_x(rotation_radians.x);
+			world_vertex_normals[i].rotate_along_y(rotation_radians.y);
 
-			// println!("Cross-product: (v1 - v0).cross(v2 - v0) = {}", (v1 - v0).cross(v2 - v0));
-			// println!("Cross-product with dot: (v1 - v0).cross(v2 - v0).dot(v0) = {}", (v1 - v0).cross(v2 - v0).dot(v0));
+			// world_vertex_normals[i] *= world_space_scalar;
 
-			mesh.c.borrow_mut()[index] = (v1 - v0).cross(v2 - v0).dot(v0);
+			// world_vertex_normals[i] += world_space_translator;
 
 		}
 
-		//
-
-		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0 }; mesh_vertices_length ];
+		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertices_length ];
 
 		for i in 0..mesh_vertices_length {
 
@@ -285,11 +338,9 @@ fn main() -> Result<(), String> {
 				(-1.0 * world_vertices[i].y) / world_vertices[i].z + 1.0
 			) * height_scale;
 
+			screen_vertices[i].z = world_vertices[i].z;
+
 		}
-
-		// canvas.set_draw_color(sdl2::pixels::Color::BLACK);
-
-		// canvas.clear();
 
 		backbuffer.with_lock(
             None,
@@ -300,45 +351,212 @@ fn main() -> Result<(), String> {
 					width: screen_width,
 				};
 
-				for (index, face) in mesh.f.iter().enumerate() {
+				if should_render_shader {
 
-					// Backface cull
-
-					if mesh.c.borrow_mut()[index] >= 0.0 {
-						continue;
+					for i in 0..z_buffer_size {
+						z_buffer[i] = f32::MAX;
 					}
 
-					// Rendering
+				}
 
-					let c = colors[index / 2];
+				for (index, face) in mesh.f.iter().enumerate() {
 
-					// println!("index={}, value={}, c={}", index, value, c);
+					// if index > 2500 {
+					// 	continue;
+					// }
 
-					let tri = vec![
+					// Backface culling
+
+					let screen_vertices = vec![
 						screen_vertices[face.0],
 						screen_vertices[face.1],
 						screen_vertices[face.2],
 					];
 
-					let tri_slice = tri.as_slice();
+					let mut world_vertex_normals_for_face: Vec<Vec3> = vec![
+						(world_vertices[face.1] - world_vertices[face.0]).cross(world_vertices[face.2] - world_vertices[face.0]),
+						(world_vertices[face.2] - world_vertices[face.1]).cross(world_vertices[face.0] - world_vertices[face.1]),
+						(world_vertices[face.0] - world_vertices[face.2]).cross(world_vertices[face.1] - world_vertices[face.2]),
+					];
 
-					if should_render_wireframe
-					{
+					if mesh_face_normals_length > 0 || mesh_vertex_normals_length == mesh_vertices_length {
+
+						if mesh_face_normals_length > 0 {
+
+							let face_normal_indices = mesh.tn[index];
+
+							world_vertex_normals_for_face = vec![
+								world_vertex_normals[face_normal_indices.0],
+								world_vertex_normals[face_normal_indices.1],
+								world_vertex_normals[face_normal_indices.2],
+							];
+
+						} else {
+
+							world_vertex_normals_for_face = vec![
+								world_vertex_normals[face.0],
+								world_vertex_normals[face.1],
+								world_vertex_normals[face.2],
+							];
+
+						}
+
+					}
+
+					let normalized_face_normal_vector = world_vertex_normals_for_face[0].as_normal();
+
+					let dot_product = normalized_face_normal_vector.dot(world_vertices[face.0].as_normal());
+
+					if dot_product > 0.0 {
+						continue;
+					}
+
+					if should_render_wireframe {
 						draw::poly_line(
 							pixel_buffer,
-							tri_slice,
+							screen_vertices.as_slice(),
 							color::WHITE);
 					}
-					else
-					{
+
+					if should_render_shader {
+
+						// Calculate luminance
+
+						let min_luminance = 150.0;
+						let max_luminance = 255.0;
+
+						let light_intensity = 1.0;
+
+						let luminance0 = -1.0 * light_intensity * normalized_light_vector.dot(world_vertex_normals_for_face[0].as_normal());
+						let luminance1 = -1.0 * light_intensity * normalized_light_vector.dot(world_vertex_normals_for_face[1].as_normal());
+						let luminance2 = -1.0 * light_intensity * normalized_light_vector.dot(world_vertex_normals_for_face[2].as_normal());
+
+						let luminance_avg = (luminance0 + luminance1 + luminance2) / 3.0;
+
+						let scaled_luminances: f32 = min_luminance + luminance_avg * (max_luminance - min_luminance);
+
+						debug_print!("luminance = {}", luminance);
+
+						let value = scaled_luminances as u8;
+
+						let color = Color::RGB(0, value, (0.5 * scaled_luminances) as u8);
+
 						draw::triangle_fill(
 							pixel_buffer,
-							tri_slice,
-							c
+							z_buffer.as_mut_slice(),
+							screen_width,
+							screen_vertices.as_slice(),
+							color
 						);
+
+					}
+
+					if should_render_normals {
+
+						let world_vertices_for_face = vec![
+							world_vertices[face.0],
+							world_vertices[face.1],
+							world_vertices[face.2],
+						];
+
+						let mut world_vertex_normals_for_face: Vec<Vec3> = vec![
+							(world_vertices[face.1] - world_vertices[face.0]).cross(world_vertices[face.2] - world_vertices[face.0]),
+							(world_vertices[face.2] - world_vertices[face.1]).cross(world_vertices[face.0] - world_vertices[face.1]),
+							(world_vertices[face.0] - world_vertices[face.2]).cross(world_vertices[face.1] - world_vertices[face.2]),
+						];
+
+						if mesh_face_normals_length > 0 || mesh_vertex_normals_length == mesh_vertices_length {
+
+							if mesh_face_normals_length > 0 {
+
+								let face_normal_indices = mesh.tn[index];
+
+								world_vertex_normals_for_face = vec![
+									world_vertex_normals[face_normal_indices.0],
+									world_vertex_normals[face_normal_indices.1],
+									world_vertex_normals[face_normal_indices.2],
+								];
+
+							} else {
+
+								world_vertex_normals_for_face = vec![
+									world_vertex_normals[face.0],
+									world_vertex_normals[face.1],
+									world_vertex_normals[face.2],
+								];
+
+							}
+
+						}
+
+						for i in 0..=2 {
+
+							let world_vertex = world_vertices_for_face[i];
+							let world_vertex_normal = world_vertex_normals_for_face[i].as_normal() * 1.0;
+
+							// println!("world_vertex: {}", world_vertices_for_face[i]);
+							// println!("world_vertex_normal: {}", world_vertex_normals_for_face[i]);
+
+							let world_vertex_relative_normal = world_vertex + world_vertex_normal;
+
+							let screen_vertex_relative_normal = Vec2{
+								x: (
+									world_vertex_relative_normal.x / world_vertex_relative_normal.z * aspect_ratio_how + 1.0
+								) * width_scale,
+								y: (
+									(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
+								) * height_scale,
+								z: 0.0,
+							};
+
+							let from_point = screen_vertices[i];
+
+							let to_point = screen_vertex_relative_normal;
+
+							// assert!(
+							// 	(from_point.x - to_point.x).abs() < 100.0,
+							// 	"Too much space between {} and {}!",
+							// 	from_point,
+							// 	to_point
+							// );
+
+							// draw::set_pixel(
+							// 	pixel_buffer,
+							// 	to_point.x as u32,
+							// 	to_point.y as u32,
+							// 	color::RED);
+
+							draw::line(
+								pixel_buffer,
+							from_point.x as u32,
+							from_point.y as u32,
+							to_point.x as u32,
+							to_point.y as u32,
+							color::RED);
+
+						}
+
 					}
 
 				}
+
+				// let screen_light_vector = Vec3{
+				// 	x: (
+				// 		light_vector.x / light_vector.z * aspect_ratio_how + 1.0
+				// 	) * width_scale,
+				// 	y: (
+				// 		(-1.0 * light_vector.y) / light_vector.z + 1.0
+				// 	) * height_scale,
+				// 	z: 0.0,
+				// };
+
+				// draw::line(
+				// 	pixel_buffer,
+				// 	0,
+				// 	0,
+				// 	screen_light_vector.x as u32,
+				// 	screen_light_vector.y as u32,
+				// 	color::WHITE)
 
 			}
         ).unwrap();
@@ -347,18 +565,26 @@ fn main() -> Result<(), String> {
 
 		canvas.present();
 
-		let frame_end_ticks = timer.performance_counter();
+		frame_end_ticks = timer.performance_counter();
 
-		let delta_ticks = frame_end_ticks - frame_start_ticks;
+		let delta_ticks = frame_end_ticks - _frame_start_ticks;
 
 		let frame_frequency = delta_ticks as f64 / tick_frequency as f64;
 
-		debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
+		let random: u32 = rng.gen();
+		let modulo: u32 = 10;
+
+		if random % modulo == 0 {
+			println!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
+		}
+
+		// debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
 		// debug_print!("(frame_frequency={}", frame_frequency);
 
-		timer.delay(floor(16.666 - delta_ticks as f64, 0) as u32);
+		timer.delay(floor(16.666 - frame_frequency, 0) as u32);
 
 	}
 
 	Ok(())
+
 }

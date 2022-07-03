@@ -5,6 +5,7 @@ use std::ops;
 pub struct Vec2 {
 	pub x: f32,
 	pub y: f32,
+	pub z: f32,
 }
 
 impl fmt::Display for Vec2 {
@@ -19,6 +20,7 @@ impl ops::Add<Vec2> for Vec2 {
         Vec2{
 			x: self.x + rhs.x,
 			y: self.y + rhs.y,
+			z: self.z,
 		}
     }
 }
@@ -36,6 +38,7 @@ impl ops::Sub<Vec2> for Vec2 {
         Vec2{
 			x: self.x - rhs.x,
 			y: self.y - rhs.y,
+			z: self.z,
 		}
     }
 }
@@ -46,6 +49,7 @@ impl ops::Mul<f32> for Vec2 {
         Vec2{
 			x: self.x * rhs,
 			y: self.y * rhs,
+			z: self.z,
 		}
     }
 }
@@ -56,6 +60,7 @@ impl ops::Mul<Vec2> for Vec2 {
         Vec2{
 			x: self.x * rhs.x,
 			y: self.y * rhs.y,
+			z: self.z,
 		}
     }
 }
@@ -86,35 +91,3 @@ impl ops::MulAssign<Vec2> for Vec2 {
 // 		}
 //     }
 // }
-
-impl Vec2 {
-
-	fn len(self) -> f32 {
-		return ((self.x.powi(2) + self.y.powi(2)) / 2.0).sqrt();
-	}
-
-	fn dot(self, rhs: Vec2) -> f32 {
-		return self.x * rhs.x + self.y * rhs.y;
-	}
-
-	fn as_normal(self) -> Vec2 {
-		let len = self.len();
-		Vec2{
-			x: self.x / len,
-			y: self.y / len,
-		}
-	}
-
-	fn normalize(&mut self) -> () {
-		let len = self.len();
-		self.x /= len;
-		self.y /= len;
-	}
-
-	fn rotate(&mut self, phi: f32) -> () {
-		let (x, y, phi_cos, phi_sin) = (self.x, self.y, phi.cos(), phi.sin());
-		self.x = x * phi_cos - y * phi_sin;
-		self.y = x * phi_sin + y * phi_cos;
-	}
-
-}
