@@ -38,11 +38,13 @@ fn main() -> Result<(), String> {
 	// let filename = "voxels2.obj";
 	// let filename = "teapot.obj";
 	// let filename = "teapot2.obj";
-	let filename = "minicooper.obj";
-	// let filename = "minicooper2.obj";
+	// let filename = "minicooper.obj";
+	let filename = "minicooper2.obj";
 	// let filename = "jeffrey.obj";
 	// let filename = "jeffrey2.obj";
 	// let filename = "jeffrey3.obj";
+	// let filename = "globe2.obj";
+	// let filename = "pubes.obj";
 
 	let obj_file_path = format!("{}{}{}", root_directory, "/data/obj/", filename).to_string();
 
@@ -104,7 +106,6 @@ fn main() -> Result<(), String> {
 
 	backbuffer.set_blend_mode(sdl2::render::BlendMode::None);
 
-
 	let mut z_buffer: Vec<f32> = Vec::with_capacity(z_buffer_size);
 
 	for _ in 0..z_buffer_size {
@@ -125,15 +126,15 @@ fn main() -> Result<(), String> {
 
 	let mut world_space_translator = Vec3{
 
-		// teapot2
-		// x: 0.0,
-		// y: -1.0,
-		// z: 3.0,
+		// default
+		x: 0.0,
+		y: -1.0,
+		z: 10.0,
 
 		// minicooper
-		x: 0.0,
-		y: -10.0,
-		z: 60.0,
+		// x: 0.0,
+		// y: -10.0,
+		// z: 60.0,
 
 	};
 
@@ -145,14 +146,15 @@ fn main() -> Result<(), String> {
 
 	let mut rotation_radians = Vec3{
 
-		// x: 0.0,
-		// y: 0.0,
-		// z: 0.0,
+		// default
+		x: 0.0,
+		y: 0.0,
+		z: 0.0,
 
 		// minicooper
-		x: PI * -0.5,
-		y: 0.0,
-		z: PI,
+		// x: PI * -0.5,
+		// y: 0.0,
+		// z: PI,
 
 	};
 
@@ -263,6 +265,29 @@ fn main() -> Result<(), String> {
 			}
 		}
 
+		// Indexes triangle list
+
+		// 0. Split vertices and indices
+		// 1a. Vertex stream -> Vertex transformer
+		// 1b. Index stream
+		// 2. Triangle assembler (vertices + indices -> Triangle[])
+		//  - Backface culling
+		// 3. World-space-to-screen-space transformer
+		// 4. Triange rasterizer
+		// 5. Pixel shader
+		// 6. PutPixel
+
+		// Scene::Update(keyboardState, mouseState, deltaT)
+
+		// pub struct Triangle<T = Vec3> {
+		// 	pub v0: T,
+		// 	pub v1: T,
+		// 	pub v2: T,
+		// }
+
+		// Interpolate entire Vertex (all attributes) when drawing (scanline
+		// interpolant)
+
 		// Translation of vertices to screen space;
 
 		// let last_mouse_x_worldspace = (last_mouse_x as f32 / width_scale) - 1.0;
@@ -270,13 +295,13 @@ fn main() -> Result<(), String> {
 
 		// debug_print!("Last mouse position in worldspace: ({}, {})", last_mouse_x_worldspace, last_mouse_y_worldspace);
 
-		// rotation_radians.z += 0.5 * PI * delta_t_seconds;
-		// rotation_radians.z %= 2.0 * PI;
+		rotation_radians.z += 0.25 * PI * delta_t_seconds;
+		rotation_radians.z %= 2.0 * PI;
 
-		// rotation_radians.x += 0.5 * PI * delta_t_seconds;
-		// rotation_radians.x %= 2.0 * PI;
+		rotation_radians.x += 0.25 * PI * delta_t_seconds;
+		rotation_radians.x %= 2.0 * PI;
 
-		rotation_radians.y += 0.4 * PI * delta_t_seconds;
+		rotation_radians.y += 0.25 * PI * delta_t_seconds;
 		rotation_radians.y %= 2.0 * PI;
 
 		// rotation_radians.y = -1.0 * (last_mouse_x as f32) / 100.0;
@@ -433,13 +458,16 @@ fn main() -> Result<(), String> {
 
 						let luminance_avg = (luminance0 + luminance1 + luminance2) / 3.0;
 
-						let scaled_luminances: f32 = min_luminance + luminance_avg * (max_luminance - min_luminance);
+						let scaled_luminance: f32 = min_luminance + luminance_avg * (max_luminance - min_luminance);
 
 						debug_print!("luminance = {}", luminance);
 
-						let value = scaled_luminances as u8;
-
-						let color = Color::RGB(0, value, (0.5 * scaled_luminances) as u8);
+						let color = Color::RGB(
+							scaled_luminance as u8,
+							scaled_luminance as u8,
+							scaled_luminance as u8
+							// (0.5 * scaled_luminances) as u8
+						);
 
 						draw::triangle_fill(
 							pixel_buffer,
@@ -492,7 +520,7 @@ fn main() -> Result<(), String> {
 						for i in 0..=2 {
 
 							let world_vertex = world_vertices_for_face[i];
-							let world_vertex_normal = world_vertex_normals_for_face[i].as_normal() * 1.0;
+							let world_vertex_normal = world_vertex_normals_for_face[i].as_normal() * 0.025;
 
 							// println!("world_vertex: {}", world_vertices_for_face[i]);
 							// println!("world_vertex_normal: {}", world_vertex_normals_for_face[i]);

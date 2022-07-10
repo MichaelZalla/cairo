@@ -21,6 +21,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c53dfa917ec274df8ed3c572698f381a24eef2efba9492d797301b72b6db408a"
 
 [[package]]
+name = "cairo"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "crossterm",
+ "libmath",
+ "once_cell",
+ "rand 0.8.5",
+ "sdl2",
+]
+
+[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -275,18 +287,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62f25bc4c7e55e0b0b7a1d43fb893f4fa1361d0abe38b9ce4f323c2adfe6ef42"
 dependencies = [
  "bitflags",
-]
-
-[[package]]
-name = "rust-sdl2-pixel"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "crossterm",
- "libmath",
- "once_cell",
- "rand 0.8.5",
- "sdl2",
 ]
 
 [[package]]
