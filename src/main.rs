@@ -292,12 +292,12 @@ fn main() -> Result<(), String> {
 
 		normalized_light_vector = light_vector.as_normal();
 
-		let mut world_vertices: Vec<Vec3> = vec![ Vec3{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertices_length ];
+		let mut world_vertices: Vec<Vec3> = vec![ Vec3::new(); mesh_vertices_length ];
 
 		let mut world_vertex_normals: Vec<Vec3> = vec![];
 
 		if mesh_vertex_normals_length > 0 {
-			world_vertex_normals = vec![ Vec3{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertex_normals_length ];
+			world_vertex_normals = vec![ Vec3::new(); mesh_vertex_normals_length ];
 		}
 
 		for i in 0..mesh_vertices_length {
@@ -322,13 +322,9 @@ fn main() -> Result<(), String> {
 			world_vertex_normals[i].rotate_along_x(rotation_radians.x);
 			world_vertex_normals[i].rotate_along_y(rotation_radians.y);
 
-			// world_vertex_normals[i] *= world_space_scalar;
-
-			// world_vertex_normals[i] += world_space_translator;
-
 		}
 
-		let mut screen_vertices: Vec<Vec2> = vec![ Vec2{ x: 0.0, y: 0.0, z: 0.0 }; mesh_vertices_length ];
+		let mut screen_vertices: Vec<Vec2> = vec![ Vec2::new(); mesh_vertices_length ];
 
 		for i in 0..mesh_vertices_length {
 

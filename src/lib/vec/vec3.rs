@@ -2,7 +2,7 @@ use std::cmp;
 use std::ops;
 use std::fmt;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
 	pub x: f32,
 	pub y: f32,
@@ -13,6 +13,12 @@ impl fmt::Display for Vec3 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(v, "({}, {}, {})", self.x, self.y, self.z)
     }
+}
+
+impl Vec3 {
+	pub fn new() -> Self {
+		Default::default()
+	}
 }
 
 impl cmp::PartialEq for Vec3 {

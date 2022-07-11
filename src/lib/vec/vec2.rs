@@ -1,11 +1,17 @@
 use std::fmt;
 use std::ops;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Vec2 {
 	pub x: f32,
 	pub y: f32,
 	pub z: f32,
+}
+
+impl Vec2 {
+	pub fn new() -> Self {
+		Default::default()
+	}
 }
 
 impl fmt::Display for Vec2 {
