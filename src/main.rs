@@ -22,6 +22,14 @@ use crate::lib::vec::vec3::Vec3;
 
 use crate::lib::color::Color;
 
+fn get_absolute_filepath(
+	filepath: &str) -> String
+{
+	let root_directory: String = String::from(env!("CARGO_MANIFEST_DIR"));
+
+	return format!("{}{}", root_directory, filepath).to_string();
+}
+
 fn main() -> Result<(), String> {
 
 	let aspect_ratio = 16.0 / 9.0;
@@ -54,28 +62,22 @@ fn main() -> Result<(), String> {
 
 	let mut rng = rand::thread_rng();
 
-	let mut root_directory: String = String::new();
+	// let filepath = "/data/obj/cow.obj";
+	// let filepath = "/data/obj/cube.obj";
+	// let filepath = "/data/obj/lamp.obj";
+	// let filepath = "/data/obj/voxels.obj";
+	// let filepath = "/data/obj/voxels2.obj";
+	// let filepath = "/data/obj/teapot.obj";
+	let filepath = "/data/obj/teapot2.obj";
+	// let filepath = "/data/obj/minicooper.obj";
+	// let filepath = "/data/obj/minicooper2.obj";
+	// let filepath = "/data/obj/jeffrey.obj";
+	// let filepath = "/data/obj/jeffrey2.obj";
+	// let filepath = "/data/obj/jeffrey3.obj";
+	// let filepath = "/data/obj/globe2.obj";
+	// let filepath = "/data/obj/pubes.obj";
 
-	root_directory.insert_str(0, env!("CARGO_MANIFEST_DIR"));
-
-	// let filename = "cow.obj";
-	// let filename = "cube.obj";
-	// let filename = "lamp.obj";
-	// let filename = "voxels.obj";
-	// let filename = "voxels2.obj";
-	// let filename = "teapot.obj";
-	// let filename = "teapot2.obj";
-	// let filename = "minicooper.obj";
-	let filename = "minicooper2.obj";
-	// let filename = "jeffrey.obj";
-	// let filename = "jeffrey2.obj";
-	// let filename = "jeffrey3.obj";
-	// let filename = "globe2.obj";
-	// let filename = "pubes.obj";
-
-	let obj_file_path = format!("{}{}{}", root_directory, "/data/obj/", filename).to_string();
-
-	let mesh = get_mesh_from_obj(obj_file_path);
+	let mesh = get_mesh_from_obj(get_absolute_filepath(filepath));
 
 	let mesh_vertices_length = mesh.v.len();
 	let mesh_vertex_normals_length = mesh.vn.len();
