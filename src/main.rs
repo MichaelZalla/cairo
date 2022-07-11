@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
 	let screen_width = window_width;
 	let screen_height = window_height;
 
-	let aspect_ratio_how: f32 = 1.0 / aspect_ratio;
+	let height_over_width: f32 = 1.0 / aspect_ratio;
 
 	let z_buffer_size: usize = (screen_width * screen_height) as usize;
 
@@ -329,7 +329,7 @@ fn main() -> Result<(), String> {
 		for i in 0..mesh_vertices_length {
 
 			screen_vertices[i].x = (
-				world_vertices[i].x / world_vertices[i].z * aspect_ratio_how + 1.0
+				world_vertices[i].x / world_vertices[i].z * height_over_width + 1.0
 			) * width_scale;
 
 			screen_vertices[i].y = (
@@ -502,7 +502,7 @@ fn main() -> Result<(), String> {
 
 							let screen_vertex_relative_normal = Vec2{
 								x: (
-									world_vertex_relative_normal.x / world_vertex_relative_normal.z * aspect_ratio_how + 1.0
+									world_vertex_relative_normal.x / world_vertex_relative_normal.z * height_over_width + 1.0
 								) * width_scale,
 								y: (
 									(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
