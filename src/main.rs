@@ -104,17 +104,9 @@ fn main() -> Result<(), String> {
 	println!("{}", mesh.v[0]);
 
 	let mut world_space_translator = Vec3{
-
-		// default
 		x: 0.0,
 		y: -1.0,
 		z: 10.0,
-
-		// minicooper
-		// x: 0.0,
-		// y: -10.0,
-		// z: 60.0,
-
 	};
 
 	let world_space_scalar = Vec3{
@@ -124,17 +116,9 @@ fn main() -> Result<(), String> {
 	};
 
 	let mut rotation_radians = Vec3{
-
-		// default
 		x: 0.0,
 		y: 0.0,
 		z: 0.0,
-
-		// minicooper
-		// x: PI * -0.5,
-		// y: 0.0,
-		// z: PI,
-
 	};
 
 	let mut should_render_wireframe = false;
