@@ -64,7 +64,7 @@ fn main() -> Result<(), String> {
 	// let filepath = "/data/obj/cube.obj";
 	// let filepath = "/data/obj/lamp.obj";
 	// let filepath = "/data/obj/voxels.obj";
-	let filepath = "/data/obj/voxels2.obj";
+	// let filepath = "/data/obj/voxels2.obj";
 	// let filepath = "/data/obj/teapot.obj";
 	// let filepath = "/data/obj/teapot2.obj";
 	// let filepath = "/data/obj/minicooper.obj";
@@ -75,12 +75,18 @@ fn main() -> Result<(), String> {
 	// let filepath = "/data/obj/globe2.obj";
 	// let filepath = "/data/obj/pubes.obj";
 
-	let mesh_filepath = get_absolute_filepath(filepath);
-
-	let mut mesh_scene = MeshScene::new(
-		screen_width,
-		screen_height,
-		mesh_filepath);
+	let mut scenes: Vec<MeshScene> = vec![
+		MeshScene::new(
+			screen_width,
+			screen_height,
+			get_absolute_filepath("/data/obj/voxels2.obj")
+		),
+		// MeshScene::new(
+		// 	screen_width,
+		// 	screen_height,
+		// 	get_absolute_filepath("/data/obj/minicooper2.obj")
+		// )
+	];
 
 	let tick_frequency = app.timer.performance_frequency();
 
@@ -154,7 +160,9 @@ fn main() -> Result<(), String> {
 
 		// 1b. Scene update (rotation, velocity, etc)
 
-		mesh_scene.update(keyboard_state, mouse_state, delta_t_seconds);
+		for scene in scenes.as_mut_slice() {
+			scene.update(&keyboard_state, &mouse_state, delta_t_seconds);
+		}
 
 		// Indexes triangle list
 
@@ -190,7 +198,9 @@ fn main() -> Result<(), String> {
 					width: screen_width,
 				};
 
-				mesh_scene.render(&mut pixel_buffer);
+				for scene in scenes.as_mut_slice() {
+					scene.render(&mut pixel_buffer);
+				}
 
 			}
         ).unwrap();
