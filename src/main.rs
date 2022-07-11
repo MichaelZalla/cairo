@@ -24,6 +24,34 @@ use crate::lib::color::Color;
 
 fn main() -> Result<(), String> {
 
+	let aspect_ratio = 16.0 / 9.0;
+
+	let window_width: u32 = 1200;
+	let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
+
+	let mut app = get_application_context(
+		"Cairo (v0.1.0)",
+		window_width,
+		window_height,
+		false,
+		false
+	).unwrap();
+
+	let screen_width = app.window.size().0;
+	let screen_height = app.window.size().1;
+
+	let mut graphics = get_application_rendering_context(
+		app.window
+	).unwrap();
+
+	let texture_creator = graphics.canvas.texture_creator();
+
+	let mut backbuffer = get_backbuffer(
+		&graphics,
+		&texture_creator,
+		BlendMode::None
+	).unwrap();
+
 	let mut rng = rand::thread_rng();
 
 	let mut root_directory: String = String::new();
@@ -52,34 +80,6 @@ fn main() -> Result<(), String> {
 	let mesh_vertices_length = mesh.v.len();
 	let mesh_vertex_normals_length = mesh.vn.len();
 	let mesh_face_normals_length = mesh.tn.len();
-
-	let aspect_ratio = 16.0 / 9.0;
-
-	let window_width: u32 = 1200;
-	let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
-
-	let mut app = get_application_context(
-		"Cairo (v0.1.0)",
-		window_width,
-		window_height,
-		false,
-		false
-	).unwrap();
-
-	let screen_width = app.window.size().0;
-	let screen_height = app.window.size().1;
-
-	let mut graphics = get_application_rendering_context(
-		app.window
-	).unwrap();
-
-	let texture_creator = graphics.canvas.texture_creator();
-
-	let mut backbuffer = get_backbuffer(
-		&graphics,
-		&texture_creator,
-		BlendMode::None
-	).unwrap();
 
 	let height_over_width: f32 = 1.0 / aspect_ratio;
 
