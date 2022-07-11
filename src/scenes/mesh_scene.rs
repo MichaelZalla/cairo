@@ -81,9 +81,9 @@ impl MeshScene {
 impl Scene for MeshScene {
 
 	// fn update(&mut self, keyboard_state: KeyboardState, mouse_state: MouseState, delta_t_seconds: f32) -> () {
-	fn update(&mut self, keyboard_state: KeyboardState, mouse_state: MouseState, delta_t_seconds: f32) -> () {
+	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
 
-		for keycode in keyboard_state.keys_pressed {
+		for keycode in &keyboard_state.keys_pressed {
 			match keycode {
 				Keycode::Down|Keycode::S { .. } => {
 					self.world_space_translator.y += 0.1;
