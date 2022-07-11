@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use sdl2::keyboard::Keycode;
 
-use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj}, device::{KeyboardState, MouseState}, graphics::Graphics, draw}, debug_print};
+use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj}, device::{KeyboardState, MouseState}, graphics::Graphics}, debug_print};
 
 pub struct MeshScene {
 	graphics: Graphics,
@@ -201,8 +201,7 @@ impl MeshScene {
 			}
 
 			if self.should_render_wireframe {
-				draw::poly_line(
-					&mut self.graphics.buffer,
+				self.graphics.poly_line(
 					screen_vertices.as_slice(),
 					color::WHITE);
 			}
@@ -235,8 +234,7 @@ impl MeshScene {
 
 				let z_buffer_width = self.graphics.buffer.width;
 
-				draw::triangle_fill(
-					&mut self.graphics.buffer,
+				self.graphics.triangle_fill(
 					self.z_buffer.as_mut_slice(),
 					z_buffer_width,
 					screen_vertices.as_slice(),
@@ -314,15 +312,13 @@ impl MeshScene {
 					// 	to_point
 					// );
 
-					// draw::set_pixel(
-					// 	self.graphics.buffer,
+					// self.graphics.set_pixel(
 					// 	to_point.x as u32,
 					// 	to_point.y as u32,
 					// 	color::RED);
 
-					draw::line(
-						&mut self.graphics.buffer,
-					from_point.x as u32,
+					self.graphics.line(
+						from_point.x as u32,
 					from_point.y as u32,
 					to_point.x as u32,
 					to_point.y as u32,
@@ -344,8 +340,7 @@ impl MeshScene {
 		// 	z: 0.0,
 		// };
 
-		// draw::line(
-		// 	pixel_buffer,
+		// self.graphics.line(
 		// 	0,
 		// 	0,
 		// 	screen_light_vector.x as u32,

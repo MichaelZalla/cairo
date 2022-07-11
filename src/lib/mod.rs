@@ -1,6 +1,5 @@
 pub mod color;
 pub mod context;
-pub mod draw;
 pub mod graphics;
 pub mod device;
 pub mod mesh;
