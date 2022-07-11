@@ -2,11 +2,10 @@ use std::f32::consts::PI;
 
 use sdl2::keyboard::Keycode;
 
-use crate::{lib::{scene::Scene, draw::{self, PixelBuffer}, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj}, device::{KeyboardState, MouseState}}, debug_print};
+use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj}, device::{KeyboardState, MouseState}, graphics::Graphics, draw}, debug_print};
 
 pub struct MeshScene {
-	screen_width: u32,
-	screen_height: u32,
+	graphics: Graphics,
 	width_scale: f32,
 	height_scale: f32,
 	mesh: Mesh,
@@ -21,14 +20,13 @@ pub struct MeshScene {
 	should_render_shader: bool,
 	should_render_normals: bool,
 }
-
 impl MeshScene {
 
-	pub fn new(screen_width: u32, screen_height: u32, filepath: String) -> Self {
+	pub fn new(graphics: Graphics, filepath: String) -> Self {
 
 		let mesh = get_mesh_from_obj(filepath);
 
-		let z_buffer_size: usize = (screen_width * screen_height) as usize;
+		let z_buffer_size: usize = (graphics.buffer.width * graphics.buffer.height) as usize;
 
 		let mut z_buffer: Vec<f32> = Vec::with_capacity(z_buffer_size);
 
@@ -36,11 +34,13 @@ impl MeshScene {
 			z_buffer.push(f32::MAX);
 		}
 
+		let width_scale = graphics.buffer.width as f32 / 2.0;
+		let height_scale = graphics.buffer.height as f32 / 2.0;
+
 		return MeshScene{
-			screen_width: screen_width,
-			screen_height: screen_height,
-			width_scale: screen_width as f32 / 2.0,
-			height_scale: screen_height as f32 / 2.0,
+			graphics: graphics,
+			width_scale: width_scale,
+			height_scale: height_scale,
 			mesh: mesh,
 			world_space_translator: Vec3{
 				x: 0.0,
@@ -76,16 +76,13 @@ impl MeshScene {
 
 	}
 
-	fn process_vertices(&mut self, pixel_buffer: &mut PixelBuffer) -> () {
+	fn process_vertices(&mut self) -> () {
 
 		let mesh = &self.mesh;
 
 		let mesh_vertices_length = mesh.v.len();
 		let mesh_vertex_normals_length = mesh.vn.len();
 		let mesh_face_normals_length = mesh.tn.len();
-
-		let aspect_ratio = (self.screen_width as f32) / (self.screen_height as f32);
-		let height_over_width: f32 = 1.0 / aspect_ratio;
 
 		// 1. Reset our Z-buffer
 
@@ -138,7 +135,7 @@ impl MeshScene {
 		for i in 0..mesh_vertices_length {
 
 			screen_vertices[i].x = (
-				world_vertices[i].x / world_vertices[i].z * height_over_width + 1.0
+				world_vertices[i].x / world_vertices[i].z * self.graphics.buffer.height_over_width + 1.0
 			) * self.width_scale;
 
 			screen_vertices[i].y = (
@@ -205,7 +202,7 @@ impl MeshScene {
 
 			if self.should_render_wireframe {
 				draw::poly_line(
-					pixel_buffer,
+					&mut self.graphics.buffer,
 					screen_vertices.as_slice(),
 					color::WHITE);
 			}
@@ -236,10 +233,12 @@ impl MeshScene {
 					// (0.5 * scaled_luminances) as u8
 				);
 
+				let z_buffer_width = self.graphics.buffer.width;
+
 				draw::triangle_fill(
-					pixel_buffer,
+					&mut self.graphics.buffer,
 					self.z_buffer.as_mut_slice(),
-					self.screen_width,
+					z_buffer_width,
 					screen_vertices.as_slice(),
 					color
 				);
@@ -296,7 +295,7 @@ impl MeshScene {
 
 					let screen_vertex_relative_normal = Vec2{
 						x: (
-							world_vertex_relative_normal.x / world_vertex_relative_normal.z * height_over_width + 1.0
+							world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.graphics.buffer.height_over_width + 1.0
 						) * self.width_scale,
 						y: (
 							(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
@@ -316,13 +315,13 @@ impl MeshScene {
 					// );
 
 					// draw::set_pixel(
-					// 	pixel_buffer,
+					// 	self.graphics.buffer,
 					// 	to_point.x as u32,
 					// 	to_point.y as u32,
 					// 	color::RED);
 
 					draw::line(
-						pixel_buffer,
+						&mut self.graphics.buffer,
 					from_point.x as u32,
 					from_point.y as u32,
 					to_point.x as u32,
@@ -359,7 +358,6 @@ impl MeshScene {
 
 impl Scene for MeshScene {
 
-	// fn update(&mut self, keyboard_state: KeyboardState, mouse_state: MouseState, delta_t_seconds: f32) -> () {
 	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
 
 		for keycode in &keyboard_state.keys_pressed {
@@ -420,10 +418,16 @@ impl Scene for MeshScene {
 
 	}
 
-	fn render(&mut self, pixel_buffer: &mut PixelBuffer) -> () {
+	fn render(&mut self) -> () {
 
-		self.process_vertices(pixel_buffer);
+		self.graphics.buffer.clear();
 
+		self.process_vertices();
+
+	}
+
+	fn get_pixel_data(&self) -> &Vec<u32> {
+		return self.graphics.get_pixel_data();
 	}
 
 }

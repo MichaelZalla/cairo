@@ -14,8 +14,7 @@ mod macros;
 mod lib;
 use crate::lib::context::{get_application_context, get_application_rendering_context, get_backbuffer};
 use crate::lib::device::{KeyboardState, MouseState};
-use crate::lib::draw::PixelBuffer;
-use crate::lib::graphics::Graphics;
+use crate::lib::graphics::{Graphics, PixelBuffer};
 
 mod scenes;
 use crate::lib::scene::Scene;
@@ -52,12 +51,20 @@ fn main() -> Result<(), String> {
 
 	let texture_creator = app_rendering_context.canvas.texture_creator();
 
-	let mut graphics = Graphics{
-		texture: get_backbuffer(
-			&app_rendering_context,
-			&texture_creator,
-			BlendMode::None,
-		).unwrap(),
+	let mut backbuffer =  get_backbuffer(
+		&app_rendering_context,
+		&texture_creator,
+		BlendMode::None,
+	).unwrap();
+
+	let graphics = Graphics{
+		buffer: PixelBuffer{
+			width: screen_width,
+			height: screen_height,
+			width_over_height: aspect_ratio,
+			height_over_width: 1.0 / aspect_ratio,
+			pixels: vec![0 as u32; (screen_width * screen_height) as usize],
+		},
 	};
 
 	// let filepath = "/data/obj/cow.obj";
@@ -77,13 +84,11 @@ fn main() -> Result<(), String> {
 
 	let mut scenes: Vec<MeshScene> = vec![
 		MeshScene::new(
-			screen_width,
-			screen_height,
+			graphics.clone(),
 			get_absolute_filepath("/data/obj/voxels2.obj")
 		),
 		// MeshScene::new(
-		// 	screen_width,
-		// 	screen_height,
+		// 	graphics.clone(),
 		// 	get_absolute_filepath("/data/obj/minicooper2.obj")
 		// )
 	];
@@ -187,19 +192,25 @@ fn main() -> Result<(), String> {
 		// Interpolate entire Vertex (all attributes) when drawing (scanline
 		// interpolant)
 
-		graphics.texture.with_lock(
+		backbuffer.with_lock(
             None,
             |write_only_byte_array, _pitch| {
 
-				let pixels: &mut [u32] = bytemuck::cast_slice_mut(write_only_byte_array);
-
-				let mut pixel_buffer = PixelBuffer{
-					pixels: pixels,
-					width: screen_width,
-				};
-
 				for scene in scenes.as_mut_slice() {
-					scene.render(&mut pixel_buffer);
+
+					scene.render();
+
+					let pixels_as_u8_slice: &[u8] = bytemuck::cast_slice(
+						&scene.get_pixel_data(),
+					);
+
+					let mut index = 0;
+
+					while index < pixels_as_u8_slice.len() {
+						write_only_byte_array[index] = pixels_as_u8_slice[index];
+						index += 1;
+					}
+
 				}
 
 			}
@@ -207,7 +218,7 @@ fn main() -> Result<(), String> {
 
 		// Page-flip
 
-		app_rendering_context.canvas.copy(&graphics.texture, None, None).unwrap();
+		app_rendering_context.canvas.copy(&backbuffer, None, None).unwrap();
 
 		app_rendering_context.canvas.present();
 

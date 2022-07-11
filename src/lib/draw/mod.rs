@@ -2,11 +2,7 @@
 
 use super::vec::vec2;
 use super::color;
-
-pub struct PixelBuffer<'p> {
-	pub pixels: &'p mut [u32],
-	pub width: u32,
-}
+use super::graphics::PixelBuffer;
 
 #[inline(always)]
 pub fn set_pixel(
