@@ -325,10 +325,10 @@ fn main() -> Result<(), String> {
 
 		backbuffer.with_lock(
             None,
-            |bytearray, _| {
+            |write_only_byte_array, _pitch| {
 
 				let pixel_buffer: &mut draw::PixelBuffer = &mut draw::PixelBuffer{
-					pixels: bytemuck::cast_slice_mut(bytearray),
+					pixels: bytemuck::cast_slice_mut(write_only_byte_array),
 					width: screen_width,
 				};
 
