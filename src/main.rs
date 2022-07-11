@@ -66,6 +66,9 @@ fn main() -> Result<(), String> {
 		false
 	).unwrap();
 
+	let screen_width = app.window.size().0;
+	let screen_height = app.window.size().1;
+
 	let mut graphics = get_application_rendering_context(
 		app.window
 	).unwrap();
@@ -77,9 +80,6 @@ fn main() -> Result<(), String> {
 		&texture_creator,
 		BlendMode::None
 	).unwrap();
-
-	let screen_width = window_width;
-	let screen_height = window_height;
 
 	let height_over_width: f32 = 1.0 / aspect_ratio;
 
