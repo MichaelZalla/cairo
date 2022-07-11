@@ -225,6 +225,11 @@ fn main() -> Result<(), String> {
 			}
 		}
 
+		light_vector.x = -1.0 * (last_mouse_x as f32) / 20.0;
+		light_vector.y = (last_mouse_y as f32) / 20.0;
+
+		normalized_light_vector = light_vector.as_normal();
+
 		// Indexes triangle list
 
 		// 0. Split vertices and indices
@@ -270,18 +275,7 @@ fn main() -> Result<(), String> {
 		// rotation_radians.x = (last_mouse_y as f32) / 100.0;
 		// rotation_radians.x %= 2.0 * PI;
 
-		light_vector.x = -1.0 * (last_mouse_x as f32) / 20.0;
-		light_vector.y = (last_mouse_y as f32) / 20.0;
-
-		normalized_light_vector = light_vector.as_normal();
-
 		let mut world_vertices: Vec<Vec3> = vec![Vec3::new(); mesh_vertices_length];
-
-		let mut world_vertex_normals: Vec<Vec3> = vec![];
-
-		if mesh_vertex_normals_length > 0 {
-			world_vertex_normals = vec![ Vec3::new(); mesh_vertex_normals_length ];
-		}
 
 		for i in 0..mesh_vertices_length {
 
@@ -295,6 +289,12 @@ fn main() -> Result<(), String> {
 
 			world_vertices[i] += world_space_translator;
 
+		}
+
+		let mut world_vertex_normals: Vec<Vec3> = vec![];
+
+		if mesh_vertex_normals_length > 0 {
+			world_vertex_normals = vec![ Vec3::new(); mesh_vertex_normals_length ];
 		}
 
 		for i in 0..mesh_vertex_normals_length {
