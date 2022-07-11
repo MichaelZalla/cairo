@@ -1,26 +1,26 @@
 extern crate sdl2;
 
-use std::f32::consts::{PI};
+use std::f32::consts::PI;
 
 use math::round::floor;
+
 use rand::Rng;
 
-// use sdl2::surface;
-use sdl2::{event::Event};
+use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::render::BlendMode;
 
 mod macros;
 
 mod lib;
-use lib::color;
-use lib::draw;
-use lib::mesh::get_mesh_from_obj;
-use lib::vec::vec2::Vec2;
-use lib::vec::vec3::Vec3;
+use crate::lib::color;
+use crate::lib::context::{get_application_context, get_application_rendering_context, get_backbuffer};
+use crate::lib::draw;
+use crate::lib::mesh::get_mesh_from_obj;
+use crate::lib::vec::vec2::Vec2;
+use crate::lib::vec::vec3::Vec3;
 
 use crate::lib::color::Color;
-
-const BYTES_PER_PIXEL: u32 = 4;
 
 fn main() -> Result<(), String> {
 
@@ -28,8 +28,7 @@ fn main() -> Result<(), String> {
 
 	let mut root_directory: String = String::new();
 
-	root_directory
-		.insert_str(0, env!("CARGO_MANIFEST_DIR"));
+	root_directory.insert_str(0, env!("CARGO_MANIFEST_DIR"));
 
 	// let filename = "cow.obj";
 	// let filename = "cube.obj";
@@ -54,57 +53,36 @@ fn main() -> Result<(), String> {
 	let mesh_vertex_normals_length = mesh.vn.len();
 	let mesh_face_normals_length = mesh.tn.len();
 
-	let sdl_context = sdl2::init()?;
-
-	let mut events = sdl_context.event_pump()?;
-
-	let video_subsys = sdl_context.video()?;
-
-	let window_width: u32 = 1200;
-
 	let aspect_ratio = 16.0 / 9.0;
 
-	let window = video_subsys
-		.window("cairo", window_width, (window_width as f32 / aspect_ratio) as u32)
-		// .opengl()
-		// .fullscreen_desktop()
-		// .borderless()
-		// .position_centered()
-		.build()
-		.unwrap();
+	let window_width: u32 = 1200;
+	let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
 
-	let screen_width: u32 = window.size().0;
-	let screen_height: u32 = window.size().1;
-	let aspect_ratio_how: f32 = screen_height as f32 / screen_width as f32;
-	let screen_pitch: u32 = screen_width * BYTES_PER_PIXEL;
-	let pixel_buffer_size: usize = (screen_width * screen_height * BYTES_PER_PIXEL) as usize;
-	let z_buffer_size: usize = (screen_width * screen_height) as usize;
-
-	sdl_context.mouse().show_cursor(false);
-
-	let mut canvas = window
-        .into_canvas()
-        // .accelerated()
-		// .present_vsync()
-		.build()
-		.unwrap();
-
-	let texture_creator = canvas.texture_creator();
-
-	let mut backbuffer = texture_creator
-		.create_texture_streaming(
-			sdl2::pixels::PixelFormatEnum::RGBA32,
-			screen_width,
-			screen_height)
-		.unwrap();
-
-	backbuffer.update(
-		None,
-		&vec![0; pixel_buffer_size],
-		screen_pitch as usize
+	let mut app = get_application_context(
+		"Cairo (v0.1.0)",
+		window_width,
+		window_height,
+		false
 	).unwrap();
 
-	backbuffer.set_blend_mode(sdl2::render::BlendMode::None);
+	let mut graphics = get_application_rendering_context(
+		app.window
+	).unwrap();
+
+	let texture_creator = graphics.canvas.texture_creator();
+
+	let mut backbuffer = get_backbuffer(
+		&graphics,
+		&texture_creator,
+		BlendMode::None
+	).unwrap();
+
+	let screen_width = window_width;
+	let screen_height = window_height;
+
+	let aspect_ratio_how: f32 = 1.0 / aspect_ratio;
+
+	let z_buffer_size: usize = (screen_width * screen_height) as usize;
 
 	let mut z_buffer: Vec<f32> = Vec::with_capacity(z_buffer_size);
 
@@ -118,9 +96,7 @@ fn main() -> Result<(), String> {
 	let mut last_mouse_x: u32 = 0;
 	let mut last_mouse_y: u32 = 0;
 
-	let mut timer = sdl_context.timer()?;
-
-	let tick_frequency = timer.performance_frequency();
+	let tick_frequency = app.timer.performance_frequency();
 
 	println!("{}", mesh.v[0]);
 
@@ -173,7 +149,7 @@ fn main() -> Result<(), String> {
 
 		// Main loop
 
-		_frame_start_ticks = timer.performance_counter();
+		_frame_start_ticks = app.timer.performance_counter();
 
 		if frame_end_ticks == 0 {
 			frame_end_ticks = _frame_start_ticks;
@@ -187,7 +163,7 @@ fn main() -> Result<(), String> {
 
 		// Event polling
 
-		for event in events.poll_iter() {
+		for event in app.events.poll_iter() {
 			match event {
 
 				Event::Quit { .. } => break 'main,
@@ -589,11 +565,11 @@ fn main() -> Result<(), String> {
 			}
         ).unwrap();
 
-		canvas.copy(&backbuffer, None, None).unwrap();
+		graphics.canvas.copy(&backbuffer, None, None).unwrap();
 
-		canvas.present();
+		graphics.canvas.present();
 
-		frame_end_ticks = timer.performance_counter();
+		frame_end_ticks = app.timer.performance_counter();
 
 		let delta_ticks = frame_end_ticks - _frame_start_ticks;
 
@@ -609,7 +585,7 @@ fn main() -> Result<(), String> {
 		// debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
 		// debug_print!("(frame_frequency={}", frame_frequency);
 
-		timer.delay(floor(16.666 - frame_frequency, 0) as u32);
+		app.timer.delay(floor(16.666 - frame_frequency, 0) as u32);
 
 	}
 
