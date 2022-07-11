@@ -34,3 +34,7 @@ default-features = false
 
 # [lib.vec2]
 # path = "src/lib/vec2"
+
+[[bin]]
+name = "Cairo"
+path = "src/main.rs"
