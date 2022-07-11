@@ -138,7 +138,6 @@ fn main() -> Result<(), String> {
 	let mut should_render_wireframe = false;
 	let mut should_render_shader = true;
 	let mut should_render_normals = false;
-	// let mut should_use_right_hand_rule = true;
 
 	let mut _frame_start_ticks: u64 = 0;
 	let mut frame_end_ticks: u64 = 0;
@@ -169,15 +168,11 @@ fn main() -> Result<(), String> {
 
 				Event::Quit { .. } => break 'main,
 
-				Event::KeyDown {
-					keycode: Some(keycode),
-					..
-				} => {
-
+				Event::KeyDown { keycode: Some(keycode), .. } => {
 					match keycode {
-
-						Keycode::Escape { .. } => break 'main,
-
+						Keycode::Escape { .. } => {
+							break 'main
+						},
 						Keycode::Down|Keycode::S { .. } => {
 							world_space_translator.y += 0.1;
 						},
@@ -196,40 +191,26 @@ fn main() -> Result<(), String> {
 						Keycode::E { .. } => {
 							world_space_translator.z -= 0.1;
 						},
-
-						Keycode::H { .. } => {
-							// // should_use_right_hand_rule = !should_use_right_hand_rule;
-						},
-
 						Keycode::Num1 { .. } => {
 							should_render_wireframe = !should_render_wireframe;
 						}
-
 						Keycode::Num2 { .. } => {
 							should_render_shader = !should_render_shader;
 						}
-
 						Keycode::Num3 { .. } => {
 							should_render_normals = !should_render_normals;
 						}
-
 						_ => {}
-
 					}
 				}
 
 				Event::MouseWheel { direction, y, .. } => {
-
 					match direction {
-
 						sdl2::mouse::MouseWheelDirection::Normal {} => {
 							world_space_translator.z += (y as f32) / 4.0;
 						}
-
 						_ => {}
-
 					}
-
 				}
 
 				Event::MouseMotion { x, y, .. } => {
@@ -292,7 +273,7 @@ fn main() -> Result<(), String> {
 
 		normalized_light_vector = light_vector.as_normal();
 
-		let mut world_vertices: Vec<Vec3> = vec![ Vec3::new(); mesh_vertices_length ];
+		let mut world_vertices: Vec<Vec3> = vec![Vec3::new(); mesh_vertices_length];
 
 		let mut world_vertex_normals: Vec<Vec3> = vec![];
 
