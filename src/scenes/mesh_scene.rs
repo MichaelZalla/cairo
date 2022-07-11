@@ -76,76 +76,13 @@ impl MeshScene {
 
 	}
 
-}
+	fn process_vertices(&mut self, pixel_buffer: &mut PixelBuffer) -> () {
 
-impl Scene for MeshScene {
+		let mesh = &self.mesh;
 
-	// fn update(&mut self, keyboard_state: KeyboardState, mouse_state: MouseState, delta_t_seconds: f32) -> () {
-	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
-
-		for keycode in &keyboard_state.keys_pressed {
-			match keycode {
-				Keycode::Down|Keycode::S { .. } => {
-					self.world_space_translator.y += 0.1;
-				},
-				Keycode::Up|Keycode::W { .. } => {
-					self.world_space_translator.y -= 0.1;
-				},
-				Keycode::Right|Keycode::D { .. } => {
-					self.world_space_translator.x -= 0.1;
-				},
-				Keycode::Left|Keycode::A { .. } => {
-					self.world_space_translator.x += 0.1;
-				},
-				Keycode::Q { .. } => {
-					self.world_space_translator.z += 0.1;
-				},
-				Keycode::E { .. } => {
-					self.world_space_translator.z -= 0.1;
-				},
-				Keycode::Num1 { .. } => {
-					self.should_render_wireframe = !self.should_render_wireframe;
-				}
-				Keycode::Num2 { .. } => {
-					self.should_render_shader = !self.should_render_shader;
-				}
-				Keycode::Num3 { .. } => {
-					self.should_render_normals = !self.should_render_normals;
-				}
-				_ => {}
-			}
-		}
-
-		if mouse_state.wheel_did_move {
-			match mouse_state.wheel_direction {
-				sdl2::mouse::MouseWheelDirection::Normal => {
-					self.world_space_translator.z += (mouse_state.wheel_y as f32) / 4.0;
-				},
-				_ => {}
-			}
-		}
-
-		self.light_vector.x = -1.0 * (mouse_state.pos.0 as f32) / 20.0;
-		self.light_vector.y = (mouse_state.pos.1 as f32) / 20.0;
-
-		self.normalized_light_vector = self.light_vector.as_normal();
-
-		self.rotation_radians.z += 0.25 * PI * delta_t_seconds;
-		self.rotation_radians.z %= 2.0 * PI;
-
-		self.rotation_radians.x += 0.25 * PI * delta_t_seconds;
-		self.rotation_radians.x %= 2.0 * PI;
-
-		self.rotation_radians.y += 0.25 * PI * delta_t_seconds;
-		self.rotation_radians.y %= 2.0 * PI;
-
-	}
-
-	fn render(&mut self, pixel_buffer: &mut PixelBuffer) -> () {
-
-		let mesh_vertices_length = self.mesh.v.len();
-		let mesh_vertex_normals_length = self.mesh.vn.len();
-		let mesh_face_normals_length = self.mesh.tn.len();
+		let mesh_vertices_length = mesh.v.len();
+		let mesh_vertex_normals_length = mesh.vn.len();
+		let mesh_face_normals_length = mesh.tn.len();
 
 		let aspect_ratio = (self.screen_width as f32) / (self.screen_height as f32);
 		let height_over_width: f32 = 1.0 / aspect_ratio;
@@ -164,7 +101,7 @@ impl Scene for MeshScene {
 
 		for i in 0..mesh_vertices_length {
 
-			world_vertices[i] = self.mesh.v[i].clone();
+			world_vertices[i] = mesh.v[i].clone();
 
 			world_vertices[i].rotate_along_z(self.rotation_radians.z);
 			world_vertices[i].rotate_along_x(self.rotation_radians.x);
@@ -186,7 +123,7 @@ impl Scene for MeshScene {
 
 		for i in 0..mesh_vertex_normals_length {
 
-			world_vertex_normals[i] = self.mesh.vn[i].clone();
+			world_vertex_normals[i] = mesh.vn[i].clone();
 
 			world_vertex_normals[i].rotate_along_z(self.rotation_radians.z);
 			world_vertex_normals[i].rotate_along_x(self.rotation_radians.x);
@@ -214,7 +151,7 @@ impl Scene for MeshScene {
 
 		// 5.
 
-		for (index, face) in self.mesh.f.iter().enumerate() {
+		for (index, face) in mesh.f.iter().enumerate() {
 
 			// if index > 2500 {
 			// 	continue;
@@ -238,7 +175,7 @@ impl Scene for MeshScene {
 
 				if mesh_face_normals_length > 0 {
 
-					let face_normal_indices = self.mesh.tn[index];
+					let face_normal_indices = mesh.tn[index];
 
 					world_vertex_normals_for_face = vec![
 						world_vertex_normals[face_normal_indices.0],
@@ -327,7 +264,7 @@ impl Scene for MeshScene {
 
 					if mesh_face_normals_length > 0 {
 
-						let face_normal_indices = self.mesh.tn[index];
+						let face_normal_indices = mesh.tn[index];
 
 						world_vertex_normals_for_face = vec![
 							world_vertex_normals[face_normal_indices.0],
@@ -415,6 +352,77 @@ impl Scene for MeshScene {
 		// 	screen_light_vector.x as u32,
 		// 	screen_light_vector.y as u32,
 		// 	color::WHITE)
+
+	}
+
+}
+
+impl Scene for MeshScene {
+
+	// fn update(&mut self, keyboard_state: KeyboardState, mouse_state: MouseState, delta_t_seconds: f32) -> () {
+	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
+
+		for keycode in &keyboard_state.keys_pressed {
+			match keycode {
+				Keycode::Down|Keycode::S { .. } => {
+					self.world_space_translator.y += 0.1;
+				},
+				Keycode::Up|Keycode::W { .. } => {
+					self.world_space_translator.y -= 0.1;
+				},
+				Keycode::Right|Keycode::D { .. } => {
+					self.world_space_translator.x -= 0.1;
+				},
+				Keycode::Left|Keycode::A { .. } => {
+					self.world_space_translator.x += 0.1;
+				},
+				Keycode::Q { .. } => {
+					self.world_space_translator.z += 0.1;
+				},
+				Keycode::E { .. } => {
+					self.world_space_translator.z -= 0.1;
+				},
+				Keycode::Num1 { .. } => {
+					self.should_render_wireframe = !self.should_render_wireframe;
+				}
+				Keycode::Num2 { .. } => {
+					self.should_render_shader = !self.should_render_shader;
+				}
+				Keycode::Num3 { .. } => {
+					self.should_render_normals = !self.should_render_normals;
+				}
+				_ => {}
+			}
+		}
+
+		if mouse_state.wheel_did_move {
+			match mouse_state.wheel_direction {
+				sdl2::mouse::MouseWheelDirection::Normal => {
+					self.world_space_translator.z += (mouse_state.wheel_y as f32) / 4.0;
+				},
+				_ => {}
+			}
+		}
+
+		self.light_vector.x = -1.0 * (mouse_state.pos.0 as f32) / 20.0;
+		self.light_vector.y = (mouse_state.pos.1 as f32) / 20.0;
+
+		self.normalized_light_vector = self.light_vector.as_normal();
+
+		self.rotation_radians.z += 0.25 * PI * delta_t_seconds;
+		self.rotation_radians.z %= 2.0 * PI;
+
+		self.rotation_radians.x += 0.25 * PI * delta_t_seconds;
+		self.rotation_radians.x %= 2.0 * PI;
+
+		self.rotation_radians.y += 0.25 * PI * delta_t_seconds;
+		self.rotation_radians.y %= 2.0 * PI;
+
+	}
+
+	fn render(&mut self, pixel_buffer: &mut PixelBuffer) -> () {
+
+		self.process_vertices(pixel_buffer);
 
 	}
 
