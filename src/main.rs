@@ -62,6 +62,7 @@ fn main() -> Result<(), String> {
 		"Cairo (v0.1.0)",
 		window_width,
 		window_height,
+		false,
 		false
 	).unwrap();
 

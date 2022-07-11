@@ -14,6 +14,7 @@ pub fn get_application_context(
 	window_title: &str,
 	window_width: u32,
 	window_height: u32,
+	full_screen: bool,
 	show_cursor: bool,
 ) -> Result<ApplicationContext, String>
 {
@@ -32,15 +33,24 @@ pub fn get_application_context(
 							match sdl_context.video() {
 								Ok(video_subsystem) => {
 
-									match video_subsystem
-										.window(window_title, window_width, window_height)
-										// .opengl()
-										// .fullscreen_desktop()
-										// .borderless()
-										// .position_centered()
-										.build()
-										// .unwrap()
-									{
+									let mut window_builder = video_subsystem.window(
+										window_title,
+										window_width,
+										window_height
+									);
+
+									// window_builder.opengl()
+									// window_builder.position_centered()
+									// window_builder.borderless();
+
+									if full_screen {
+										// @NOTE(mzalla) Overrides
+										// `window_width` and `window_height`
+										// for the current desktop resolution;
+										window_builder.fullscreen_desktop();
+									}
+
+									match window_builder.build() {
 										Ok(window) => Ok(ApplicationContext{
 											window: window,
 											timer: timer,
