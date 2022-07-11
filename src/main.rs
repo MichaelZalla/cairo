@@ -139,7 +139,7 @@ fn main() -> Result<(), String> {
 	let mut should_render_shader = true;
 	let mut should_render_normals = false;
 
-	let mut _frame_start_ticks: u64 = 0;
+	let mut frame_start_ticks: u64 = 0;
 	let mut frame_end_ticks: u64 = 0;
 
 	let mut light_vector: Vec3 = Vec3{ x: 0.0, y: 0.0, z: 1.0 };
@@ -149,13 +149,13 @@ fn main() -> Result<(), String> {
 
 		// Main loop
 
-		_frame_start_ticks = app.timer.performance_counter();
+		frame_start_ticks = app.timer.performance_counter();
 
 		if frame_end_ticks == 0 {
-			frame_end_ticks = _frame_start_ticks;
+			frame_end_ticks = frame_start_ticks;
 		}
 
-		let tick_delta = _frame_start_ticks - frame_end_ticks;
+		let tick_delta = frame_start_ticks - frame_end_ticks;
 
 		let delta_t_seconds = 1.0 / tick_frequency as f32 * tick_delta as f32;
 
@@ -549,7 +549,7 @@ fn main() -> Result<(), String> {
 
 		frame_end_ticks = app.timer.performance_counter();
 
-		let delta_ticks = frame_end_ticks - _frame_start_ticks;
+		let delta_ticks = frame_end_ticks - frame_start_ticks;
 
 		let frame_frequency = delta_ticks as f64 / tick_frequency as f64;
 
