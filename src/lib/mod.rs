@@ -4,4 +4,5 @@ pub mod graphics;
 pub mod device;
 pub mod mesh;
 pub mod scene;
+pub mod pipeline;
 pub mod vec;

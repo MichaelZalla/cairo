@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use sdl2::keyboard::Keycode;
 
-use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj, Face}, device::{KeyboardState, MouseState}, graphics::Graphics}, debug_print};
+use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj, Face}, device::{KeyboardState, MouseState}, graphics::Graphics, pipeline::Pipeline}};
 
 type Triangle<T> = Vec<T>;
 
@@ -21,7 +21,7 @@ impl Vertex {
 }
 
 pub struct MeshScene {
-	graphics: Graphics,
+	pipeline: Pipeline,
 	width_scale: f32,
 	height_scale: f32,
 	mesh: Mesh,
@@ -58,7 +58,9 @@ impl MeshScene {
 		let height_scale = graphics.buffer.height as f32 / 2.0;
 
 		return MeshScene{
-			graphics: graphics,
+			pipeline: Pipeline{
+				graphics: graphics,
+			},
 			width_scale: width_scale,
 			height_scale: height_scale,
 			mesh: mesh,
@@ -256,7 +258,7 @@ impl MeshScene {
 		for mut point in points.as_mut_slice() {
 
 			point.x = (
-				point.x / point.z * self.graphics.buffer.height_over_width + 1.0
+				point.x / point.z * self.pipeline.graphics.buffer.height_over_width + 1.0
 			) * self.width_scale;
 
 			point.y = (
@@ -266,7 +268,7 @@ impl MeshScene {
 		}
 
 		if self.should_render_wireframe {
-			self.graphics.poly_line(points.as_slice(), color::WHITE);
+			self.pipeline.graphics.poly_line(points.as_slice(), color::WHITE);
 		}
 
 		// Interpolate entire Vertex (all attributes) when drawing (scanline
@@ -298,9 +300,9 @@ impl MeshScene {
 				// (0.5 * scaled_luminances) as u8
 			);
 
-			let z_buffer_width = self.graphics.buffer.width;
+			let z_buffer_width = self.pipeline.graphics.buffer.width;
 
-			self.graphics.triangle_fill(
+			self.pipeline.graphics.triangle_fill(
 				self.z_buffer.as_mut_slice(),
 				z_buffer_width,
 				points.as_slice(),
@@ -317,7 +319,7 @@ impl MeshScene {
 
 				let screen_vertex_relative_normal = Vec2{
 					x: (
-						world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.graphics.buffer.height_over_width + 1.0
+						world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.pipeline.graphics.buffer.height_over_width + 1.0
 					) * self.width_scale,
 					y: (
 						(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
@@ -329,7 +331,7 @@ impl MeshScene {
 
 				let to_point = screen_vertex_relative_normal;
 
-				self.graphics.line(
+				self.pipeline.graphics.line(
 					from_point.x as u32,
 				from_point.y as u32,
 				to_point.x as u32,
@@ -408,7 +410,7 @@ impl Scene for MeshScene {
 
 	fn render(&mut self) -> () {
 
-		self.graphics.buffer.clear();
+		self.pipeline.graphics.buffer.clear();
 
 		if self.should_render_shader {
 			for i in 0..self.z_buffer_size {
@@ -421,7 +423,7 @@ impl Scene for MeshScene {
 	}
 
 	fn get_pixel_data(&self) -> &Vec<u32> {
-		return self.graphics.get_pixel_data();
+		return self.pipeline.graphics.get_pixel_data();
 	}
 
 }
