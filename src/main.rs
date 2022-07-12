@@ -76,6 +76,10 @@ fn main() -> Result<(), String> {
 		),
 		MeshScene::new(
 			graphics.clone(),
+			get_absolute_filepath("/data/obj/cow.obj")
+		),
+		MeshScene::new(
+			graphics.clone(),
 			get_absolute_filepath("/data/obj/lamp.obj")
 		),
 		MeshScene::new(

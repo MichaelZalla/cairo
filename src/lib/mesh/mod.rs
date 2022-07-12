@@ -30,7 +30,7 @@ pub fn get_mesh_from_obj(
 	let mut vertices: Vec<Vec3> = vec![];
 	let mut faces: Vec<Face> = vec![];
 	let mut vertex_normals: Vec<Vec3> = vec![];
-	let face_normals: Vec<(usize, usize, usize)> = vec![];
+	let mut face_normals: Vec<(usize, usize, usize)> = vec![];
 
 	for (_, line) in lines.enumerate() {
 		match line {
@@ -70,23 +70,23 @@ pub fn get_mesh_from_obj(
 									z.next().unwrap().parse::<usize>().unwrap() - 1,
 								));
 
-								// let result = x.next();
+								let result = x.next();
 
-								// match result {
-								// 	Some(_) => {
+								match result {
+									Some(_) => {
 
-								// 		y.next();
-								// 		z.next();
+										y.next();
+										z.next();
 
-								// 		face_normals.push((
-								// 			x.next().unwrap().parse::<usize>().unwrap() - 1,
-								// 			y.next().unwrap().parse::<usize>().unwrap() - 1,
-								// 			z.next().unwrap().parse::<usize>().unwrap() - 1,
-								// 		));
+										face_normals.push((
+											x.next().unwrap().parse::<usize>().unwrap() - 1,
+											y.next().unwrap().parse::<usize>().unwrap() - 1,
+											z.next().unwrap().parse::<usize>().unwrap() - 1,
+										));
 
-								// 	},
-								// 	None => (),
-								// }
+									},
+									None => (),
+								}
 
 							},
 							"vn" => {

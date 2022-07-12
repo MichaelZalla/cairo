@@ -2,7 +2,23 @@ use std::f32::consts::PI;
 
 use sdl2::keyboard::Keycode;
 
-use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj}, device::{KeyboardState, MouseState}, graphics::Graphics}, debug_print};
+use crate::{lib::{scene::Scene, color::{self, Color}, vec::{vec3::Vec3, vec2::Vec2}, mesh::{Mesh, get_mesh_from_obj, Face}, device::{KeyboardState, MouseState}, graphics::Graphics}, debug_print};
+
+type Triangle<T> = Vec<T>;
+
+#[derive(Copy, Clone, Default)]
+struct Vertex {
+	p: Vec3,
+	n: Vec3,
+}
+
+impl Vertex {
+
+	pub fn new() -> Self {
+		Default::default()
+	}
+
+}
 
 pub struct MeshScene {
 	graphics: Graphics,
@@ -20,9 +36,13 @@ pub struct MeshScene {
 	should_render_shader: bool,
 	should_render_normals: bool,
 }
+
 impl MeshScene {
 
-	pub fn new(graphics: Graphics, filepath: String) -> Self {
+	pub fn new(
+		graphics: Graphics,
+		filepath: String) -> Self
+	{
 
 		let mesh = get_mesh_from_obj(filepath);
 
@@ -69,285 +89,239 @@ impl MeshScene {
 			},
 			z_buffer_size: z_buffer_size,
 			z_buffer: z_buffer,
-			should_render_wireframe: false,
+			should_render_wireframe: true,
 			should_render_shader: true,
 			should_render_normals: false,
 		};
 
 	}
 
-	fn process_vertices(&mut self) -> () {
+	fn get_world_vertices(
+		&mut self) -> Vec<Vertex>
+	{
 
-		// Indexes triangle list
+		let mesh_v_len = self.mesh.v.len();
 
-		// 0. Split vertices and indices
-		// 1a. Vertex stream -> Vertex transformer
-		// 1b. Index stream
-		// 2. Triangle assembler (vertices + indices -> Triangle[])
-		//  - Backface culling
-		// 3. World-space-to-screen-space transformer
-		// 4. Triange rasterizer
-		// 5. Pixel shader
-		// 6. PutPixel
+		let mut world_vertices: Vec<Vertex> = vec![Vertex::new(); mesh_v_len];
 
-		// Scene::Update(keyboardState, mouseState, deltaT)
+		// Object-to-world-space transform
 
-		// pub struct Triangle<T = Vec3> {
-		// 	pub v0: T,
-		// 	pub v1: T,
-		// 	pub v2: T,
-		// }
+		for i in 0..mesh_v_len {
 
-		// Interpolate entire Vertex (all attributes) when drawing (scanline
-		// interpolant)
+			world_vertices[i].p = self.mesh.v[i].clone();
 
-		let mesh = &self.mesh;
+			world_vertices[i].p.rotate_along_z(self.rotation_radians.z);
+			world_vertices[i].p.rotate_along_x(self.rotation_radians.x);
+			world_vertices[i].p.rotate_along_y(self.rotation_radians.y);
 
-		let mesh_vertices_length = mesh.v.len();
-		let mesh_vertex_normals_length = mesh.vn.len();
-		let mesh_face_normals_length = mesh.tn.len();
+			world_vertices[i].p *= self.world_space_scalar;
 
-		// 1. Reset our Z-buffer
+			world_vertices[i].p += self.world_space_translator;
 
-		if self.should_render_shader {
-			for i in 0..self.z_buffer_size {
-				self.z_buffer[i] = f32::MAX;
+		}
+
+		return world_vertices;
+
+	}
+
+	fn get_triangles(
+		&mut self,
+		faces: Vec<Face>,
+		vertices: Vec<Vertex>) -> Vec<Triangle<Vertex>>
+	{
+
+		let mut triangles: Vec<Triangle<Vertex>> = vec![];
+
+		let mesh_v_len = self.mesh.v.len();
+		let mesh_vn_len = self.mesh.vn.len();
+		let mesh_tn_len = self.mesh.tn.len();
+
+		for (face_index, face) in faces.iter().enumerate() {
+
+			// Resolve normals for current triangle;
+
+			let mut world_vertex_normals_for_face: Vec<Vec3> = vec![];
+
+			if mesh_tn_len > 0 {
+				world_vertex_normals_for_face.push(self.mesh.vn[self.mesh.tn[face_index].0].clone());
+				world_vertex_normals_for_face.push(self.mesh.vn[self.mesh.tn[face_index].1].clone());
+				world_vertex_normals_for_face.push(self.mesh.vn[self.mesh.tn[face_index].2].clone());
 			}
-		}
+			else if mesh_vn_len == mesh_v_len {
+				world_vertex_normals_for_face.push(self.mesh.vn[face.0].clone());
+				world_vertex_normals_for_face.push(self.mesh.vn[face.1].clone());
+				world_vertex_normals_for_face.push(self.mesh.vn[face.2].clone());
+			}
+			else {
+				world_vertex_normals_for_face.push(
+					(vertices[face.1].p - vertices[face.0].p).cross(vertices[face.2].p - vertices[face.0].p)
+				);
+				world_vertex_normals_for_face.push(
+					(vertices[face.2].p - vertices[face.1].p).cross(vertices[face.0].p - vertices[face.1].p)
+				);
+				world_vertex_normals_for_face.push(
+					(vertices[face.0].p - vertices[face.2].p).cross(vertices[face.1].p - vertices[face.2].p)
+				);
+			}
 
-		// 2. Object-to-world-space transform (vertices)
+			// Rotate normals
 
-		let mut world_vertices: Vec<Vec3> = vec![Vec3::new(); mesh_vertices_length];
+			if mesh_tn_len > 0 || mesh_vn_len == mesh_v_len {
 
-		for i in 0..mesh_vertices_length {
+				world_vertex_normals_for_face[0].rotate_along_z(self.rotation_radians.z);
+				world_vertex_normals_for_face[0].rotate_along_x(self.rotation_radians.x);
+				world_vertex_normals_for_face[0].rotate_along_y(self.rotation_radians.y);
 
-			world_vertices[i] = mesh.v[i].clone();
+				world_vertex_normals_for_face[1].rotate_along_z(self.rotation_radians.z);
+				world_vertex_normals_for_face[1].rotate_along_x(self.rotation_radians.x);
+				world_vertex_normals_for_face[1].rotate_along_y(self.rotation_radians.y);
 
-			world_vertices[i].rotate_along_z(self.rotation_radians.z);
-			world_vertices[i].rotate_along_x(self.rotation_radians.x);
-			world_vertices[i].rotate_along_y(self.rotation_radians.y);
-
-			world_vertices[i] *= self.world_space_scalar;
-
-			world_vertices[i] += self.world_space_translator;
-
-		}
-
-		// 3. Object-to-world-space transform (normals)
-
-		let mut world_vertex_normals: Vec<Vec3> = vec![];
-
-		if mesh_vertex_normals_length > 0 {
-			world_vertex_normals = vec![ Vec3::new(); mesh_vertex_normals_length ];
-		}
-
-		for i in 0..mesh_vertex_normals_length {
-
-			world_vertex_normals[i] = mesh.vn[i].clone();
-
-			world_vertex_normals[i].rotate_along_z(self.rotation_radians.z);
-			world_vertex_normals[i].rotate_along_x(self.rotation_radians.x);
-			world_vertex_normals[i].rotate_along_y(self.rotation_radians.y);
-
-		}
-
-		// 4. World-to-screen-space transform (perspective divide)
-
-		let mut screen_vertices: Vec<Vec2> = vec![ Vec2::new(); mesh_vertices_length ];
-
-		for i in 0..mesh_vertices_length {
-
-			screen_vertices[i].x = (
-				world_vertices[i].x / world_vertices[i].z * self.graphics.buffer.height_over_width + 1.0
-			) * self.width_scale;
-
-			screen_vertices[i].y = (
-				(-1.0 * world_vertices[i].y) / world_vertices[i].z + 1.0
-			) * self.height_scale;
-
-			screen_vertices[i].z = world_vertices[i].z;
-
-		}
-
-		// 5.
-
-		for (index, face) in mesh.f.iter().enumerate() {
-
-			// if index > 2500 {
-			// 	continue;
-			// }
-
-			// Backface culling
-
-			let screen_vertices = vec![
-				screen_vertices[face.0],
-				screen_vertices[face.1],
-				screen_vertices[face.2],
-			];
-
-			let mut world_vertex_normals_for_face: Vec<Vec3> = vec![
-				(world_vertices[face.1] - world_vertices[face.0]).cross(world_vertices[face.2] - world_vertices[face.0]),
-				(world_vertices[face.2] - world_vertices[face.1]).cross(world_vertices[face.0] - world_vertices[face.1]),
-				(world_vertices[face.0] - world_vertices[face.2]).cross(world_vertices[face.1] - world_vertices[face.2]),
-			];
-
-			if mesh_face_normals_length > 0 || mesh_vertex_normals_length == mesh_vertices_length {
-
-				if mesh_face_normals_length > 0 {
-
-					let face_normal_indices = mesh.tn[index];
-
-					world_vertex_normals_for_face = vec![
-						world_vertex_normals[face_normal_indices.0],
-						world_vertex_normals[face_normal_indices.1],
-						world_vertex_normals[face_normal_indices.2],
-					];
-
-				} else {
-
-					world_vertex_normals_for_face = vec![
-						world_vertex_normals[face.0],
-						world_vertex_normals[face.1],
-						world_vertex_normals[face.2],
-					];
-
-				}
+				world_vertex_normals_for_face[2].rotate_along_z(self.rotation_radians.z);
+				world_vertex_normals_for_face[2].rotate_along_x(self.rotation_radians.x);
+				world_vertex_normals_for_face[2].rotate_along_y(self.rotation_radians.y);
 
 			}
 
-			let normalized_face_normal_vector = world_vertex_normals_for_face[0].as_normal();
+			world_vertex_normals_for_face[0] = world_vertex_normals_for_face[0].as_normal();
+			world_vertex_normals_for_face[1] = world_vertex_normals_for_face[1].as_normal();
+			world_vertex_normals_for_face[2] = world_vertex_normals_for_face[2].as_normal();
 
-			let dot_product = normalized_face_normal_vector.dot(world_vertices[face.0].as_normal());
+			// Cull backfaces
+
+			let dot_product = world_vertex_normals_for_face[0].dot(vertices[face.0].p.as_normal());
 
 			if dot_product > 0.0 {
 				continue;
 			}
 
-			if self.should_render_wireframe {
-				self.graphics.poly_line(
-					screen_vertices.as_slice(),
-					color::WHITE);
-			}
+			triangles.push(vec![
+				Vertex{
+					p: vertices[face.0].p,
+					n: world_vertex_normals_for_face[0],
+				},
+				Vertex{
+					p: vertices[face.1].p,
+					n: world_vertex_normals_for_face[1],
+				},
+				Vertex{
+					p: vertices[face.2].p,
+					n: world_vertex_normals_for_face[2],
+				},
+			]);
 
-			if self.should_render_shader {
+		}
 
-				// Calculate luminance
+		return triangles;
 
-				let min_luminance = 150.0;
-				let max_luminance = 255.0;
+	}
 
-				let light_intensity = 1.0;
+	fn process_triangle(
+		&mut self,
+		triangle: Triangle<Vertex>) -> ()
+	{
 
-				let luminance0 = -1.0 * light_intensity * self.normalized_light_vector.dot(world_vertex_normals_for_face[0].as_normal());
-				let luminance1 = -1.0 * light_intensity * self.normalized_light_vector.dot(world_vertex_normals_for_face[1].as_normal());
-				let luminance2 = -1.0 * light_intensity * self.normalized_light_vector.dot(world_vertex_normals_for_face[2].as_normal());
+		let mut points: Vec<Vec2> = vec![
+			Vec2{
+				x: triangle[0].p.x,
+				y: triangle[0].p.y,
+				z: triangle[0].p.z,
+			},
+			Vec2{
+				x: triangle[1].p.x,
+				y: triangle[1].p.y,
+				z: triangle[1].p.z,
+			},
+			Vec2{
+				x: triangle[2].p.x,
+				y: triangle[2].p.y,
+				z: triangle[2].p.z,
+			},
+		];
 
-				let luminance_avg = (luminance0 + luminance1 + luminance2) / 3.0;
+		// Screen-space perspective divide
 
-				let scaled_luminance: f32 = min_luminance + luminance_avg * (max_luminance - min_luminance);
+		for mut point in points.as_mut_slice() {
 
-				debug_print!("luminance = {}", luminance);
+			point.x = (
+				point.x / point.z * self.graphics.buffer.height_over_width + 1.0
+			) * self.width_scale;
 
-				let color = Color::RGB(
-					scaled_luminance as u8,
-					scaled_luminance as u8,
-					scaled_luminance as u8
-					// (0.5 * scaled_luminances) as u8
-				);
+			point.y = (
+				(-1.0 * point.y) / point.z + 1.0
+			) * self.height_scale;
 
-				let z_buffer_width = self.graphics.buffer.width;
+		}
 
-				self.graphics.triangle_fill(
-					self.z_buffer.as_mut_slice(),
-					z_buffer_width,
-					screen_vertices.as_slice(),
-					color
-				);
+		if self.should_render_wireframe {
+			self.graphics.poly_line(points.as_slice(), color::WHITE);
+		}
 
-			}
+		// Interpolate entire Vertex (all attributes) when drawing (scanline
+		// interpolant)
 
-			if self.should_render_normals {
+		if self.should_render_shader {
 
-				let world_vertices_for_face = vec![
-					world_vertices[face.0],
-					world_vertices[face.1],
-					world_vertices[face.2],
-				];
+			// Calculate luminance
 
-				let mut world_vertex_normals_for_face: Vec<Vec3> = vec![
-					(world_vertices[face.1] - world_vertices[face.0]).cross(world_vertices[face.2] - world_vertices[face.0]),
-					(world_vertices[face.2] - world_vertices[face.1]).cross(world_vertices[face.0] - world_vertices[face.1]),
-					(world_vertices[face.0] - world_vertices[face.2]).cross(world_vertices[face.1] - world_vertices[face.2]),
-				];
+			let min_luminance = 150.0;
+			let max_luminance = 255.0;
 
-				if mesh_face_normals_length > 0 || mesh_vertex_normals_length == mesh_vertices_length {
+			let light_intensity = 1.0;
 
-					if mesh_face_normals_length > 0 {
+			let luminance0 = -1.0 * light_intensity * self.normalized_light_vector.dot(triangle[0].n);
+			let luminance1 = -1.0 * light_intensity * self.normalized_light_vector.dot(triangle[1].n);
+			let luminance2 = -1.0 * light_intensity * self.normalized_light_vector.dot(triangle[2].n);
 
-						let face_normal_indices = mesh.tn[index];
+			let luminance_avg = (luminance0 + luminance1 + luminance2) / 3.0;
 
-						world_vertex_normals_for_face = vec![
-							world_vertex_normals[face_normal_indices.0],
-							world_vertex_normals[face_normal_indices.1],
-							world_vertex_normals[face_normal_indices.2],
-						];
+			let scaled_luminance: f32 = min_luminance + luminance_avg * (max_luminance - min_luminance);
 
-					} else {
+			// println!("luminance_avg = {}", luminance_avg);
 
-						world_vertex_normals_for_face = vec![
-							world_vertex_normals[face.0],
-							world_vertex_normals[face.1],
-							world_vertex_normals[face.2],
-						];
+			let color = Color::RGB(
+				scaled_luminance as u8,
+				scaled_luminance as u8,
+				scaled_luminance as u8
+				// (0.5 * scaled_luminances) as u8
+			);
 
-					}
+			let z_buffer_width = self.graphics.buffer.width;
 
-				}
+			self.graphics.triangle_fill(
+				self.z_buffer.as_mut_slice(),
+				z_buffer_width,
+				points.as_slice(),
+				color
+			);
 
-				for i in 0..=2 {
+		}
 
-					let world_vertex = world_vertices_for_face[i];
-					let world_vertex_normal = world_vertex_normals_for_face[i].as_normal() * 0.025;
+		if self.should_render_normals {
 
-					// println!("world_vertex: {}", world_vertices_for_face[i]);
-					// println!("world_vertex_normal: {}", world_vertex_normals_for_face[i]);
+			for i in 0..=2 {
 
-					let world_vertex_relative_normal = world_vertex + world_vertex_normal;
+				let world_vertex_relative_normal = triangle[i].p + (triangle[i].n * 0.05);
 
-					let screen_vertex_relative_normal = Vec2{
-						x: (
-							world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.graphics.buffer.height_over_width + 1.0
-						) * self.width_scale,
-						y: (
-							(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
-						) * self.height_scale,
-						z: 0.0,
-					};
+				let screen_vertex_relative_normal = Vec2{
+					x: (
+						world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.graphics.buffer.height_over_width + 1.0
+					) * self.width_scale,
+					y: (
+						(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
+					) * self.height_scale,
+					z: 0.0,
+				};
 
-					let from_point = screen_vertices[i];
+				let from_point = points[i];
 
-					let to_point = screen_vertex_relative_normal;
+				let to_point = screen_vertex_relative_normal;
 
-					// assert!(
-					// 	(from_point.x - to_point.x).abs() < 100.0,
-					// 	"Too much space between {} and {}!",
-					// 	from_point,
-					// 	to_point
-					// );
-
-					// self.graphics.set_pixel(
-					// 	to_point.x as u32,
-					// 	to_point.y as u32,
-					// 	color::RED);
-
-					self.graphics.line(
-						from_point.x as u32,
-					from_point.y as u32,
-					to_point.x as u32,
-					to_point.y as u32,
-					color::RED);
-
-				}
+				self.graphics.line(
+					from_point.x as u32,
+				from_point.y as u32,
+				to_point.x as u32,
+				to_point.y as u32,
+				color::RED);
 
 			}
 
@@ -423,7 +397,21 @@ impl Scene for MeshScene {
 
 		self.graphics.buffer.clear();
 
-		self.process_vertices();
+		if self.should_render_shader {
+			for i in 0..self.z_buffer_size {
+				self.z_buffer[i] = f32::MAX;
+			}
+		}
+
+		let world_vertices = self.get_world_vertices();
+
+		let faces = self.mesh.f.clone();
+
+		let triangles = self.get_triangles(faces, world_vertices);
+
+		for triangle in triangles {
+			self.process_triangle(triangle);
+		}
 
 	}
 
