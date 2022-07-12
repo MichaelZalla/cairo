@@ -1,5 +1,6 @@
 [package]
 name = "cairo"
+description = "A single-threaded 3D software pipeline for rendering on the CPU."
 version = "0.1.0"
 authors = ["Michael Zalla <michael@zalla.io>"]
 edition = "2021"
