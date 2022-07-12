@@ -5,9 +5,11 @@ use std::path::Path;
 
 use super::vec::vec3::Vec3;
 
+pub type Face = (usize, usize, usize);
+
 pub struct Mesh {
 	pub v: Vec<Vec3>,
-	pub f: Vec<(usize, usize, usize)>,
+	pub f: Vec<Face>,
 	pub vn: Vec<Vec3>,
 	pub tn: Vec<(usize, usize, usize)>,
 }
@@ -26,7 +28,7 @@ pub fn get_mesh_from_obj(
 	};
 
 	let mut vertices: Vec<Vec3> = vec![];
-	let mut faces: Vec<(usize, usize, usize)> = vec![];
+	let mut faces: Vec<Face> = vec![];
 	let mut vertex_normals: Vec<Vec3> = vec![];
 	let face_normals: Vec<(usize, usize, usize)> = vec![];
 
