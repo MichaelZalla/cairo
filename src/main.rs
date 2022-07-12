@@ -197,15 +197,19 @@ fn main() -> Result<(), String> {
 		mouse_state.pos.0 = last_known_mouse_x;
 		mouse_state.pos.1 = last_known_mouse_y;
 
-		// 1b. Scene update (rotation, velocity, etc)
+		// Update current scene
 
-		scenes[current_scene_index].update(&keyboard_state, &mouse_state, delta_t_seconds);
+		scenes[current_scene_index]
+			.update(&keyboard_state, &mouse_state, delta_t_seconds);
 
 		backbuffer.with_lock(
             None,
             |write_only_byte_array, _pitch| {
 
-				scenes[current_scene_index].render();
+				// Render current scene
+
+				scenes[current_scene_index]
+					.render();
 
 				let pixels_as_u8_slice: &[u8] = bytemuck::cast_slice(
 					&scenes[current_scene_index].get_pixel_data(),
@@ -221,7 +225,7 @@ fn main() -> Result<(), String> {
 			}
         ).unwrap();
 
-		// Page-flip
+		// Flip buffers
 
 		app_rendering_context.canvas.copy(&backbuffer, None, None).unwrap();
 
@@ -230,6 +234,7 @@ fn main() -> Result<(), String> {
 		frame_end_ticks = app.timer.performance_counter();
 
 		// Report framerate
+
 		let delta_ticks = frame_end_ticks - frame_start_ticks;
 
 		let frame_frequency = delta_ticks as f64 / tick_frequency as f64;
