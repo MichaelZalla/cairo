@@ -22,8 +22,8 @@ impl Vertex {
 
 pub struct MeshScene {
 	pipeline: Pipeline,
-	width_scale: f32,
-	height_scale: f32,
+	buffer_width_over_2: f32,
+	buffer_height_over_2: f32,
 	mesh: Mesh,
 	world_space_translator: Vec3,
 	world_space_scalar: Vec3,
@@ -54,15 +54,15 @@ impl MeshScene {
 			z_buffer.push(f32::MAX);
 		}
 
-		let width_scale = graphics.buffer.width as f32 / 2.0;
-		let height_scale = graphics.buffer.height as f32 / 2.0;
+		let buffer_width_over_2 = graphics.buffer.width as f32 / 2.0;
+		let buffer_height_over_2 = graphics.buffer.height as f32 / 2.0;
 
 		return MeshScene{
 			pipeline: Pipeline{
 				graphics: graphics,
 			},
-			width_scale: width_scale,
-			height_scale: height_scale,
+			buffer_width_over_2: buffer_width_over_2,
+			buffer_height_over_2: buffer_height_over_2,
 			mesh: mesh,
 			world_space_translator: Vec3{
 				x: 0.0,
@@ -259,11 +259,11 @@ impl MeshScene {
 
 			point.x = (
 				point.x / point.z * self.pipeline.graphics.buffer.height_over_width + 1.0
-			) * self.width_scale;
+			) * self.buffer_width_over_2;
 
 			point.y = (
 				(-1.0 * point.y) / point.z + 1.0
-			) * self.height_scale;
+			) * self.buffer_height_over_2;
 
 		}
 
@@ -320,10 +320,10 @@ impl MeshScene {
 				let screen_vertex_relative_normal = Vec2{
 					x: (
 						world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.pipeline.graphics.buffer.height_over_width + 1.0
-					) * self.width_scale,
+					) * self.buffer_width_over_2,
 					y: (
 						(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
-					) * self.height_scale,
+					) * self.buffer_height_over_2,
 					z: 0.0,
 				};
 
