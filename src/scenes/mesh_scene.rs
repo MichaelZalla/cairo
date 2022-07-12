@@ -96,8 +96,8 @@ impl MeshScene {
 
 	}
 
-	fn get_world_vertices(
-		&mut self) -> Vec<Vertex>
+	fn process_world_vertices(
+		&mut self) -> ()
 	{
 
 		let mesh_v_len = self.mesh.v.len();
@@ -120,14 +120,16 @@ impl MeshScene {
 
 		}
 
-		return world_vertices;
+		let faces = self.mesh.f.clone();
+
+		self.process_triangles(faces, world_vertices);
 
 	}
 
-	fn get_triangles(
+	fn process_triangles(
 		&mut self,
 		faces: Vec<Face>,
-		vertices: Vec<Vertex>) -> Vec<Triangle<Vertex>>
+		vertices: Vec<Vertex>) -> ()
 	{
 
 		let mut triangles: Vec<Triangle<Vertex>> = vec![];
@@ -211,11 +213,22 @@ impl MeshScene {
 
 		}
 
-		return triangles;
+		for triangle in triangles {
+			self.process_triangle(triangle);
+		}
 
 	}
 
 	fn process_triangle(
+		&mut self,
+		triangle: Triangle<Vertex>) -> ()
+	{
+		// @TODO(mzalla) Geometry shader?
+
+		self.post_process_triangle_vertices(triangle);
+	}
+
+	fn post_process_triangle_vertices(
 		&mut self,
 		triangle: Triangle<Vertex>) -> ()
 	{
@@ -403,15 +416,7 @@ impl Scene for MeshScene {
 			}
 		}
 
-		let world_vertices = self.get_world_vertices();
-
-		let faces = self.mesh.f.clone();
-
-		let triangles = self.get_triangles(faces, world_vertices);
-
-		for triangle in triangles {
-			self.process_triangle(triangle);
-		}
+		self.process_world_vertices();
 
 	}
 
