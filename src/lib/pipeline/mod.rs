@@ -24,23 +24,15 @@ pub struct PipelineOptions {
 }
 
 pub struct Pipeline {
-
 	options: PipelineOptions,
-
 	graphics: Graphics,
-
 	buffer_width_over_2: f32,
 	buffer_height_over_2: f32,
-
 	scale: Vec3,
 	rotation: Vec3,
 	translation: Vec3,
-
 	light_normal: Vec3,
-
 	z_buffer: Vec<f32>,
-	z_buffer_size: usize,
-
 }
 
 impl Pipeline {
@@ -72,7 +64,6 @@ impl Pipeline {
 				z: 1.0
 			},
 			z_buffer: z_buffer,
-			z_buffer_size: z_buffer_size,
 		};
 
 	}
@@ -126,7 +117,7 @@ impl Pipeline {
 		self.graphics.buffer.clear();
 
 		if self.options.should_render_shader {
-			for i in 0..self.z_buffer_size {
+			for i in 0..self.z_buffer.len() {
 				self.z_buffer[i] = f32::MAX;
 			}
 		}
@@ -391,7 +382,7 @@ impl Pipeline {
 
 		let z_buffer_index = (y * self.graphics.buffer.width + x) as usize;
 
-		if z_buffer_index >= self.z_buffer_size {
+		if z_buffer_index >= self.z_buffer.len() {
 			panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
 		}
 
