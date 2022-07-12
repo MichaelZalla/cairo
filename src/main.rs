@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+use std::cmp::min;
+
 use math::round::floor;
 
 use rand::Rng;
@@ -67,31 +69,38 @@ fn main() -> Result<(), String> {
 		},
 	};
 
-	// let filepath = "/data/obj/cow.obj";
-	// let filepath = "/data/obj/cube.obj";
-	// let filepath = "/data/obj/lamp.obj";
-	// let filepath = "/data/obj/voxels.obj";
-	// let filepath = "/data/obj/voxels2.obj";
-	// let filepath = "/data/obj/teapot.obj";
-	// let filepath = "/data/obj/teapot2.obj";
-	// let filepath = "/data/obj/minicooper.obj";
-	// let filepath = "/data/obj/minicooper2.obj";
-	// let filepath = "/data/obj/jeffrey.obj";
-	// let filepath = "/data/obj/jeffrey2.obj";
-	// let filepath = "/data/obj/jeffrey3.obj";
-	// let filepath = "/data/obj/globe2.obj";
-	// let filepath = "/data/obj/pubes.obj";
-
-	let mut scenes: Vec<MeshScene> = vec![
+	let mut scenes = vec![
+		MeshScene::new(
+			graphics.clone(),
+			get_absolute_filepath("/data/obj/cube.obj")
+		),
+		MeshScene::new(
+			graphics.clone(),
+			get_absolute_filepath("/data/obj/lamp.obj")
+		),
 		MeshScene::new(
 			graphics.clone(),
 			get_absolute_filepath("/data/obj/voxels2.obj")
 		),
-		// MeshScene::new(
-		// 	graphics.clone(),
-		// 	get_absolute_filepath("/data/obj/minicooper2.obj")
-		// )
+		MeshScene::new(
+			graphics.clone(),
+			get_absolute_filepath("/data/obj/teapot.obj")
+		),
+		MeshScene::new(
+			graphics.clone(),
+			get_absolute_filepath("/data/obj/teapot2.obj")
+		),
+		MeshScene::new(
+			graphics.clone(),
+			get_absolute_filepath("/data/obj/minicooper2.obj")
+		),
+		MeshScene::new(
+			graphics.clone(),
+			get_absolute_filepath("/data/obj/jeffrey3.obj")
+		),
 	];
+
+	let mut current_scene_index = min(0, scenes.len() - 1);
 
 	let tick_frequency = app.timer.performance_frequency();
 
@@ -138,6 +147,27 @@ fn main() -> Result<(), String> {
 						Keycode::Escape { .. } => {
 							break 'main
 						},
+						Keycode::Num4 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 0);
+						},
+						Keycode::Num5 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 1);
+						},
+						Keycode::Num6 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 2);
+						},
+						Keycode::Num7 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 3);
+						},
+						Keycode::Num8 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 4);
+						},
+						Keycode::Num9 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 5);
+						},
+						Keycode::Num0 { .. } => {
+							current_scene_index = min(scenes.len() - 1, 6);
+						},
 						_ => {
 							keyboard_state.keys_pressed.push(keycode);
 						}
@@ -165,52 +195,23 @@ fn main() -> Result<(), String> {
 
 		// 1b. Scene update (rotation, velocity, etc)
 
-		for scene in scenes.as_mut_slice() {
-			scene.update(&keyboard_state, &mouse_state, delta_t_seconds);
-		}
-
-		// Indexes triangle list
-
-		// 0. Split vertices and indices
-		// 1a. Vertex stream -> Vertex transformer
-		// 1b. Index stream
-		// 2. Triangle assembler (vertices + indices -> Triangle[])
-		//  - Backface culling
-		// 3. World-space-to-screen-space transformer
-		// 4. Triange rasterizer
-		// 5. Pixel shader
-		// 6. PutPixel
-
-		// Scene::Update(keyboardState, mouseState, deltaT)
-
-		// pub struct Triangle<T = Vec3> {
-		// 	pub v0: T,
-		// 	pub v1: T,
-		// 	pub v2: T,
-		// }
-
-		// Interpolate entire Vertex (all attributes) when drawing (scanline
-		// interpolant)
+		scenes[current_scene_index].update(&keyboard_state, &mouse_state, delta_t_seconds);
 
 		backbuffer.with_lock(
             None,
             |write_only_byte_array, _pitch| {
 
-				for scene in scenes.as_mut_slice() {
+				scenes[current_scene_index].render();
 
-					scene.render();
+				let pixels_as_u8_slice: &[u8] = bytemuck::cast_slice(
+					&scenes[current_scene_index].get_pixel_data(),
+				);
 
-					let pixels_as_u8_slice: &[u8] = bytemuck::cast_slice(
-						&scene.get_pixel_data(),
-					);
+				let mut index = 0;
 
-					let mut index = 0;
-
-					while index < pixels_as_u8_slice.len() {
-						write_only_byte_array[index] = pixels_as_u8_slice[index];
-						index += 1;
-					}
-
+				while index < pixels_as_u8_slice.len() {
+					write_only_byte_array[index] = pixels_as_u8_slice[index];
+					index += 1;
 				}
 
 			}

@@ -78,6 +78,29 @@ impl MeshScene {
 
 	fn process_vertices(&mut self) -> () {
 
+		// Indexes triangle list
+
+		// 0. Split vertices and indices
+		// 1a. Vertex stream -> Vertex transformer
+		// 1b. Index stream
+		// 2. Triangle assembler (vertices + indices -> Triangle[])
+		//  - Backface culling
+		// 3. World-space-to-screen-space transformer
+		// 4. Triange rasterizer
+		// 5. Pixel shader
+		// 6. PutPixel
+
+		// Scene::Update(keyboardState, mouseState, deltaT)
+
+		// pub struct Triangle<T = Vec3> {
+		// 	pub v0: T,
+		// 	pub v1: T,
+		// 	pub v2: T,
+		// }
+
+		// Interpolate entire Vertex (all attributes) when drawing (scanline
+		// interpolant)
+
 		let mesh = &self.mesh;
 
 		let mesh_vertices_length = mesh.v.len();
@@ -329,23 +352,6 @@ impl MeshScene {
 			}
 
 		}
-
-		// let screen_light_vector = Vec3{
-		// 	x: (
-		// 		light_vector.x / light_vector.z * aspect_ratio_how + 1.0
-		// 	) * width_scale,
-		// 	y: (
-		// 		(-1.0 * light_vector.y) / light_vector.z + 1.0
-		// 	) * height_scale,
-		// 	z: 0.0,
-		// };
-
-		// self.graphics.line(
-		// 	0,
-		// 	0,
-		// 	screen_light_vector.x as u32,
-		// 	screen_light_vector.y as u32,
-		// 	color::WHITE)
 
 	}
 
