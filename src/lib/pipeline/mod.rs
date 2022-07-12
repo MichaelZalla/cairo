@@ -1,6 +1,13 @@
-use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::{Vec2, self}}, mesh::Mesh, color::{self, Color}};
+use std::{ops, fmt};
 
-type Triangle<T> = Vec<T>;
+use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, color::{self, Color}};
+
+#[derive(Copy, Clone, Default)]
+struct Triangle<T> {
+	v0: T,
+	v1: T,
+	v2: T,
+}
 
 #[derive(Copy, Clone, Default)]
 struct Vertex {
@@ -12,6 +19,45 @@ impl Vertex {
 
 	pub fn new() -> Self {
 		Default::default()
+	}
+
+}
+
+impl fmt::Display for Vertex {
+	fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(v, "{}", self.p)
+    }
+}
+
+impl ops::Add<Vertex> for Vertex {
+	type Output = Vertex;
+	fn add(self, rhs: Vertex) -> Vertex {
+		Vertex {
+			p: self.p + rhs.p,
+			n: self.n + rhs.n,
+		}
+	}
+
+}
+
+impl ops::Sub<Vertex> for Vertex {
+	type Output = Vertex;
+	fn sub(self, rhs: Vertex) -> Vertex {
+		Vertex {
+			p: self.p - rhs.p,
+			n: self.n - rhs.n,
+		}
+	}
+
+}
+
+impl ops::Mul<f32> for Vertex {
+	type Output = Vertex;
+	fn mul(self, scalar: f32) -> Vertex {
+		Vertex {
+			p: self.p * scalar,
+			n: self.n * scalar,
+		}
 	}
 
 }
@@ -227,20 +273,20 @@ impl Pipeline {
 				continue;
 			}
 
-			triangles.push(vec![
-				Vertex{
+			triangles.push(Triangle{
+				v0: Vertex{
 					p: vertices[face.0].p,
 					n: world_vertex_normals_for_face[0],
 				},
-				Vertex{
+				v1: Vertex{
 					p: vertices[face.1].p,
 					n: world_vertex_normals_for_face[1],
 				},
-				Vertex{
+				v2: Vertex{
 					p: vertices[face.2].p,
 					n: world_vertex_normals_for_face[2],
 				},
-			]);
+			});
 
 		}
 
@@ -264,40 +310,71 @@ impl Pipeline {
 		triangle: Triangle<Vertex>) -> ()
 	{
 
-		let mut points: Vec<Vec2> = vec![
-			Vec2{
-				x: triangle[0].p.x,
-				y: triangle[0].p.y,
-				z: triangle[0].p.z,
-			},
-			Vec2{
-				x: triangle[1].p.x,
-				y: triangle[1].p.y,
-				z: triangle[1].p.z,
-			},
-			Vec2{
-				x: triangle[2].p.x,
-				y: triangle[2].p.y,
-				z: triangle[2].p.z,
-			},
+		let world_vertex_relative_normals = [
+			triangle.v0.p + (triangle.v0.n * 0.05),
+			triangle.v1.p + (triangle.v1.n * 0.05),
+			triangle.v2.p + (triangle.v2.n * 0.05),
 		];
 
 		// Screen-space perspective divide
 
-		for mut point in points.as_mut_slice() {
+		let screen_v0 = Vertex{
+			p: Vec3{
+				x: (
+					triangle.v0.p.x / triangle.v0.p.z * self.graphics.buffer.height_over_width + 1.0
+				) * self.buffer_width_over_2,
+				y: (
+					(-1.0 * triangle.v0.p.y) / triangle.v0.p.z + 1.0
+				) * self.buffer_height_over_2,
+				z: triangle.v0.p.z,
+			},
+			n: triangle.v0.n.clone(),
+		};
 
-			point.x = (
-				point.x / point.z * self.graphics.buffer.height_over_width + 1.0
-			) * self.buffer_width_over_2;
+		let screen_v1 = Vertex{
+			p: Vec3{
+				x: (
+					triangle.v1.p.x / triangle.v1.p.z * self.graphics.buffer.height_over_width + 1.0
+				) * self.buffer_width_over_2,
+				y: (
+					(-1.0 * triangle.v1.p.y) / triangle.v1.p.z + 1.0
+				) * self.buffer_height_over_2,
+				z: triangle.v1.p.z,
+			},
+			n: triangle.v1.n.clone(),
+		};
 
-			point.y = (
-				(-1.0 * point.y) / point.z + 1.0
-			) * self.buffer_height_over_2;
+		let screen_v2 = Vertex{
+			p: Vec3{
+				x: (
+					triangle.v2.p.x / triangle.v2.p.z * self.graphics.buffer.height_over_width + 1.0
+				) * self.buffer_width_over_2,
+				y: (
+					(-1.0 * triangle.v2.p.y) / triangle.v2.p.z + 1.0
+				) * self.buffer_height_over_2,
+				z: triangle.v2.p.z,
+			},
+			n: triangle.v2.n.clone(),
+		};
 
-		}
+		let screen_vertices = [screen_v0, screen_v1, screen_v2];
 
 		if self.options.should_render_wireframe {
-			self.graphics.poly_line(points.as_slice(), color::WHITE);
+
+			let mut points: Vec<Vec2> = vec![];
+
+			for v in screen_vertices {
+				points.push(Vec2 {
+					x: v.p.x,
+					y: v.p.y,
+					z: v.p.z,
+				});
+			}
+
+			self.graphics.poly_line(
+				points.as_slice(),
+				color::WHITE
+			);
 		}
 
 		// Interpolate entire Vertex (all attributes) when drawing (scanline
@@ -305,39 +382,17 @@ impl Pipeline {
 
 		if self.options.should_render_shader {
 
-			// Calculate luminance
+			let color = self.get_triangle_color(triangle);
 
-			let min_luminance = 150.0;
-			let max_luminance = 255.0;
-
-			let light_intensity = 1.0;
-
-			let luminance0 = -1.0 * light_intensity * self.light_normal.dot(triangle[0].n);
-			let luminance1 = -1.0 * light_intensity * self.light_normal.dot(triangle[1].n);
-			let luminance2 = -1.0 * light_intensity * self.light_normal.dot(triangle[2].n);
-
-			let luminance_avg = (luminance0 + luminance1 + luminance2) / 3.0;
-
-			let scaled_luminance: f32 = min_luminance + luminance_avg * (max_luminance - min_luminance);
-
-			// println!("luminance_avg = {}", luminance_avg);
-
-			let color = Color::RGB(
-				scaled_luminance as u8,
-				scaled_luminance as u8,
-				scaled_luminance as u8
-				// (0.5 * scaled_luminances) as u8
-			);
-
-			self.triangle_fill(points.as_slice(), color);
+			self.triangle_fill(screen_v0, screen_v1, screen_v2, color);
 
 		}
 
 		if self.options.should_render_normals {
 
-			for i in 0..=2 {
+			for (index, v) in screen_vertices.iter().enumerate() {
 
-				let world_vertex_relative_normal = triangle[i].p + (triangle[i].n * 0.05);
+				let world_vertex_relative_normal = world_vertex_relative_normals[index];
 
 				let screen_vertex_relative_normal = Vec2{
 					x: (
@@ -349,16 +404,10 @@ impl Pipeline {
 					z: 0.0,
 				};
 
-				let from_point = points[i];
+				let from = v.p;
+				let to = screen_vertex_relative_normal;
 
-				let to_point = screen_vertex_relative_normal;
-
-				self.graphics.line(
-					from_point.x as u32,
-				from_point.y as u32,
-				to_point.x as u32,
-				to_point.y as u32,
-				color::RED);
+				self.graphics.line(from.x as u32, from.y as u32, to.x as u32, to.y as u32, color::RED);
 
 			}
 
@@ -367,7 +416,7 @@ impl Pipeline {
 	}
 
 	#[inline(always)]
-	pub fn set_pixel_with_z_buffer(
+	fn set_pixel(
 		&mut self,
 		x: u32,
 		y: u32,
@@ -406,29 +455,31 @@ impl Pipeline {
 	#[inline(always)]
 	fn flat_top_triangle_fill(
 		&mut self,
-		p: &[vec2::Vec2],
-		color: color::Color) -> ()
+		v0: Vertex,
+		v1: Vertex,
+		v2: Vertex,
+		color: Color) -> ()
 	{
 
-		let left_step_x = (p[2].x - p[0].x) / (p[2].y - p[0].y);
-		let right_step_x = (p[2].x - p[1].x) / (p[2].y - p[1].y);
+		let left_step_x = (v2.p.x - v0.p.x) / (v2.p.y - v0.p.y);
+		let right_step_x = (v2.p.x - v1.p.x) / (v2.p.y - v1.p.y);
 
-		let left_step_z = (p[2].z - p[0].z) / (p[2].y - p[0].y);
-		let right_step_z = (p[2].z - p[1].z) / (p[2].y - p[1].y);
+		let left_step_z = (v2.p.z - v0.p.z) / (v2.p.y - v0.p.y);
+		let right_step_z = (v2.p.z - v1.p.z) / (v2.p.y - v1.p.y);
 
-		let y_start = (p[0].y - 0.5).ceil() as u32;
-		let y_end = (p[2].y - 0.5).ceil() as u32;
+		let y_start = (v0.p.y - 0.5).ceil() as u32;
+		let y_end = (v2.p.y - 0.5).ceil() as u32;
 
 		for y in y_start..y_end {
 
-			let delta_y = (y as f32 + 0.5) - p[0].y;
+			let delta_y = (y as f32 + 0.5) - v0.p.y;
 
-			let x_left =  p[0].x + left_step_x * delta_y;
-			let x_right = p[1].x + right_step_x * delta_y;
+			let x_left =  v0.p.x + left_step_x * delta_y;
+			let x_right = v1.p.x + right_step_x * delta_y;
 			let x_span = x_right - x_left;
 
-			let z_start: f32 =  p[0].z + left_step_z * delta_y;
-			let z_end: f32 = p[1].z + right_step_z * delta_y;
+			let z_start: f32 =  v0.p.z + left_step_z * delta_y;
+			let z_end: f32 = v1.p.z + right_step_z * delta_y;
 			let z_span: f32 = z_end - z_start;
 
 			let x_start = (x_left - 0.5).ceil() as u32;
@@ -441,7 +492,7 @@ impl Pipeline {
 
 				let z = z_start + z_span * x_progress;
 
-				self.set_pixel_with_z_buffer(x, y, z, color);
+				self.set_pixel(x, y, z, color);
 
 			}
 
@@ -452,29 +503,31 @@ impl Pipeline {
 	#[inline(always)]
 	fn flat_bottom_triangle_fill(
 		&mut self,
-		p: &[vec2::Vec2],
-		color: color::Color) -> ()
+		v0: Vertex,
+		v1: Vertex,
+		v2: Vertex,
+		color: Color) -> ()
 	{
 
-		let left_step_x = (p[1].x - p[0].x) / (p[1].y - p[0].y);
-		let right_step_x = (p[2].x - p[0].x) / (p[2].y - p[0].y);
+		let left_step_x = (v1.p.x - v0.p.x) / (v1.p.y - v0.p.y);
+		let right_step_x = (v2.p.x - v0.p.x) / (v2.p.y - v0.p.y);
 
-		let left_step_z = (p[1].z - p[0].z) / (p[1].y - p[0].y);
-		let right_step_z = (p[2].z - p[0].z) / (p[2].y - p[0].y);
+		let left_step_z = (v1.p.z - v0.p.z) / (v1.p.y - v0.p.y);
+		let right_step_z = (v2.p.z - v0.p.z) / (v2.p.y - v0.p.y);
 
-		let y_start = (p[0].y - 0.5).ceil() as u32;
-		let y_end = (p[2].y - 0.5).ceil() as u32;
+		let y_start = (v0.p.y - 0.5).ceil() as u32;
+		let y_end = (v2.p.y - 0.5).ceil() as u32;
 
 		for y in y_start..y_end {
 
-			let delta_y = y as f32 + 0.5 - p[0].y;
+			let delta_y = y as f32 + 0.5 - v0.p.y;
 
-			let x_left =  p[0].x + left_step_x * delta_y;
-			let x_right = p[0].x + right_step_x * delta_y;
+			let x_left =  v0.p.x + left_step_x * delta_y;
+			let x_right = v0.p.x + right_step_x * delta_y;
 			let x_span = x_right - x_left;
 
-			let z_start: f32 =  p[0].z + left_step_z * delta_y;
-			let z_end: f32 = p[0].z + right_step_z * delta_y;
+			let z_start: f32 =  v0.p.z + left_step_z * delta_y;
+			let z_end: f32 = v0.p.z + right_step_z * delta_y;
 			let z_span: f32 = z_end - z_start;
 
 			let x_start = (x_left - 0.5).ceil() as u32;
@@ -487,7 +540,7 @@ impl Pipeline {
 
 				let z = z_start + z_span * x_progress;
 
-				self.set_pixel_with_z_buffer(x, y, z, color);
+				self.set_pixel(x, y, z, color);
 
 			}
 
@@ -496,58 +549,56 @@ impl Pipeline {
 	}
 
 	#[inline(always)]
-	pub fn triangle_fill(
+	fn triangle_fill(
 		&mut self,
-		p: &[vec2::Vec2],
-		color: color::Color) -> ()
+		v0: Vertex,
+		v1: Vertex,
+		v2: Vertex,
+		color: Color) -> ()
 	{
 
-		let mut tri = vec![
-			p[0],
-			p[1],
-			p[2],
-		];
+		let mut tri = vec![v0, v1, v2];
 
 		// Sorts points by y-value (highest-to-lowest)
 
-		if tri[1].y < tri[0].y {
+		if tri[1].p.y < tri[0].p.y {
 			tri.swap(0, 1);
 		}
-		if tri[2].y < tri[1].y {
+		if tri[2].p.y < tri[1].p.y {
 			tri.swap(1, 2);
 		}
-		if tri[1].y < tri[0].y {
+		if tri[1].p.y < tri[0].p.y {
 			tri.swap(0, 1);
 		}
 
-		if tri[0].y == tri[1].y {
+		if tri[0].p.y == tri[1].p.y {
 
 			// Flat-top (horizontal line is tri[0]-to-tri[1]);
 
 			// tri[2] must sit below tri[0] and tri[1]; tri[0] and tri[1] cannot
 			// have the same x-value; therefore, sort tri[0] and tri[1] by x-value;
 
-			if tri[1].x < tri[0].x {
+			if tri[1].p.x < tri[0].p.x {
 				tri.swap(0, 1);
 			}
 
-			self.flat_top_triangle_fill(tri.as_slice(), color);
+			self.flat_top_triangle_fill(tri[0], tri[1], tri[2], color);
 
 			return;
 
 		}
-		else if tri[1].y == tri[2].y {
+		else if tri[1].p.y == tri[2].p.y {
 
 			// Flat-bottom (horizontal line is tri[1]-to-tri[2]);
 
 			// tri[0] must sit above tri[1] and tri[2]; tri[1] and tri[2] cannot
 			// have the same x-value; therefore, sort tri[1] and tri[2] by x-value;
 
-			if tri[2].x < tri[1].x {
+			if tri[2].p.x < tri[1].p.x {
 				tri.swap(1, 2);
 			}
 
-			self.flat_bottom_triangle_fill(tri.as_slice(), color);
+			self.flat_bottom_triangle_fill(tri[0], tri[1], tri[2], color);
 
 			return;
 
@@ -560,12 +611,12 @@ impl Pipeline {
 			// Find splitting vertex
 
 			let split_ratio =
-				(tri[1].y - tri[0].y) /
-				(tri[2].y - tri[0].y);
+				(tri[1].p.y - tri[0].p.y) /
+				(tri[2].p.y - tri[0].p.y);
 
 			let split_point = tri[0] + (tri[2] - tri[0]) * split_ratio;
 
-			if tri[1].x < split_point.x {
+			if tri[1].p.x < split_point.p.x {
 
 				// Major right
 
@@ -573,23 +624,9 @@ impl Pipeline {
 				// split_point cannot have the same x-value; therefore, sort tri[1]
 				// and split_point by x-value;
 
-				self.flat_bottom_triangle_fill(
-					vec![
-						tri[0],
-						tri[1],
-						split_point,
-					].as_slice(),
-					color);
+				self.flat_bottom_triangle_fill(tri[0], tri[1], split_point, color);
 
-				self.flat_top_triangle_fill(
-					vec![
-						tri[1],
-						split_point,
-						tri[2],
-					].as_slice(),
-					color);
-
-				return;
+				self.flat_top_triangle_fill(tri[1], split_point, tri[2], color);
 
 			}
 			else
@@ -597,27 +634,44 @@ impl Pipeline {
 
 				// Major left
 
-				self.flat_bottom_triangle_fill(
-					vec![
-						tri[0],
-						split_point,
-						tri[1],
-					].as_slice(),
-					color);
+				self.flat_bottom_triangle_fill(tri[0], split_point, tri[1], color);
 
-				self.flat_top_triangle_fill(
-					vec![
-						split_point,
-						tri[1],
-						tri[2],
-					].as_slice(),
-					color);
-
-				return;
+				self.flat_top_triangle_fill(split_point, tri[1], tri[2], color);
 
 			}
 
 		}
+
+	}
+
+	fn get_triangle_color(
+		&self,
+		tri: Triangle<Vertex>) -> Color
+	{
+
+		// Calculate luminance
+
+		let min_luminance = 150.0;
+		let max_luminance = 255.0;
+
+		let light_intensity = 1.0;
+
+		let luminance_0 = -1.0 * light_intensity * self.light_normal.dot(tri.v0.n);
+		let luminance_1 = -1.0 * light_intensity * self.light_normal.dot(tri.v1.n);
+		let luminance_2 = -1.0 * light_intensity * self.light_normal.dot(tri.v2.n);
+
+		let luminance = (luminance_0 + luminance_1 + luminance_2) / 3.0;
+
+		let scaled_luminance: f32 = min_luminance + luminance * (max_luminance - min_luminance);
+
+		let color = Color::RGB(
+			scaled_luminance as u8,
+			scaled_luminance as u8,
+			scaled_luminance as u8
+			// (0.5 * scaled_luminances) as u8
+		);
+
+		return color;
 
 	}
 
