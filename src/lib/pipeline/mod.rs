@@ -558,13 +558,13 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 			// Find splitting vertex
 
-			let split_ratio =
+			let alpha_split =
 				(tri[1].p.y - tri[0].p.y) /
 				(tri[2].p.y - tri[0].p.y);
 
-			let split_point = tri[0] + (tri[2] - tri[0]) * split_ratio;
+			let split_vertex = tri[0] + (tri[2] - tri[0]) * alpha_split;
 
-			if tri[1].p.x < split_point.p.x {
+			if tri[1].p.x < split_vertex.p.x {
 
 				// Major right
 
@@ -572,9 +572,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				// split_point cannot have the same x-value; therefore, sort tri[1]
 				// and split_point by x-value;
 
-				self.flat_bottom_triangle_fill(tri[0], tri[1], split_point, color);
+				self.flat_bottom_triangle_fill(tri[0], tri[1], split_vertex, color);
 
-				self.flat_top_triangle_fill(tri[1], split_point, tri[2], color);
+				self.flat_top_triangle_fill(tri[1], split_vertex, tri[2], color);
 
 			}
 			else
@@ -582,9 +582,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 				// Major left
 
-				self.flat_bottom_triangle_fill(tri[0], split_point, tri[1], color);
+				self.flat_bottom_triangle_fill(tri[0], split_vertex, tri[1], color);
 
-				self.flat_top_triangle_fill(split_point, tri[1], tri[2], color);
+				self.flat_top_triangle_fill(split_vertex, tri[1], tri[2], color);
 
 			}
 
