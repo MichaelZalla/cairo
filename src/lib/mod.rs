@@ -2,6 +2,7 @@ pub mod color;
 pub mod context;
 pub mod graphics;
 pub mod device;
+pub mod effect;
 pub mod mesh;
 pub mod scene;
 pub mod pipeline;

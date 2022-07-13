@@ -11,10 +11,11 @@ use crate::{
 		graphics::Graphics,
 		pipeline::{Pipeline, PipelineOptions}
 	},
+	effects::default_effect::DefaultEffect,
 };
 
 pub struct MeshScene {
-	pipeline: Pipeline,
+	pipeline: Pipeline<DefaultEffect>,
 	pipeline_options: PipelineOptions,
 	mesh: Mesh,
 	translation: Vec3,
@@ -68,7 +69,11 @@ impl MeshScene {
 			should_render_normals: false,
 		};
 
-		let mut pipeline = Pipeline::new(graphics, pipeline_options);
+		let mut pipeline = Pipeline::new(
+			graphics,
+			DefaultEffect{},
+			pipeline_options
+		);
 
 		pipeline.set_scale(scale);
 		pipeline.set_rotation(rotation);

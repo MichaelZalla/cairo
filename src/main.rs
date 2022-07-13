@@ -20,6 +20,7 @@ use crate::lib::graphics::{Graphics, PixelBuffer};
 use crate::lib::scene::Scene;
 
 mod vertices;
+mod effects;
 mod scenes;
 
 fn get_absolute_filepath(

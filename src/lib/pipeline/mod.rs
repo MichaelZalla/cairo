@@ -1,6 +1,6 @@
 use crate::vertices::default_vertex::DefaultVertex;
 
-use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, color::{self, Color}};
+use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, color::{self, Color}, effect::Effect};
 
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
@@ -18,7 +18,7 @@ pub struct PipelineOptions {
 
 type Vertex = DefaultVertex;
 
-pub struct Pipeline {
+pub struct Pipeline<T: Effect> {
 	options: PipelineOptions,
 	graphics: Graphics,
 	buffer_width_over_2: f32,
@@ -28,12 +28,14 @@ pub struct Pipeline {
 	translation: Vec3,
 	light_normal: Vec3,
 	z_buffer: Vec<f32>,
+	effect: T,
 }
 
-impl Pipeline {
+impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 	pub fn new(
 		graphics: Graphics,
+		effect: T,
 		options: PipelineOptions) -> Self
 	{
 
@@ -62,6 +64,7 @@ impl Pipeline {
 				z: 1.0
 			},
 			z_buffer: z_buffer,
+			effect: effect,
 		};
 
 	}
