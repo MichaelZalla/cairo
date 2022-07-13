@@ -1,4 +1,4 @@
-use std::{ops, fmt};
+use crate::vertices::default_vertex::DefaultVertex;
 
 use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, color::{self, Color}};
 
@@ -10,64 +10,13 @@ struct Triangle<T> {
 }
 
 #[derive(Copy, Clone, Default)]
-struct Vertex {
-	p: Vec3,
-	n: Vec3,
-}
-
-impl Vertex {
-
-	pub fn new() -> Self {
-		Default::default()
-	}
-
-}
-
-impl fmt::Display for Vertex {
-	fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(v, "{}", self.p)
-    }
-}
-
-impl ops::Add<Vertex> for Vertex {
-	type Output = Vertex;
-	fn add(self, rhs: Vertex) -> Vertex {
-		Vertex {
-			p: self.p + rhs.p,
-			n: self.n + rhs.n,
-		}
-	}
-
-}
-
-impl ops::Sub<Vertex> for Vertex {
-	type Output = Vertex;
-	fn sub(self, rhs: Vertex) -> Vertex {
-		Vertex {
-			p: self.p - rhs.p,
-			n: self.n - rhs.n,
-		}
-	}
-
-}
-
-impl ops::Mul<f32> for Vertex {
-	type Output = Vertex;
-	fn mul(self, scalar: f32) -> Vertex {
-		Vertex {
-			p: self.p * scalar,
-			n: self.n * scalar,
-		}
-	}
-
-}
-
-#[derive(Copy, Clone, Default)]
 pub struct PipelineOptions {
 	pub should_render_wireframe: bool,
 	pub should_render_shader: bool,
 	pub should_render_normals: bool,
 }
+
+type Vertex = DefaultVertex;
 
 pub struct Pipeline {
 	options: PipelineOptions,
@@ -83,7 +32,10 @@ pub struct Pipeline {
 
 impl Pipeline {
 
-	pub fn new(graphics: Graphics, options: PipelineOptions) -> Self {
+	pub fn new(
+		graphics: Graphics,
+		options: PipelineOptions) -> Self
+	{
 
 		let z_buffer_size: usize = (graphics.buffer.width * graphics.buffer.height) as usize;
 
@@ -377,7 +329,7 @@ impl Pipeline {
 			);
 		}
 
-		// Interpolate entire Vertex (all attributes) when drawing (scanline
+		// Interpolate entire vertex (all attributes) when drawing (scanline
 		// interpolant)
 
 		if self.options.should_render_shader {

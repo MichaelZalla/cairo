@@ -17,9 +17,10 @@ mod lib;
 use crate::lib::context::{get_application_context, get_application_rendering_context, get_backbuffer};
 use crate::lib::device::{KeyboardState, MouseState};
 use crate::lib::graphics::{Graphics, PixelBuffer};
-
-mod scenes;
 use crate::lib::scene::Scene;
+
+mod vertices;
+mod scenes;
 
 fn get_absolute_filepath(
 	filepath: &str) -> String
