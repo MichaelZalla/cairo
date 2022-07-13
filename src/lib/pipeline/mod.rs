@@ -536,8 +536,6 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 			self.flat_top_triangle_fill(tri[0], tri[1], tri[2], color);
 
-			return;
-
 		}
 		else if tri[1].p.y == tri[2].p.y {
 
@@ -551,8 +549,6 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			}
 
 			self.flat_bottom_triangle_fill(tri[0], tri[1], tri[2], color);
-
-			return;
 
 		}
 		else
