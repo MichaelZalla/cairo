@@ -380,7 +380,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 	{
 
 		if x > (self.graphics.buffer.width - 1) || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32 - 1) {
-			// panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
+			// Prevents panic! inside of self.graphics.set_pixel();
 			return;
 		}
 
@@ -396,14 +396,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			return;
 		}
 
-		let pixel_index = (y * self.graphics.buffer.width + x) as usize;
-
-		let r = color.r as u32;
-		let g = (color.g as u32).rotate_left(8);
-		let b = (color.b as u32).rotate_left(16);
-		let a = (color.a as u32).rotate_left(24);
-
-		self.graphics.buffer.pixels[pixel_index] = r|g|b|a;
+		self.graphics.set_pixel(x, y, color);
 
 	}
 
