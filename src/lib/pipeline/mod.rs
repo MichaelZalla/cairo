@@ -509,7 +509,11 @@ impl Pipeline {
 		color: Color) -> ()
 	{
 
-		let mut tri = vec![v0, v1, v2];
+		let mut tri = vec![
+			v0,
+			v1,
+			v2,
+		];
 
 		// Sorts points by y-value (highest-to-lowest)
 

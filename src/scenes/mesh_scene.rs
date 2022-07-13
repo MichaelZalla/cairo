@@ -2,7 +2,16 @@ use std::f32::consts::PI;
 
 use sdl2::keyboard::Keycode;
 
-use crate::{lib::{scene::Scene, vec::vec3::Vec3, mesh::{Mesh, get_mesh_from_obj}, device::{KeyboardState, MouseState}, graphics::Graphics, pipeline::{Pipeline, PipelineOptions}}};
+use crate::{
+	lib::{
+		scene::Scene,
+		vec::vec3::Vec3,
+		mesh::{Mesh, get_mesh_from_obj},
+		device::{KeyboardState, MouseState},
+		graphics::Graphics,
+		pipeline::{Pipeline, PipelineOptions}
+	},
+};
 
 pub struct MeshScene {
 	pipeline: Pipeline,
@@ -60,7 +69,6 @@ impl MeshScene {
 		};
 
 		let mut pipeline = Pipeline::new(graphics, pipeline_options);
-
 
 		pipeline.set_scale(scale);
 		pipeline.set_rotation(rotation);
@@ -139,7 +147,7 @@ impl Scene for MeshScene {
 			match mouse_state.wheel_direction {
 				sdl2::mouse::MouseWheelDirection::Normal => {
 					self.translation.z += (mouse_state.wheel_y as f32) / 4.0;
-					self.pipeline.set_translation((self.translation));
+					self.pipeline.set_translation(self.translation);
 				},
 				_ => {}
 			}
