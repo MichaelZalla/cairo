@@ -420,7 +420,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 		for y in y_start..y_end {
 
-			let delta_y = (y as f32 + 0.5) - v0.p.y;
+			let delta_y = y as f32 + 0.5 - v0.p.y;
 
 			let x_left =  v0.p.x + left_step_x * delta_y;
 			let x_right = v1.p.x + right_step_x * delta_y;
