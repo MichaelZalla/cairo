@@ -51,7 +51,7 @@ impl MeshScene {
 			z: 10.0,
 		};
 
-		let directional_light = Vec3{
+		let ambient_light = Vec3{
 			x: 0.0,
 			y: 0.0,
 			z: 1.0
@@ -74,7 +74,7 @@ impl MeshScene {
 				scale,
 				rotation,
 				translation,
-				directional_light
+				ambient_light
 			),
 			pipeline_options
 		);
@@ -83,7 +83,7 @@ impl MeshScene {
 		pipeline.effect.set_rotation(rotation);
 		pipeline.effect.set_translation(translation);
 
-		pipeline.set_light_normal(directional_light.as_normal());
+		pipeline.set_light_normal(ambient_light.as_normal());
 
 		return MeshScene{
 			pipeline,
@@ -180,11 +180,11 @@ impl Scene for MeshScene {
 
 		self.pipeline.effect.set_rotation(self.rotation);
 
-		self.pipeline.effect.set_directional_light(Vec3 {
-			x: -1.0 * (mouse_state.pos.0 as f32) / 20.0,
-			y: (mouse_state.pos.1 as f32) / 20.0,
-			z: 0.0,
-		}.as_normal());
+		// self.pipeline.effect.set_ambient_light(Vec3 {
+		// 	x: -1.0 * (mouse_state.pos.0 as f32) / 20.0,
+		// 	y: (mouse_state.pos.1 as f32) / 20.0,
+		// 	z: 0.0,
+		// }.as_normal());
 
 	}
 

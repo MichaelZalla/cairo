@@ -9,7 +9,7 @@ pub struct DefaultEffect {
 	scale: Vec3,
 	rotation: Vec3,
 	translation: Vec3,
-	directional_light: Vec3,
+	ambient_light: Vec3,
 }
 
 impl DefaultEffect {
@@ -18,13 +18,13 @@ impl DefaultEffect {
 		scale: Vec3,
 		rotation: Vec3,
 		translation: Vec3,
-		directional_light: Vec3) -> Self
+		ambient_light: Vec3) -> Self
 	{
 		return DefaultEffect {
 			scale,
 			rotation,
 			translation,
-			directional_light,
+			ambient_light,
 		};
 	}
 
@@ -49,11 +49,11 @@ impl DefaultEffect {
 		self.translation = matrix;
 	}
 
-	pub fn set_directional_light(
+	pub fn set_ambient_light(
 		&mut self,
 		light: Vec3) -> ()
 	{
-		self.directional_light = light;
+		self.ambient_light = light;
 	}
 
 }
@@ -89,20 +89,18 @@ impl Effect for DefaultEffect {
 
 		// Calculate luminance
 
-		let min_luminance = 150.0;
-		let max_luminance = 255.0;
+		let diffuse = 25.0;
 
-		let light_intensity = 1.0;
+		let light_intensity = 0.667;
 
-		let luminance = -1.0 * light_intensity * self.directional_light.dot(interpolant.n);
+		let luminance = -1.0 * light_intensity * self.ambient_light.dot(interpolant.n);
 
-		let scaled_luminance: f32 = min_luminance + luminance * (max_luminance - min_luminance);
+		let scaled_luminance: f32 = diffuse + luminance * (255.0 - diffuse);
 
 		let color = Color::RGB(
 			scaled_luminance as u8,
 			scaled_luminance as u8,
 			scaled_luminance as u8
-			// (0.5 * scaled_luminances) as u8
 		);
 
 		return color;
