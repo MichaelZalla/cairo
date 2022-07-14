@@ -75,7 +75,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		mesh: &Mesh) -> ()
 	{
 
-		self.graphics.buffer.clear();
+		self.graphics.buffer.clear(color::BLACK);
 
 		if self.options.should_render_shader {
 			for i in 0..self.z_buffer.len() {

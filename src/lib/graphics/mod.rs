@@ -1,4 +1,4 @@
-use super::{color, vec::vec2};
+use super::{color::{self, Color}, vec::vec2};
 
 #[derive(Clone)]
 pub struct PixelBuffer {
@@ -11,9 +11,12 @@ pub struct PixelBuffer {
 
 impl PixelBuffer {
 
-	pub fn clear(&mut self) -> &Self {
+	pub fn clear(
+		&mut self,
+		color: Color) -> &Self
+	{
 		for i in 0..self.pixels.len() {
-			self.pixels[i] = 0;
+			self.pixels[i] = color.to_u32();
 		}
 		self
 	}
