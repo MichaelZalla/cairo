@@ -22,6 +22,8 @@ pub struct MeshScene {
 	rotation: Vec3,
 	light_vector: Vec3,
 	normalized_light_vector: Vec3,
+	screen_width: u32,
+	screen_height: u32,
 }
 
 impl MeshScene {
@@ -69,6 +71,11 @@ impl MeshScene {
 			should_render_normals: false,
 		};
 
+		let buffer = &graphics.buffer;
+
+		let screen_width = buffer.width;
+		let screen_height = buffer.height;
+
 		let mut pipeline = Pipeline::new(
 			graphics,
 			DefaultEffect{},
@@ -81,7 +88,6 @@ impl MeshScene {
 
 		pipeline.set_light_normal(normalized_light_vector);
 
-
 		return MeshScene{
 			pipeline: pipeline,
 			pipeline_options: pipeline_options,
@@ -90,6 +96,8 @@ impl MeshScene {
 			translation: translation,
 			light_vector: light_vector,
 			normalized_light_vector: normalized_light_vector,
+			screen_width: screen_width,
+			screen_height: screen_height,
 		};
 
 	}
@@ -158,23 +166,31 @@ impl Scene for MeshScene {
 			}
 		}
 
-		self.light_vector.x = -1.0 * (mouse_state.pos.0 as f32) / 20.0;
-		self.light_vector.y = (mouse_state.pos.1 as f32) / 20.0;
+		let mouse_position = mouse_state.pos.to_owned();
 
-		self.normalized_light_vector = self.light_vector.as_normal();
+		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
+		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
 
-		self.pipeline.set_light_normal(self.normalized_light_vector);
+		self.rotation.y = -2.0 * PI * nds_mouse_x;
+		self.rotation.x = PI + 2.0 * PI * nds_mouse_y;
 
-		self.rotation.z += 0.25 * PI * delta_t_seconds;
-		self.rotation.z %= 2.0 * PI;
+		// self.rotation.z += 0.2 * PI * delta_t_seconds;
+		// self.rotation.z %= 2.0 * PI;
 
-		self.rotation.x += 0.25 * PI * delta_t_seconds;
-		self.rotation.x %= 2.0 * PI;
+		// self.rotation.x += 0.2 * PI * delta_t_seconds;
+		// self.rotation.x %= 2.0 * PI;
 
-		self.rotation.y += 0.25 * PI * delta_t_seconds;
-		self.rotation.y %= 2.0 * PI;
+		// self.rotation.y += 0.2 * PI * delta_t_seconds;
+		// self.rotation.y %= 2.0 * PI;
 
 		self.pipeline.set_rotation(self.rotation);
+
+		self.directional_light.x = -1.0 * (mouse_state.pos.0 as f32) / 20.0;
+		self.directional_light.y = (mouse_state.pos.1 as f32) / 20.0;
+
+		self.normalized_light_vector = self.directional_light.as_normal();
+
+		self.pipeline.set_light_normal(self.normalized_light_vector);
 
 	}
 
