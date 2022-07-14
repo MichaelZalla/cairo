@@ -336,11 +336,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		// interpolant)
 
 		if self.options.should_render_shader {
-
-			let color = self.get_triangle_color(triangle);
-
-			self.triangle_fill(screen_v0, screen_v1, screen_v2, color);
-
+			self.triangle_fill(screen_v0, screen_v1, screen_v2);
 		}
 
 		if self.options.should_render_normals {
@@ -405,9 +401,12 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		&mut self,
 		v0: Vertex,
 		v1: Vertex,
-		v2: Vertex,
-		color: Color) -> ()
+		v2: Vertex) -> ()
 	{
+
+		// @NOTE(mzalla) v0 as top-left vertex
+		// @NOTE(mzalla) v1 as top-right vertex
+		// @NOTE(mzalla) v2 as bottom vertex
 
 		let left_step_x = (v2.p.x - v0.p.x) / (v2.p.y - v0.p.y);
 		let right_step_x = (v2.p.x - v1.p.x) / (v2.p.y - v1.p.y);
@@ -418,11 +417,17 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		let y_start = (v0.p.y - 0.5).ceil() as u32;
 		let y_end = (v2.p.y - 0.5).ceil() as u32;
 
+		let mut lhs = v0.clone();
+		let lhs_step = (v2 - v0) / (y_end - y_start) as f32;
+
+		let mut rhs = v1.clone();
+		let rhs_step = (v2 - v1) / (y_end - y_start) as f32;
+
 		for y in y_start..y_end {
 
 			let delta_y = y as f32 + 0.5 - v0.p.y;
 
-			let x_left =  v0.p.x + left_step_x * delta_y;
+			let x_left = v0.p.x + left_step_x * delta_y;
 			let x_right = v1.p.x + right_step_x * delta_y;
 			let x_span = x_right - x_left;
 
@@ -433,6 +438,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			let x_start = (x_left - 0.5).ceil() as u32;
 			let x_end = (x_right - 0.5).ceil() as u32;
 
+			let mut cursor = lhs.clone();
+			let cursor_step = (rhs - cursor) / (x_end - x_start) as f32;
+
 			for x in x_start..x_end {
 
 				let x_relative = x - x_start;
@@ -440,9 +448,16 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 				let z = z_start + z_span * x_progress;
 
+				let color = self.get_pixel_color(cursor);
+
 				self.set_pixel(x, y, z, color);
 
+				cursor = cursor + cursor_step;
+
 			}
+
+			lhs = lhs + lhs_step;
+			rhs = rhs + rhs_step;
 
 		}
 
@@ -453,9 +468,12 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		&mut self,
 		v0: Vertex,
 		v1: Vertex,
-		v2: Vertex,
-		color: Color) -> ()
+		v2: Vertex) -> ()
 	{
+
+		// @NOTE(mzalla) v0 as top vertex
+		// @NOTE(mzalla) v1 as bottom-left vertex
+		// @NOTE(mzalla) v2 as bottom-right vertex
 
 		let left_step_x = (v1.p.x - v0.p.x) / (v1.p.y - v0.p.y);
 		let right_step_x = (v2.p.x - v0.p.x) / (v2.p.y - v0.p.y);
@@ -465,6 +483,12 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 		let y_start = (v0.p.y - 0.5).ceil() as u32;
 		let y_end = (v2.p.y - 0.5).ceil() as u32;
+
+		let mut lhs = v0.clone();
+		let lhs_step = (v1 - v0) / (y_end - y_start) as f32;
+
+		let mut rhs = v0.clone();
+		let rhs_step = (v2 - v0) / (y_end - y_start) as f32;
 
 		for y in y_start..y_end {
 
@@ -481,6 +505,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			let x_start = (x_left - 0.5).ceil() as u32;
 			let x_end = (x_right - 0.5).ceil() as u32;
 
+			let mut cursor = lhs.clone();
+			let cursor_step = (rhs - cursor) / (x_end - x_start) as f32;
+
 			for x in x_start..x_end {
 
 				let x_relative = x - x_start;
@@ -488,9 +515,16 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 				let z = z_start + z_span * x_progress;
 
+				let color = self.get_pixel_color(cursor);
+
 				self.set_pixel(x, y, z, color);
 
+				cursor = cursor + cursor_step;
+
 			}
+
+			lhs = lhs + lhs_step;
+			rhs = rhs + rhs_step;
 
 		}
 
@@ -501,8 +535,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		&mut self,
 		v0: Vertex,
 		v1: Vertex,
-		v2: Vertex,
-		color: Color) -> ()
+		v2: Vertex) -> ()
 	{
 
 		let mut tri = vec![
@@ -534,7 +567,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				tri.swap(0, 1);
 			}
 
-			self.flat_top_triangle_fill(tri[0], tri[1], tri[2], color);
+			self.flat_top_triangle_fill(tri[0], tri[1], tri[2]);
 
 		}
 		else if tri[1].p.y == tri[2].p.y {
@@ -548,7 +581,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				tri.swap(1, 2);
 			}
 
-			self.flat_bottom_triangle_fill(tri[0], tri[1], tri[2], color);
+			self.flat_bottom_triangle_fill(tri[0], tri[1], tri[2]);
 
 		}
 		else
@@ -572,9 +605,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				// split_point cannot have the same x-value; therefore, sort tri[1]
 				// and split_point by x-value;
 
-				self.flat_bottom_triangle_fill(tri[0], tri[1], split_vertex, color);
+				self.flat_bottom_triangle_fill(tri[0], tri[1], split_vertex);
 
-				self.flat_top_triangle_fill(tri[1], split_vertex, tri[2], color);
+				self.flat_top_triangle_fill(tri[1], split_vertex, tri[2]);
 
 			}
 			else
@@ -582,9 +615,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 				// Major left
 
-				self.flat_bottom_triangle_fill(tri[0], split_vertex, tri[1], color);
+				self.flat_bottom_triangle_fill(tri[0], split_vertex, tri[1]);
 
-				self.flat_top_triangle_fill(split_vertex, tri[1], tri[2], color);
+				self.flat_top_triangle_fill(split_vertex, tri[1], tri[2]);
 
 			}
 
@@ -592,9 +625,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 	}
 
-	fn get_triangle_color(
+	fn get_pixel_color(
 		&self,
-		tri: Triangle<Vertex>) -> Color
+		it: Vertex) -> Color
 	{
 
 		// Calculate luminance
@@ -604,11 +637,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 		let light_intensity = 1.0;
 
-		let luminance_0 = -1.0 * light_intensity * self.light_normal.dot(tri.v0.n);
-		let luminance_1 = -1.0 * light_intensity * self.light_normal.dot(tri.v1.n);
-		let luminance_2 = -1.0 * light_intensity * self.light_normal.dot(tri.v2.n);
-
-		let luminance = (luminance_0 + luminance_1 + luminance_2) / 3.0;
+		let luminance = -1.0 * light_intensity * self.directional_light_normal.dot(it.n);
 
 		let scaled_luminance: f32 = min_luminance + luminance * (max_luminance - min_luminance);
 
