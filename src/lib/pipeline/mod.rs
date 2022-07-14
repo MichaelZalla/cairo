@@ -562,7 +562,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				(tri[1].p.y - tri[0].p.y) /
 				(tri[2].p.y - tri[0].p.y);
 
-			let split_vertex = tri[0] + (tri[2] - tri[0]) * alpha_split;
+			let split_vertex = Vertex::interpolate(tri[0], tri[2], alpha_split);
 
 			if tri[1].p.x < split_vertex.p.x {
 
