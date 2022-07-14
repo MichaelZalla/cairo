@@ -184,14 +184,17 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				v0: Vertex{
 					p: vertices[face.0].p,
 					n: world_vertex_normals_for_face[0],
+					c: vertices[face.0].c,
 				},
 				v1: Vertex{
 					p: vertices[face.1].p,
 					n: world_vertex_normals_for_face[1],
+					c: vertices[face.1].c,
 				},
 				v2: Vertex{
 					p: vertices[face.2].p,
 					n: world_vertex_normals_for_face[2],
+					c: vertices[face.2].c,
 				},
 			});
 
@@ -236,6 +239,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				z: triangle.v0.p.z,
 			},
 			n: triangle.v0.n.clone(),
+			c: triangle.v0.c.clone(),
 		};
 
 		let screen_v1 = Vertex{
@@ -249,6 +253,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				z: triangle.v1.p.z,
 			},
 			n: triangle.v1.n.clone(),
+			c: triangle.v1.c.clone(),
 		};
 
 		let screen_v2 = Vertex{
@@ -262,6 +267,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				z: triangle.v2.p.z,
 			},
 			n: triangle.v2.n.clone(),
+			c: triangle.v2.c.clone(),
 		};
 
 		let screen_vertices = [screen_v0, screen_v1, screen_v2];

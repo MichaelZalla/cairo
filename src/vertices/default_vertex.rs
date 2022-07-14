@@ -6,6 +6,7 @@ use crate::lib::vec::vec3::Vec3;
 pub struct DefaultVertex {
 	pub p: Vec3,
 	pub n: Vec3,
+	pub c: Vec3,
 }
 
 impl DefaultVertex {
@@ -30,6 +31,7 @@ impl Add<DefaultVertex> for DefaultVertex {
 		DefaultVertex {
 			p: self.p + rhs.p,
 			n: self.n + rhs.n,
+			c: self.c + rhs.c,
 		}
 	}
 }
@@ -40,6 +42,7 @@ impl Sub<DefaultVertex> for DefaultVertex {
 		DefaultVertex {
 			p: self.p - rhs.p,
 			n: self.n - rhs.n,
+			c: self.c - rhs.c,
 		}
 	}
 }
@@ -50,6 +53,7 @@ impl Mul<f32> for DefaultVertex {
 		DefaultVertex {
 			p: self.p * scalar,
 			n: self.n * scalar,
+			c: self.c * scalar,
 		}
 	}
 }
@@ -60,6 +64,7 @@ impl Div<f32> for DefaultVertex {
 		DefaultVertex {
 			p: self.p / scalar,
 			n: self.n / scalar,
+			c: self.c / scalar,
 		}
 	}
 }
