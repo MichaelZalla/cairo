@@ -20,8 +20,7 @@ pub struct MeshScene {
 	mesh: Mesh,
 	translation: Vec3,
 	rotation: Vec3,
-	light_vector: Vec3,
-	normalized_light_vector: Vec3,
+	directional_light: Vec3,
 	screen_width: u32,
 	screen_height: u32,
 }
@@ -53,13 +52,7 @@ impl MeshScene {
 			z: 10.0,
 		};
 
-		let light_vector = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: 1.0
-		};
-
-		let normalized_light_vector = Vec3{
+		let directional_light = Vec3{
 			x: 0.0,
 			y: 0.0,
 			z: 1.0
@@ -86,18 +79,17 @@ impl MeshScene {
 		pipeline.set_rotation(rotation);
 		pipeline.set_translation(translation);
 
-		pipeline.set_light_normal(normalized_light_vector);
+		pipeline.set_light_normal(directional_light.as_normal());
 
 		return MeshScene{
-			pipeline: pipeline,
-			pipeline_options: pipeline_options,
-			mesh: mesh,
-			rotation: rotation,
-			translation: translation,
-			light_vector: light_vector,
-			normalized_light_vector: normalized_light_vector,
-			screen_width: screen_width,
-			screen_height: screen_height,
+			pipeline,
+			pipeline_options,
+			mesh,
+			rotation,
+			translation,
+			directional_light,
+			screen_width,
+			screen_height,
 		};
 
 	}
@@ -188,9 +180,7 @@ impl Scene for MeshScene {
 		self.directional_light.x = -1.0 * (mouse_state.pos.0 as f32) / 20.0;
 		self.directional_light.y = (mouse_state.pos.1 as f32) / 20.0;
 
-		self.normalized_light_vector = self.directional_light.as_normal();
-
-		self.pipeline.set_light_normal(self.normalized_light_vector);
+		self.pipeline.set_light_normal(self.directional_light.as_normal());
 
 	}
 

@@ -26,7 +26,7 @@ pub struct Pipeline<T: Effect> {
 	scale: Vec3,
 	rotation: Vec3,
 	translation: Vec3,
-	light_normal: Vec3,
+	directional_light_normal: Vec3,
 	z_buffer: Vec<f32>,
 	effect: T,
 }
@@ -58,7 +58,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			scale: Vec3::new(),
 			rotation: Vec3::new(),
 			translation: Vec3::new(),
-			light_normal: Vec3{
+			directional_light_normal: Vec3{
 				x: 0.0,
 				y: 0.0,
 				z: 1.0
@@ -107,7 +107,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		&mut self,
 		normal: Vec3) -> ()
 	{
-		self.light_normal = normal;
+		self.directional_light_normal = normal;
 	}
 
 	pub fn render(
