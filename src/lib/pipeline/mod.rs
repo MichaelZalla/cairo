@@ -1,6 +1,6 @@
 use crate::vertices::default_vertex::DefaultVertex;
 
-use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, color::{self, Color}, effect::Effect};
+use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, effect::Effect, color};
 
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
@@ -23,12 +23,8 @@ pub struct Pipeline<T: Effect> {
 	graphics: Graphics,
 	buffer_width_over_2: f32,
 	buffer_height_over_2: f32,
-	scale: Vec3,
-	rotation: Vec3,
-	translation: Vec3,
-	directional_light_normal: Vec3,
 	z_buffer: Vec<f32>,
-	effect: T,
+	pub effect: T,
 }
 
 impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
@@ -55,14 +51,6 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			graphics: graphics,
 			buffer_width_over_2: buffer_width_over_2,
 			buffer_height_over_2: buffer_height_over_2,
-			scale: Vec3::new(),
-			rotation: Vec3::new(),
-			translation: Vec3::new(),
-			directional_light_normal: Vec3{
-				x: 0.0,
-				y: 0.0,
-				z: 1.0
-			},
 			z_buffer: z_buffer,
 			effect: effect,
 		};
@@ -80,34 +68,6 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		options: PipelineOptions) -> ()
 	{
 		self.options = options;
-	}
-
-	pub fn set_scale(
-		&mut self,
-		matrix: Vec3) -> ()
-	{
-		self.scale = matrix;
-	}
-
-	pub fn set_rotation(
-		&mut self,
-		matrix: Vec3) -> ()
-	{
-		self.rotation = matrix;
-	}
-
-	pub fn set_translation(
-		&mut self,
-		matrix: Vec3) -> ()
-	{
-		self.translation = matrix;
-	}
-
-	pub fn set_light_normal(
-		&mut self,
-		normal: Vec3) -> ()
-	{
-		self.directional_light_normal = normal;
 	}
 
 	pub fn render(
@@ -139,17 +99,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		// Object-to-world-space transform
 
 		for i in 0..mesh_v_len {
-
-			world_vertices[i].p = mesh.v[i].clone();
-
-			world_vertices[i].p.rotate_along_z(self.rotation.z);
-			world_vertices[i].p.rotate_along_x(self.rotation.x);
-			world_vertices[i].p.rotate_along_y(self.rotation.y);
-
-			world_vertices[i].p *= self.scale;
-
-			world_vertices[i].p += self.translation;
-
+			world_vertices[i] = self.effect.vs(mesh.v[i]);
 		}
 
 		self.process_triangles(mesh, world_vertices);
@@ -202,17 +152,19 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 			if mesh_tn_len > 0 || mesh_vn_len == mesh_v_len {
 
-				world_vertex_normals_for_face[0].rotate_along_z(self.rotation.z);
-				world_vertex_normals_for_face[0].rotate_along_x(self.rotation.x);
-				world_vertex_normals_for_face[0].rotate_along_y(self.rotation.y);
+				let rotation = self.effect.get_rotation();
 
-				world_vertex_normals_for_face[1].rotate_along_z(self.rotation.z);
-				world_vertex_normals_for_face[1].rotate_along_x(self.rotation.x);
-				world_vertex_normals_for_face[1].rotate_along_y(self.rotation.y);
+				world_vertex_normals_for_face[0].rotate_along_z(rotation.z);
+				world_vertex_normals_for_face[0].rotate_along_x(rotation.x);
+				world_vertex_normals_for_face[0].rotate_along_y(rotation.y);
 
-				world_vertex_normals_for_face[2].rotate_along_z(self.rotation.z);
-				world_vertex_normals_for_face[2].rotate_along_x(self.rotation.x);
-				world_vertex_normals_for_face[2].rotate_along_y(self.rotation.y);
+				world_vertex_normals_for_face[1].rotate_along_z(rotation.z);
+				world_vertex_normals_for_face[1].rotate_along_x(rotation.x);
+				world_vertex_normals_for_face[1].rotate_along_y(rotation.y);
+
+				world_vertex_normals_for_face[2].rotate_along_z(rotation.z);
+				world_vertex_normals_for_face[2].rotate_along_x(rotation.x);
+				world_vertex_normals_for_face[2].rotate_along_y(rotation.y);
 
 			}
 
@@ -448,7 +400,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 				let z = z_start + z_span * x_progress;
 
-				let color = self.get_pixel_color(cursor);
+				let color = self.effect.ps(cursor);
 
 				self.set_pixel(x, y, z, color);
 
@@ -515,7 +467,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 				let z = z_start + z_span * x_progress;
 
-				let color = self.get_pixel_color(cursor);
+				let color = self.effect.ps(cursor);
 
 				self.set_pixel(x, y, z, color);
 
@@ -622,33 +574,6 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			}
 
 		}
-
-	}
-
-	fn get_pixel_color(
-		&self,
-		it: Vertex) -> Color
-	{
-
-		// Calculate luminance
-
-		let min_luminance = 150.0;
-		let max_luminance = 255.0;
-
-		let light_intensity = 1.0;
-
-		let luminance = -1.0 * light_intensity * self.directional_light_normal.dot(it.n);
-
-		let scaled_luminance: f32 = min_luminance + luminance * (max_luminance - min_luminance);
-
-		let color = Color::RGB(
-			scaled_luminance as u8,
-			scaled_luminance as u8,
-			scaled_luminance as u8
-			// (0.5 * scaled_luminances) as u8
-		);
-
-		return color;
 
 	}
 

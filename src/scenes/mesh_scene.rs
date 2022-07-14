@@ -18,9 +18,8 @@ pub struct MeshScene {
 	pipeline: Pipeline<DefaultEffect>,
 	pipeline_options: PipelineOptions,
 	mesh: Mesh,
-	translation: Vec3,
 	rotation: Vec3,
-	directional_light: Vec3,
+	translation: Vec3,
 	screen_width: u32,
 	screen_height: u32,
 }
@@ -71,13 +70,18 @@ impl MeshScene {
 
 		let mut pipeline = Pipeline::new(
 			graphics,
-			DefaultEffect{},
+			DefaultEffect::new(
+				scale,
+				rotation,
+				translation,
+				directional_light
+			),
 			pipeline_options
 		);
 
-		pipeline.set_scale(scale);
-		pipeline.set_rotation(rotation);
-		pipeline.set_translation(translation);
+		pipeline.effect.set_scale(scale);
+		pipeline.effect.set_rotation(rotation);
+		pipeline.effect.set_translation(translation);
 
 		pipeline.set_light_normal(directional_light.as_normal());
 
@@ -87,7 +91,6 @@ impl MeshScene {
 			mesh,
 			rotation,
 			translation,
-			directional_light,
 			screen_width,
 			screen_height,
 		};
@@ -104,27 +107,27 @@ impl Scene for MeshScene {
 			match keycode {
 				Keycode::Down|Keycode::S { .. } => {
 					self.translation.y += 0.1;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Up|Keycode::W { .. } => {
 					self.translation.y -= 0.1;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Right|Keycode::D { .. } => {
 					self.translation.x -= 0.1;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Left|Keycode::A { .. } => {
 					self.translation.x += 0.1;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Q { .. } => {
 					self.translation.z += 0.1;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::E { .. } => {
 					self.translation.z -= 0.1;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Num1 { .. } => {
 					self.pipeline_options.should_render_wireframe =
@@ -152,7 +155,7 @@ impl Scene for MeshScene {
 			match mouse_state.wheel_direction {
 				sdl2::mouse::MouseWheelDirection::Normal => {
 					self.translation.z += (mouse_state.wheel_y as f32) / 4.0;
-					self.pipeline.set_translation(self.translation);
+					self.pipeline.effect.set_translation(self.translation);
 				},
 				_ => {}
 			}
@@ -175,12 +178,13 @@ impl Scene for MeshScene {
 		// self.rotation.y += 0.2 * PI * delta_t_seconds;
 		// self.rotation.y %= 2.0 * PI;
 
-		self.pipeline.set_rotation(self.rotation);
+		self.pipeline.effect.set_rotation(self.rotation);
 
-		self.directional_light.x = -1.0 * (mouse_state.pos.0 as f32) / 20.0;
-		self.directional_light.y = (mouse_state.pos.1 as f32) / 20.0;
-
-		self.pipeline.set_light_normal(self.directional_light.as_normal());
+		self.pipeline.effect.set_directional_light(Vec3 {
+			x: -1.0 * (mouse_state.pos.0 as f32) / 20.0,
+			y: (mouse_state.pos.1 as f32) / 20.0,
+			z: 0.0,
+		}.as_normal());
 
 	}
 
