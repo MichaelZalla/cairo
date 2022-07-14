@@ -69,19 +69,19 @@ impl Effect for DefaultEffect {
 
 	fn vs(&self, v: Vec3) -> Self::Vertex {
 
-		let mut result = Self::Vertex::new();
+		let mut vertex = Self::Vertex::new();
 
-		result.p = v.clone();
+		vertex.p = v.clone();
 
-		result.p.rotate_along_z(self.rotation.z);
-		result.p.rotate_along_x(self.rotation.x);
-		result.p.rotate_along_y(self.rotation.y);
+		vertex.p.rotate_along_z(self.rotation.z);
+		vertex.p.rotate_along_x(self.rotation.x);
+		vertex.p.rotate_along_y(self.rotation.y);
 
-		result.p *= self.scale;
+		vertex.p *= self.scale;
 
-		result.p += self.translation;
+		vertex.p += self.translation;
 
-		return result;
+		return vertex;
 
 	}
 
