@@ -58,9 +58,21 @@ impl MeshScene {
 		};
 
 		let ambient_light = Vec3{
+			x: 0.1,
+			y: 0.1,
+			z: 0.1,
+		};
+
+		let diffuse_light = Vec3{
+			x: 0.8,
+			y: 0.8,
+			z: 0.8,
+		};
+
+		let diffuse_light_direction = Vec3{
 			x: 0.0,
 			y: 0.0,
-			z: 1.0
+			z: 1.0,
 		};
 
 		let pipeline_options = crate::lib::pipeline::PipelineOptions {
@@ -74,23 +86,19 @@ impl MeshScene {
 		let screen_width = buffer.width;
 		let screen_height = buffer.height;
 
-		let mut pipeline = Pipeline::new(
+		let pipeline = Pipeline::new(
 			graphics,
 			DefaultEffect::new(
 				scale,
 				rotation,
 				translation,
 				mesh_color,
-				ambient_light
+				ambient_light,
+				diffuse_light,
+				diffuse_light_direction
 			),
 			pipeline_options
 		);
-
-		pipeline.effect.set_scale(scale);
-		pipeline.effect.set_rotation(rotation);
-		pipeline.effect.set_translation(translation);
-
-		pipeline.set_light_normal(ambient_light.as_normal());
 
 		return MeshScene{
 			pipeline,

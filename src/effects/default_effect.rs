@@ -11,6 +11,8 @@ pub struct DefaultEffect {
 	translation: Vec3,
 	mesh_color: Vec3,
 	ambient_light: Vec3,
+	diffuse_light: Vec3,
+	diffuse_light_direction: Vec3,
 }
 
 impl DefaultEffect {
@@ -20,7 +22,9 @@ impl DefaultEffect {
 		rotation: Vec3,
 		translation: Vec3,
 		mesh_color: Vec3,
-		ambient_light: Vec3) -> Self
+		ambient_light: Vec3,
+		diffuse_light: Vec3,
+		diffuse_light_direction: Vec3) -> Self
 	{
 		return DefaultEffect {
 			scale,
@@ -28,6 +32,8 @@ impl DefaultEffect {
 			translation,
 			mesh_color,
 			ambient_light,
+			diffuse_light,
+			diffuse_light_direction,
 		};
 	}
 
@@ -66,6 +72,20 @@ impl DefaultEffect {
 		self.ambient_light = light;
 	}
 
+	pub fn set_diffuse_light(
+		&mut self,
+		light: Vec3) -> ()
+	{
+		self.diffuse_light = light;
+	}
+
+	pub fn set_diffuse_light_direction(
+		&mut self,
+		normal: Vec3) -> ()
+	{
+		self.diffuse_light_direction = normal;
+	}
+
 }
 
 impl Effect for DefaultEffect {
@@ -98,7 +118,15 @@ impl Effect for DefaultEffect {
 
 		vertex.n = vertex.n.as_normal();
 
-		vertex.c = self.mesh_color.clone();
+		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
+			(vertex.n * -1.0).dot(
+				self.diffuse_light_direction
+			)
+		);
+
+		let color = *(diffuse_intensity + self.ambient_light).saturate() * 255.0;
+
+		vertex.c = color;
 
 		return vertex;
 
@@ -106,23 +134,12 @@ impl Effect for DefaultEffect {
 
 	fn ps(&self, interpolant: <Self as Effect>::Vertex) -> Color {
 
-		// Calculate luminance
-
-		let diffuse = 25.0;
-
-		let light_intensity = 0.667;
-
-		let luminance = -1.0 * light_intensity * self.ambient_light.dot(interpolant.n);
-
-		let scaled_luminance: f32 = diffuse + luminance * (255.0 - diffuse);
-
-		let color = Color::RGB(
-			scaled_luminance as u8,
-			scaled_luminance as u8,
-			scaled_luminance as u8
-		);
-
-		return color;
+		return Color{
+			r: interpolant.c.x as u8,
+			g: interpolant.c.y as u8,
+			b: interpolant.c.z as u8,
+			a: 255 as u8,
+		};
 
 	}
 
