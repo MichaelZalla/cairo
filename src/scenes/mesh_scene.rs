@@ -181,8 +181,12 @@ impl Scene for MeshScene {
 		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
 		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
 
-		self.rotation.y = -2.0 * PI * nds_mouse_x;
-		self.rotation.x = PI + 2.0 * PI * nds_mouse_y;
+		// Rotation via mouse input
+
+		// self.rotation.y = -2.0 * PI * nds_mouse_x;
+		// self.rotation.x = PI + 2.0 * PI * nds_mouse_y;
+
+		// Rotation via time delta
 
 		// self.rotation.z += 0.2 * PI * delta_t_seconds;
 		// self.rotation.z %= 2.0 * PI;
@@ -190,16 +194,25 @@ impl Scene for MeshScene {
 		// self.rotation.x += 0.2 * PI * delta_t_seconds;
 		// self.rotation.x %= 2.0 * PI;
 
-		// self.rotation.y += 0.2 * PI * delta_t_seconds;
-		// self.rotation.y %= 2.0 * PI;
+		self.rotation.y += 0.2 * PI * delta_t_seconds;
+		self.rotation.y %= 2.0 * PI;
 
 		self.pipeline.effect.set_rotation(self.rotation);
 
-		// self.pipeline.effect.set_ambient_light(Vec3 {
-		// 	x: -1.0 * (mouse_state.pos.0 as f32) / 20.0,
-		// 	y: (mouse_state.pos.1 as f32) / 20.0,
-		// 	z: 0.0,
-		// }.as_normal());
+		// Light direction rotation via mouse input
+
+		let mut rotated_diffuse_light_direction = Vec3{
+			x: 0.0,
+			y: 0.0,
+			z: 1.0,
+		};
+
+		rotated_diffuse_light_direction.rotate_along_x(-2.0 * PI * nds_mouse_y * -1.0);
+		rotated_diffuse_light_direction.rotate_along_y(-2.0 * PI * nds_mouse_x);
+
+		self.pipeline.effect.set_diffuse_light_direction(
+			rotated_diffuse_light_direction
+		);
 
 	}
 
