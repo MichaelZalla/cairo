@@ -124,7 +124,9 @@ impl Effect for DefaultEffect {
 			)
 		);
 
-		let color = *(diffuse_intensity + self.ambient_light).saturate() * 255.0;
+		let color = (*self.mesh_color.get_hadamard(
+			diffuse_intensity + self.ambient_light
+		).saturate()) * 255.0;
 
 		vertex.c = color;
 

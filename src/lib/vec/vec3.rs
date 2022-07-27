@@ -143,6 +143,34 @@ impl Vec3 {
 	// 	self.z /= mag;
 	// }
 
+	pub fn hadamard(
+		&mut self,
+		rhs: Vec3) -> ()
+	{
+		*self *= rhs;
+	}
+
+	pub fn get_hadamard(
+		&self,
+		v: Vec3) -> Vec3
+	{
+		let mut result = self.clone();
+
+		result.hadamard(v);
+
+		return result;
+	}
+
+	pub fn saturate(
+		&mut self) -> &Self
+	{
+		self.x = self.x.max(0.0).min(1.0);
+		self.y = self.y.max(0.0).min(1.0);
+		self.z = self.z.max(0.0).min(1.0);
+
+		return self;
+	}
+
 	pub fn rotate_along_z(&mut self, phi: f32) -> () {
 		let (x, y, phi_cos, phi_sin) = (self.x, self.y, phi.cos(), phi.sin());
 		self.x = x * phi_cos - y * phi_sin;
