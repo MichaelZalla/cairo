@@ -8,7 +8,7 @@ pub trait Effect<T = DefaultVertex> {
 
 	fn get_rotation(&self) -> Vec3;
 
-	fn vs(&self, v: Vec3) -> Self::Vertex;
+	fn vs(&self, v: T) -> Self::Vertex;
 
 	fn ps(&self, interpolant: Self::Vertex) -> Color;
 

@@ -92,14 +92,14 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		mesh: &Mesh) -> ()
 	{
 
-		let mesh_v_len = mesh.v.len();
+		let mesh_v_len = mesh.vertices.len();
 
 		let mut world_vertices: Vec<Vertex> = vec![Vertex::new(); mesh_v_len];
 
 		// Object-to-world-space transform
 
 		for i in 0..mesh_v_len {
-			world_vertices[i] = self.effect.vs(mesh.v[i]);
+			world_vertices[i] = self.effect.vs(mesh.vertices[i]);
 		}
 
 		self.process_triangles(mesh, world_vertices);
@@ -112,90 +112,27 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 		vertices: Vec<Vertex>) -> ()
 	{
 
-		let faces = mesh.f.clone();
+		let faces = mesh.face_indices.clone();
 
 		let mut triangles: Vec<Triangle<Vertex>> = vec![];
 
-		let mesh_v_len = mesh.v.len();
-		let mesh_vn_len = mesh.vn.len();
-		let mesh_tn_len = mesh.tn.len();
-
-		for (face_index, face) in faces.iter().enumerate() {
-
-			// Resolve normals for current triangle;
-
-			let mut world_vertex_normals_for_face: Vec<Vec3> = vec![];
-
-			if mesh_tn_len > 0 {
-				world_vertex_normals_for_face.push(mesh.vn[mesh.tn[face_index].0].clone());
-				world_vertex_normals_for_face.push(mesh.vn[mesh.tn[face_index].1].clone());
-				world_vertex_normals_for_face.push(mesh.vn[mesh.tn[face_index].2].clone());
-			}
-			else if mesh_vn_len == mesh_v_len {
-				world_vertex_normals_for_face.push(mesh.vn[face.0].clone());
-				world_vertex_normals_for_face.push(mesh.vn[face.1].clone());
-				world_vertex_normals_for_face.push(mesh.vn[face.2].clone());
-			}
-			else {
-				world_vertex_normals_for_face.push(
-					(vertices[face.1].p - vertices[face.0].p).cross(vertices[face.2].p - vertices[face.0].p)
-				);
-				world_vertex_normals_for_face.push(
-					(vertices[face.2].p - vertices[face.1].p).cross(vertices[face.0].p - vertices[face.1].p)
-				);
-				world_vertex_normals_for_face.push(
-					(vertices[face.0].p - vertices[face.2].p).cross(vertices[face.1].p - vertices[face.2].p)
-				);
-			}
-
-			// Rotate normals
-
-			if mesh_tn_len > 0 || mesh_vn_len == mesh_v_len {
-
-				let rotation = self.effect.get_rotation();
-
-				world_vertex_normals_for_face[0].rotate_along_z(rotation.z);
-				world_vertex_normals_for_face[0].rotate_along_x(rotation.x);
-				world_vertex_normals_for_face[0].rotate_along_y(rotation.y);
-
-				world_vertex_normals_for_face[1].rotate_along_z(rotation.z);
-				world_vertex_normals_for_face[1].rotate_along_x(rotation.x);
-				world_vertex_normals_for_face[1].rotate_along_y(rotation.y);
-
-				world_vertex_normals_for_face[2].rotate_along_z(rotation.z);
-				world_vertex_normals_for_face[2].rotate_along_x(rotation.x);
-				world_vertex_normals_for_face[2].rotate_along_y(rotation.y);
-
-			}
-
-			world_vertex_normals_for_face[0] = world_vertex_normals_for_face[0].as_normal();
-			world_vertex_normals_for_face[1] = world_vertex_normals_for_face[1].as_normal();
-			world_vertex_normals_for_face[2] = world_vertex_normals_for_face[2].as_normal();
+		for face in faces.iter() {
 
 			// Cull backfaces
 
-			let dot_product = world_vertex_normals_for_face[0].dot(vertices[face.0].p.as_normal());
+			let vertex_vector = vertices[face.0].p;
+			let vertex_normal = vertices[face.0].n;
+
+			let dot_product = vertex_normal.dot(vertex_vector.as_normal());
 
 			if dot_product > 0.0 {
 				continue;
 			}
 
 			triangles.push(Triangle{
-				v0: Vertex{
-					p: vertices[face.0].p,
-					n: world_vertex_normals_for_face[0],
-					c: vertices[face.0].c,
-				},
-				v1: Vertex{
-					p: vertices[face.1].p,
-					n: world_vertex_normals_for_face[1],
-					c: vertices[face.1].c,
-				},
-				v2: Vertex{
-					p: vertices[face.2].p,
-					n: world_vertex_normals_for_face[2],
-					c: vertices[face.2].c,
-				},
+				v0: vertices[face.0],
+				v1: vertices[face.1],
+				v2: vertices[face.2],
 			});
 
 		}
