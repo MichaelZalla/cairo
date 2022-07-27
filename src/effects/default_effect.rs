@@ -13,6 +13,11 @@ pub struct DefaultEffect {
 	ambient_light: Vec3,
 	diffuse_light: Vec3,
 	diffuse_light_direction: Vec3,
+	point_light: Vec3,
+	point_light_position: Vec3,
+	constant_attenuation: f32,
+	linear_attenuation: f32,
+	quadratic_attenuation: f32,
 }
 
 impl DefaultEffect {
@@ -24,7 +29,9 @@ impl DefaultEffect {
 		mesh_color: Vec3,
 		ambient_light: Vec3,
 		diffuse_light: Vec3,
-		diffuse_light_direction: Vec3) -> Self
+		diffuse_light_direction: Vec3,
+		point_light: Vec3,
+		point_light_position: Vec3,) -> Self
 	{
 		return DefaultEffect {
 			scale,
@@ -34,6 +41,11 @@ impl DefaultEffect {
 			ambient_light,
 			diffuse_light,
 			diffuse_light_direction,
+			point_light,
+			point_light_position,
+			constant_attenuation: 0.382,
+			linear_attenuation: 1.0,
+			quadratic_attenuation: 2.619,
 		};
 	}
 
@@ -86,6 +98,20 @@ impl DefaultEffect {
 		self.diffuse_light_direction = normal;
 	}
 
+	pub fn set_point_light(
+		&mut self,
+		light: Vec3) -> ()
+	{
+		self.point_light = light;
+	}
+
+	pub fn set_point_light_position(
+		&mut self,
+		pos: Vec3) -> ()
+	{
+		self.point_light_position = pos;
+	}
+
 }
 
 impl Effect for DefaultEffect {
@@ -118,14 +144,36 @@ impl Effect for DefaultEffect {
 
 		vertex.n = vertex.n.as_normal();
 
+		// Calculate point light intensity
+
+		let vertex_to_point_light = self.point_light_position - vertex.p;
+		let distance_to_point_light = vertex_to_point_light.mag();
+		let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
+
+		let attentuation = 1.0 / (
+			self.quadratic_attenuation * distance_to_point_light.powi(2) +
+			self.linear_attenuation * distance_to_point_light +
+			self.constant_attenuation
+		);
+
+		// Calculate diffuse light intensity
+
 		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
 			(vertex.n * -1.0).dot(
 				self.diffuse_light_direction
 			)
 		);
 
+		// Calculate point light intensity
+
+		let point_intensity = self.point_light * attentuation * (0.0 as f32).max(
+			vertex.n.dot(normal_to_point_light)
+		);
+
+		// Calculate our color based on mesh color and light intensities
+
 		let color = (*self.mesh_color.get_hadamard(
-			diffuse_intensity + self.ambient_light
+			point_intensity + diffuse_intensity + self.ambient_light
 		).saturate()) * 255.0;
 
 		vertex.c = color;

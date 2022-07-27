@@ -110,7 +110,7 @@ impl ops::MulAssign<Vec3> for Vec3 {
 
 impl Vec3 {
 
-	fn mag(self) -> f32 {
+	pub fn mag(self) -> f32 {
 		return ((self.x.powi(2) + self.y.powi(2) + self.z.powi(2)) / 2.0).sqrt();
 	}
 

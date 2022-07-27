@@ -64,15 +64,27 @@ impl MeshScene {
 		};
 
 		let diffuse_light = Vec3{
-			x: 0.8,
-			y: 0.8,
-			z: 0.8,
+			x: 0.6,
+			y: 0.6,
+			z: 0.6,
 		};
 
 		let diffuse_light_direction = Vec3{
 			x: 0.0,
 			y: 0.0,
 			z: 1.0,
+		};
+
+		let point_light = Vec3{
+			x: 0.8,
+			y: 0.8,
+			z: 0.8,
+		};
+
+		let point_light_position = Vec3{
+			x: 0.0,
+			y: 0.0,
+			z: -1.0,
 		};
 
 		let pipeline_options = crate::lib::pipeline::PipelineOptions {
@@ -95,7 +107,9 @@ impl MeshScene {
 				mesh_color,
 				ambient_light,
 				diffuse_light,
-				diffuse_light_direction
+				diffuse_light_direction,
+				point_light,
+				point_light_position
 			),
 			pipeline_options
 		);
@@ -199,19 +213,34 @@ impl Scene for MeshScene {
 
 		self.pipeline.effect.set_rotation(self.rotation);
 
-		// Light direction rotation via mouse input
+		// // Diffuse light direction rotation via mouse input
 
-		let mut rotated_diffuse_light_direction = Vec3{
+		// let mut rotated_diffuse_light_direction = Vec3{
+		// 	x: 0.0,
+		// 	y: 0.0,
+		// 	z: 1.0,
+		// };
+
+		// rotated_diffuse_light_direction.rotate_along_x(-2.0 * PI * nds_mouse_y * -1.0);
+		// rotated_diffuse_light_direction.rotate_along_y(-2.0 * PI * nds_mouse_x);
+
+		// self.pipeline.effect.set_diffuse_light_direction(
+		// 	rotated_diffuse_light_direction
+		// );
+
+		// Point light position translation via mouse input
+
+		let mut point_light_position = Vec3{
 			x: 0.0,
 			y: 0.0,
-			z: 1.0,
+			z: 2.0,
 		};
 
-		rotated_diffuse_light_direction.rotate_along_x(-2.0 * PI * nds_mouse_y * -1.0);
-		rotated_diffuse_light_direction.rotate_along_y(-2.0 * PI * nds_mouse_x);
+		point_light_position.y = 5.0 - (10.0 * nds_mouse_y);
+		point_light_position.x = -5.0 + (10.0 * nds_mouse_x);
 
-		self.pipeline.effect.set_diffuse_light_direction(
-			rotated_diffuse_light_direction
+		self.pipeline.effect.set_point_light_position(
+			point_light_position
 		);
 
 	}
