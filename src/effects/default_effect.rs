@@ -9,6 +9,7 @@ pub struct DefaultEffect {
 	scale: Vec3,
 	rotation: Vec3,
 	translation: Vec3,
+	mesh_color: Vec3,
 	ambient_light: Vec3,
 }
 
@@ -18,12 +19,14 @@ impl DefaultEffect {
 		scale: Vec3,
 		rotation: Vec3,
 		translation: Vec3,
+		mesh_color: Vec3,
 		ambient_light: Vec3) -> Self
 	{
 		return DefaultEffect {
 			scale,
 			rotation,
 			translation,
+			mesh_color,
 			ambient_light,
 		};
 	}
@@ -47,6 +50,13 @@ impl DefaultEffect {
 		matrix: Vec3) -> ()
 	{
 		self.translation = matrix;
+	}
+
+	pub fn set_mesh_color(
+		&mut self,
+		c: Vec3) -> ()
+	{
+		self.mesh_color = c;
 	}
 
 	pub fn set_ambient_light(
@@ -88,7 +98,7 @@ impl Effect for DefaultEffect {
 
 		vertex.n = vertex.n.as_normal();
 
-		vertex.c = v.c.clone();
+		vertex.c = self.mesh_color.clone();
 
 		return vertex;
 

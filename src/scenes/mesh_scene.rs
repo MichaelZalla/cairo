@@ -51,6 +51,12 @@ impl MeshScene {
 			z: 10.0,
 		};
 
+		let mesh_color = Vec3{
+			x: 0.5,
+			y: 0.0,
+			z: 0.65,
+		};
+
 		let ambient_light = Vec3{
 			x: 0.0,
 			y: 0.0,
@@ -74,6 +80,7 @@ impl MeshScene {
 				scale,
 				rotation,
 				translation,
+				mesh_color,
 				ambient_light
 			),
 			pipeline_options
