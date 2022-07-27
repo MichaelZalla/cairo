@@ -18,6 +18,8 @@ pub struct DefaultEffect {
 	constant_attenuation: f32,
 	linear_attenuation: f32,
 	quadratic_attenuation: f32,
+	specular_intensity: f32,
+	specular_power: i32,
 }
 
 impl DefaultEffect {
@@ -46,6 +48,8 @@ impl DefaultEffect {
 			constant_attenuation: 0.382,
 			linear_attenuation: 1.0,
 			quadratic_attenuation: 2.619,
+			specular_intensity: 1.0,
+			specular_power: 10,
 		};
 	}
 
@@ -154,6 +158,8 @@ impl Effect for DefaultEffect {
 
 	fn ps(&self, interpolant: <Self as Effect>::Vertex) -> Color {
 
+		let surface_normal = interpolant.n.as_normal();
+
 		// Calculate diffuse light intensity
 
 		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
@@ -175,14 +181,31 @@ impl Effect for DefaultEffect {
 		);
 
 		let point_intensity = self.point_light * attentuation * (0.0 as f32).max(
-			// interpolant.n.dot(normal_to_point_light)
-			interpolant.n.as_normal().dot(normal_to_point_light)
+			surface_normal.dot(normal_to_point_light)
 		);
+
+		// Calculate specular light intensity
+
+		// point light projected onto surface normal
+		let w = surface_normal * self.point_light.dot(surface_normal);
+
+		// vector to reflected light ray
+		let r = w * 2.0 - vertex_to_point_light;
+
+		// normal for reflected light
+		let r_inverse_hat = r.as_normal() * -1.0;
+
+		let specular_intensity =
+			self.point_light *
+			self.specular_intensity *
+			(0.0 as f32).max(
+				r_inverse_hat.dot(interpolant.world_pos.as_normal())
+			).powi(self.specular_power);
 
 		// Calculate our color based on mesh color and light intensities
 
 		let color = (*self.mesh_color.get_hadamard(
-			point_intensity + diffuse_intensity + self.ambient_light
+			self.ambient_light + diffuse_intensity + point_intensity + specular_intensity
 		).saturate()) * 255.0;
 
 		return Color{
