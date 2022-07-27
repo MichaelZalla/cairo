@@ -136,6 +136,8 @@ impl Effect for DefaultEffect {
 		vertex.p *= self.scale;
 		vertex.p += self.translation;
 
+		vertex.world_pos = vertex.p.clone();
+
 		vertex.n = v.n.clone();
 
 		vertex.n.rotate_along_z(self.rotation.z);
@@ -144,9 +146,25 @@ impl Effect for DefaultEffect {
 
 		vertex.n = vertex.n.as_normal();
 
+		vertex.c = v.c.clone();
+
+		return vertex;
+
+	}
+
+	fn ps(&self, interpolant: <Self as Effect>::Vertex) -> Color {
+
+		// Calculate diffuse light intensity
+
+		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
+			(interpolant.n.as_normal() * -1.0).dot(
+				self.diffuse_light_direction
+			)
+		);
+
 		// Calculate point light intensity
 
-		let vertex_to_point_light = self.point_light_position - vertex.p;
+		let vertex_to_point_light = self.point_light_position - interpolant.world_pos;
 		let distance_to_point_light = vertex_to_point_light.mag();
 		let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
 
@@ -156,18 +174,9 @@ impl Effect for DefaultEffect {
 			self.constant_attenuation
 		);
 
-		// Calculate diffuse light intensity
-
-		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
-			(vertex.n * -1.0).dot(
-				self.diffuse_light_direction
-			)
-		);
-
-		// Calculate point light intensity
-
 		let point_intensity = self.point_light * attentuation * (0.0 as f32).max(
-			vertex.n.dot(normal_to_point_light)
+			// interpolant.n.dot(normal_to_point_light)
+			interpolant.n.as_normal().dot(normal_to_point_light)
 		);
 
 		// Calculate our color based on mesh color and light intensities
@@ -176,18 +185,10 @@ impl Effect for DefaultEffect {
 			point_intensity + diffuse_intensity + self.ambient_light
 		).saturate()) * 255.0;
 
-		vertex.c = color;
-
-		return vertex;
-
-	}
-
-	fn ps(&self, interpolant: <Self as Effect>::Vertex) -> Color {
-
 		return Color{
-			r: interpolant.c.x as u8,
-			g: interpolant.c.y as u8,
-			b: interpolant.c.z as u8,
+			r: color.x as u8,
+			g: color.y as u8,
+			b: color.z as u8,
 			a: 255 as u8,
 		};
 

@@ -7,6 +7,7 @@ pub struct DefaultVertex {
 	pub p: Vec3,
 	pub n: Vec3,
 	pub c: Vec3,
+	pub world_pos: Vec3,
 }
 
 impl DefaultVertex {
@@ -32,6 +33,7 @@ impl Add<DefaultVertex> for DefaultVertex {
 			p: self.p + rhs.p,
 			n: self.n + rhs.n,
 			c: self.c + rhs.c,
+			world_pos: self.world_pos + rhs.world_pos,
 		}
 	}
 }
@@ -43,6 +45,7 @@ impl Sub<DefaultVertex> for DefaultVertex {
 			p: self.p - rhs.p,
 			n: self.n - rhs.n,
 			c: self.c - rhs.c,
+			world_pos: self.world_pos - rhs.world_pos,
 		}
 	}
 }
@@ -54,6 +57,7 @@ impl Mul<f32> for DefaultVertex {
 			p: self.p * scalar,
 			n: self.n * scalar,
 			c: self.c * scalar,
+			world_pos: self.world_pos * scalar,
 		}
 	}
 }
@@ -65,6 +69,7 @@ impl Div<f32> for DefaultVertex {
 			p: self.p / scalar,
 			n: self.n / scalar,
 			c: self.c / scalar,
+			world_pos: self.world_pos / scalar,
 		}
 	}
 }

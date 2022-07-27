@@ -145,18 +145,21 @@ pub fn get_mesh_from_obj(
 				p: vertices[face.0].clone(),
 				n: vertex_normals[normal_indices.0].clone(),
 				c: white.clone(),
+				world_pos: Vec3::new(),
 			});
 
 			mesh.vertices.push(DefaultVertex {
 				p: vertices[face.1].clone(),
 				n: vertex_normals[normal_indices.1].clone(),
 				c: white.clone(),
+				world_pos: Vec3::new(),
 			});
 
 			mesh.vertices.push(DefaultVertex {
 				p: vertices[face.2].clone(),
 				n: vertex_normals[normal_indices.2].clone(),
 				c: white.clone(),
+				world_pos: Vec3::new(),
 			});
 
 			mesh.face_indices.push((
@@ -184,18 +187,21 @@ pub fn get_mesh_from_obj(
 				p: vertices[face.0].clone(),
 				n: computed_normal.clone(),
 				c: white.clone(),
+				world_pos: Vec3::new(),
 			});
 
 			mesh.vertices.push(DefaultVertex {
 				p: vertices[face.1].clone(),
 				n: computed_normal.clone(),
 				c: white.clone(),
+				world_pos: Vec3::new(),
 			});
 
 			mesh.vertices.push(DefaultVertex {
 				p: vertices[face.2].clone(),
 				n: computed_normal.clone(),
 				c: white.clone(),
+				world_pos: Vec3::new(),
 			});
 
 			mesh.face_indices.push((
@@ -219,7 +225,8 @@ pub fn get_mesh_from_obj(
 			mesh.vertices.push(DefaultVertex {
 				p: vertex.clone(),
 				n: vertex_normals[vertex_index].clone(),
-				c: white.clone()
+				c: white.clone(),
+				world_pos: Vec3::new(),
 			})
 
 		}

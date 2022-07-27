@@ -177,6 +177,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			},
 			n: triangle.v0.n.clone(),
 			c: triangle.v0.c.clone(),
+			world_pos: triangle.v0.p.clone(),
 		};
 
 		let screen_v1 = Vertex{
@@ -191,6 +192,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			},
 			n: triangle.v1.n.clone(),
 			c: triangle.v1.c.clone(),
+			world_pos: triangle.v1.p.clone(),
 		};
 
 		let screen_v2 = Vertex{
@@ -205,6 +207,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 			},
 			n: triangle.v2.n.clone(),
 			c: triangle.v2.c.clone(),
+			world_pos: triangle.v2.p.clone(),
 		};
 
 		let screen_vertices = [screen_v0, screen_v1, screen_v2];

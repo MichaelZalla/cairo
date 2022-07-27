@@ -64,9 +64,9 @@ impl MeshScene {
 		};
 
 		let diffuse_light = Vec3{
-			x: 0.6,
-			y: 0.6,
-			z: 0.6,
+			x: 0.3,
+			y: 0.3,
+			z: 0.3,
 		};
 
 		let diffuse_light_direction = Vec3{
