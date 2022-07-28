@@ -1,14 +1,18 @@
 use crate::{
 	lib::{
-		effect::Effect, color::Color, vec::vec3::Vec3, matrix::Mat3,
+		effect::Effect,
+		color::Color,
+		vec::{vec3::Vec3, vec4::Vec4},
+		matrix::Mat4,
 	},
-	vertices::default_vertex::DefaultVertex
+	vertices::{
+		default_vertex_in::DefaultVertexIn,
+		default_vertex_out::DefaultVertexOut
+	}
 };
 
 pub struct DefaultEffect {
-	scale: Vec3,
-	rotation: Mat3,
-	translation: Vec3,
+	transform: Mat4,
 	mesh_color: Vec3,
 	ambient_light: Vec3,
 	diffuse_light: Vec3,
@@ -25,9 +29,7 @@ pub struct DefaultEffect {
 impl DefaultEffect {
 
 	pub fn new(
-		scale: Vec3,
-		rotation: Mat3,
-		translation: Vec3,
+		transform: Mat4,
 		mesh_color: Vec3,
 		ambient_light: Vec3,
 		diffuse_light: Vec3,
@@ -36,9 +38,7 @@ impl DefaultEffect {
 		point_light_position: Vec3,) -> Self
 	{
 		return DefaultEffect {
-			scale,
-			rotation,
-			translation,
+			transform,
 			mesh_color,
 			ambient_light,
 			diffuse_light,
@@ -53,31 +53,11 @@ impl DefaultEffect {
 		};
 	}
 
-	pub fn set_scale(
+	pub fn set_transform(
 		&mut self,
-		matrix: Vec3) -> ()
+		mat: Mat4) -> ()
 	{
-		self.scale = matrix;
-	}
-
-	fn get_rotation(
-		&self) -> Mat3
-	{
-		return self.rotation;
-	}
-
-	pub fn set_rotation(
-		&mut self,
-		mat: Mat3) -> ()
-	{
-		self.rotation = mat;
-	}
-
-	pub fn set_translation(
-		&mut self,
-		vec: Vec3) -> ()
-	{
-		self.translation = vec;
+		self.transform = mat;
 	}
 
 	pub fn set_mesh_color(
@@ -126,41 +106,45 @@ impl DefaultEffect {
 
 impl Effect for DefaultEffect {
 
-	type Vertex = DefaultVertex;
+	type VertexIn = DefaultVertexIn;
+	type VertexOut = DefaultVertexOut;
 
-	fn vs(&self, v: Self::Vertex) -> Self::Vertex {
+	fn vs(&self, v: Self::VertexIn) -> Self::VertexOut {
 
-		let mut vertex = Self::Vertex::new();
+		let mut out = Self::VertexOut::new();
 
-		vertex.p = v.p.clone();
+		out.p = Vec4::new(v.p, 1.0) * self.transform;
 
-		vertex.p *= self.rotation;
+		out.world_pos = Vec3{
+			x: out.p.x,
+			y: out.p.y,
+			z: out.p.z,
+		};
 
-		vertex.p *= self.scale;
-		vertex.p += self.translation;
+		out.n = Vec4::new(v.n, 0.0) * self.transform;
 
-		vertex.world_pos = vertex.p.clone();
+		out.n = out.n.as_normal();
 
-		vertex.n = v.n.clone();
+		out.c = v.c.clone();
 
-		vertex.n *= self.rotation;
-
-		vertex.n = vertex.n.as_normal();
-
-		vertex.c = v.c.clone();
-
-		return vertex;
+		return out;
 
 	}
 
-	fn ps(&self, interpolant: <Self as Effect>::Vertex) -> Color {
+	fn ps(&self, interpolant: <Self as Effect>::VertexOut) -> Color {
 
 		let surface_normal = interpolant.n.as_normal();
+
+		let surface_normal_vec3 = Vec3{
+			x: surface_normal.x,
+			y: surface_normal.y,
+			z: surface_normal.z,
+		};
 
 		// Calculate diffuse light intensity
 
 		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
-			(interpolant.n.as_normal() * -1.0).dot(
+			(surface_normal_vec3 * -1.0).dot(
 				self.diffuse_light_direction
 			)
 		);
@@ -178,13 +162,13 @@ impl Effect for DefaultEffect {
 		);
 
 		let point_intensity = self.point_light * attentuation * (0.0 as f32).max(
-			surface_normal.dot(normal_to_point_light)
+			surface_normal_vec3.dot(normal_to_point_light)
 		);
 
 		// Calculate specular light intensity
 
 		// point light projected onto surface normal
-		let w = surface_normal * self.point_light.dot(surface_normal);
+		let w = surface_normal_vec3 * self.point_light.dot(surface_normal_vec3);
 
 		// vector to reflected light ray
 		let r = w * 2.0 - vertex_to_point_light;

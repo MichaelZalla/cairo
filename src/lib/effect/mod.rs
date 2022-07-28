@@ -1,13 +1,12 @@
-use crate::vertices::default_vertex::DefaultVertex;
-
 use super::color::Color;
 
-pub trait Effect<T = DefaultVertex> {
+pub trait Effect {
 
-	type Vertex;
+	type VertexIn;
+	type VertexOut;
 
-	fn vs(&self, v: T) -> Self::Vertex;
+	fn vs(&self, v: Self::VertexIn) -> Self::VertexOut;
 
-	fn ps(&self, interpolant: Self::Vertex) -> Color;
+	fn ps(&self, interpolant: Self::VertexOut) -> Color;
 
 }

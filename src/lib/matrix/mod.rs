@@ -1,6 +1,6 @@
 use std::{fmt, ops};
 
-use super::vec::vec3::Vec3;
+use super::vec::{vec3::Vec3, vec4::Vec4};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mat<T, const N: usize> {
@@ -103,6 +103,22 @@ impl<T: std::default::Default + std::marker::Copy, const N: usize> Mat<T,N> {
 
 }
 
+impl<const N: usize> Mat<f32,N> {
+
+	pub fn scaling(
+		factor: f32) -> Self
+	{
+		let mut result = Mat::<f32,N>::new();
+
+		for i in 0..N {
+			result.elements[i][i] = factor;
+		}
+
+		return result;
+	}
+
+}
+
 impl Mat<f32,3> {
 
 	pub fn rotation_z(
@@ -152,6 +168,71 @@ impl Mat<f32,3> {
 
 }
 
+impl Mat<f32,4> {
+
+	pub fn rotation_z(
+		theta: f32) -> Self
+	{
+		let sin_theta = theta.sin();
+		let cos_theta = theta.cos();
+
+		return Mat{
+			elements: [
+				[cos_theta, 	sin_theta, 	0.0, 	0.0 ],
+				[-sin_theta, 	cos_theta, 	0.0, 	0.0 ],
+				[0.0, 			0.0, 		1.0, 	0.0	],
+				[0.0, 			0.0, 		0.0, 	1.0	],
+			]
+		}
+	}
+
+	pub fn rotation_y(
+		theta: f32) -> Self
+	{
+		let sin_theta = theta.sin();
+		let cos_theta = theta.cos();
+
+		return Mat{
+			elements: [
+				[cos_theta, 	0.0, 	-sin_theta, 	0.0 ],
+				[0.0, 			1.0, 	0.0, 			0.0 ],
+				[sin_theta, 	0.0, 	cos_theta, 		0.0 ],
+				[0.0, 			0.0, 	0.0, 			1.0 ],
+			]
+		}
+	}
+
+	pub fn rotation_x(
+		theta: f32) -> Self
+	{
+		let sin_theta = theta.sin();
+		let cos_theta = theta.cos();
+
+		return Mat{
+			elements: [
+				[1.0, 	0.0, 	 	0.0, 		0.0  	],
+				[0.0, 	cos_theta, 	sin_theta, 	0.0 	],
+				[0.0, 	-sin_theta, cos_theta, 	0.0 	],
+				[0.0, 	0.0, 		0.0, 		1.0 	],
+			]
+		}
+	}
+
+	pub fn translation(
+		v: Vec3) -> Self
+	{
+		return Mat{
+			elements: [
+				[1.0, 	0.0,  0.0, 	0.0, ],
+				[0.0, 	1.0,  0.0, 	0.0, ],
+				[0.0, 	0.0,  1.0, 	0.0, ],
+				[v.x, 	v.y,  v.z, 	1.0, ],
+			]
+		};
+	}
+
+}
+
 pub type Mat3 = Mat<f32,3>;
 
 impl ops::MulAssign<Mat3> for Vec3 {
@@ -173,6 +254,33 @@ impl ops::Mul<Mat3> for Vec3 {
 			x: (self.x * rhs.elements[0][0] + self.y * rhs.elements[1][0] + self.z * rhs.elements[2][0]),
 			y: (self.x * rhs.elements[0][1] + self.y * rhs.elements[1][1] + self.z * rhs.elements[2][1]),
 			z: (self.x * rhs.elements[0][2] + self.y * rhs.elements[1][2] + self.z * rhs.elements[2][2]),
+		}
+	}
+}
+
+pub type Mat4 = Mat<f32,4>;
+
+impl ops::MulAssign<Mat4> for Vec4 {
+	fn mul_assign(&mut self, rhs: Mat4) {
+
+		let result = self.clone() * rhs;
+
+		self.x = result.x;
+		self.y = result.y;
+		self.z = result.z;
+		self.w = result.w;
+
+	}
+}
+
+impl ops::Mul<Mat4> for Vec4 {
+	type Output = Vec4;
+	fn mul(self, rhs: Mat4) -> Self {
+		Vec4 {
+			x: (self.x * rhs.elements[0][0] + self.y * rhs.elements[1][0] + self.z * rhs.elements[2][0] + self.w * rhs.elements[3][0]),
+			y: (self.x * rhs.elements[0][1] + self.y * rhs.elements[1][1] + self.z * rhs.elements[2][1] + self.w * rhs.elements[3][1]),
+			z: (self.x * rhs.elements[0][2] + self.y * rhs.elements[1][2] + self.z * rhs.elements[2][2] + self.w * rhs.elements[3][2]),
+			w: (self.x * rhs.elements[0][3] + self.y * rhs.elements[1][3] + self.z * rhs.elements[2][3] + self.w * rhs.elements[3][3]),
 		}
 	}
 }

@@ -1,6 +1,16 @@
-use crate::vertices::default_vertex::DefaultVertex;
+use crate::vertices::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut};
 
-use super::{graphics::Graphics, vec::{vec3::Vec3, vec2::Vec2}, mesh::Mesh, effect::Effect, color};
+use super::{
+	graphics::Graphics,
+	vec::{
+		vec2::Vec2,
+		vec3::Vec3,
+		vec4::Vec4,
+	},
+	mesh::Mesh,
+	effect::Effect,
+	color
+};
 
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
@@ -16,8 +26,6 @@ pub struct PipelineOptions {
 	pub should_render_normals: bool,
 }
 
-type Vertex = DefaultVertex;
-
 pub struct Pipeline<T: Effect> {
 	options: PipelineOptions,
 	graphics: Graphics,
@@ -27,7 +35,7 @@ pub struct Pipeline<T: Effect> {
 	pub effect: T,
 }
 
-impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
+impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeline<T> where T: Effect {
 
 	pub fn new(
 		graphics: Graphics,
@@ -94,7 +102,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 		let mesh_v_len = mesh.vertices.len();
 
-		let mut world_vertices: Vec<Vertex> = vec![Vertex::new(); mesh_v_len];
+		let mut world_vertices: Vec<T::VertexOut> = vec![T::VertexOut::new(); mesh_v_len];
 
 		// Object-to-world-space transform
 
@@ -109,12 +117,12 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 	fn process_triangles(
 		&mut self,
 		mesh: &Mesh,
-		vertices: Vec<Vertex>) -> ()
+		vertices: Vec<T::VertexOut>) -> ()
 	{
 
 		let faces = mesh.face_indices.clone();
 
-		let mut triangles: Vec<Triangle<Vertex>> = vec![];
+		let mut triangles: Vec<Triangle<T::VertexOut>> = vec![];
 
 		for face in faces.iter() {
 
@@ -145,7 +153,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 	fn process_triangle(
 		&mut self,
-		triangle: Triangle<Vertex>) -> ()
+		triangle: Triangle<T::VertexOut>) -> ()
 	{
 		// @TODO(mzalla) Geometry shader?
 
@@ -154,7 +162,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 	fn post_process_triangle_vertices(
 		&mut self,
-		triangle: Triangle<Vertex>) -> ()
+		triangle: Triangle<T::VertexOut>) -> ()
 	{
 
 		let world_vertex_relative_normals = [
@@ -165,8 +173,8 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 
 		// Screen-space perspective divide
 
-		let screen_v0 = Vertex{
-			p: Vec3{
+		let screen_v0 = T::VertexOut{
+			p: Vec4{
 				x: (
 					triangle.v0.p.x / triangle.v0.p.z * self.graphics.buffer.height_over_width + 1.0
 				) * self.buffer_width_over_2,
@@ -174,14 +182,19 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 					(-1.0 * triangle.v0.p.y) / triangle.v0.p.z + 1.0
 				) * self.buffer_height_over_2,
 				z: triangle.v0.p.z,
+				w: 1.0,
 			},
 			n: triangle.v0.n.clone(),
 			c: triangle.v0.c.clone(),
-			world_pos: triangle.v0.p.clone(),
+			world_pos: Vec3{
+				x: triangle.v0.p.x,
+				y: triangle.v0.p.y,
+				z: triangle.v0.p.z,
+			},
 		};
 
-		let screen_v1 = Vertex{
-			p: Vec3{
+		let screen_v1 = T::VertexOut{
+			p: Vec4{
 				x: (
 					triangle.v1.p.x / triangle.v1.p.z * self.graphics.buffer.height_over_width + 1.0
 				) * self.buffer_width_over_2,
@@ -189,14 +202,19 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 					(-1.0 * triangle.v1.p.y) / triangle.v1.p.z + 1.0
 				) * self.buffer_height_over_2,
 				z: triangle.v1.p.z,
+				w: 1.0,
 			},
 			n: triangle.v1.n.clone(),
 			c: triangle.v1.c.clone(),
-			world_pos: triangle.v1.p.clone(),
+			world_pos: Vec3{
+				x: triangle.v1.p.x,
+				y: triangle.v1.p.y,
+				z: triangle.v1.p.z,
+			},
 		};
 
-		let screen_v2 = Vertex{
-			p: Vec3{
+		let screen_v2 = T::VertexOut{
+			p: Vec4{
 				x: (
 					triangle.v2.p.x / triangle.v2.p.z * self.graphics.buffer.height_over_width + 1.0
 				) * self.buffer_width_over_2,
@@ -204,10 +222,15 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 					(-1.0 * triangle.v2.p.y) / triangle.v2.p.z + 1.0
 				) * self.buffer_height_over_2,
 				z: triangle.v2.p.z,
+				w: 1.0,
 			},
 			n: triangle.v2.n.clone(),
 			c: triangle.v2.c.clone(),
-			world_pos: triangle.v2.p.clone(),
+			world_pos: Vec3{
+				x: triangle.v2.p.x,
+				y: triangle.v2.p.y,
+				z: triangle.v2.p.z,
+			},
 		};
 
 		let screen_vertices = [screen_v0, screen_v1, screen_v2];
@@ -297,9 +320,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 	#[inline(always)]
 	fn flat_top_triangle_fill(
 		&mut self,
-		v0: Vertex,
-		v1: Vertex,
-		v2: Vertex) -> ()
+		v0: T::VertexOut,
+		v1: T::VertexOut,
+		v2: T::VertexOut) -> ()
 	{
 
 		// @NOTE(mzalla) v0 as top-left vertex
@@ -364,9 +387,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 	#[inline(always)]
 	fn flat_bottom_triangle_fill(
 		&mut self,
-		v0: Vertex,
-		v1: Vertex,
-		v2: Vertex) -> ()
+		v0: T::VertexOut,
+		v1: T::VertexOut,
+		v2: T::VertexOut) -> ()
 	{
 
 		// @NOTE(mzalla) v0 as top vertex
@@ -431,9 +454,9 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 	#[inline(always)]
 	fn triangle_fill(
 		&mut self,
-		v0: Vertex,
-		v1: Vertex,
-		v2: Vertex) -> ()
+		v0: T::VertexOut,
+		v1: T::VertexOut,
+		v2: T::VertexOut) -> ()
 	{
 
 		let mut tri = vec![
@@ -493,7 +516,7 @@ impl<T: Effect<Vertex = DefaultVertex>> Pipeline<T> where T: Effect {
 				(tri[1].p.y - tri[0].p.y) /
 				(tri[2].p.y - tri[0].p.y);
 
-			let split_vertex = Vertex::interpolate(tri[0], tri[2], alpha_split);
+			let split_vertex = T::VertexOut::interpolate(tri[0], tri[2], alpha_split);
 
 			if tri[1].p.x < split_vertex.p.x {
 

@@ -3,14 +3,14 @@ use std::io::{self, BufRead};
 
 use std::path::Path;
 
-use crate::vertices::default_vertex::DefaultVertex;
+use crate::vertices::default_vertex_in::DefaultVertexIn;
 
 use super::vec::vec3::Vec3;
 
 pub type Face = (usize, usize, usize);
 
 pub struct Mesh {
-	pub vertices: Vec<DefaultVertex>,
+	pub vertices: Vec<DefaultVertexIn>,
 	pub face_indices: Vec<Face>,
 }
 
@@ -141,21 +141,21 @@ pub fn get_mesh_from_obj(
 
 			let normal_indices = face_normals[face_index];
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertices[face.0].clone(),
 				n: vertex_normals[normal_indices.0].clone(),
 				c: white.clone(),
 				world_pos: Vec3::new(),
 			});
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertices[face.1].clone(),
 				n: vertex_normals[normal_indices.1].clone(),
 				c: white.clone(),
 				world_pos: Vec3::new(),
 			});
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertices[face.2].clone(),
 				n: vertex_normals[normal_indices.2].clone(),
 				c: white.clone(),
@@ -183,21 +183,21 @@ pub fn get_mesh_from_obj(
 				.cross(vertices[face.2] - vertices[face.0])
 				.as_normal();
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertices[face.0].clone(),
 				n: computed_normal.clone(),
 				c: white.clone(),
 				world_pos: Vec3::new(),
 			});
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertices[face.1].clone(),
 				n: computed_normal.clone(),
 				c: white.clone(),
 				world_pos: Vec3::new(),
 			});
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertices[face.2].clone(),
 				n: computed_normal.clone(),
 				c: white.clone(),
@@ -222,7 +222,7 @@ pub fn get_mesh_from_obj(
 
 		for (vertex_index, vertex) in vertices.iter().enumerate() {
 
-			mesh.vertices.push(DefaultVertex {
+			mesh.vertices.push(DefaultVertexIn {
 				p: vertex.clone(),
 				n: vertex_normals[vertex_index].clone(),
 				c: white.clone(),

@@ -10,7 +10,7 @@ use crate::{
 		device::{KeyboardState, MouseState},
 		graphics::Graphics,
 		pipeline::{Pipeline, PipelineOptions},
-		matrix::Mat3,
+		matrix::Mat4,
 	},
 	effects::default_effect::DefaultEffect,
 };
@@ -34,23 +34,9 @@ impl MeshScene {
 
 		let mesh = get_mesh_from_obj(filepath);
 
-		let scale = Vec3{
-			x: 0.5,
-			y: 0.5,
-			z: 0.5,
-		};
-
-		let rotation = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: 0.0,
-		};
-
-		let translation = Vec3{
-			x: 0.0,
-			y: -1.0,
-			z: 10.0,
-		};
+		// let scale = 0.5;
+		let rotation = Vec3{ x: 0.0, y: 0.0, z: 0.0 };
+		let translation = Vec3{ x: 0.0, y: -1.0, z: 10.0 };
 
 		let mesh_color = Vec3{
 			x: 0.5,
@@ -99,12 +85,12 @@ impl MeshScene {
 		let screen_width = buffer.width;
 		let screen_height = buffer.height;
 
+		let transform = Mat4::scaling(0.5);
+
 		let pipeline = Pipeline::new(
 			graphics,
 			DefaultEffect::new(
-				scale,
-				Mat3::new(),
-				translation,
+				transform,
 				mesh_color,
 				ambient_light,
 				diffuse_light,
@@ -137,27 +123,21 @@ impl Scene for MeshScene {
 			match keycode {
 				Keycode::Down|Keycode::S { .. } => {
 					self.translation.y += 0.1;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Up|Keycode::W { .. } => {
 					self.translation.y -= 0.1;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Right|Keycode::D { .. } => {
 					self.translation.x -= 0.1;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Left|Keycode::A { .. } => {
 					self.translation.x += 0.1;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Q { .. } => {
 					self.translation.z += 0.1;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::E { .. } => {
 					self.translation.z -= 0.1;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				Keycode::Num1 { .. } => {
 					self.pipeline_options.should_render_wireframe =
@@ -185,7 +165,6 @@ impl Scene for MeshScene {
 			match mouse_state.wheel_direction {
 				sdl2::mouse::MouseWheelDirection::Normal => {
 					self.translation.z += (mouse_state.wheel_y as f32) / 4.0;
-					self.pipeline.effect.set_translation(self.translation);
 				},
 				_ => {}
 			}
@@ -212,12 +191,18 @@ impl Scene for MeshScene {
 		self.rotation.y += 0.2 * PI * delta_t_seconds;
 		self.rotation.y %= 2.0 * PI;
 
-		let rotation_matrix =
-			Mat3::rotation_x(self.rotation.x) *
-			Mat3::rotation_y(self.rotation.y) *
-			Mat3::rotation_z(self.rotation.z);
+		let scaling_matrix = Mat4::scaling(0.5);
 
-		self.pipeline.effect.set_rotation(rotation_matrix);
+		let rotation_matrix =
+			Mat4::rotation_x(self.rotation.x) *
+			Mat4::rotation_y(self.rotation.y) *
+			Mat4::rotation_z(self.rotation.z);
+
+		let translation_matrix = Mat4::translation(self.translation);
+
+		self.pipeline.effect.set_transform(
+			scaling_matrix * rotation_matrix * translation_matrix
+		);
 
 		// // Diffuse light direction rotation via mouse input
 
