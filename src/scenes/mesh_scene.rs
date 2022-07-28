@@ -9,7 +9,8 @@ use crate::{
 		mesh::{Mesh, get_mesh_from_obj},
 		device::{KeyboardState, MouseState},
 		graphics::Graphics,
-		pipeline::{Pipeline, PipelineOptions}
+		pipeline::{Pipeline, PipelineOptions},
+		matrix::Mat3,
 	},
 	effects::default_effect::DefaultEffect,
 };
@@ -102,7 +103,7 @@ impl MeshScene {
 			graphics,
 			DefaultEffect::new(
 				scale,
-				rotation,
+				Mat3::new(),
 				translation,
 				mesh_color,
 				ambient_light,
@@ -211,7 +212,12 @@ impl Scene for MeshScene {
 		self.rotation.y += 0.2 * PI * delta_t_seconds;
 		self.rotation.y %= 2.0 * PI;
 
-		self.pipeline.effect.set_rotation(self.rotation);
+		let rotation_matrix =
+			Mat3::rotation_x(self.rotation.x) *
+			Mat3::rotation_y(self.rotation.y) *
+			Mat3::rotation_z(self.rotation.z);
+
+		self.pipeline.effect.set_rotation(rotation_matrix);
 
 		// // Diffuse light direction rotation via mouse input
 

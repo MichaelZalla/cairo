@@ -1,13 +1,13 @@
 use crate::{
 	lib::{
-		effect::Effect, color::Color, vec::vec3::Vec3,
+		effect::Effect, color::Color, vec::vec3::Vec3, matrix::Mat3,
 	},
 	vertices::default_vertex::DefaultVertex
 };
 
 pub struct DefaultEffect {
 	scale: Vec3,
-	rotation: Vec3,
+	rotation: Mat3,
 	translation: Vec3,
 	mesh_color: Vec3,
 	ambient_light: Vec3,
@@ -26,7 +26,7 @@ impl DefaultEffect {
 
 	pub fn new(
 		scale: Vec3,
-		rotation: Vec3,
+		rotation: Mat3,
 		translation: Vec3,
 		mesh_color: Vec3,
 		ambient_light: Vec3,
@@ -60,25 +60,31 @@ impl DefaultEffect {
 		self.scale = matrix;
 	}
 
+	fn get_rotation(
+		&self) -> Mat3
+	{
+		return self.rotation;
+	}
+
 	pub fn set_rotation(
 		&mut self,
-		matrix: Vec3) -> ()
+		mat: Mat3) -> ()
 	{
-		self.rotation = matrix;
+		self.rotation = mat;
 	}
 
 	pub fn set_translation(
 		&mut self,
-		matrix: Vec3) -> ()
+		vec: Vec3) -> ()
 	{
-		self.translation = matrix;
+		self.translation = vec;
 	}
 
 	pub fn set_mesh_color(
 		&mut self,
-		c: Vec3) -> ()
+		color: Vec3) -> ()
 	{
-		self.mesh_color = c;
+		self.mesh_color = color;
 	}
 
 	pub fn set_ambient_light(
@@ -122,20 +128,13 @@ impl Effect for DefaultEffect {
 
 	type Vertex = DefaultVertex;
 
-	fn get_rotation(&self) -> Vec3
-	{
-		return self.rotation;
-	}
-
 	fn vs(&self, v: Self::Vertex) -> Self::Vertex {
 
 		let mut vertex = Self::Vertex::new();
 
 		vertex.p = v.p.clone();
 
-		vertex.p.rotate_along_z(self.rotation.z);
-		vertex.p.rotate_along_x(self.rotation.x);
-		vertex.p.rotate_along_y(self.rotation.y);
+		vertex.p *= self.rotation;
 
 		vertex.p *= self.scale;
 		vertex.p += self.translation;
@@ -144,9 +143,7 @@ impl Effect for DefaultEffect {
 
 		vertex.n = v.n.clone();
 
-		vertex.n.rotate_along_z(self.rotation.z);
-		vertex.n.rotate_along_x(self.rotation.x);
-		vertex.n.rotate_along_y(self.rotation.y);
+		vertex.n *= self.rotation;
 
 		vertex.n = vertex.n.as_normal();
 

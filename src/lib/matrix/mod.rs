@@ -1,0 +1,178 @@
+use std::{fmt, ops};
+
+use super::vec::vec3::Vec3;
+
+#[derive(Debug, Copy, Clone)]
+pub struct Mat<T, const N: usize> {
+	elements: [[T; N]; N],
+}
+
+impl<T: std::marker::Copy + std::fmt::Display, const N: usize> fmt::Display for Mat<T, N> {
+	fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+		let mut result: Vec<String> = vec![String::from("(\n"); 1];
+
+		for i in 0..N {
+			result.push(String::from(" ("));
+			for j in 0..N {
+				let value = self.elements[i][j];
+				result.push(String::from(format!("{}", value)));
+				if j < N - 1 {
+					result.push(String::from(","));
+				}
+			}
+			result.push(String::from(")"));
+			if i < N - 1 {
+				result.push(String::from(","));
+			}
+			result.push(String::from("\n"));
+		}
+
+		result.push(String::from(")\n"));
+
+		let flat_result = result.join("");
+
+		write!(v, "{}", flat_result)
+    }
+}
+
+impl<T: std::ops::MulAssign<f32>, const N: usize> ops::MulAssign<f32> for Mat<T,N> {
+	fn mul_assign(&mut self, rhs: f32) {
+		for i in 0..N {
+			for j in 0..N {
+				self.elements[i][j] *= rhs;
+			}
+		}
+	}
+}
+
+impl<T: std::clone::Clone + std::ops::MulAssign<f32>, const N: usize> ops::Mul<f32> for Mat<T,N> {
+	type Output = Mat<T,N>;
+	fn mul(self, rhs: f32) -> Mat<T,N> {
+		let mut result = self.clone();
+		result *= rhs;
+		return result;
+	}
+}
+
+impl<T: std::default::Default + std::marker::Copy + std::ops::Mul<Output = T> + std::ops::AddAssign<T>, const N: usize> ops::MulAssign<Self> for Mat<T,N> {
+	fn mul_assign(&mut self, rhs: Self) {
+		let result = (*self) * rhs;
+		for i in 0..N {
+			for j in 0..N {
+				self.elements[i][j] = result.elements[i][j];
+			}
+		}
+	}
+}
+
+impl<T: std::default::Default + std::marker::Copy + std::ops::Mul<Output = T> + std::ops::AddAssign<T>, const N: usize> ops::Mul<Self> for Mat<T,N> {
+
+	type Output = Mat<T,N>;
+
+	fn mul(self, rhs: Self) -> Mat<T,N> {
+
+		let mut result = Mat::<T,N>::new();
+
+		for i in 0..N {
+			for j in 0..N {
+
+				let mut sum: T = T::default();
+
+				for k in 0..N {
+					sum += self.elements[i][k] * rhs.elements[k][j];
+				}
+
+				result.elements[i][j] = sum;
+
+			}
+		}
+
+		return result;
+
+	}
+}
+
+impl<T: std::default::Default + std::marker::Copy, const N: usize> Mat<T,N> {
+
+	pub fn new() -> Self {
+		Mat{
+			elements: [[T::default(); N]; N],
+		}
+	}
+
+}
+
+impl Mat<f32,3> {
+
+	pub fn rotation_z(
+		theta: f32) -> Self
+	{
+		let sin_theta = theta.sin();
+		let cos_theta = theta.cos();
+
+		return Mat{
+			elements: [
+				[cos_theta, 	sin_theta, 	0.0	],
+				[-sin_theta, 	cos_theta, 	0.0	],
+				[0.0, 			0.0, 		1.0	],
+			]
+		}
+	}
+
+	pub fn rotation_y(
+		theta: f32) -> Self
+	{
+		let sin_theta = theta.sin();
+		let cos_theta = theta.cos();
+
+		return Mat{
+			elements: [
+				[cos_theta, 	0.0, 	-sin_theta 	],
+				[0.0, 			1.0, 	0.0 		],
+				[sin_theta, 	0.0, 	cos_theta 	],
+			]
+		}
+	}
+
+	pub fn rotation_x(
+		theta: f32) -> Self
+	{
+		let sin_theta = theta.sin();
+		let cos_theta = theta.cos();
+
+		return Mat{
+			elements: [
+				[1.0, 	0.0, 	 	0.0 	 	],
+				[0.0, 	cos_theta, 	sin_theta 	],
+				[0.0, 	-sin_theta, cos_theta 	],
+			]
+		}
+	}
+
+}
+
+pub type Mat3 = Mat<f32,3>;
+
+impl ops::MulAssign<Mat3> for Vec3 {
+	fn mul_assign(&mut self, rhs: Mat3) {
+
+		let result = self.clone() * rhs;
+
+		self.x = result.x;
+		self.y = result.y;
+		self.z = result.z;
+
+	}
+}
+
+impl ops::Mul<Mat3> for Vec3 {
+	type Output = Vec3;
+	fn mul(self, rhs: Mat3) -> Self {
+		Vec3 {
+			x: (self.x * rhs.elements[0][0] + self.y * rhs.elements[1][0] + self.z * rhs.elements[2][0]),
+			y: (self.x * rhs.elements[0][1] + self.y * rhs.elements[1][1] + self.z * rhs.elements[2][1]),
+			z: (self.x * rhs.elements[0][2] + self.y * rhs.elements[1][2] + self.z * rhs.elements[2][2]),
+		}
+	}
+}
