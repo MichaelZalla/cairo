@@ -100,6 +100,14 @@ impl ops::Div<f32> for Vec3 {
     }
 }
 
+impl ops::MulAssign<f32> for Vec3 {
+    fn mul_assign(&mut self, rhs: f32) {
+		self.x *= rhs;
+		self.y *= rhs;
+		self.z *= rhs;
+	}
+}
+
 impl ops::MulAssign<Vec3> for Vec3 {
     fn mul_assign(&mut self, rhs: Vec3) {
 		self.x *= rhs.x;
