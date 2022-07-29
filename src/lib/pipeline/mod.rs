@@ -292,6 +292,29 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 	}
 
 	#[inline(always)]
+	fn test_and_set_z_buffer(
+		&mut self,
+		x: u32,
+		y: u32,
+		z: f32) -> bool
+	{
+
+		let z_buffer_index = (y * self.graphics.buffer.width + x) as usize;
+
+		if z_buffer_index >= self.z_buffer.len() {
+			panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
+		}
+
+		if z < self.z_buffer[z_buffer_index] {
+			self.z_buffer[z_buffer_index] = z;
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	#[inline(always)]
 	fn set_pixel(
 		&mut self,
 		x: u32,
@@ -305,19 +328,10 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			return;
 		}
 
-		let z_buffer_index = (y * self.graphics.buffer.width + x) as usize;
-
-		if z_buffer_index >= self.z_buffer.len() {
-			panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
+		if self.test_and_set_z_buffer(x, y, z) {
+			self.graphics.set_pixel(x, y, color);
 		}
 
-		if z < self.z_buffer[z_buffer_index] {
-			self.z_buffer[z_buffer_index] = z;
-		} else {
-			return;
-		}
-
-		self.graphics.set_pixel(x, y, color);
 
 	}
 
