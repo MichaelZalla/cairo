@@ -1,4 +1,7 @@
-use std::{fmt::{Display, Formatter, Result}, ops::{Add, Sub, Mul, Div}};
+use std::{
+	fmt::{Display, Formatter, Result},
+	ops::{Add, Sub, Mul, Div}
+};
 
 use crate::lib::vec::vec3::Vec3;
 

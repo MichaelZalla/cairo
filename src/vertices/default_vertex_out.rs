@@ -1,4 +1,7 @@
-use std::{fmt::{Display, Formatter, Result}, ops::{Add, Sub, Mul, Div}};
+use std::{
+	fmt::{Display, Formatter, Result},
+	ops::{Add, Sub, Mul, MulAssign, Div}
+};
 
 use crate::lib::vec::{vec3::Vec3, vec4::Vec4};
 
@@ -59,6 +62,15 @@ impl Mul<f32> for DefaultVertexOut {
 			c: self.c * scalar,
 			world_pos: self.world_pos * scalar,
 		}
+	}
+}
+
+impl MulAssign<f32> for DefaultVertexOut {
+	fn mul_assign(&mut self, scalar: f32) {
+		self.p *= scalar;
+		self.n *= scalar;
+		self.c *= scalar;
+		self.world_pos *= scalar;
 	}
 }
 
