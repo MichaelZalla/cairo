@@ -131,7 +131,11 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			let vertex_vector = vertices[face.0].p;
 			let vertex_normal = vertices[face.0].n;
 
-			let dot_product = vertex_normal.dot(vertex_vector.as_normal());
+			let world_space_origin = Vec4::new(Vec3{ x: 0.0, y: 0.0, z: 0.0 }, 1.0);
+
+			let projected_origin = world_space_origin * self.effect.get_projection();
+
+			let dot_product = vertex_normal.dot(vertex_vector.as_normal() - projected_origin);
 
 			if dot_product > 0.0 {
 				continue;

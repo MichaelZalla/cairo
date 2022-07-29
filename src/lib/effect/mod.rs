@@ -1,9 +1,14 @@
-use super::color::Color;
+use super::{
+	matrix::Mat4,
+	color::Color,
+};
 
 pub trait Effect {
 
 	type VertexIn;
 	type VertexOut;
+
+	fn get_projection(&self) -> Mat4;
 
 	fn vs(&self, v: Self::VertexIn) -> Self::VertexOut;
 
