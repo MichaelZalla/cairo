@@ -160,6 +160,22 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		self.post_process_triangle_vertices(triangle);
 	}
 
+	fn transform_to_ndc_space(
+		&mut self,
+		v: &mut T::VertexOut) -> ()
+	{
+
+		let x_factor = self.buffer_width_over_2;
+		let y_factor = self.buffer_height_over_2;
+
+		let z_inverse = 1.0 / v.p.z;
+
+		v.p.x = (v.p.x * z_inverse * self.graphics.buffer.height_over_width + 1.0) * x_factor;
+		v.p.y = (-v.p.y * z_inverse + 1.0) * y_factor;
+		v.p.w = 1.0;
+
+	}
+
 	fn post_process_triangle_vertices(
 		&mut self,
 		triangle: &mut Triangle<T::VertexOut>) -> ()
@@ -173,71 +189,15 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 		// Screen-space perspective divide
 
-		let screen_v0 = T::VertexOut{
-			p: Vec4{
-				x: (
-					triangle.v0.p.x / triangle.v0.p.z * self.graphics.buffer.height_over_width + 1.0
-				) * self.buffer_width_over_2,
-				y: (
-					(-1.0 * triangle.v0.p.y) / triangle.v0.p.z + 1.0
-				) * self.buffer_height_over_2,
-				z: triangle.v0.p.z,
-				w: 1.0,
-			},
-			n: triangle.v0.n.clone(),
-			c: triangle.v0.c.clone(),
-			world_pos: Vec3{
-				x: triangle.v0.p.x,
-				y: triangle.v0.p.y,
-				z: triangle.v0.p.z,
-			},
-		};
-
-		let screen_v1 = T::VertexOut{
-			p: Vec4{
-				x: (
-					triangle.v1.p.x / triangle.v1.p.z * self.graphics.buffer.height_over_width + 1.0
-				) * self.buffer_width_over_2,
-				y: (
-					(-1.0 * triangle.v1.p.y) / triangle.v1.p.z + 1.0
-				) * self.buffer_height_over_2,
-				z: triangle.v1.p.z,
-				w: 1.0,
-			},
-			n: triangle.v1.n.clone(),
-			c: triangle.v1.c.clone(),
-			world_pos: Vec3{
-				x: triangle.v1.p.x,
-				y: triangle.v1.p.y,
-				z: triangle.v1.p.z,
-			},
-		};
-
-		let screen_v2 = T::VertexOut{
-			p: Vec4{
-				x: (
-					triangle.v2.p.x / triangle.v2.p.z * self.graphics.buffer.height_over_width + 1.0
-				) * self.buffer_width_over_2,
-				y: (
-					(-1.0 * triangle.v2.p.y) / triangle.v2.p.z + 1.0
-				) * self.buffer_height_over_2,
-				z: triangle.v2.p.z,
-				w: 1.0,
-			},
-			n: triangle.v2.n.clone(),
-			c: triangle.v2.c.clone(),
-			world_pos: Vec3{
-				x: triangle.v2.p.x,
-				y: triangle.v2.p.y,
-				z: triangle.v2.p.z,
-			},
-		};
-
-		let screen_vertices = [
-			screen_v0,
-			screen_v1,
-			screen_v2,
+		let mut screen_vertices = [
+			triangle.v0,
+			triangle.v1,
+			triangle.v2,
 		];
+
+		self.transform_to_ndc_space(&mut screen_vertices[0]);
+		self.transform_to_ndc_space(&mut screen_vertices[1]);
+		self.transform_to_ndc_space(&mut screen_vertices[2]);
 
 		if self.options.should_render_wireframe {
 
@@ -261,7 +221,11 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		// interpolant)
 
 		if self.options.should_render_shader {
-			self.triangle_fill(screen_v0, screen_v1, screen_v2);
+			self.triangle_fill(
+				screen_vertices[0],
+				screen_vertices[1],
+				screen_vertices[2]
+			);
 		}
 
 		if self.options.should_render_normals {
