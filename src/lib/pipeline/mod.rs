@@ -170,7 +170,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 		let z_inverse = 1.0 / v.p.z;
 
-		v.p.x = (v.p.x * z_inverse * self.graphics.buffer.height_over_width + 1.0) * x_factor;
+		v.p.x = (v.p.x * z_inverse + 1.0) * x_factor;
 		v.p.y = (-v.p.y * z_inverse + 1.0) * y_factor;
 		v.p.w = 1.0;
 

@@ -88,7 +88,7 @@ impl MeshScene {
 		let world_transform = Mat4::scaling(0.5);
 
 		let projection_transform = Mat4::projection(
-			2.0,
+			2.0 * graphics.buffer.width_over_height,
 			2.0,
 			1.0,
 			10.0,
