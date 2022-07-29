@@ -1,4 +1,4 @@
-use std::{fmt, ops};
+use std::{fmt, ops, f32::consts::PI};
 
 use super::vec::{vec3::Vec3, vec4::Vec4};
 
@@ -246,6 +246,29 @@ impl Mat<f32,4> {
 				[0.0, 	 		 		2.0 * n / h as f32, 	0.0, 					0.0	],
 				[0.0, 	 		 		0.0, 	 				f / (f - n), 	 		1.0	],
 				[0.0, 	 		 		0.0, 	 				(-n * f) / (f - n), 	0.0	],
+			]
+		}
+	}
+
+	pub fn projection_for_fov(
+		fov: f32,
+		aspect_ratio: f32,
+		near: f32,
+		far: f32) -> Self
+	{
+
+		let fov_rad = fov * PI / 180.0;
+		let width = 1.0 / (fov_rad / 2.0).tan();
+		let height = width * aspect_ratio;
+
+		let (w, h, n, f) = (width, height, near, far);
+
+		return Self {
+			elements: [
+				[w, 	0.0, 	0.0, 				 	0.0	],
+				[0.0, 	h, 		0.0, 				 	0.0	],
+				[0.0, 	0.0, 	f / (f - n), 	 	 	1.0	],
+				[0.0, 	0.0, 	(-n * f) / (f - n),  	0.0	],
 			]
 		}
 	}
