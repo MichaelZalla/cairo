@@ -181,19 +181,21 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		triangle: &mut Triangle<T::VertexOut>) -> ()
 	{
 
-		let world_vertex_relative_normals = [
-			triangle.v0.p + (triangle.v0.n * 0.05),
-			triangle.v1.p + (triangle.v1.n * 0.05),
-			triangle.v2.p + (triangle.v2.n * 0.05),
-		];
+		// World-space to screen-space (NDC) transform
 
-		// Screen-space perspective divide
-
-		let mut screen_vertices = [
+		let world_vertices = [
 			triangle.v0,
 			triangle.v1,
 			triangle.v2,
 		];
+
+		let world_vertex_relative_normals = [
+			world_vertices[0].p + world_vertices[0].n * 0.05,
+			world_vertices[1].p + world_vertices[1].n * 0.05,
+			world_vertices[2].p + world_vertices[2].n * 0.05,
+		];
+
+		let mut screen_vertices = world_vertices.clone();
 
 		self.transform_to_ndc_space(&mut screen_vertices[0]);
 		self.transform_to_ndc_space(&mut screen_vertices[1]);
