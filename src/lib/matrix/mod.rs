@@ -231,6 +231,25 @@ impl Mat<f32,4> {
 		};
 	}
 
+	pub fn projection(
+		width: f32,
+		height: f32,
+		near: f32,
+		far: f32) -> Self
+	{
+
+		let (w, h, n, f) = (width, height, near, far);
+
+		return Self {
+			elements: [
+				[2.0 * n / w as f32, 	0.0, 	 			 	0.0, 					0.0	],
+				[0.0, 	 		 		2.0 * n / h as f32, 	0.0, 					0.0	],
+				[0.0, 	 		 		0.0, 	 				f / (f - n), 	 		1.0	],
+				[0.0, 	 		 		0.0, 	 				(-n * f) / (f - n), 	0.0	],
+			]
+		}
+	}
+
 }
 
 pub type Mat3 = Mat<f32,3>;

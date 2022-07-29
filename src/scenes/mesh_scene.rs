@@ -85,12 +85,20 @@ impl MeshScene {
 		let screen_width = buffer.width;
 		let screen_height = buffer.height;
 
-		let transform = Mat4::scaling(0.5);
+		let world_transform = Mat4::scaling(0.5);
+
+		let projection_transform = Mat4::projection(
+			2.0,
+			2.0,
+			1.0,
+			10.0,
+		);
 
 		let pipeline = Pipeline::new(
 			graphics,
 			DefaultEffect::new(
-				transform,
+				world_transform,
+				projection_transform,
 				mesh_color,
 				ambient_light,
 				diffuse_light,
@@ -200,7 +208,7 @@ impl Scene for MeshScene {
 
 		let translation_matrix = Mat4::translation(self.translation);
 
-		self.pipeline.effect.set_transform(
+		self.pipeline.effect.set_world_transform(
 			scaling_matrix * rotation_matrix * translation_matrix
 		);
 
