@@ -145,7 +145,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 		}
 
-		for triangle in triangles {
+		for triangle in triangles.as_mut_slice() {
 			self.process_triangle(triangle);
 		}
 
@@ -153,7 +153,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn process_triangle(
 		&mut self,
-		triangle: Triangle<T::VertexOut>) -> ()
+		triangle: &mut Triangle<T::VertexOut>) -> ()
 	{
 		// @TODO(mzalla) Geometry shader?
 
@@ -162,7 +162,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn post_process_triangle_vertices(
 		&mut self,
-		triangle: Triangle<T::VertexOut>) -> ()
+		triangle: &mut Triangle<T::VertexOut>) -> ()
 	{
 
 		let world_vertex_relative_normals = [
