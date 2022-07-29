@@ -320,7 +320,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		x: u32,
 		y: u32,
 		z: f32,
-		color: color::Color) -> ()
+		interpolant: &T::VertexOut) -> ()
 	{
 
 		if x > (self.graphics.buffer.width - 1) || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32 - 1) {
@@ -329,9 +329,12 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		}
 
 		if self.test_and_set_z_buffer(x, y, z) {
-			self.graphics.set_pixel(x, y, color);
-		}
 
+			let color = self.effect.ps(interpolant);
+
+			self.graphics.set_pixel(x, y, color);
+
+		}
 
 	}
 
@@ -387,9 +390,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 				let z = z_start + z_span * x_progress;
 
-				let color = self.effect.ps(&cursor);
-
-				self.set_pixel(x, y, z, color);
+				self.set_pixel(x, y, z, &cursor);
 
 				cursor = cursor + cursor_step;
 
@@ -454,9 +455,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 				let z = z_start + z_span * x_progress;
 
-				let color = self.effect.ps(&cursor);
-
-				self.set_pixel(x, y, z, color);
+				self.set_pixel(x, y, z, &cursor);
 
 				cursor = cursor + cursor_step;
 
