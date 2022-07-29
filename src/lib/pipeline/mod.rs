@@ -323,8 +323,11 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		interpolant: &T::VertexOut) -> ()
 	{
 
-		if x > (self.graphics.buffer.width - 1) || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32 - 1) {
+		if x > (self.graphics.buffer.width - 1) ||
+		   y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32 - 1)
+		{
 			// Prevents panic! inside of self.graphics.set_pixel();
+
 			return;
 		}
 
