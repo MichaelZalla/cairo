@@ -149,7 +149,7 @@ impl Effect for DefaultEffect {
 
 	}
 
-	fn ps(&self, interpolant: <Self as Effect>::VertexOut) -> Color {
+	fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Color {
 
 		let surface_normal = interpolant.n.as_normal();
 

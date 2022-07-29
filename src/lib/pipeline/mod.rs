@@ -373,7 +373,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 				let z = z_start + z_span * x_progress;
 
-				let color = self.effect.ps(cursor);
+				let color = self.effect.ps(&cursor);
 
 				self.set_pixel(x, y, z, color);
 
@@ -440,7 +440,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 				let z = z_start + z_span * x_progress;
 
-				let color = self.effect.ps(cursor);
+				let color = self.effect.ps(&cursor);
 
 				self.set_pixel(x, y, z, color);
 
