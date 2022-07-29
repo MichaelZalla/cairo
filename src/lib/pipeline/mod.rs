@@ -233,7 +233,11 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			},
 		};
 
-		let screen_vertices = [screen_v0, screen_v1, screen_v2];
+		let screen_vertices = [
+			screen_v0,
+			screen_v1,
+			screen_v2,
+		];
 
 		if self.options.should_render_wireframe {
 
