@@ -170,13 +170,70 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
+	fn should_cull_from_homogeneous_space(
+		&mut self,
+		triangle: &mut Triangle<T::VertexOut>) -> bool
+	{
+
+		if triangle.v0.p.x > triangle.v0.p.w &&
+		   triangle.v1.p.x > triangle.v1.p.w &&
+		   triangle.v2.p.x > triangle.v2.p.w
+		{
+			return true;
+		}
+
+		if triangle.v0.p.x < -triangle.v0.p.w &&
+		   triangle.v1.p.x < -triangle.v1.p.w &&
+		   triangle.v2.p.x < -triangle.v2.p.w
+		{
+			return true;
+		}
+
+		if triangle.v0.p.y > triangle.v0.p.w &&
+		   triangle.v1.p.y > triangle.v1.p.w &&
+		   triangle.v2.p.y > triangle.v2.p.w
+		{
+			return true;
+		}
+
+		if triangle.v0.p.y < -triangle.v0.p.w &&
+		   triangle.v1.p.y < -triangle.v1.p.w &&
+		   triangle.v2.p.y < -triangle.v2.p.w
+		{
+			return true;
+		}
+
+		// if triangle.v0.p.z > triangle.v0.p.w &&
+		//    triangle.v1.p.z > triangle.v1.p.w &&
+		//    triangle.v2.p.z > triangle.v2.p.w
+		// {
+		// 	return true;
+		// }
+
+		if triangle.v0.p.z < 0.0 &&
+		   triangle.v1.p.z < 0.0 &&
+		   triangle.v2.p.z < 0.0
+		{
+			return true;
+		}
+
+		return false;
+
+	}
+
 	fn process_triangle(
 		&mut self,
 		triangle: &mut Triangle<T::VertexOut>) -> ()
 	{
+
 		// @TODO(mzalla) Geometry shader?
 
+		if self.should_cull_from_homogeneous_space(triangle) {
+			return;
+		}
+
 		self.post_process_triangle_vertices(triangle);
+
 	}
 
 	fn transform_to_ndc_space(
