@@ -401,8 +401,8 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		let left_step_z = (v2.p.z - v0.p.z) / (v2.p.y - v0.p.y);
 		let right_step_z = (v2.p.z - v1.p.z) / (v2.p.y - v1.p.y);
 
-		let y_start = (v0.p.y - 0.5).ceil() as u32;
-		let y_end = (v2.p.y - 0.5).ceil() as u32;
+		let y_start = ((v0.p.y - 0.5).ceil() as u32).max(0).min(self.graphics.buffer.height - 1);
+		let y_end = ((v2.p.y - 0.5).ceil() as u32).min(self.graphics.buffer.height - 1);
 
 		let mut lhs = v0.clone();
 		let lhs_step = (v2 - v0) / (y_end - y_start) as f32;
@@ -422,8 +422,8 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			let z_end: f32 = v1.p.z + right_step_z * delta_y;
 			let z_span: f32 = z_end - z_start;
 
-			let x_start = (x_left - 0.5).ceil() as u32;
-			let x_end = (x_right - 0.5).ceil() as u32;
+			let x_start = ((x_left - 0.5).ceil() as u32).max(0).min(self.graphics.buffer.width - 1);
+			let x_end = ((x_right - 0.5).ceil() as u32).min(self.graphics.buffer.width - 1);
 
 			let mut cursor = lhs.clone();
 			let cursor_step = (rhs - cursor) / (x_end - x_start) as f32;
@@ -466,8 +466,8 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		let left_step_z = (v1.p.z - v0.p.z) / (v1.p.y - v0.p.y);
 		let right_step_z = (v2.p.z - v0.p.z) / (v2.p.y - v0.p.y);
 
-		let y_start = (v0.p.y - 0.5).ceil() as u32;
-		let y_end = (v2.p.y - 0.5).ceil() as u32;
+		let y_start = ((v0.p.y - 0.5).ceil() as u32).max(0).min(self.graphics.buffer.height - 1);
+		let y_end = ((v2.p.y - 0.5).ceil() as u32).min(self.graphics.buffer.height - 1);
 
 		let mut lhs = v0.clone();
 		let lhs_step = (v1 - v0) / (y_end - y_start) as f32;
@@ -487,8 +487,8 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			let z_end: f32 = v0.p.z + right_step_z * delta_y;
 			let z_span: f32 = z_end - z_start;
 
-			let x_start = (x_left - 0.5).ceil() as u32;
-			let x_end = (x_right - 0.5).ceil() as u32;
+			let x_start = ((x_left - 0.5).ceil() as u32).max(0).min(self.graphics.buffer.width - 1);
+			let x_end = ((x_right - 0.5).ceil() as u32).min(self.graphics.buffer.width - 1);
 
 			let mut cursor = lhs.clone();
 			let cursor_step = (rhs - cursor) / (x_end - x_start) as f32;
