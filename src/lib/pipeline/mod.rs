@@ -32,6 +32,7 @@ pub struct Pipeline<T: Effect> {
 	buffer_width_over_2: f32,
 	buffer_height_over_2: f32,
 	z_buffer: Vec<f32>,
+	world_space_origin: Vec4,
 	pub effect: T,
 }
 
@@ -60,6 +61,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			buffer_width_over_2: buffer_width_over_2,
 			buffer_height_over_2: buffer_height_over_2,
 			z_buffer: z_buffer,
+			world_space_origin: Vec4::new(Vec3{ x: 0.0, y: 0.0, z: 0.0 }, 1.0),
 			effect: effect,
 		};
 
@@ -128,16 +130,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 			// Cull backfaces
 
-			let vertex_vector = vertices[face.0].p;
-			let vertex_normal = vertices[face.0].n;
-
-			let world_space_origin = Vec4::new(Vec3{ x: 0.0, y: 0.0, z: 0.0 }, 1.0);
-
-			let projected_origin = world_space_origin * self.effect.get_projection();
-
-			let dot_product = vertex_normal.dot(vertex_vector.as_normal() - projected_origin);
-
-			if dot_product > 0.0 {
+			if self.is_backface(vertices[face.0]) {
 				continue;
 			}
 
@@ -152,6 +145,28 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		for triangle in triangles.as_mut_slice() {
 			self.process_triangle(triangle);
 		}
+
+	}
+
+	fn is_backface(
+		&mut self,
+		vertex: T::VertexOut) -> bool
+	{
+
+		let vertex_vector = vertex.p;
+		let vertex_normal = vertex.n;
+
+		let projected_origin = self.world_space_origin * self.effect.get_projection();
+
+		let dot_product = vertex_normal.dot(
+			vertex_vector.as_normal() - projected_origin
+		);
+
+		if dot_product > 0.0 {
+			return true;
+		}
+
+		return false;
 
 	}
 
