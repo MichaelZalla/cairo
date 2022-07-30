@@ -34,6 +34,7 @@ pub struct MeshScene {
 	mesh_rotation: Vec3,
 
 	camera_position: Vec3,
+	camera_rotation: Vec3,
 	camera_speed: f32,
 
 }
@@ -53,11 +54,7 @@ impl MeshScene {
 			z: 10.0,
 		};
 
-		let mesh_rotation = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: 0.0,
-		};
+		let mesh_rotation = Vec3::new();
 
 		let mesh_color = Vec3{
 			x: 0.5,
@@ -65,7 +62,8 @@ impl MeshScene {
 			z: 0.65,
 		};
 
-		let camera_position = Vec3{ x: 0.0, y: 0.0, z: 0.0 };
+		let camera_position = Vec3::new();
+		let camera_rotation = Vec3::new();
 		let camera_speed = 15.0;
 
 		let ambient_light = Vec3{
@@ -129,8 +127,8 @@ impl MeshScene {
 
 		let aspect_ratio = graphics.buffer.width_over_height;
 
-		let horizontal_fov = FIELD_OF_VIEW;
-		let vertical_fov = FIELD_OF_VIEW / aspect_ratio;
+		let horizontal_fov_rad = PI * (FIELD_OF_VIEW) / 180.0;
+		let vertical_fov_rad = PI * (FIELD_OF_VIEW / aspect_ratio) / 180.0;
 
 		let projection_transform = Mat4::projection_for_fov(
 			FIELD_OF_VIEW,
@@ -161,6 +159,7 @@ impl MeshScene {
 			mesh_position,
 			mesh_rotation,
 			camera_position,
+			camera_rotation,
 			camera_speed,
 			screen_width,
 			screen_height,
@@ -234,10 +233,20 @@ impl Scene for MeshScene {
 		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
 		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
 
-		// Mesh rotation via mouse input
+		// Camera rotation via mouse input
 
-		// self.world_rotation.y = -2.0 * PI * nds_mouse_x;
-		// self.world_rotation.x = PI + 2.0 * PI * nds_mouse_y;
+		self.camera_rotation.y = -PI + (nds_mouse_x * 2.0 * PI);
+		self.camera_rotation.x = -PI + (nds_mouse_y * 2.0 * PI);
+
+		let camera_step = self.camera_speed * delta_t_seconds;
+
+		let camera_rotation_inverse_transform =
+			Mat4::rotation_x(-self.camera_rotation.x) *
+			Mat4::rotation_y(-self.camera_rotation.y) *
+			Mat4::rotation_z(-self.camera_rotation.z);
+
+		let camera_rotation_inverse_transposed =
+			camera_rotation_inverse_transform.transposed();
 
 		// Mesh rotation via time delta
 
@@ -257,11 +266,18 @@ impl Scene for MeshScene {
 			Mat4::rotation_z(self.mesh_rotation.z) *
 			Mat4::translation(self.mesh_position);
 
-		let camera_translation_transform =
-			Mat4::translation(self.camera_position * -1.0);
+		let camera_translation_inverse = self.camera_position * -1.0;
+
+		let camera_translation_inverse_transform =
+			Mat4::translation(Vec3{
+				x: camera_translation_inverse.x,
+				y: camera_translation_inverse.y,
+				z: camera_translation_inverse.z,
+			});
 
 		let view_transform =
-			camera_translation_transform;
+			camera_rotation_inverse_transform *
+			camera_translation_inverse_transform;
 
 		let world_view_transform =
 			world_transform *
