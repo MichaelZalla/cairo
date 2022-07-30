@@ -15,6 +15,10 @@ use crate::{
 	effects::default_effect::DefaultEffect,
 };
 
+static FIELD_OF_VIEW: f32 = 100.0;
+static PROJECTION_Z_NEAR: f32 = 1.0;
+static PROJECTION_Z_FAR: f32 = 10.0;
+
 pub struct MeshScene {
 
 	pipeline: Pipeline<DefaultEffect>,
@@ -121,10 +125,10 @@ impl MeshScene {
 		// );
 
 		let projection_transform = Mat4::projection_for_fov(
-			100.0,
+			FIELD_OF_VIEW,
 			graphics.buffer.width_over_height,
-			1.0,
-			10.0,
+			PROJECTION_Z_NEAR,
+			PROJECTION_Z_FAR,
 		);
 
 		let pipeline = Pipeline::new(
