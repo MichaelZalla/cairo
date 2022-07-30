@@ -16,13 +16,19 @@ use crate::{
 };
 
 pub struct MeshScene {
+
 	pipeline: Pipeline<DefaultEffect>,
 	pipeline_options: PipelineOptions,
+
 	mesh: Mesh,
-	rotation: Vec3,
-	translation: Vec3,
+	mesh_position: Vec3,
+	mesh_rotation: Vec3,
+
+	camera_position: Vec3,
+	camera_speed: f32,
 	screen_width: u32,
 	screen_height: u32,
+
 }
 
 impl MeshScene {
@@ -34,15 +40,26 @@ impl MeshScene {
 
 		let mesh = get_mesh_from_obj(filepath);
 
-		// let scale = 0.5;
-		let rotation = Vec3{ x: 0.0, y: 0.0, z: 0.0 };
-		let translation = Vec3{ x: 0.0, y: -1.0, z: 10.0 };
+		let mesh_position = Vec3{
+			x: 0.0,
+			y: 0.0,
+			z: 10.0,
+		};
+
+		let mesh_rotation = Vec3{
+			x: 0.0,
+			y: 0.0,
+			z: 0.0,
+		};
 
 		let mesh_color = Vec3{
 			x: 0.5,
 			y: 0.0,
 			z: 0.65,
 		};
+
+		let camera_position = Vec3{ x: 0.0, y: 0.0, z: 0.0 };
+		let camera_speed = 15.0;
 
 		let ambient_light = Vec3{
 			x: 0.1,
@@ -85,7 +102,16 @@ impl MeshScene {
 		let screen_width = buffer.width;
 		let screen_height = buffer.height;
 
-		let world_transform = Mat4::scaling(0.5);
+		let world_transform =
+			Mat4::scaling(0.5) *
+			Mat4::translation(mesh_position);
+
+		let view_transform =
+			Mat4::translation(camera_position * -1.0);
+
+		let world_view_transform =
+			world_transform *
+			view_transform;
 
 		// let projection_transform = Mat4::projection(
 		// 	2.0 * graphics.buffer.width_over_height,
@@ -104,7 +130,7 @@ impl MeshScene {
 		let pipeline = Pipeline::new(
 			graphics,
 			DefaultEffect::new(
-				world_transform,
+				world_view_transform,
 				projection_transform,
 				mesh_color,
 				ambient_light,
@@ -120,8 +146,10 @@ impl MeshScene {
 			pipeline,
 			pipeline_options,
 			mesh,
-			rotation,
-			translation,
+			mesh_position,
+			mesh_rotation,
+			camera_position,
+			camera_speed,
 			screen_width,
 			screen_height,
 		};
@@ -134,25 +162,27 @@ impl Scene for MeshScene {
 
 	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
 
+		let camera_step = self.camera_speed * delta_t_seconds;
+
 		for keycode in &keyboard_state.keys_pressed {
 			match keycode {
 				Keycode::Down|Keycode::S { .. } => {
-					self.translation.y += 0.1;
+					self.camera_position.z -= camera_step;
 				},
 				Keycode::Up|Keycode::W { .. } => {
-					self.translation.y -= 0.1;
+					self.camera_position.z += camera_step;
 				},
 				Keycode::Right|Keycode::D { .. } => {
-					self.translation.x -= 0.1;
+					self.camera_position.x += camera_step;
 				},
 				Keycode::Left|Keycode::A { .. } => {
-					self.translation.x += 0.1;
+					self.camera_position.x -= camera_step;
 				},
 				Keycode::Q { .. } => {
-					self.translation.z += 0.1;
+					self.camera_position.y += camera_step;
 				},
 				Keycode::E { .. } => {
-					self.translation.z -= 0.1;
+					self.camera_position.y -= camera_step;
 				},
 				Keycode::Num1 { .. } => {
 					self.pipeline_options.should_render_wireframe =
@@ -179,7 +209,7 @@ impl Scene for MeshScene {
 		if mouse_state.wheel_did_move {
 			match mouse_state.wheel_direction {
 				sdl2::mouse::MouseWheelDirection::Normal => {
-					self.translation.z += (mouse_state.wheel_y as f32) / 4.0;
+					self.camera_position.z -= (mouse_state.wheel_y as f32) / 4.0;
 				},
 				_ => {}
 			}
@@ -190,33 +220,41 @@ impl Scene for MeshScene {
 		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
 		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
 
-		// Rotation via mouse input
+		// Mesh rotation via mouse input
 
-		// self.rotation.y = -2.0 * PI * nds_mouse_x;
-		// self.rotation.x = PI + 2.0 * PI * nds_mouse_y;
+		// self.world_rotation.y = -2.0 * PI * nds_mouse_x;
+		// self.world_rotation.x = PI + 2.0 * PI * nds_mouse_y;
 
-		// Rotation via time delta
+		// Mesh rotation via time delta
 
-		// self.rotation.z += 0.2 * PI * delta_t_seconds;
-		// self.rotation.z %= 2.0 * PI;
+		self.mesh_rotation.z += 0.2 * PI * delta_t_seconds;
+		self.mesh_rotation.z %= 2.0 * PI;
 
-		// self.rotation.x += 0.2 * PI * delta_t_seconds;
-		// self.rotation.x %= 2.0 * PI;
+		self.mesh_rotation.x += 0.2 * PI * delta_t_seconds;
+		self.mesh_rotation.x %= 2.0 * PI;
 
-		self.rotation.y += 0.2 * PI * delta_t_seconds;
-		self.rotation.y %= 2.0 * PI;
+		self.mesh_rotation.y += 0.2 * PI * delta_t_seconds;
+		self.mesh_rotation.y %= 2.0 * PI;
 
-		let scaling_matrix = Mat4::scaling(0.5);
+		let world_transform =
+			Mat4::scaling(0.5) *
+			Mat4::rotation_x(self.mesh_rotation.x) *
+			Mat4::rotation_y(self.mesh_rotation.y) *
+			Mat4::rotation_z(self.mesh_rotation.z) *
+			Mat4::translation(self.mesh_position);
 
-		let rotation_matrix =
-			Mat4::rotation_x(self.rotation.x) *
-			Mat4::rotation_y(self.rotation.y) *
-			Mat4::rotation_z(self.rotation.z);
+		let camera_translation_transform =
+			Mat4::translation(self.camera_position * -1.0);
 
-		let translation_matrix = Mat4::translation(self.translation);
+		let view_transform =
+			camera_translation_transform;
 
-		self.pipeline.effect.set_world_transform(
-			scaling_matrix * rotation_matrix * translation_matrix
+		let world_view_transform =
+			world_transform *
+			view_transform;
+
+		self.pipeline.effect.set_world_view_transform(
+			world_view_transform
 		);
 
 		// // Diffuse light direction rotation via mouse input

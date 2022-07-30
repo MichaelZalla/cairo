@@ -12,9 +12,9 @@ use crate::{
 };
 
 pub struct DefaultEffect {
-	world_transform: Mat4,
+	world_view_transform: Mat4,
 	projection_transform: Mat4,
-	world_projection_transform: Mat4,
+	world_view_projection_transform: Mat4,
 	mesh_color: Vec3,
 	ambient_light: Vec3,
 	diffuse_light: Vec3,
@@ -31,7 +31,7 @@ pub struct DefaultEffect {
 impl DefaultEffect {
 
 	pub fn new(
-		world_transform: Mat4,
+		world_view_transform: Mat4,
 		projection_transform: Mat4,
 		mesh_color: Vec3,
 		ambient_light: Vec3,
@@ -41,9 +41,9 @@ impl DefaultEffect {
 		point_light_position: Vec3,) -> Self
 	{
 		return DefaultEffect {
-			world_transform,
+			world_view_transform,
 			projection_transform,
-			world_projection_transform: world_transform * projection_transform,
+			world_view_projection_transform: world_view_transform * projection_transform,
 			mesh_color,
 			ambient_light,
 			diffuse_light,
@@ -58,13 +58,13 @@ impl DefaultEffect {
 		};
 	}
 
-	pub fn set_world_transform(
+	pub fn set_world_view_transform(
 		&mut self,
 		mat: Mat4) -> ()
 	{
-		self.world_transform = mat;
+		self.world_view_transform = mat;
 
-		self.world_projection_transform = self.world_transform * self.projection_transform;
+		self.world_view_projection_transform = self.world_view_transform * self.projection_transform;
 	}
 
 	pub fn set_projection_transform(
@@ -73,7 +73,7 @@ impl DefaultEffect {
 	{
 		self.projection_transform = mat;
 
-		self.world_projection_transform = self.world_transform * self.projection_transform;
+		self.world_view_projection_transform = self.world_view_transform * self.projection_transform;
 	}
 
 	pub fn set_mesh_color(
@@ -135,9 +135,9 @@ impl Effect for DefaultEffect {
 
 		let mut out = Self::VertexOut::new();
 
-		out.p = Vec4::new(v.p, 1.0) * self.world_projection_transform;
+		out.p = Vec4::new(v.p, 1.0) * self.world_view_projection_transform;
 
-		let world_pos = Vec4::new(v.p, 1.0) * self.world_transform;
+		let world_pos = Vec4::new(v.p, 1.0) * self.world_view_transform;
 
 		out.world_pos = Vec3{
 			x: world_pos.x,
@@ -145,7 +145,7 @@ impl Effect for DefaultEffect {
 			z: world_pos.z,
 		};
 
-		out.n = Vec4::new(v.n, 0.0) * self.world_transform;
+		out.n = Vec4::new(v.n, 0.0) * self.world_view_transform;
 
 		out.n = out.n.as_normal();
 
