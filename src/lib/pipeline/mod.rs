@@ -221,6 +221,59 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
+	fn clip1(
+		&mut self,
+		v0: T::VertexOut,
+		v1: T::VertexOut,
+		v2: T::VertexOut)
+	{
+
+		let a_alpha = -(v0.p.z) / (v1.p.z - v0.p.z);
+		let b_alpha = -(v0.p.z) / (v2.p.z - v0.p.z);
+
+		let a_prime = T::VertexOut::interpolate(v0, v1, a_alpha);
+		let b_prime = T::VertexOut::interpolate(v0, v2, b_alpha);
+
+		let mut triangle1  = Triangle{
+			v0: a_prime,
+			v1: v1,
+			v2: v2,
+		};
+
+		let mut triangle2  = Triangle{
+			v0: b_prime,
+			v1: a_prime,
+			v2: v2,
+		};
+
+		self.post_process_triangle_vertices(&mut triangle1);
+		self.post_process_triangle_vertices(&mut triangle2);
+
+	}
+
+	fn clip2(
+		&mut self,
+		v0: T::VertexOut,
+		v1: T::VertexOut,
+		v2: T::VertexOut)
+	{
+
+		let a_alpha = -(v0.p.z) / (v2.p.z - v0.p.z);
+		let b_alpha = -(v1.p.z) / (v2.p.z - v1.p.z);
+
+		let a_prime = T::VertexOut::interpolate(v0, v2, a_alpha);
+		let b_prime = T::VertexOut::interpolate(v1, v2, b_alpha);
+
+		let mut triangle  = Triangle{
+			v0: a_prime,
+			v1: b_prime,
+			v2: v2,
+		};
+
+		self.post_process_triangle_vertices(&mut triangle);
+
+	}
+
 	fn process_triangle(
 		&mut self,
 		triangle: &mut Triangle<T::VertexOut>) -> ()
@@ -232,7 +285,50 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			return;
 		}
 
-		self.post_process_triangle_vertices(triangle);
+		// Clip triangles that intersect the front of our view frustum
+
+		if triangle.v0.p.z < 0.0 {
+
+			if triangle.v1.p.z < 0.0 {
+
+				// Clip 2 (0 and 1)
+				self.clip2(triangle.v0, triangle.v1, triangle.v2);
+
+			} else if triangle.v2.p.z < 0.0 {
+
+				// Clip 2 (0 and 2)
+				self.clip1(triangle.v0, triangle.v2, triangle.v1);
+
+			} else {
+
+				// Clip 1 (0)
+				self.clip1(triangle.v0, triangle.v1, triangle.v2);
+
+			}
+
+		} else if triangle.v1.p.z < 0.0 {
+
+			if triangle.v2.p.z < 0.0 {
+
+				// Clip 2
+				self.clip2(triangle.v1, triangle.v2, triangle.v0);
+
+			} else {
+
+				// Clip 1
+				self.clip1(triangle.v1, triangle.v0, triangle.v2);
+
+			}
+		} else if triangle.v2.p.z < 0.0 {
+
+			// Clip 1
+			self.clip1(triangle.v2, triangle.v0, triangle.v1);
+
+		} else {
+
+			self.post_process_triangle_vertices(triangle);
+
+		}
 
 	}
 
@@ -244,11 +340,11 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		let x_factor = self.buffer_width_over_2;
 		let y_factor = self.buffer_height_over_2;
 
-		let z_inverse = 1.0 / v.p.z;
+		let w_inverse = 1.0 / v.p.w;
 
-		v.p.x = (v.p.x * z_inverse + 1.0) * x_factor;
-		v.p.y = (-v.p.y * z_inverse + 1.0) * y_factor;
-		v.p.w = 1.0;
+		v.p.x = (v.p.x * w_inverse + 1.0) * x_factor;
+		v.p.y = (-v.p.y * w_inverse + 1.0) * y_factor;
+		v.p.w = w_inverse;
 
 	}
 
@@ -312,12 +408,14 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 				let world_vertex_relative_normal = world_vertex_relative_normals[index];
 
+				let w_inverse = 1.0 / world_vertices[index].p.w;
+
 				let screen_vertex_relative_normal = Vec2{
 					x: (
-						world_vertex_relative_normal.x / world_vertex_relative_normal.z * self.graphics.buffer.height_over_width + 1.0
+						world_vertex_relative_normal.x * w_inverse + 1.0
 					) * self.buffer_width_over_2,
 					y: (
-						(-1.0 * world_vertex_relative_normal.y) / world_vertex_relative_normal.z + 1.0
+						-world_vertex_relative_normal.y * w_inverse + 1.0
 					) * self.buffer_height_over_2,
 					z: 0.0,
 				};
