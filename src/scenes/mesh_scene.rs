@@ -24,14 +24,17 @@ pub struct MeshScene {
 	pipeline: Pipeline<DefaultEffect>,
 	pipeline_options: PipelineOptions,
 
+	screen_width: u32,
+	screen_height: u32,
+	horizontal_fov_rad: f32,
+	vertical_fov_rad: f32,
+
 	mesh: Mesh,
 	mesh_position: Vec3,
 	mesh_rotation: Vec3,
 
 	camera_position: Vec3,
 	camera_speed: f32,
-	screen_width: u32,
-	screen_height: u32,
 
 }
 
@@ -124,9 +127,14 @@ impl MeshScene {
 		// 	10.0,
 		// );
 
+		let aspect_ratio = graphics.buffer.width_over_height;
+
+		let horizontal_fov = FIELD_OF_VIEW;
+		let vertical_fov = FIELD_OF_VIEW / aspect_ratio;
+
 		let projection_transform = Mat4::projection_for_fov(
 			FIELD_OF_VIEW,
-			graphics.buffer.width_over_height,
+			aspect_ratio,
 			PROJECTION_Z_NEAR,
 			PROJECTION_Z_FAR,
 		);
@@ -156,6 +164,8 @@ impl MeshScene {
 			camera_speed,
 			screen_width,
 			screen_height,
+			horizontal_fov_rad,
+			vertical_fov_rad,
 		};
 
 	}
