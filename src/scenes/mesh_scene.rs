@@ -37,6 +37,8 @@ pub struct MeshScene {
 	camera_rotation_inverse_transform: Mat4,
 	camera_speed: f32,
 
+	point_light_distance_from_camera: f32,
+
 	prev_mouse_state: MouseState,
 
 }
@@ -168,6 +170,7 @@ impl MeshScene {
 			camera_position,
 			camera_rotation_inverse_transform,
 			camera_speed,
+			point_light_distance_from_camera: 5.0,
 			screen_width,
 			screen_height,
 			horizontal_fov_rad,
@@ -322,17 +325,17 @@ impl Scene for MeshScene {
 
 		// Point light position translation via mouse input
 
-		let mut point_light_position = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: 2.0,
-		};
+		let point_light_position = forward * self.point_light_distance_from_camera;
 
-		point_light_position.y = 5.0 - (10.0 * nds_mouse_y);
-		point_light_position.x = -5.0 + (10.0 * nds_mouse_x);
+		// point_light_position.y = 5.0 - (10.0 * nds_mouse_y);
+		// point_light_position.x = -5.0 + (10.0 * nds_mouse_x);
 
 		self.pipeline.effect.set_point_light_position(
-			point_light_position
+			Vec3{
+				x: point_light_position.x,
+				y: point_light_position.x,
+				z: point_light_position.z,
+			}
 		);
 
 		self.prev_mouse_state = mouse_state.clone();

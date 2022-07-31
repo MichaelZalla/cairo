@@ -179,33 +179,46 @@ impl Effect for DefaultEffect {
 		let distance_to_point_light = vertex_to_point_light.mag();
 		let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
 
+		let likeness = normal_to_point_light.dot(Vec3 {
+			x: interpolant.n.x,
+			y: interpolant.n.y,
+			z: interpolant.n.z,
+		} * -1.0);
+
 		let attentuation = 1.0 / (
 			self.quadratic_attenuation * distance_to_point_light.powi(2) +
 			self.linear_attenuation * distance_to_point_light +
 			self.constant_attenuation
 		);
 
-		let point_intensity = self.point_light * attentuation * (0.0 as f32).max(
-			surface_normal_vec3.dot(normal_to_point_light)
-		);
+		let mut point_intensity: Vec3 = Vec3::new();
+		let mut specular_intensity: Vec3 = Vec3::new();
 
-		// Calculate specular light intensity
+		if likeness < 0.0 {
 
-		// point light projected onto surface normal
-		let w = surface_normal_vec3 * self.point_light.dot(surface_normal_vec3);
+			point_intensity = self.point_light * attentuation * (0.0 as f32).max(
+				surface_normal_vec3.dot(normal_to_point_light)
+			);
 
-		// vector to reflected light ray
-		let r = w * 2.0 - vertex_to_point_light;
+			// Calculate specular light intensity
 
-		// normal for reflected light
-		let r_inverse_hat = r.as_normal() * -1.0;
+			// point light projected onto surface normal
+			let w = surface_normal_vec3 * self.point_light.dot(surface_normal_vec3);
 
-		let specular_intensity =
-			self.point_light *
-			self.specular_intensity *
-			(0.0 as f32).max(
-				r_inverse_hat.dot(interpolant.world_pos.as_normal())
-			).powi(self.specular_power);
+			// vector to reflected light ray
+			let r = w * 2.0 - vertex_to_point_light;
+
+			// normal for reflected light
+			let r_inverse_hat = r.as_normal() * -1.0;
+
+			specular_intensity =
+				self.point_light *
+				self.specular_intensity *
+				(0.0 as f32).max(
+					r_inverse_hat.dot(interpolant.world_pos.as_normal())
+				).powi(self.specular_power);
+
+		}
 
 		// Calculate our color based on mesh color and light intensities
 
