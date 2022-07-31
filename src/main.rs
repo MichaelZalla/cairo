@@ -196,8 +196,8 @@ fn main() -> Result<(), String> {
 			}
 		}
 
-		mouse_state.pos.0 = last_known_mouse_x;
-		mouse_state.pos.1 = last_known_mouse_y;
+		mouse_state.position.0 = last_known_mouse_x;
+		mouse_state.position.1 = last_known_mouse_y;
 
 		// Update current scene
 

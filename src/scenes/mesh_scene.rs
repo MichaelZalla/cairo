@@ -34,8 +34,10 @@ pub struct MeshScene {
 	mesh_rotation: Vec3,
 
 	camera_position: Vec4,
-	camera_rotation: Vec3,
+	camera_rotation_inverse_transform: Mat4,
 	camera_speed: f32,
+
+	prev_mouse_state: MouseState,
 
 }
 
@@ -63,7 +65,7 @@ impl MeshScene {
 		};
 
 		let camera_position = Vec4::new(Vec3::new(), 1.0);
-		let camera_rotation = Vec3::new();
+		let camera_rotation_inverse_transform = Mat4::identity();
 		let camera_speed = 15.0;
 
 		let ambient_light = Vec3{
@@ -166,12 +168,13 @@ impl MeshScene {
 			mesh_position,
 			mesh_rotation,
 			camera_position,
-			camera_rotation,
+			camera_rotation_inverse_transform,
 			camera_speed,
 			screen_width,
 			screen_height,
 			horizontal_fov_rad,
 			vertical_fov_rad,
+			prev_mouse_state: MouseState::new(),
 		};
 
 	}
@@ -182,25 +185,25 @@ impl Scene for MeshScene {
 
 	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
 
-		let mouse_position = mouse_state.pos.to_owned();
+		let mouse_position = mouse_state.position;
 
 		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
 		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
 
-		// Camera rotation via mouse input
+		let prev_nds_mouse_x = self.prev_mouse_state.position.0 as f32 / self.screen_width as f32;
+		let prev_nds_mouse_y = self.prev_mouse_state.position.1 as f32 / self.screen_height as f32;
 
-		self.camera_rotation.y = -PI + (nds_mouse_x * 2.0 * PI);
-		self.camera_rotation.x = -PI + (nds_mouse_y * 2.0 * PI);
+		let mouse_x_delta = nds_mouse_x - prev_nds_mouse_x;
+		let mouse_y_delta = nds_mouse_y - prev_nds_mouse_y;
+
+		self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
+			Mat4::rotation_y(-mouse_x_delta  * 2.0 * PI) *
+			Mat4::rotation_x(-mouse_y_delta  * 2.0 * PI);
 
 		let camera_step = self.camera_speed * delta_t_seconds;
 
-		let camera_rotation_inverse_transform =
-			Mat4::rotation_x(-self.camera_rotation.x) *
-			Mat4::rotation_y(-self.camera_rotation.y) *
-			Mat4::rotation_z(-self.camera_rotation.z);
-
 		let camera_rotation_inverse_transposed =
-			camera_rotation_inverse_transform.transposed();
+			self.camera_rotation_inverse_transform.transposed();
 
 		let up = Vec4::new(Vec3{ x: 0.0, y: -1.0, z: 0.0 }, 1.0);
 		let left = Vec4::new(Vec3{ x: -1.0, y: 0.0, z: 0.0 }, 1.0);
@@ -285,8 +288,8 @@ impl Scene for MeshScene {
 			});
 
 		let view_transform =
-			camera_rotation_inverse_transform *
-			camera_translation_inverse_transform;
+			camera_translation_inverse_transform *
+			self.camera_rotation_inverse_transform;
 
 		let world_view_transform =
 			world_transform *
@@ -325,6 +328,8 @@ impl Scene for MeshScene {
 		self.pipeline.effect.set_point_light_position(
 			point_light_position
 		);
+
+		self.prev_mouse_state = mouse_state.clone();
 
 	}
 

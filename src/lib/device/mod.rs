@@ -16,7 +16,7 @@ impl KeyboardState {
 }
 
 pub struct MouseState {
-	pub pos: (i32, i32),
+	pub position: (i32, i32),
 	pub wheel_did_move: bool,
 	pub wheel_y: i32,
 	pub wheel_direction: MouseWheelDirection,
@@ -26,7 +26,7 @@ impl MouseState {
 
 	pub fn new() -> Self {
 		return MouseState {
-			pos: (0,0),
+			position: (0,0),
 			wheel_did_move: false,
 			wheel_y: 0,
 			wheel_direction: MouseWheelDirection::Unknown(0),

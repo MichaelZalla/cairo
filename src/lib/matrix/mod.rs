@@ -105,6 +105,11 @@ impl<T: std::default::Default + std::marker::Copy, const N: usize> Mat<T,N> {
 
 impl<const N: usize> Mat<f32,N> {
 
+	pub fn identity() -> Self
+	{
+		Self::scaling(1.0)
+	}
+
 	pub fn scaling(
 		factor: f32) -> Self
 	{
@@ -271,6 +276,20 @@ impl Mat<f32,4> {
 				[0.0, 	0.0, 	(-n * f) / (f - n),  	0.0	],
 			]
 		}
+	}
+
+	pub fn transposed(
+		&self) -> Self
+	{
+		let mut result: Self = self.clone();
+
+		for i in 0..self.elements.len() {
+			for j in 0..self.elements[0].len() {
+				result.elements[i][j] = self.elements[j][i];
+			}
+		}
+
+		return result;
 	}
 
 }
