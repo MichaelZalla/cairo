@@ -6,7 +6,7 @@ use crate::{
 	lib::{
 		scene::Scene,
 		vec::{vec3::Vec3, vec4::Vec4},
-		mesh::{Mesh, get_mesh_from_obj},
+		mesh::Mesh,
 		device::{KeyboardState, MouseState},
 		graphics::Graphics,
 		pipeline::{Pipeline, PipelineOptions},
@@ -45,10 +45,8 @@ impl MeshScene {
 
 	pub fn new(
 		graphics: Graphics,
-		filepath: String) -> Self
+		mesh: Mesh) -> Self
 	{
-
-		let mesh = get_mesh_from_obj(filepath);
 
 		let mesh_position = Vec3{
 			x: 0.0,

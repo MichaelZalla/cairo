@@ -14,6 +14,7 @@ use sdl2::render::BlendMode;
 mod macros;
 
 mod lib;
+use crate::lib::mesh::get_mesh_from_obj;
 use crate::lib::context::{get_application_context, get_application_rendering_context, get_backbuffer};
 use crate::lib::device::{KeyboardState, MouseState};
 use crate::lib::graphics::{Graphics, PixelBuffer};
@@ -74,35 +75,35 @@ fn main() -> Result<(), String> {
 	let mut scenes = vec![
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/cube.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/cow.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/lamp.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/voxels2.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/teapot.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/teapot2.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/minicooper2.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"))
 		),
 		MeshScene::new(
 			graphics.clone(),
-			get_absolute_filepath("/data/obj/jeffrey3.obj")
+			get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"))
 		),
 	];
 
