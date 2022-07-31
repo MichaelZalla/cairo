@@ -5,7 +5,7 @@ use sdl2::keyboard::Keycode;
 use crate::{
 	lib::{
 		scene::Scene,
-		vec::vec3::Vec3,
+		vec::{vec3::Vec3, vec4::Vec4},
 		mesh::{Mesh, get_mesh_from_obj},
 		device::{KeyboardState, MouseState},
 		graphics::Graphics,
@@ -33,7 +33,7 @@ pub struct MeshScene {
 	mesh_position: Vec3,
 	mesh_rotation: Vec3,
 
-	camera_position: Vec3,
+	camera_position: Vec4,
 	camera_rotation: Vec3,
 	camera_speed: f32,
 
@@ -62,7 +62,7 @@ impl MeshScene {
 			z: 0.65,
 		};
 
-		let camera_position = Vec3::new();
+		let camera_position = Vec4::new(Vec3::new(), 1.0);
 		let camera_rotation = Vec3::new();
 		let camera_speed = 15.0;
 
@@ -111,8 +111,15 @@ impl MeshScene {
 			Mat4::scaling(0.5) *
 			Mat4::translation(mesh_position);
 
+		let camera_position_inverse = camera_position * -1.0;
+
 		let view_transform =
-			Mat4::translation(camera_position * -1.0);
+			Mat4::translation(Vec3 {
+				x: camera_position_inverse.x,
+				y: camera_position_inverse.y,
+				z: camera_position_inverse.z,
+			}
+		);
 
 		let world_view_transform =
 			world_transform *
@@ -175,27 +182,49 @@ impl Scene for MeshScene {
 
 	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
 
+		let mouse_position = mouse_state.pos.to_owned();
+
+		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
+		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
+
+		// Camera rotation via mouse input
+
+		self.camera_rotation.y = -PI + (nds_mouse_x * 2.0 * PI);
+		self.camera_rotation.x = -PI + (nds_mouse_y * 2.0 * PI);
+
 		let camera_step = self.camera_speed * delta_t_seconds;
+
+		let camera_rotation_inverse_transform =
+			Mat4::rotation_x(-self.camera_rotation.x) *
+			Mat4::rotation_y(-self.camera_rotation.y) *
+			Mat4::rotation_z(-self.camera_rotation.z);
+
+		let camera_rotation_inverse_transposed =
+			camera_rotation_inverse_transform.transposed();
+
+		let up = Vec4::new(Vec3{ x: 0.0, y: -1.0, z: 0.0 }, 1.0);
+		let left = Vec4::new(Vec3{ x: -1.0, y: 0.0, z: 0.0 }, 1.0);
+		let forward = Vec4::new(Vec3{ x: 0.0, y: 0.0, z: 1.0 }, 1.0);
 
 		for keycode in &keyboard_state.keys_pressed {
 			match keycode {
 				Keycode::Down|Keycode::S { .. } => {
-					self.camera_position.z -= camera_step;
+					self.camera_position -= forward * camera_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Up|Keycode::W { .. } => {
-					self.camera_position.z += camera_step;
+					self.camera_position += forward * camera_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Right|Keycode::D { .. } => {
-					self.camera_position.x += camera_step;
+					self.camera_position -= left * camera_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Left|Keycode::A { .. } => {
-					self.camera_position.x -= camera_step;
+					self.camera_position += left * camera_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Q { .. } => {
-					self.camera_position.y += camera_step;
+					self.camera_position -= up * camera_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::E { .. } => {
-					self.camera_position.y -= camera_step;
+					self.camera_position += up * camera_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Num1 { .. } => {
 					self.pipeline_options.should_render_wireframe =
@@ -227,26 +256,6 @@ impl Scene for MeshScene {
 				_ => {}
 			}
 		}
-
-		let mouse_position = mouse_state.pos.to_owned();
-
-		let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
-		let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
-
-		// Camera rotation via mouse input
-
-		self.camera_rotation.y = -PI + (nds_mouse_x * 2.0 * PI);
-		self.camera_rotation.x = -PI + (nds_mouse_y * 2.0 * PI);
-
-		let camera_step = self.camera_speed * delta_t_seconds;
-
-		let camera_rotation_inverse_transform =
-			Mat4::rotation_x(-self.camera_rotation.x) *
-			Mat4::rotation_y(-self.camera_rotation.y) *
-			Mat4::rotation_z(-self.camera_rotation.z);
-
-		let camera_rotation_inverse_transposed =
-			camera_rotation_inverse_transform.transposed();
 
 		// Mesh rotation via time delta
 
