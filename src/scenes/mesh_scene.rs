@@ -229,6 +229,14 @@ impl Scene for MeshScene {
 				Keycode::E { .. } => {
 					self.camera_position += up * camera_step * camera_rotation_inverse_transposed;
 				},
+				Keycode::Z { .. } => {
+					self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
+						Mat4::rotation_z(camera_step / 2.0);
+				},
+				Keycode::C { .. } => {
+					self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
+						Mat4::rotation_z(-camera_step / 2.0);
+				},
 				Keycode::Num1 { .. } => {
 					self.pipeline_options.should_render_wireframe =
 						!self.pipeline_options.should_render_wireframe;
