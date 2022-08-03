@@ -5,9 +5,12 @@ use sdl2::{
 	render::{Canvas, TextureCreator, BlendMode, Texture},
 };
 
+use super::device::GameController;
+
 pub struct ApplicationContext {
 	pub window: Window,
 	pub timer: TimerSubsystem,
+	pub game_controllers: Vec<Option<GameController>>,
 	pub events: EventPump,
 }
 
@@ -34,36 +37,86 @@ pub fn get_application_context(
 			match sdl_context.timer() {
 				Ok(timer) => {
 
-					match sdl_context.event_pump() {
-						Ok(events) => {
+					match sdl_context.game_controller() {
+						Ok(game_controller_subsystem) => {
 
-							match sdl_context.video() {
-								Ok(video_subsystem) => {
+							let mut game_controllers: Vec<Option<GameController>> = vec![];
 
-									let mut window_builder = video_subsystem.window(
-										window_title,
-										window_width,
-										window_height
-									);
+							for _ in 0..4 {
+								game_controllers.push(None);
+							}
 
-									// window_builder.opengl()
-									// window_builder.position_centered()
-									// window_builder.borderless();
+							match game_controller_subsystem.num_joysticks() {
+								Ok(count) => {
 
-									if full_screen {
-										// @NOTE(mzalla) Overrides
-										// `window_width` and `window_height`
-										// for the current desktop resolution;
-										window_builder.fullscreen_desktop();
+									println!("Initialized game controller subsystem with {} joysticks.", count);
+
+									for joystick_index in 0..count {
+
+										if game_controller_subsystem.is_game_controller(joystick_index) {
+
+											match game_controller_subsystem.open(joystick_index) {
+												Ok(joystick) => {
+
+													if joystick.attached() {
+
+														println!("Controller mapping: {}", joystick.mapping());
+
+														game_controllers[joystick_index as usize] = Some(
+															GameController::new_with_handle(joystick)
+														);
+													}
+												},
+												Err(e) => {
+													println!("Error initializing controller {}: '{}'", joystick_index, e)
+												}
+											}
+
+										}
+
 									}
 
-									match window_builder.build() {
-										Ok(window) => Ok(ApplicationContext{
-											window: window,
-											timer: timer,
-											events: events,
-										}),
-										Err(e) => Err(e.to_string()),
+								},
+								Err(e) => {
+									println!("Error initializing game controller subsystem: '{}'", e);
+								},
+							}
+
+							match sdl_context.event_pump() {
+								Ok(events) => {
+
+									match sdl_context.video() {
+										Ok(video_subsystem) => {
+
+											let mut window_builder = video_subsystem.window(
+												window_title,
+												window_width,
+												window_height
+											);
+
+											// window_builder.opengl()
+											// window_builder.position_centered()
+											// window_builder.borderless();
+
+											if full_screen {
+												// @NOTE(mzalla) Overrides
+												// `window_width` and `window_height`
+												// for the current desktop resolution;
+												window_builder.fullscreen_desktop();
+											}
+
+											match window_builder.build() {
+												Ok(window) => Ok(ApplicationContext{
+													window: window,
+													timer: timer,
+													game_controllers,
+													events: events,
+												}),
+												Err(e) => Err(e.to_string()),
+											}
+
+										},
+										Err(e) => Err(e),
 									}
 
 								},

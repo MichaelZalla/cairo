@@ -19,6 +19,8 @@ use crate::lib::context::{get_application_context, get_application_rendering_con
 use crate::lib::device::{
 	MouseState,
 	KeyboardState,
+	GameController,
+	GameControllerState,
 };
 use crate::lib::graphics::{Graphics, PixelBuffer};
 use crate::lib::scene::Scene;
@@ -124,6 +126,8 @@ fn main() -> Result<(), String> {
 	let mut last_known_mouse_x = 0;
 	let mut last_known_mouse_y = 0;
 
+	let mut prev_game_controller_state: GameControllerState = Default::default();
+
 	'main: loop {
 
 		// Main loop
@@ -147,6 +151,22 @@ fn main() -> Result<(), String> {
 		let mut mouse_state = MouseState::new();
 
 		let mut keyboard_state = KeyboardState::new();
+
+		let mut game_controller = GameController::new();
+
+		let controller = app
+			.game_controllers[0]
+			.as_ref();
+
+		if controller.is_some() {
+
+			let unwrapped = controller.unwrap();
+
+			game_controller.id = unwrapped.id;
+			game_controller.name = unwrapped.name.clone();
+			game_controller.state = prev_game_controller_state;
+
+		}
 
 		for event in events {
 			match event {
@@ -196,10 +216,40 @@ fn main() -> Result<(), String> {
 					}
 				}
 
+				Event::ControllerDeviceAdded { which, .. } => {
+					println!("Connected controller {}", which);
+				},
+
+				Event::ControllerDeviceRemoved { which, .. } => {
+					println!("Disconnected controller {}", which);
+				},
+
+				Event::JoyButtonDown { button_idx, .. } => {
+					println!("Button down! {}", button_idx);
+				},
+
+				Event::JoyButtonUp { button_idx, .. } => {
+					println!("Button up! {}", button_idx);
+				},
+
+				Event::ControllerButtonDown { button, .. } => {
+					game_controller.set_button_state(button, true);
+				},
+
+				Event::ControllerButtonUp { button, .. } => {
+					game_controller.set_button_state(button, false);
+				},
+
+				Event::ControllerAxisMotion { axis, value, .. } => {
+					game_controller.set_joystick_state(axis, value);
+				},
+
 				_ => {}
 
 			}
 		}
+
+		prev_game_controller_state = game_controller.state.clone();
 
 		// Cache input device states
 
@@ -211,6 +261,7 @@ fn main() -> Result<(), String> {
 		scenes[current_scene_index].update(
 			&keyboard_state,
 			&mouse_state,
+			&game_controller.state,
 			delta_t_seconds
 		);
 
