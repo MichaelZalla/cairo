@@ -1,20 +1,9 @@
+use sdl2::{
+	mouse::MouseWheelDirection,
+	keyboard::Keycode,
+};
 
-use sdl2::{keyboard::Keycode, mouse::MouseWheelDirection};
-
-pub struct KeyboardState {
-	pub keys_pressed: Vec<Keycode>,
-}
-
-impl KeyboardState {
-
-	pub fn new() -> Self {
-		return KeyboardState {
-			keys_pressed: vec![],
-		};
-	}
-
-}
-
+#[derive(Clone)]
 pub struct MouseState {
 	pub position: (i32, i32),
 	pub wheel_did_move: bool,
@@ -34,3 +23,18 @@ impl MouseState {
 	}
 
 }
+
+pub struct KeyboardState {
+	pub keys_pressed: Vec<Keycode>,
+}
+
+impl KeyboardState {
+
+	pub fn new() -> Self {
+		return KeyboardState {
+			keys_pressed: vec![],
+		};
+	}
+
+}
+

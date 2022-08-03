@@ -16,7 +16,10 @@ mod macros;
 mod lib;
 use crate::lib::mesh::get_mesh_from_obj;
 use crate::lib::context::{get_application_context, get_application_rendering_context, get_backbuffer};
-use crate::lib::device::{KeyboardState, MouseState};
+use crate::lib::device::{
+	MouseState,
+	KeyboardState,
+};
 use crate::lib::graphics::{Graphics, PixelBuffer};
 use crate::lib::scene::Scene;
 
@@ -141,13 +144,25 @@ fn main() -> Result<(), String> {
 
 		let events = app.events.poll_iter();
 
-		let mut keyboard_state = KeyboardState::new();
 		let mut mouse_state = MouseState::new();
+
+		let mut keyboard_state = KeyboardState::new();
 
 		for event in events {
 			match event {
 
 				Event::Quit { .. } => break 'main,
+
+				Event::MouseMotion { x, y, .. } => {
+					last_known_mouse_x = x;
+					last_known_mouse_y = y;
+				}
+
+				Event::MouseWheel { direction, y, .. } => {
+					mouse_state.wheel_did_move = true;
+					mouse_state.wheel_direction = direction;
+					mouse_state.wheel_y = y;
+				}
 
 				Event::KeyDown { keycode: Some(keycode), .. } => {
 					match keycode {
@@ -181,29 +196,23 @@ fn main() -> Result<(), String> {
 					}
 				}
 
-				Event::MouseMotion { x, y, .. } => {
-					last_known_mouse_x = x;
-					last_known_mouse_y = y;
-				}
-
-				Event::MouseWheel { direction, y, .. } => {
-					mouse_state.wheel_did_move = true;
-					mouse_state.wheel_direction = direction;
-					mouse_state.wheel_y = y;
-				}
-
 				_ => {}
 
 			}
 		}
+
+		// Cache input device states
 
 		mouse_state.position.0 = last_known_mouse_x;
 		mouse_state.position.1 = last_known_mouse_y;
 
 		// Update current scene
 
-		scenes[current_scene_index]
-			.update(&keyboard_state, &mouse_state, delta_t_seconds);
+		scenes[current_scene_index].update(
+			&keyboard_state,
+			&mouse_state,
+			delta_t_seconds
+		);
 
 		backbuffer.with_lock(
             None,

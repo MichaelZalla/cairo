@@ -1,4 +1,9 @@
-use sdl2::{video::{Window, WindowContext}, TimerSubsystem, EventPump, render::{Canvas, TextureCreator, BlendMode, Texture}};
+use sdl2::{
+	video::{Window, WindowContext},
+	TimerSubsystem,
+	EventPump,
+	render::{Canvas, TextureCreator, BlendMode, Texture},
+};
 
 pub struct ApplicationContext {
 	pub window: Window,
@@ -22,7 +27,9 @@ pub fn get_application_context(
 	match sdl2::init() {
 		Ok(sdl_context) => {
 
-			sdl_context.mouse().show_cursor(show_cursor);
+			sdl_context
+				.mouse()
+				.show_cursor(show_cursor);
 
 			match sdl_context.timer() {
 				Ok(timer) => {
