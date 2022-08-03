@@ -1,8 +1,10 @@
 use std::fmt;
+
 use sdl2::{
 	mouse::MouseWheelDirection,
 	keyboard::Keycode,
-	controller::{Button, Axis}
+	controller::{Button, Axis},
+	haptic::Haptic,
 };
 
 #[derive(Clone)]
@@ -46,6 +48,7 @@ pub struct GameController {
 	pub name: String,
 	pub state: GameControllerState,
 	handle: Option<sdl2::controller::GameController>,
+	haptic: Option<sdl2::haptic::Haptic>,
 }
 
 impl GameController {
@@ -158,6 +161,41 @@ impl GameController {
 			},
 		}
 
+	}
+
+	pub fn set_haptic_device(
+		&mut self,
+		device: Haptic)
+	{
+		self.haptic = Some(device);
+	}
+
+	pub fn set_haptic_intensity(
+		&mut self,
+		low_intensity: u16,
+		high_intensity: u16,
+		duration: u32) -> Result<(), String>
+	{
+		if self.handle.is_some() {
+
+			let handle = self.handle.as_mut().unwrap();
+
+			match handle.set_rumble(
+				low_intensity,
+				high_intensity,
+				duration)
+			{
+				Ok(_) => {
+					return Ok(());
+				},
+				Err(e) => {
+					return Err(format!("Failed to set haptic intensity for device {}: {}", self.id, e));
+				},
+			}
+
+		} else {
+			return Err(String::from("Called GameController::set_haptic_intensity with no device handle attached!"));
+		}
 	}
 
 }

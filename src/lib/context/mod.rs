@@ -76,6 +76,36 @@ pub fn get_application_context(
 
 									}
 
+									match sdl_context.haptic() {
+										Ok(haptic_subsystem) => {
+
+											println!("Initialized haptic subsystem.");
+
+											for controller in game_controllers.as_mut_slice() {
+
+												if controller.is_some() {
+
+													let unwrapped = controller.as_mut().unwrap();
+
+													match haptic_subsystem.open_from_joystick_id(unwrapped.id) {
+														Ok(device) => {
+															unwrapped.set_haptic_device(device);
+														},
+														Err(e) => {
+															println!("Error retrieving haptic device for joystick {}: '{}'", unwrapped.id, e);
+														}
+													}
+
+												}
+
+											}
+
+										},
+										Err(e) => {
+											println!("Error initializing haptic subsystem: '{}'", e);
+										}
+									}
+
 								},
 								Err(e) => {
 									println!("Error initializing game controller subsystem: '{}'", e);
