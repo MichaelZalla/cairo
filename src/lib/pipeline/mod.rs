@@ -373,6 +373,17 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		self.transform_to_ndc_space(&mut screen_vertices[1]);
 		self.transform_to_ndc_space(&mut screen_vertices[2]);
 
+		// Interpolate entire vertex (all attributes) when drawing (scanline
+		// interpolant)
+
+		if self.options.should_render_shader {
+			self.triangle_fill(
+				screen_vertices[0],
+				screen_vertices[1],
+				screen_vertices[2]
+			);
+		}
+
 		if self.options.should_render_wireframe {
 
 			let mut points: Vec<Vec2> = vec![];
@@ -388,17 +399,6 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			self.graphics.poly_line(
 				points.as_slice(),
 				color::WHITE
-			);
-		}
-
-		// Interpolate entire vertex (all attributes) when drawing (scanline
-		// interpolant)
-
-		if self.options.should_render_shader {
-			self.triangle_fill(
-				screen_vertices[0],
-				screen_vertices[1],
-				screen_vertices[2]
 			);
 		}
 
