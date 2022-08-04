@@ -126,7 +126,8 @@ fn main() -> Result<(), String> {
 	let mut last_known_mouse_x = 0;
 	let mut last_known_mouse_y = 0;
 
-	let mut prev_game_controller_state: GameControllerState = Default::default();
+	let mut prev_game_controller_state: GameControllerState =
+		GameController::new().state;
 
 	'main: loop {
 
