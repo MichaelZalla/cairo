@@ -133,31 +133,35 @@ impl GameController {
 	pub fn set_joystick_state(
 		&mut self,
 		axis: Axis,
-		mut value: i16)
+		value: i16)
 	{
 
-		if value.abs() <= self.state.axis_dead_zone {
-			value = 0;
+		let mut deadzoned_value: i16 = value;
+
+		if (value < 0 && value >= -self.state.axis_dead_zone) ||
+		   (value > 0 && value <= self.state.axis_dead_zone)
+		{
+			deadzoned_value = 0;
 		}
 
 		match axis {
 			Axis::LeftX => {
-				self.state.joysticks.left.position.x = value;
+				self.state.joysticks.left.position.x = deadzoned_value;
 			},
 			Axis::LeftY => {
-				self.state.joysticks.left.position.y = value;
+				self.state.joysticks.left.position.y = deadzoned_value;
 			},
 			Axis::RightX => {
-				self.state.joysticks.right.position.x = value;
+				self.state.joysticks.right.position.x = deadzoned_value;
 			},
 			Axis::RightY => {
-				self.state.joysticks.right.position.y = value;
+				self.state.joysticks.right.position.y = deadzoned_value;
 			},
 			Axis::TriggerLeft => {
-				self.state.triggers.left.activation = value;
+				self.state.triggers.left.activation = deadzoned_value;
 			},
 			Axis::TriggerRight => {
-				self.state.triggers.right.activation = value;
+				self.state.triggers.right.activation = deadzoned_value;
 			},
 		}
 
