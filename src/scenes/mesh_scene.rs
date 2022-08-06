@@ -307,14 +307,14 @@ impl Scene for MeshScene {
 			}
 		}
 
-		if game_controller_state.buttons.X {
+		if game_controller_state.buttons.x {
 
 			self.pipeline_options.should_render_wireframe =
 				!self.pipeline_options.should_render_wireframe;
 
 			self.pipeline.set_options(self.pipeline_options);
 
-		} else if game_controller_state.buttons.Y {
+		} else if game_controller_state.buttons.y {
 
 			self.pipeline_options.should_render_normals =
 				!self.pipeline_options.should_render_normals;
@@ -323,14 +323,14 @@ impl Scene for MeshScene {
 
 		}
 
-		if game_controller_state.buttons.DPAD_UP {
+		if game_controller_state.buttons.dpad_up {
 			self.camera_position += forward * camera_movement_step * camera_rotation_inverse_transposed;
-		} else if game_controller_state.buttons.DPAD_DOWN {
+		} else if game_controller_state.buttons.dpad_down {
 			self.camera_position -= forward * camera_movement_step * camera_rotation_inverse_transposed;
-		} else if game_controller_state.buttons.DPAD_LEFT {
+		} else if game_controller_state.buttons.dpad_left {
 			self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
 				Mat4::rotation_z(-camera_roll_step);
-		} else if game_controller_state.buttons.DPAD_RIGHT {
+		} else if game_controller_state.buttons.dpad_right {
 			self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
 				Mat4::rotation_z(camera_roll_step);
 		}

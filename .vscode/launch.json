@@ -4,13 +4,13 @@
 			"type": "lldb",
 			"request": "attach",
 			"name": "Attach",
-			"program": "${workspaceFolder}/target/debug/Cairo"
+			"program": "${workspaceFolder}/target/debug/cairo"
 		},
 		{
 			"type": "lldb",
 			"request": "launch",
-			"name": "run Cairo",
-			"program": "${workspaceFolder}/target/debug/Cairo",
+			"name": "run cairo",
+			"program": "${workspaceFolder}/target/debug/cairo",
 			"args": [],
 			"cwd": "${workspaceFolder}",
 			"sourceMap": {},

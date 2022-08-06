@@ -10,14 +10,14 @@ pub struct Color {
     pub a: u8,
 }
 
-pub static BLACK: Color = Color::RGB(0, 0, 0);
-pub static WHITE: Color = Color::RGB(255, 255, 255);
+pub static BLACK: Color = Color::rgb(0, 0, 0);
+pub static WHITE: Color = Color::rgb(255, 255, 255);
 
-pub static RED: Color = Color::RGB(255, 0, 0);
-pub static GREEN: Color = Color::RGB(0, 255, 0);
-pub static BLUE: Color = Color::RGB(0, 0, 255);
+pub static RED: Color = Color::rgb(255, 0, 0);
+pub static GREEN: Color = Color::rgb(0, 255, 0);
+pub static BLUE: Color = Color::rgb(0, 0, 255);
 
-pub static YELLOW: Color = Color::RGB(255, 255, 0);
+pub static YELLOW: Color = Color::rgb(255, 255, 0);
 
 impl fmt::Display for Color {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -28,7 +28,7 @@ impl fmt::Display for Color {
 impl Color
 {
 
-	pub const fn RGB(
+	pub const fn rgb(
 		r: u8,
 		g: u8,
 		b: u8) -> Color
@@ -36,7 +36,7 @@ impl Color
 		return Color { r, g, b, a: 0xff };
 	}
 
-	// pub const fn RGBA(r: u8, g: u8, b: u8, a: u8) -> Color {
+	// pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
 	// 	return Color { r, g, b, a }
 	// }
 

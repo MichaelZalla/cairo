@@ -36,7 +36,7 @@ default-features = false
 # path = "src/lib/vec2"
 
 [[bin]]
-name = "Cairo"
+name = "cairo"
 path = "src/main.rs"
 
 [profile.dev]

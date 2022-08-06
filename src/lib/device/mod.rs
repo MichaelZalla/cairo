@@ -82,49 +82,49 @@ impl GameController {
 	{
 		match button {
 			Button::A => {
-				self.state.buttons.A = on;
+				self.state.buttons.a = on;
 			},
 			Button::B => {
-				self.state.buttons.B = on;
+				self.state.buttons.b = on;
 			},
 			Button::X => {
-				self.state.buttons.X = on;
+				self.state.buttons.x = on;
 			},
 			Button::Y => {
-				self.state.buttons.Y = on;
+				self.state.buttons.y = on;
 			},
 			Button::Back => {
-				self.state.buttons.BACK = on;
+				self.state.buttons.back = on;
 			},
 			Button::Guide => {
-				self.state.buttons.GUIDE = on;
+				self.state.buttons.guide = on;
 			},
 			Button::Start => {
-				self.state.buttons.START = on;
+				self.state.buttons.start = on;
 			},
 			Button::LeftStick => {
-				self.state.buttons.LEFT_STICK = on;
+				self.state.buttons.left_stick = on;
 			},
 			Button::RightStick => {
-				self.state.buttons.RIGHT_STICK = on;
+				self.state.buttons.right_stick = on;
 			},
 			Button::LeftShoulder => {
-				self.state.buttons.LEFT_SHOULDER = on;
+				self.state.buttons.left_shoulder = on;
 			},
 			Button::RightShoulder => {
-				self.state.buttons.RIGHT_SHOULDER = on;
+				self.state.buttons.right_shoulder = on;
 			},
 			Button::DPadUp => {
-				self.state.buttons.DPAD_UP = on;
+				self.state.buttons.dpad_up = on;
 			},
 			Button::DPadDown => {
-				self.state.buttons.DPAD_DOWN = on;
+				self.state.buttons.dpad_down = on;
 			},
 			Button::DPadLeft => {
-				self.state.buttons.DPAD_LEFT = on;
+				self.state.buttons.dpad_left = on;
 			},
 			Button::DPadRight => {
-				self.state.buttons.DPAD_RIGHT = on;
+				self.state.buttons.dpad_right = on;
 			},
 			_ => {},
 		}
@@ -206,21 +206,21 @@ impl GameController {
 
 #[derive(Default, Clone)]
 pub struct GameControllerStateButtons {
-	pub A: bool,
-	pub B: bool,
-	pub X: bool,
-	pub Y: bool,
-	pub BACK: bool,
-	pub GUIDE: bool,
-	pub START: bool,
-	pub LEFT_STICK: bool,
-	pub RIGHT_STICK: bool,
-	pub LEFT_SHOULDER: bool,
-	pub RIGHT_SHOULDER: bool,
-	pub DPAD_UP: bool,
-	pub DPAD_DOWN: bool,
-	pub DPAD_LEFT: bool,
-	pub DPAD_RIGHT: bool,
+	pub a: bool,
+	pub b: bool,
+	pub x: bool,
+	pub y: bool,
+	pub back: bool,
+	pub guide: bool,
+	pub start: bool,
+	pub left_stick: bool,
+	pub right_stick: bool,
+	pub left_shoulder: bool,
+	pub right_shoulder: bool,
+	pub dpad_up: bool,
+	pub dpad_down: bool,
+	pub dpad_left: bool,
+	pub dpad_right: bool,
 }
 
 #[derive(Default, Clone)]

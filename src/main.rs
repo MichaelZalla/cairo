@@ -117,7 +117,7 @@ fn main() -> Result<(), String> {
 
 	let tick_frequency = app.timer.performance_frequency();
 
-	let mut frame_start_ticks: u64 = 0;
+	let mut frame_start_ticks: u64;
 	let mut frame_end_ticks: u64 = 0;
 
 	let mut rng = rand::thread_rng();
