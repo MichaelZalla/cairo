@@ -55,13 +55,13 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		let buffer_height_over_2 = (graphics.buffer.height as f32) / 2.0;
 
 		return Pipeline{
-			options: options,
-			graphics: graphics,
+			options,
+			graphics,
 			buffer_width_over_2: buffer_width_over_2,
 			buffer_height_over_2: buffer_height_over_2,
-			z_buffer: z_buffer,
+			z_buffer,
 			world_space_origin: Vec4::new(Vec3{ x: 0.0, y: 0.0, z: 0.0 }, 1.0),
-			effect: effect,
+			effect,
 		};
 
 	}
