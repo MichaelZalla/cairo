@@ -172,4 +172,12 @@ impl Vec3 {
 		return self;
 	}
 
+	pub fn interpolate(
+		start: Self,
+		end: Self,
+		alpha: f32) -> Self
+	{
+		return start + (end - start) * alpha;
+	}
+
 }
