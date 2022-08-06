@@ -32,7 +32,6 @@ pub struct Pipeline<T: Effect> {
 	buffer_width_over_2: f32,
 	buffer_height_over_2: f32,
 	z_buffer: Vec<f32>,
-	world_space_origin: Vec4,
 	pub effect: T,
 }
 
@@ -130,14 +129,18 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 			// Cull backfaces
 
-			if self.is_backface(vertices[face.0]) {
+			let v0 = vertices[face.0];
+			let v1 = vertices[face.1];
+			let v2 = vertices[face.2];
+
+			if self.is_backface(v0.p, v1.p, v2.p) {
 				continue;
 			}
 
 			triangles.push(Triangle{
-				v0: vertices[face.0],
-				v1: vertices[face.1],
-				v2: vertices[face.2],
+				v0,
+				v1,
+				v2,
 			});
 
 		}
@@ -150,16 +153,30 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn is_backface(
 		&mut self,
-		vertex: T::VertexOut) -> bool
+		v0: Vec4,
+		v1: Vec4,
+		v2: Vec4) -> bool
 	{
 
-		let vertex_vector = vertex.p;
-		let vertex_normal = vertex.n;
+		let vertices = [
+			Vec3 { x: v0.x, y: v0.y, z: v0.z },
+			Vec3 { x: v1.x, y: v1.y, z: v1.z },
+			Vec3 { x: v2.x, y: v2.y, z: v2.z },
+		];
 
-		let projected_origin = self.world_space_origin * self.effect.get_projection();
+		// Computes a hard surface normal for the face (ignores smooth normals);
+
+		let vertex_normal = (vertices[1] - vertices[0])
+			.cross(vertices[2] - vertices[0]).as_normal();
+
+		let projected_origin = Vec3{ x: 0.0, y: 0.0, z: 0.0 };
 
 		let dot_product = vertex_normal.dot(
-			vertex_vector.as_normal() - projected_origin
+			vertices[0].as_normal() - Vec3 {
+				x: projected_origin.x,
+				y: projected_origin.y,
+				z: projected_origin.z,
+			}
 		);
 
 		if dot_product > 0.0 {
