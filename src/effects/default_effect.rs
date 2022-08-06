@@ -177,11 +177,7 @@ impl Effect for DefaultEffect {
 		let distance_to_point_light = vertex_to_point_light.mag();
 		let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
 
-		let likeness = normal_to_point_light.dot(Vec3 {
-			x: interpolant.n.x,
-			y: interpolant.n.y,
-			z: interpolant.n.z,
-		} * -1.0);
+		let likeness = normal_to_point_light.dot(surface_normal_vec3 * -1.0);
 
 		let attentuation = 1.0 / (
 			self.quadratic_attenuation * distance_to_point_light.powi(2) +
