@@ -1,5 +1,7 @@
 use std::fmt;
 
+use super::vec::vec4::Vec4;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Color {
     pub r: u8,
@@ -48,6 +50,17 @@ impl Color
 			(self.g as u32) << 8 |
 			(self.b as u32) << 16 |
 			(self.a as u32) << 24;
+	}
+
+	pub fn to_vec(
+		&self) -> Vec4
+	{
+		return Vec4 {
+			x: (self.r as f32) / 255.0,
+			y: (self.g as f32) / 255.0,
+			z: (self.b as f32) / 255.0,
+			w: (self.a as f32) / 255.0,
+		}
 	}
 
 }
