@@ -23,7 +23,7 @@ version = "0.8.5"
 # features = ["gfx","image"]
 
 [dependencies.sdl2]
-version = "0.34"
+version = "0.35.2"
 default-features = false
 # features = ["gfx","image"]
 
