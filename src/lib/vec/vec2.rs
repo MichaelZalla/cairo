@@ -8,12 +8,6 @@ pub struct Vec2 {
 	pub z: f32,
 }
 
-impl Vec2 {
-	pub fn new() -> Self {
-		Default::default()
-	}
-}
-
 impl fmt::Display for Vec2 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(v, "({}, {})", self.x, self.y)

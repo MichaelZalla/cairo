@@ -144,13 +144,6 @@ impl Vec3 {
 		}
 	}
 
-	// fn normalize(&mut self) -> () {
-	// 	let mag = self.mag();
-	// 	self.x /= mag;
-	// 	self.y /= mag;
-	// 	self.z /= mag;
-	// }
-
 	pub fn hadamard(
 		&mut self,
 		rhs: Vec3) -> ()
@@ -177,32 +170,6 @@ impl Vec3 {
 		self.z = self.z.max(0.0).min(1.0);
 
 		return self;
-	}
-
-	pub fn rotate_along_z(&mut self, phi: f32) -> () {
-		let (x, y, phi_cos, phi_sin) = (self.x, self.y, phi.cos(), phi.sin());
-		self.x = x * phi_cos - y * phi_sin;
-		self.y = x * phi_sin + y * phi_cos;
-	}
-
-	pub fn rotate_along_x(&mut self, phi: f32) -> () {
-		// X-axis rotation looks like Z-axis rotation if replace:
-		// - X axis with Y axis
-		// - Y axis with Z axis
-		// - Z axis with X axis
-		let (y, z, phi_cos, phi_sin) = (self.y, self.z, phi.cos(), phi.sin());
-		self.y = y * phi_cos - z * phi_sin;
-		self.z = y * phi_sin + z * phi_cos;
-	}
-
-	pub fn rotate_along_y(&mut self, phi: f32) -> () {
-		// Y-axis rotation looks like Z-axis rotation if replace:
-		// - X axis with Z axis
-		// - Y axis with X axis
-		// - Zaxis with Y axis
-		let (z, x, phi_cos, phi_sin) = (self.z, self.x, phi.cos(), phi.sin());
-		self.z = z * phi_cos - x * phi_sin;
-		self.x = z * phi_sin + x * phi_cos;
 	}
 
 }
