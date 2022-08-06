@@ -18,7 +18,7 @@ pub struct DefaultEffect {
 	mesh_color: Vec3,
 	ambient_light: Vec3,
 	diffuse_light: Vec3,
-	diffuse_light_direction: Vec3,
+	diffuse_light_direction: Vec4,
 	point_light: Vec3,
 	point_light_position: Vec3,
 	constant_attenuation: f32,
@@ -36,9 +36,9 @@ impl DefaultEffect {
 		mesh_color: Vec3,
 		ambient_light: Vec3,
 		diffuse_light: Vec3,
-		diffuse_light_direction: Vec3,
+		diffuse_light_direction: Vec4,
 		point_light: Vec3,
-		point_light_position: Vec3,) -> Self
+		point_light_position: Vec3) -> Self
 	{
 		return DefaultEffect {
 			world_view_transform,
@@ -99,7 +99,7 @@ impl DefaultEffect {
 
 	pub fn set_diffuse_light_direction(
 		&mut self,
-		normal: Vec3) -> ()
+		normal: Vec4) -> ()
 	{
 		self.diffuse_light_direction = normal;
 	}
@@ -165,9 +165,19 @@ impl Effect for DefaultEffect {
 
 		// Calculate diffuse light intensity
 
+		let diffuse_light_direction_world_view =
+			(
+				self.diffuse_light_direction *
+				self.world_view_transform
+			).as_normal();
+
 		let diffuse_intensity = self.diffuse_light * (0.0 as f32).max(
 			(surface_normal_vec3 * -1.0).dot(
-				self.diffuse_light_direction
+				Vec3 {
+					x: diffuse_light_direction_world_view.x,
+					y: diffuse_light_direction_world_view.y,
+					z: diffuse_light_direction_world_view.z,
+				}
 			)
 		);
 
