@@ -5,9 +5,17 @@ use sdl2::keyboard::Keycode;
 use crate::{
 	lib::{
 		scene::Scene,
-		vec::{vec3::Vec3, vec4::Vec4},
+		vec::{
+			vec3::Vec3,
+			vec4::Vec4,
+			vec2::Vec2
+		},
 		mesh::Mesh,
-		device::{KeyboardState, MouseState},
+		device::{
+			KeyboardState,
+			MouseState,
+			GameControllerState
+		},
 		graphics::Graphics,
 		pipeline::{Pipeline, PipelineOptions},
 		matrix::Mat4,
@@ -196,7 +204,15 @@ impl MeshScene {
 
 impl Scene for MeshScene {
 
-	fn update(&mut self, keyboard_state: &KeyboardState, mouse_state: &MouseState, delta_t_seconds: f32) -> () {
+	fn update(
+		&mut self,
+		keyboard_state: &KeyboardState,
+		mouse_state: &MouseState,
+		game_controller_state: &GameControllerState,
+		delta_t_seconds: f32) -> ()
+	{
+
+		// Calculate mouse position delta
 
 		let mouse_position = mouse_state.position;
 
@@ -283,6 +299,70 @@ impl Scene for MeshScene {
 				_ => {}
 			}
 		}
+
+		if game_controller_state.buttons.X {
+
+			self.pipeline_options.should_render_wireframe =
+				!self.pipeline_options.should_render_wireframe;
+
+			self.pipeline.set_options(self.pipeline_options);
+
+		} else if game_controller_state.buttons.Y {
+
+			self.pipeline_options.should_render_normals =
+				!self.pipeline_options.should_render_normals;
+
+			self.pipeline.set_options(self.pipeline_options);
+
+		}
+
+		if game_controller_state.buttons.DPAD_UP {
+			self.camera_position += forward * camera_movement_step * camera_rotation_inverse_transposed;
+		} else if game_controller_state.buttons.DPAD_DOWN {
+			self.camera_position -= forward * camera_movement_step * camera_rotation_inverse_transposed;
+		} else if game_controller_state.buttons.DPAD_LEFT {
+			self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
+				Mat4::rotation_z(-camera_roll_step);
+		} else if game_controller_state.buttons.DPAD_RIGHT {
+			self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
+				Mat4::rotation_z(camera_roll_step);
+		}
+
+		let left_joystick_position_normalized = Vec2{
+			x: game_controller_state.joysticks.left.position.x as f32 / std::i16::MAX as f32,
+			y: game_controller_state.joysticks.left.position.y as f32 / std::i16::MAX as f32,
+			z: 1.0,
+		};
+
+		if left_joystick_position_normalized.x > 0.5 {
+			self.camera_position -= left * camera_movement_step * camera_rotation_inverse_transposed;
+		} else if left_joystick_position_normalized.x < -0.5 {
+			self.camera_position += left * camera_movement_step * camera_rotation_inverse_transposed;
+		}
+
+		if left_joystick_position_normalized.y > 0.5 {
+			self.camera_position -= forward * camera_movement_step * camera_rotation_inverse_transposed;
+		} else if left_joystick_position_normalized.y < -0.5 {
+			self.camera_position += forward * camera_movement_step * camera_rotation_inverse_transposed;
+		}
+
+		let right_joystick_position_normalized = Vec2{
+			x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,
+			y: game_controller_state.joysticks.right.position.y as f32 / std::i16::MAX as f32,
+			z: 1.0,
+		};
+
+		let yaw_delta = -right_joystick_position_normalized.x * PI / 32.0;
+		let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
+		let roll_delta = -yaw_delta * 0.5;
+
+		self.camera_roll += roll_delta;
+		self.camera_roll = self.camera_roll % (2.0 * PI);
+
+		self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
+			Mat4::rotation_y(yaw_delta) *
+			Mat4::rotation_x(pitch_delta) *
+			Mat4::rotation_z(-yaw_delta * 0.5);
 
 		// Mesh rotation via time delta
 
