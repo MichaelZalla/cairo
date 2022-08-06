@@ -431,7 +431,6 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
-	#[inline(always)]
 	fn test_and_set_z_buffer(
 		&mut self,
 		x: u32,
@@ -454,7 +453,6 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
-	#[inline(always)]
 	fn set_pixel(
 		&mut self,
 		x: u32,
@@ -481,7 +479,6 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
-	#[inline(always)]
 	fn flat_top_triangle_fill(
 		&mut self,
 		v0: T::VertexOut,
@@ -546,7 +543,6 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
-	#[inline(always)]
 	fn flat_bottom_triangle_fill(
 		&mut self,
 		v0: T::VertexOut,
@@ -611,7 +607,6 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	}
 
-	#[inline(always)]
 	fn triangle_fill(
 		&mut self,
 		v0: T::VertexOut,

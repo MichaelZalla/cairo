@@ -34,7 +34,6 @@ impl Graphics {
 		return &self.buffer.pixels;
 	}
 
-	#[inline(always)]
 	pub fn set_pixel(
 		&mut self,
 		x: u32,
@@ -58,7 +57,6 @@ impl Graphics {
 
 	}
 
-	// #[inline]
 	pub fn line(
 		&mut self,
 		mut x1: u32,
