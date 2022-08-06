@@ -1,1 +1,1 @@
-pub mod mesh_scene;
+pub mod default_scene;

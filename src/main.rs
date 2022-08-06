@@ -7,10 +7,11 @@ use math::round::floor;
 
 use rand::Rng;
 
-use scenes::mesh_scene::MeshScene;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::BlendMode;
+
+use scenes::default_scene::DefaultScene;
 
 mod macros;
 

@@ -27,7 +27,7 @@ static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10.0;
 
-pub struct MeshScene {
+pub struct DefaultScene {
 
 	pipeline: Pipeline<DefaultEffect>,
 	pipeline_options: PipelineOptions,
@@ -53,7 +53,7 @@ pub struct MeshScene {
 
 }
 
-impl MeshScene {
+impl DefaultScene {
 
 	pub fn new(
 		graphics: Graphics,
@@ -176,7 +176,7 @@ impl MeshScene {
 			pipeline_options
 		);
 
-		return MeshScene{
+		return DefaultScene{
 			pipeline,
 			pipeline_options,
 			mesh,
