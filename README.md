@@ -1,4 +1,6 @@
-# Cairo - 3D Software Renderer
+# Cairo
+
+A single-threaded, 3D software-rendering pipeline in Rust.
 
 ## Postinstall
 
