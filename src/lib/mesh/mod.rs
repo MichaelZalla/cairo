@@ -109,7 +109,9 @@ pub fn get_mesh_from_obj(
 							// "o" => println!("o"),
 							// "g" => println!("g"),
 							// "s" => println!("s"),
-							other => println!("{}", other),
+							_ => {
+								// println!("{}", other)
+							},
 						}
 					}
 				}
@@ -162,8 +164,6 @@ impl Mesh {
 
 			// Case 1. 3 vertex normals are defined per face;
 
-			println!("Case 1!");
-
 			for (face_index, face) in faces.iter().enumerate() {
 
 				let normal_indices = face_normals[face_index];
@@ -201,8 +201,6 @@ impl Mesh {
 
 			// Case 2. No normal data was provided; we'll generate a normal for each
 			// face, creating 3 unique Vertex instances for that face;
-
-			println!("Case 2!");
 
 			for (face_index, face) in faces.iter().enumerate() {
 
@@ -242,8 +240,6 @@ impl Mesh {
 		}
 
 		if mesh_vn_len == mesh_v_len {
-
-			println!("Case 3!");
 
 			// Case 3. One normal is defined per-vertex; no need for duplicate Vertexs;
 
