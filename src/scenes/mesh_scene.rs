@@ -209,9 +209,11 @@ impl Scene for MeshScene {
 		let mouse_x_delta = nds_mouse_x - prev_nds_mouse_x;
 		let mouse_y_delta = nds_mouse_y - prev_nds_mouse_y;
 
+		// Apply camera rotation based on mouse position delta
+
 		self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
-			Mat4::rotation_y(-mouse_x_delta  * 2.0 * PI) *
-			Mat4::rotation_x(-mouse_y_delta  * 2.0 * PI);
+			Mat4::rotation_y(-mouse_x_delta * 2.0 * PI) *
+			Mat4::rotation_x(-mouse_y_delta * 2.0 * PI);
 
 		let camera_movement_step = self.camera_movement_speed * delta_t_seconds;
 		let camera_roll_step = self.camera_roll_speed * delta_t_seconds;
