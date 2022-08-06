@@ -35,7 +35,9 @@ pub struct MeshScene {
 
 	camera_position: Vec4,
 	camera_rotation_inverse_transform: Mat4,
-	camera_speed: f32,
+	camera_movement_speed: f32,
+	camera_roll: f32,
+	camera_roll_speed: f32,
 
 	point_light_distance_from_camera: f32,
 
@@ -53,7 +55,7 @@ impl MeshScene {
 		let mesh_position = Vec3{
 			x: 0.0,
 			y: 0.0,
-			z: 10.0,
+			z: 0.0,
 		};
 
 		let mesh_rotation = Vec3::new();
@@ -64,9 +66,18 @@ impl MeshScene {
 			z: 0.65,
 		};
 
-		let camera_position = Vec4::new(Vec3::new(), 1.0);
+		let camera_position = Vec4::new(Vec3{
+			x: 0.0,
+			y: 0.0,
+			z: 0.0,
+		}, 1.0);
+
 		let camera_rotation_inverse_transform = Mat4::identity();
-		let camera_speed = 15.0;
+
+		let camera_movement_speed = 150.0;
+
+		let camera_roll = 0.0;
+		let camera_roll_speed = 6.0;
 
 		let ambient_light = Vec3{
 			x: 0.1,
@@ -169,8 +180,9 @@ impl MeshScene {
 			mesh_rotation,
 			camera_position,
 			camera_rotation_inverse_transform,
-			camera_speed,
-			point_light_distance_from_camera: 5.0,
+			camera_movement_speed,
+			camera_roll,
+			camera_roll_speed,
 			screen_width,
 			screen_height,
 			horizontal_fov_rad,
@@ -201,7 +213,8 @@ impl Scene for MeshScene {
 			Mat4::rotation_y(-mouse_x_delta  * 2.0 * PI) *
 			Mat4::rotation_x(-mouse_y_delta  * 2.0 * PI);
 
-		let camera_step = self.camera_speed * delta_t_seconds;
+		let camera_movement_step = self.camera_movement_speed * delta_t_seconds;
+		let camera_roll_step = self.camera_roll_speed * delta_t_seconds;
 
 		let camera_rotation_inverse_transposed =
 			self.camera_rotation_inverse_transform.transposed();
@@ -212,50 +225,50 @@ impl Scene for MeshScene {
 
 		for keycode in &keyboard_state.keys_pressed {
 			match keycode {
-				Keycode::Down|Keycode::S { .. } => {
-					self.camera_position -= forward * camera_step * camera_rotation_inverse_transposed;
-				},
 				Keycode::Up|Keycode::W { .. } => {
-					self.camera_position += forward * camera_step * camera_rotation_inverse_transposed;
+					self.camera_position += forward * camera_movement_step * camera_rotation_inverse_transposed;
 				},
-				Keycode::Right|Keycode::D { .. } => {
-					self.camera_position -= left * camera_step * camera_rotation_inverse_transposed;
+				Keycode::Down|Keycode::S { .. } => {
+					self.camera_position -= forward * camera_movement_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Left|Keycode::A { .. } => {
-					self.camera_position += left * camera_step * camera_rotation_inverse_transposed;
+					self.camera_position += left * camera_movement_step * camera_rotation_inverse_transposed;
+				},
+				Keycode::Right|Keycode::D { .. } => {
+					self.camera_position -= left * camera_movement_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Q { .. } => {
-					self.camera_position -= up * camera_step * camera_rotation_inverse_transposed;
+					self.camera_position -= up * camera_movement_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::E { .. } => {
-					self.camera_position += up * camera_step * camera_rotation_inverse_transposed;
+					self.camera_position += up * camera_movement_step * camera_rotation_inverse_transposed;
 				},
 				Keycode::Z { .. } => {
 					self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
-						Mat4::rotation_z(camera_step / 2.0);
+						Mat4::rotation_z(-camera_roll_step);
 				},
 				Keycode::C { .. } => {
 					self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform *
-						Mat4::rotation_z(-camera_step / 2.0);
+						Mat4::rotation_z(camera_roll_step);
 				},
 				Keycode::Num1 { .. } => {
 					self.pipeline_options.should_render_wireframe =
 						!self.pipeline_options.should_render_wireframe;
 
 					self.pipeline.set_options(self.pipeline_options);
-				}
+				},
 				Keycode::Num2 { .. } => {
 					self.pipeline_options.should_render_shader =
 						!self.pipeline_options.should_render_shader;
 
 					self.pipeline.set_options(self.pipeline_options);
-				}
+				},
 				Keycode::Num3 { .. } => {
 					self.pipeline_options.should_render_normals =
 						!self.pipeline_options.should_render_normals;
 
 					self.pipeline.set_options(self.pipeline_options);
-				}
+				},
 				_ => {}
 			}
 		}
