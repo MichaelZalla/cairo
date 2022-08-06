@@ -26,8 +26,12 @@ impl fmt::Display for Color {
 impl Color
 {
 
-	pub const fn RGB(r: u8, g: u8, b: u8) -> Color {
-		return Color { r, g, b, a: 0xff }
+	pub const fn RGB(
+		r: u8,
+		g: u8,
+		b: u8) -> Color
+	{
+		return Color { r, g, b, a: 0xff };
 	}
 
 	// pub const fn RGBA(r: u8, g: u8, b: u8, a: u8) -> Color {
@@ -36,7 +40,9 @@ impl Color
 
 	// @NOTE(mzalla) Check out:
 	// https://doc.rust-lang.org/rust-by-example/conversion/from_into.html
-	pub const fn to_u32(&self) -> u32 {
+	pub const fn to_u32(
+		&self) -> u32
+	{
 		return
 			(self.r as u32) |
 			(self.g as u32) << 8 |

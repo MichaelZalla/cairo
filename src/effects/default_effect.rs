@@ -126,9 +126,7 @@ impl Effect for DefaultEffect {
 	type VertexOut = DefaultVertexOut;
 
 	fn get_projection(&self) -> Mat4 {
-
 		return self.projection_transform;
-
 	}
 
 	fn vs(&self, v: Self::VertexIn) -> Self::VertexOut {
