@@ -1,0 +1,23 @@
+{
+	"configurations": [
+		{
+			"type": "lldb",
+			"request": "attach",
+			"name": "Attach",
+			"program": "${workspaceFolder}/target/debug/Cairo"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "run Cairo",
+			"program": "${workspaceFolder}/target/debug/Cairo",
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"sourceMap": {},
+			"sourceLanguages": [
+				"rust"
+			],
+			"env": {}
+		}
+	]
+}
