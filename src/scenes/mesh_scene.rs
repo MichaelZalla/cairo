@@ -100,22 +100,18 @@ impl MeshScene {
 		};
 
 		let diffuse_light_direction = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: 1.0,
+			x: 0.25,
+			y: -1.0,
+			z: -0.25,
 		};
 
 		let point_light = Vec3{
-			x: 0.8,
-			y: 0.8,
-			z: 0.8,
+			x: 0.4,
+			y: 0.4,
+			z: 0.4,
 		};
 
-		let point_light_position = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: -1.0,
-		};
+		let point_light_position = Vec3::new();
 
 		let pipeline_options = crate::lib::pipeline::PipelineOptions {
 			should_render_wireframe: true,
@@ -191,6 +187,7 @@ impl MeshScene {
 			camera_movement_speed,
 			camera_roll,
 			camera_roll_speed,
+			point_light_distance_from_camera: 20.0,
 			screen_width,
 			screen_height,
 			horizontal_fov_rad,
@@ -236,6 +233,25 @@ impl Scene for MeshScene {
 
 		let camera_rotation_inverse_transposed =
 			self.camera_rotation_inverse_transform.transposed();
+
+		// Translate point light relative to camera based on mousewheel delta
+
+		if mouse_state.wheel_did_move {
+			match mouse_state.wheel_direction {
+				sdl2::mouse::MouseWheelDirection::Normal => {
+
+					self.point_light_distance_from_camera += mouse_state.wheel_y as f32 / 4.0;
+
+					self.point_light_distance_from_camera = self.point_light_distance_from_camera
+						.min(30.0)
+						.max(5.0);
+
+				},
+				_ => {}
+			}
+		}
+
+		// Apply camera movement based on keyboard or gamepad input
 
 		let up = Vec4::new(Vec3{ x: 0.0, y: -1.0, z: 0.0 }, 1.0);
 		let left = Vec4::new(Vec3{ x: -1.0, y: 0.0, z: 0.0 }, 1.0);
@@ -286,15 +302,6 @@ impl Scene for MeshScene {
 						!self.pipeline_options.should_render_normals;
 
 					self.pipeline.set_options(self.pipeline_options);
-				},
-				_ => {}
-			}
-		}
-
-		if mouse_state.wheel_did_move {
-			match mouse_state.wheel_direction {
-				sdl2::mouse::MouseWheelDirection::Normal => {
-					self.camera_position.z -= (mouse_state.wheel_y as f32) / 4.0;
 				},
 				_ => {}
 			}
