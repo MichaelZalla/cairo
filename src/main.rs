@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate sdl2;
 
 use std::cmp::min;

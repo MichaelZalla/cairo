@@ -9,6 +9,7 @@ edition = "2021"
 
 [features]
 debug_print_feature = []
+dead_code = []
 
 [dependencies]
 bytemuck = "*"

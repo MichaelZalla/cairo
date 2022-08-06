@@ -31,7 +31,7 @@
     {
       "type": "shell",
       "command": "/opt/homebrew/bin/cargo",
-      "args": ["run", "--features", "debug_print_feature", "edition2021"],
+      "args": ["run", "--features", "dead_code", "debug_print_feature", "edition2021"],
       "problemMatcher": ["$rustc"],
       "label": "Rust: cargo run"
     }
