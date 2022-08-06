@@ -12,9 +12,7 @@ debug_print_feature = []
 
 [dependencies]
 bytemuck = "*"
-crossterm = "0.21.0"
 libmath = "0.2.1"
-once_cell = "1.8.0"
 # rand = "*"
 
 [dependencies.rand]
