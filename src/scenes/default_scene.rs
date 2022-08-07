@@ -427,6 +427,12 @@ impl Scene for MeshScene {
 
 	fn render(&mut self) -> () {
 
+		self.pipeline.clear_pixel_buffer();
+
+		if self.pipeline_options.should_render_shader {
+			self.pipeline.clear_z_buffer();
+		}
+
 		self.pipeline.render(&self.entity.mesh);
 
 	}

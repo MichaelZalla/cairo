@@ -82,17 +82,21 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		&mut self,
 		mesh: &Mesh) -> ()
 	{
-
-		self.graphics.buffer.clear(color::BLACK);
-
-		if self.options.should_render_shader {
-			for i in 0..self.z_buffer.len() {
-				self.z_buffer[i] = f32::MAX;
-			}
-		}
-
 		self.process_world_vertices(mesh);
+	}
 
+	pub fn clear_pixel_buffer(
+		&mut self)
+	{
+		self.graphics.buffer.clear(color::SKY_BOX);
+	}
+
+	pub fn clear_z_buffer(
+		&mut self)
+	{
+		for i in 0..self.z_buffer.len() {
+			self.z_buffer[i] = f32::MAX;
+		}
 	}
 
 	fn process_world_vertices(
@@ -416,6 +420,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 				points.as_slice(),
 				color::WHITE
 			);
+
 		}
 
 		if self.options.should_render_normals {
