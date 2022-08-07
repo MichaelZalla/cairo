@@ -10,7 +10,6 @@ use crate::{
 			vec4::Vec4,
 			vec2::Vec2
 		},
-		mesh::Mesh,
 		device::{
 			KeyboardState,
 			MouseState,
@@ -19,6 +18,7 @@ use crate::{
 		graphics::Graphics,
 		pipeline::{Pipeline, PipelineOptions},
 		matrix::Mat4,
+		entity::Entity,
 	},
 	effects::default_effect::DefaultEffect,
 };
@@ -37,9 +37,7 @@ pub struct DefaultScene {
 	horizontal_fov_rad: f32,
 	vertical_fov_rad: f32,
 
-	mesh: Mesh,
-	mesh_position: Vec3,
-	mesh_rotation: Vec3,
+	entity: Entity,
 
 	camera_position: Vec4,
 	camera_rotation_inverse_transform: Mat4,
@@ -57,22 +55,8 @@ impl DefaultScene {
 
 	pub fn new(
 		graphics: Graphics,
-		mesh: Mesh) -> Self
+		entity: Entity) -> Self
 	{
-
-		let mesh_position = Vec3{
-			x: 0.0,
-			y: 0.0,
-			z: 0.0,
-		};
-
-		let mesh_rotation = Vec3::new();
-
-		let mesh_color = Vec3{
-			x: 0.5,
-			y: 0.0,
-			z: 0.65,
-		};
 
 		let camera_position = Vec4::new(Vec3{
 			x: 0.0,
@@ -126,7 +110,7 @@ impl DefaultScene {
 
 		let world_transform =
 			Mat4::scaling(0.5) *
-			Mat4::translation(mesh_position);
+			Mat4::translation(entity.position);
 
 		let camera_position_inverse = camera_position * -1.0;
 
@@ -179,9 +163,7 @@ impl DefaultScene {
 		return DefaultScene{
 			pipeline,
 			pipeline_options,
-			mesh,
-			mesh_position,
-			mesh_rotation,
+			entity,
 			camera_position,
 			camera_rotation_inverse_transform,
 			camera_movement_speed,
@@ -373,21 +355,21 @@ impl Scene for MeshScene {
 
 		// Mesh rotation via time delta
 
-		self.mesh_rotation.z += 0.2 * PI * delta_t_seconds;
-		self.mesh_rotation.z %= 2.0 * PI;
+		self.entity.rotation.z += 0.2 * PI * delta_t_seconds;
+		self.entity.rotation.z %= 2.0 * PI;
 
-		self.mesh_rotation.x += 0.2 * PI * delta_t_seconds;
-		self.mesh_rotation.x %= 2.0 * PI;
+		self.entity.rotation.x += 0.2 * PI * delta_t_seconds;
+		self.entity.rotation.x %= 2.0 * PI;
 
-		self.mesh_rotation.y += 0.2 * PI * delta_t_seconds;
-		self.mesh_rotation.y %= 2.0 * PI;
+		self.entity.rotation.y += 0.2 * PI * delta_t_seconds;
+		self.entity.rotation.y %= 2.0 * PI;
 
 		let world_transform =
 			Mat4::scaling(0.5) *
-			Mat4::rotation_x(self.mesh_rotation.x) *
-			Mat4::rotation_y(self.mesh_rotation.y) *
-			Mat4::rotation_z(self.mesh_rotation.z) *
-			Mat4::translation(self.mesh_position);
+			Mat4::rotation_x(self.entity.rotation.x) *
+			Mat4::rotation_y(self.entity.rotation.y) *
+			Mat4::rotation_z(self.entity.rotation.z) *
+			Mat4::translation(self.entity.position);
 
 		let camera_translation_inverse = self.camera_position * -1.0;
 
@@ -446,7 +428,7 @@ impl Scene for MeshScene {
 
 	fn render(&mut self) -> () {
 
-		self.pipeline.render(&self.mesh);
+		self.pipeline.render(&self.entity.mesh);
 
 	}
 

@@ -16,15 +16,28 @@ use scenes::default_scene::DefaultScene;
 mod macros;
 
 mod lib;
+
 use crate::lib::mesh::get_mesh_from_obj;
-use crate::lib::context::{get_application_context, get_application_rendering_context, get_backbuffer};
+use crate::lib::context::{
+	get_application_context,
+	get_application_rendering_context,
+	get_backbuffer,
+};
+
 use crate::lib::device::{
 	MouseState,
 	KeyboardState,
 	GameController,
 	GameControllerState,
 };
-use crate::lib::graphics::{Graphics, PixelBuffer};
+
+use crate::lib::graphics::{
+	Graphics,
+	PixelBuffer,
+};
+
+use lib::entity::Entity;
+
 use crate::lib::scene::Scene;
 
 mod vertices;
@@ -80,37 +93,53 @@ fn main() -> Result<(), String> {
 	};
 
 	let mut scenes = vec![
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"))
+			)
 		),
-		MeshScene::new(
+		DefaultScene::new(
 			graphics.clone(),
-			get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"))
+			Entity::new(
+				get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"))
+			)
 		),
 	];
 
