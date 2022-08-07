@@ -7,6 +7,8 @@ use crate::vertices::default_vertex_in::DefaultVertexIn;
 
 use super::vec::vec3::Vec3;
 
+pub mod primitive;
+
 pub type Face = (usize, usize, usize);
 
 #[derive(Default, Clone)]
