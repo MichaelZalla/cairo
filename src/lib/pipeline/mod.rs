@@ -9,7 +9,7 @@ use super::{
 	},
 	mesh::Mesh,
 	effect::Effect,
-	color
+	color::{self, Color}
 };
 
 #[derive(Copy, Clone, Default)]
@@ -112,7 +112,13 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		// Object-to-world-space transform
 
 		for i in 0..mesh_v_len {
+
 			world_vertices[i] = self.effect.vs(mesh.vertices[i]);
+
+			if self.options.should_cull_backfaces == false {
+				world_vertices[i].c = mesh.vertices[i].c;
+			}
+
 		}
 
 		self.process_triangles(mesh, world_vertices);
@@ -420,7 +426,12 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			let mut c = color::WHITE;
 
 			if self.options.should_cull_backfaces == false {
-				c = color::YELLOW;
+				c = Color {
+					r: (world_vertices[0].c.x) as u8,
+					g: (world_vertices[0].c.y) as u8,
+					b: (world_vertices[0].c.z) as u8,
+					a: 255,
+				};
 			}
 
 			self.graphics.poly_line(
