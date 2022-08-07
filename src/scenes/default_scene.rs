@@ -30,7 +30,22 @@ static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10.0;
 
+#[derive(Copy, Clone, Default)]
+pub struct DefaultSceneOptions {
+	should_render_colliders: bool,
+}
+
+impl DefaultSceneOptions {
+
+	pub fn new() -> Self {
+		Default::default()
+	}
+
+}
+
 pub struct DefaultScene<'a> {
+
+	options: DefaultSceneOptions,
 
 	pipeline: Pipeline<DefaultEffect>,
 	pipeline_options: PipelineOptions,
@@ -60,6 +75,8 @@ impl<'a> DefaultScene<'a> {
 		graphics: Graphics,
 		entities: &'a RwLock<Vec<&'a mut Entity>>) -> Self
 	{
+
+		let options = DefaultSceneOptions::new();
 
 		let camera_position = Vec4::new(Vec3{
 			x: 0.0,
@@ -101,9 +118,10 @@ impl<'a> DefaultScene<'a> {
 		let point_light_position = Vec3::new();
 
 		let pipeline_options = crate::lib::pipeline::PipelineOptions {
-			should_render_wireframe: true,
+			should_render_wireframe: false,
 			should_render_shader: true,
 			should_render_normals: false,
+			should_cull_backfaces: true,
 		};
 
 		let buffer = &graphics.buffer;
@@ -162,7 +180,8 @@ impl<'a> DefaultScene<'a> {
 			pipeline_options
 		);
 
-		return DefaultScene{
+		return DefaultScene {
+			options,
 			pipeline,
 			pipeline_options,
 			entities,
@@ -286,6 +305,10 @@ impl<'a> Scene for DefaultScene<'a> {
 						!self.pipeline_options.should_render_normals;
 
 					self.pipeline.set_options(self.pipeline_options);
+				},
+				Keycode::L { .. } => {
+					self.options.should_render_colliders =
+						!self.options.should_render_colliders;
 				},
 				_ => {}
 			}
@@ -445,7 +468,24 @@ impl<'a> Scene for DefaultScene<'a> {
 		let r = self.entities.read().unwrap();
 
 		for entity in r.as_slice() {
-			self.pipeline.render(&entity.mesh);
+			self.pipeline.render_mesh(&entity.mesh);
+		}
+
+		if self.options.should_render_colliders {
+
+			self.pipeline.set_options(PipelineOptions {
+				should_render_wireframe: true,
+				should_render_shader: false,
+				should_render_normals: false,
+				should_cull_backfaces: false,
+			});
+
+			for entity in r.as_slice() {
+				self.pipeline.render_mesh(&entity.collider);
+			}
+
+			self.pipeline.set_options(self.pipeline_options);
+
 		}
 
 	}

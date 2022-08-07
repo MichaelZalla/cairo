@@ -24,6 +24,7 @@ pub struct PipelineOptions {
 	pub should_render_wireframe: bool,
 	pub should_render_shader: bool,
 	pub should_render_normals: bool,
+	pub should_cull_backfaces: bool,
 }
 
 pub struct Pipeline<T: Effect> {
@@ -78,7 +79,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		self.options = options;
 	}
 
-	pub fn render(
+	pub fn render_mesh(
 		&mut self,
 		mesh: &Mesh)
 	{
@@ -136,7 +137,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 			let v1 = vertices[face.1];
 			let v2 = vertices[face.2];
 
-			if self.is_backface(v0.p, v1.p, v2.p) {
+			if self.options.should_cull_backfaces && self.is_backface(v0.p, v1.p, v2.p) {
 				continue;
 			}
 
@@ -416,9 +417,15 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 				});
 			}
 
+			let mut c = color::WHITE;
+
+			if self.options.should_cull_backfaces == false {
+				c = color::YELLOW;
+			}
+
 			self.graphics.poly_line(
 				points.as_slice(),
-				color::WHITE
+				c
 			);
 
 		}
