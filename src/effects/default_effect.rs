@@ -65,7 +65,7 @@ impl DefaultEffect {
 
 	pub fn set_world_view_transform(
 		&mut self,
-		mat: Mat4) -> ()
+		mat: Mat4)
 	{
 		self.world_view_transform = mat;
 
@@ -74,7 +74,7 @@ impl DefaultEffect {
 
 	pub fn set_projection_transform(
 		&mut self,
-		mat: Mat4) -> ()
+		mat: Mat4)
 	{
 		self.projection_transform = mat;
 
@@ -83,35 +83,35 @@ impl DefaultEffect {
 
 	pub fn set_ambient_light(
 		&mut self,
-		light: Vec3) -> ()
+		light: Vec3)
 	{
 		self.ambient_light = light;
 	}
 
 	pub fn set_diffuse_light(
 		&mut self,
-		light: Vec3) -> ()
+		light: Vec3)
 	{
 		self.diffuse_light = light;
 	}
 
 	pub fn set_diffuse_light_direction(
 		&mut self,
-		normal: Vec4) -> ()
+		normal: Vec4)
 	{
 		self.diffuse_light_direction = normal;
 	}
 
 	pub fn set_point_light(
 		&mut self,
-		light: Vec3) -> ()
+		light: Vec3)
 	{
 		self.point_light = light;
 	}
 
 	pub fn set_point_light_position(
 		&mut self,
-		pos: Vec3) -> ()
+		pos: Vec3)
 	{
 		self.point_light_position = pos;
 	}

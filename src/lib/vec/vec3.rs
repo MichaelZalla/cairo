@@ -146,7 +146,7 @@ impl Vec3 {
 
 	pub fn hadamard(
 		&mut self,
-		rhs: Vec3) -> ()
+		rhs: Vec3)
 	{
 		*self *= rhs;
 	}

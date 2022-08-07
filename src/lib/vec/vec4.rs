@@ -162,7 +162,7 @@ impl Vec4 {
 
 	pub fn hadamard(
 		&mut self,
-		rhs: Vec4) -> ()
+		rhs: Vec4)
 	{
 		*self *= rhs;
 	}

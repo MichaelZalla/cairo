@@ -26,7 +26,7 @@ impl ops::Add<Vec2> for Vec2 {
 }
 
 impl ops::AddAssign<Vec2> for Vec2 {
-    fn add_assign(&mut self, rhs: Vec2) -> () {
+    fn add_assign(&mut self, rhs: Vec2) {
 		self.x += rhs.x;
 		self.y += rhs.y;
     }

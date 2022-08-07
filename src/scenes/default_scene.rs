@@ -190,7 +190,7 @@ impl<'a> Scene for DefaultScene<'a> {
 		keyboard_state: &KeyboardState,
 		mouse_state: &MouseState,
 		game_controller_state: &GameControllerState,
-		delta_t_seconds: f32) -> ()
+		delta_t_seconds: f32)
 	{
 
 		// Calculate mouse position delta
@@ -432,7 +432,9 @@ impl<'a> Scene for DefaultScene<'a> {
 
 	}
 
-	fn render(&mut self) -> () {
+	fn render(
+		&mut self)
+	{
 
 		self.pipeline.clear_pixel_buffer();
 

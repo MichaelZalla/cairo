@@ -38,7 +38,7 @@ impl Graphics {
 		&mut self,
 		x: u32,
 		y: u32,
-		color: color::Color) -> ()
+		color: color::Color)
 	{
 
 		if x > (self.buffer.width - 1) || y > (self.buffer.pixels.len() as u32 / self.buffer.width as u32 - 1) {
@@ -63,7 +63,7 @@ impl Graphics {
 		mut y1: u32,
 		mut x2: u32,
 		mut y2: u32,
-		color: color::Color) -> ()
+		color: color::Color)
 	{
 
 		// y = m*x + b
@@ -150,7 +150,7 @@ impl Graphics {
 	pub fn poly_line(
 		&mut self,
 		p: &[vec2::Vec2],
-		color: color::Color) -> ()
+		color: color::Color)
 	{
 
 		for i in 0..p.len() {

@@ -73,14 +73,14 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	pub fn set_options(
 		&mut self,
-		options: PipelineOptions) -> ()
+		options: PipelineOptions)
 	{
 		self.options = options;
 	}
 
 	pub fn render(
 		&mut self,
-		mesh: &Mesh) -> ()
+		mesh: &Mesh)
 	{
 		self.process_world_vertices(mesh);
 	}
@@ -101,7 +101,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn process_world_vertices(
 		&mut self,
-		mesh: &Mesh) -> ()
+		mesh: &Mesh)
 	{
 
 		let mesh_v_len = mesh.vertices.len();
@@ -121,7 +121,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 	fn process_triangles(
 		&mut self,
 		mesh: &Mesh,
-		vertices: Vec<T::VertexOut>) -> ()
+		vertices: Vec<T::VertexOut>)
 	{
 
 		let faces = mesh.face_indices.clone();
@@ -296,7 +296,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn process_triangle(
 		&mut self,
-		triangle: &mut Triangle<T::VertexOut>) -> ()
+		triangle: &mut Triangle<T::VertexOut>)
 	{
 
 		// @TODO(mzalla) Geometry shader?
@@ -354,7 +354,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn transform_to_ndc_space(
 		&mut self,
-		v: &mut T::VertexOut) -> ()
+		v: &mut T::VertexOut)
 	{
 
 		let x_factor = self.buffer_width_over_2;
@@ -370,7 +370,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 
 	fn post_process_triangle_vertices(
 		&mut self,
-		triangle: &mut Triangle<T::VertexOut>) -> ()
+		triangle: &mut Triangle<T::VertexOut>)
 	{
 
 		// World-space to screen-space (NDC) transform
@@ -479,7 +479,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		x: u32,
 		y: u32,
 		z: f32,
-		interpolant: &T::VertexOut) -> ()
+		interpolant: &T::VertexOut)
 	{
 
 		if x > (self.graphics.buffer.width - 1) ||
@@ -504,7 +504,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		&mut self,
 		v0: T::VertexOut,
 		v1: T::VertexOut,
-		v2: T::VertexOut) -> ()
+		v2: T::VertexOut)
 	{
 
 		// @NOTE(mzalla) v0 as top-left vertex
@@ -568,7 +568,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		&mut self,
 		v0: T::VertexOut,
 		v1: T::VertexOut,
-		v2: T::VertexOut) -> ()
+		v2: T::VertexOut)
 	{
 
 		// @NOTE(mzalla) v0 as top vertex
@@ -632,7 +632,7 @@ impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeli
 		&mut self,
 		v0: T::VertexOut,
 		v1: T::VertexOut,
-		v2: T::VertexOut) -> ()
+		v2: T::VertexOut)
 	{
 
 		let mut tri = vec![
