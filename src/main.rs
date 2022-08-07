@@ -2,6 +2,7 @@
 extern crate sdl2;
 
 use std::cmp::min;
+use std::sync::RwLock;
 
 use math::round::floor;
 
@@ -17,7 +18,6 @@ mod macros;
 
 mod lib;
 
-use crate::lib::mesh::get_mesh_from_obj;
 use crate::lib::context::{
 	get_application_context,
 	get_application_rendering_context,
@@ -35,6 +35,8 @@ use crate::lib::graphics::{
 	Graphics,
 	PixelBuffer,
 };
+
+use lib::mesh::get_mesh_from_obj;
 
 use lib::entity::Entity;
 
@@ -92,54 +94,63 @@ fn main() -> Result<(), String> {
 		},
 	};
 
+	let mut cube_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"))
+	);
+
+	let mut cow_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"))
+	);
+
+	let mut lamp_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"))
+	);
+
+	let mut voxels2_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"))
+	);
+
+	let mut teapot_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"))
+	);
+
+	let mut teapot2_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"))
+	);
+
+	let mut minicooper2_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"))
+	);
+
+	let mut jeffrey4_entity = Entity::new(
+		get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"))
+	);
+
+	let entities: Vec<&mut Entity> = vec![
+		&mut cube_entity,
+		&mut cow_entity,
+		&mut lamp_entity,
+		&mut voxels2_entity,
+	];
+
+	let entities2 = vec![
+		&mut teapot_entity,
+		&mut teapot2_entity,
+		&mut minicooper2_entity,
+		&mut jeffrey4_entity,
+	];
+
+	let entities_rwl = RwLock::new(entities);
+	let entities2_rwl = RwLock::new(entities2);
+
 	let mut scenes = vec![
 		DefaultScene::new(
 			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"))
-			)
+			&entities_rwl,
 		),
 		DefaultScene::new(
 			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"))
-			)
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"))
-			)
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"))
-			)
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"))
-			)
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"))
-			)
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"))
-			)
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			Entity::new(
-				get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"))
-			)
+			&entities2_rwl
 		),
 	];
 

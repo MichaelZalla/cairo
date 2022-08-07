@@ -9,7 +9,7 @@ use super::vec::vec3::Vec3;
 
 pub type Face = (usize, usize, usize);
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct Mesh {
 	pub vertices: Vec<DefaultVertexIn>,
 	pub face_indices: Vec<Face>,

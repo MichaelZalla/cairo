@@ -3,6 +3,7 @@ use super::{
 	mesh::Mesh
 };
 
+#[derive(Default, Clone)]
 pub struct Entity {
 	pub position: Vec3,
 	pub rotation: Vec3,
