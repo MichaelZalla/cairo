@@ -1,7 +1,7 @@
 use crate::{
 	lib::{
 		effect::Effect,
-		color::Color,
+		color::{Color, self},
 		vec::{vec3::Vec3, vec4::Vec4},
 		matrix::Mat4,
 	},
@@ -25,6 +25,9 @@ pub struct DefaultEffect {
 	quadratic_attenuation: f32,
 	specular_intensity: f32,
 	specular_power: i32,
+	fog_near_z: f32,
+	fog_far_z: f32,
+	fog_color_vec: Vec3,
 }
 
 impl DefaultEffect {
@@ -38,6 +41,7 @@ impl DefaultEffect {
 		point_light: Vec3,
 		point_light_position: Vec3) -> Self
 	{
+
 		return DefaultEffect {
 			world_view_transform,
 			projection_transform,
@@ -52,7 +56,11 @@ impl DefaultEffect {
 			quadratic_attenuation: 2.619,
 			specular_intensity: 1.0,
 			specular_power: 10,
+			fog_near_z: 25.0,
+			fog_far_z: 150.0,
+			fog_color_vec: color::SKY_BOX.to_vec3(),
 		};
+
 	}
 
 	pub fn set_world_view_transform(
@@ -145,7 +153,9 @@ impl Effect for DefaultEffect {
 
 	fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Color {
 
-		let surface_normal = interpolant.n.as_normal();
+		let out = interpolant;
+
+		let surface_normal = out.n;
 
 		let surface_normal_vec3 = Vec3{
 			x: surface_normal.x,
@@ -173,7 +183,7 @@ impl Effect for DefaultEffect {
 
 		// Calculate point light intensity
 
-		let vertex_to_point_light = self.point_light_position - interpolant.world_pos;
+		let vertex_to_point_light = self.point_light_position - out.world_pos;
 		let distance_to_point_light = vertex_to_point_light.mag();
 		let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
 
@@ -209,18 +219,38 @@ impl Effect for DefaultEffect {
 				self.point_light *
 				self.specular_intensity *
 				(0.0 as f32).max(
-					r_inverse_hat.dot(interpolant.world_pos.as_normal())
+					r_inverse_hat.dot(out.world_pos.as_normal())
 				).powi(self.specular_power);
 
 		}
 
 		// Calculate our color based on mesh color and light intensities
 
+		out.c = v.c.clone();
+
 		let color = *out.c.get_hadamard(
 			self.ambient_light + diffuse_intensity + point_intensity + specular_intensity
-		).saturate()) * 255.0;
+		).saturate() * 255.0;
 
-		return Color{
+		let distance: f32 = out.world_pos.mag();
+
+		let fog_alpha;
+
+		if distance <= self.fog_near_z {
+			fog_alpha = 0.0;
+		} else if distance >= self.fog_far_z {
+			fog_alpha = 1.0;
+		} else {
+			fog_alpha = (distance - self.fog_near_z) / (self.fog_far_z - self.fog_near_z);
+		}
+
+		let color = Vec3::interpolate(
+			out.c,
+			self.fog_color_vec,
+			fog_alpha
+		);
+
+		return Color {
 			r: color.x as u8,
 			g: color.y as u8,
 			b: color.z as u8,
