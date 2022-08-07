@@ -17,6 +17,16 @@ pub struct Mesh {
 	pub face_indices: Vec<Face>,
 }
 
+impl<'a> Default for &'a Mesh {
+    fn default() -> &'a Mesh {
+        static DEFAULT: Mesh = Mesh {
+            vertices: vec![],
+			face_indices: vec![],
+        };
+        &DEFAULT
+    }
+}
+
 pub fn get_mesh_from_obj(
 	filepath: String) -> Mesh
 {

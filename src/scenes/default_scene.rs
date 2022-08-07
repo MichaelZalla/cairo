@@ -18,9 +18,14 @@ use crate::{
 			MouseState,
 			GameControllerState
 		},
+		collision::{
+			oct_tree::OctTreeNode
+		},
+		color,
 		graphics::Graphics,
 		pipeline::{Pipeline, PipelineOptions},
 		matrix::Mat4,
+		mesh::primitive::make_box,
 		entity::Entity,
 	},
 	effects::default_effect::DefaultEffect,
@@ -55,7 +60,7 @@ pub struct DefaultScene<'a> {
 	horizontal_fov_rad: f32,
 	vertical_fov_rad: f32,
 
-	entities: &'a RwLock<Vec<&'a mut Entity>>,
+	entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
 
 	camera_position: Vec4,
 	camera_rotation_inverse_transform: Mat4,
@@ -73,7 +78,7 @@ impl<'a> DefaultScene<'a> {
 
 	pub fn new(
 		graphics: Graphics,
-		entities: &'a RwLock<Vec<&'a mut Entity>>) -> Self
+		entities: &'a RwLock<Vec<&'a mut Entity<'a>>>) -> Self
 	{
 
 		let options = DefaultSceneOptions::new();
@@ -481,6 +486,62 @@ impl<'a> Scene for DefaultScene<'a> {
 			});
 
 			for entity in r.as_slice() {
+
+				let root = &entity.oct_tree.tree;
+
+				let oct_tree_mesh = make_box(
+					root.bounds.half_dimension * 2.0,
+					root.bounds.half_dimension * 2.0,
+					root.bounds.half_dimension * 2.0
+				);
+
+				let mut global_oct_tree_offset =
+					entity.collider_mesh.vertices[0].p -
+					oct_tree_mesh.vertices[0].p;
+
+				global_oct_tree_offset.y *= -1.0;
+
+				let mut frontier: Vec<&OctTreeNode<usize>> = vec![
+					root
+				];
+
+				while frontier.len() > 0 {
+
+					match frontier.pop() {
+
+						Some(node) => {
+
+							let dimension = node.bounds.half_dimension * 2.0;
+
+							let mut node_mesh = make_box(dimension, dimension, dimension);
+
+							let alpha = node.depth as f32 / 4.0;
+
+							for v in node_mesh.vertices.as_mut_slice() {
+								v.p += global_oct_tree_offset + (node.bounds.center - root.bounds.center);
+								v.c = Vec3::interpolate(
+									color::BLACK.to_vec3(),
+									color::WHITE.to_vec3(),
+									alpha,
+								);
+							}
+
+							self.pipeline.render_mesh(
+								&node_mesh
+							);
+
+							for c in node.children.as_slice() {
+								frontier.push(c);
+							}
+
+						},
+
+						None => {},
+
+					}
+
+
+				}
 
 				self.pipeline.render_mesh(
 					&entity.collider_mesh

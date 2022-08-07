@@ -1,3 +1,4 @@
+pub mod collision;
 pub mod color;
 pub mod context;
 pub mod graphics;

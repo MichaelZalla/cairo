@@ -5,7 +5,7 @@ use std::{
 
 use crate::lib::vec::vec3::Vec3;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct DefaultVertexIn {
 	pub p: Vec3,
 	pub n: Vec3,

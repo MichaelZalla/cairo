@@ -4,6 +4,10 @@ use super::{
 		Mesh,
 		primitive::make_box,
 	},
+	collision::{
+		aabb::AABB,
+		mesh_oct_tree::MeshOctTree,
+	},
 };
 
 #[derive(Default, Clone)]
@@ -12,6 +16,7 @@ pub struct Entity<'a> {
 	pub rotation: Vec3,
 	pub mesh: &'a Mesh,
 	pub collider_mesh: Mesh,
+	pub oct_tree: MeshOctTree<'a>,
 }
 
 impl<'a> Entity<'a> {
@@ -22,11 +27,39 @@ impl<'a> Entity<'a> {
 
 		let collider_mesh = Entity::make_collision_mesh(&mesh);
 
+		let width = collider_mesh.vertices[1].p.x - collider_mesh.vertices[0].p.x;
+		let height = collider_mesh.vertices[0].p.y - collider_mesh.vertices[2].p.y;
+		let depth = collider_mesh.vertices[0].p.z - collider_mesh.vertices[4].p.z;
+
+		let collider_mesh_center = Vec3 {
+			x: collider_mesh.vertices[0].p.x + width / 2.0,
+			y: collider_mesh.vertices[2].p.y + height / 2.0,
+			z: collider_mesh.vertices[0].p.z - depth / 2.0,
+		};
+
+		let largest_dimension = width.max(height).max(depth);
+
+		let half_dimension = largest_dimension / 2.0;
+
+		let level_capacity = 64;
+
+		let bounds = AABB::new(
+			collider_mesh_center,
+			half_dimension,
+		);
+
+		let oct_tree = MeshOctTree::new(
+			mesh,
+			level_capacity,
+			bounds
+		);
+
 		return Entity {
 			position: Vec3::new(),
 			rotation: Vec3::new(),
 			mesh,
 			collider_mesh,
+			oct_tree
 		};
 
 	}

@@ -90,10 +90,18 @@ pub fn make_box(
 	faces.push((1, 3, 7));
 	faces.push((7, 5, 1));
 
+	// Generates dummy normals to prevent vertex-duplication per face;
+
+	let mut vertex_normals: Vec<Vec3> = vec![];
+
+	for _ in vertices.as_slice() {
+		vertex_normals.push(Vec3 { x: 0.0, y: 1.0, z: 0.0 })
+	}
+
 	return Mesh::new(
 		vertices,
 		faces,
-		vec![],
+		vertex_normals,
 		vec![]
 	);
 
