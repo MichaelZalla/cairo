@@ -15,7 +15,6 @@ pub struct DefaultEffect {
 	world_view_transform: Mat4,
 	projection_transform: Mat4,
 	world_view_projection_transform: Mat4,
-	mesh_color: Vec3,
 	ambient_light: Vec3,
 	diffuse_light: Vec3,
 	diffuse_light_direction: Vec4,
@@ -33,7 +32,6 @@ impl DefaultEffect {
 	pub fn new(
 		world_view_transform: Mat4,
 		projection_transform: Mat4,
-		mesh_color: Vec3,
 		ambient_light: Vec3,
 		diffuse_light: Vec3,
 		diffuse_light_direction: Vec4,
@@ -44,7 +42,6 @@ impl DefaultEffect {
 			world_view_transform,
 			projection_transform,
 			world_view_projection_transform: world_view_transform * projection_transform,
-			mesh_color,
 			ambient_light,
 			diffuse_light,
 			diffuse_light_direction,
@@ -74,13 +71,6 @@ impl DefaultEffect {
 		self.projection_transform = mat;
 
 		self.world_view_projection_transform = self.world_view_transform * self.projection_transform;
-	}
-
-	pub fn set_mesh_color(
-		&mut self,
-		color: Vec3) -> ()
-	{
-		self.mesh_color = color;
 	}
 
 	pub fn set_ambient_light(
@@ -226,7 +216,7 @@ impl Effect for DefaultEffect {
 
 		// Calculate our color based on mesh color and light intensities
 
-		let color = (*self.mesh_color.get_hadamard(
+		let color = *out.c.get_hadamard(
 			self.ambient_light + diffuse_intensity + point_intensity + specular_intensity
 		).saturate()) * 255.0;
 

@@ -150,7 +150,6 @@ impl DefaultScene {
 			DefaultEffect::new(
 				world_view_transform,
 				projection_transform,
-				mesh_color,
 				ambient_light,
 				diffuse_light,
 				diffuse_light_direction,
