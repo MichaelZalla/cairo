@@ -7,17 +7,17 @@ use super::{
 };
 
 #[derive(Default, Clone)]
-pub struct Entity {
+pub struct Entity<'a> {
 	pub position: Vec3,
 	pub rotation: Vec3,
-	pub mesh: Mesh,
+	pub mesh: &'a Mesh,
 	pub collider_mesh: Mesh,
 }
 
-impl Entity {
+impl<'a> Entity<'a> {
 
 	pub fn new(
-		mesh: Mesh) -> Self
+		mesh: &'a Mesh) -> Self
 	{
 
 		let collider_mesh = Entity::make_collision_mesh(&mesh);

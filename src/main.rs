@@ -94,37 +94,29 @@ fn main() -> Result<(), String> {
 		},
 	};
 
-	let mut cube_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"))
-	);
+	let cube_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"));
+	let mut cube_entity = Entity::new(&cube_mesh);
 
-	let mut cow_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"))
-	);
+	let cow_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"));
+	let mut cow_entity = Entity::new(&cow_mesh);
 
-	let mut lamp_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"))
-	);
+	let lamp_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"));
+	let mut lamp_entity = Entity::new(&lamp_mesh);
 
-	let mut voxels2_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"))
-	);
+	let voxels2_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"));
+	let mut voxels2_entity = Entity::new(&voxels2_mesh);
 
-	let mut teapot_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"))
-	);
+	let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"));
+	let mut teapot_entity = Entity::new(&teapot_mesh);
 
-	let mut teapot2_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"))
-	);
+	let teapot2_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"));
+	let mut teapot2_entity = Entity::new(&teapot2_mesh);
 
-	let mut minicooper2_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"))
-	);
+	let minicooper2_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"));
+	let mut minicooper2_entity = Entity::new(&minicooper2_mesh);
 
-	let mut jeffrey4_entity = Entity::new(
-		get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"))
-	);
+	let jeffrey4_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"));
+	let mut jeffrey4_entity = Entity::new(&jeffrey4_mesh);
 
 	let entities: Vec<&mut Entity> = vec![
 		&mut cube_entity,
