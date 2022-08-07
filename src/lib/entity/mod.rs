@@ -8,6 +8,7 @@ use super::{
 		aabb::AABB,
 		mesh_oct_tree::MeshOctTree,
 	},
+	color,
 };
 
 #[derive(Default, Clone)]
@@ -115,15 +116,9 @@ impl<'a> Entity<'a> {
 			z: z_min + depth / 2.0,
 		};
 
-		let yellow = Vec3 {
-			x: 1.0,
-			y: 1.0,
-			z: 0.0,
-		};
-
 		for v in collider.vertices.as_mut_slice() {
 			v.p += collider_offset;
-			v.c = yellow.clone();
+			v.c = color::YELLOW.to_vec3() / 255.0;
 		}
 
 		return collider;
