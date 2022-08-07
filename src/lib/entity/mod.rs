@@ -3,7 +3,7 @@ use super::{
 	mesh::{
 		Mesh,
 		primitive::make_box,
-	}
+	},
 };
 
 #[derive(Default, Clone)]
@@ -11,7 +11,7 @@ pub struct Entity {
 	pub position: Vec3,
 	pub rotation: Vec3,
 	pub mesh: Mesh,
-	pub collider: Mesh,
+	pub collider_mesh: Mesh,
 }
 
 impl Entity {
@@ -20,18 +20,18 @@ impl Entity {
 		mesh: Mesh) -> Self
 	{
 
-		let collider = Entity::make_collider(&mesh);
+		let collider_mesh = Entity::make_collision_mesh(&mesh);
 
 		return Entity {
 			position: Vec3::new(),
 			rotation: Vec3::new(),
 			mesh,
-			collider,
+			collider_mesh,
 		};
 
 	}
 
-	fn make_collider(
+	fn make_collision_mesh(
 		mesh: &Mesh) -> Mesh
 	{
 

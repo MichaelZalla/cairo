@@ -481,7 +481,11 @@ impl<'a> Scene for DefaultScene<'a> {
 			});
 
 			for entity in r.as_slice() {
-				self.pipeline.render_mesh(&entity.collider);
+
+				self.pipeline.render_mesh(
+					&entity.collider_mesh
+				);
+
 			}
 
 			self.pipeline.set_options(self.pipeline_options);
