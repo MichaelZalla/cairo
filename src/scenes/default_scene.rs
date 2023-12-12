@@ -108,10 +108,11 @@ impl<'a> DefaultScene<'a> {
 			z: 0.3,
 		};
 
-		let diffuse_light_direction = Vec3{
+		let diffuse_light_direction = Vec4{
 			x: 0.25,
 			y: -1.0,
 			z: -0.25,
+			w: 1.0,
 		};
 
 		let point_light = Vec3{
@@ -135,8 +136,8 @@ impl<'a> DefaultScene<'a> {
 		let screen_height = buffer.height;
 
 		let world_transform =
-			Mat4::scaling(0.5) *
-			Mat4::translation(entity.position);
+			Mat4::scaling(0.5)/* *
+			Mat4::translation(entity.position)*/;
 
 		let camera_position_inverse = camera_position * -1.0;
 

@@ -226,9 +226,9 @@ impl Effect for DefaultEffect {
 
 		// Calculate our color based on mesh color and light intensities
 
-		out.c = v.c.clone();
+		let mut color = interpolant.c.clone();
 
-		let color = *out.c.get_hadamard(
+		color = *color.get_hadamard(
 			self.ambient_light + diffuse_intensity + point_intensity + specular_intensity
 		).saturate() * 255.0;
 
@@ -244,8 +244,8 @@ impl Effect for DefaultEffect {
 			fog_alpha = (distance - self.fog_near_z) / (self.fog_far_z - self.fog_near_z);
 		}
 
-		let color = Vec3::interpolate(
-			out.c,
+		color = Vec3::interpolate(
+			color,
 			self.fog_color_vec,
 			fog_alpha
 		);

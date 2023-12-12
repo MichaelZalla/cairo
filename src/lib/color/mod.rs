@@ -19,6 +19,8 @@ pub static BLUE: Color = Color::rgb(0, 0, 255);
 
 pub static YELLOW: Color = Color::rgb(255, 255, 0);
 
+pub static SKY_BOX: Color = Color::rgb(102, 153, 255);
+
 impl fmt::Display for Color {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(v, "(r={}, g={}, b={}, a={})", self.r, self.g, self.b, self.a)
