@@ -6,28 +6,24 @@ use std::{
 use sdl2::keyboard::Keycode;
 
 use crate::{
-	lib::{
-		scene::Scene,
-		vec::{
-			vec3::Vec3,
-			vec4::Vec4,
-			vec2::Vec2
-		},
-		device::{
-			KeyboardState,
-			MouseState,
-			GameControllerState
-		},
-		collision::{
-			oct_tree::OctTreeNode
-		},
-		color,
-		graphics::Graphics,
-		pipeline::{Pipeline, PipelineOptions},
-		matrix::Mat4,
-		mesh::primitive::make_box,
-		entity::Entity,
+	scene::Scene,
+	vec::{
+		vec3::Vec3,
+		vec4::Vec4,
+		vec2::Vec2
 	},
+	device::{
+		KeyboardState,
+		MouseState,
+		GameControllerState
+	},
+	collision::oct_tree::OctTreeNode,
+	color,
+	graphics::Graphics,
+	pipeline::{Pipeline, PipelineOptions},
+	matrix::Mat4,
+	mesh::primitive::make_box,
+	entity::Entity,
 	effects::default_effect::DefaultEffect,
 };
 
@@ -123,7 +119,7 @@ impl<'a> DefaultScene<'a> {
 
 		let point_light_position = Vec3::new();
 
-		let pipeline_options = crate::lib::pipeline::PipelineOptions {
+		let pipeline_options = crate::pipeline::PipelineOptions {
 			should_render_wireframe: false,
 			should_render_shader: true,
 			should_render_normals: false,

@@ -3,7 +3,7 @@ use std::{
 	ops::{Add, Sub, Mul, MulAssign, Div}
 };
 
-use crate::lib::vec::{vec3::Vec3, vec4::Vec4};
+use crate::vec::{vec3::Vec3, vec4::Vec4};
 
 #[derive(Copy, Clone, Default)]
 pub struct DefaultVertexOut {

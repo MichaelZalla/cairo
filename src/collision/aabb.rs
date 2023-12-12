@@ -1,6 +1,9 @@
 use std::fmt::{self};
 
-use crate::{vertices::default_vertex_in::DefaultVertexIn, lib::vec::vec3::Vec3};
+use crate::{
+	vec::vec3::Vec3,
+	vertex::default_vertex_in::DefaultVertexIn,
+};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct AABB {

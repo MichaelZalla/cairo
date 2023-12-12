@@ -1,4 +1,4 @@
-use crate::lib::vec::vec3::Vec3;
+use crate::vec::vec3::Vec3;
 
 use super::{Mesh, Face};
 

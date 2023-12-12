@@ -1,6 +1,6 @@
 use crate::{
-	lib::mesh::Mesh,
-	vertices::default_vertex_in::DefaultVertexIn,
+	mesh::Mesh,
+	vertex::default_vertex_in::DefaultVertexIn,
 };
 
 use super::{

@@ -1,9 +1,15 @@
+# linked libs
+SDL2.dll
+libSDL2-2.0.so.0
+libSDL2-2.0.0.dylib
+libSDL2.a
+libSDL2.dylib
+
+# visual studio solution
+.vs
+
 # data
 data
 
-# build
+# builds
 target
-
-# scratch
-src/lib/term
-y-intercept.rs

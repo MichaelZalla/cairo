@@ -3,7 +3,7 @@ use std::{
 	ops::{Add, Sub, Mul, Div}
 };
 
-use crate::lib::vec::vec3::Vec3;
+use crate::vec::vec3::Vec3;
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct DefaultVertexIn {

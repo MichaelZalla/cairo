@@ -12,7 +12,7 @@
       "command": "/bin/bash",
       "args": [
         "-l",
-        "./.vscode/build.sh"
+        "./scripts/build.sh"
       ],
       "problemMatcher": ["$rustc"],
       "group": {

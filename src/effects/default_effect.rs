@@ -1,14 +1,12 @@
 use crate::{
-	lib::{
-		effect::Effect,
-		color::{Color, self},
-		vec::{vec3::Vec3, vec4::Vec4},
-		matrix::Mat4,
-	},
-	vertices::{
+	effect::Effect,
+	color::{Color, self},
+	vec::{vec3::Vec3, vec4::Vec4},
+	matrix::Mat4,
+	vertex::{
 		default_vertex_in::DefaultVertexIn,
 		default_vertex_out::DefaultVertexOut
-	}
+	},
 };
 
 pub struct DefaultEffect {

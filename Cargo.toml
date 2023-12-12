@@ -14,30 +14,14 @@ dead_code = []
 [dependencies]
 bytemuck = "*"
 libmath = "0.2.1"
-# rand = "*"
 
 [dependencies.rand]
 version = "0.8.5"
-# default-features = false
-# features = ["gfx","image"]
 
 [dependencies.sdl2]
-version = "0.35.2"
+version = "0.36.0"
 default-features = false
 # features = ["gfx","image"]
-
-# [profile.dev]
-# opt-level = 0
-
-# [profile.release]
-# opt-level = 3
-
-# [lib.vec2]
-# path = "src/lib/vec2"
-
-[[bin]]
-name = "cairo"
-path = "src/main.rs"
 
 [profile.dev]
 opt-level = 1

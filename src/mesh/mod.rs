@@ -3,7 +3,7 @@ use std::io::{self, BufRead};
 
 use std::path::Path;
 
-use crate::vertices::default_vertex_in::DefaultVertexIn;
+use crate::vertex::default_vertex_in::DefaultVertexIn;
 
 use super::vec::vec3::Vec3;
 

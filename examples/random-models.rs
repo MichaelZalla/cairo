@@ -12,39 +12,33 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::render::BlendMode;
 
-use scenes::default_scene::DefaultScene;
+use cairo::scenes::default_scene::DefaultScene;
 
-mod macros;
+use cairo::macros;
 
-mod lib;
-
-use crate::lib::context::{
+use cairo::context::{
 	get_application_context,
 	get_application_rendering_context,
 	get_backbuffer,
 };
 
-use crate::lib::device::{
+use cairo::device::{
 	MouseState,
 	KeyboardState,
 	GameController,
 	GameControllerState,
 };
 
-use crate::lib::graphics::{
+use cairo::graphics::{
 	Graphics,
 	PixelBuffer,
 };
 
-use lib::mesh::get_mesh_from_obj;
+use cairo::mesh::get_mesh_from_obj;
 
-use lib::entity::Entity;
+use cairo::entity::Entity;
 
-use crate::lib::scene::Scene;
-
-mod vertices;
-mod effects;
-mod scenes;
+use cairo::scene::Scene;
 
 fn get_absolute_filepath(
 	filepath: &str) -> String
@@ -175,7 +169,7 @@ fn main() -> Result<(), String> {
 
 		let delta_t_seconds = 1.0 / tick_frequency as f32 * tick_delta as f32;
 
-		debug_print!("Slept for {} ticks, {} seconds!", tick_delta, delta_t_seconds);
+		cairo::debug_print!("Slept for {} ticks, {} seconds!", tick_delta, delta_t_seconds);
 
 		// Event polling
 
