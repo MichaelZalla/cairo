@@ -132,7 +132,12 @@ pub fn get_mesh_from_obj(
 	}
 
 	println!(
-		"Parsed mesh with {} vertices, {} faces, {} vertex normals, and {} face normals.",
+		"{}",
+		filepath,
+	);
+	
+	println!(
+		"  Parsed mesh with {} vertices, {} faces, {} vertex normals, and {} face normals.",
 		vertices.len(),
 		faces.len(),
 		vertex_normals.len(),
