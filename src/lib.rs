@@ -10,6 +10,7 @@ pub mod graphics;
 pub mod device;
 pub mod effect;
 pub mod entity;
+pub mod fs;
 pub mod matrix;
 pub mod mesh;
 pub mod scene;

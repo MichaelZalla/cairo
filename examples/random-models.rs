@@ -4,6 +4,8 @@ extern crate sdl2;
 use std::cmp::min;
 use std::sync::RwLock;
 
+use cairo::fs::get_absolute_filepath;
+
 use math::round::floor;
 
 use rand::Rng;
@@ -39,14 +41,6 @@ use cairo::mesh::get_mesh_from_obj;
 use cairo::entity::Entity;
 
 use cairo::scene::Scene;
-
-fn get_absolute_filepath(
-	filepath: &str) -> String
-{
-	let root_directory: String = String::from(env!("CARGO_MANIFEST_DIR"));
-
-	return format!("{}{}", root_directory, filepath).to_string();
-}
 
 fn main() -> Result<(), String> {
 
