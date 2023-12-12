@@ -9,31 +9,32 @@
     },
     {
       "type": "shell",
-      "command": "/bin/bash",
-      "args": [
-        "-l",
-        "./scripts/build.sh"
-      ],
       "problemMatcher": ["$rustc"],
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "label": "Rust: cargo build"
+      "label": "Rust: cargo run --example random-models",
+      "windows": {
+        "command": "cargo run --example random-models"
+      },
+      "linux": {
+        "command": "cargo run --example random-models"
+      }
     },
     {
       "type": "shell",
-      "command": "/opt/homebrew/bin/cargo",
-      "args": ["build", "--release"],
       "problemMatcher": ["$rustc"],
-      "label": "Rust: cargo build --release"
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --release --example random-models",
+      "windows": {
+        "command": "cargo run --release --example random-models"
+      },
+      "linux": {
+        "command": "cargo run --release --example random-models"
+      }
     },
-    {
-      "type": "shell",
-      "command": "/opt/homebrew/bin/cargo",
-      "args": ["run", "--features", "dead_code", "debug_print_feature", "edition2021"],
-      "problemMatcher": ["$rustc"],
-      "label": "Rust: cargo run"
-    }
   ]
 }
