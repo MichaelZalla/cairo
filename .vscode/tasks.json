@@ -14,12 +14,12 @@
         "kind": "build",
         "isDefault": true
       },
-      "label": "Rust: cargo run --example random-models",
+      "label": "Rust: cargo run --example multiple-scenes",
       "windows": {
-        "command": "cargo run --example random-models"
+        "command": "cargo run --example multiple-scenes"
       },
       "linux": {
-        "command": "cargo run --example random-models"
+        "command": "cargo run --example multiple-scenes"
       }
     },
     {
@@ -28,12 +28,12 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --release --example random-models",
+      "label": "Rust: cargo run --release --example multiple-scenes",
       "windows": {
-        "command": "cargo run --release --example random-models"
+        "command": "cargo run --release --example multiple-scenes"
       },
       "linux": {
-        "command": "cargo run --release --example random-models"
+        "command": "cargo run --release --example multiple-scenes"
       }
     },
   ]

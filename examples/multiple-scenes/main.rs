@@ -40,39 +40,15 @@ fn main() -> Result<(), String> {
 	let cube_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"));
 	let mut cube_entity = Entity::new(&cube_mesh);
 
-	let cow_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/cow.obj"));
-	let mut cow_entity = Entity::new(&cow_mesh);
-
-	let lamp_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/lamp.obj"));
-	let mut lamp_entity = Entity::new(&lamp_mesh);
-
-	let voxels2_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/voxels2.obj"));
-	let mut voxels2_entity = Entity::new(&voxels2_mesh);
-
 	let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"));
 	let mut teapot_entity = Entity::new(&teapot_mesh);
 
-	let teapot2_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot2.obj"));
-	let mut teapot2_entity = Entity::new(&teapot2_mesh);
-
-	let minicooper2_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/minicooper2.obj"));
-	let mut minicooper2_entity = Entity::new(&minicooper2_mesh);
-
-	let jeffrey4_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/jeffrey4.obj"));
-	let mut jeffrey4_entity = Entity::new(&jeffrey4_mesh);
-
 	let entities: Vec<&mut Entity> = vec![
 		&mut cube_entity,
-		// &mut cow_entity,
-		// &mut lamp_entity,
-		// &mut voxels2_entity,
 	];
 
 	let entities2 = vec![
 		&mut teapot_entity,
-		// &mut teapot2_entity,
-		// &mut minicooper2_entity,
-		// &mut jeffrey4_entity,
 	];
 
 	let entities_rwl = RwLock::new(entities);
@@ -103,7 +79,6 @@ fn main() -> Result<(), String> {
 		game_controller_state: &GameControllerState,
 		delta_t_seconds: f32| -> ()
 	{                
-	   
 		// Update scene
 				
 		let scenes_len = scenes.borrow_mut().len();
@@ -117,21 +92,6 @@ fn main() -> Result<(), String> {
 				},
 				Keycode::Num5 { .. } => {
 					new_index = min(scenes_len - 1, 1);
-				},
-				Keycode::Num6 { .. } => {
-					new_index = min(scenes_len - 1, 2);
-				},
-				Keycode::Num7 { .. } => {
-					new_index = min(scenes_len - 1, 3);
-				},
-				Keycode::Num8 { .. } => {
-					new_index = min(scenes_len - 1, 4);
-				},
-				Keycode::Num9 { .. } => {
-					new_index = min(scenes_len - 1, 5);
-				},
-				Keycode::Num0 { .. } => {
-					new_index = min(scenes_len - 1, 6);
 				},
 				_ => {
 
@@ -147,12 +107,10 @@ fn main() -> Result<(), String> {
 			&game_controller_state,
 			delta_t_seconds
 		);
-
 	};
 
 	let render = || -> Result<Vec<u32>, String>
 	{
-
 		// Render current scene
 
 		scenes.borrow_mut()[*current_scene_index.borrow()].render();
@@ -161,11 +119,10 @@ fn main() -> Result<(), String> {
 		return Ok(
 			scenes.borrow_mut()[*current_scene_index.borrow()].get_pixel_data().clone()
 		);
-
 	};
 
 	let app = App::new(
-		"examples/random-models",
+		"examples/multiple-scenes",
 		WINDOW_WIDTH,
 		ASPECT_RATIO,
 		update, 
