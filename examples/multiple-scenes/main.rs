@@ -37,10 +37,10 @@ fn main() -> Result<(), String> {
 		},
 	};
 	
-	let cube_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"));
+	let cube_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/cube.obj"));
 	let mut cube_entity = Entity::new(&cube_mesh);
 
-	let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/teapot.obj"));
+	let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/teapot.obj"));
 	let mut teapot_entity = Entity::new(&teapot_mesh);
 
 	let entities: Vec<&mut Entity> = vec![
