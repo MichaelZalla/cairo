@@ -152,7 +152,7 @@ pub fn get_application_context(
 														screen_height,
 														rendering_context,
 														timer,
-													game_controllers,
+														game_controllers,
 														events,
 													})
 

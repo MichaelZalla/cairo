@@ -1,79 +1,42 @@
-#![allow(dead_code)]
 extern crate sdl2;
 
-use std::cmp::min;
-use std::sync::RwLock;
+use std::{
+	sync::RwLock,
+	cmp::min,
+	cell::RefCell,
+};
 
-use cairo::fs::get_absolute_filepath;
-
-use math::round::floor;
-
-use rand::Rng;
-
-use sdl2::event::Event;
+use cairo::{
+    app::App,
+    fs::get_absolute_filepath,
+    device::{
+        MouseState,
+        KeyboardState,
+        GameControllerState,
+    },
+    graphics::{Graphics, PixelBuffer},
+	mesh::get_mesh_from_obj,
+	entity::Entity, scenes::default_scene::DefaultScene,
+	scene::Scene,
+};
 use sdl2::keyboard::Keycode;
-use sdl2::render::BlendMode;
 
-use cairo::scenes::default_scene::DefaultScene;
-
-use cairo::context::{
-	get_application_context,
-	get_backbuffer,
-};
-
-use cairo::device::{
-	MouseState,
-	KeyboardState,
-	GameController,
-	GameControllerState,
-};
-
-use cairo::graphics::{
-	Graphics,
-	PixelBuffer,
-};
-
-use cairo::mesh::get_mesh_from_obj;
-
-use cairo::entity::Entity;
-
-use cairo::scene::Scene;
+static ASPECT_RATIO: f32 = 16.0 / 9.0;
+static WINDOW_WIDTH: u32 = 1080;
+static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
 
-	let aspect_ratio = 16.0 / 9.0;
-
-	let window_width: u32 = 1200;
-	let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
-
-	let mut app = get_application_context(
-		"Cairo (v0.1.0)",
-		window_width,
-		window_height,
-		false,
-		false
-	).unwrap();
-
-	let mut app_rendering_context = app.rendering_context;
-
-	let texture_creator = app_rendering_context.canvas.texture_creator();
-
-	let mut backbuffer =  get_backbuffer(
-		&app_rendering_context,
-		&texture_creator,
-		BlendMode::None,
-	).unwrap();
-
 	let graphics = Graphics{
 		buffer: PixelBuffer{
-			width: app.screen_width,
-			height: app.screen_height,
-			width_over_height: aspect_ratio,
-			height_over_width: 1.0 / aspect_ratio,
-			pixels: vec![0 as u32; (app.screen_width * app.screen_height) as usize],
+			width: WINDOW_WIDTH,
+			height: WINDOW_HEIGHT,
+			width_over_height: ASPECT_RATIO,
+			height_over_width: 1.0 / ASPECT_RATIO,
+			pixels: vec![0 as u32; (WINDOW_WIDTH * WINDOW_HEIGHT) as usize],
 		},
 	};
-
+	
 	let cube_mesh = get_mesh_from_obj(get_absolute_filepath("/data/obj/cube.obj"));
 	let mut cube_entity = Entity::new(&cube_mesh);
 
@@ -100,237 +63,117 @@ fn main() -> Result<(), String> {
 
 	let entities: Vec<&mut Entity> = vec![
 		&mut cube_entity,
-		&mut cow_entity,
-		&mut lamp_entity,
-		&mut voxels2_entity,
+		// &mut cow_entity,
+		// &mut lamp_entity,
+		// &mut voxels2_entity,
 	];
 
 	let entities2 = vec![
 		&mut teapot_entity,
-		&mut teapot2_entity,
-		&mut minicooper2_entity,
-		&mut jeffrey4_entity,
+		// &mut teapot2_entity,
+		// &mut minicooper2_entity,
+		// &mut jeffrey4_entity,
 	];
 
 	let entities_rwl = RwLock::new(entities);
 	let entities2_rwl = RwLock::new(entities2);
 
-	let mut scenes = vec![
-		DefaultScene::new(
-			graphics.clone(),
-			&entities_rwl,
-		),
-		DefaultScene::new(
-			graphics.clone(),
-			&entities2_rwl
-		),
-	];
+	let scenes = RefCell::new(
+		vec![
+			DefaultScene::new(
+				graphics.clone(),
+				&entities_rwl,
+			),
+			DefaultScene::new(
+				graphics.clone(),
+				&entities2_rwl
+			),
+		]
+	);
 
-	let mut current_scene_index = min(0, scenes.len() - 1);
+	let current_scene_index = RefCell::new(
+		min(0, scenes.borrow().len() - 1)
+	);
 
-	let tick_frequency = app.timer.performance_frequency();
+	// Set up our app
 
-	let mut frame_start_ticks: u64;
-	let mut frame_end_ticks: u64 = 0;
+	let update = |
+		keyboard_state: &KeyboardState,
+		mouse_state: &MouseState,
+		game_controller_state: &GameControllerState,
+		delta_t_seconds: f32| -> ()
+	{                
+	   
+		// Update scene
+				
+		let scenes_len = scenes.borrow_mut().len();
+		
+		let mut new_index = *current_scene_index.borrow();
 
-	let mut rng = rand::thread_rng();
+		for keycode in keyboard_state.keys_pressed.to_owned() {
+			match keycode {
+				Keycode::Num4 { .. } => {
+					new_index = min(scenes_len - 1, 0);
+				},
+				Keycode::Num5 { .. } => {
+					new_index = min(scenes_len - 1, 1);
+				},
+				Keycode::Num6 { .. } => {
+					new_index = min(scenes_len - 1, 2);
+				},
+				Keycode::Num7 { .. } => {
+					new_index = min(scenes_len - 1, 3);
+				},
+				Keycode::Num8 { .. } => {
+					new_index = min(scenes_len - 1, 4);
+				},
+				Keycode::Num9 { .. } => {
+					new_index = min(scenes_len - 1, 5);
+				},
+				Keycode::Num0 { .. } => {
+					new_index = min(scenes_len - 1, 6);
+				},
+				_ => {
 
-	let mut last_known_mouse_x = 0;
-	let mut last_known_mouse_y = 0;
-
-	let mut prev_game_controller_state: GameControllerState =
-		GameController::new().state;
-
-	'main: loop {
-
-		// Main loop
-
-		frame_start_ticks = app.timer.performance_counter();
-
-		if frame_end_ticks == 0 {
-			frame_end_ticks = frame_start_ticks;
-		}
-
-		let tick_delta = frame_start_ticks - frame_end_ticks;
-
-		let delta_t_seconds = 1.0 / tick_frequency as f32 * tick_delta as f32;
-
-		cairo::debug_print!("Slept for {} ticks, {} seconds!", tick_delta, delta_t_seconds);
-
-		// Event polling
-
-		let events = app.events.poll_iter();
-
-		let mut mouse_state = MouseState::new();
-
-		let mut keyboard_state = KeyboardState::new();
-
-		let mut game_controller = GameController::new();
-
-		let controller = app
-			.game_controllers[0]
-			.as_ref();
-
-		if controller.is_some() {
-
-			let unwrapped = controller.unwrap();
-
-			game_controller.id = unwrapped.id;
-			game_controller.name = unwrapped.name.clone();
-			game_controller.state = prev_game_controller_state;
-
-		}
-
-		for event in events {
-			match event {
-
-				Event::Quit { .. } => break 'main,
-
-				Event::MouseMotion { x, y, .. } => {
-					last_known_mouse_x = x;
-					last_known_mouse_y = y;
 				}
-
-				Event::MouseWheel { direction, y, .. } => {
-					mouse_state.wheel_did_move = true;
-					mouse_state.wheel_direction = direction;
-					mouse_state.wheel_y = y;
-				}
-
-				Event::KeyDown { keycode: Some(keycode), .. } => {
-					match keycode {
-						Keycode::Escape { .. } => {
-							break 'main
-						},
-						Keycode::Num4 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 0);
-						},
-						Keycode::Num5 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 1);
-						},
-						Keycode::Num6 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 2);
-						},
-						Keycode::Num7 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 3);
-						},
-						Keycode::Num8 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 4);
-						},
-						Keycode::Num9 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 5);
-						},
-						Keycode::Num0 { .. } => {
-							current_scene_index = min(scenes.len() - 1, 6);
-						},
-						_ => {
-							keyboard_state.keys_pressed.push(keycode);
-						}
-					}
-				}
-
-				Event::ControllerDeviceAdded { which, .. } => {
-					println!("Connected controller {}", which);
-				},
-
-				Event::ControllerDeviceRemoved { which, .. } => {
-					println!("Disconnected controller {}", which);
-				},
-
-				Event::JoyButtonDown { button_idx, .. } => {
-					println!("Button down! {}", button_idx);
-				},
-
-				Event::JoyButtonUp { button_idx, .. } => {
-					println!("Button up! {}", button_idx);
-				},
-
-				Event::ControllerButtonDown { button, .. } => {
-					game_controller.set_button_state(button, true);
-				},
-
-				Event::ControllerButtonUp { button, .. } => {
-					game_controller.set_button_state(button, false);
-				},
-
-				Event::ControllerAxisMotion { axis, value, .. } => {
-					game_controller.set_joystick_state(axis, value);
-				},
-
-				_ => {}
-
 			}
 		}
 
-		prev_game_controller_state = game_controller.state.clone();
+		*current_scene_index.borrow_mut() = new_index;
 
-		// Cache input device states
-
-		mouse_state.position.0 = last_known_mouse_x;
-		mouse_state.position.1 = last_known_mouse_y;
-
-		// Update current scene
-
-		scenes[current_scene_index].update(
+		scenes.borrow_mut()[*current_scene_index.borrow()].update(
 			&keyboard_state,
 			&mouse_state,
-			&game_controller.state,
+			&game_controller_state,
 			delta_t_seconds
 		);
 
-		backbuffer.with_lock(
-            None,
-            |write_only_byte_array, _pitch| {
+	};
 
-				// Render current scene
+	let render = || -> Result<Vec<u32>, String>
+	{
 
-				scenes[current_scene_index]
-					.render();
+		// Render current scene
 
-				let pixels_as_u8_slice: &[u8] = bytemuck::cast_slice(
-					&scenes[current_scene_index].get_pixel_data(),
-				);
+		scenes.borrow_mut()[*current_scene_index.borrow()].render();
 
-				let mut index = 0;
+		// @TODO(mzalla) Return reference to a captured variable???
+		return Ok(
+			scenes.borrow_mut()[*current_scene_index.borrow()].get_pixel_data().clone()
+		);
 
-				while index < pixels_as_u8_slice.len() {
-					write_only_byte_array[index] = pixels_as_u8_slice[index];
-					index += 1;
-				}
+	};
 
-			}
-        ).unwrap();
+	let app = App::new(
+		"examples/random-models",
+		WINDOW_WIDTH,
+		ASPECT_RATIO,
+		update, 
+		render,
+	);
 
-		// Flip buffers
+	app.run()?;
 
-		app_rendering_context.canvas.copy(&backbuffer, None, None).unwrap();
-
-		app_rendering_context.canvas.present();
-
-		frame_end_ticks = app.timer.performance_counter();
-
-		// Report framerate
-
-		let delta_ticks = frame_end_ticks - frame_start_ticks;
-
-		let frame_frequency = delta_ticks as f64 / tick_frequency as f64;
-
-		let random: u32 = rng.gen();
-		let modulo: u32 = 10;
-
-		if random % modulo == 0 {
-			println!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
-		}
-
-		// debug_print!("Rendering {} frames per second...", floor(1.0 / frame_frequency, 2));
-		// debug_print!("(frame_frequency={}", frame_frequency);
-
-		// Sleep if we can...
-
-		app.timer.delay(floor(16.666 - frame_frequency, 0) as u32);
-
-	}
-
-	Ok(())
+    Ok(())
 
 }

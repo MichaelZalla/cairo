@@ -18,5 +18,7 @@ pub mod pipeline;
 pub mod vec;
 pub mod vertex;
 
+pub mod app;
+
 pub mod effects;
 pub mod scenes;
