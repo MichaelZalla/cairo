@@ -16,11 +16,8 @@ use sdl2::render::BlendMode;
 
 use cairo::scenes::default_scene::DefaultScene;
 
-use cairo::macros;
-
 use cairo::context::{
 	get_application_context,
-	get_application_rendering_context,
 	get_backbuffer,
 };
 
@@ -57,12 +54,7 @@ fn main() -> Result<(), String> {
 		false
 	).unwrap();
 
-	let screen_width = app.window.size().0;
-	let screen_height = app.window.size().1;
-
-	let mut app_rendering_context = get_application_rendering_context(
-		app.window
-	).unwrap();
+	let mut app_rendering_context = app.rendering_context;
 
 	let texture_creator = app_rendering_context.canvas.texture_creator();
 
@@ -74,11 +66,11 @@ fn main() -> Result<(), String> {
 
 	let graphics = Graphics{
 		buffer: PixelBuffer{
-			width: screen_width,
-			height: screen_height,
+			width: app.screen_width,
+			height: app.screen_height,
 			width_over_height: aspect_ratio,
 			height_over_width: 1.0 / aspect_ratio,
-			pixels: vec![0 as u32; (screen_width * screen_height) as usize],
+			pixels: vec![0 as u32; (app.screen_width * app.screen_height) as usize],
 		},
 	};
 

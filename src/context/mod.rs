@@ -8,7 +8,9 @@ use sdl2::{
 use super::device::GameController;
 
 pub struct ApplicationContext {
-	pub window: Window,
+	pub rendering_context: ApplicationRenderingContext,
+	pub screen_width: u32,
+	pub screen_height: u32,
 	pub timer: TimerSubsystem,
 	pub game_controllers: Vec<Option<GameController>>,
 	pub events: EventPump,
@@ -136,12 +138,25 @@ pub fn get_application_context(
 											}
 
 											match window_builder.build() {
-												Ok(window) => Ok(ApplicationContext{
-													window: window,
-													timer: timer,
+												Ok(window) => {
+
+													let screen_width = window.size().0;
+													let screen_height = window.size().1;
+
+													let rendering_context = get_application_rendering_context(
+														window
+													).unwrap();
+													
+													Ok(ApplicationContext{
+														screen_width,
+														screen_height,
+														rendering_context,
+														timer,
 													game_controllers,
-													events: events,
-												}),
+														events,
+													})
+
+												},
 												Err(e) => Err(e.to_string()),
 											}
 
