@@ -1,3 +1,5 @@
+use std::cmp::{min, max};
+
 use sdl2::pixels::Color as SDLColor;
 
 use sdl2::ttf::Font;
@@ -101,8 +103,11 @@ impl Graphics {
 			// Vertical line
 
 			// dbg!("Drawing vertical line from ({},{}) to ({},{})!", x1, y1, x2, y2);
+			
+			let min_y = min(y1, y2);
+			let max_y = max(y1, y2);
 
-			for y in y1..y2 {
+			for y in min_y..max_y {
 				self.set_pixel(x1, y, color);
 			}
 
@@ -112,8 +117,11 @@ impl Graphics {
 			// Horizontal line
 
 			// dbg!("Drawing horizontal line from ({},{}) to ({},{})!", x1, y1, x2, y2);
+			
+			let min_x = min(x1, x2);
+			let max_x = max(x1, x2);
 
-			for x in x1..x2 {
+			for x in min_x..max_x {
 				self.set_pixel(x, y1, color);
 			}
 
