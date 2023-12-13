@@ -13,6 +13,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example basic-window",
+      "windows": {
+        "command": "cargo run --example basic-window"
+      },
+      "linux": {
+        "command": "cargo run --example basic-window"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example multiple-scenes",
       "windows": {
         "command": "cargo run --example multiple-scenes"
