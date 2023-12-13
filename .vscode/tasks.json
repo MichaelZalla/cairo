@@ -11,8 +11,7 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example multiple-scenes",
       "windows": {
@@ -28,12 +27,12 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --release --example multiple-scenes",
+      "label": "Rust: cargo run --example render-text C:/Windows/Fonts/vgasys.fon",
       "windows": {
-        "command": "cargo run --release --example multiple-scenes"
+        "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"
       },
       "linux": {
-        "command": "cargo run --release --example multiple-scenes"
+        "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"
       }
     },
   ]
