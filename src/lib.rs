@@ -20,5 +20,7 @@ pub mod vertex;
 
 pub mod app;
 
+pub mod ui;
+
 pub mod effects;
 pub mod scenes;

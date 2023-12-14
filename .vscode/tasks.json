@@ -49,5 +49,20 @@
         "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"
       }
     },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo run --example ui-panels C:/Windows/Fonts/vgasys.fon",
+      "windows": {
+        "command": "cargo run --example ui-panels C:/Windows/Fonts/vgasys.fon"
+      },
+      "linux": {
+        "command": "cargo run --example ui-panels C:/Windows/Fonts/vgasys.fon"
+      }
+    },
   ]
 }

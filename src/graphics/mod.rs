@@ -1,256 +1,231 @@
-use std::cmp::{min, max};
+use std::cmp::{max, min};
 
 use sdl2::pixels::Color as SDLColor;
 
 use sdl2::ttf::Font;
 
-use crate::{
-	vec::vec2,
-	color::Color,
-};
+use crate::{color::Color, vec::vec2};
 
 #[derive(Clone)]
 pub struct PixelBuffer {
-	pub width: u32,
-	pub height: u32,
-	pub width_over_height: f32,
-	pub height_over_width: f32,
-	pub pixels: Vec<u32>,
+    pub width: u32,
+    pub height: u32,
+    pub width_over_height: f32,
+    pub height_over_width: f32,
+    pub pixels: Vec<u32>,
 }
 
 impl PixelBuffer {
+    pub fn new(width: u32, height: u32) -> Self {
+        return PixelBuffer {
+            width,
+            height,
+            width_over_height: width as f32 / height as f32,
+            height_over_width: height as f32 / width as f32,
+            pixels: vec![0 as u32; (width * height) as usize],
+        };
+    }
 
-	pub fn clear(
-		&mut self,
-		color: Color) -> &Self
-	{
-		for i in 0..self.pixels.len() {
-			self.pixels[i] = color.to_u32();
-		}
-		self
-	}
-
+    pub fn clear(&mut self, color: Color) -> &Self {
+        for i in 0..self.pixels.len() {
+            self.pixels[i] = color.to_u32();
+        }
+        self
+    }
 }
 
 #[derive(Clone)]
 pub struct TextOperation<'a> {
-	pub text: &'a String,
-	pub x: u32,
-	pub y: u32,
-	pub color: Color,
+    pub text: &'a String,
+    pub x: u32,
+    pub y: u32,
+    pub color: Color,
 }
 
 #[derive(Clone)]
 pub struct Graphics {
-	pub buffer: PixelBuffer,
+    pub buffer: PixelBuffer,
 }
 
 impl Graphics {
+    pub fn get_pixel_data(&self) -> &Vec<u32> {
+        return &self.buffer.pixels;
+    }
 
-	pub fn get_pixel_data(&self) -> &Vec<u32> {
-		return &self.buffer.pixels;
-	}
+    pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
+        if x > (self.buffer.width - 1)
+            || y > (self.buffer.pixels.len() as u32 / self.buffer.width as u32 - 1)
+        {
+            // panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
+            return;
+        }
 
-	pub fn set_pixel(
-		&mut self,
-		x: u32,
-		y: u32,
-		color: Color)
-	{
+        let pixel_index = (y * self.buffer.width + x) as usize;
 
-		if x > (self.buffer.width - 1) || y > (self.buffer.pixels.len() as u32 / self.buffer.width as u32 - 1) {
-			// panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
-			return;
-		}
+        let r = color.r as u32;
+        let g = (color.g as u32).rotate_left(8);
+        let b = (color.b as u32).rotate_left(16);
+        let a = (color.a as u32).rotate_left(24);
 
-		let pixel_index = (y * self.buffer.width + x) as usize;
+        self.buffer.pixels[pixel_index] = r | g | b | a;
+    }
 
-		let r = color.r as u32;
-		let g = (color.g as u32).rotate_left(8);
-		let b = (color.b as u32).rotate_left(16);
-		let a = (color.a as u32).rotate_left(24);
+    pub fn line(&mut self, mut x1: u32, mut y1: u32, mut x2: u32, mut y2: u32, color: Color) {
+        // y = m*x + b
+        // x = (y - b) / m
+        // m = (y2-y1)/(x2-x1)
+        //
+        // 1. y1 = m*x1 + b
+        // y2 = m*x2 + b
+        //
+        // 2. y1 + y2 = m*x1 + m*x2 + 2*b
+        //
+        // 3. y1 + y2 - m*x1 - m*x2 = 2*b
+        // y1 + y2 - m*(x1 + x2) = 2*b
+        //
+        // 4. b = (y1 + y2 - m*(x1 + x2)) / 2
+        //
 
-		self.buffer.pixels[pixel_index] = r|g|b|a;
+        if x2 == x1 {
+            // Vertical line
 
-	}
+            // dbg!("Drawing vertical line from ({},{}) to ({},{})!", x1, y1, x2, y2);
 
-	pub fn line(
-		&mut self,
-		mut x1: u32,
-		mut y1: u32,
-		mut x2: u32,
-		mut y2: u32,
-		color: Color)
-	{
+            let min_y = min(y1, y2);
+            let max_y = max(y1, y2);
 
-		// y = m*x + b
-		// x = (y - b) / m
-		// m = (y2-y1)/(x2-x1)
-		//
-		// 1. y1 = m*x1 + b
-		// y2 = m*x2 + b
-		//
-		// 2. y1 + y2 = m*x1 + m*x2 + 2*b
-		//
-		// 3. y1 + y2 - m*x1 - m*x2 = 2*b
-		// y1 + y2 - m*(x1 + x2) = 2*b
-		//
-		// 4. b = (y1 + y2 - m*(x1 + x2)) / 2
-		//
+            for y in min_y..max_y {
+                self.set_pixel(x1, y, color);
+            }
+        } else if y2 == y1 {
+            // Horizontal line
 
-		if x2 == x1 {
+            // dbg!("Drawing horizontal line from ({},{}) to ({},{})!", x1, y1, x2, y2);
 
-			// Vertical line
+            let min_x = min(x1, x2);
+            let max_x = max(x1, x2);
 
-			// dbg!("Drawing vertical line from ({},{}) to ({},{})!", x1, y1, x2, y2);
-			
-			let min_y = min(y1, y2);
-			let max_y = max(y1, y2);
+            for x in min_x..max_x {
+                self.set_pixel(x, y1, color);
+            }
+        } else {
+            // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
 
-			for y in min_y..max_y {
-				self.set_pixel(x1, y, color);
-			}
+            let dx = x2 as i32 - x1 as i32;
+            let dy = y2 as i32 - y1 as i32;
+            let m = dy as f32 / dx as f32;
+            let b = (y1 as f32 + y2 as f32 - m * (x1 + x2) as f32) / 2.0;
 
-		}
-		else if y2 == y1 {
+            // dbg!("m = {}, b = {}", m, b);
 
-			// Horizontal line
+            if m.abs() > 1.0 {
+                if y2 < y1 {
+                    let t: u32 = y1;
+                    y1 = y2;
+                    y2 = t;
+                }
 
-			// dbg!("Drawing horizontal line from ({},{}) to ({},{})!", x1, y1, x2, y2);
-			
-			let min_x = min(x1, x2);
-			let max_x = max(x1, x2);
+                // Vertical-ish line
+                for y in y1..y2 {
+                    self.set_pixel(((y as f32 - b) / m) as u32, y, color);
+                }
+            } else {
+                if x2 < x1 {
+                    let t: u32 = x1;
+                    x1 = x2;
+                    x2 = t;
+                }
 
-			for x in min_x..max_x {
-				self.set_pixel(x, y1, color);
-			}
+                // Horizontal-ish line
+                for x in x1..x2 {
+                    self.set_pixel(x, (m * x as f32 + b) as u32, color);
+                }
+            }
+        }
+    }
 
-		}
-		else {
+    pub fn poly_line(&mut self, p: &[vec2::Vec2], color: Color) {
+        for i in 0..p.len() {
+            if i == p.len() - 1 {
+                self.line(
+                    p[i].x as u32,
+                    p[i].y as u32,
+                    p[0].x as u32,
+                    p[0].y as u32,
+                    color,
+                );
+            } else {
+                self.line(
+                    p[i].x as u32,
+                    p[i].y as u32,
+                    p[i + 1].x as u32,
+                    p[i + 1].y as u32,
+                    color,
+                );
+            }
+        }
+    }
 
-			// println!("({}, {}), ({}, {})", x1, y1, x2, y2);
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, pixels: &Vec<u32>) -> () {
+        for x in left..(left + width) {
+            for y in top..(top + height) {
+                let src_pixel_index = ((y - top) * width + (x - left)) as usize;
 
-			let dx = x2 as i32 - x1 as i32;
-			let dy = y2 as i32 - y1 as i32;
-			let m = dy as f32 / dx as f32;
-			let b = (y1 as f32 + y2 as f32 - m * (x1 + x2) as f32) / 2.0;
+                let src_pixel_value = pixels[src_pixel_index];
 
-			// dbg!("m = {}, b = {}", m, b);
+                let dest_pixel_index = (y * self.buffer.width + x) as usize;
 
-			if m.abs() > 1.0 {
+                self.buffer.pixels[dest_pixel_index] = src_pixel_value;
+            }
+        }
+    }
 
-				if y2 < y1 {
-					let t: u32 = y1;
-					y1 = y2;
-					y2 = t;
-				}
+    pub fn text(&mut self, font: &Font, op: TextOperation) -> Result<(), String> {
+        // Generate a new text rendering (surface)
 
-				// Vertical-ish line
-				for y in y1..y2 {
-					self.set_pixel(((y as f32 - b) / m) as u32, y, color);
-				}
+        let surface = font
+            .render(op.text)
+            .blended(SDLColor::RGBA(
+                op.color.r, op.color.g, op.color.b, op.color.a,
+            ))
+            .map_err(|e| e.to_string())?;
 
-			}
-			else {
+        // Read the pixel data from the rendered surface
 
-				if x2 < x1 {
-					let t: u32 = x1;
-					x1 = x2;
-					x2 = t;
-				}
+        let text_surface_canvas = surface.into_canvas()?;
 
-				// Horizontal-ish line
-				for x in x1..x2 {
-					self.set_pixel(x, (m * x as f32 + b) as u32, color);
-				}
+        let text_surface_canvas_size = text_surface_canvas.output_size()?;
 
-			}
+        let text_canvas_width = text_surface_canvas_size.0;
+        let text_canvas_height = text_surface_canvas_size.1;
 
-		}
+        let text_surface_pixels =
+            text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
 
-	}
+        // Copy the rendered pixels to the graphics buffer, with padding
 
-	pub fn poly_line(
-		&mut self,
-		p: &[vec2::Vec2],
-		color: Color)
-	{
+        for y in 0..text_canvas_height {
+            for x in 0..text_canvas_width {
+                let text_surface_pixels_index =
+                    (x as usize + y as usize * text_canvas_width as usize) * 4;
 
-		for i in 0..p.len() {
+                let a = text_surface_pixels[text_surface_pixels_index + 3];
 
-			if i == p.len() - 1 {
-				self.line(p[i].x as u32, p[i].y as u32, p[0].x as u32, p[0].y as u32, color);
-			}
-			else {
-				self.line(p[i].x as u32, p[i].y as u32, p[i+1].x as u32, p[i+1].y as u32, color);
-			}
+                if a != 0 {
+                    self.set_pixel(
+                        op.x + x,
+                        op.y + y,
+                        Color {
+                            r: text_surface_pixels[text_surface_pixels_index],
+                            g: text_surface_pixels[text_surface_pixels_index + 1],
+                            b: text_surface_pixels[text_surface_pixels_index + 2],
+                            a,
+                        },
+                    )
+                }
+            }
+        }
 
-		}
-
-	}
-
-	pub fn text(
-		&mut self,
-		font: &Font,
-		op: TextOperation) -> Result<(), String>
-	{
-
-		// Generate a new text rendering (surface)
-
-		let surface = font
-			.render(op.text)
-			.blended(
-				SDLColor::RGBA(
-					op.color.r,
-					op.color.g,
-					op.color.b,
-					op.color.a
-				)
-			)
-			.map_err(|e| e.to_string())?;
-		
-		// Read the pixel data from the rendered surface 
-
-		let text_surface_canvas = surface.into_canvas()?;
-
-		let text_surface_canvas_size = text_surface_canvas.output_size()?;
-
-		let text_canvas_width = text_surface_canvas_size.0;
-		let text_canvas_height = text_surface_canvas_size.1;
-
-		let text_surface_pixels = text_surface_canvas
-			.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
-
-		// Copy the rendered pixels to the graphics buffer, with padding
-
-		for y in 0..text_canvas_height {
-			for x in 0..text_canvas_width {
-
-				let text_surface_pixels_index =
-					(x as usize + y as usize * text_canvas_width as usize) * 4;
-
-				let a = text_surface_pixels[text_surface_pixels_index + 3];
-
-				if a != 0 {
-
-					self.set_pixel(
-						op.x + x,
-						op.y + y,
-						Color {
-							r: text_surface_pixels[text_surface_pixels_index],
-							g: text_surface_pixels[text_surface_pixels_index + 1],
-							b: text_surface_pixels[text_surface_pixels_index + 2],
-							a,
-						},
-					)
-
-				}
-
-			}
-		}
-
-		Ok(())
-
-	}	
-
+        Ok(())
+    }
 }
