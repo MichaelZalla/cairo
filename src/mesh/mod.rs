@@ -15,7 +15,7 @@ pub type Face = (usize, usize, usize);
 #[derive(Default, Clone)]
 pub struct Mesh {
     pub vertices: Vec<DefaultVertexIn>,
-    pub face_indices: Vec<Face>,
+    pub face_indices: Vec<(usize, usize, usize)>,
 }
 
 impl<'a> Default for &'a Mesh {
@@ -32,7 +32,7 @@ impl Mesh {
     pub fn new(
         vertices: Vec<Vec3>,
         vertex_normals: Vec<Vec3>,
-        face_vertex_indices: Vec<Face>,
+        face_vertex_indices: Vec<(usize, usize, usize)>,
         face_vertex_normal_indices: Vec<(usize, usize, usize)>,
     ) -> Self {
         let vertices_len = vertices.len();

@@ -1,9 +1,6 @@
 use std::path::Path;
 
-use crate::{
-    mesh::{read_lines, Face},
-    vec::vec3::Vec3,
-};
+use crate::{mesh::read_lines, vec::vec3::Vec3};
 
 use super::Mesh;
 
@@ -19,7 +16,7 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
 
     let mut vertices: Vec<Vec3> = vec![];
     let mut vertex_normals: Vec<Vec3> = vec![];
-    let mut face_vertex_indices: Vec<Face> = vec![];
+    let mut face_vertex_indices: Vec<(usize, usize, usize)> = vec![];
     let mut face_vertex_normal_indices: Vec<(usize, usize, usize)> = vec![];
 
     for (_, line) in lines.enumerate() {

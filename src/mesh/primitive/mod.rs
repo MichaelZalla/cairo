@@ -1,6 +1,6 @@
 use crate::vec::vec3::Vec3;
 
-use super::{Face, Mesh};
+use super::Mesh;
 
 pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
     let front_top_left = Vec3 {
@@ -54,7 +54,7 @@ pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
         back_bottom_right,  // 7
     ];
 
-    let mut face_vertex_indices: Vec<Face> = vec![];
+    let mut face_vertex_indices: Vec<(usize, usize, usize)> = vec![];
 
     // Front face
 
