@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::fs::read_lines;
-use crate::vec::vec3::Vec3;
+use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
 
@@ -17,6 +17,7 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
 
     let mut vertices: Vec<Vec3> = vec![];
     let mut vertex_normals: Vec<Vec3> = vec![];
+    let mut uv_coordinates: Vec<Vec2> = vec![];
     let mut face_vertex_indices: Vec<(usize, usize, usize)> = vec![];
     let mut face_vertex_normal_indices: Vec<(usize, usize, usize)> = vec![];
 
@@ -46,7 +47,32 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                 vertices.push(Vec3 { x, y, z });
                             }
                             // Texture (UV) coordinate, as (u, [v, w]), between 0 and 1. v, w are optional and default to 0.
-                            "vt" => (),
+                            "vt" => {
+                                // `vt 0.500 1 [0]` (u v w?)
+                                let u = line_components.next().unwrap().parse::<f32>().unwrap();
+                                let mut v = 0.0;
+                                let mut w = 0.0;
+
+                                let result = line_components.next();
+
+                                match result {
+                                    Some(value) => {
+                                        v = value.parse::<f32>().unwrap();
+
+                                        let result = line_components.next();
+
+                                        match result {
+                                            Some(value) => {
+                                                w = value.parse::<f32>().unwrap();
+                                            }
+                                            None => (),
+                                        }
+                                    }
+                                    None => (),
+                                }
+
+                                uv_coordinates.push(Vec2 { x: u, y: v, z: w })
+                            }
                             // Vertex normal in (x,y,z) form; normal might not be a unit vector.
                             "vn" => {
                                 // `vn  0.000005 -34.698460 -17.753405` (x y z)
@@ -125,14 +151,14 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
         }
     }
 
-    println!("{}", filepath,);
-
+    println!("Parsed mesh from OBJ file ({})", filepath);
+    println!("  > Vertices: {}", vertices.len());
+    println!("  > UV coordinates: {}", uv_coordinates.len());
+    println!("  > Vertex normals: {}", vertex_normals.len());
+    println!("  > Face vertex indices: {}", face_vertex_indices.len());
     println!(
-        "  Parsed mesh with {} vertices, {} vertex normals, {} faces, and {} face normals.",
-        vertices.len(),
-        vertex_normals.len(),
-        face_vertex_indices.len(),
-        face_vertex_normal_indices.len(),
+        "  > Face vertex normal indices: {}",
+        face_vertex_normal_indices.len()
     );
 
     return Mesh::new(
