@@ -102,27 +102,27 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                 // `f 1004//1004 1003//1003 1002//1002` ({x,y,z}{vert_index, texture_index, vert_normal_index})
                                 // `f 1004//1004 1003//1003 1002//1002` ({x,y,z}{vert_index, texture_index, vert_normal_index})
 
-                                let mut x = line_components.next().unwrap().split("/");
-                                let mut y = line_components.next().unwrap().split("/");
-                                let mut z = line_components.next().unwrap().split("/");
+                                let mut v1 = line_components.next().unwrap().split("/");
+                                let mut v2 = line_components.next().unwrap().split("/");
+                                let mut v3 = line_components.next().unwrap().split("/");
 
                                 face_vertex_indices.push((
-                                    x.next().unwrap().parse::<usize>().unwrap() - 1,
-                                    y.next().unwrap().parse::<usize>().unwrap() - 1,
-                                    z.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    v1.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    v2.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    v3.next().unwrap().parse::<usize>().unwrap() - 1,
                                 ));
 
-                                let result = x.next();
+                                let result = v1.next();
 
                                 match result {
                                     Some(_) => {
-                                        y.next();
-                                        z.next();
+                                        v2.next();
+                                        v3.next();
 
                                         face_vertex_normal_indices.push((
-                                            x.next().unwrap().parse::<usize>().unwrap() - 1,
-                                            y.next().unwrap().parse::<usize>().unwrap() - 1,
-                                            z.next().unwrap().parse::<usize>().unwrap() - 1,
+                                            v1.next().unwrap().parse::<usize>().unwrap() - 1,
+                                            v2.next().unwrap().parse::<usize>().unwrap() - 1,
+                                            v3.next().unwrap().parse::<usize>().unwrap() - 1,
                                         ));
                                     }
                                     None => (),
