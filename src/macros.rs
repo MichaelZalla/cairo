@@ -7,5 +7,5 @@ macro_rules! debug_print {
 #[macro_export]
 #[cfg(not(feature = "debug_print_feature"))]
 macro_rules! debug_print {
-    ($( $args:expr ),*) => {}
+    ($( $args:expr ),*) => {};
 }

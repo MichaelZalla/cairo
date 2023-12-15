@@ -5,27 +5,14 @@ use sdl2::keyboard::Keycode;
 use sdl2::render::BlendMode;
 
 use crate::debug_print;
-use crate::device::{
-	MouseState,
-	KeyboardState,
-	GameController,
-	GameControllerState,
-};
+use crate::device::{GameController, GameControllerState, KeyboardState, MouseState};
 
-use crate::context::{
-    ApplicationContext,
-    get_application_context,
-    get_backbuffer,
-};
+use crate::context::{get_application_context, get_backbuffer, ApplicationContext};
 
 pub struct App<U, R>
-    where
-        U: FnMut(
-            &KeyboardState,
-            &MouseState,
-            &GameControllerState,
-            f32) -> (),
-        R: FnMut() -> Result<Vec<u32>, String>,
+where
+    U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+    R: FnMut() -> Result<Vec<u32>, String>,
 {
     pub context: ApplicationContext,
     pub aspect_ratio: f32,
@@ -35,86 +22,65 @@ pub struct App<U, R>
 
 impl<U, R> App<U, R>
 where
-    U: FnMut(
-        &KeyboardState,
-        &MouseState,
-        &GameControllerState,
-        f32) -> (),
-    R: FnMut() -> Result<Vec<u32>, String>
+    U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+    R: FnMut() -> Result<Vec<u32>, String>,
 {
-
     pub fn new(
         window_title: &str,
         window_width: u32,
         aspect_ratio: f32,
         update: U,
-        render: R
-    ) -> Self where
-        U: FnMut(
-            &KeyboardState,
-            &MouseState,
-            &GameControllerState,
-            f32) -> (),
-        R: FnMut() -> Result<Vec<u32>, String>
-	{
-
+        render: R,
+    ) -> Self
+    where
+        U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+        R: FnMut() -> Result<Vec<u32>, String>,
+    {
         let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
-    
-        let context = get_application_context(
-            window_title,
-            window_width,
-            window_height,
-            false,
-            false
-        ).unwrap();
 
-		return App {
+        let context =
+            get_application_context(window_title, window_width, window_height, false, false)
+                .unwrap();
+
+        return App {
             context,
             aspect_ratio,
             update,
             render,
         };
+    }
 
-	}
+    pub fn run(mut self) -> Result<(), String> {
+        let texture_creator = self.context.rendering_context.canvas.texture_creator();
 
-    pub fn run(mut self) -> Result<(), String>
-    {
-
-        let texture_creator = self 
-            .context
-            .rendering_context
-            .canvas
-            .texture_creator();
-    
-        let mut backbuffer =  get_backbuffer(
+        let mut backbuffer = get_backbuffer(
             &self.context.rendering_context,
             &texture_creator,
             BlendMode::None,
-        ).unwrap();
+        )
+        .unwrap();
 
         // Set up scene here!
-    
+
         let ticks_per_second = self.context.timer.performance_frequency();
-    
+
         let frame_rate_limit = 120;
-        
+
         let desired_ticks_per_frame: u64 = ticks_per_second / frame_rate_limit;
-    
+
         let mut frame_start_tick: u64 = self.context.timer.performance_counter();
         let mut frame_end_tick: u64;
-    
+
         let mut rng = rand::thread_rng();
-    
+
         let mut last_known_mouse_x = 0;
         let mut last_known_mouse_y = 0;
-    
-        let mut prev_game_controller_state: GameControllerState =
-            GameController::new().state;
+
+        let mut prev_game_controller_state: GameControllerState = GameController::new().state;
 
         // Main event loop
 
         'main: loop {
-
             // Main loop
 
             let now_tick = self.context.timer.performance_counter();
@@ -142,23 +108,18 @@ where
 
             let mut game_controller = GameController::new();
 
-            let controller = self.context
-                .game_controllers[0]
-                .as_ref();
+            let controller = self.context.game_controllers[0].as_ref();
 
             if controller.is_some() {
-
                 let unwrapped = controller.unwrap();
 
                 game_controller.id = unwrapped.id;
                 game_controller.name = unwrapped.name.clone();
                 game_controller.state = prev_game_controller_state;
-
             }
 
             for event in events {
                 match event {
-
                     Event::Quit { .. } => break 'main,
 
                     Event::MouseMotion { x, y, .. } => {
@@ -172,47 +133,45 @@ where
                         mouse_state.wheel_y = y;
                     }
 
-                    Event::KeyDown { keycode: Some(keycode), .. } => {
-                        match keycode {
-                            Keycode::Escape { .. } => {
-                                break 'main
-                            },
-                            _ => {
-                                keyboard_state.keys_pressed.push(keycode);
-                            }
+                    Event::KeyDown {
+                        keycode: Some(keycode),
+                        ..
+                    } => match keycode {
+                        Keycode::Escape { .. } => break 'main,
+                        _ => {
+                            keyboard_state.keys_pressed.push(keycode);
                         }
-                    }
+                    },
 
                     Event::ControllerDeviceAdded { which, .. } => {
                         println!("Connected controller {}", which);
-                    },
+                    }
 
                     Event::ControllerDeviceRemoved { which, .. } => {
                         println!("Disconnected controller {}", which);
-                    },
+                    }
 
                     Event::JoyButtonDown { button_idx, .. } => {
                         println!("Button down! {}", button_idx);
-                    },
+                    }
 
                     Event::JoyButtonUp { button_idx, .. } => {
                         println!("Button up! {}", button_idx);
-                    },
+                    }
 
                     Event::ControllerButtonDown { button, .. } => {
                         game_controller.set_button_state(button, true);
-                    },
+                    }
 
                     Event::ControllerButtonUp { button, .. } => {
                         game_controller.set_button_state(button, false);
-                    },
+                    }
 
                     Event::ControllerAxisMotion { axis, value, .. } => {
                         game_controller.set_joystick_state(axis, value);
-                    },
+                    }
 
                     _ => {}
-
                 }
             }
 
@@ -224,48 +183,45 @@ where
             mouse_state.position.1 = last_known_mouse_y;
 
             // Update current scene
-            
+
             (self.update)(
                 &keyboard_state,
                 &mouse_state,
                 &game_controller.state,
-                seconds_slept
+                seconds_slept,
             );
 
             // Render current scene to backbuffer
 
-            backbuffer.with_lock(
-                None,
-                |write_only_byte_array, _pitch| {
-
+            backbuffer
+                .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
 
                     match (self.render)() {
                         Ok(pixels_as_u32_slice) => {
+                            let pixels_as_u8_slice: &[u8] =
+                                bytemuck::cast_slice(&pixels_as_u32_slice);
 
-                            let pixels_as_u8_slice: &[u8] = bytemuck::cast_slice(
-                                &pixels_as_u32_slice
-                            );
-        
                             let mut index = 0;
-        
+
                             while index < pixels_as_u8_slice.len() {
                                 write_only_byte_array[index] = pixels_as_u8_slice[index];
                                 index += 1;
                             }
-
-                        },
+                        }
                         Err(_e) => {
                             // Do nothing?
                         }
                     }
-
-                }
-            ).unwrap();
+                })
+                .unwrap();
 
             // Flip buffers
 
-            self.context.rendering_context.canvas.copy(&backbuffer, None, None)?;
+            self.context
+                .rendering_context
+                .canvas
+                .copy(&backbuffer, None, None)?;
 
             self.context.rendering_context.canvas.present();
 
@@ -278,21 +234,21 @@ where
             // let frames_per_second = ticks_for_current_frame as f64 / ticks_per_second as f64;
 
             let frames_per_second = ticks_per_second / ticks_for_current_frame;
-            
+
             let unused_ticks: u64;
 
             if ticks_for_current_frame < desired_ticks_per_frame {
                 unused_ticks = std::cmp::min(
                     desired_ticks_per_frame,
-                    desired_ticks_per_frame - ticks_for_current_frame
+                    desired_ticks_per_frame - ticks_for_current_frame,
                 );
             } else {
                 unused_ticks = 0;
             }
-            
+
             let unused_seconds = (unused_ticks as f64 / ticks_per_second as f64) as f64;
             let unused_milliseconds = unused_seconds * 1000.0;
-            
+
             let random: u32 = rng.gen();
             let modulo: u32 = 30;
 
@@ -310,15 +266,12 @@ where
             }
 
             frame_start_tick = self.context.timer.performance_counter();
-            
-            // Sleep if we can...
-            
-            self.context.timer.delay(unused_milliseconds.floor() as u32);
 
+            // Sleep if we can...
+
+            self.context.timer.delay(unused_milliseconds.floor() as u32);
         }
 
         Ok(())
-
     }
-
 }

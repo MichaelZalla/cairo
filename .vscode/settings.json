@@ -1,7 +1,15 @@
 {
   "task.quickOpen.skip": true,
   "triggerTaskOnSave.tasks": {
-    "Rust: cargo build": ["src/*.rs"],
-    "restart": ["src/*.rs"]
-  }
+    "Rust: cargo build": [
+      "src/*.rs"
+    ],
+    "restart": [
+      "src/*.rs"
+    ]
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
 }

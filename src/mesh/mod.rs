@@ -13,279 +13,236 @@ pub type Face = (usize, usize, usize);
 
 #[derive(Default, Clone)]
 pub struct Mesh {
-	pub vertices: Vec<DefaultVertexIn>,
-	pub face_indices: Vec<Face>,
+    pub vertices: Vec<DefaultVertexIn>,
+    pub face_indices: Vec<Face>,
 }
 
 impl<'a> Default for &'a Mesh {
     fn default() -> &'a Mesh {
         static DEFAULT: Mesh = Mesh {
             vertices: vec![],
-			face_indices: vec![],
+            face_indices: vec![],
         };
         &DEFAULT
     }
 }
 
-pub fn get_mesh_from_obj(
-	filepath: String) -> Mesh
-{
+pub fn get_mesh_from_obj(filepath: String) -> Mesh {
+    let path = Path::new(&filepath);
 
-	let path = Path::new(&filepath);
+    let display = path.display();
 
-	let display = path.display();
+    let lines = match read_lines(&path) {
+        Err(why) => panic!("Failed to open file {}: {}", display, why),
+        Ok(lines) => lines,
+    };
 
-	let lines = match read_lines(&path) {
-		Err(why) => panic!("Failed to open file {}: {}", display, why),
-		Ok(lines) => lines,
-	};
+    let mut vertices: Vec<Vec3> = vec![];
+    let mut faces: Vec<Face> = vec![];
+    let mut vertex_normals: Vec<Vec3> = vec![];
+    let mut face_normals: Vec<(usize, usize, usize)> = vec![];
 
-	let mut vertices: Vec<Vec3> = vec![];
-	let mut faces: Vec<Face> = vec![];
-	let mut vertex_normals: Vec<Vec3> = vec![];
-	let mut face_normals: Vec<(usize, usize, usize)> = vec![];
+    for (_, line) in lines.enumerate() {
+        match line {
+            Err(why) => println!("Error reading next line: {}", why),
+            Ok(line) => {
+                let mut line_components = line.split_whitespace();
 
-	for (_, line) in lines.enumerate() {
-		match line {
-			Err(why) => println!("Error reading next line: {}", why),
-			Ok(line) => {
+                match line_components.next() {
+                    None => (),
+                    Some(first) => {
+                        match first {
+                            "v" => {
+                                // `v  -0.512365 -40.559704 21.367237`
 
-				let mut line_components = line.split_whitespace();
+                                let (x, y, z) = (
+                                    line_components.next().unwrap().parse::<f32>().unwrap(),
+                                    line_components.next().unwrap().parse::<f32>().unwrap(),
+                                    line_components.next().unwrap().parse::<f32>().unwrap(),
+                                );
 
-				match line_components.next() {
-					None => (),
-					Some(first) => {
-						match first {
-							"v" => {
+                                vertices.push(Vec3 { x, y, z });
+                            }
+                            "f" => {
+                                // `f 1004//1004 1003//1003 1002//1002`
 
-								// `v  -0.512365 -40.559704 21.367237`
+                                let mut x = line_components.next().unwrap().split("/");
+                                let mut y = line_components.next().unwrap().split("/");
+                                let mut z = line_components.next().unwrap().split("/");
 
-								let (x, y, z) = (
-									line_components.next().unwrap().parse::<f32>().unwrap(),
-									line_components.next().unwrap().parse::<f32>().unwrap(),
-									line_components.next().unwrap().parse::<f32>().unwrap(),
-								);
+                                faces.push((
+                                    x.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    y.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    z.next().unwrap().parse::<usize>().unwrap() - 1,
+                                ));
 
-								vertices.push(Vec3{ x, y, z });
+                                let result = x.next();
 
-							},
-							"f" => {
+                                match result {
+                                    Some(_) => {
+                                        y.next();
+                                        z.next();
 
-								// `f 1004//1004 1003//1003 1002//1002`
+                                        face_normals.push((
+                                            x.next().unwrap().parse::<usize>().unwrap() - 1,
+                                            y.next().unwrap().parse::<usize>().unwrap() - 1,
+                                            z.next().unwrap().parse::<usize>().unwrap() - 1,
+                                        ));
+                                    }
+                                    None => (),
+                                }
+                            }
+                            "vn" => {
+                                // `vn  0.000005 -34.698460 -17.753405`
 
-								let mut x = line_components.next().unwrap().split("/");
-								let mut y = line_components.next().unwrap().split("/");
-								let mut z = line_components.next().unwrap().split("/");
+                                let vertex_normal = Vec3 {
+                                    x: line_components.next().unwrap().parse::<f32>().unwrap(),
+                                    y: line_components.next().unwrap().parse::<f32>().unwrap(),
+                                    z: line_components.next().unwrap().parse::<f32>().unwrap(),
+                                };
 
-								faces.push((
-									x.next().unwrap().parse::<usize>().unwrap() - 1,
-									y.next().unwrap().parse::<usize>().unwrap() - 1,
-									z.next().unwrap().parse::<usize>().unwrap() - 1,
-								));
+                                vertex_normals.push(vertex_normal);
+                            }
+                            "#" => (),
+                            // "mtllib" => println!("mtllib"),
+                            // "ysentk" => println!("ysentk"),
+                            // "o" => println!("o"),
+                            // "g" => println!("g"),
+                            // "s" => println!("s"),
+                            _ => {
+                                // println!("{}", other)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-								let result = x.next();
+    println!("{}", filepath,);
 
-								match result {
-									Some(_) => {
+    println!(
+        "  Parsed mesh with {} vertices, {} faces, {} vertex normals, and {} face normals.",
+        vertices.len(),
+        faces.len(),
+        vertex_normals.len(),
+        face_normals.len(),
+    );
 
-										y.next();
-										z.next();
-
-										face_normals.push((
-											x.next().unwrap().parse::<usize>().unwrap() - 1,
-											y.next().unwrap().parse::<usize>().unwrap() - 1,
-											z.next().unwrap().parse::<usize>().unwrap() - 1,
-										));
-
-									},
-									None => (),
-								}
-
-							},
-							"vn" => {
-
-								// `vn  0.000005 -34.698460 -17.753405`
-
-								let vertex_normal = Vec3{
-									x: line_components.next().unwrap().parse::<f32>().unwrap(),
-									y: line_components.next().unwrap().parse::<f32>().unwrap(),
-									z: line_components.next().unwrap().parse::<f32>().unwrap(),
-								};
-
-								vertex_normals.push(vertex_normal);
-
-							},
-							"#" => (),
-							// "mtllib" => println!("mtllib"),
-							// "ysentk" => println!("ysentk"),
-							// "o" => println!("o"),
-							// "g" => println!("g"),
-							// "s" => println!("s"),
-							_ => {
-								// println!("{}", other)
-							},
-						}
-					}
-				}
-			},
-		}
-	}
-
-	println!(
-		"{}",
-		filepath,
-	);
-	
-	println!(
-		"  Parsed mesh with {} vertices, {} faces, {} vertex normals, and {} face normals.",
-		vertices.len(),
-		faces.len(),
-		vertex_normals.len(),
-		face_normals.len(),
-	);
-
-	return Mesh::new(
-		vertices,
-		faces,
-		vertex_normals,
-		face_normals,
-	);
-
+    return Mesh::new(vertices, faces, vertex_normals, face_normals);
 }
 
 impl Mesh {
+    pub fn new(
+        vertices: Vec<Vec3>,
+        faces: Vec<Face>,
+        vertex_normals: Vec<Vec3>,
+        face_normals: Vec<(usize, usize, usize)>,
+    ) -> Self {
+        let mesh_v_len = vertices.len();
+        let mesh_vn_len = vertex_normals.len();
+        let mesh_tn_len = face_normals.len();
 
-	pub fn new(
-		vertices: Vec<Vec3>,
-		faces: Vec<Face>,
-		vertex_normals: Vec<Vec3>,
-		face_normals: Vec<(usize, usize, usize)>) -> Self
-	{
+        let mut mesh: Mesh = Mesh {
+            vertices: vec![],
+            face_indices: vec![],
+        };
 
-		let mesh_v_len = vertices.len();
-		let mesh_vn_len = vertex_normals.len();
-		let mesh_tn_len = face_normals.len();
+        let white = Vec3 {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        };
 
-		let mut mesh: Mesh = Mesh{
-			vertices: vec![],
-			face_indices: vec![],
-		};
+        if mesh_tn_len == faces.len() {
+            // Case 1. 3 vertex normals are defined per face;
 
-		let white = Vec3{
-			x: 1.0,
-			y: 1.0,
-			z: 1.0,
-		};
+            for (face_index, face) in faces.iter().enumerate() {
+                let normal_indices = face_normals[face_index];
 
-		if mesh_tn_len == faces.len() {
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertices[face.0].clone(),
+                    n: vertex_normals[normal_indices.0].clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                });
 
-			// Case 1. 3 vertex normals are defined per face;
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertices[face.1].clone(),
+                    n: vertex_normals[normal_indices.1].clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                });
 
-			for (face_index, face) in faces.iter().enumerate() {
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertices[face.2].clone(),
+                    n: vertex_normals[normal_indices.2].clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                });
 
-				let normal_indices = face_normals[face_index];
+                mesh.face_indices
+                    .push((face_index * 3, face_index * 3 + 1, face_index * 3 + 2))
+            }
+        } else if mesh_vn_len != mesh_v_len {
+            // Case 2. No normal data was provided; we'll generate a normal for each
+            // face, creating 3 unique Vertex instances for that face;
 
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertices[face.0].clone(),
-					n: vertex_normals[normal_indices.0].clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				});
+            for (face_index, face) in faces.iter().enumerate() {
+                let computed_normal = (vertices[face.1] - vertices[face.0])
+                    .cross(vertices[face.2] - vertices[face.0])
+                    .as_normal();
 
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertices[face.1].clone(),
-					n: vertex_normals[normal_indices.1].clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				});
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertices[face.0].clone(),
+                    n: computed_normal.clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                });
 
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertices[face.2].clone(),
-					n: vertex_normals[normal_indices.2].clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				});
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertices[face.1].clone(),
+                    n: computed_normal.clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                });
 
-				mesh.face_indices.push((
-					face_index * 3,
-					face_index * 3 + 1,
-					face_index * 3 + 2,
-				))
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertices[face.2].clone(),
+                    n: computed_normal.clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                });
 
-			}
+                mesh.face_indices
+                    .push((face_index * 3, face_index * 3 + 1, face_index * 3 + 2))
+            }
+        }
 
-		} else if mesh_vn_len != mesh_v_len {
+        if mesh_vn_len == mesh_v_len {
+            // Case 3. One normal is defined per-vertex; no need for duplicate Vertexs;
 
-			// Case 2. No normal data was provided; we'll generate a normal for each
-			// face, creating 3 unique Vertex instances for that face;
+            for (vertex_index, vertex) in vertices.iter().enumerate() {
+                mesh.vertices.push(DefaultVertexIn {
+                    p: vertex.clone(),
+                    n: vertex_normals[vertex_index].clone(),
+                    c: white.clone(),
+                    world_pos: Vec3::new(),
+                })
+            }
 
-			for (face_index, face) in faces.iter().enumerate() {
+            mesh.face_indices = faces;
+        }
 
-				let computed_normal = (vertices[face.1] - vertices[face.0])
-					.cross(vertices[face.2] - vertices[face.0])
-					.as_normal();
-
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertices[face.0].clone(),
-					n: computed_normal.clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				});
-
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertices[face.1].clone(),
-					n: computed_normal.clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				});
-
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertices[face.2].clone(),
-					n: computed_normal.clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				});
-
-				mesh.face_indices.push((
-					face_index * 3,
-					face_index * 3 + 1,
-					face_index * 3 + 2,
-				))
-
-			}
-
-		}
-
-		if mesh_vn_len == mesh_v_len {
-
-			// Case 3. One normal is defined per-vertex; no need for duplicate Vertexs;
-
-			for (vertex_index, vertex) in vertices.iter().enumerate() {
-
-				mesh.vertices.push(DefaultVertexIn {
-					p: vertex.clone(),
-					n: vertex_normals[vertex_index].clone(),
-					c: white.clone(),
-					world_pos: Vec3::new(),
-				})
-
-			}
-
-			mesh.face_indices = faces;
-
-		}
-
-		return mesh;
-
-	}
-
+        return mesh;
+    }
 }
 
 fn read_lines<P>(filepath: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where P: AsRef<Path>, {
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filepath)?;
 
-	let file = File::open(filepath)?;
-
-	Ok(io::BufReader::new(file).lines())
-
+    Ok(io::BufReader::new(file).lines())
 }

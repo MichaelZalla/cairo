@@ -3,24 +3,22 @@ extern crate sdl2;
 
 pub mod macros;
 
+pub mod app;
 pub mod collision;
 pub mod color;
 pub mod context;
-pub mod graphics;
 pub mod device;
 pub mod effect;
 pub mod entity;
 pub mod fs;
+pub mod graphics;
 pub mod matrix;
 pub mod mesh;
-pub mod scene;
 pub mod pipeline;
+pub mod scene;
+pub mod ui;
 pub mod vec;
 pub mod vertex;
-
-pub mod app;
-
-pub mod ui;
 
 pub mod effects;
 pub mod scenes;
