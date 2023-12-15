@@ -27,7 +27,7 @@ static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     // Generate a cube mesh
-    let cube_mesh = mesh::get_mesh_from_obj("./data/obj/cube.obj".to_string());
+    let cube_mesh = mesh::obj::get_mesh_from_obj("./data/obj/cube.obj".to_string());
     // let cube_mesh = mesh::primitive::make_box(1.0, 1.0, 1.0);
 
     // Assign the mesh to a new entity

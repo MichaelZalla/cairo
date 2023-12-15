@@ -9,7 +9,7 @@ use cairo::{
     fs::get_absolute_filepath,
     graphics::{Graphics, PixelBuffer},
     matrix::Mat4,
-    mesh::get_mesh_from_obj,
+    mesh::obj::get_mesh_from_obj,
     scene::{
         camera::Camera,
         light::{AmbientLight, DirectionalLight, PointLight},
