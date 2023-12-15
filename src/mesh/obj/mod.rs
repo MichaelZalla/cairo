@@ -200,8 +200,10 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
 
     return Mesh::new(
         vertices,
+        uv_coordinates,
         vertex_normals,
         face_vertex_indices,
+        face_vertex_uv_coordinate_indices,
         face_vertex_normal_indices,
     );
 }

@@ -1,4 +1,4 @@
-use crate::vec::vec3::Vec3;
+use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
 
@@ -86,7 +86,13 @@ pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
     face_vertex_indices.push((1, 3, 7));
     face_vertex_indices.push((7, 5, 1));
 
-    // Generates dummy normals to prevent vertex-duplication per face;
+    // Generates dummy texture coordinates
+    // @TODO Generate correct vertex texture coordinates!
+
+    let vertex_uv_coordinates: Vec<Vec2> = vec![];
+
+    // Generates dummy normals
+    // @TODO Generate correct vertex normals!
 
     let mut vertex_normals: Vec<Vec3> = vec![];
 
@@ -98,5 +104,16 @@ pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
         })
     }
 
-    return Mesh::new(vertices, vertex_normals, face_vertex_indices, vec![]);
+    let face_vertex_uv_coordinate_indices: Vec<(usize, usize, usize)> = vec![];
+
+    let face_vertex_normal_indices: Vec<(usize, usize, usize)> = vec![];
+
+    return Mesh::new(
+        vertices,
+        vertex_uv_coordinates,
+        vertex_normals,
+        face_vertex_indices,
+        face_vertex_uv_coordinate_indices,
+        face_vertex_normal_indices,
+    );
 }

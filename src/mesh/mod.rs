@@ -1,4 +1,5 @@
 use crate::color;
+use crate::vec::vec2::Vec2;
 use crate::vertex::default_vertex_in::DefaultVertexIn;
 
 use super::vec::vec3::Vec3;
@@ -27,8 +28,10 @@ impl<'a> Default for &'a Mesh {
 impl Mesh {
     pub fn new(
         vertices: Vec<Vec3>,
+        uv_coordinates: Vec<Vec2>,
         vertex_normals: Vec<Vec3>,
         face_vertex_indices: Vec<(usize, usize, usize)>,
+        face_vertex_uv_coordinate_indices: Vec<(usize, usize, usize)>,
         face_vertex_normal_indices: Vec<(usize, usize, usize)>,
     ) -> Self {
         let vertices_len = vertices.len();
