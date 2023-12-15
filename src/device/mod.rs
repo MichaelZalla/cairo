@@ -4,11 +4,34 @@ use sdl2::{
     controller::{Axis, Button},
     haptic::Haptic,
     keyboard::Keycode,
-    mouse::MouseWheelDirection,
+    mouse::{MouseButton, MouseWheelDirection},
 };
 
-#[derive(Clone)]
+#[derive(Default, Copy, Clone)]
+pub enum MouseEventKind {
+    #[default]
+    Down,
+    Up,
+}
+
+#[derive(Copy, Clone)]
+pub struct MouseEvent {
+    pub button: MouseButton,
+    pub kind: MouseEventKind,
+}
+
+impl Default for MouseEvent {
+    fn default() -> Self {
+        return MouseEvent {
+            button: MouseButton::Unknown,
+            kind: MouseEventKind::Down,
+        };
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct MouseState {
+    pub button_event: Option<MouseEvent>,
     pub position: (i32, i32),
     pub wheel_did_move: bool,
     pub wheel_y: i32,
@@ -18,6 +41,7 @@ pub struct MouseState {
 impl MouseState {
     pub fn new() -> Self {
         return MouseState {
+            button_event: None,
             position: (0, 0),
             wheel_did_move: false,
             wheel_y: 0,

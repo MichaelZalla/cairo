@@ -1,11 +1,16 @@
+use std::collections::HashSet;
+
 use rand::Rng;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 use sdl2::render::BlendMode;
 
 use crate::debug_print;
-use crate::device::{GameController, GameControllerState, KeyboardState, MouseState};
+use crate::device::{
+    GameController, GameControllerState, KeyboardState, MouseEvent, MouseEventKind, MouseState,
+};
 
 use crate::context::{get_application_context, get_backbuffer, ApplicationContext};
 
@@ -73,8 +78,7 @@ where
 
         let mut rng = rand::thread_rng();
 
-        let mut last_known_mouse_x = 0;
-        let mut last_known_mouse_y = 0;
+        let mut prev_mouse_clicks = HashSet::new();
 
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
 
@@ -122,11 +126,10 @@ where
                 match event {
                     Event::Quit { .. } => break 'main,
 
-                    Event::MouseMotion { x, y, .. } => {
-                        last_known_mouse_x = x;
-                        last_known_mouse_y = y;
-                    }
-
+                    // Event::MouseMotion { x, y, .. } => {
+                    //     last_known_mouse_x = x;
+                    //     last_known_mouse_y = y;
+                    // }
                     Event::MouseWheel { direction, y, .. } => {
                         mouse_state.wheel_did_move = true;
                         mouse_state.wheel_direction = direction;
@@ -175,12 +178,63 @@ where
                 }
             }
 
+            // Read the current mouse state
+
+            let current_mouse_state = self.context.events.mouse_state();
+
+            // Read any mouse click signals
+
+            let mouse_clicks = current_mouse_state.pressed_mouse_buttons().collect();
+
+            // Get the difference between the old and new signals
+
+            let old_mouse_clicks = &prev_mouse_clicks - &mouse_clicks;
+            let new_mouse_clicks = &mouse_clicks - &prev_mouse_clicks;
+
+            // Use the difference to construct any button-click event(s)
+
+            if !new_mouse_clicks.is_empty() || !old_mouse_clicks.is_empty() {
+                let mut is_down: bool = false;
+
+                let source = if !new_mouse_clicks.is_empty() {
+                    is_down = true;
+                    new_mouse_clicks
+                } else {
+                    old_mouse_clicks
+                };
+
+                let button: MouseButton = source
+                    .into_iter()
+                    .collect::<Vec<MouseButton>>()
+                    .first()
+                    .unwrap()
+                    .to_owned();
+
+                match button {
+                    MouseButton::Left | MouseButton::Right | MouseButton::Middle => {
+                        mouse_state.button_event = Some(MouseEvent {
+                            button,
+                            kind: if is_down {
+                                MouseEventKind::Down
+                            } else {
+                                MouseEventKind::Up
+                            },
+                        })
+                    }
+                    _ => {
+                        // Do nothing?
+                    }
+                }
+            }
+
+            prev_mouse_clicks = mouse_clicks;
+
             prev_game_controller_state = game_controller.state.clone();
 
             // Cache input device states
 
-            mouse_state.position.0 = last_known_mouse_x;
-            mouse_state.position.1 = last_known_mouse_y;
+            mouse_state.position.0 = current_mouse_state.x();
+            mouse_state.position.1 = current_mouse_state.y();
 
             // Update current scene
 
