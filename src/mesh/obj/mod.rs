@@ -19,6 +19,7 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
     let mut vertex_normals: Vec<Vec3> = vec![];
     let mut uv_coordinates: Vec<Vec2> = vec![];
     let mut face_vertex_indices: Vec<(usize, usize, usize)> = vec![];
+    let mut face_vertex_uv_coordinate_indices: Vec<(usize, usize, usize)> = vec![];
     let mut face_vertex_normal_indices: Vec<(usize, usize, usize)> = vec![];
 
     for (_, line) in lines.enumerate() {
@@ -112,17 +113,46 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                     v3.next().unwrap().parse::<usize>().unwrap() - 1,
                                 ));
 
-                                let result = v1.next();
+                                let v1_uv_coordinate_index = v1.next();
+                                let v2_uv_coordinate_index = v2.next();
+                                let v3_uv_coordinate_index = v3.next();
 
-                                match result {
+                                match v1_uv_coordinate_index {
+                                    Some(index) => {
+                                        if index != "" {
+                                            face_vertex_uv_coordinate_indices.push((
+                                                v1_uv_coordinate_index
+                                                    .unwrap()
+                                                    .parse::<usize>()
+                                                    .unwrap()
+                                                    - 1,
+                                                v2_uv_coordinate_index
+                                                    .unwrap()
+                                                    .parse::<usize>()
+                                                    .unwrap()
+                                                    - 1,
+                                                v3_uv_coordinate_index
+                                                    .unwrap()
+                                                    .parse::<usize>()
+                                                    .unwrap()
+                                                    - 1,
+                                            ));
+                                        }
+                                    }
+                                    None => (),
+                                }
+
+                                let v1_normal_index = v1.next();
+
+                                match v1_normal_index {
                                     Some(_) => {
-                                        v2.next();
-                                        v3.next();
+                                        let v2_normal_index = v2.next();
+                                        let v3_normal_index = v3.next();
 
                                         face_vertex_normal_indices.push((
-                                            v1.next().unwrap().parse::<usize>().unwrap() - 1,
-                                            v2.next().unwrap().parse::<usize>().unwrap() - 1,
-                                            v3.next().unwrap().parse::<usize>().unwrap() - 1,
+                                            v1_normal_index.unwrap().parse::<usize>().unwrap() - 1,
+                                            v2_normal_index.unwrap().parse::<usize>().unwrap() - 1,
+                                            v3_normal_index.unwrap().parse::<usize>().unwrap() - 1,
                                         ));
                                     }
                                     None => (),
@@ -158,6 +188,10 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
     println!(
         "  > Face vertex indices: {} ((usize, usize, usize))",
         face_vertex_indices.len()
+    );
+    println!(
+        "  > Face vertex UV-coordinate indices: {} ((usize, usize, usize))",
+        face_vertex_uv_coordinate_indices.len()
     );
     println!(
         "  > Face vertex normal indices: {} ((usize, usize, usize))",
