@@ -3,11 +3,14 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use crate::{
+    collision::oct_tree::OctTreeNode,
+    color,
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::Graphics,
     matrix::Mat4,
+    mesh::primitive::make_box,
     pipeline::{Pipeline, PipelineOptions},
     scene::{
         camera::Camera,

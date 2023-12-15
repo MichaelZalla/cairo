@@ -164,7 +164,7 @@ impl Effect for DefaultEffect {
 
         // Calculate our color based on mesh color and light intensities
 
-        let color = *out
+        let mut color = *out
             .c
             .get_hadamard(
                 ambient_contribution
