@@ -19,7 +19,7 @@ impl fmt::Display for Vec4 {
 }
 
 impl Vec4 {
-    pub fn new(v: Vec3, w: f32) -> Self {
+    pub const fn new(v: Vec3, w: f32) -> Self {
         return Vec4 {
             x: v.x,
             y: v.y,
@@ -171,3 +171,30 @@ impl Vec4 {
         return self;
     }
 }
+
+pub const UP: Vec4 = Vec4::new(
+    Vec3 {
+        x: 0.0,
+        y: -1.0,
+        z: 0.0,
+    },
+    1.0,
+);
+
+pub const LEFT: Vec4 = Vec4::new(
+    Vec3 {
+        x: -1.0,
+        y: 0.0,
+        z: 0.0,
+    },
+    1.0,
+);
+
+pub const FORWARD: Vec4 = Vec4::new(
+    Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    },
+    1.0,
+);

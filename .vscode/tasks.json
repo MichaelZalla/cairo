@@ -27,6 +27,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example spinning-cube",
+      "windows": {
+        "command": "cargo run --example spinning-cube"
+      },
+      "linux": {
+        "command": "cargo run --example spinning-cube"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example multiple-scenes",
       "windows": {
         "command": "cargo run --example multiple-scenes"
