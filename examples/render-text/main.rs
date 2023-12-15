@@ -23,6 +23,11 @@ fn main() -> Result<(), String> {
 
             let args: Vec<String> = env::args().collect();
 
+            if args.len() < 2 {
+                println!("Usage: cargo run --example render-text /path/to/your-font.fon");
+                return Ok(());
+            }
+
             let font_path = get_absolute_filepath(&args[1]);
 
             let mut font = ttf_context.load_font(font_path, 128)?;
