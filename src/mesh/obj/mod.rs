@@ -151,13 +151,16 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
         }
     }
 
-    println!("Parsed mesh from OBJ file ({})", filepath);
-    println!("  > Vertices: {}", vertices.len());
-    println!("  > UV coordinates: {}", uv_coordinates.len());
-    println!("  > Vertex normals: {}", vertex_normals.len());
-    println!("  > Face vertex indices: {}", face_vertex_indices.len());
+    println!("Parsed mesh from OBJ file (\"{}\"):", filepath);
+    println!("  > Vertices: {} (Vec3)", vertices.len());
+    println!("  > UV coordinates: {} (Vec2)", uv_coordinates.len());
+    println!("  > Vertex normals: {} (Vec3)", vertex_normals.len());
     println!(
-        "  > Face vertex normal indices: {}",
+        "  > Face vertex indices: {} ((usize, usize, usize))",
+        face_vertex_indices.len()
+    );
+    println!(
+        "  > Face vertex normal indices: {} ((usize, usize, usize))",
         face_vertex_normal_indices.len()
     );
 
