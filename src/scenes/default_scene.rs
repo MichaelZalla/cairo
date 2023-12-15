@@ -1,18 +1,19 @@
-use std::{f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use sdl2::keyboard::Keycode;
 
 use crate::{
-    collision::oct_tree::OctTreeNode,
-    color,
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::Graphics,
     matrix::Mat4,
-    mesh::primitive::make_box,
     pipeline::{Pipeline, PipelineOptions},
-    scene::Scene,
+    scene::{
+        camera::Camera,
+        light::{AmbientLight, DirectionalLight, PointLight},
+        Scene,
+    },
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
@@ -33,74 +34,30 @@ impl DefaultSceneOptions {
 
 pub struct DefaultScene<'a> {
     options: DefaultSceneOptions,
-
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-
     screen_width: u32,
     screen_height: u32,
-    horizontal_fov_rad: f32,
-    vertical_fov_rad: f32,
-
+    cameras: Vec<Camera>,
+    active_camera_index: usize,
+    ambient_light: AmbientLight,
+    directional_light: DirectionalLight,
+    point_light: PointLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-
-    camera_position: Vec4,
-    camera_rotation_inverse_transform: Mat4,
-    camera_movement_speed: f32,
-    camera_roll: f32,
-    camera_roll_speed: f32,
-
-    point_light_distance_from_camera: f32,
 
     prev_mouse_state: MouseState,
 }
 
 impl<'a> DefaultScene<'a> {
-    pub fn new(graphics: Graphics, entities: &'a RwLock<Vec<&'a mut Entity<'a>>>) -> Self {
+    pub fn new(
+        graphics: Graphics,
+        camera: Camera,
+        ambient_light: AmbientLight,
+        directional_light: DirectionalLight,
+        point_light: PointLight,
+        entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+    ) -> Self {
         let options = DefaultSceneOptions::new();
-
-        let camera_position = Vec4::new(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            1.0,
-        );
-
-        let camera_rotation_inverse_transform = Mat4::identity();
-
-        let camera_movement_speed = 150.0;
-
-        let camera_roll = 0.0;
-        let camera_roll_speed = 6.0;
-
-        let ambient_light = Vec3 {
-            x: 0.1,
-            y: 0.1,
-            z: 0.1,
-        };
-
-        let diffuse_light = Vec3 {
-            x: 0.3,
-            y: 0.3,
-            z: 0.3,
-        };
-
-        let diffuse_light_direction = Vec4 {
-            x: 0.25,
-            y: -1.0,
-            z: -0.25,
-            w: 1.0,
-        };
-
-        let point_light = Vec3 {
-            x: 0.4,
-            y: 0.4,
-            z: 0.4,
-        };
-
-        let point_light_position = Vec3::new();
 
         let pipeline_options = crate::pipeline::PipelineOptions {
             should_render_wireframe: false,
@@ -118,27 +75,15 @@ impl<'a> DefaultScene<'a> {
 			Mat4::scaling(0.5)/* *
 			Mat4::translation(entity.position)*/;
 
-        let camera_position_inverse = camera_position * -1.0;
-
         let view_transform = Mat4::translation(Vec3 {
-            x: camera_position_inverse.x,
-            y: camera_position_inverse.y,
-            z: camera_position_inverse.z,
+            x: camera.position_inverse.x,
+            y: camera.position_inverse.y,
+            z: camera.position_inverse.z,
         });
 
         let world_view_transform = world_transform * view_transform;
 
-        // let projection_transform = Mat4::projection(
-        // 	2.0 * graphics.buffer.width_over_height,
-        // 	2.0,
-        // 	1.0,
-        // 	10.0,
-        // );
-
         let aspect_ratio = graphics.buffer.width_over_height;
-
-        let horizontal_fov_rad = PI * (FIELD_OF_VIEW) / 180.0;
-        let vertical_fov_rad = PI * (FIELD_OF_VIEW / aspect_ratio) / 180.0;
 
         let projection_transform = Mat4::projection_for_fov(
             FIELD_OF_VIEW,
@@ -153,10 +98,8 @@ impl<'a> DefaultScene<'a> {
                 world_view_transform,
                 projection_transform,
                 ambient_light,
-                diffuse_light,
-                diffuse_light_direction,
+                directional_light,
                 point_light,
-                point_light_position,
             ),
             pipeline_options,
         );
@@ -166,16 +109,13 @@ impl<'a> DefaultScene<'a> {
             pipeline,
             pipeline_options,
             entities,
-            camera_position,
-            camera_rotation_inverse_transform,
-            camera_movement_speed,
-            camera_roll,
-            camera_roll_speed,
-            point_light_distance_from_camera: 20.0,
+            cameras: vec![camera],
+            active_camera_index: 0,
+            ambient_light,
+            directional_light,
+            point_light,
             screen_width,
             screen_height,
-            horizontal_fov_rad,
-            vertical_fov_rad,
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -204,25 +144,30 @@ impl<'a> Scene for DefaultScene<'a> {
 
         // Apply camera rotation based on mouse position delta
 
-        self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform
+        let camera = self.cameras[self.active_camera_index].borrow_mut();
+
+        camera.rotation_inverse_transform = camera.rotation_inverse_transform
             * Mat4::rotation_y(-mouse_x_delta * 2.0 * PI)
             * Mat4::rotation_x(-mouse_y_delta * 2.0 * PI);
 
-        let camera_movement_step = self.camera_movement_speed * delta_t_seconds;
-        let camera_roll_step = self.camera_roll_speed * delta_t_seconds;
+        let camera_movement_step = camera.movement_speed * delta_t_seconds;
+        let camera_roll_step = camera.roll_speed * delta_t_seconds;
 
-        let camera_rotation_inverse_transposed =
-            self.camera_rotation_inverse_transform.transposed();
+        camera.rotation_inverse_transposed = camera.rotation_inverse_transform.transposed();
 
         // Translate point light relative to camera based on mousewheel delta
 
         if mouse_state.wheel_did_move {
             match mouse_state.wheel_direction {
                 sdl2::mouse::MouseWheelDirection::Normal => {
-                    self.point_light_distance_from_camera += mouse_state.wheel_y as f32 / 4.0;
+                    self.point_light.distance_from_active_camera +=
+                        mouse_state.wheel_y as f32 / 4.0;
 
-                    self.point_light_distance_from_camera =
-                        self.point_light_distance_from_camera.min(30.0).max(5.0);
+                    self.point_light.distance_from_active_camera = self
+                        .point_light
+                        .distance_from_active_camera
+                        .min(30.0)
+                        .max(5.0);
                 }
                 _ => {}
             }
@@ -258,36 +203,36 @@ impl<'a> Scene for DefaultScene<'a> {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::Up | Keycode::W { .. } => {
-                    self.camera_position +=
-                        forward * camera_movement_step * camera_rotation_inverse_transposed;
+                    camera.position +=
+                        forward * camera_movement_step * camera.rotation_inverse_transposed;
                 }
                 Keycode::Down | Keycode::S { .. } => {
-                    self.camera_position -=
-                        forward * camera_movement_step * camera_rotation_inverse_transposed;
+                    camera.position -=
+                        forward * camera_movement_step * camera.rotation_inverse_transposed;
                 }
                 Keycode::Left | Keycode::A { .. } => {
-                    self.camera_position +=
-                        left * camera_movement_step * camera_rotation_inverse_transposed;
+                    camera.position +=
+                        left * camera_movement_step * camera.rotation_inverse_transposed;
                 }
                 Keycode::Right | Keycode::D { .. } => {
-                    self.camera_position -=
-                        left * camera_movement_step * camera_rotation_inverse_transposed;
+                    camera.position -=
+                        left * camera_movement_step * camera.rotation_inverse_transposed;
                 }
                 Keycode::Q { .. } => {
-                    self.camera_position -=
-                        up * camera_movement_step * camera_rotation_inverse_transposed;
+                    camera.position -=
+                        up * camera_movement_step * camera.rotation_inverse_transposed;
                 }
                 Keycode::E { .. } => {
-                    self.camera_position +=
-                        up * camera_movement_step * camera_rotation_inverse_transposed;
+                    camera.position +=
+                        up * camera_movement_step * camera.rotation_inverse_transposed;
                 }
                 Keycode::Z { .. } => {
-                    self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform
-                        * Mat4::rotation_z(-camera_roll_step);
+                    camera.rotation_inverse_transform =
+                        camera.rotation_inverse_transform * Mat4::rotation_z(-camera_roll_step);
                 }
                 Keycode::C { .. } => {
-                    self.camera_rotation_inverse_transform =
-                        self.camera_rotation_inverse_transform * Mat4::rotation_z(camera_roll_step);
+                    camera.rotation_inverse_transform =
+                        camera.rotation_inverse_transform * Mat4::rotation_z(camera_roll_step);
                 }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
@@ -327,17 +272,15 @@ impl<'a> Scene for DefaultScene<'a> {
         }
 
         if game_controller_state.buttons.dpad_up {
-            self.camera_position +=
-                forward * camera_movement_step * camera_rotation_inverse_transposed;
+            camera.position += forward * camera_movement_step * camera.rotation_inverse_transposed;
         } else if game_controller_state.buttons.dpad_down {
-            self.camera_position -=
-                forward * camera_movement_step * camera_rotation_inverse_transposed;
+            camera.position -= forward * camera_movement_step * camera.rotation_inverse_transposed;
         } else if game_controller_state.buttons.dpad_left {
-            self.camera_rotation_inverse_transform =
-                self.camera_rotation_inverse_transform * Mat4::rotation_z(-camera_roll_step);
+            camera.rotation_inverse_transform =
+                camera.rotation_inverse_transform * Mat4::rotation_z(-camera_roll_step);
         } else if game_controller_state.buttons.dpad_right {
-            self.camera_rotation_inverse_transform =
-                self.camera_rotation_inverse_transform * Mat4::rotation_z(camera_roll_step);
+            camera.rotation_inverse_transform =
+                camera.rotation_inverse_transform * Mat4::rotation_z(camera_roll_step);
         }
 
         let left_joystick_position_normalized = Vec2 {
@@ -347,19 +290,15 @@ impl<'a> Scene for DefaultScene<'a> {
         };
 
         if left_joystick_position_normalized.x > 0.5 {
-            self.camera_position -=
-                left * camera_movement_step * camera_rotation_inverse_transposed;
+            camera.position -= left * camera_movement_step * camera.rotation_inverse_transposed;
         } else if left_joystick_position_normalized.x < -0.5 {
-            self.camera_position +=
-                left * camera_movement_step * camera_rotation_inverse_transposed;
+            camera.position += left * camera_movement_step * camera.rotation_inverse_transposed;
         }
 
         if left_joystick_position_normalized.y > 0.5 {
-            self.camera_position -=
-                forward * camera_movement_step * camera_rotation_inverse_transposed;
+            camera.position -= forward * camera_movement_step * camera.rotation_inverse_transposed;
         } else if left_joystick_position_normalized.y < -0.5 {
-            self.camera_position +=
-                forward * camera_movement_step * camera_rotation_inverse_transposed;
+            camera.position += forward * camera_movement_step * camera.rotation_inverse_transposed;
         }
 
         let right_joystick_position_normalized = Vec2 {
@@ -372,10 +311,10 @@ impl<'a> Scene for DefaultScene<'a> {
         let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
         let roll_delta = -yaw_delta * 0.5;
 
-        self.camera_roll += roll_delta;
-        self.camera_roll = self.camera_roll % (2.0 * PI);
+        camera.roll += roll_delta;
+        camera.roll = camera.roll % (2.0 * PI);
 
-        self.camera_rotation_inverse_transform = self.camera_rotation_inverse_transform
+        camera.rotation_inverse_transform = camera.rotation_inverse_transform
             * Mat4::rotation_y(yaw_delta)
             * Mat4::rotation_x(pitch_delta)
             * Mat4::rotation_z(-yaw_delta * 0.5);
@@ -401,7 +340,7 @@ impl<'a> Scene for DefaultScene<'a> {
             * Mat4::rotation_z(entity.rotation.z)
             * Mat4::translation(entity.position);
 
-        let camera_translation_inverse = self.camera_position * -1.0;
+        let camera_translation_inverse = camera.position * -1.0;
 
         let camera_translation_inverse_transform = Mat4::translation(Vec3 {
             x: camera_translation_inverse.x,
@@ -410,7 +349,7 @@ impl<'a> Scene for DefaultScene<'a> {
         });
 
         let view_transform =
-            camera_translation_inverse_transform * self.camera_rotation_inverse_transform;
+            camera_translation_inverse_transform * camera.rotation_inverse_transform;
 
         let world_view_transform = world_transform * view_transform;
 
@@ -435,7 +374,7 @@ impl<'a> Scene for DefaultScene<'a> {
 
         // Point light position translation via mouse input
 
-        let point_light_position = forward * self.point_light_distance_from_camera;
+        let point_light_position = forward * self.point_light.distance_from_active_camera;
 
         // point_light_position.y = 5.0 - (10.0 * nds_mouse_y);
         // point_light_position.x = -5.0 + (10.0 * nds_mouse_x);

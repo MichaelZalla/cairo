@@ -1,5 +1,8 @@
 use super::device::{GameControllerState, KeyboardState, MouseState};
 
+pub mod camera;
+pub mod light;
+
 pub trait Scene {
     fn update(
         &mut self,
@@ -7,8 +10,9 @@ pub trait Scene {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
         delta_t_seconds: f32,
-    ) -> ();
+    );
 
-    fn render(&mut self) -> ();
+    fn render(&mut self);
+
     fn get_pixel_data(&self) -> &Vec<u32>;
 }

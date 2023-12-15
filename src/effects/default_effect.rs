@@ -2,6 +2,7 @@ use crate::{
     color::{self, Color},
     effect::Effect,
     matrix::Mat4,
+    scene::light::{AmbientLight, DirectionalLight, PointLight},
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -10,14 +11,9 @@ pub struct DefaultEffect {
     world_view_transform: Mat4,
     projection_transform: Mat4,
     world_view_projection_transform: Mat4,
-    ambient_light: Vec3,
-    diffuse_light: Vec3,
-    diffuse_light_direction: Vec4,
-    point_light: Vec3,
-    point_light_position: Vec3,
-    constant_attenuation: f32,
-    linear_attenuation: f32,
-    quadratic_attenuation: f32,
+    ambient_light: AmbientLight,
+    directional_light: DirectionalLight,
+    point_light: PointLight,
     specular_intensity: f32,
     specular_power: i32,
     fog_near_z: f32,
@@ -29,24 +25,17 @@ impl DefaultEffect {
     pub fn new(
         world_view_transform: Mat4,
         projection_transform: Mat4,
-        ambient_light: Vec3,
-        diffuse_light: Vec3,
-        diffuse_light_direction: Vec4,
-        point_light: Vec3,
-        point_light_position: Vec3,
+        ambient_light: AmbientLight,
+        directional_light: DirectionalLight,
+        point_light: PointLight,
     ) -> Self {
         return DefaultEffect {
             world_view_transform,
             projection_transform,
             world_view_projection_transform: world_view_transform * projection_transform,
             ambient_light,
-            diffuse_light,
-            diffuse_light_direction,
+            directional_light,
             point_light,
-            point_light_position,
-            constant_attenuation: 0.382,
-            linear_attenuation: 1.0,
-            quadratic_attenuation: 2.619,
             specular_intensity: 1.0,
             specular_power: 10,
             fog_near_z: 25.0,
@@ -69,24 +58,8 @@ impl DefaultEffect {
             self.world_view_transform * self.projection_transform;
     }
 
-    pub fn set_ambient_light(&mut self, light: Vec3) {
-        self.ambient_light = light;
-    }
-
-    pub fn set_diffuse_light(&mut self, light: Vec3) {
-        self.diffuse_light = light;
-    }
-
-    pub fn set_diffuse_light_direction(&mut self, normal: Vec4) {
-        self.diffuse_light_direction = normal;
-    }
-
-    pub fn set_point_light(&mut self, light: Vec3) {
-        self.point_light = light;
-    }
-
-    pub fn set_point_light_position(&mut self, pos: Vec3) {
-        self.point_light_position = pos;
+    pub fn set_point_light_position(&mut self, position: Vec3) {
+        self.point_light.position = position;
     }
 }
 
@@ -131,43 +104,50 @@ impl Effect for DefaultEffect {
             z: surface_normal.z,
         };
 
-        // Calculate diffuse light intensity
+        // Ambient light contribution
 
-        let diffuse_light_direction_world_view =
-            (self.diffuse_light_direction * self.world_view_transform).as_normal();
+        let ambient_contribution = self.ambient_light.intensities;
 
-        let diffuse_intensity = self.diffuse_light
-            * (0.0 as f32).max((surface_normal_vec3 * -1.0).dot(Vec3 {
-                x: diffuse_light_direction_world_view.x,
-                y: diffuse_light_direction_world_view.y,
-                z: diffuse_light_direction_world_view.z,
-            }));
+        // Calculate directional light intensity
+
+        let directional_light_direction_world_view =
+            (self.directional_light.direction * self.world_view_transform).as_normal();
+
+        let directional_light_contribution = self.directional_light.intensities
+            * (0.0 as f32).max((surface_normal_vec3 * -1.0).dot(
+                Vec3 {
+                    x: directional_light_direction_world_view.x,
+                    y: directional_light_direction_world_view.y,
+                    z: directional_light_direction_world_view.z,
+                },
+                // Vec4::new(self.directional_light_direction, 1.0) * self.world_view_projection_transform
+            ));
 
         // Calculate point light intensity
 
-        let vertex_to_point_light = self.point_light_position - out.world_pos;
+        let vertex_to_point_light = self.point_light.position - out.world_pos;
         let distance_to_point_light = vertex_to_point_light.mag();
         let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
 
         let likeness = normal_to_point_light.dot(surface_normal_vec3 * -1.0);
 
         let attentuation = 1.0
-            / (self.quadratic_attenuation * distance_to_point_light.powi(2)
-                + self.linear_attenuation * distance_to_point_light
-                + self.constant_attenuation);
+            / (self.point_light.quadratic_attenuation * distance_to_point_light.powi(2)
+                + self.point_light.linear_attenuation * distance_to_point_light
+                + self.point_light.constant_attenuation);
 
-        let mut point_intensity: Vec3 = Vec3::new();
-        let mut specular_intensity: Vec3 = Vec3::new();
+        let mut point_light_contribution: Vec3 = Vec3::new();
+        let mut specular_contribution: Vec3 = Vec3::new();
 
         if likeness < 0.0 {
-            point_intensity = self.point_light
+            point_light_contribution = self.point_light.intensities
                 * attentuation
                 * (0.0 as f32).max(surface_normal_vec3.dot(normal_to_point_light));
 
             // Calculate specular light intensity
 
             // point light projected onto surface normal
-            let w = surface_normal_vec3 * self.point_light.dot(surface_normal_vec3);
+            let w = surface_normal_vec3 * self.point_light.intensities.dot(surface_normal_vec3);
 
             // vector to reflected light ray
             let r = w * 2.0 - vertex_to_point_light;
@@ -175,7 +155,7 @@ impl Effect for DefaultEffect {
             // normal for reflected light
             let r_inverse_hat = r.as_normal() * -1.0;
 
-            specular_intensity = self.point_light
+            specular_contribution = self.point_light.intensities
                 * self.specular_intensity
                 * (0.0 as f32)
                     .max(r_inverse_hat.dot(out.world_pos.as_normal()))
@@ -184,11 +164,13 @@ impl Effect for DefaultEffect {
 
         // Calculate our color based on mesh color and light intensities
 
-        let mut color = interpolant.c.clone();
-
-        color = *color
+        let color = *out
+            .c
             .get_hadamard(
-                self.ambient_light + diffuse_intensity + point_intensity + specular_intensity,
+                ambient_contribution
+                    + directional_light_contribution
+                    + point_light_contribution
+                    + specular_contribution,
             )
             .saturate()
             * 255.0;

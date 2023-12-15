@@ -8,9 +8,15 @@ use cairo::{
     entity::Entity,
     fs::get_absolute_filepath,
     graphics::{Graphics, PixelBuffer},
+    matrix::Mat4,
     mesh::get_mesh_from_obj,
-    scene::Scene,
+    scene::{
+        camera::Camera,
+        light::{AmbientLight, DirectionalLight, PointLight},
+        Scene,
+    },
     scenes::default_scene::DefaultScene,
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 use sdl2::keyboard::Keycode;
 
@@ -19,6 +25,72 @@ static WINDOW_WIDTH: u32 = 1080;
 static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
+    // Import mesh data
+    let cube_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/cube.obj"));
+    let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/teapot.obj"));
+
+    // Assign meshes to new entities
+    let mut cube_entity = Entity::new(&cube_mesh);
+    let mut teapot_entity = Entity::new(&teapot_mesh);
+
+    // Wrap the entity collection in a memory-safe container
+    let entities: Vec<&mut Entity> = vec![&mut cube_entity];
+    let entities_rwl = RwLock::new(entities);
+    let entities2 = vec![&mut teapot_entity];
+    let entities2_rwl = RwLock::new(entities2);
+
+    // Set up a camera for rendering our scenes
+    let camera: Camera = Camera::new(
+        Vec4::new(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -5.0,
+            },
+            1.0,
+        ),
+        Mat4::identity(),
+        150.0,
+        0.0,
+        6.0,
+    );
+
+    // Define (shared) lights for our scenes
+    let ambient_light = AmbientLight {
+        intensities: Vec3 {
+            x: 0.1,
+            y: 0.1,
+            z: 0.1,
+        },
+    };
+
+    let directional_light = DirectionalLight {
+        intensities: Vec3 {
+            x: 0.3,
+            y: 0.3,
+            z: 0.3,
+        },
+        direction: Vec4 {
+            x: 0.25,
+            y: -1.0,
+            z: -0.25,
+            w: 1.0,
+        },
+    };
+
+    let point_light = PointLight {
+        intensities: Vec3 {
+            x: 0.4,
+            y: 0.4,
+            z: 0.4,
+        },
+        position: Vec3::new(),
+        distance_from_active_camera: 0.0,
+        constant_attenuation: 0.382,
+        linear_attenuation: 1.0,
+        quadratic_attenuation: 2.619,
+    };
+
     let graphics = Graphics {
         buffer: PixelBuffer {
             width: WINDOW_WIDTH,
@@ -29,22 +101,23 @@ fn main() -> Result<(), String> {
         },
     };
 
-    let cube_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/cube.obj"));
-    let mut cube_entity = Entity::new(&cube_mesh);
-
-    let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/teapot.obj"));
-    let mut teapot_entity = Entity::new(&teapot_mesh);
-
-    let entities: Vec<&mut Entity> = vec![&mut cube_entity];
-
-    let entities2 = vec![&mut teapot_entity];
-
-    let entities_rwl = RwLock::new(entities);
-    let entities2_rwl = RwLock::new(entities2);
-
     let scenes = RefCell::new(vec![
-        DefaultScene::new(graphics.clone(), &entities_rwl),
-        DefaultScene::new(graphics.clone(), &entities2_rwl),
+        DefaultScene::new(
+            graphics.clone(),
+            camera,
+            ambient_light,
+            directional_light,
+            point_light,
+            &entities_rwl,
+        ),
+        DefaultScene::new(
+            graphics.clone(),
+            camera,
+            ambient_light,
+            directional_light,
+            point_light,
+            &entities2_rwl,
+        ),
     ]);
 
     let current_scene_index = RefCell::new(min(0, scenes.borrow().len() - 1));
