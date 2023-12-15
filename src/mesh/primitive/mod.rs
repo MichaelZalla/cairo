@@ -54,37 +54,37 @@ pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
         back_bottom_right,  // 7
     ];
 
-    let mut faces: Vec<Face> = vec![];
+    let mut face_vertex_indices: Vec<Face> = vec![];
 
     // Front face
 
-    faces.push((0, 2, 1));
-    faces.push((2, 3, 1));
+    face_vertex_indices.push((0, 2, 1));
+    face_vertex_indices.push((2, 3, 1));
 
     // Back face
 
-    faces.push((4, 5, 6));
-    faces.push((5, 7, 6));
+    face_vertex_indices.push((4, 5, 6));
+    face_vertex_indices.push((5, 7, 6));
 
     // Top face
 
-    faces.push((4, 0, 5));
-    faces.push((0, 1, 5));
+    face_vertex_indices.push((4, 0, 5));
+    face_vertex_indices.push((0, 1, 5));
 
     // Bottom face
 
-    faces.push((6, 7, 2));
-    faces.push((7, 3, 2));
+    face_vertex_indices.push((6, 7, 2));
+    face_vertex_indices.push((7, 3, 2));
 
     // Left face
 
-    faces.push((4, 6, 0));
-    faces.push((6, 2, 0));
+    face_vertex_indices.push((4, 6, 0));
+    face_vertex_indices.push((6, 2, 0));
 
     // Right face
 
-    faces.push((1, 3, 7));
-    faces.push((7, 5, 1));
+    face_vertex_indices.push((1, 3, 7));
+    face_vertex_indices.push((7, 5, 1));
 
     // Generates dummy normals to prevent vertex-duplication per face;
 
@@ -98,5 +98,5 @@ pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
         })
     }
 
-    return Mesh::new(vertices, faces, vertex_normals, vec![]);
+    return Mesh::new(vertices, vertex_normals, face_vertex_indices, vec![]);
 }

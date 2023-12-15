@@ -31,13 +31,13 @@ impl<'a> Default for &'a Mesh {
 impl Mesh {
     pub fn new(
         vertices: Vec<Vec3>,
-        faces: Vec<Face>,
         vertex_normals: Vec<Vec3>,
-        face_normals: Vec<(usize, usize, usize)>,
+        face_vertex_indices: Vec<Face>,
+        face_vertex_normal_indices: Vec<(usize, usize, usize)>,
     ) -> Self {
-        let mesh_v_len = vertices.len();
-        let mesh_vn_len = vertex_normals.len();
-        let mesh_tn_len = face_normals.len();
+        let vertices_len = vertices.len();
+        let vertex_normals_len = vertex_normals.len();
+        let face_vertex_normal_indices_len = face_vertex_normal_indices.len();
 
         let mut mesh: Mesh = Mesh {
             vertices: vec![],
@@ -50,11 +50,11 @@ impl Mesh {
             z: 1.0,
         };
 
-        if mesh_tn_len == faces.len() {
+        if face_vertex_normal_indices_len == face_vertex_indices.len() {
             // Case 1. 3 vertex normals are defined per face;
 
-            for (face_index, face) in faces.iter().enumerate() {
-                let normal_indices = face_normals[face_index];
+            for (face_index, face) in face_vertex_indices.iter().enumerate() {
+                let normal_indices = face_vertex_normal_indices[face_index];
 
                 mesh.vertices.push(DefaultVertexIn {
                     p: vertices[face.0].clone(),
@@ -80,11 +80,11 @@ impl Mesh {
                 mesh.face_indices
                     .push((face_index * 3, face_index * 3 + 1, face_index * 3 + 2))
             }
-        } else if mesh_vn_len != mesh_v_len {
+        } else if vertex_normals_len != vertices_len {
             // Case 2. No normal data was provided; we'll generate a normal for each
             // face, creating 3 unique Vertex instances for that face;
 
-            for (face_index, face) in faces.iter().enumerate() {
+            for (face_index, face) in face_vertex_indices.iter().enumerate() {
                 let computed_normal = (vertices[face.1] - vertices[face.0])
                     .cross(vertices[face.2] - vertices[face.0])
                     .as_normal();
@@ -115,7 +115,7 @@ impl Mesh {
             }
         }
 
-        if mesh_vn_len == mesh_v_len {
+        if vertex_normals_len == vertices_len {
             // Case 3. One normal is defined per-vertex; no need for duplicate Vertexs;
 
             for (vertex_index, vertex) in vertices.iter().enumerate() {
@@ -127,7 +127,7 @@ impl Mesh {
                 })
             }
 
-            mesh.face_indices = faces;
+            mesh.face_indices = face_vertex_indices;
         }
 
         return mesh;

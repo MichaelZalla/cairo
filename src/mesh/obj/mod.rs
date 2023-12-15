@@ -18,9 +18,9 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
     };
 
     let mut vertices: Vec<Vec3> = vec![];
-    let mut faces: Vec<Face> = vec![];
     let mut vertex_normals: Vec<Vec3> = vec![];
-    let mut face_normals: Vec<(usize, usize, usize)> = vec![];
+    let mut face_vertex_indices: Vec<Face> = vec![];
+    let mut face_vertex_normal_indices: Vec<(usize, usize, usize)> = vec![];
 
     for (_, line) in lines.enumerate() {
         match line {
@@ -50,7 +50,7 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                 let mut y = line_components.next().unwrap().split("/");
                                 let mut z = line_components.next().unwrap().split("/");
 
-                                faces.push((
+                                face_vertex_indices.push((
                                     x.next().unwrap().parse::<usize>().unwrap() - 1,
                                     y.next().unwrap().parse::<usize>().unwrap() - 1,
                                     z.next().unwrap().parse::<usize>().unwrap() - 1,
@@ -63,7 +63,7 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                         y.next();
                                         z.next();
 
-                                        face_normals.push((
+                                        face_vertex_normal_indices.push((
                                             x.next().unwrap().parse::<usize>().unwrap() - 1,
                                             y.next().unwrap().parse::<usize>().unwrap() - 1,
                                             z.next().unwrap().parse::<usize>().unwrap() - 1,
@@ -102,12 +102,17 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
     println!("{}", filepath,);
 
     println!(
-        "  Parsed mesh with {} vertices, {} faces, {} vertex normals, and {} face normals.",
+        "  Parsed mesh with {} vertices, {} vertex normals, {} faces, and {} face normals.",
         vertices.len(),
-        faces.len(),
         vertex_normals.len(),
-        face_normals.len(),
+        face_vertex_indices.len(),
+        face_vertex_normal_indices.len(),
     );
 
-    return Mesh::new(vertices, faces, vertex_normals, face_normals);
+    return Mesh::new(
+        vertices,
+        vertex_normals,
+        face_vertex_indices,
+        face_vertex_normal_indices,
+    );
 }
