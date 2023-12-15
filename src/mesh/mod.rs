@@ -3,6 +3,7 @@ use std::io::{self, BufRead};
 
 use std::path::Path;
 
+use crate::color;
 use crate::vertex::default_vertex_in::DefaultVertexIn;
 
 use super::vec::vec3::Vec3;
@@ -44,11 +45,7 @@ impl Mesh {
             face_indices: vec![],
         };
 
-        let white = Vec3 {
-            x: 1.0,
-            y: 1.0,
-            z: 1.0,
-        };
+        let white = color::WHITE.to_vec3() / 255.0;
 
         if face_vertex_normal_indices_len == face_vertex_indices.len() {
             // Case 1. 3 vertex normals are defined per face;

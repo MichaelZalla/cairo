@@ -51,9 +51,9 @@ impl Color {
 
     pub fn to_vec3(&self) -> Vec3 {
         return Vec3 {
-            x: (self.r as f32) / 255.0,
-            y: (self.g as f32) / 255.0,
-            z: (self.b as f32) / 255.0,
+            x: self.r as f32,
+            y: self.g as f32,
+            z: self.b as f32,
         };
     }
 }
