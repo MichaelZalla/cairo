@@ -1,6 +1,7 @@
 use std::path::Path;
 
-use crate::{mesh::read_lines, vec::vec3::Vec3};
+use crate::fs::read_lines;
+use crate::vec::vec3::Vec3;
 
 use super::Mesh;
 

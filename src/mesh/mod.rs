@@ -1,8 +1,3 @@
-use std::fs::File;
-use std::io::{self, BufRead};
-
-use std::path::Path;
-
 use crate::color;
 use crate::vertex::default_vertex_in::DefaultVertexIn;
 
@@ -129,13 +124,4 @@ impl Mesh {
 
         return mesh;
     }
-}
-
-fn read_lines<P>(filepath: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filepath)?;
-
-    Ok(io::BufReader::new(file).lines())
 }
