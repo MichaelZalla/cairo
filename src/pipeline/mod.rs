@@ -289,8 +289,11 @@ where
     fn transform_to_ndc_space(&mut self, v: &mut T::VertexOut) {
         let w_inverse = 1.0 / v.p.w;
 
-        v.p.x = (v.p.x * w_inverse + 1.0) * self.buffer_width_over_2;
-        v.p.y = (-v.p.y * w_inverse + 1.0) * self.buffer_height_over_2;
+        *v *= w_inverse;
+
+        v.p.x = (v.p.x + 1.0) * self.buffer_width_over_2;
+        v.p.y = (-v.p.y + 1.0) * self.buffer_height_over_2;
+
         v.p.w = w_inverse;
     }
 
@@ -389,7 +392,7 @@ where
         }
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, z: f32, interpolant: &T::VertexOut) {
+    fn set_pixel(&mut self, x: u32, y: u32, z: f32, interpolant: &mut T::VertexOut) {
         if x > (self.graphics.buffer.width - 1)
             || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32
                 - 1)
@@ -399,8 +402,10 @@ where
             return;
         }
 
-        if self.test_and_set_z_buffer(x, y, z) {
-            let color = self.effect.ps(interpolant);
+        if self.test_and_set_z_buffer(x, y, interpolant.p.z) {
+            let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
+
+            let color = self.effect.ps(&linear_space_interpolant);
 
             self.graphics.set_pixel(x, y, color);
         }
@@ -453,7 +458,7 @@ where
 
                 let z = z_start + z_span * x_progress;
 
-                self.set_pixel(x, y, z, &cursor);
+                self.set_pixel(x, y, z, &mut cursor);
 
                 cursor = cursor + cursor_step;
             }
@@ -510,7 +515,7 @@ where
 
                 let z = z_start + z_span * x_progress;
 
-                self.set_pixel(x, y, z, &cursor);
+                self.set_pixel(x, y, z, &mut cursor);
 
                 cursor = cursor + cursor_step;
             }
