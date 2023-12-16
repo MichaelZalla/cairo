@@ -26,147 +26,101 @@ pub fn get_application_context(
     full_screen: bool,
     show_cursor: bool,
 ) -> Result<ApplicationContext, String> {
-    match sdl2::init() {
-        Ok(sdl_context) => {
-            sdl_context.mouse().show_cursor(show_cursor);
+    let sdl_context = sdl2::init()?;
 
-            match sdl_context.timer() {
-                Ok(timer) => {
-                    match sdl_context.game_controller() {
-                        Ok(game_controller_subsystem) => {
-                            let mut game_controllers: Vec<Option<GameController>> = vec![];
+    sdl_context.mouse().show_cursor(show_cursor);
 
-                            for _ in 0..4 {
-                                game_controllers.push(None);
-                            }
+    let timer = sdl_context.timer()?;
 
-                            match game_controller_subsystem.num_joysticks() {
-                                Ok(count) => {
-                                    println!(
-                                        "Initialized game controller subsystem with {} joysticks.",
-                                        count
-                                    );
+    let game_controller_subsystem = sdl_context.game_controller()?;
 
-                                    for joystick_index in 0..count {
-                                        if game_controller_subsystem
-                                            .is_game_controller(joystick_index)
-                                        {
-                                            match game_controller_subsystem.open(joystick_index) {
-                                                Ok(joystick) => {
-                                                    if joystick.attached() {
-                                                        println!(
-                                                            "Controller mapping: {}",
-                                                            joystick.mapping()
-                                                        );
+    let mut game_controllers: Vec<Option<GameController>> = vec![];
 
-                                                        game_controllers[joystick_index as usize] =
-                                                            Some(GameController::new_with_handle(
-                                                                joystick,
-                                                            ));
-                                                    }
-                                                }
-                                                Err(e) => {
-                                                    println!(
-                                                        "Error initializing controller {}: '{}'",
-                                                        joystick_index, e
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+    for _ in 0..4 {
+        game_controllers.push(None);
+    }
 
-                                    match sdl_context.haptic() {
-                                        Ok(haptic_subsystem) => {
-                                            println!("Initialized haptic subsystem.");
+    let count = game_controller_subsystem.num_joysticks()?;
 
-                                            for controller in game_controllers.as_mut_slice() {
-                                                if controller.is_some() {
-                                                    let unwrapped = controller.as_mut().unwrap();
+    println!(
+        "Initialized game controller subsystem with {} joysticks.",
+        count
+    );
 
-                                                    match haptic_subsystem
-                                                        .open_from_joystick_id(unwrapped.id)
-                                                    {
-                                                        Ok(device) => {
-                                                            unwrapped.set_haptic_device(device);
-                                                        }
-                                                        Err(e) => {
-                                                            println!("Error retrieving haptic device for joystick {}: '{}'", unwrapped.id, e);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        Err(e) => {
-                                            println!(
-                                                "Error initializing haptic subsystem: '{}'",
-                                                e
-                                            );
-                                        }
-                                    }
-                                }
-                                Err(e) => {
-                                    println!(
-                                        "Error initializing game controller subsystem: '{}'",
-                                        e
-                                    );
-                                }
-                            }
+    for joystick_index in 0..count {
+        if game_controller_subsystem.is_game_controller(joystick_index) {
+            match game_controller_subsystem.open(joystick_index) {
+                Ok(joystick) => {
+                    if joystick.attached() {
+                        println!("Controller mapping: {}", joystick.mapping());
 
-                            match sdl_context.event_pump() {
-                                Ok(events) => {
-                                    match sdl_context.video() {
-                                        Ok(video_subsystem) => {
-                                            let mut window_builder = video_subsystem.window(
-                                                window_title,
-                                                window_width,
-                                                window_height,
-                                            );
-
-                                            // window_builder.opengl()
-                                            // window_builder.position_centered()
-                                            // window_builder.borderless();
-
-                                            if full_screen {
-                                                // @NOTE(mzalla) Overrides
-                                                // `window_width` and `window_height`
-                                                // for the current desktop resolution;
-                                                window_builder.fullscreen_desktop();
-                                            }
-
-                                            match window_builder.build() {
-                                                Ok(window) => {
-                                                    let screen_width = window.size().0;
-                                                    let screen_height = window.size().1;
-
-                                                    let rendering_context =
-                                                        get_application_rendering_context(window)
-                                                            .unwrap();
-
-                                                    Ok(ApplicationContext {
-                                                        screen_width,
-                                                        screen_height,
-                                                        rendering_context,
-                                                        timer,
-                                                        game_controllers,
-                                                        events,
-                                                    })
-                                                }
-                                                Err(e) => Err(e.to_string()),
-                                            }
-                                        }
-                                        Err(e) => Err(e),
-                                    }
-                                }
-                                Err(e) => Err(e),
-                            }
-                        }
-                        Err(e) => Err(e),
+                        game_controllers[joystick_index as usize] =
+                            Some(GameController::new_with_handle(joystick));
                     }
                 }
-                Err(e) => Err(e),
+                Err(e) => {
+                    println!("Error initializing controller {}: '{}'", joystick_index, e)
+                }
             }
         }
-        Err(e) => Err(e),
+    }
+
+    let haptic_subsystem = sdl_context.haptic()?;
+
+    println!("Initialized haptic subsystem.");
+
+    for controller in game_controllers.as_mut_slice() {
+        if controller.is_some() {
+            let unwrapped = controller.as_mut().unwrap();
+
+            match haptic_subsystem.open_from_joystick_id(unwrapped.id) {
+                Ok(device) => {
+                    unwrapped.set_haptic_device(device);
+                }
+                Err(e) => {
+                    println!(
+                        "Error retrieving haptic device for joystick {}: '{}'",
+                        unwrapped.id, e
+                    );
+                }
+            }
+        }
+    }
+
+    let events = sdl_context.event_pump()?;
+
+    let video_subsystem = sdl_context.video()?;
+
+    let mut window_builder = video_subsystem.window(window_title, window_width, window_height);
+
+    // window_builder.opengl()
+    // window_builder.position_centered()
+    // window_builder.borderless();
+
+    if full_screen {
+        // @NOTE(mzalla) Overrides
+        // `window_width` and `window_height`
+        // for the current desktop resolution;
+        window_builder.fullscreen_desktop();
+    }
+
+    match window_builder.build() {
+        Ok(window) => {
+            let screen_width = window.size().0;
+            let screen_height = window.size().1;
+
+            let rendering_context = get_application_rendering_context(window).unwrap();
+
+            Ok(ApplicationContext {
+                screen_width,
+                screen_height,
+                rendering_context,
+                timer,
+                game_controllers,
+                events,
+            })
+        }
+        Err(e) => Err(e.to_string()),
     }
 }
 
