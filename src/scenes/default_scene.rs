@@ -136,14 +136,14 @@ impl<'a> Scene for DefaultScene<'a> {
 
         let mouse_position = mouse_state.position;
 
-        let nds_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
-        let nds_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
+        let ndc_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
+        let ndc_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
 
-        let prev_nds_mouse_x = self.prev_mouse_state.position.0 as f32 / self.screen_width as f32;
-        let prev_nds_mouse_y = self.prev_mouse_state.position.1 as f32 / self.screen_height as f32;
+        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.screen_width as f32;
+        let prev_ndc_mouse_y = self.prev_mouse_state.position.1 as f32 / self.screen_height as f32;
 
-        let mouse_x_delta = nds_mouse_x - prev_nds_mouse_x;
-        let mouse_y_delta = nds_mouse_y - prev_nds_mouse_y;
+        let mouse_x_delta = ndc_mouse_x - prev_ndc_mouse_x;
+        let mouse_y_delta = ndc_mouse_y - prev_ndc_mouse_y;
 
         // Apply camera rotation based on mouse position delta
 
@@ -350,8 +350,8 @@ impl<'a> Scene for DefaultScene<'a> {
         // 	z: 1.0,
         // };
 
-        // rotated_diffuse_light_direction.rotate_along_x(-2.0 * PI * nds_mouse_y * -1.0);
-        // rotated_diffuse_light_direction.rotate_along_y(-2.0 * PI * nds_mouse_x);
+        // rotated_diffuse_light_direction.rotate_along_x(-2.0 * PI * ndc_mouse_y * -1.0);
+        // rotated_diffuse_light_direction.rotate_along_y(-2.0 * PI * ndc_mouse_x);
 
         // self.pipeline.effect.set_diffuse_light_direction(
         // 	rotated_diffuse_light_direction
