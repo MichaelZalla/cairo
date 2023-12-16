@@ -72,15 +72,24 @@ impl ops::MulAssign<Vec2> for Vec2 {
     }
 }
 
-// impl ops::Div<f32> for Vec2 {
-//     type Output = Vec2;
-//     fn div(self, rhs: f32) -> Vec2 {
-//         Vec2{
-// 			x: self.x / rhs,
-// 			y: self.y / rhs,
-// 		}
-//     }
-// }
+impl ops::MulAssign<f32> for Vec2 {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
+    }
+}
+
+impl ops::Div<f32> for Vec2 {
+    type Output = Vec2;
+    fn div(self, rhs: f32) -> Vec2 {
+        Vec2 {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
+    }
+}
 
 // impl ops::Div<Vec2> for Vec2 {
 //     type Output = Vec2;

@@ -90,6 +90,8 @@ impl Effect for DefaultEffect {
 
         out.c = v.c.clone();
 
+        out.uv = v.uv.clone();
+
         return out;
     }
 
@@ -164,8 +166,23 @@ impl Effect for DefaultEffect {
 
         // Calculate our color based on mesh color and light intensities
 
-        let mut color = *out
-            .c
+        let mut color: Vec3;
+
+        let checkerboard_subdivisions = 10.0;
+        let checkerboard_subdivision_size = 1.0 / checkerboard_subdivisions;
+
+        let is_dark_row =
+            out.uv.y % (checkerboard_subdivision_size * 2.0) < checkerboard_subdivision_size;
+        let should_flip =
+            out.uv.x % (checkerboard_subdivision_size * 2.0) < checkerboard_subdivision_size;
+
+        if (!is_dark_row && should_flip) || (is_dark_row && !should_flip) {
+            color = color::BLACK.to_vec3();
+        } else {
+            color = color::WHITE.to_vec3();
+        }
+
+        color = *color
             .get_hadamard(
                 ambient_contribution
                     + directional_light_contribution

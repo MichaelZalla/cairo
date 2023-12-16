@@ -3,13 +3,14 @@ use std::{
     ops::{Add, Div, Mul, MulAssign, Sub},
 };
 
-use crate::vec::{vec3::Vec3, vec4::Vec4};
+use crate::vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4};
 
 #[derive(Copy, Clone, Default)]
 pub struct DefaultVertexOut {
     pub p: Vec4,
     pub n: Vec4,
     pub c: Vec3,
+    pub uv: Vec2,
     pub world_pos: Vec3,
 }
 
@@ -30,6 +31,7 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
             p: self.p + rhs.p,
             n: self.n + rhs.n,
             c: self.c + rhs.c,
+            uv: self.uv + rhs.uv,
             world_pos: self.world_pos + rhs.world_pos,
         }
     }
@@ -42,6 +44,7 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
             p: self.p - rhs.p,
             n: self.n - rhs.n,
             c: self.c - rhs.c,
+            uv: self.uv - rhs.uv,
             world_pos: self.world_pos - rhs.world_pos,
         }
     }
@@ -54,6 +57,7 @@ impl Mul<f32> for DefaultVertexOut {
             p: self.p * scalar,
             n: self.n * scalar,
             c: self.c * scalar,
+            uv: self.uv * scalar,
             world_pos: self.world_pos * scalar,
         }
     }
@@ -64,6 +68,7 @@ impl MulAssign<f32> for DefaultVertexOut {
         self.p *= scalar;
         self.n *= scalar;
         self.c *= scalar;
+        self.uv *= scalar;
         self.world_pos *= scalar;
     }
 }
@@ -75,6 +80,7 @@ impl Div<f32> for DefaultVertexOut {
             p: self.p / scalar,
             n: self.n / scalar,
             c: self.c / scalar,
+            uv: self.uv / scalar,
             world_pos: self.world_pos / scalar,
         }
     }

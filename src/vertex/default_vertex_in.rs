@@ -3,13 +3,14 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::vec::vec3::Vec3;
+use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct DefaultVertexIn {
     pub p: Vec3,
     pub n: Vec3,
     pub c: Vec3,
+    pub uv: Vec2,
     pub world_pos: Vec3,
 }
 
@@ -30,6 +31,7 @@ impl Add<DefaultVertexIn> for DefaultVertexIn {
             p: self.p + rhs.p,
             n: self.n + rhs.n,
             c: self.c + rhs.c,
+            uv: self.uv + rhs.uv,
             world_pos: self.world_pos + rhs.world_pos,
         }
     }
@@ -42,6 +44,7 @@ impl Sub<DefaultVertexIn> for DefaultVertexIn {
             p: self.p - rhs.p,
             n: self.n - rhs.n,
             c: self.c - rhs.c,
+            uv: self.uv - rhs.uv,
             world_pos: self.world_pos - rhs.world_pos,
         }
     }
@@ -54,6 +57,7 @@ impl Mul<f32> for DefaultVertexIn {
             p: self.p * scalar,
             n: self.n * scalar,
             c: self.c * scalar,
+            uv: self.uv * scalar,
             world_pos: self.world_pos * scalar,
         }
     }
@@ -66,6 +70,7 @@ impl Div<f32> for DefaultVertexIn {
             p: self.p / scalar,
             n: self.n / scalar,
             c: self.c / scalar,
+            uv: self.uv / scalar,
             world_pos: self.world_pos / scalar,
         }
     }
