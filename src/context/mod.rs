@@ -6,6 +6,8 @@ use sdl2::{
 
 use super::device::GameController;
 
+const GAME_CONTROLLER_COUNT: usize = 4;
+
 pub struct ApplicationContext {
     pub rendering_context: ApplicationRenderingContext,
     pub screen_width: u32,
@@ -36,7 +38,7 @@ pub fn get_application_context(
 
     let mut game_controllers: Vec<Option<GameController>> = vec![];
 
-    for _ in 0..4 {
+    for _ in 0..GAME_CONTROLLER_COUNT {
         game_controllers.push(None);
     }
 
