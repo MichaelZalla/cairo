@@ -147,11 +147,7 @@ where
             .cross(vertices[2] - vertices[0])
             .as_normal();
 
-        let projected_origin = Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
+        let projected_origin = Vec4::new(Default::default(), 1.0) * self.effect.get_projection();
 
         let dot_product = vertex_normal.dot(
             vertices[0].as_normal()
