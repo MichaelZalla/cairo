@@ -110,7 +110,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         _game_controller_state: &GameControllerState,
-        delta_t_seconds: f32,
+        _delta_t_seconds: f32,
     ) {
         // Calculate mouse position delta
 
@@ -201,16 +201,18 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let mut entities = self.entities.write().unwrap();
 
+        let rotation_speed = 0.001;
+
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta
 
-            entity.rotation.z += 1.0 * PI * delta_t_seconds;
+            entity.rotation.z += 1.0 * rotation_speed * PI;
             entity.rotation.z %= 2.0 * PI;
 
-            entity.rotation.x += 1.0 * PI * delta_t_seconds;
+            entity.rotation.x += 1.0 * rotation_speed * PI;
             entity.rotation.x %= 2.0 * PI;
 
-            entity.rotation.y += 1.0 * PI * delta_t_seconds;
+            entity.rotation.y += 1.0 * rotation_speed * PI;
             entity.rotation.y %= 2.0 * PI;
         }
 
