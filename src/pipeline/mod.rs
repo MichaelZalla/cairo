@@ -287,13 +287,10 @@ where
     }
 
     fn transform_to_ndc_space(&mut self, v: &mut T::VertexOut) {
-        let x_factor = self.buffer_width_over_2;
-        let y_factor = self.buffer_height_over_2;
-
         let w_inverse = 1.0 / v.p.w;
 
-        v.p.x = (v.p.x * w_inverse + 1.0) * x_factor;
-        v.p.y = (-v.p.y * w_inverse + 1.0) * y_factor;
+        v.p.x = (v.p.x * w_inverse + 1.0) * self.buffer_width_over_2;
+        v.p.y = (-v.p.y * w_inverse + 1.0) * self.buffer_height_over_2;
         v.p.w = w_inverse;
     }
 
