@@ -220,14 +220,14 @@ where
 
         let mut triangle1 = Triangle {
             v0: a_prime,
-            v1: v1,
-            v2: v2,
+            v1,
+            v2,
         };
 
         let mut triangle2 = Triangle {
             v0: b_prime,
             v1: a_prime,
-            v2: v2,
+            v2,
         };
 
         self.post_process_triangle_vertices(&mut triangle1);
@@ -244,7 +244,7 @@ where
         let mut triangle = Triangle {
             v0: a_prime,
             v1: b_prime,
-            v2: v2,
+            v2,
         };
 
         self.post_process_triangle_vertices(&mut triangle);
