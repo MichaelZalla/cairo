@@ -56,9 +56,7 @@ impl<'a> SpinningCubeScene<'a> {
         let screen_width = graphics_buffer.width;
         let screen_height = graphics_buffer.height;
 
-        let world_transform =
-			Mat4::scaling(0.5)/* *
-			Mat4::translation(entity.position)*/;
+        let world_transform = Mat4::new();
 
         let view_transform = Mat4::translation(Vec3 {
             x: camera.position_inverse.x,

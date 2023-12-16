@@ -201,41 +201,18 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let mut entities = self.entities.write().unwrap();
 
-        let entity = &mut entities[0];
+        for entity in entities.as_mut_slice() {
+            // Mesh rotation via our time delta
 
-        // Mesh rotation via our time delta
+            entity.rotation.z += 1.0 * PI * delta_t_seconds;
+            entity.rotation.z %= 2.0 * PI;
 
-        entity.rotation.z += 1.0 * PI * delta_t_seconds;
-        entity.rotation.z %= 2.0 * PI;
+            entity.rotation.x += 1.0 * PI * delta_t_seconds;
+            entity.rotation.x %= 2.0 * PI;
 
-        entity.rotation.x += 1.0 * PI * delta_t_seconds;
-        entity.rotation.x %= 2.0 * PI;
-
-        entity.rotation.y += 1.0 * PI * delta_t_seconds;
-        entity.rotation.y %= 2.0 * PI;
-
-        let world_transform = Mat4::scaling(0.5)
-            * Mat4::rotation_x(entity.rotation.x)
-            * Mat4::rotation_y(entity.rotation.y)
-            * Mat4::rotation_z(entity.rotation.z)
-            * Mat4::translation(entity.position);
-
-        let camera_translation_inverse = camera.position * -1.0;
-
-        let camera_translation_inverse_transform = Mat4::translation(Vec3 {
-            x: camera_translation_inverse.x,
-            y: camera_translation_inverse.y,
-            z: camera_translation_inverse.z,
-        });
-
-        let view_transform =
-            camera_translation_inverse_transform * camera.rotation_inverse_transform;
-
-        let world_view_transform = world_transform * view_transform;
-
-        self.pipeline
-            .effect
-            .set_world_view_transform(world_view_transform);
+            entity.rotation.y += 1.0 * PI * delta_t_seconds;
+            entity.rotation.y %= 2.0 * PI;
+        }
 
         self.prev_mouse_state = mouse_state.clone();
     }
@@ -249,9 +226,37 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let r = self.entities.read().unwrap();
 
+        let camera = (self.cameras[self.active_camera_index]).borrow_mut();
+
+        let camera_translation_inverse = camera.position * -1.0;
+
+        let camera_translation_inverse_transform = Mat4::translation(Vec3 {
+            x: camera_translation_inverse.x,
+            y: camera_translation_inverse.y,
+            z: camera_translation_inverse.z,
+        });
+
+        let view_transform =
+            camera_translation_inverse_transform * camera.rotation_inverse_transform;
+
         for entity in r.as_slice() {
-            let mesh = entity.mesh;
-            self.pipeline.render_mesh(mesh);
+            let world_transform = Mat4::scaling(0.5)
+                * Mat4::rotation_x(entity.rotation.x)
+                * Mat4::rotation_y(entity.rotation.y)
+                * Mat4::rotation_z(entity.rotation.z)
+                * Mat4::translation(entity.position);
+
+            let world_view_transform = world_transform * view_transform;
+
+            self.pipeline
+                .effect
+                .set_world_view_transform(world_view_transform);
+
+            self.pipeline
+                .effect
+                .set_point_light_position(self.point_light.position * view_transform);
+
+            self.pipeline.render_mesh(&entity.mesh);
         }
     }
 

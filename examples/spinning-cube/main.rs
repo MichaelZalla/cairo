@@ -82,7 +82,7 @@ fn main() -> Result<(), String> {
             y: 0.4,
             z: 0.4,
         },
-        position: Vec3::new(),
+        position: Default::default(),
         constant_attenuation: 0.382,
         linear_attenuation: 1.0,
         quadratic_attenuation: 2.619,

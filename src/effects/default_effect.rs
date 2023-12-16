@@ -58,7 +58,7 @@ impl DefaultEffect {
             self.world_view_transform * self.projection_transform;
     }
 
-    pub fn set_point_light_position(&mut self, position: Vec3) {
+    pub fn set_point_light_position(&mut self, position: Vec4) {
         self.point_light.position = position;
     }
 }
@@ -127,8 +127,14 @@ impl Effect for DefaultEffect {
 
         // Calculate point light intensity
 
-        let vertex_to_point_light = self.point_light.position - out.world_pos;
+        let vertex_to_point_light = Vec3 {
+            x: self.point_light.position.x,
+            y: self.point_light.position.y,
+            z: self.point_light.position.z,
+        } - out.world_pos;
+
         let distance_to_point_light = vertex_to_point_light.mag();
+
         let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
 
         let likeness = normal_to_point_light.dot(surface_normal_vec3 * -1.0);

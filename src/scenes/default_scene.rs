@@ -74,9 +74,7 @@ impl<'a> DefaultScene<'a> {
         let screen_width = buffer.width;
         let screen_height = buffer.height;
 
-        let world_transform =
-			Mat4::scaling(0.5)/* *
-			Mat4::translation(entity.position)*/;
+        let world_transform = Mat4::scaling(1.0);
 
         let view_transform = Mat4::translation(Vec3 {
             x: camera.position_inverse.x,
