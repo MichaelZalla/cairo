@@ -158,24 +158,6 @@ impl<'a> Scene for DefaultScene<'a> {
 
         camera.rotation_inverse_transposed = camera.rotation_inverse_transform.transposed();
 
-        // Translate point light relative to camera based on mousewheel delta
-
-        if mouse_state.wheel_did_move {
-            match mouse_state.wheel_direction {
-                sdl2::mouse::MouseWheelDirection::Normal => {
-                    self.point_light.distance_from_active_camera +=
-                        mouse_state.wheel_y as f32 / 4.0;
-
-                    self.point_light.distance_from_active_camera = self
-                        .point_light
-                        .distance_from_active_camera
-                        .min(30.0)
-                        .max(5.0);
-                }
-                _ => {}
-            }
-        }
-
         // Apply camera movement based on keyboard or gamepad input
 
         let up = Vec4::new(
@@ -374,19 +356,6 @@ impl<'a> Scene for DefaultScene<'a> {
         // self.pipeline.effect.set_diffuse_light_direction(
         // 	rotated_diffuse_light_direction
         // );
-
-        // Point light position translation via mouse input
-
-        let point_light_position = forward * self.point_light.distance_from_active_camera;
-
-        // point_light_position.y = 5.0 - (10.0 * nds_mouse_y);
-        // point_light_position.x = -5.0 + (10.0 * nds_mouse_x);
-
-        self.pipeline.effect.set_point_light_position(Vec3 {
-            x: point_light_position.x,
-            y: point_light_position.x,
-            z: point_light_position.z,
-        });
 
         self.prev_mouse_state = mouse_state.clone();
     }

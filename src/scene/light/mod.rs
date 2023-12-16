@@ -16,7 +16,6 @@ pub struct DirectionalLight {
 pub struct PointLight {
     pub intensities: Vec3,
     pub position: Vec3,
-    pub distance_from_active_camera: f32,
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,

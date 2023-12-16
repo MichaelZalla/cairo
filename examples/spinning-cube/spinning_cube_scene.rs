@@ -170,24 +170,6 @@ impl<'a> Scene for SpinningCubeScene<'a> {
             }
         }
 
-        // Translate point light relative to camera based on mousewheel delta
-
-        if mouse_state.wheel_did_move {
-            match mouse_state.wheel_direction {
-                sdl2::mouse::MouseWheelDirection::Normal => {
-                    self.point_light.distance_from_active_camera +=
-                        mouse_state.wheel_y as f32 / 4.0;
-
-                    self.point_light.distance_from_active_camera = self
-                        .point_light
-                        .distance_from_active_camera
-                        .min(30.0)
-                        .max(5.0);
-                }
-                _ => {}
-            }
-        }
-
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::Num1 { .. } => {
@@ -255,14 +237,6 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         self.pipeline
             .effect
             .set_world_view_transform(world_view_transform);
-
-        let point_light_position = vec4::FORWARD * self.point_light.distance_from_active_camera;
-
-        self.pipeline.effect.set_point_light_position(Vec3 {
-            x: point_light_position.x,
-            y: point_light_position.x,
-            z: point_light_position.z,
-        });
 
         self.prev_mouse_state = mouse_state.clone();
     }

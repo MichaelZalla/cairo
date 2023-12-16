@@ -85,7 +85,6 @@ fn main() -> Result<(), String> {
             z: 0.4,
         },
         position: Vec3::new(),
-        distance_from_active_camera: 0.0,
         constant_attenuation: 0.382,
         linear_attenuation: 1.0,
         quadratic_attenuation: 2.619,
