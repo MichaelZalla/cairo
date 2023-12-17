@@ -7,7 +7,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
-    graphics::Graphics,
+    graphics::{Graphics, PixelBuffer},
     matrix::Mat4,
     pipeline::{Pipeline, PipelineOptions},
     scene::{
@@ -28,8 +28,8 @@ static PROJECTION_Z_FAR: f32 = 10.0;
 pub struct TextureMappedCubeScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    screen_width: u32,
-    screen_height: u32,
+    viewport_width: u32,
+    viewport_height: u32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     // ambient_light: AmbientLight,
@@ -41,10 +41,24 @@ pub struct TextureMappedCubeScene<'a> {
 
 impl<'a> TextureMappedCubeScene<'a> {
     pub fn new(
-        graphics: Graphics,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     ) -> Self {
+        let canvas_output_size = rendering_context
+            .canvas
+            .read()
+            .unwrap()
+            .output_size()
+            .unwrap();
+
+        let viewport_width = canvas_output_size.0;
+        let viewport_height = canvas_output_size.1;
+        let aspect_ratio = viewport_width as f32 / viewport_height as f32;
+
+        let graphics = Graphics {
+            buffer: PixelBuffer::new(viewport_width, viewport_height),
+        };
+
         // Set up a camera for rendering our cube scene
         let camera: Camera = Camera::new(
             Vec4::new(
@@ -104,11 +118,6 @@ impl<'a> TextureMappedCubeScene<'a> {
             should_cull_backfaces: true,
         };
 
-        let graphics_buffer = &graphics.buffer;
-
-        let screen_width = graphics_buffer.width;
-        let screen_height = graphics_buffer.height;
-
         let world_transform = Mat4::new();
 
         let view_transform = Mat4::translation(Vec3 {
@@ -118,8 +127,6 @@ impl<'a> TextureMappedCubeScene<'a> {
         });
 
         let world_view_transform = world_transform * view_transform;
-
-        let aspect_ratio = graphics.buffer.width_over_height;
 
         let projection_transform = Mat4::projection_for_fov(
             FIELD_OF_VIEW,
@@ -150,8 +157,8 @@ impl<'a> TextureMappedCubeScene<'a> {
             // ambient_light,
             // directional_light,
             point_light,
-            screen_width,
-            screen_height,
+            viewport_width,
+            viewport_height,
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -169,11 +176,12 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let mouse_position = mouse_state.position;
 
-        let ndc_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
-        let ndc_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
+        let ndc_mouse_x = mouse_position.0 as f32 / self.viewport_width as f32;
+        let ndc_mouse_y = mouse_position.1 as f32 / self.viewport_height as f32;
 
-        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.screen_width as f32;
-        let prev_ndc_mouse_y = self.prev_mouse_state.position.1 as f32 / self.screen_height as f32;
+        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.viewport_width as f32;
+        let prev_ndc_mouse_y =
+            self.prev_mouse_state.position.1 as f32 / self.viewport_height as f32;
 
         let mouse_x_delta = ndc_mouse_x - prev_ndc_mouse_x;
         let mouse_y_delta = ndc_mouse_y - prev_ndc_mouse_y;

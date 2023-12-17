@@ -6,7 +6,6 @@ use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{Graphics, PixelBuffer},
     mesh,
     scene::Scene,
 };
@@ -17,7 +16,6 @@ use self::texture_mapped_cube_scene::TextureMappedCubeScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
 static WINDOW_WIDTH: u32 = 800;
-static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
@@ -37,15 +35,6 @@ fn main() -> Result<(), String> {
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(TextureMappedCubeScene::new(
-        Graphics {
-            buffer: PixelBuffer {
-                width: WINDOW_WIDTH,
-                height: WINDOW_HEIGHT,
-                width_over_height: ASPECT_RATIO,
-                height_over_width: 1.0 / ASPECT_RATIO,
-                pixels: vec![0 as u32; (WINDOW_WIDTH * WINDOW_HEIGHT) as usize],
-            },
-        },
         rendering_context,
         &entities_rwl,
     ));
