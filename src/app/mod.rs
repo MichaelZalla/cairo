@@ -44,7 +44,13 @@ impl App {
         U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
         R: FnMut() -> Result<Vec<u32>, String>,
     {
-        let texture_creator = self.context.rendering_context.canvas.texture_creator();
+        let texture_creator = self
+            .context
+            .rendering_context
+            .canvas
+            .read()
+            .unwrap()
+            .texture_creator();
 
         let mut backbuffer = get_backbuffer(
             &self.context.rendering_context,
@@ -263,9 +269,16 @@ impl App {
             self.context
                 .rendering_context
                 .canvas
+                .write()
+                .unwrap()
                 .copy(&backbuffer, None, None)?;
 
-            self.context.rendering_context.canvas.present();
+            self.context
+                .rendering_context
+                .canvas
+                .write()
+                .unwrap()
+                .present();
 
             frame_end_tick = self.context.timer.performance_counter();
 

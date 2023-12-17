@@ -1,3 +1,5 @@
+use std::sync::RwLock;
+
 use sdl2::{
     render::{BlendMode, Canvas, Texture, TextureCreator},
     video::{Window, WindowContext},
@@ -18,7 +20,7 @@ pub struct ApplicationContext {
 }
 
 pub struct ApplicationRenderingContext {
-    pub canvas: Canvas<Window>,
+    pub canvas: RwLock<Canvas<Window>>,
 }
 
 pub fn get_application_context(
@@ -135,14 +137,18 @@ pub fn get_application_rendering_context<'a, 'r>(
     if vertical_sync {
         match window.into_canvas().present_vsync().build() {
             Ok(canvas) => {
-                return Ok(ApplicationRenderingContext { canvas });
+                return Ok(ApplicationRenderingContext {
+                    canvas: RwLock::new(canvas),
+                });
             }
             Err(e) => Err(e.to_string()),
         }
     } else {
         match window.into_canvas().build() {
             Ok(canvas) => {
-                return Ok(ApplicationRenderingContext { canvas });
+                return Ok(ApplicationRenderingContext {
+                    canvas: RwLock::new(canvas),
+                });
             }
             Err(e) => Err(e.to_string()),
         }
@@ -154,7 +160,7 @@ pub fn get_backbuffer<'r>(
     texture_creator: &'r TextureCreator<WindowContext>,
     blend_mode: BlendMode,
 ) -> Result<Texture<'r>, String> {
-    let size = context.canvas.output_size().unwrap();
+    let size = context.canvas.read().unwrap().output_size().unwrap();
 
     let canvas_width = size.0;
     let canvas_height = size.1;
