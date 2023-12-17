@@ -17,9 +17,6 @@ pub struct DefaultEffect {
     point_light: PointLight,
     specular_intensity: f32,
     specular_power: i32,
-    fog_near_z: f32,
-    fog_far_z: f32,
-    fog_color_vec: Vec3,
 }
 
 impl DefaultEffect {
@@ -40,9 +37,6 @@ impl DefaultEffect {
             point_light,
             specular_intensity: 1.0,
             specular_power: 10,
-            fog_near_z: 25.0,
-            fog_far_z: 150.0,
-            fog_color_vec: color::SKY_BOX.to_vec3(),
         };
     }
 
@@ -199,20 +193,6 @@ impl Effect for DefaultEffect {
             )
             .saturate()
             * 255.0;
-
-        let distance: f32 = out.world_pos.mag();
-
-        let fog_alpha;
-
-        if distance <= self.fog_near_z {
-            fog_alpha = 0.0;
-        } else if distance >= self.fog_far_z {
-            fog_alpha = 1.0;
-        } else {
-            fog_alpha = (distance - self.fog_near_z) / (self.fog_far_z - self.fog_near_z);
-        }
-
-        color = Vec3::interpolate(color, self.fog_color_vec, fog_alpha);
 
         return Color {
             r: color.x as u8,
