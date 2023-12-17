@@ -11,6 +11,21 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo build --examples",
+      "windows": {
+        "command": "cargo build --examples"
+      },
+      "linux": {
+        "command": "cargo build --examples"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
         "kind": "build"
       },
       "label": "Rust: cargo run --example basic-window",
@@ -39,8 +54,7 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example texture-mapping",
       "windows": {
