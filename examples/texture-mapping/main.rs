@@ -7,14 +7,8 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     graphics::{Graphics, PixelBuffer},
-    matrix::Mat4,
     mesh,
-    scene::{
-        camera::Camera,
-        light::{AmbientLight, DirectionalLight, PointLight},
-        Scene,
-    },
-    vec::{vec3::Vec3, vec4::Vec4},
+    scene::Scene,
 };
 
 mod texture_mapped_cube_scene;
@@ -41,57 +35,6 @@ fn main() -> Result<(), String> {
 
     let rendering_context = &app.context.rendering_context;
 
-    // Set up a camera for rendering our cube scene
-    let camera: Camera = Camera::new(
-        Vec4::new(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -5.0,
-            },
-            1.0,
-        ),
-        Mat4::identity(),
-        150.0,
-        0.0,
-        6.0,
-    );
-
-    // Define lights for our scene
-    let ambient_light = AmbientLight {
-        intensities: Vec3 {
-            x: 0.1,
-            y: 0.1,
-            z: 0.1,
-        },
-    };
-
-    let directional_light = DirectionalLight {
-        intensities: Vec3 {
-            x: 0.3,
-            y: 0.3,
-            z: 0.3,
-        },
-        direction: Vec4 {
-            x: 0.25,
-            y: -1.0,
-            z: -0.25,
-            w: 1.0,
-        },
-    };
-
-    let point_light = PointLight {
-        intensities: Vec3 {
-            x: 0.4,
-            y: 0.4,
-            z: 0.4,
-        },
-        position: Default::default(),
-        constant_attenuation: 0.382,
-        linear_attenuation: 1.0,
-        quadratic_attenuation: 2.619,
-    };
-
     // Instantiate our textured cube scene
     let scene = RefCell::new(TextureMappedCubeScene::new(
         Graphics {
@@ -104,10 +47,6 @@ fn main() -> Result<(), String> {
             },
         },
         rendering_context,
-        camera,
-        ambient_light,
-        directional_light,
-        point_light,
         &entities_rwl,
     ));
 

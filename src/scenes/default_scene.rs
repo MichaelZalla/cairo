@@ -41,12 +41,59 @@ impl<'a> DefaultScene<'a> {
     pub fn new(
         graphics: Graphics,
         rendering_context: Option<&ApplicationRenderingContext>,
-        camera: Camera,
-        ambient_light: AmbientLight,
-        directional_light: DirectionalLight,
-        point_light: PointLight,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     ) -> Self {
+        // Set up a camera for rendering our scenes
+        let camera: Camera = Camera::new(
+            Vec4::new(
+                Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: -5.0,
+                },
+                1.0,
+            ),
+            Mat4::identity(),
+            150.0,
+            0.0,
+            6.0,
+        );
+
+        // Define (shared) lights for our scenes
+        let ambient_light = AmbientLight {
+            intensities: Vec3 {
+                x: 0.1,
+                y: 0.1,
+                z: 0.1,
+            },
+        };
+
+        let directional_light = DirectionalLight {
+            intensities: Vec3 {
+                x: 0.3,
+                y: 0.3,
+                z: 0.3,
+            },
+            direction: Vec4 {
+                x: 0.25,
+                y: -1.0,
+                z: -0.25,
+                w: 1.0,
+            },
+        };
+
+        let point_light = PointLight {
+            intensities: Vec3 {
+                x: 0.4,
+                y: 0.4,
+                z: 0.4,
+            },
+            position: Default::default(),
+            constant_attenuation: 0.382,
+            linear_attenuation: 1.0,
+            quadratic_attenuation: 2.619,
+        };
+
         let pipeline_options = crate::pipeline::PipelineOptions {
             should_render_wireframe: false,
             should_render_shader: true,
