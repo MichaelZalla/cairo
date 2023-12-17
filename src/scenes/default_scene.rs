@@ -3,14 +3,11 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use crate::{
-    collision::oct_tree::OctTreeNode,
-    color,
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::Graphics,
     matrix::Mat4,
-    mesh::primitive::make_box,
     pipeline::{Pipeline, PipelineOptions},
     scene::{
         camera::Camera,
@@ -24,19 +21,7 @@ static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10.0;
 
-#[derive(Copy, Clone, Default)]
-pub struct DefaultSceneOptions {
-    should_render_colliders: bool,
-}
-
-impl DefaultSceneOptions {
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
-
 pub struct DefaultScene<'a> {
-    options: DefaultSceneOptions,
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
     screen_width: u32,
@@ -60,8 +45,6 @@ impl<'a> DefaultScene<'a> {
         point_light: PointLight,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     ) -> Self {
-        let options = DefaultSceneOptions::new();
-
         let pipeline_options = crate::pipeline::PipelineOptions {
             should_render_wireframe: false,
             should_render_shader: true,
@@ -106,7 +89,6 @@ impl<'a> DefaultScene<'a> {
         );
 
         return DefaultScene {
-            options,
             pipeline,
             pipeline_options,
             entities,
@@ -234,9 +216,6 @@ impl<'a> Scene for DefaultScene<'a> {
                         !self.pipeline_options.should_render_normals;
 
                     self.pipeline.set_options(self.pipeline_options);
-                }
-                Keycode::L { .. } => {
-                    self.options.should_render_colliders = !self.options.should_render_colliders;
                 }
                 _ => {}
             }
@@ -369,66 +348,6 @@ impl<'a> Scene for DefaultScene<'a> {
 
         for entity in r.as_slice() {
             self.pipeline.render_mesh(&entity.mesh);
-        }
-
-        if self.options.should_render_colliders {
-            self.pipeline.set_options(PipelineOptions {
-                should_render_wireframe: true,
-                should_render_shader: false,
-                should_render_normals: false,
-                should_cull_backfaces: false,
-            });
-
-            for entity in r.as_slice() {
-                let root = &entity.oct_tree.tree;
-
-                let oct_tree_mesh = make_box(
-                    root.bounds.half_dimension * 2.0,
-                    root.bounds.half_dimension * 2.0,
-                    root.bounds.half_dimension * 2.0,
-                );
-
-                let mut global_oct_tree_offset =
-                    entity.collider_mesh.vertices[0].p - oct_tree_mesh.vertices[0].p;
-
-                global_oct_tree_offset.y *= -1.0;
-
-                let mut frontier: Vec<&OctTreeNode<usize>> = vec![root];
-
-                while frontier.len() > 0 {
-                    match frontier.pop() {
-                        Some(node) => {
-                            let dimension = node.bounds.half_dimension * 2.0;
-
-                            let mut node_mesh = make_box(dimension, dimension, dimension);
-
-                            let alpha = node.depth as f32 / 4.0;
-
-                            for v in node_mesh.vertices.as_mut_slice() {
-                                v.p += global_oct_tree_offset
-                                    + (node.bounds.center - root.bounds.center);
-                                v.c = Vec3::interpolate(
-                                    color::BLACK.to_vec3(),
-                                    color::WHITE.to_vec3(),
-                                    alpha,
-                                );
-                            }
-
-                            self.pipeline.render_mesh(&node_mesh);
-
-                            for c in node.children.as_slice() {
-                                frontier.push(c);
-                            }
-                        }
-
-                        None => {}
-                    }
-                }
-
-                self.pipeline.render_mesh(&entity.collider_mesh);
-            }
-
-            self.pipeline.set_options(self.pipeline_options);
         }
     }
 
