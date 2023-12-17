@@ -48,17 +48,17 @@ fn main() -> Result<(), String> {
             let mouse_x = RefCell::new(0);
             let mouse_y = RefCell::new(0);
 
-            let update = |_keyboard_state: &KeyboardState,
-                          mouse_state: &MouseState,
-                          _game_controller_state: &GameControllerState,
-                          delta_t_seconds: f32|
+            let mut update = |_keyboard_state: &KeyboardState,
+                              mouse_state: &MouseState,
+                              _game_controller_state: &GameControllerState,
+                              delta_t_seconds: f32|
              -> () {
                 *now_seconds.borrow_mut() += delta_t_seconds;
                 *mouse_x.borrow_mut() = mouse_state.position.0;
                 *mouse_y.borrow_mut() = mouse_state.position.1;
             };
 
-            let render = || -> Result<Vec<u32>, String> {
+            let mut render = || -> Result<Vec<u32>, String> {
                 // Clears pixel buffer
 
                 graphics.buffer.clear(color::BLACK);
@@ -95,15 +95,9 @@ fn main() -> Result<(), String> {
                 return Ok(graphics.get_pixel_data().clone());
             };
 
-            let app = App::new(
-                "examples/render-text",
-                WINDOW_WIDTH,
-                ASPECT_RATIO,
-                update,
-                render,
-            );
+            let app = App::new("examples/render-text", WINDOW_WIDTH, ASPECT_RATIO);
 
-            app.run()?;
+            app.run(&mut update, &mut render)?;
         }
         Err(e) => {
             println!("Error initializing ttf font subsystem: '{}'", e);

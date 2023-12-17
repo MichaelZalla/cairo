@@ -14,33 +14,13 @@ use crate::device::{
 
 use crate::context::{get_application_context, get_backbuffer, ApplicationContext};
 
-pub struct App<U, R>
-where
-    U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
-    R: FnMut() -> Result<Vec<u32>, String>,
-{
+pub struct App {
     pub context: ApplicationContext,
     pub aspect_ratio: f32,
-    update: U,
-    render: R,
 }
 
-impl<U, R> App<U, R>
-where
-    U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
-    R: FnMut() -> Result<Vec<u32>, String>,
-{
-    pub fn new(
-        window_title: &str,
-        window_width: u32,
-        aspect_ratio: f32,
-        update: U,
-        render: R,
-    ) -> Self
-    where
-        U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
-        R: FnMut() -> Result<Vec<u32>, String>,
-    {
+impl App {
+    pub fn new(window_title: &str, window_width: u32, aspect_ratio: f32) -> Self {
         let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
 
         let context =
@@ -50,12 +30,14 @@ where
         return App {
             context,
             aspect_ratio,
-            update,
-            render,
         };
     }
 
-    pub fn run(mut self) -> Result<(), String> {
+    pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
+    where
+        U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+        R: FnMut() -> Result<Vec<u32>, String>,
+    {
         let texture_creator = self.context.rendering_context.canvas.texture_creator();
 
         let mut backbuffer = get_backbuffer(
@@ -238,7 +220,7 @@ where
 
             // Update current scene
 
-            (self.update)(
+            update(
                 &keyboard_state,
                 &mouse_state,
                 &game_controller.state,
@@ -251,7 +233,7 @@ where
                 .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
 
-                    match (self.render)() {
+                    match render() {
                         Ok(pixels_as_u32_slice) => {
                             let pixels_as_u8_slice: &[u8] =
                                 bytemuck::cast_slice(&pixels_as_u32_slice);

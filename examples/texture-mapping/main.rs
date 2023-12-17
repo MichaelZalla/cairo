@@ -107,10 +107,10 @@ fn main() -> Result<(), String> {
     ));
 
     // Set up our app
-    let update = |keyboard_state: &KeyboardState,
-                  mouse_state: &MouseState,
-                  game_controller_state: &GameControllerState,
-                  delta_t_seconds: f32|
+    let mut update = |keyboard_state: &KeyboardState,
+                      mouse_state: &MouseState,
+                      game_controller_state: &GameControllerState,
+                      delta_t_seconds: f32|
      -> () {
         // Delegate the update to our textured cube scene
 
@@ -122,7 +122,7 @@ fn main() -> Result<(), String> {
         );
     };
 
-    let render = || -> Result<Vec<u32>, String> {
+    let mut render = || -> Result<Vec<u32>, String> {
         // Delegate the rendering to our textured cube scene
 
         scene.borrow_mut().render();
@@ -131,15 +131,9 @@ fn main() -> Result<(), String> {
         return Ok(scene.borrow_mut().get_pixel_data().clone());
     };
 
-    let app = App::new(
-        "examples/texture-mapped-cube",
-        WINDOW_WIDTH,
-        ASPECT_RATIO,
-        update,
-        render,
-    );
+    let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
 
-    app.run()?;
+    app.run(&mut update, &mut render)?;
 
     Ok(())
 }

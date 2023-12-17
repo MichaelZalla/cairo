@@ -24,15 +24,15 @@ fn main() -> Result<(), String> {
         },
     };
 
-    let update = |_keyboard_state: &KeyboardState,
-                  _mouse_state: &MouseState,
-                  _game_controller_state: &GameControllerState,
-                  _delta_t_seconds: f32|
+    let mut update = |_keyboard_state: &KeyboardState,
+                      _mouse_state: &MouseState,
+                      _game_controller_state: &GameControllerState,
+                      _delta_t_seconds: f32|
      -> () {
         // @TODO Update any borrowed state here.
     };
 
-    let render = || -> Result<Vec<u32>, String> {
+    let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
         graphics.buffer.clear(color::BLACK);
 
@@ -43,15 +43,9 @@ fn main() -> Result<(), String> {
         return Ok(graphics.get_pixel_data().clone());
     };
 
-    let app = App::new(
-        "examples/basic-window",
-        WINDOW_WIDTH,
-        ASPECT_RATIO,
-        update,
-        render,
-    );
+    let app = App::new("examples/basic-window", WINDOW_WIDTH, ASPECT_RATIO);
 
-    app.run()?;
+    app.run(&mut update, &mut render)?;
 
     Ok(())
 }
