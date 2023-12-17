@@ -23,7 +23,7 @@ pub struct PipelineOptions {
     pub should_cull_backfaces: bool,
 }
 
-pub struct Pipeline<T: Effect> {
+pub struct Pipeline<T> {
     options: PipelineOptions,
     graphics: Graphics,
     buffer_width_over_2: f32,
@@ -32,7 +32,7 @@ pub struct Pipeline<T: Effect> {
     pub effect: T,
 }
 
-impl<T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeline<T>
+impl<'a, T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeline<T>
 where
     T: Effect,
 {

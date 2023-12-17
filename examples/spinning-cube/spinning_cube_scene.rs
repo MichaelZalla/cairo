@@ -83,6 +83,7 @@ impl<'a> SpinningCubeScene<'a> {
                 ambient_light,
                 directional_light,
                 point_light,
+                None,
             ),
             pipeline_options,
         );

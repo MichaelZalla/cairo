@@ -1,5 +1,6 @@
 use crate::{
     color::{self, Color},
+    context::ApplicationRenderingContext,
     effect::Effect,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight},
@@ -28,6 +29,7 @@ impl DefaultEffect {
         ambient_light: AmbientLight,
         directional_light: DirectionalLight,
         point_light: PointLight,
+        rendering_context: Option<&ApplicationRenderingContext>,
     ) -> Self {
         return DefaultEffect {
             world_view_transform,

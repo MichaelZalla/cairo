@@ -3,6 +3,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
+    context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
@@ -38,6 +39,7 @@ pub struct TextureMappedCubeScene<'a> {
 impl<'a> TextureMappedCubeScene<'a> {
     pub fn new(
         graphics: Graphics,
+        rendering_context: &ApplicationRenderingContext,
         camera: Camera,
         ambient_light: AmbientLight,
         directional_light: DirectionalLight,
@@ -84,6 +86,7 @@ impl<'a> TextureMappedCubeScene<'a> {
                 ambient_light,
                 directional_light,
                 point_light,
+                Some(rendering_context),
             ),
             pipeline_options,
         );

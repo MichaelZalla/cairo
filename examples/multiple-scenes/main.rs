@@ -103,6 +103,7 @@ fn main() -> Result<(), String> {
     let scenes = RefCell::new(vec![
         DefaultScene::new(
             graphics.clone(),
+            None,
             camera,
             ambient_light,
             directional_light,
@@ -111,6 +112,7 @@ fn main() -> Result<(), String> {
         ),
         DefaultScene::new(
             graphics.clone(),
+            None,
             camera,
             ambient_light,
             directional_light,

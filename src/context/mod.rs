@@ -159,7 +159,7 @@ pub fn get_backbuffer<'r>(
     context: &ApplicationRenderingContext,
     texture_creator: &'r TextureCreator<WindowContext>,
     blend_mode: BlendMode,
-) -> Result<Texture<'r>, String> {
+) -> Result<Texture, String> {
     let size = context.canvas.read().unwrap().output_size().unwrap();
 
     let canvas_width = size.0;

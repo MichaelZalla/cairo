@@ -26,6 +26,8 @@ static WINDOW_WIDTH: u32 = 800;
 static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
+    let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
+
     // Generate a cube mesh
     let cube_mesh = mesh::obj::get_mesh_from_obj("./data/obj/cube-textured.obj".to_string());
     // let cube_mesh = mesh::primitive::make_box(1.0, 1.0, 1.0);
@@ -36,6 +38,8 @@ fn main() -> Result<(), String> {
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
     let entities_rwl = RwLock::new(entities);
+
+    let rendering_context = &app.context.rendering_context;
 
     // Set up a camera for rendering our cube scene
     let camera: Camera = Camera::new(
@@ -99,6 +103,7 @@ fn main() -> Result<(), String> {
                 pixels: vec![0 as u32; (WINDOW_WIDTH * WINDOW_HEIGHT) as usize],
             },
         },
+        rendering_context,
         camera,
         ambient_light,
         directional_light,
@@ -130,8 +135,6 @@ fn main() -> Result<(), String> {
         // @TODO(mzalla) Return reference to a captured variable???
         return Ok(scene.borrow_mut().get_pixel_data().clone());
     };
-
-    let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
 
     app.run(&mut update, &mut render)?;
 
