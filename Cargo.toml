@@ -22,7 +22,7 @@ version = "0.8.5"
 [dependencies.sdl2]
 version = "0.36.0"
 default-features = false
-features = ["ttf","unsafe_textures"]
+features = ["ttf","unsafe_textures", "image"]
 
 [profile.dev]
 opt-level = 1

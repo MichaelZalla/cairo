@@ -1,7 +1,13 @@
+use sdl2::image::InitFlag;
+use sdl2::image::LoadTexture;
+use sdl2::pixels::PixelFormatEnum;
+use sdl2::render::TextureAccess;
+
 use crate::{
     color::{self, Color},
     context::ApplicationRenderingContext,
     effect::Effect,
+    material::{Material, TextureMap},
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight},
     vec::{vec3::Vec3, vec4::Vec4},
@@ -17,6 +23,7 @@ pub struct DefaultEffect {
     point_light: PointLight,
     specular_intensity: f32,
     specular_power: i32,
+    materials: Vec<Material>,
 }
 
 impl DefaultEffect {
@@ -28,6 +35,62 @@ impl DefaultEffect {
         point_light: PointLight,
         rendering_context: Option<&ApplicationRenderingContext>,
     ) -> Self {
+        sdl2::image::init(InitFlag::JPG).unwrap();
+
+        let mut materials: Vec<Material> = vec![];
+
+        match rendering_context {
+            Some(ctx) => {
+                let filepath = "./examples/texture-mapping/assets/checkerboard.png".to_string();
+
+                let mut pixel_data: Vec<u8> = vec![];
+
+                let mut canvas = ctx.canvas.write().unwrap();
+
+                let texture_creator = canvas.texture_creator();
+
+                let static_texture = texture_creator.load_texture(filepath.clone()).unwrap();
+
+                let texture_attrs = static_texture.query();
+                let width = texture_attrs.width;
+                let height = texture_attrs.height;
+
+                let mut target_texture = texture_creator
+                    .create_texture(
+                        PixelFormatEnum::RGBA32,
+                        TextureAccess::Target,
+                        width,
+                        height,
+                    )
+                    .unwrap();
+
+                canvas
+                    .with_texture_canvas(&mut target_texture, |texture_canvas| {
+                        texture_canvas.copy(&static_texture, None, None).unwrap();
+
+                        let pixels = texture_canvas
+                            .read_pixels(None, PixelFormatEnum::RGBA32)
+                            .unwrap();
+
+                        pixel_data.resize(pixels.len(), 0);
+                        pixel_data.copy_from_slice(pixels.as_slice());
+                    })
+                    .unwrap();
+
+                let mut material = Material::new();
+
+                material.diffuse_map = Some(TextureMap {
+                    filepath: filepath,
+                    width,
+                    height,
+                    pixel_data,
+                });
+
+                materials.push(material);
+            }
+            _ => {}
+        }
+
         return DefaultEffect {
             world_view_transform,
             projection_transform,
@@ -37,6 +100,7 @@ impl DefaultEffect {
             point_light,
             specular_intensity: 1.0,
             specular_power: 10,
+            materials,
         };
     }
 
@@ -166,33 +230,40 @@ impl Effect for DefaultEffect {
                     .powi(self.specular_power);
         }
 
+        let total_contribution = ambient_contribution
+            + directional_light_contribution
+            + point_light_contribution
+            + specular_contribution;
+
         // Calculate our color based on mesh color and light intensities
 
-        let mut color: Vec3;
+        let mut color: Vec3 = out.c;
 
-        let checkerboard_subdivisions = 10.0;
-        let checkerboard_subdivision_size = 1.0 / checkerboard_subdivisions;
+        if self.materials.len() > 0 {
+            let diffuse_map = &self.materials[0].diffuse_map;
 
-        let is_dark_row =
-            out.uv.y % (checkerboard_subdivision_size * 2.0) < checkerboard_subdivision_size;
-        let should_flip =
-            out.uv.x % (checkerboard_subdivision_size * 2.0) < checkerboard_subdivision_size;
+            match &diffuse_map {
+                Some(map) => {
+                    assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
+                    let texel_x = ((out.uv.x * (map.width - 1) as f32).floor() * 0.25) as u32;
+                    let texel_y = ((out.uv.y * (map.height - 1) as f32).floor() * 0.25) as u32;
+                    let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
+                    let pixels = &map.pixel_data;
+                    assert!(texel_color_index < pixels.len());
 
-        if (!is_dark_row && should_flip) || (is_dark_row && !should_flip) {
-            color = color::BLACK.to_vec3();
-        } else {
-            color = color::WHITE.to_vec3();
+                    let r: u8 = pixels[texel_color_index];
+                    let g: u8 = pixels[texel_color_index + 1];
+                    let b: u8 = pixels[texel_color_index + 2];
+
+                    let _a: u8 = pixels[texel_color_index + 3];
+
+                    color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
+                }
+                _ => {}
+            }
         }
 
-        color = *color
-            .get_hadamard(
-                ambient_contribution
-                    + directional_light_contribution
-                    + point_light_contribution
-                    + specular_contribution,
-            )
-            .saturate()
-            * 255.0;
+        color = *((color * total_contribution).saturate()) * 255.0;
 
         return Color {
             r: color.x as u8,

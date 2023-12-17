@@ -12,6 +12,7 @@ pub mod effect;
 pub mod entity;
 pub mod fs;
 pub mod graphics;
+pub mod material;
 pub mod matrix;
 pub mod mesh;
 pub mod pipeline;
