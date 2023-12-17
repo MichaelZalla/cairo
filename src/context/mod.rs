@@ -27,6 +27,7 @@ pub fn get_application_context(
     window_height: u32,
     full_screen: bool,
     show_cursor: bool,
+    vertical_sync: bool,
 ) -> Result<ApplicationContext, String> {
     let sdl_context = sdl2::init()?;
 
@@ -111,7 +112,8 @@ pub fn get_application_context(
             let screen_width = window.size().0;
             let screen_height = window.size().1;
 
-            let rendering_context = get_application_rendering_context(window).unwrap();
+            let rendering_context =
+                get_application_rendering_context(window, vertical_sync).unwrap();
 
             Ok(ApplicationContext {
                 screen_width,
@@ -128,17 +130,22 @@ pub fn get_application_context(
 
 pub fn get_application_rendering_context<'a, 'r>(
     window: Window,
+    vertical_sync: bool,
 ) -> Result<ApplicationRenderingContext, String> {
-    match window
-        .into_canvas()
-        // .accelerated()
-        // .present_vsync()
-        .build()
-    {
-        Ok(canvas) => {
-            return Ok(ApplicationRenderingContext { canvas: canvas });
+    if vertical_sync {
+        match window.into_canvas().present_vsync().build() {
+            Ok(canvas) => {
+                return Ok(ApplicationRenderingContext { canvas });
+            }
+            Err(e) => Err(e.to_string()),
         }
-        Err(e) => Err(e.to_string()),
+    } else {
+        match window.into_canvas().build() {
+            Ok(canvas) => {
+                return Ok(ApplicationRenderingContext { canvas });
+            }
+            Err(e) => Err(e.to_string()),
+        }
     }
 }
 

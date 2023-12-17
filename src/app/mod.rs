@@ -23,9 +23,15 @@ impl App {
     pub fn new(window_title: &str, window_width: u32, aspect_ratio: f32) -> Self {
         let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
 
-        let context =
-            get_application_context(window_title, window_width, window_height, false, false)
-                .unwrap();
+        let context = get_application_context(
+            window_title,
+            window_width,
+            window_height,
+            false,
+            false,
+            true,
+        )
+        .unwrap();
 
         return App {
             context,
