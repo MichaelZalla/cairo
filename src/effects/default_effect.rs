@@ -35,13 +35,19 @@ impl DefaultEffect {
         match rendering_context {
             Some(context) => {
                 let diffuse_texture = crate::image::get_texture_map_from_image_path(
-                    "./examples/texture-mapping/assets/checkerboard.png".to_string(),
+                    "./examples/texture-mapping/assets/grass-diffuse.tga".to_string(),
+                    context,
+                );
+
+                let normal_texture = crate::image::get_texture_map_from_image_path(
+                    "./examples/texture-mapping/assets/grass-normal.tga".to_string(),
                     context,
                 );
 
                 let mut material = Material::new();
 
                 material.diffuse_map = Some(diffuse_texture);
+                material.normal_map = Some(normal_texture);
 
                 materials.push(material);
             }
@@ -115,7 +121,41 @@ impl Effect for DefaultEffect {
     fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Color {
         let out = interpolant;
 
+        // Calculate all lighting contributions
+
         let surface_normal = out.n;
+
+        if self.materials.len() > 0 {
+            let normal_map = &self.materials[0].normal_map;
+
+            match &normal_map {
+                Some(map) => {
+                    assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
+                    let texel_x = ((out.uv.x * (map.width - 1) as f32).floor() * 0.25) as u32;
+                    let texel_y = ((out.uv.y * (map.height - 1) as f32).floor() * 0.25) as u32;
+                    let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
+                    let pixels = &map.pixel_data;
+                    assert!(texel_color_index < pixels.len());
+
+                    let r: u8 = pixels[texel_color_index];
+                    let g: u8 = pixels[texel_color_index + 1];
+                    let b: u8 = pixels[texel_color_index + 2];
+
+                    let _map_normal = Vec4 {
+                        x: (r as f32 / 255.0) * 2.0 - 1.0,
+                        y: (g as f32 / 255.0) * 2.0 - 1.0,
+                        z: (b as f32 / 255.0) * 2.0 - 1.0,
+                        w: 1.0,
+                    };
+
+                    // @TODO Perturb the surface normal using the local
+                    // tangent-space information read from `map`
+                    //
+                    // surface_normal = (surface_normal * out.TBN).as_normal();
+                }
+                _ => {}
+            }
+        }
 
         let surface_normal_vec3 = Vec3 {
             x: surface_normal.x,
