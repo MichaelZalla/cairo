@@ -6,6 +6,8 @@ use sdl2::render::TextureAccess;
 use crate::context::ApplicationRenderingContext;
 use crate::vec::vec2::Vec2;
 
+pub mod uv;
+
 #[derive(Debug, Clone, Default)]
 pub struct TextureMap {
     pub filepath: String,

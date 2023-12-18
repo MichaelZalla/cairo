@@ -1,4 +1,7 @@
-use crate::vec::{vec2::Vec2, vec3::Vec3};
+use crate::{
+    image,
+    vec::{vec2::Vec2, vec3::Vec3},
+};
 
 use super::{Face, Mesh};
 
@@ -45,32 +48,6 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     back_bottom_right.z += depth;
 
-    // Generate UVs
-
-    let top_left = Vec2 {
-        x: 0.0,
-        y: 1.0,
-        z: 0.0,
-    };
-
-    let top_right = Vec2 {
-        x: 1.0,
-        y: 1.0,
-        z: 0.0,
-    };
-
-    let bottom_left = Vec2 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
-
-    let bottom_right = Vec2 {
-        x: 1.0,
-        y: 0.0,
-        z: 0.0,
-    };
-
     // Generate normals
 
     let forward = Vec3 {
@@ -109,10 +86,10 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     ];
 
     let uvs: Vec<Vec2> = vec![
-        top_left,     // 0
-        top_right,    // 1
-        bottom_left,  // 2
-        bottom_right, // 3
+        image::uv::TOP_LEFT,     // 0
+        image::uv::TOP_RIGHT,    // 1
+        image::uv::BOTTOM_LEFT,  // 2
+        image::uv::BOTTOM_RIGHT, // 3
     ];
 
     let normals: Vec<Vec3> = vec![
