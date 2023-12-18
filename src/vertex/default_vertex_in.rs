@@ -9,8 +9,8 @@ use crate::vec::{vec2::Vec2, vec3::Vec3};
 pub struct DefaultVertexIn {
     pub p: Vec3,
     pub n: Vec3,
-    pub c: Vec3,
     pub uv: Vec2,
+    pub c: Vec3,
 }
 
 impl DefaultVertexIn {
@@ -29,8 +29,8 @@ impl Add<DefaultVertexIn> for DefaultVertexIn {
         DefaultVertexIn {
             p: self.p + rhs.p,
             n: self.n + rhs.n,
-            c: self.c + rhs.c,
             uv: self.uv + rhs.uv,
+            c: self.c + rhs.c,
         }
     }
 }
@@ -41,8 +41,8 @@ impl Sub<DefaultVertexIn> for DefaultVertexIn {
         DefaultVertexIn {
             p: self.p - rhs.p,
             n: self.n - rhs.n,
-            c: self.c - rhs.c,
             uv: self.uv - rhs.uv,
+            c: self.c - rhs.c,
         }
     }
 }
@@ -53,8 +53,8 @@ impl Mul<f32> for DefaultVertexIn {
         DefaultVertexIn {
             p: self.p * scalar,
             n: self.n * scalar,
-            c: self.c * scalar,
             uv: self.uv * scalar,
+            c: self.c * scalar,
         }
     }
 }
@@ -65,8 +65,8 @@ impl Div<f32> for DefaultVertexIn {
         DefaultVertexIn {
             p: self.p / scalar,
             n: self.n / scalar,
-            c: self.c / scalar,
             uv: self.uv / scalar,
+            c: self.c / scalar,
         }
     }
 }
