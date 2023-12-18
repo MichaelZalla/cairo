@@ -299,7 +299,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
             z: camera_translation_inverse.z,
         });
 
-        let view_transform =
+        let camera_view_inverse_transform =
             camera_translation_inverse_transform * camera.rotation_inverse_transform;
 
         for entity in r.as_slice() {
@@ -309,15 +309,15 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
                 * Mat4::rotation_z(entity.rotation.z)
                 * Mat4::translation(entity.position);
 
-            let world_view_transform = world_transform * view_transform;
+            let world_view_transform = world_transform * camera_view_inverse_transform;
 
             self.pipeline
                 .effect
                 .set_world_view_transform(world_view_transform);
 
-            self.pipeline
-                .effect
-                .set_point_light_position(self.point_light.position * view_transform);
+            self.pipeline.effect.set_point_light_position(
+                self.point_light.position * camera_view_inverse_transform,
+            );
 
             self.pipeline.render_mesh(&entity.mesh);
         }
