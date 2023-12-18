@@ -4,6 +4,7 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
 use crate::context::ApplicationRenderingContext;
+use crate::vec::vec2::Vec2;
 
 #[derive(Debug, Clone, Default)]
 pub struct TextureMap {
@@ -59,4 +60,24 @@ pub fn get_texture_map_from_image_path(
         height,
         pixel_data,
     };
+}
+
+pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8, u8) {
+    assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
+
+    let texel_x = ((uv.x * (map.width - 1) as f32).floor() * 0.25) as u32;
+    let texel_y = ((uv.y * (map.height - 1) as f32).floor() * 0.25) as u32;
+
+    let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
+
+    let pixels = &map.pixel_data;
+
+    assert!(texel_color_index < pixels.len());
+
+    let r: u8 = pixels[texel_color_index];
+    let g: u8 = pixels[texel_color_index + 1];
+    let b: u8 = pixels[texel_color_index + 2];
+    let a: u8 = pixels[texel_color_index + 3];
+
+    return (r, g, b, a);
 }

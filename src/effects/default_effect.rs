@@ -2,6 +2,7 @@ use crate::{
     color::{self, Color},
     context::ApplicationRenderingContext,
     effect::Effect,
+    image::sample_from_uv,
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight},
@@ -130,16 +131,7 @@ impl Effect for DefaultEffect {
 
             match &normal_map {
                 Some(map) => {
-                    assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
-                    let texel_x = ((out.uv.x * (map.width - 1) as f32).floor() * 0.25) as u32;
-                    let texel_y = ((out.uv.y * (map.height - 1) as f32).floor() * 0.25) as u32;
-                    let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
-                    let pixels = &map.pixel_data;
-                    assert!(texel_color_index < pixels.len());
-
-                    let r: u8 = pixels[texel_color_index];
-                    let g: u8 = pixels[texel_color_index + 1];
-                    let b: u8 = pixels[texel_color_index + 2];
+                    let (r, g, b, _a) = sample_from_uv(out.uv, map);
 
                     let _map_normal = Vec4 {
                         x: (r as f32 / 255.0) * 2.0 - 1.0,
@@ -241,18 +233,7 @@ impl Effect for DefaultEffect {
 
             match &diffuse_map {
                 Some(map) => {
-                    assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
-                    let texel_x = ((out.uv.x * (map.width - 1) as f32).floor() * 0.25) as u32;
-                    let texel_y = ((out.uv.y * (map.height - 1) as f32).floor() * 0.25) as u32;
-                    let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
-                    let pixels = &map.pixel_data;
-                    assert!(texel_color_index < pixels.len());
-
-                    let r: u8 = pixels[texel_color_index];
-                    let g: u8 = pixels[texel_color_index + 1];
-                    let b: u8 = pixels[texel_color_index + 2];
-
-                    let _a: u8 = pixels[texel_color_index + 3];
+                    let (r, g, b, _a) = sample_from_uv(out.uv, map);
 
                     color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                 }
