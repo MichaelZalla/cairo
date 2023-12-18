@@ -65,8 +65,8 @@ pub fn get_texture_map_from_image_path(
 pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8, u8) {
     assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
 
-    let texel_x = ((uv.x * (map.width - 1) as f32).floor() * 0.25) as u32;
-    let texel_y = ((uv.y * (map.height - 1) as f32).floor() * 0.25) as u32;
+    let texel_x = (((1.0 - uv.x) * (map.width - 1) as f32).floor()) as u32;
+    let texel_y = (((1.0 - uv.y) * (map.height - 1) as f32).floor()) as u32;
 
     let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
 
