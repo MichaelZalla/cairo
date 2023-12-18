@@ -5,43 +5,43 @@ use super::{Face, Mesh};
 pub fn make_box(width: f32, height: f32, depth: f32) -> Mesh {
     let front_top_left = Vec3 {
         x: -width / 2.0,
-        y: height / 2.0,
-        z: depth / 2.0,
+        y: -height / 2.0,
+        z: -depth / 2.0,
     };
 
     let front_top_right = Vec3 {
         x: width / 2.0,
-        y: height / 2.0,
-        z: depth / 2.0,
+        y: -height / 2.0,
+        z: -depth / 2.0,
     };
 
     let front_bottom_left = Vec3 {
         x: -width / 2.0,
-        y: -height / 2.0,
-        z: depth / 2.0,
+        y: height / 2.0,
+        z: -depth / 2.0,
     };
 
     let front_bottom_right = Vec3 {
         x: width / 2.0,
-        y: -height / 2.0,
-        z: depth / 2.0,
+        y: height / 2.0,
+        z: -depth / 2.0,
     };
 
     let mut back_top_left = front_top_left.clone();
 
-    back_top_left.z -= depth;
+    back_top_left.z += depth;
 
     let mut back_top_right = front_top_right.clone();
 
-    back_top_right.z -= depth;
+    back_top_right.z += depth;
 
     let mut back_bottom_left = front_bottom_left.clone();
 
-    back_bottom_left.z -= depth;
+    back_bottom_left.z += depth;
 
     let mut back_bottom_right = front_bottom_right.clone();
 
-    back_bottom_right.z -= depth;
+    back_bottom_right.z += depth;
 
     let vertices: Vec<Vec3> = vec![
         front_top_left,     // 0
