@@ -1,13 +1,8 @@
-use sdl2::image::InitFlag;
-use sdl2::image::LoadTexture;
-use sdl2::pixels::PixelFormatEnum;
-use sdl2::render::TextureAccess;
-
 use crate::{
     color::{self, Color},
     context::ApplicationRenderingContext,
     effect::Effect,
-    material::{Material, TextureMap},
+    material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight},
     vec::{vec3::Vec3, vec4::Vec4},
@@ -35,56 +30,18 @@ impl DefaultEffect {
         point_light: PointLight,
         rendering_context: Option<&ApplicationRenderingContext>,
     ) -> Self {
-        sdl2::image::init(InitFlag::JPG).unwrap();
-
         let mut materials: Vec<Material> = vec![];
 
         match rendering_context {
-            Some(ctx) => {
-                let filepath = "./examples/texture-mapping/assets/checkerboard.png".to_string();
-
-                let mut pixel_data: Vec<u8> = vec![];
-
-                let mut canvas = ctx.canvas.write().unwrap();
-
-                let texture_creator = canvas.texture_creator();
-
-                let static_texture = texture_creator.load_texture(filepath.clone()).unwrap();
-
-                let texture_attrs = static_texture.query();
-                let width = texture_attrs.width;
-                let height = texture_attrs.height;
-
-                let mut target_texture = texture_creator
-                    .create_texture(
-                        PixelFormatEnum::RGBA32,
-                        TextureAccess::Target,
-                        width,
-                        height,
-                    )
-                    .unwrap();
-
-                canvas
-                    .with_texture_canvas(&mut target_texture, |texture_canvas| {
-                        texture_canvas.copy(&static_texture, None, None).unwrap();
-
-                        let pixels = texture_canvas
-                            .read_pixels(None, PixelFormatEnum::RGBA32)
-                            .unwrap();
-
-                        pixel_data.resize(pixels.len(), 0);
-                        pixel_data.copy_from_slice(pixels.as_slice());
-                    })
-                    .unwrap();
+            Some(context) => {
+                let diffuse_texture = crate::image::get_texture_map_from_image_path(
+                    "./examples/texture-mapping/assets/checkerboard.png".to_string(),
+                    context,
+                );
 
                 let mut material = Material::new();
 
-                material.diffuse_map = Some(TextureMap {
-                    filepath: filepath,
-                    width,
-                    height,
-                    pixel_data,
-                });
+                material.diffuse_map = Some(diffuse_texture);
 
                 materials.push(material);
             }
