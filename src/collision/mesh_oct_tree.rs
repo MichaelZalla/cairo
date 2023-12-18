@@ -5,12 +5,12 @@ use super::{aabb::AABB, oct_tree::OctTreeNode};
 #[derive(Default, Clone)]
 pub struct MeshOctTree<'a> {
     mesh: &'a Mesh,
-    pub tree: OctTreeNode<usize>,
+    pub root: OctTreeNode<usize>,
 }
 
 impl<'a> MeshOctTree<'a> {
     pub fn new(mesh: &'a Mesh, level_capacity: usize, bounds: AABB) -> Self {
-        let tree = OctTreeNode::<usize> {
+        let root = OctTreeNode::<usize> {
             depth: 0,
             bounds,
             data_capacity: level_capacity,
@@ -18,7 +18,7 @@ impl<'a> MeshOctTree<'a> {
             data: vec![],
         };
 
-        let mut result = MeshOctTree { mesh, tree };
+        let mut result = MeshOctTree { mesh, root };
 
         for face_index in 0..result.mesh.faces.len() {
             result.insert_face(face_index);
@@ -32,7 +32,7 @@ impl<'a> MeshOctTree<'a> {
 
         let aabb = AABB::new_from_triangle(&vertices.0, &vertices.1, &vertices.2);
 
-        return self.tree.insert(face_index, &aabb);
+        return self.root.insert(face_index, &aabb);
     }
 
     fn get_vertices_for_face(&self, face_index: usize) -> (&Vec3, &Vec3, &Vec3) {
