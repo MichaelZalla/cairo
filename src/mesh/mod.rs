@@ -48,25 +48,25 @@ impl Mesh {
         if face_vertex_normal_indices_len == face_vertex_indices.len() {
             // Case 1. 3 vertex normals are defined per face;
 
-            for (face_index, face) in face_vertex_indices.iter().enumerate() {
+            for (face_index, vertex_indices) in face_vertex_indices.iter().enumerate() {
                 let normal_indices = face_vertex_normal_indices[face_index];
 
                 let mut v0_in = DefaultVertexIn {
-                    p: vertices[face.0].clone(),
+                    p: vertices[vertex_indices.0].clone(),
                     n: vertex_normals[normal_indices.0].clone(),
                     c: white.clone(),
                     uv: Default::default(),
                     world_pos: Vec3::new(),
                 };
                 let mut v1_in = DefaultVertexIn {
-                    p: vertices[face.1].clone(),
+                    p: vertices[vertex_indices.1].clone(),
                     n: vertex_normals[normal_indices.1].clone(),
                     c: white.clone(),
                     uv: Default::default(),
                     world_pos: Vec3::new(),
                 };
                 let mut v2_in = DefaultVertexIn {
-                    p: vertices[face.2].clone(),
+                    p: vertices[vertex_indices.2].clone(),
                     n: vertex_normals[normal_indices.2].clone(),
                     c: white.clone(),
                     uv: Default::default(),
@@ -92,11 +92,11 @@ impl Mesh {
             // Case 2. No normal data was provided; we'll generate a normal for each
             // face, creating 3 unique Vertex instances for that face;
 
-            for (face_index, face) in face_vertex_indices.iter().enumerate() {
+            for (face_index, vertex_indices) in face_vertex_indices.iter().enumerate() {
                 let uv_coordinate_indices = face_vertex_uv_coordinate_indices[face_index];
 
-                let computed_normal = (vertices[face.1] - vertices[face.0])
-                    .cross(vertices[face.2] - vertices[face.0])
+                let computed_normal = (vertices[vertex_indices.1] - vertices[vertex_indices.0])
+                    .cross(vertices[vertex_indices.2] - vertices[vertex_indices.0])
                     .as_normal();
 
                 let v0_in = DefaultVertexIn {
