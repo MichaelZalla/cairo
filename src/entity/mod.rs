@@ -10,22 +10,22 @@ pub struct Entity<'a> {
     pub position: Vec3,
     pub rotation: Vec3,
     pub mesh: &'a Mesh,
-    pub collider_mesh: Mesh,
+    pub bounds: AABB,
     pub oct_tree: MeshOctTree<'a>,
 }
 
 impl<'a> Entity<'a> {
     pub fn new(mesh: &'a Mesh) -> Self {
-        let collider_mesh = Entity::make_collision_mesh(&mesh);
+        let bounds = Entity::make_bounding_box(&mesh);
 
-        let width = collider_mesh.vertices[1].x - collider_mesh.vertices[0].x;
-        let height = collider_mesh.vertices[0].y - collider_mesh.vertices[2].y;
-        let depth = collider_mesh.vertices[0].z - collider_mesh.vertices[4].z;
+        let width = bounds.right - bounds.left;
+        let height = bounds.top - bounds.bottom;
+        let depth = bounds.near - bounds.far;
 
         let collider_mesh_center = Vec3 {
-            x: collider_mesh.vertices[0].x + width / 2.0,
-            y: collider_mesh.vertices[2].y + height / 2.0,
-            z: collider_mesh.vertices[0].z - depth / 2.0,
+            x: bounds.left + width / 2.0,
+            y: bounds.bottom + height / 2.0,
+            z: bounds.near - depth / 2.0,
         };
 
         let largest_dimension = width.max(height).max(depth);
@@ -34,20 +34,20 @@ impl<'a> Entity<'a> {
 
         let level_capacity = 64;
 
-        let bounds = AABB::new(collider_mesh_center, half_dimension);
+        let oct_tree_bounds = AABB::new(collider_mesh_center, half_dimension);
 
-        let oct_tree = MeshOctTree::new(mesh, level_capacity, bounds);
+        let oct_tree = MeshOctTree::new(mesh, level_capacity, oct_tree_bounds);
 
         return Entity {
             position: Vec3::new(),
             rotation: Vec3::new(),
             mesh,
-            collider_mesh,
+            bounds,
             oct_tree,
         };
     }
 
-    fn make_collision_mesh(mesh: &Mesh) -> Mesh {
+    fn make_bounding_box(mesh: &Mesh) -> AABB {
         let mut x_min: f32 = f32::MAX;
         let mut x_max: f32 = f32::MIN;
 
@@ -81,19 +81,36 @@ impl<'a> Entity<'a> {
         let height = y_max - y_min;
         let depth = z_max - z_min;
 
-        let mut collider = make_box(width, height, depth);
-
-        let collider_offset = Vec3 {
-            x: x_min + width / 2.0,
-            y: y_min + height / 2.0,
-            z: z_min + depth / 2.0,
+        let result = AABB {
+            center: Vec3 {
+                x: x_min + width / 2.0,
+                y: y_min + height / 2.0,
+                z: z_min + depth / 2.0,
+            },
+            half_dimension: (x_max - x_min) / 2.0,
+            left: x_min,
+            right: x_max,
+            top: y_max,
+            bottom: y_min,
+            near: z_max,
+            far: z_min,
         };
 
-        for v in collider.vertices.as_mut_slice() {
-            *v += collider_offset;
+        return result;
+    }
+
+    pub fn make_bounding_box_mesh(bounds: &AABB) -> Mesh {
+        let width = bounds.right - bounds.left;
+        let height = bounds.top - bounds.bottom;
+        let depth = bounds.near - bounds.far;
+
+        let mut bounding_box_mesh = make_box(width, height, depth);
+
+        for v in bounding_box_mesh.vertices.as_mut_slice() {
+            *v += bounds.center;
             // v.c = color::YELLOW.to_vec3() / 255.0;
         }
 
-        return collider;
+        return bounding_box_mesh;
     }
 }
