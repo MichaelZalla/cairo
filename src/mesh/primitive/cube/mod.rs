@@ -1,6 +1,6 @@
 use crate::{
     image,
-    vec::{vec2::Vec2, vec3::Vec3},
+    vec::{vec2::Vec2, vec3::Vec3, vec4},
 };
 
 use super::{Face, Mesh};
@@ -51,25 +51,25 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Generate normals
 
     let forward = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 1.0,
+        x: vec4::FORWARD.x,
+        y: vec4::FORWARD.y,
+        z: vec4::FORWARD.z,
     };
 
     let backward = forward * -1.0;
 
     let up = Vec3 {
-        x: 0.0,
-        y: -1.0,
-        z: 0.0,
+        x: vec4::UP.x,
+        y: vec4::UP.y,
+        z: vec4::UP.z,
     };
 
     let down = up * -1.0;
 
     let left = Vec3 {
-        x: -1.0,
-        y: 0.0,
-        z: 0.0,
+        x: vec4::LEFT.x,
+        y: vec4::LEFT.y,
+        z: vec4::LEFT.z,
     };
 
     let right = left * -1.0;
