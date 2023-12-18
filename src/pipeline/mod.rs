@@ -197,12 +197,12 @@ where
             return true;
         }
 
-        // if triangle.v0.p.z > triangle.v0.p.w &&
-        //    triangle.v1.p.z > triangle.v1.p.w &&
-        //    triangle.v2.p.z > triangle.v2.p.w
-        // {
-        // 	return true;
-        // }
+        if triangle.v0.p.z > triangle.v0.p.w
+            && triangle.v1.p.z > triangle.v1.p.w
+            && triangle.v2.p.z > triangle.v2.p.w
+        {
+            return true;
+        }
 
         if triangle.v0.p.z < 0.0 && triangle.v1.p.z < 0.0 && triangle.v2.p.z < 0.0 {
             return true;
