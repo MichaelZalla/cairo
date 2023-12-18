@@ -1,6 +1,6 @@
 use std::fmt::{self};
 
-use crate::{vec::vec3::Vec3, vertex::default_vertex_in::DefaultVertexIn};
+use crate::vec::vec3::Vec3;
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct AABB {
@@ -29,22 +29,18 @@ impl AABB {
         };
     }
 
-    pub fn new_from_triangle(
-        v0: &DefaultVertexIn,
-        v1: &DefaultVertexIn,
-        v2: &DefaultVertexIn,
-    ) -> Self {
-        let min_x = v0.p.x.min(v1.p.x).min(v2.p.x);
+    pub fn new_from_triangle(v0: &Vec3, v1: &Vec3, v2: &Vec3) -> Self {
+        let min_x = v0.x.min(v1.x).min(v2.x);
 
-        let max_x = v0.p.x.max(v1.p.x).max(v2.p.x);
+        let max_x = v0.x.max(v1.x).max(v2.x);
 
-        let min_y = v0.p.y.min(v1.p.y).min(v2.p.y);
+        let min_y = v0.y.min(v1.y).min(v2.y);
 
-        let max_y = v0.p.y.max(v1.p.y).max(v2.p.y);
+        let max_y = v0.y.max(v1.y).max(v2.y);
 
-        let min_z = v0.p.z.min(v1.p.z).min(v2.p.z);
+        let min_z = v0.z.min(v1.z).min(v2.z);
 
-        let max_z = v0.p.z.max(v1.p.z).max(v2.p.z);
+        let max_z = v0.z.max(v1.z).max(v2.z);
 
         let center = Vec3 {
             x: min_x + (max_x - min_x) / 2.0,

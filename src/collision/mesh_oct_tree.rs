@@ -1,4 +1,4 @@
-use crate::{mesh::Mesh, vertex::default_vertex_in::DefaultVertexIn};
+use crate::{mesh::Mesh, vec::vec3::Vec3};
 
 use super::{aabb::AABB, oct_tree::OctTreeNode};
 
@@ -20,7 +20,7 @@ impl<'a> MeshOctTree<'a> {
 
         let mut result = MeshOctTree { mesh, tree };
 
-        for face_index in 0..result.mesh.face_indices.len() {
+        for face_index in 0..result.mesh.faces.len() {
             result.insert_face(face_index);
         }
 
@@ -35,13 +35,10 @@ impl<'a> MeshOctTree<'a> {
         return self.tree.insert(face_index, &aabb);
     }
 
-    fn get_vertices_for_face(
-        &self,
-        face_index: usize,
-    ) -> (&DefaultVertexIn, &DefaultVertexIn, &DefaultVertexIn) {
-        let v0_index = self.mesh.face_indices[face_index].0;
-        let v1_index = self.mesh.face_indices[face_index].1;
-        let v2_index = self.mesh.face_indices[face_index].2;
+    fn get_vertices_for_face(&self, face_index: usize) -> (&Vec3, &Vec3, &Vec3) {
+        let v0_index = self.mesh.faces[face_index].vertices.0;
+        let v1_index = self.mesh.faces[face_index].vertices.1;
+        let v2_index = self.mesh.faces[face_index].vertices.2;
 
         return (
             &self.mesh.vertices[v0_index],

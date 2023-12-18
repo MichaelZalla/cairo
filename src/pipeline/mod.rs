@@ -81,34 +81,82 @@ where
     }
 
     fn process_world_vertices(&mut self, mesh: &Mesh) {
-        let mesh_v_len = mesh.vertices.len();
+        // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
-        let mut world_vertices: Vec<T::VertexOut> = vec![T::VertexOut::new(); mesh_v_len];
+        let mut vertices_in: Vec<DefaultVertexIn> = vec![];
 
-        // Object-to-world-space transform
+        for face_index in 0..mesh.faces.len() {
+            let face = mesh.faces[face_index];
 
-        for i in 0..mesh_v_len {
-            world_vertices[i] = self.effect.vs(mesh.vertices[i]);
+            let v0_in = DefaultVertexIn {
+                p: mesh.vertices[face.vertices.0].clone(),
+                n: if face.normals.is_some() {
+                    mesh.normals[face.normals.unwrap().0].clone()
+                } else {
+                    Default::default()
+                },
+                uv: if face.uvs.is_some() {
+                    mesh.uvs[face.uvs.unwrap().0].clone()
+                } else {
+                    Default::default()
+                },
+                c: color::WHITE.to_vec3() / 255.0,
+            };
 
-            if self.options.should_cull_backfaces == false {
-                world_vertices[i].c = mesh.vertices[i].c;
-            }
+            let v1_in = DefaultVertexIn {
+                p: mesh.vertices[face.vertices.1].clone(),
+                n: if face.normals.is_some() {
+                    mesh.normals[face.normals.unwrap().1].clone()
+                } else {
+                    Default::default()
+                },
+                uv: if face.uvs.is_some() {
+                    mesh.uvs[face.uvs.unwrap().1].clone()
+                } else {
+                    Default::default()
+                },
+                c: color::WHITE.to_vec3() / 255.0,
+            };
+
+            let v2_in = DefaultVertexIn {
+                p: mesh.vertices[face.vertices.2].clone(),
+                n: if face.normals.is_some() {
+                    mesh.normals[face.normals.unwrap().2].clone()
+                } else {
+                    Default::default()
+                },
+                uv: if face.uvs.is_some() {
+                    mesh.uvs[face.uvs.unwrap().2].clone()
+                } else {
+                    Default::default()
+                },
+                c: color::WHITE.to_vec3() / 255.0,
+            };
+
+            vertices_in.push(v0_in);
+            vertices_in.push(v1_in);
+            vertices_in.push(v2_in);
         }
+
+        // Process mesh vertices from object-space to world-space.
+
+        let world_vertices = vertices_in
+            .into_iter()
+            .map(|v_in| return self.effect.vs(v_in))
+            .collect();
 
         self.process_triangles(mesh, world_vertices);
     }
 
-    fn process_triangles(&mut self, mesh: &Mesh, vertices: Vec<T::VertexOut>) {
-        let faces = mesh.face_indices.clone();
-
+    fn process_triangles(&mut self, mesh: &Mesh, world_vertices: Vec<T::VertexOut>) {
         let mut triangles: Vec<Triangle<T::VertexOut>> = vec![];
 
-        for face in faces.iter() {
+        for face_index in 0..mesh.faces.len() {
             // Cull backfaces
 
-            let v0 = vertices[face.0];
-            let v1 = vertices[face.1];
-            let v2 = vertices[face.2];
+            let v0 = world_vertices[face_index * 3];
+            let v1 = world_vertices[face_index * 3 + 1];
+            let v2 = world_vertices[face_index * 3 + 2];
 
             if self.options.should_cull_backfaces && self.is_backface(v0.p, v1.p, v2.p) {
                 continue;

@@ -96,6 +96,8 @@ impl Effect for DefaultEffect {
     }
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut {
+        // Object-to-world-space vertex transform
+
         let mut out = Self::VertexOut::new();
 
         out.p = Vec4::new(v.p, 1.0) * self.world_view_projection_transform;

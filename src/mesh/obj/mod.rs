@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use crate::fs::read_lines;
+use crate::mesh::Face;
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
@@ -16,11 +17,9 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
     };
 
     let mut vertices: Vec<Vec3> = vec![];
-    let mut vertex_normals: Vec<Vec3> = vec![];
-    let mut uv_coordinates: Vec<Vec2> = vec![];
-    let mut face_vertex_indices: Vec<(usize, usize, usize)> = vec![];
-    let mut face_vertex_uv_coordinate_indices: Vec<(usize, usize, usize)> = vec![];
-    let mut face_vertex_normal_indices: Vec<(usize, usize, usize)> = vec![];
+    let mut normals: Vec<Vec3> = vec![];
+    let mut uvs: Vec<Vec2> = vec![];
+    let mut faces: Vec<Face> = vec![];
 
     for (_, line) in lines.enumerate() {
         match line {
@@ -72,7 +71,7 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                     None => (),
                                 }
 
-                                uv_coordinates.push(Vec2 { x: u, y: v, z: w })
+                                uvs.push(Vec2 { x: u, y: v, z: w })
                             }
                             // Vertex normal in (x,y,z) form; normal might not be a unit vector.
                             "vn" => {
@@ -84,16 +83,16 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                     z: line_components.next().unwrap().parse::<f32>().unwrap(),
                                 };
 
-                                vertex_normals.push(vertex_normal);
+                                normals.push(vertex_normal);
                             }
                             // Parameter space vertex
                             "vp" => (),
                             // Polygonal face
                             "f" => {
                                 // Vertex indices only:             f v1 v2 v3 ....
-                                // Vertex and UV indices:           f v1/vt1 v2/vt2 v3/vt3 ...
-                                // Vertex, UV, and normal indices:  f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 ...
-                                // Vertex and normal indices only:  f v1//vn1 v2//vn2 v3//vn3 ...
+                                // Vertex and UV indices:           f v1/uv1 v2/uv2 v3/uv3 ...
+                                // Vertex, UV, and normal indices:  f v1/uv1/n1 v2/uv2/n2 v3/uv3/n3 ...
+                                // Vertex and normal indices only:  f v1//n1 v2//n2 v3//n3 ...
 
                                 // f 1 2 3
                                 // f 3/1 4/2 5/3
@@ -103,60 +102,58 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
                                 // `f 1004//1004 1003//1003 1002//1002` ({x,y,z}{vert_index, texture_index, vert_normal_index})
                                 // `f 1004//1004 1003//1003 1002//1002` ({x,y,z}{vert_index, texture_index, vert_normal_index})
 
-                                let mut v1 = line_components.next().unwrap().split("/");
-                                let mut v2 = line_components.next().unwrap().split("/");
-                                let mut v3 = line_components.next().unwrap().split("/");
+                                let mut face: Face = Default::default();
 
-                                face_vertex_indices.push((
-                                    v1.next().unwrap().parse::<usize>().unwrap() - 1,
-                                    v2.next().unwrap().parse::<usize>().unwrap() - 1,
-                                    v3.next().unwrap().parse::<usize>().unwrap() - 1,
-                                ));
+                                let mut v1_iter = line_components.next().unwrap().split("/");
+                                let mut v2_iter = line_components.next().unwrap().split("/");
+                                let mut v3_iter = line_components.next().unwrap().split("/");
 
-                                let v1_uv_coordinate_index = v1.next();
-                                let v2_uv_coordinate_index = v2.next();
-                                let v3_uv_coordinate_index = v3.next();
+                                face.vertices = (
+                                    v1_iter.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    v2_iter.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    v3_iter.next().unwrap().parse::<usize>().unwrap() - 1,
+                                );
 
-                                match v1_uv_coordinate_index {
+                                let v1_uv_index = v1_iter.next();
+                                let v2_uv_index = v2_iter.next();
+                                let v3_uv_index = v3_iter.next();
+
+                                match v1_uv_index {
                                     Some(index) => {
                                         if index != "" {
-                                            face_vertex_uv_coordinate_indices.push((
-                                                v1_uv_coordinate_index
-                                                    .unwrap()
-                                                    .parse::<usize>()
-                                                    .unwrap()
-                                                    - 1,
-                                                v2_uv_coordinate_index
-                                                    .unwrap()
-                                                    .parse::<usize>()
-                                                    .unwrap()
-                                                    - 1,
-                                                v3_uv_coordinate_index
-                                                    .unwrap()
-                                                    .parse::<usize>()
-                                                    .unwrap()
-                                                    - 1,
-                                            ));
+                                            let v1_uv =
+                                                v1_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+                                            let v2_uv =
+                                                v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+                                            let v3_uv =
+                                                v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+
+                                            face.uvs = Some((v1_uv, v2_uv, v3_uv));
                                         }
                                     }
                                     None => (),
                                 }
 
-                                let v1_normal_index = v1.next();
+                                let v1_normal_index = v1_iter.next();
 
                                 match v1_normal_index {
                                     Some(_) => {
-                                        let v2_normal_index = v2.next();
-                                        let v3_normal_index = v3.next();
+                                        let v2_normal_index = v2_iter.next();
+                                        let v3_normal_index = v3_iter.next();
 
-                                        face_vertex_normal_indices.push((
-                                            v1_normal_index.unwrap().parse::<usize>().unwrap() - 1,
-                                            v2_normal_index.unwrap().parse::<usize>().unwrap() - 1,
-                                            v3_normal_index.unwrap().parse::<usize>().unwrap() - 1,
-                                        ));
+                                        let v1_n =
+                                            v1_normal_index.unwrap().parse::<usize>().unwrap() - 1;
+                                        let v2_n =
+                                            v2_normal_index.unwrap().parse::<usize>().unwrap() - 1;
+                                        let v3_n =
+                                            v3_normal_index.unwrap().parse::<usize>().unwrap() - 1;
+
+                                        face.normals = Some((v1_n, v2_n, v3_n));
                                     }
                                     None => (),
                                 }
+
+                                faces.push(face);
                             }
                             // Line element
                             "l" => (),
@@ -183,27 +180,9 @@ pub fn get_mesh_from_obj(filepath: String) -> Mesh {
 
     println!("Parsed mesh from OBJ file (\"{}\"):", filepath);
     println!("  > Vertices: {} (Vec3)", vertices.len());
-    println!("  > UV coordinates: {} (Vec2)", uv_coordinates.len());
-    println!("  > Vertex normals: {} (Vec3)", vertex_normals.len());
-    println!(
-        "  > Face vertex indices: {} ((usize, usize, usize))",
-        face_vertex_indices.len()
-    );
-    println!(
-        "  > Face vertex UV-coordinate indices: {} ((usize, usize, usize))",
-        face_vertex_uv_coordinate_indices.len()
-    );
-    println!(
-        "  > Face vertex normal indices: {} ((usize, usize, usize))",
-        face_vertex_normal_indices.len()
-    );
+    println!("  > UVs: {} (Vec2)", uvs.len());
+    println!("  > Normals: {} (Vec3)", normals.len());
+    println!("  > Faces: {} (Face)", faces.len());
 
-    return Mesh::new(
-        vertices,
-        uv_coordinates,
-        vertex_normals,
-        face_vertex_indices,
-        face_vertex_uv_coordinate_indices,
-        face_vertex_normal_indices,
-    );
+    return Mesh::new(vertices, uvs, normals, faces);
 }

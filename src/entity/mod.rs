@@ -18,14 +18,14 @@ impl<'a> Entity<'a> {
     pub fn new(mesh: &'a Mesh) -> Self {
         let collider_mesh = Entity::make_collision_mesh(&mesh);
 
-        let width = collider_mesh.vertices[1].p.x - collider_mesh.vertices[0].p.x;
-        let height = collider_mesh.vertices[0].p.y - collider_mesh.vertices[2].p.y;
-        let depth = collider_mesh.vertices[0].p.z - collider_mesh.vertices[4].p.z;
+        let width = collider_mesh.vertices[1].x - collider_mesh.vertices[0].x;
+        let height = collider_mesh.vertices[0].y - collider_mesh.vertices[2].y;
+        let depth = collider_mesh.vertices[0].z - collider_mesh.vertices[4].z;
 
         let collider_mesh_center = Vec3 {
-            x: collider_mesh.vertices[0].p.x + width / 2.0,
-            y: collider_mesh.vertices[2].p.y + height / 2.0,
-            z: collider_mesh.vertices[0].p.z - depth / 2.0,
+            x: collider_mesh.vertices[0].x + width / 2.0,
+            y: collider_mesh.vertices[2].y + height / 2.0,
+            z: collider_mesh.vertices[0].z - depth / 2.0,
         };
 
         let largest_dimension = width.max(height).max(depth);
@@ -58,22 +58,22 @@ impl<'a> Entity<'a> {
         let mut z_max: f32 = f32::MIN;
 
         for v in mesh.vertices.as_slice() {
-            if v.p.x < x_min {
-                x_min = v.p.x;
-            } else if v.p.x > x_max {
-                x_max = v.p.x;
+            if v.x < x_min {
+                x_min = v.x;
+            } else if v.x > x_max {
+                x_max = v.x;
             }
 
-            if v.p.y < y_min {
-                y_min = v.p.y;
-            } else if v.p.y > y_max {
-                y_max = v.p.y;
+            if v.y < y_min {
+                y_min = v.y;
+            } else if v.y > y_max {
+                y_max = v.y;
             }
 
-            if v.p.z < z_min {
-                z_min = v.p.z;
-            } else if v.p.z > z_max {
-                z_max = v.p.z;
+            if v.z < z_min {
+                z_min = v.z;
+            } else if v.z > z_max {
+                z_max = v.z;
             }
         }
 
@@ -90,8 +90,8 @@ impl<'a> Entity<'a> {
         };
 
         for v in collider.vertices.as_mut_slice() {
-            v.p += collider_offset;
-            v.c = color::YELLOW.to_vec3() / 255.0;
+            *v += collider_offset;
+            // v.c = color::YELLOW.to_vec3() / 255.0;
         }
 
         return collider;
