@@ -34,13 +34,7 @@ fn main() -> Result<(), String> {
     let entities2_rwl = RwLock::new(entities2);
 
     let graphics = Graphics {
-        buffer: PixelBuffer {
-            width: WINDOW_WIDTH,
-            height: WINDOW_HEIGHT,
-            width_over_height: ASPECT_RATIO,
-            height_over_width: 1.0 / ASPECT_RATIO,
-            pixels: vec![0 as u32; (WINDOW_WIDTH * WINDOW_HEIGHT) as usize],
-        },
+        buffer: PixelBuffer::new(WINDOW_WIDTH, WINDOW_HEIGHT),
     };
 
     let scenes = RefCell::new(vec![
