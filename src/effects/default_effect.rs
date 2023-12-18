@@ -178,11 +178,13 @@ impl Effect for DefaultEffect {
 
         // Calculate point light intensity
 
-        let vertex_to_point_light = Vec3 {
+        let light_position_vec3 = Vec3 {
             x: self.point_light.position.x,
             y: self.point_light.position.y,
             z: self.point_light.position.z,
-        } - out.world_pos;
+        };
+
+        let vertex_to_point_light = light_position_vec3 - out.world_pos;
 
         let distance_to_point_light = vertex_to_point_light.mag();
 
@@ -206,7 +208,7 @@ impl Effect for DefaultEffect {
             // Calculate specular light intensity
 
             // point light projected onto surface normal
-            let w = surface_normal_vec3 * self.point_light.intensities.dot(surface_normal_vec3);
+            let w = surface_normal_vec3 * light_position_vec3.dot(surface_normal_vec3);
 
             // vector to reflected light ray
             let r = w * 2.0 - vertex_to_point_light;
