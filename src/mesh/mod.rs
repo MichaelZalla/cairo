@@ -51,21 +51,21 @@ impl Mesh {
             for (face_index, face) in face_vertex_indices.iter().enumerate() {
                 let normal_indices = face_vertex_normal_indices[face_index];
 
-                let mut v0 = DefaultVertexIn {
+                let mut v0_in = DefaultVertexIn {
                     p: vertices[face.0].clone(),
                     n: vertex_normals[normal_indices.0].clone(),
                     c: white.clone(),
                     uv: Default::default(),
                     world_pos: Vec3::new(),
                 };
-                let mut v1 = DefaultVertexIn {
+                let mut v1_in = DefaultVertexIn {
                     p: vertices[face.1].clone(),
                     n: vertex_normals[normal_indices.1].clone(),
                     c: white.clone(),
                     uv: Default::default(),
                     world_pos: Vec3::new(),
                 };
-                let mut v2 = DefaultVertexIn {
+                let mut v2_in = DefaultVertexIn {
                     p: vertices[face.2].clone(),
                     n: vertex_normals[normal_indices.2].clone(),
                     c: white.clone(),
@@ -76,14 +76,14 @@ impl Mesh {
                 if face_vertex_uv_coordinate_indices.len() > 0 {
                     let uv_coordinate_indices: (usize, usize, usize) =
                         face_vertex_uv_coordinate_indices[face_index];
-                    v0.uv = uv_coordinates[uv_coordinate_indices.0].clone();
-                    v1.uv = uv_coordinates[uv_coordinate_indices.1].clone();
-                    v2.uv = uv_coordinates[uv_coordinate_indices.2].clone();
+                    v0_in.uv = uv_coordinates[uv_coordinate_indices.0].clone();
+                    v1_in.uv = uv_coordinates[uv_coordinate_indices.1].clone();
+                    v2_in.uv = uv_coordinates[uv_coordinate_indices.2].clone();
                 }
 
-                mesh.vertices.push(v0);
-                mesh.vertices.push(v1);
-                mesh.vertices.push(v2);
+                mesh.vertices.push(v0_in);
+                mesh.vertices.push(v1_in);
+                mesh.vertices.push(v2_in);
 
                 mesh.face_indices
                     .push((face_index * 3, face_index * 3 + 1, face_index * 3 + 2))
@@ -99,29 +99,31 @@ impl Mesh {
                     .cross(vertices[face.2] - vertices[face.0])
                     .as_normal();
 
-                mesh.vertices.push(DefaultVertexIn {
-                    p: vertices[face.0].clone(),
+                let v0_in = DefaultVertexIn {
+                    p: vertices[vertex_indices.0].clone(),
                     n: computed_normal.clone(),
                     c: white.clone(),
                     uv: uv_coordinates[uv_coordinate_indices.0].clone(),
                     world_pos: Vec3::new(),
-                });
-
-                mesh.vertices.push(DefaultVertexIn {
-                    p: vertices[face.1].clone(),
+                };
+                let v1_in = DefaultVertexIn {
+                    p: vertices[vertex_indices.1].clone(),
                     n: computed_normal.clone(),
                     c: white.clone(),
                     uv: uv_coordinates[uv_coordinate_indices.1].clone(),
                     world_pos: Vec3::new(),
-                });
-
-                mesh.vertices.push(DefaultVertexIn {
-                    p: vertices[face.2].clone(),
+                };
+                let v2_in = DefaultVertexIn {
+                    p: vertices[vertex_indices.2].clone(),
                     n: computed_normal.clone(),
                     c: white.clone(),
                     uv: uv_coordinates[uv_coordinate_indices.2].clone(),
                     world_pos: Vec3::new(),
-                });
+                };
+
+                mesh.vertices.push(v0_in);
+                mesh.vertices.push(v1_in);
+                mesh.vertices.push(v2_in);
 
                 mesh.face_indices
                     .push((face_index * 3, face_index * 3 + 1, face_index * 3 + 2))
@@ -132,13 +134,15 @@ impl Mesh {
             // Case 3. One normal is defined per-vertex; no need for duplicate Vertexs;
 
             for (vertex_index, vertex) in vertices.iter().enumerate() {
-                mesh.vertices.push(DefaultVertexIn {
+                let v_in = DefaultVertexIn {
                     p: vertex.clone(),
                     n: vertex_normals[vertex_index].clone(),
                     c: white.clone(),
                     uv: uv_coordinates[vertex_index],
                     world_pos: Vec3::new(),
-                })
+                };
+
+                mesh.vertices.push(v_in);
             }
 
             mesh.face_indices = face_vertex_indices;
