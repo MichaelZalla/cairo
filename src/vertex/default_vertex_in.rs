@@ -11,7 +11,6 @@ pub struct DefaultVertexIn {
     pub n: Vec3,
     pub c: Vec3,
     pub uv: Vec2,
-    pub world_pos: Vec3,
 }
 
 impl DefaultVertexIn {
@@ -32,7 +31,6 @@ impl Add<DefaultVertexIn> for DefaultVertexIn {
             n: self.n + rhs.n,
             c: self.c + rhs.c,
             uv: self.uv + rhs.uv,
-            world_pos: self.world_pos + rhs.world_pos,
         }
     }
 }
@@ -45,7 +43,6 @@ impl Sub<DefaultVertexIn> for DefaultVertexIn {
             n: self.n - rhs.n,
             c: self.c - rhs.c,
             uv: self.uv - rhs.uv,
-            world_pos: self.world_pos - rhs.world_pos,
         }
     }
 }
@@ -58,7 +55,6 @@ impl Mul<f32> for DefaultVertexIn {
             n: self.n * scalar,
             c: self.c * scalar,
             uv: self.uv * scalar,
-            world_pos: self.world_pos * scalar,
         }
     }
 }
@@ -71,7 +67,6 @@ impl Div<f32> for DefaultVertexIn {
             n: self.n / scalar,
             c: self.c / scalar,
             uv: self.uv / scalar,
-            world_pos: self.world_pos / scalar,
         }
     }
 }

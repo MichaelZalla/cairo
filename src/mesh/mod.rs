@@ -56,21 +56,18 @@ impl Mesh {
                     n: vertex_normals[normal_indices.0].clone(),
                     c: white.clone(),
                     uv: Default::default(),
-                    world_pos: Default::default(),
                 };
                 let mut v1_in = DefaultVertexIn {
                     p: vertices[vertex_indices.1].clone(),
                     n: vertex_normals[normal_indices.1].clone(),
                     c: white.clone(),
                     uv: Default::default(),
-                    world_pos: Default::default(),
                 };
                 let mut v2_in = DefaultVertexIn {
                     p: vertices[vertex_indices.2].clone(),
                     n: vertex_normals[normal_indices.2].clone(),
                     c: white.clone(),
                     uv: Default::default(),
-                    world_pos: Default::default(),
                 };
 
                 if face_vertex_uv_coordinate_indices.len() > 0 {
@@ -104,21 +101,18 @@ impl Mesh {
                     n: computed_normal.clone(),
                     c: white.clone(),
                     uv: uv_coordinates[uv_coordinate_indices.0].clone(),
-                    world_pos: Vec3::new(),
                 };
                 let v1_in = DefaultVertexIn {
                     p: vertices[vertex_indices.1].clone(),
                     n: computed_normal.clone(),
                     c: white.clone(),
                     uv: uv_coordinates[uv_coordinate_indices.1].clone(),
-                    world_pos: Vec3::new(),
                 };
                 let v2_in = DefaultVertexIn {
                     p: vertices[vertex_indices.2].clone(),
                     n: computed_normal.clone(),
                     c: white.clone(),
                     uv: uv_coordinates[uv_coordinate_indices.2].clone(),
-                    world_pos: Vec3::new(),
                 };
 
                 mesh.vertices.push(v0_in);
@@ -139,7 +133,6 @@ impl Mesh {
                     n: vertex_normals[vertex_index].clone(),
                     c: white.clone(),
                     uv: uv_coordinates[vertex_index],
-                    world_pos: Vec3::new(),
                 };
 
                 mesh.vertices.push(v_in);
