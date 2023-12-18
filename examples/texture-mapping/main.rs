@@ -21,7 +21,7 @@ fn main() -> Result<(), String> {
     let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
 
     // Generate a cube mesh
-    let cube_mesh = mesh::primitive::make_box(1.0, 1.0, 1.0);
+    let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
     // Assign the mesh to a new entity
     let mut cube_entity = Entity::new(&cube_mesh);

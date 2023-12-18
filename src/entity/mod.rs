@@ -1,7 +1,7 @@
 use super::{
     collision::{aabb::AABB, mesh_oct_tree::MeshOctTree},
     color,
-    mesh::{primitive::make_box, Mesh},
+    mesh::{primitive, Mesh},
     vec::vec3::Vec3,
 };
 
@@ -104,7 +104,7 @@ impl<'a> Entity<'a> {
         let height = bounds.top - bounds.bottom;
         let depth = bounds.near - bounds.far;
 
-        let mut bounding_box_mesh = make_box(width, height, depth);
+        let mut bounding_box_mesh = primitive::cube::generate(width, height, depth);
 
         for v in bounding_box_mesh.vertices.as_mut_slice() {
             *v += bounds.center;
