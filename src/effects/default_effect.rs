@@ -126,7 +126,13 @@ impl Effect for DefaultEffect {
 
         // Calculate all lighting contributions
 
-        let surface_normal = out.n;
+        let surface_normal = out.n.as_normal();
+
+        let surface_normal_vec3 = Vec3 {
+            x: surface_normal.x,
+            y: surface_normal.y,
+            z: surface_normal.z,
+        };
 
         if self.materials.len() > 0 {
             let normal_map = &self.materials[0].normal_map;
@@ -150,12 +156,6 @@ impl Effect for DefaultEffect {
                 _ => {}
             }
         }
-
-        let surface_normal_vec3 = Vec3 {
-            x: surface_normal.x,
-            y: surface_normal.y,
-            z: surface_normal.z,
-        };
 
         // Ambient light contribution
 
