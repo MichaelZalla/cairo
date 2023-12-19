@@ -24,7 +24,7 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
 
             uvs.push(Vec2 {
                 x: x_alpha,
-                y: (1.0 - z_alpha),
+                y: z_alpha,
                 z: 0.0,
             });
         }
