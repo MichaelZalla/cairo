@@ -52,34 +52,34 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
     for z in 0..depth_divisions {
         for x in 0..width_divisions {
             let face_1 = Face {
-                // (front_top_left, front_bottom_left, front_top_right)
+                // (far_left, far_right, near_left) (clockwise)
                 vertices: (
                     (z * pitch + x) as usize,
-                    ((z + 1) * pitch + x) as usize,
                     (z * pitch + x + 1) as usize,
+                    ((z + 1) * pitch + x) as usize,
                 ),
-                // (top_left, bottom_left, top_right)
+                // (top_left, top_right, bottom_left) (clockwise)
                 uvs: Some((
                     (z * pitch + x) as usize,
-                    ((z + 1) * pitch + x) as usize,
                     (z * pitch + x + 1) as usize,
+                    ((z + 1) * pitch + x) as usize,
                 )),
                 // (up, up, up)
                 normals: Some((0, 0, 0)),
             };
 
             let face_2 = Face {
-                // (front_bottom_left, front_bottom_right, front_top_right)
+                // (near_left, far_right, near_right) (clockwise)
                 vertices: (
                     ((z + 1) * pitch + x) as usize,
-                    ((z + 1) * pitch + x + 1) as usize,
                     (z * pitch + x + 1) as usize,
+                    ((z + 1) * pitch + x + 1) as usize,
                 ),
-                // (bottom_left, bottom_right, top_right)
+                // (bottom_left, top_right, bottom_right) (clockwise)
                 uvs: Some((
                     ((z + 1) * pitch + x) as usize,
-                    ((z + 1) * pitch + x + 1) as usize,
                     (z * pitch + x + 1) as usize,
+                    ((z + 1) * pitch + x + 1) as usize,
                 )),
                 // (up, up, up)
                 normals: Some((0, 0, 0)),
