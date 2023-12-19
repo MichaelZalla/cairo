@@ -22,15 +22,23 @@ fn main() -> Result<(), String> {
     let app = App::new("examples/generate-primitives", WINDOW_WIDTH, ASPECT_RATIO);
 
     // Generate a cube mesh
-    let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
     let plane_mesh = mesh::primitive::plane::generate(30.0, 30.0, 10, 10);
+    let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let cone_mesh = mesh::primitive::cone::generate(2.0, 2.0, 60);
 
-    // Assign the mesh to a new entitys
-    let mut cube_entity = Entity::new(&cube_mesh, None);
+    // Assign the mesh to new entities
     let mut plane_entity = Entity::new(&plane_mesh, None);
 
+    let mut cube_entity = Entity::new(&cube_mesh, None);
+    cube_entity.position.x -= 1.5;
+    cube_entity.position.y -= 1.5;
+
+    let mut cone_entity = Entity::new(&cone_mesh, None);
+    cone_entity.position.x += 1.5;
+    cone_entity.position.y -= 1.5;
+
     // Wrap the entity collection in a memory-safe container
-    let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity];
+    let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity, &mut cone_entity];
 
     let entities_rwl = RwLock::new(entities);
 
