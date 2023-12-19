@@ -8,7 +8,7 @@ use cairo::{
     entity::Entity,
     fs::get_absolute_filepath,
     graphics::{Graphics, PixelBuffer},
-    mesh::obj::get_mesh_from_obj,
+    mesh::obj::load_obj,
     scene::Scene,
     scenes::default_scene::DefaultScene,
 };
@@ -20,8 +20,8 @@ static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     // Import mesh data
-    let cube_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/cube.obj"));
-    let teapot_mesh = get_mesh_from_obj(get_absolute_filepath("./data/obj/teapot.obj"));
+    let cube_mesh = load_obj(get_absolute_filepath("./data/obj/cube.obj"));
+    let teapot_mesh = load_obj(get_absolute_filepath("./data/obj/teapot.obj"));
 
     // Assign meshes to new entities
     let mut cube_entity = Entity::new(&cube_mesh);

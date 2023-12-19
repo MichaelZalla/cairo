@@ -6,7 +6,7 @@ use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
 
-pub fn get_mesh_from_obj(filepath: String) -> Mesh {
+pub fn load_obj(filepath: String) -> Mesh {
     let path = Path::new(&filepath);
 
     let display = path.display();
