@@ -56,6 +56,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example generate-primitives",
+      "windows": {
+        "command": "cargo run --example generate-primitives"
+      },
+      "linux": {
+        "command": "cargo run --example generate-primitives"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example texture-mapping",
       "windows": {
         "command": "cargo run --example texture-mapping"
