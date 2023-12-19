@@ -38,12 +38,14 @@ impl DefaultEffect {
                 let diffuse_texture = crate::image::get_texture_map_from_image_path(
                     "./examples/texture-mapping/assets/grass-diffuse.tga".to_string(),
                     context,
-                );
+                )
+                .unwrap();
 
                 let normal_texture = crate::image::get_texture_map_from_image_path(
                     "./examples/texture-mapping/assets/grass-normal.tga".to_string(),
                     context,
-                );
+                )
+                .unwrap();
 
                 let mut material = Material::new();
 
