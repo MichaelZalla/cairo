@@ -243,5 +243,9 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     faces.push(right_face_1);
     faces.push(right_face_2);
 
-    return Mesh::new(vertices, uvs, normals, faces);
+    let mut mesh = Mesh::new(vertices, uvs, normals, faces);
+
+    mesh.object_name = "cube".to_string();
+
+    return mesh;
 }

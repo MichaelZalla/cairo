@@ -90,5 +90,9 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
         }
     }
 
-    return Mesh::new(vertices, uvs, normals, faces);
+    let mut mesh = Mesh::new(vertices, uvs, normals, faces);
+
+    mesh.object_name = "plane".to_string();
+
+    return mesh;
 }
