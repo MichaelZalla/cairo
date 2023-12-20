@@ -611,8 +611,6 @@ where
 
             self.flat_bottom_triangle_fill(tri[0], tri[1], tri[2]);
         } else {
-            // panic!("y0={}, y1={}, y2={}", tri[0].y, tri[1].y, tri[2].y);
-
             // Find splitting vertex
 
             let alpha_split = (tri[1].p.y - tri[0].p.y) / (tri[2].p.y - tri[0].p.y);
