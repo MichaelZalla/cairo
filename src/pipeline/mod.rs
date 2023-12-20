@@ -1,4 +1,7 @@
-use crate::vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut};
+use crate::{
+    mesh::Face,
+    vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
+};
 
 use super::{
     color::{self, Color},
@@ -145,13 +148,13 @@ where
             .map(|v_in| return self.effect.vs(v_in))
             .collect();
 
-        self.process_triangles(mesh, world_vertices);
+        self.process_triangles(&mesh.faces, world_vertices);
     }
 
-    fn process_triangles(&mut self, mesh: &Mesh, world_vertices: Vec<T::VertexOut>) {
+    fn process_triangles(&mut self, faces: &Vec<Face>, world_vertices: Vec<T::VertexOut>) {
         let mut triangles: Vec<Triangle<T::VertexOut>> = vec![];
 
-        for face_index in 0..mesh.faces.len() {
+        for face_index in 0..faces.len() {
             // Cull backfaces
 
             let v0 = world_vertices[face_index * 3];
