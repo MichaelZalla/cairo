@@ -13,7 +13,6 @@ debug_print_feature = []
 dead_code = []
 
 [dependencies]
-bytemuck = "*"
 libmath = "0.2.1"
 
 [dependencies.rand]

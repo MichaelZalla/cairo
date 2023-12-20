@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::ptr;
 
 use rand::Rng;
 
@@ -246,9 +247,11 @@ impl App {
                     // Render current scene
 
                     match render() {
-                        Ok(pixels_as_u32_slice) => {
-                            let pixels_as_u8_slice: &[u8] =
-                                bytemuck::cast_slice(&pixels_as_u32_slice);
+                        Ok(pixels_as_u32_slice) => unsafe {
+                            let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
+                                pixels_as_u32_slice.as_ptr() as *const u8,
+                                pixels_as_u32_slice.len() * 4,
+                            ));
 
                             let mut index = 0;
 
@@ -256,7 +259,7 @@ impl App {
                                 write_only_byte_array[index] = pixels_as_u8_slice[index];
                                 index += 1;
                             }
-                        }
+                        },
                         Err(_e) => {
                             // Do nothing?
                         }
