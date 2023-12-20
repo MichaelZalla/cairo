@@ -2,7 +2,7 @@ use crate::{mesh::Mesh, vec::vec3::Vec3};
 
 use super::{aabb::AABB, oct_tree::OctTreeNode};
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct MeshOctTree<'a> {
     mesh: &'a Mesh,
     pub root: OctTreeNode<usize>,

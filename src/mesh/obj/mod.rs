@@ -1,7 +1,8 @@
 use std::path::Path;
 
 use crate::fs::read_lines;
-use crate::mesh::Face;
+
+use crate::mesh::{Face, MaterialSource};
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
@@ -15,6 +16,11 @@ pub fn load_obj(filepath: String) -> Mesh {
         Err(why) => panic!("Failed to open file {}: {}", display, why),
         Ok(lines) => lines,
     };
+
+    let mut object_name: Option<String> = None;
+    let mut group_name: Option<String> = None;
+    let mut material_source: Option<MaterialSource> = None;
+    let mut material_name: Option<String> = None;
 
     let mut vertices: Vec<Vec3> = vec![];
     let mut normals: Vec<Vec3> = vec![];
@@ -158,13 +164,31 @@ pub fn load_obj(filepath: String) -> Mesh {
                             // Line element
                             "l" => (),
                             // External material reference
-                            "mtllib" => (),
+                            "mtllib" => {
+                                let filepath = line_components.next().unwrap();
+
+                                material_source = Some(MaterialSource {
+                                    filepath: filepath.to_string(),
+                                });
+                            }
                             // Material group
-                            "usemtl" => (),
+                            "usemtl" => {
+                                let name = line_components.next().unwrap();
+
+                                material_name = Some(name.to_string());
+                            }
                             // Named object
-                            "o" => (),
+                            "o" => {
+                                let name = line_components.next().unwrap();
+
+                                object_name = Some(name.to_string());
+                            }
                             // Named object polygon group
-                            "g" => (),
+                            "g" => {
+                                let name = line_components.next().unwrap();
+
+                                group_name = Some(name.to_string());
+                            }
                             // Polygon smoothing group
                             "s" => (),
                             // Unrecognized prefix
@@ -179,10 +203,45 @@ pub fn load_obj(filepath: String) -> Mesh {
     }
 
     println!("Parsed mesh from OBJ file (\"{}\"):", filepath);
-    println!("  > Vertices: {} (Vec3)", vertices.len());
-    println!("  > UVs: {} (Vec2)", uvs.len());
-    println!("  > Normals: {} (Vec3)", normals.len());
-    println!("  > Faces: {} (Face)", faces.len());
 
-    return Mesh::new(vertices, uvs, normals, faces);
+    let mut mesh = Mesh::new(vertices, uvs, normals, faces);
+
+    match object_name {
+        Some(name) => {
+            println!("  > Object name: {}", name);
+            mesh.object_name = name;
+        }
+        None => (),
+    }
+
+    match group_name {
+        Some(name) => {
+            println!("  > Group name: {}", name);
+            mesh.group_name = name;
+        }
+        None => (),
+    }
+
+    match material_source {
+        Some(source) => {
+            println!("  > Material source: {}", source.filepath);
+            mesh.material_source = source;
+        }
+        None => (),
+    }
+
+    match material_name {
+        Some(name) => {
+            println!("  > Material name: {}", name);
+            mesh.material_name = name;
+        }
+        None => (),
+    }
+
+    println!("  > Vertices: {} (Vec3)", mesh.vertices.len());
+    println!("  > UVs: {} (Vec2)", mesh.uvs.len());
+    println!("  > Normals: {} (Vec3)", mesh.normals.len());
+    println!("  > Faces: {} (Face)", mesh.faces.len());
+
+    return mesh;
 }

@@ -5,7 +5,7 @@ use super::{
     vec::vec3::Vec3,
 };
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Entity<'a> {
     pub position: Vec3,
     pub rotation: Vec3,

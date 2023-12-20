@@ -13,33 +13,45 @@ pub struct Face {
 }
 
 #[derive(Default, Clone)]
+pub struct MaterialSource {
+    pub filepath: String,
+}
+
+#[derive(Clone)]
 pub struct Mesh {
+    pub object_name: String,
+    pub group_name: String,
+    pub material_source: MaterialSource,
+    pub material_name: String,
     pub vertices: Vec<Vec3>,
     pub normals: Vec<Vec3>,
     pub uvs: Vec<Vec2>,
     pub faces: Vec<Face>,
 }
 
-impl<'a> Default for &'a Mesh {
-    fn default() -> &'a Mesh {
-        static DEFAULT: Mesh = Mesh {
+impl Default for Mesh {
+    fn default() -> Mesh {
+        Mesh {
+            object_name: "__undefined__".to_string(),
+            group_name: "__undefined__".to_string(),
+            material_source: Default::default(),
+            material_name: "__undefined__".to_string(),
             vertices: vec![],
             normals: vec![],
             uvs: vec![],
             faces: vec![],
-        };
-        &DEFAULT
+        }
     }
 }
 
 impl Mesh {
     pub fn new(vertices: Vec<Vec3>, uvs: Vec<Vec2>, normals: Vec<Vec3>, faces: Vec<Face>) -> Self {
-        let mesh = Mesh {
-            vertices,
-            normals,
-            uvs,
-            faces,
-        };
+        let mut mesh = Mesh::default();
+
+        mesh.vertices = vertices;
+        mesh.normals = normals;
+        mesh.uvs = uvs;
+        mesh.faces = faces;
 
         return mesh;
     }
