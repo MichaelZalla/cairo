@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::fs::{get_absolute_filepath, read_lines};
+use crate::fs::read_lines;
 
 use crate::mesh::{Face, MaterialSource};
 use crate::vec::{vec2::Vec2, vec3::Vec3};
@@ -8,13 +8,11 @@ use crate::vec::{vec2::Vec2, vec3::Vec3};
 use super::Mesh;
 
 pub fn load_obj(filepath: &str) -> Vec<Mesh> {
-    let abs = get_absolute_filepath(filepath);
-    let path = Path::new(&abs);
-
-    let display = path.display();
+    let path = Path::new(&filepath);
+    let path_display = path.display();
 
     let lines = match read_lines(&path) {
-        Err(why) => panic!("Failed to open file {}: {}", display, why),
+        Err(why) => panic!("Failed to open file {}: {}", path_display, why),
         Ok(lines) => lines,
     };
 
@@ -205,7 +203,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
 
     let mut meshes = vec![Mesh::new(vertices, uvs, normals, faces)];
 
-    meshes.last_mut().unwrap().object_source = filepath.to_string();
+    meshes.last_mut().unwrap().object_source = path_display.to_string();
 
     match object_name {
         Some(name) => {
@@ -236,7 +234,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         "Parsed {} mesh{} from \"{}\":",
         count,
         if count > 1 { "es" } else { "" },
-        filepath
+        path_display
     );
 
     println!();
