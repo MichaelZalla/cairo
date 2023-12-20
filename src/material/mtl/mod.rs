@@ -1,11 +1,16 @@
 use std::{path::Path, str::SplitWhitespace};
 
-use crate::{fs::read_lines, image::TextureMap, vec::vec3::Vec3};
+use crate::{
+    fs::{get_absolute_filepath, read_lines},
+    image::TextureMap,
+    vec::vec3::Vec3,
+};
 
 use super::Material;
 
-pub fn load_mtl(filepath: String) -> Vec<Material> {
-    let path = Path::new(&filepath);
+pub fn load_mtl(filepath: &str) -> Vec<Material> {
+    let abs = get_absolute_filepath(filepath);
+    let path = Path::new(&abs);
 
     let display = path.display();
 

@@ -21,21 +21,16 @@ fn main() -> Result<(), String> {
     let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
 
     // Load a cube mesh
-    let cube_meshes = mesh::obj::load_obj("./data/obj/cube-textured.obj".to_string());
+    let cube_meshes = mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
     let cube_mesh = &cube_meshes[0];
 
     if cube_mesh.material_source.filepath.len() > 0 {
-        let cube_object_source_parent = Path::new(&cube_mesh.object_source).parent().unwrap();
+        let parent = Path::new(&cube_mesh.object_source).parent().unwrap();
+        let path = Path::new(&cube_mesh.material_source.filepath);
+        let path_relative = parent.join(path).into_os_string().into_string().unwrap();
+        let relative_str = path_relative.as_str();
 
-        let cube_material_source = Path::new(&cube_mesh.material_source.filepath);
-
-        let cube_material_source_path_relative = cube_object_source_parent
-            .join(cube_material_source)
-            .into_os_string()
-            .into_string()
-            .unwrap();
-
-        let cube_materials = material::mtl::load_mtl(cube_material_source_path_relative);
+        let cube_materials = material::mtl::load_mtl(&relative_str);
     }
 
     // Assign the mesh to a new entity
