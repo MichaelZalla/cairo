@@ -31,9 +31,9 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
         match line {
             Err(why) => println!("Error reading next line: {}", why),
             Ok(line) => {
-                let mut line_components = line.split_whitespace();
+                let mut line_tokens = line.split_whitespace();
 
-                match line_components.next() {
+                match line_tokens.next() {
                     None => (),
                     Some(first) => {
                         match first {
@@ -45,9 +45,9 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
                                 // `v  -0.512365 -40.559704 21.367237 50 255 0` (x y z r g b)
 
                                 let (x, y, z) = (
-                                    line_components.next().unwrap().parse::<f32>().unwrap(),
-                                    line_components.next().unwrap().parse::<f32>().unwrap(),
-                                    line_components.next().unwrap().parse::<f32>().unwrap(),
+                                    line_tokens.next().unwrap().parse::<f32>().unwrap(),
+                                    line_tokens.next().unwrap().parse::<f32>().unwrap(),
+                                    line_tokens.next().unwrap().parse::<f32>().unwrap(),
                                 );
 
                                 vertices.push(Vec3 { x, y, z });
@@ -55,17 +55,17 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
                             // Texture (UV) coordinate, as (u, [v, w]), between 0 and 1. v, w are optional and default to 0.
                             "vt" => {
                                 // `vt 0.500 1 [0]` (u v w?)
-                                let u = line_components.next().unwrap().parse::<f32>().unwrap();
+                                let u = line_tokens.next().unwrap().parse::<f32>().unwrap();
                                 let mut v = 0.0;
                                 let mut w = 0.0;
 
-                                let result = line_components.next();
+                                let result = line_tokens.next();
 
                                 match result {
                                     Some(value) => {
                                         v = value.parse::<f32>().unwrap();
 
-                                        let result = line_components.next();
+                                        let result = line_tokens.next();
 
                                         match result {
                                             Some(value) => {
@@ -84,9 +84,9 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
                                 // `vn  0.000005 -34.698460 -17.753405` (x y z)
 
                                 let vertex_normal = Vec3 {
-                                    x: line_components.next().unwrap().parse::<f32>().unwrap(),
-                                    y: line_components.next().unwrap().parse::<f32>().unwrap(),
-                                    z: line_components.next().unwrap().parse::<f32>().unwrap(),
+                                    x: line_tokens.next().unwrap().parse::<f32>().unwrap(),
+                                    y: line_tokens.next().unwrap().parse::<f32>().unwrap(),
+                                    z: line_tokens.next().unwrap().parse::<f32>().unwrap(),
                                 };
 
                                 normals.push(vertex_normal);
@@ -110,9 +110,9 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
 
                                 let mut face: Face = Default::default();
 
-                                let mut v1_iter = line_components.next().unwrap().split("/");
-                                let mut v2_iter = line_components.next().unwrap().split("/");
-                                let mut v3_iter = line_components.next().unwrap().split("/");
+                                let mut v1_iter = line_tokens.next().unwrap().split("/");
+                                let mut v2_iter = line_tokens.next().unwrap().split("/");
+                                let mut v3_iter = line_tokens.next().unwrap().split("/");
 
                                 face.vertices = (
                                     v1_iter.next().unwrap().parse::<usize>().unwrap() - 1,
@@ -165,7 +165,7 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
                             "l" => (),
                             // External material reference
                             "mtllib" => {
-                                let filepath = line_components.next().unwrap();
+                                let filepath = line_tokens.next().unwrap();
 
                                 material_source = Some(MaterialSource {
                                     filepath: filepath.to_string(),
@@ -173,19 +173,19 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
                             }
                             // Material group
                             "usemtl" => {
-                                let name = line_components.next().unwrap();
+                                let name = line_tokens.next().unwrap();
 
                                 material_name = Some(name.to_string());
                             }
                             // Named object
                             "o" => {
-                                let name = line_components.next().unwrap();
+                                let name = line_tokens.next().unwrap();
 
                                 object_name = Some(name.to_string());
                             }
                             // Named object polygon group
                             "g" => {
-                                let name = line_components.next().unwrap();
+                                let name = line_tokens.next().unwrap();
 
                                 group_name = Some(name.to_string());
                             }
