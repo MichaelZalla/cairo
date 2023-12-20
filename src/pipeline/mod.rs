@@ -1,4 +1,5 @@
 use crate::{
+    material::Material,
     mesh::Face,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -70,7 +71,21 @@ where
     }
 
     pub fn render_mesh(&mut self, mesh: &Mesh) {
-        self.process_world_vertices(mesh);
+        match &mesh.material {
+            Some(mat) => {
+                // Set the pipeline effect's active material to this mesh's
+                // material
+                let mat_raw_mut = &*mat as *const Material;
+
+                self.effect.set_active_material(Some(mat_raw_mut));
+            }
+            None => (),
+        }
+
+        self.process_world_vertices(&mesh);
+
+        // Reset the pipeline effect's active material
+        self.effect.set_active_material(None);
     }
 
     pub fn clear_pixel_buffer(&mut self) {

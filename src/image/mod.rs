@@ -83,26 +83,6 @@ impl TextureMap {
     }
 }
 
-pub fn get_texture_map_from_image_path(
-    filepath: &str,
-    rendering_context: &ApplicationRenderingContext,
-) -> Result<TextureMap, String> {
-    let mut map = TextureMap {
-        info: TextureMapInfo {
-            filepath: filepath.to_string(),
-        },
-        is_loaded: false,
-        width: 0,
-        height: 0,
-        pixel_data: vec![],
-    };
-
-    match map.load(rendering_context) {
-        Ok(()) => return Ok(map),
-        Err(msg) => return Err(msg),
-    }
-}
-
 pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 

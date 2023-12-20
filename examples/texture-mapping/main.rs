@@ -1,12 +1,12 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, path::Path, sync::RwLock};
+use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    material, mesh,
+    mesh,
     scene::Scene,
 };
 
@@ -20,9 +20,42 @@ static WINDOW_WIDTH: u32 = 800;
 fn main() -> Result<(), String> {
     let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
 
-    // Load a cube mesh
-    let cube_meshes = mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
-    let cube_mesh = &cube_meshes[0];
+    let rendering_context = &app.context.rendering_context;
+
+    // Load a cube mesh and its materials
+
+    let mut cube_meshes = mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
+
+    let cube_mesh = &mut cube_meshes[0];
+
+    match &mut cube_mesh.material {
+        Some(mat) => {
+            // Ambient
+            match &mut mat.ambient_map {
+                Some(map) => {
+                    map.load(rendering_context)?;
+                }
+                None => (),
+            }
+
+            // Diffuse
+            match &mut mat.diffuse_map {
+                Some(map) => {
+                    map.load(rendering_context)?;
+                }
+                None => (),
+            }
+
+            // Normal
+            match &mut mat.normal_map {
+                Some(map) => {
+                    map.load(rendering_context)?;
+                }
+                None => (),
+            }
+        }
+        None => (),
+    }
 
     // Assign the mesh to a new entity
     let mut cube_entity = Entity::new(&cube_mesh);
@@ -30,8 +63,6 @@ fn main() -> Result<(), String> {
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
     let entities_rwl = RwLock::new(entities);
-
-    let rendering_context = &app.context.rendering_context;
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(TextureMappedCubeScene::new(

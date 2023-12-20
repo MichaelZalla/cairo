@@ -40,8 +40,8 @@ fn main() -> Result<(), String> {
     };
 
     let scenes = RefCell::new(vec![
-        DefaultScene::new(graphics.clone(), None, &entities_rwl),
-        DefaultScene::new(graphics.clone(), None, &entities2_rwl),
+        DefaultScene::new(graphics.clone(), &entities_rwl),
+        DefaultScene::new(graphics.clone(), &entities2_rwl),
     ]);
 
     let current_scene_index = RefCell::new(min(0, scenes.borrow().len() - 1));

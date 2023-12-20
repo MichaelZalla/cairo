@@ -3,7 +3,6 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use crate::{
-    context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
@@ -33,16 +32,11 @@ pub struct DefaultScene<'a> {
     directional_light: DirectionalLight,
     point_light: PointLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-
     prev_mouse_state: MouseState,
 }
 
 impl<'a> DefaultScene<'a> {
-    pub fn new(
-        graphics: Graphics,
-        rendering_context: Option<&ApplicationRenderingContext>,
-        entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-    ) -> Self {
+    pub fn new(graphics: Graphics, entities: &'a RwLock<Vec<&'a mut Entity<'a>>>) -> Self {
         // Set up a camera for rendering our scenes
         let camera: Camera = Camera::new(
             Vec4::new(
@@ -133,7 +127,6 @@ impl<'a> DefaultScene<'a> {
                 ambient_light,
                 directional_light,
                 point_light,
-                rendering_context,
             ),
             pipeline_options,
         );

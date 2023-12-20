@@ -1,6 +1,5 @@
 use crate::{
     color::{self, Color},
-    context::ApplicationRenderingContext,
     effect::Effect,
     image::sample_from_uv,
     material::Material,
@@ -19,7 +18,7 @@ pub struct DefaultEffect {
     point_light: PointLight,
     specular_intensity: f32,
     specular_power: i32,
-    materials: Vec<Material>,
+    active_material: Option<*const Material>,
 }
 
 impl DefaultEffect {
@@ -29,34 +28,7 @@ impl DefaultEffect {
         ambient_light: AmbientLight,
         directional_light: DirectionalLight,
         point_light: PointLight,
-        rendering_context: Option<&ApplicationRenderingContext>,
     ) -> Self {
-        let mut materials: Vec<Material> = vec![];
-
-        match rendering_context {
-            Some(context) => {
-                let diffuse_texture = crate::image::get_texture_map_from_image_path(
-                    "./examples/texture-mapping/assets/grass-diffuse.tga",
-                    context,
-                )
-                .unwrap();
-
-                let normal_texture = crate::image::get_texture_map_from_image_path(
-                    "./examples/texture-mapping/assets/grass-normal.tga",
-                    context,
-                )
-                .unwrap();
-
-                let mut material = Material::new("checkerboard".to_string());
-
-                material.diffuse_map = Some(diffuse_texture);
-                material.normal_map = Some(normal_texture);
-
-                materials.push(material);
-            }
-            _ => {}
-        }
-
         return DefaultEffect {
             world_view_transform,
             projection_transform,
@@ -66,7 +38,7 @@ impl DefaultEffect {
             point_light,
             specular_intensity: 1.0,
             specular_power: 10,
-            materials,
+            active_material: None,
         };
     }
 
@@ -95,6 +67,17 @@ impl Effect for DefaultEffect {
 
     fn get_projection(&self) -> Mat4 {
         return self.projection_transform;
+    }
+
+    fn set_active_material(&mut self, material_option: Option<*const Material>) {
+        match material_option {
+            Some(mat_raw_mut) => {
+                self.active_material = Some(mat_raw_mut);
+            }
+            None => {
+                self.active_material = None;
+            }
+        }
     }
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut {
@@ -136,27 +119,30 @@ impl Effect for DefaultEffect {
             z: surface_normal.z,
         };
 
-        if self.materials.len() > 0 {
-            let normal_map = &self.materials[0].normal_map;
+        match self.active_material {
+            Some(mat_raw_mut) => {
+                unsafe {
+                    match &(*mat_raw_mut).normal_map {
+                        Some(texture) => {
+                            let (r, g, b) = sample_from_uv(out.uv, texture);
 
-            match &normal_map {
-                Some(map) => {
-                    let (r, g, b) = sample_from_uv(out.uv, map);
+                            let _map_normal = Vec4 {
+                                x: (r as f32 / 255.0) * 2.0 - 1.0,
+                                y: (g as f32 / 255.0) * 2.0 - 1.0,
+                                z: (b as f32 / 255.0) * 2.0 - 1.0,
+                                w: 1.0,
+                            };
 
-                    let _map_normal = Vec4 {
-                        x: (r as f32 / 255.0) * 2.0 - 1.0,
-                        y: (g as f32 / 255.0) * 2.0 - 1.0,
-                        z: (b as f32 / 255.0) * 2.0 - 1.0,
-                        w: 1.0,
-                    };
-
-                    // @TODO Perturb the surface normal using the local
-                    // tangent-space information read from `map`
-                    //
-                    // surface_normal = (surface_normal * out.TBN).as_normal();
+                            // @TODO Perturb the surface normal using the local
+                            // tangent-space information read from `map`
+                            //
+                            // surface_normal = (surface_normal * out.TBN).as_normal();
+                        }
+                        None => (),
+                    }
                 }
-                _ => {}
             }
+            None => (),
         }
 
         // Ambient light contribution
@@ -234,19 +220,20 @@ impl Effect for DefaultEffect {
 
         let mut color: Vec3 = out.c;
 
-        if self.materials.len() > 0 {
-            let diffuse_map = &self.materials[0].diffuse_map;
+        match self.active_material {
+            Some(mat_raw_mut) => unsafe {
+                match &(*mat_raw_mut).diffuse_map {
+                    Some(texture) => {
+                        let (r, g, b) = sample_from_uv(out.uv, texture);
 
-            match &diffuse_map {
-                Some(map) => {
-                    let (r, g, b) = sample_from_uv(out.uv, map);
-
-                    color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
+                        color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
+                    }
+                    None => {
+                        color = (*mat_raw_mut).diffuse_color;
+                    }
                 }
-                None => {
-                    color = self.materials[0].diffuse_color;
-                }
-            }
+            },
+            None => {}
         }
 
         color = *((color * total_contribution).saturate()) * 255.0;

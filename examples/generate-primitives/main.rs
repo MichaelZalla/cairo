@@ -6,6 +6,8 @@ use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
+    image::TextureMap,
+    material::Material,
     mesh,
     scene::Scene,
 };
@@ -21,14 +23,31 @@ static WINDOW_WIDTH: u32 = 960;
 fn main() -> Result<(), String> {
     let app = App::new("examples/generate-primitives", WINDOW_WIDTH, ASPECT_RATIO);
 
-    // Generate a cube mesh
-    let plane_mesh = mesh::primitive::plane::generate(30.0, 30.0, 8, 8);
-    let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
-    let cone_mesh = mesh::primitive::cone::generate(2.0, 2.0, 40);
-    let cylinder_mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
+    let rendering_context = &app.context.rendering_context;
 
-    // Assign the mesh to new entities
-    let mut plane_entity = Entity::new(&plane_mesh);
+    // Generate primitive meshes
+    let mut plane_mesh = mesh::primitive::plane::generate(30.0, 30.0, 8, 8);
+    let mut cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let mut cone_mesh = mesh::primitive::cone::generate(2.0, 2.0, 40);
+    let mut cylinder_mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
+
+    // Create a new textured material
+    let mut checkerboard_mat = Material::new("checkerboard".to_string());
+
+    let mut checkerboard_texture =
+        TextureMap::new(&"./examples/generate-primitives/assets/checkerboard.png");
+
+    checkerboard_texture.load(rendering_context)?;
+
+    checkerboard_mat.diffuse_map = Some(checkerboard_texture);
+
+    plane_mesh.material = Some(checkerboard_mat.clone());
+    cube_mesh.material = Some(checkerboard_mat.clone());
+    cone_mesh.material = Some(checkerboard_mat.clone());
+    cylinder_mesh.material = Some(checkerboard_mat.clone());
+
+    // Assign the meshes to entities
+    let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
 
     let mut cube_entity = Entity::new(&cube_mesh);
     cube_entity.position.x -= 3.0;
@@ -51,8 +70,6 @@ fn main() -> Result<(), String> {
     ];
 
     let entities_rwl = RwLock::new(entities);
-
-    let rendering_context = &app.context.rendering_context;
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(GeneratePrimitivesScene::new(

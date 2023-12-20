@@ -1,3 +1,5 @@
+use crate::material::Material;
+
 use super::{color::Color, matrix::Mat4};
 
 pub trait Effect {
@@ -5,6 +7,8 @@ pub trait Effect {
     type VertexOut;
 
     fn get_projection(&self) -> Mat4;
+
+    fn set_active_material(&mut self, material_option: Option<*const Material>);
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut;
 

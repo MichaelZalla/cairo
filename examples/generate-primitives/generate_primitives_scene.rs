@@ -145,8 +145,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 ambient_light,
                 directional_light,
                 point_light,
-                Some(rendering_context),
-                // None,
             ),
             pipeline_options,
         );
