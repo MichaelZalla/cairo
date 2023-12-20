@@ -14,18 +14,20 @@ use crate::device::{
 use crate::context::{get_application_context, get_backbuffer, ApplicationContext};
 
 pub struct App {
+    pub canvas_width: u32,
+    pub canvas_height: u32,
     pub context: ApplicationContext,
     pub aspect_ratio: f32,
 }
 
 impl App {
-    pub fn new(window_title: &str, window_width: u32, aspect_ratio: f32) -> Self {
-        let window_height: u32 = (window_width as f32 / aspect_ratio) as u32;
+    pub fn new(window_title: &str, canvas_width: u32, aspect_ratio: f32) -> Self {
+        let canvas_height: u32 = (canvas_width as f32 / aspect_ratio) as u32;
 
         let context = get_application_context(
             window_title,
-            window_width,
-            window_height,
+            canvas_width,
+            canvas_height,
             false,
             false,
             true,
@@ -33,6 +35,8 @@ impl App {
         .unwrap();
 
         return App {
+            canvas_width,
+            canvas_height,
             context,
             aspect_ratio,
         };
@@ -240,6 +244,14 @@ impl App {
 
             // Render current scene to backbuffer
 
+            let cw = &mut self.context.rendering_context.canvas.write().unwrap();
+
+            let attrs = backbuffer.query();
+            let scale_x: f32 = attrs.width as f32 / self.canvas_width as f32;
+            let scale_y: f32 = attrs.height as f32 / self.canvas_height as f32;
+
+            cw.set_scale(scale_x, scale_y)?;
+
             backbuffer
                 .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
@@ -267,19 +279,9 @@ impl App {
 
             // Flip buffers
 
-            self.context
-                .rendering_context
-                .canvas
-                .write()
-                .unwrap()
-                .copy(&backbuffer, None, None)?;
+            cw.copy(&backbuffer, None, None)?;
 
-            self.context
-                .rendering_context
-                .canvas
-                .write()
-                .unwrap()
-                .present();
+            cw.present();
 
             frame_end_tick = self.context.timer.performance_counter();
 

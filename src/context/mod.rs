@@ -25,8 +25,8 @@ pub struct ApplicationRenderingContext {
 
 pub fn get_application_context(
     window_title: &str,
-    window_width: u32,
-    window_height: u32,
+    canvas_width: u32,
+    canvas_height: u32,
     full_screen: bool,
     show_cursor: bool,
     vertical_sync: bool,
@@ -96,16 +96,15 @@ pub fn get_application_context(
 
     let video_subsystem = sdl_context.video()?;
 
-    let mut window_builder = video_subsystem.window(window_title, window_width, window_height);
+    let mut window_builder = video_subsystem.window(window_title, canvas_width, canvas_height);
 
     // window_builder.opengl()
     // window_builder.position_centered()
     // window_builder.borderless();
 
     if full_screen {
-        // @NOTE(mzalla) Overrides
-        // `window_width` and `window_height`
-        // for the current desktop resolution;
+        // Will verride `canvas_width` and `canvas_height` for the current
+        // desktop resolution;
         window_builder.fullscreen_desktop();
     }
 
