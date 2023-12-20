@@ -77,6 +77,8 @@ impl TextureMap {
             })
             .unwrap();
 
+        self.is_loaded = true;
+
         Ok(())
     }
 }
@@ -89,7 +91,7 @@ pub fn get_texture_map_from_image_path(
         info: TextureMapInfo {
             filepath: filepath.to_string(),
         },
-        is_loaded: true,
+        is_loaded: false,
         width: 0,
         height: 0,
         pixel_data: vec![],
