@@ -121,8 +121,8 @@ pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
             == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
     );
 
-    let texel_x = (((1.0 - uv_x_safe) * (map.width - 1) as f32).floor()) as u32;
-    let texel_y = (((1.0 - uv_y_safe) * (map.height - 1) as f32).floor()) as u32;
+    let texel_x = ((1.0 - uv_x_safe) * (map.width - 1) as f32) as u32;
+    let texel_y = ((1.0 - uv_y_safe) * (map.height - 1) as f32) as u32;
 
     let texel_color_index = TextureMap::BYTES_PER_PIXEL * (texel_y * map.width + texel_x) as usize;
 
