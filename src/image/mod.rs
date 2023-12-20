@@ -102,12 +102,7 @@ pub fn get_texture_map_from_image_path(
 }
 
 pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
-    if map.is_loaded == false {
-        panic!(
-            "Called sample_from_uv() with an unloaded texture map: {}",
-            map.info.filepath
-        );
-    }
+    debug_assert!(map.is_loaded);
 
     let uv_x_safe = if uv.x < 0.0 || uv.x >= 1.0 {
         uv.x.rem_euclid(1.0)
@@ -121,7 +116,7 @@ pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
         uv.y
     };
 
-    assert!(
+    debug_assert!(
         map.pixel_data.len()
             == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
     );
@@ -133,7 +128,7 @@ pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
 
     let pixels = &map.pixel_data;
 
-    assert!(texel_color_index < pixels.len());
+    debug_assert!(texel_color_index < pixels.len());
 
     let r: u8 = pixels[texel_color_index];
     let g: u8 = pixels[texel_color_index + 1];
