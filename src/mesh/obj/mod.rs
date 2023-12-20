@@ -204,6 +204,8 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
 
     let mut meshes = vec![Mesh::new(vertices, uvs, normals, faces)];
 
+    meshes.last_mut().unwrap().object_source = filepath.clone();
+
     match object_name {
         Some(name) => {
             meshes.last_mut().unwrap().object_name = name;

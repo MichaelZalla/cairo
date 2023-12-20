@@ -21,6 +21,7 @@ pub struct MaterialSource {
 
 #[derive(Clone)]
 pub struct Mesh {
+    pub object_source: String,
     pub object_name: String,
     pub group_name: String,
     pub material_source: MaterialSource,
@@ -34,6 +35,7 @@ pub struct Mesh {
 impl Default for Mesh {
     fn default() -> Mesh {
         Mesh {
+            object_source: "__undefined__".to_string(),
             object_name: "__undefined__".to_string(),
             group_name: "__undefined__".to_string(),
             material_source: Default::default(),
@@ -49,6 +51,9 @@ impl Default for Mesh {
 impl fmt::Display for Mesh {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(v, "Mesh (\"{}\")", self.object_name)?;
+        if self.object_source.len() > 0 {
+            writeln!(v, "  > Source: {}", self.object_source)?;
+        }
         writeln!(v, "  > Object name: {}", self.object_name)?;
         writeln!(v, "  > Group name: {}", self.group_name)?;
         writeln!(v, "  > Material source: {}", self.material_source.filepath)?;
