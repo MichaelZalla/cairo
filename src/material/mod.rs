@@ -1,12 +1,13 @@
 use std::fmt;
 
-use crate::{color, image::TextureMap, vec::vec3::Vec3};
+use crate::{color, image::TextureMap, mesh::MaterialSource, vec::vec3::Vec3};
 
 pub mod mtl;
 
 #[derive(Debug, Clone, Default)]
 pub struct Material {
     pub name: String,
+    pub material_source: Option<MaterialSource>,
     pub illumination_model: u8,
     pub ambient_color: Vec3,
     pub ambient_map: Option<TextureMap>,
@@ -33,6 +34,13 @@ impl Material {
 impl fmt::Display for Material {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(v, "Material (\"{}\")", self.name)?;
+
+        match &self.material_source {
+            Some(source) => {
+                writeln!(v, "  > Material source : {}", source.filepath)?;
+            }
+            None => (),
+        }
 
         writeln!(v, "  > Illumination model: {}", self.illumination_model)?;
 

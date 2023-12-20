@@ -1,6 +1,6 @@
 use std::{path::Path, str::SplitWhitespace};
 
-use crate::{fs::read_lines, image::TextureMap, vec::vec3::Vec3};
+use crate::{fs::read_lines, image::TextureMap, mesh::MaterialSource, vec::vec3::Vec3};
 
 use super::Material;
 
@@ -33,9 +33,17 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // newmtl cube
 
+                                let source = MaterialSource {
+                                    filepath: path_display.to_string(),
+                                };
+
                                 let name = line_tokens.next().unwrap().to_string();
 
-                                materials.push(Material::new(name));
+                                let mut mat = Material::new(name);
+
+                                mat.material_source = Some(source);
+
+                                materials.push(mat);
                             }
 
                             // Illumination model
