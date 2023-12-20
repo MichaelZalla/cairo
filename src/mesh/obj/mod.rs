@@ -10,6 +10,7 @@ use super::Mesh;
 pub fn load_obj(filepath: &str) -> Vec<Mesh> {
     let path = Path::new(&filepath);
     let path_display = path.display();
+    let path_parent = path.parent().unwrap();
 
     let lines = match read_lines(&path) {
         Err(why) => panic!("Failed to open file {}: {}", path_display, why),
@@ -164,10 +165,17 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                             "l" => (),
                             // External material reference
                             "mtllib" => {
-                                let filepath = line_tokens.next().unwrap();
+                                let mtl_filepath = line_tokens.next().unwrap();
+
+                                let mtl_path_relative = path_parent
+                                    .join(mtl_filepath)
+                                    .into_os_string()
+                                    .into_string()
+                                    .unwrap();
+                                let mtl_path_relative_str = mtl_path_relative.as_str();
 
                                 material_source = Some(MaterialSource {
-                                    filepath: filepath.to_string(),
+                                    filepath: mtl_path_relative_str.to_string(),
                                 });
                             }
                             // Material group
