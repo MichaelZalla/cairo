@@ -221,12 +221,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         None => (),
     }
 
-    match material_source {
-        Some(source) => {
-            meshes.last_mut().unwrap().material_source = source;
-        }
-        None => (),
-    }
+    meshes.last_mut().unwrap().material_source = material_source;
 
     match material_name {
         Some(name) => {
