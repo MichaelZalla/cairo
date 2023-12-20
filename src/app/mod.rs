@@ -70,8 +70,8 @@ impl App {
 
         let desired_ticks_per_frame: u64 = ticks_per_second / frame_rate_limit;
 
-        let mut frame_start_tick: u64 = self.context.timer.performance_counter();
-        let mut frame_end_tick: u64;
+        let mut frame_start: u64 = self.context.timer.performance_counter();
+        let mut frame_end: u64;
 
         let mut prev_mouse_clicks = HashSet::new();
 
@@ -84,9 +84,9 @@ impl App {
         'main: loop {
             // Main loop
 
-            let now_tick = self.context.timer.performance_counter();
+            let now = self.context.timer.performance_counter();
 
-            let ticks_slept = now_tick - frame_start_tick;
+            let ticks_slept = now - frame_start;
 
             let seconds_slept: f32 = ticks_slept as f32 / ticks_per_second as f32;
 
@@ -283,11 +283,11 @@ impl App {
 
             cw.present();
 
-            frame_end_tick = self.context.timer.performance_counter();
+            frame_end = self.context.timer.performance_counter();
 
             // Report framerate
 
-            let ticks_for_current_frame = frame_end_tick - frame_start_tick;
+            let ticks_for_current_frame = frame_end - frame_start;
 
             // let frames_per_second = ticks_for_current_frame as f64 / ticks_per_second as f64;
 
@@ -320,7 +320,7 @@ impl App {
                 debug_print!("unused_milliseconds={}", unused_milliseconds);
             }
 
-            frame_start_tick = self.context.timer.performance_counter();
+            frame_start = self.context.timer.performance_counter();
 
             // Sleep if we can...
 
