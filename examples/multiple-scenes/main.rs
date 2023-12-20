@@ -19,9 +19,12 @@ static WINDOW_WIDTH: u32 = 1080;
 static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
-    // Import mesh data
-    let cube_mesh = load_obj(get_absolute_filepath("./data/obj/cube.obj"));
-    let teapot_mesh = load_obj(get_absolute_filepath("./data/obj/teapot.obj"));
+    // Load meshes
+    let cube_meshes = load_obj(get_absolute_filepath("./data/obj/cube.obj"));
+    let cube_mesh = &cube_meshes[0];
+
+    let teapot_meshes = load_obj(get_absolute_filepath("./data/obj/teapot.obj"));
+    let teapot_mesh = &teapot_meshes[0];
 
     // Assign meshes to new entities
     let mut cube_entity = Entity::new(&cube_mesh);

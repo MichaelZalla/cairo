@@ -7,7 +7,7 @@ use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
 
-pub fn load_obj(filepath: String) -> Mesh {
+pub fn load_obj(filepath: String) -> Vec<Mesh> {
     let path = Path::new(&filepath);
 
     let display = path.display();
@@ -204,12 +204,12 @@ pub fn load_obj(filepath: String) -> Mesh {
 
     println!("Parsed mesh from OBJ file (\"{}\"):", filepath);
 
-    let mut mesh = Mesh::new(vertices, uvs, normals, faces);
+    let mut meshes = vec![Mesh::new(vertices, uvs, normals, faces)];
 
     match object_name {
         Some(name) => {
             println!("  > Object name: {}", name);
-            mesh.object_name = name;
+            meshes.last_mut().unwrap().object_name = name;
         }
         None => (),
     }
@@ -217,7 +217,7 @@ pub fn load_obj(filepath: String) -> Mesh {
     match group_name {
         Some(name) => {
             println!("  > Group name: {}", name);
-            mesh.group_name = name;
+            meshes.last_mut().unwrap().group_name = name;
         }
         None => (),
     }
@@ -225,7 +225,7 @@ pub fn load_obj(filepath: String) -> Mesh {
     match material_source {
         Some(source) => {
             println!("  > Material source: {}", source.filepath);
-            mesh.material_source = source;
+            meshes.last_mut().unwrap().material_source = source;
         }
         None => (),
     }
@@ -233,15 +233,30 @@ pub fn load_obj(filepath: String) -> Mesh {
     match material_name {
         Some(name) => {
             println!("  > Material name: {}", name);
-            mesh.material_name = name;
+            meshes.last_mut().unwrap().material_name = name;
         }
         None => (),
     }
 
-    println!("  > Vertices: {} (Vec3)", mesh.vertices.len());
-    println!("  > UVs: {} (Vec2)", mesh.uvs.len());
-    println!("  > Normals: {} (Vec3)", mesh.normals.len());
-    println!("  > Faces: {} (Face)", mesh.faces.len());
+    println!(
+        "  > Vertices: {} (Vec3)",
+        meshes.last().unwrap().vertices.len()
+    );
+    println!("  > UVs: {} (Vec2)", meshes.last().unwrap().uvs.len());
+    println!(
+        "  > Normals: {} (Vec3)",
+        meshes.last().unwrap().normals.len()
+    );
+    println!("  > Faces: {} (Face)", meshes.last().unwrap().faces.len());
 
-    return mesh;
+    let count: usize = meshes.len();
+
+    println!(
+        "Parsed {} mesh{} from \"{}\":",
+        count,
+        if count > 1 { "es" } else { "" },
+        filepath
+    );
+
+    return meshes;
 }

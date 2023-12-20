@@ -20,8 +20,10 @@ static WINDOW_WIDTH: u32 = 800;
 fn main() -> Result<(), String> {
     let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
 
-    // Generate a cube mesh
-    let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
+    // Load a cube mesh
+    let cube_meshes = mesh::obj::load_obj("./data/obj/cube-textured.obj".to_string());
+
+    let cube_mesh = &cube_meshes[0];
 
     // Assign the mesh to a new entity
     let mut cube_entity = Entity::new(&cube_mesh);
