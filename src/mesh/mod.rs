@@ -1,8 +1,8 @@
 use std::fmt;
 
-use crate::vec::vec2::Vec2;
-
 use super::vec::vec3::Vec3;
+use crate::material::Material;
+use crate::vec::vec2::Vec2;
 
 pub mod obj;
 pub mod primitive;
@@ -26,6 +26,7 @@ pub struct Mesh {
     pub group_name: String,
     pub material_source: Option<MaterialSource>,
     pub material_name: String,
+    pub material: Option<Material>,
     pub vertices: Vec<Vec3>,
     pub normals: Vec<Vec3>,
     pub uvs: Vec<Vec2>,
@@ -44,6 +45,7 @@ impl Default for Mesh {
             normals: vec![],
             uvs: vec![],
             faces: vec![],
+            material: None,
         }
     }
 }

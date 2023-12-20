@@ -2,6 +2,7 @@ use std::path::Path;
 
 use crate::fs::read_lines;
 
+use crate::material;
 use crate::mesh::{Face, MaterialSource};
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
@@ -246,7 +247,26 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
     );
 
     println!();
-    for mesh in &meshes {
+
+    for mesh in meshes.as_mut_slice() {
+        // Load any materials from associated MTL files
+
+        match &mesh.material_source {
+            Some(src) => {
+                // Parse the set of materials inside the MTL source
+                let materials = material::mtl::load_mtl(&src.filepath);
+
+                // Find the material referenced by this mesh (via usemtl)
+                for i in 0..materials.len() {
+                    let mat = &materials[i];
+                    if mat.name == mesh.material_name {
+                        mesh.material = Some(mat.to_owned());
+                    }
+                }
+            }
+            None => (),
+        }
+
         println!("{}", mesh);
     }
 

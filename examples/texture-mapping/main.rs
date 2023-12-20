@@ -24,18 +24,6 @@ fn main() -> Result<(), String> {
     let cube_meshes = mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
     let cube_mesh = &cube_meshes[0];
 
-    match &cube_mesh.material_source {
-        Some(source) => {
-            let parent = Path::new(&cube_mesh.object_source).parent().unwrap();
-            let path = Path::new(&source.filepath);
-            let path_relative = parent.join(path).into_os_string().into_string().unwrap();
-            let relative_str = path_relative.as_str();
-
-            let cube_materials = material::mtl::load_mtl(&relative_str);
-        }
-        None => (),
-    }
-
     // Assign the mesh to a new entity
     let mut cube_entity = Entity::new(&cube_mesh);
 
