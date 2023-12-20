@@ -243,7 +243,9 @@ impl Effect for DefaultEffect {
 
                     color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                 }
-                _ => {}
+                None => {
+                    color = self.materials[0].diffuse_color;
+                }
             }
         }
 
