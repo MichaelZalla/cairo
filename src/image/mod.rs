@@ -23,9 +23,11 @@ pub struct TextureMap {
 }
 
 impl TextureMap {
-    pub fn new(filepath: String) -> Self {
+    pub fn new(filepath: &str) -> Self {
         TextureMap {
-            info: TextureMapInfo { filepath },
+            info: TextureMapInfo {
+                filepath: filepath.to_string(),
+            },
             is_loaded: false,
             width: 0,
             height: 0,
@@ -78,11 +80,13 @@ impl TextureMap {
 }
 
 pub fn get_texture_map_from_image_path(
-    filepath: String,
+    filepath: &str,
     rendering_context: &ApplicationRenderingContext,
 ) -> Result<TextureMap, String> {
     let mut map = TextureMap {
-        info: TextureMapInfo { filepath },
+        info: TextureMapInfo {
+            filepath: filepath.to_string(),
+        },
         is_loaded: true,
         width: 0,
         height: 0,

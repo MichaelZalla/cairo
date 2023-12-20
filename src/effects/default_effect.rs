@@ -36,13 +36,13 @@ impl DefaultEffect {
         match rendering_context {
             Some(context) => {
                 let diffuse_texture = crate::image::get_texture_map_from_image_path(
-                    "./examples/texture-mapping/assets/grass-diffuse.tga".to_string(),
+                    "./examples/texture-mapping/assets/grass-diffuse.tga",
                     context,
                 )
                 .unwrap();
 
                 let normal_texture = crate::image::get_texture_map_from_image_path(
-                    "./examples/texture-mapping/assets/grass-normal.tga".to_string(),
+                    "./examples/texture-mapping/assets/grass-normal.tga",
                     context,
                 )
                 .unwrap();

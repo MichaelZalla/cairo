@@ -167,7 +167,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                     .unwrap();
 
                                 materials.last_mut().unwrap().ambient_map =
-                                    Some(TextureMap::new(mtl_relative_filepath));
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
                             // Diffuse texture map (typically identical to map_Ka)
@@ -187,7 +187,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                     .unwrap();
 
                                 materials.last_mut().unwrap().diffuse_map =
-                                    Some(TextureMap::new(mtl_relative_filepath));
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
                             // Specular color map
