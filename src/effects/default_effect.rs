@@ -47,7 +47,7 @@ impl DefaultEffect {
                 )
                 .unwrap();
 
-                let mut material = Material::new();
+                let mut material = Material::new("checkerboard".to_string());
 
                 material.diffuse_map = Some(diffuse_texture);
                 material.normal_map = Some(normal_texture);

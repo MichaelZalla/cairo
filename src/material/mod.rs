@@ -6,6 +6,7 @@ pub mod mtl;
 
 #[derive(Debug, Clone, Default)]
 pub struct Material {
+    pub name: String,
     pub illumination_model: u8,
     pub ambient_color: Vec3,
     pub ambient_map: Option<TextureMap>,
@@ -22,14 +23,16 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn new() -> Self {
-        return Default::default();
+    pub fn new(name: String) -> Self {
+        let mut mat: Material = Default::default();
+        mat.name = name;
+        mat
     }
 }
 
 impl fmt::Display for Material {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(v, "Material")?;
+        writeln!(v, "Material (\"{}\")", self.name)?;
 
         writeln!(v, "  > Illumination model: {}", self.illumination_model)?;
 

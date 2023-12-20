@@ -28,17 +28,17 @@ fn main() -> Result<(), String> {
     let cylinder_mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
 
     // Assign the mesh to new entities
-    let mut plane_entity = Entity::new(&plane_mesh, None);
+    let mut plane_entity = Entity::new(&plane_mesh);
 
-    let mut cube_entity = Entity::new(&cube_mesh, None);
+    let mut cube_entity = Entity::new(&cube_mesh);
     cube_entity.position.x -= 3.0;
     cube_entity.position.y -= 1.5;
 
-    let mut cone_entity = Entity::new(&cone_mesh, None);
+    let mut cone_entity = Entity::new(&cone_mesh);
     // cone_entity.position.x += 1.5;
     cone_entity.position.y -= 1.5;
 
-    let mut cylinder_entity = Entity::new(&cylinder_mesh, None);
+    let mut cylinder_entity = Entity::new(&cylinder_mesh);
     cylinder_entity.position.x += 3.0;
     cylinder_entity.position.y -= 1.5;
 

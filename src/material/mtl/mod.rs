@@ -39,7 +39,9 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // newmtl cube
 
-                                materials.push(Material::new());
+                                let name = line_tokens.next().unwrap().to_string();
+
+                                materials.push(Material::new(name));
                             }
 
                             // Illumination model
