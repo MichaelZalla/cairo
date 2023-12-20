@@ -23,6 +23,8 @@ pub struct TextureMap {
 }
 
 impl TextureMap {
+    const BYTES_PER_PIXEL: usize = 3;
+
     pub fn new(filepath: &str) -> Self {
         TextureMap {
             info: TextureMapInfo {
@@ -67,7 +69,7 @@ impl TextureMap {
                 texture_canvas.copy(&static_texture, None, None).unwrap();
 
                 let pixels = texture_canvas
-                    .read_pixels(None, PixelFormatEnum::RGBA32)
+                    .read_pixels(None, PixelFormatEnum::RGB24)
                     .unwrap();
 
                 self.pixel_data.resize(pixels.len(), 0);
@@ -99,7 +101,7 @@ pub fn get_texture_map_from_image_path(
     }
 }
 
-pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8, u8) {
+pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     if map.is_loaded == false {
         panic!(
             "Called sample_from_uv() with an unloaded texture map: {}",
@@ -119,12 +121,15 @@ pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8, u8) {
         uv.y
     };
 
-    assert!(map.pixel_data.len() == (map.width * map.height * 4) as usize);
+    assert!(
+        map.pixel_data.len()
+            == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
+    );
 
     let texel_x = (((1.0 - uv_x_safe) * (map.width - 1) as f32).floor()) as u32;
     let texel_y = (((1.0 - uv_y_safe) * (map.height - 1) as f32).floor()) as u32;
 
-    let texel_color_index = 4 * (texel_y * map.width + texel_x) as usize;
+    let texel_color_index = TextureMap::BYTES_PER_PIXEL * (texel_y * map.width + texel_x) as usize;
 
     let pixels = &map.pixel_data;
 
@@ -133,7 +138,6 @@ pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8, u8) {
     let r: u8 = pixels[texel_color_index];
     let g: u8 = pixels[texel_color_index + 1];
     let b: u8 = pixels[texel_color_index + 2];
-    let a: u8 = pixels[texel_color_index + 3];
 
-    return (r, g, b, a);
+    return (r, g, b);
 }

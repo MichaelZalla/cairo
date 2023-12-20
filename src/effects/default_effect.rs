@@ -141,7 +141,7 @@ impl Effect for DefaultEffect {
 
             match &normal_map {
                 Some(map) => {
-                    let (r, g, b, _a) = sample_from_uv(out.uv, map);
+                    let (r, g, b) = sample_from_uv(out.uv, map);
 
                     let _map_normal = Vec4 {
                         x: (r as f32 / 255.0) * 2.0 - 1.0,
@@ -239,7 +239,7 @@ impl Effect for DefaultEffect {
 
             match &diffuse_map {
                 Some(map) => {
-                    let (r, g, b, _a) = sample_from_uv(out.uv, map);
+                    let (r, g, b) = sample_from_uv(out.uv, map);
 
                     color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                 }
