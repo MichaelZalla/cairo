@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::vec::vec2::Vec2;
 
 use super::vec::vec3::Vec3;
@@ -41,6 +43,20 @@ impl Default for Mesh {
             uvs: vec![],
             faces: vec![],
         }
+    }
+}
+
+impl fmt::Display for Mesh {
+    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(v, "Mesh (\"{}\")", self.object_name)?;
+        writeln!(v, "  > Object name: {}", self.object_name)?;
+        writeln!(v, "  > Group name: {}", self.group_name)?;
+        writeln!(v, "  > Material source: {}", self.material_source.filepath)?;
+        writeln!(v, "  > Material name: {}", self.material_name)?;
+        writeln!(v, "  > Vertices: {}", self.vertices.len())?;
+        writeln!(v, "  > UVs: {}", self.uvs.len())?;
+        writeln!(v, "  > Normals: {}", self.normals.len())?;
+        writeln!(v, "  > Faces: {}", self.faces.len())
     }
 }
 

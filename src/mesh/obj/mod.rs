@@ -202,13 +202,10 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
         }
     }
 
-    println!("Parsed mesh from OBJ file (\"{}\"):", filepath);
-
     let mut meshes = vec![Mesh::new(vertices, uvs, normals, faces)];
 
     match object_name {
         Some(name) => {
-            println!("  > Object name: {}", name);
             meshes.last_mut().unwrap().object_name = name;
         }
         None => (),
@@ -216,7 +213,6 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
 
     match group_name {
         Some(name) => {
-            println!("  > Group name: {}", name);
             meshes.last_mut().unwrap().group_name = name;
         }
         None => (),
@@ -224,7 +220,6 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
 
     match material_source {
         Some(source) => {
-            println!("  > Material source: {}", source.filepath);
             meshes.last_mut().unwrap().material_source = source;
         }
         None => (),
@@ -232,22 +227,10 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
 
     match material_name {
         Some(name) => {
-            println!("  > Material name: {}", name);
             meshes.last_mut().unwrap().material_name = name;
         }
         None => (),
     }
-
-    println!(
-        "  > Vertices: {} (Vec3)",
-        meshes.last().unwrap().vertices.len()
-    );
-    println!("  > UVs: {} (Vec2)", meshes.last().unwrap().uvs.len());
-    println!(
-        "  > Normals: {} (Vec3)",
-        meshes.last().unwrap().normals.len()
-    );
-    println!("  > Faces: {} (Face)", meshes.last().unwrap().faces.len());
 
     let count: usize = meshes.len();
 
@@ -257,6 +240,11 @@ pub fn load_obj(filepath: String) -> Vec<Mesh> {
         if count > 1 { "es" } else { "" },
         filepath
     );
+
+    println!();
+    for mesh in &meshes {
+        println!("{}", mesh);
+    }
 
     return meshes;
 }
