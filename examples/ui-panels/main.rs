@@ -52,7 +52,7 @@ fn main() -> Result<(), String> {
                 |_keyboard_state: &KeyboardState,
                  _mouse_state: &MouseState,
                  _game_controller_state: &GameControllerState,
-                 _delta_t_seconds: f32|
+                 _seconds_since_last_update: f32|
                  -> () {
                     // @TODO(mzalla) Update panel tree in response to mouse events
                 },
@@ -76,7 +76,7 @@ fn main() -> Result<(), String> {
             let mut update = |keyboard_state: &KeyboardState,
                               mouse_state: &MouseState,
                               game_controller_state: &GameControllerState,
-                              delta_t_seconds: f32|
+                              seconds_since_last_update: f32|
              -> () {
                 // Delegrate update actions to the root panel
 
@@ -84,7 +84,7 @@ fn main() -> Result<(), String> {
                     keyboard_state,
                     mouse_state,
                     game_controller_state,
-                    delta_t_seconds,
+                    seconds_since_last_update,
                 )
             };
 

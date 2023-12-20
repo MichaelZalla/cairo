@@ -78,6 +78,7 @@ impl App {
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
 
         let mut current_tick: u32 = 0;
+        let mut last_update_tick = self.context.timer.performance_counter();
 
         // Main event loop
 
@@ -235,12 +236,20 @@ impl App {
 
             // Update current scene
 
+            let ticks_since_last_update =
+                self.context.timer.performance_counter() - last_update_tick;
+
+            let seconds_since_last_update =
+                ticks_since_last_update as f32 / ticks_per_second as f32;
+
             update(
                 &keyboard_state,
                 &mouse_state,
                 &game_controller.state,
-                seconds_slept,
+                seconds_since_last_update,
             );
+
+            last_update_tick = self.context.timer.performance_counter();
 
             // Render current scene to backbuffer
 

@@ -51,7 +51,7 @@ impl<'a> SpinningCubeScene<'a> {
                 1.0,
             ),
             Mat4::identity(),
-            150.0,
+            50.0,
             0.0,
             6.0,
         );
@@ -157,7 +157,7 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         _game_controller_state: &GameControllerState,
-        delta_t_seconds: f32,
+        seconds_since_last_update: f32,
     ) {
         // Calculate mouse position delta
 
@@ -184,7 +184,7 @@ impl<'a> Scene for SpinningCubeScene<'a> {
 
         // Apply camera movement based on keyboard or gamepad input
 
-        let camera_movement_step = camera.movement_speed * delta_t_seconds;
+        let camera_movement_step = camera.movement_speed * seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
@@ -252,13 +252,13 @@ impl<'a> Scene for SpinningCubeScene<'a> {
 
         // Mesh rotation via our time delta
 
-        entity.rotation.z += 0.2 * PI * delta_t_seconds;
+        entity.rotation.z += 0.2 * PI * seconds_since_last_update;
         entity.rotation.z %= 2.0 * PI;
 
-        entity.rotation.x += 0.2 * PI * delta_t_seconds;
+        entity.rotation.x += 0.2 * PI * seconds_since_last_update;
         entity.rotation.x %= 2.0 * PI;
 
-        entity.rotation.y += 0.2 * PI * delta_t_seconds;
+        entity.rotation.y += 0.2 * PI * seconds_since_last_update;
         entity.rotation.y %= 2.0 * PI;
 
         let world_transform = Mat4::scaling(0.5)

@@ -170,7 +170,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         _game_controller_state: &GameControllerState,
-        _delta_t_seconds: f32,
+        seconds_since_last_update: f32,
     ) {
         // Calculate mouse position delta
 
@@ -198,7 +198,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         // Apply camera movement based on keyboard or gamepad input
 
-        let camera_movement_step = camera.movement_speed * 0.001;
+        let camera_movement_step = camera.movement_speed * 0.1 * seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
@@ -262,7 +262,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let mut entities = self.entities.write().unwrap();
 
-        let rotation_speed = 0.001;
+        let rotation_speed = 0.1 * seconds_since_last_update;
 
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta

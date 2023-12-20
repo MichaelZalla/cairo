@@ -9,7 +9,7 @@ pub trait Scene {
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        delta_t_seconds: f32,
+        seconds_since_last_update: f32,
     );
 
     fn render(&mut self);

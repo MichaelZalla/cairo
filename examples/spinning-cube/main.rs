@@ -42,7 +42,7 @@ fn main() -> Result<(), String> {
     let mut update = |keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState,
-                      delta_t_seconds: f32|
+                      seconds_since_last_update: f32|
      -> () {
         // Delegate the update to our spinning cube scene
 
@@ -50,7 +50,7 @@ fn main() -> Result<(), String> {
             &keyboard_state,
             &mouse_state,
             &game_controller_state,
-            delta_t_seconds,
+            seconds_since_last_update,
         );
     };
 

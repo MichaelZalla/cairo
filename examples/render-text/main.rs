@@ -45,9 +45,9 @@ fn main() -> Result<(), String> {
             let mut update = |_keyboard_state: &KeyboardState,
                               mouse_state: &MouseState,
                               _game_controller_state: &GameControllerState,
-                              delta_t_seconds: f32|
+                              seconds_since_last_update: f32|
              -> () {
-                *now_seconds.borrow_mut() += delta_t_seconds;
+                *now_seconds.borrow_mut() += seconds_since_last_update;
                 *mouse_x.borrow_mut() = mouse_state.position.0;
                 *mouse_y.borrow_mut() = mouse_state.position.1;
             };

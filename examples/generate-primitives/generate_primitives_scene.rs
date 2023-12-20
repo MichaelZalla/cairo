@@ -72,7 +72,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 1.0,
             ),
             Mat4::identity(),
-            150.0,
+            50.0,
             0.0,
             6.0,
         );
@@ -173,7 +173,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         _game_controller_state: &GameControllerState,
-        _delta_t_seconds: f32,
+        seconds_since_last_update: f32,
     ) {
         // Calculate mouse position delta
 
@@ -201,7 +201,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         // Apply camera movement based on keyboard or gamepad input
 
-        let camera_movement_step = camera.movement_speed * 0.001;
+        let camera_movement_step = camera.movement_speed * seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
@@ -265,18 +265,18 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         // let mut entities = self.entities.write().unwrap();
 
-        // let rotation_speed = 0.0002;
+        // let rotation_speed = 0.3;
 
-        // for (index, entity) in entities.as_mut_slice().into_iter().enumerate() {
+        // for entity in entities.as_mut_slice() {
         //     // Mesh rotation via our time delta
 
-        //     entity.rotation.z += rotation_speed * PI * (index as f32 + 1.0);
+        //     entity.rotation.z += 1.0 * rotation_speed * PI * seconds_since_last_update;
         //     entity.rotation.z %= 2.0 * PI;
 
-        //     entity.rotation.x += rotation_speed * PI * (index as f32 + 1.0);
+        //     entity.rotation.x += 1.0 * rotation_speed * PI * seconds_since_last_update;
         //     entity.rotation.x %= 2.0 * PI;
 
-        //     entity.rotation.y += rotation_speed * PI * (index as f32 + 1.0);
+        //     entity.rotation.y += 1.0 * rotation_speed * PI * seconds_since_last_update;
         //     entity.rotation.y %= 2.0 * PI;
         // }
 

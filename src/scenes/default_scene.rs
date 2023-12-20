@@ -160,7 +160,7 @@ impl<'a> Scene for DefaultScene<'a> {
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        delta_t_seconds: f32,
+        seconds_since_last_update: f32,
     ) {
         // Calculate mouse position delta
 
@@ -183,8 +183,8 @@ impl<'a> Scene for DefaultScene<'a> {
             * Mat4::rotation_y(-mouse_x_delta * 2.0 * PI)
             * Mat4::rotation_x(-mouse_y_delta * 2.0 * PI);
 
-        let camera_movement_step = camera.movement_speed * delta_t_seconds;
-        let camera_roll_step = camera.roll_speed * delta_t_seconds;
+        let camera_movement_step = camera.movement_speed * seconds_since_last_update;
+        let camera_roll_step = camera.roll_speed * seconds_since_last_update;
 
         camera.rotation_inverse_transposed = camera.rotation_inverse_transform.transposed();
 
@@ -337,13 +337,13 @@ impl<'a> Scene for DefaultScene<'a> {
 
         // Mesh rotation via time delta
 
-        entity.rotation.z += 0.2 * PI * delta_t_seconds;
+        entity.rotation.z += 0.2 * PI * seconds_since_last_update;
         entity.rotation.z %= 2.0 * PI;
 
-        entity.rotation.x += 0.2 * PI * delta_t_seconds;
+        entity.rotation.x += 0.2 * PI * seconds_since_last_update;
         entity.rotation.x %= 2.0 * PI;
 
-        entity.rotation.y += 0.2 * PI * delta_t_seconds;
+        entity.rotation.y += 0.2 * PI * seconds_since_last_update;
         entity.rotation.y %= 2.0 * PI;
 
         let world_transform = Mat4::scaling(0.5)
