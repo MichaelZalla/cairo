@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 use std::ptr;
 
-use rand::Rng;
-
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -71,11 +69,11 @@ impl App {
         let mut frame_start_tick: u64 = self.context.timer.performance_counter();
         let mut frame_end_tick: u64;
 
-        let mut rng = rand::thread_rng();
-
         let mut prev_mouse_clicks = HashSet::new();
 
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
+
+        let mut current_tick: u32 = 0;
 
         // Main event loop
 
@@ -307,10 +305,7 @@ impl App {
             let unused_seconds = (unused_ticks as f64 / ticks_per_second as f64) as f64;
             let unused_milliseconds = unused_seconds * 1000.0;
 
-            let random: u32 = rng.gen();
-            let modulo: u32 = 30;
-
-            if random % modulo == 0 {
+            if current_tick % 50 == 0 {
                 debug_print!("===========================");
                 debug_print!("ticks_per_second={}", ticks_per_second);
                 debug_print!("frame_start_tick={}", frame_start_tick);
@@ -328,6 +323,8 @@ impl App {
             // Sleep if we can...
 
             self.context.timer.delay(unused_milliseconds.floor() as u32);
+
+            current_tick += 1;
         }
 
         Ok(())
