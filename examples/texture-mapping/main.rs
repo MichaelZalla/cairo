@@ -1,12 +1,12 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, sync::RwLock};
+use std::{cell::RefCell, path::Path, sync::RwLock};
 
 use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    mesh,
+    material, mesh,
     scene::Scene,
 };
 
@@ -22,8 +22,21 @@ fn main() -> Result<(), String> {
 
     // Load a cube mesh
     let cube_meshes = mesh::obj::load_obj("./data/obj/cube-textured.obj".to_string());
-
     let cube_mesh = &cube_meshes[0];
+
+    if cube_mesh.material_source.filepath.len() > 0 {
+        let cube_object_source_parent = Path::new(&cube_mesh.object_source).parent().unwrap();
+
+        let cube_material_source = Path::new(&cube_mesh.material_source.filepath);
+
+        let cube_material_source_path_relative = cube_object_source_parent
+            .join(cube_material_source)
+            .into_os_string()
+            .into_string()
+            .unwrap();
+
+        let cube_materials = material::mtl::load_mtl(cube_material_source_path_relative);
+    }
 
     // Assign the mesh to a new entity
     let mut cube_entity = Entity::new(&cube_mesh);

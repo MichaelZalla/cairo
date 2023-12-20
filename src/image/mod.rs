@@ -23,6 +23,16 @@ pub struct TextureMap {
 }
 
 impl TextureMap {
+    pub fn new(filepath: String) -> Self {
+        TextureMap {
+            info: TextureMapInfo { filepath },
+            is_loaded: false,
+            width: 0,
+            height: 0,
+            pixel_data: vec![],
+        }
+    }
+
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
         // Load the map's pixel data on-demand
 

@@ -56,4 +56,13 @@ impl Color {
             z: self.b as f32,
         };
     }
+
+    pub fn from_vec3(color: Vec3) -> Color {
+        Color {
+            r: (color.x * 255.0) as u8,
+            g: (color.y * 255.0) as u8,
+            b: (color.z * 255.0) as u8,
+            a: 255 as u8,
+        }
+    }
 }
