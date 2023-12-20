@@ -303,6 +303,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let camera_view_inverse_transform =
             camera_translation_inverse_transform * camera.rotation_inverse_transform;
 
+        self.pipeline
+            .effect
+            .set_point_light_position(self.point_light.position * camera_view_inverse_transform);
+
         for entity in r.as_slice() {
             let world_transform = Mat4::scaling(0.5)
                 * Mat4::rotation_x(entity.rotation.x)
@@ -315,10 +319,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             self.pipeline
                 .effect
                 .set_world_view_transform(world_view_transform);
-
-            self.pipeline.effect.set_point_light_position(
-                self.point_light.position * camera_view_inverse_transform,
-            );
 
             self.pipeline.render_mesh(&entity.mesh);
         }
