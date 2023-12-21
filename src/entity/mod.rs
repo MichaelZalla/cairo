@@ -1,6 +1,6 @@
 use super::{
-    collision::{aabb::AABB, mesh_oct_tree::MeshOctTree},
     mesh::{primitive, Mesh},
+    physics::collision::{aabb::AABB, mesh_oct_tree::MeshOctTree},
     vec::vec3::Vec3,
 };
 

@@ -4,7 +4,6 @@ extern crate sdl2;
 pub mod macros;
 
 pub mod app;
-pub mod collision;
 pub mod color;
 pub mod context;
 pub mod device;
@@ -16,6 +15,7 @@ pub mod image;
 pub mod material;
 pub mod matrix;
 pub mod mesh;
+pub mod physics;
 pub mod pipeline;
 pub mod scene;
 pub mod ui;
