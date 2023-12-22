@@ -1,12 +1,11 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env};
+use std::{cell::RefCell, env, path::Path};
 
 use cairo::{
     app::App,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    fs::get_absolute_filepath,
     graphics::{Graphics, PixelBuffer, TextOperation},
     ui::panel::{Panel, PanelInfo},
 };
@@ -30,7 +29,7 @@ fn main() -> Result<(), String> {
                 return Ok(());
             }
 
-            let font_path = get_absolute_filepath(&args[1]);
+            let font_path = Path::new(&args[1]);
 
             let font = ttf_context.load_font(font_path, 128)?;
 
