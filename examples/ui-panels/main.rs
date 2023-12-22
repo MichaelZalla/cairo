@@ -11,8 +11,9 @@ use cairo::{
 };
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
-static WINDOW_WIDTH: u32 = 1080;
-static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
+
+static CANVAS_WIDTH: u32 = 1920;
+static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     match sdl2::ttf::init() {
@@ -36,7 +37,7 @@ fn main() -> Result<(), String> {
             // Set up our app
 
             let mut graphics = Graphics {
-                buffer: PixelBuffer::new(WINDOW_WIDTH, WINDOW_HEIGHT),
+                buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
             };
 
             let root_panel = RefCell::new(Panel::new(
@@ -45,8 +46,8 @@ fn main() -> Result<(), String> {
                     title: "Root Panel".to_string(),
                     x: 0,
                     y: 0,
-                    width: WINDOW_WIDTH,
-                    height: WINDOW_HEIGHT,
+                    width: CANVAS_WIDTH,
+                    height: CANVAS_HEIGHT,
                 },
                 |_keyboard_state: &KeyboardState,
                  _mouse_state: &MouseState,
@@ -110,7 +111,7 @@ fn main() -> Result<(), String> {
                 return Ok(graphics.get_pixel_data().clone());
             };
 
-            let app = App::new("examples/ui-panels", WINDOW_WIDTH, ASPECT_RATIO);
+            let app = App::new("examples/ui-panels", CANVAS_WIDTH, ASPECT_RATIO);
 
             app.run(&mut update, &mut render)?;
         }

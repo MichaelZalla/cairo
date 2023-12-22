@@ -18,10 +18,10 @@ use self::generate_primitives_scene::GeneratePrimitivesScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
 
-static WINDOW_WIDTH: u32 = 960;
+static CANVAS_WIDTH: u32 = 960;
 
 fn main() -> Result<(), String> {
-    let app = App::new("examples/generate-primitives", WINDOW_WIDTH, ASPECT_RATIO);
+    let app = App::new("examples/generate-primitives", CANVAS_WIDTH, ASPECT_RATIO);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -73,7 +73,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(GeneratePrimitivesScene::new(
-        rendering_context,
+        app.canvas_width,
+        app.canvas_height,
         &entities_rwl,
     ));
 

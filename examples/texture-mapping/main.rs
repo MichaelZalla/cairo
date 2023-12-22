@@ -15,10 +15,11 @@ mod texture_mapped_cube_scene;
 use self::texture_mapped_cube_scene::TextureMappedCubeScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
-static WINDOW_WIDTH: u32 = 800;
+
+static CANVAS_WIDTH: u32 = 960;
 
 fn main() -> Result<(), String> {
-    let app = App::new("examples/texture-mapped-cube", WINDOW_WIDTH, ASPECT_RATIO);
+    let app = App::new("examples/texture-mapped-cube", CANVAS_WIDTH, ASPECT_RATIO);
 
     let rendering_context = &app.context.rendering_context;
 

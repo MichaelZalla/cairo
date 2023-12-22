@@ -56,7 +56,8 @@ impl App {
             .texture_creator();
 
         let mut backbuffer = get_backbuffer(
-            &self.context.rendering_context,
+            self.canvas_width,
+            self.canvas_height,
             &texture_creator,
             BlendMode::None,
         )

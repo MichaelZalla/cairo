@@ -155,15 +155,11 @@ pub fn get_application_rendering_context<'a, 'r>(
 }
 
 pub fn get_backbuffer<'r>(
-    context: &ApplicationRenderingContext,
+    canvas_width: u32,
+    canvas_height: u32,
     texture_creator: &'r TextureCreator<WindowContext>,
     blend_mode: BlendMode,
 ) -> Result<Texture, String> {
-    let size = context.canvas.read().unwrap().output_size().unwrap();
-
-    let canvas_width = size.0;
-    let canvas_height = size.1;
-
     match texture_creator.create_texture_streaming(
         sdl2::pixels::PixelFormatEnum::RGBA32,
         canvas_width,

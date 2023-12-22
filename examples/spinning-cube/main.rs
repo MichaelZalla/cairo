@@ -16,8 +16,9 @@ mod spinning_cube_scene;
 use self::spinning_cube_scene::SpinningCubeScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
-static WINDOW_WIDTH: u32 = 1080;
-static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
+
+static CANVAS_WIDTH: u32 = 2560;
+static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     // Generate a cube mesh
@@ -33,7 +34,7 @@ fn main() -> Result<(), String> {
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SpinningCubeScene::new(
         Graphics {
-            buffer: PixelBuffer::new(WINDOW_WIDTH, WINDOW_HEIGHT),
+            buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
         },
         &entities_rwl,
     ));
@@ -63,7 +64,7 @@ fn main() -> Result<(), String> {
         return Ok(scene.borrow_mut().get_pixel_data().clone());
     };
 
-    let app = App::new("examples/spinning-cube", WINDOW_WIDTH, ASPECT_RATIO);
+    let app = App::new("examples/spinning-cube", CANVAS_WIDTH, ASPECT_RATIO);
 
     app.run(&mut update, &mut render)?;
 

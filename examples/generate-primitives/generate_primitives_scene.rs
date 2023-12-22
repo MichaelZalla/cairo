@@ -3,7 +3,6 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
@@ -42,19 +41,10 @@ pub struct GeneratePrimitivesScene<'a> {
 
 impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
-        rendering_context: &ApplicationRenderingContext,
+        canvas_width: u32,
+        canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     ) -> Self {
-        // @TODO API on RenderingContext to get these dimensions
-        let canvas_output_size = rendering_context
-            .canvas
-            .read()
-            .unwrap()
-            .output_size()
-            .unwrap();
-
-        let canvas_width = canvas_output_size.0;
-        let canvas_height = canvas_output_size.1;
         let aspect_ratio = canvas_width as f32 / canvas_height as f32;
 
         let graphics = Graphics {
