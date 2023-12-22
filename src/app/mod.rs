@@ -309,6 +309,9 @@ impl App {
 
             // Cache input device states
 
+            mouse_state.prev_position = mouse_state.position;
+            mouse_state.prev_ndc_position = mouse_state.ndc_position;
+
             mouse_state.position.0 = current_mouse_state.x();
             mouse_state.position.1 = current_mouse_state.y();
 
