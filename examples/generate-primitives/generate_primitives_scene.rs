@@ -37,6 +37,7 @@ pub struct GeneratePrimitivesScene<'a> {
     point_light: PointLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     prev_mouse_state: MouseState,
+    seconds_ellapsed: f32,
 }
 
 impl<'a> GeneratePrimitivesScene<'a> {
@@ -97,9 +98,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 z: 0.75,
             },
             position: Vec3 {
-                x: 4.0,
-                y: -1.5,
-                z: 4.0,
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
             },
             constant_attenuation: 0.001,
             linear_attenuation: 0.03,
@@ -154,6 +155,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             canvas_width,
             canvas_height,
             prev_mouse_state: MouseState::new(),
+            seconds_ellapsed: 0.0,
         };
     }
 }
@@ -166,6 +168,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         _game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
+        self.seconds_ellapsed += seconds_since_last_update;
+
         // Calculate mouse position delta
 
         let mouse_position = mouse_state.position;
@@ -253,22 +257,32 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             }
         }
 
-        // let mut entities = self.entities.write().unwrap();
+        self.point_light.position = Vec3 {
+            x: 7.0 * self.seconds_ellapsed.sin(),
+            y: -3.0,
+            z: 7.0 * self.seconds_ellapsed.cos(),
+        };
 
-        // let rotation_speed = 0.3;
+        let mut entities = self.entities.write().unwrap();
 
-        // for entity in entities.as_mut_slice() {
-        //     // Mesh rotation via our time delta
+        let rotation_speed = 0.3;
 
-        //     entity.rotation.z += 1.0 * rotation_speed * PI * seconds_since_last_update;
-        //     entity.rotation.z %= 2.0 * PI;
+        for entity in entities.as_mut_slice() {
+            // Mesh rotation via our time delta
 
-        //     entity.rotation.x += 1.0 * rotation_speed * PI * seconds_since_last_update;
-        //     entity.rotation.x %= 2.0 * PI;
+            if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {
+                continue;
+            }
 
-        //     entity.rotation.y += 1.0 * rotation_speed * PI * seconds_since_last_update;
-        //     entity.rotation.y %= 2.0 * PI;
-        // }
+            entity.rotation.z += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.z %= 2.0 * PI;
+
+            entity.rotation.x += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.x %= 2.0 * PI;
+
+            entity.rotation.y += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.y %= 2.0 * PI;
+        }
 
         self.prev_mouse_state = mouse_state.clone();
     }
@@ -280,7 +294,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             self.pipeline.clear_z_buffer();
         }
 
-        let r = self.entities.read().unwrap();
+        let mut w = self.entities.write().unwrap();
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
@@ -303,11 +317,15 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             (self.directional_light.direction * camera_view_inverse_transform).as_normal(),
         );
 
+        let entities = w.as_mut_slice();
+
+        entities.last_mut().unwrap().position = self.point_light.position;
+
         self.pipeline
             .effect
             .set_point_light_position(self.point_light.position);
 
-        for entity in r.as_slice() {
+        for entity in w.as_slice() {
             let world_transform = Mat4::scaling(1.0)
                 * Mat4::rotation_x(entity.rotation.x)
                 * Mat4::rotation_y(entity.rotation.y)
