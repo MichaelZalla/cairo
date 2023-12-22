@@ -19,7 +19,7 @@ pub struct DefaultEffect {
     directional_light: DirectionalLight,
     point_light: PointLight,
     specular_intensity: f32,
-    specular_power: i32,
+    default_specular_power: i32,
     active_material: Option<*const Material>,
 }
 
@@ -44,7 +44,7 @@ impl DefaultEffect {
             directional_light,
             point_light,
             specular_intensity: 0.65,
-            specular_power: 2,
+            default_specular_power: 8,
             active_material: None,
         };
     }
@@ -202,6 +202,17 @@ impl Effect for DefaultEffect {
 
             // Calculate specular light intensity
 
+            let specular_exponent: i32;
+
+            match self.active_material {
+                Some(mat_raw_mut) => unsafe {
+                    specular_exponent = (*mat_raw_mut).specular_exponent;
+                },
+                None => {
+                    specular_exponent = self.default_specular_power;
+                }
+            }
+
             // point light projected onto surface normal
             let w = surface_normal_vec3 * vertex_to_point_light.dot(surface_normal_vec3);
 
@@ -211,11 +222,11 @@ impl Effect for DefaultEffect {
             // normal for reflected light
             let r_inverse_hat = r.as_normal() * -1.0;
 
+            let similarity = (0.0 as f32).max(r_inverse_hat.dot(out.world_pos.as_normal()));
+
             specular_contribution = self.point_light.intensities
                 * self.specular_intensity
-                * (0.0 as f32)
-                    .max(r_inverse_hat.dot(out.world_pos.as_normal()))
-                    .powi(self.specular_power);
+                * similarity.powi(specular_exponent);
         }
 
         let total_contribution = ambient_contribution

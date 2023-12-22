@@ -14,7 +14,7 @@ pub struct Material {
     pub diffuse_color: Vec3,
     pub diffuse_map: Option<TextureMap>,
     pub specular_color: Vec3,
-    pub specular_exponent: f32,
+    pub specular_exponent: i32, // aka "shininess"
     pub emissive_color: Vec3,
     pub dissolve: f32,
     pub transparency: f32,
@@ -27,6 +27,7 @@ impl Material {
     pub fn new(name: String) -> Self {
         let mut mat: Material = Default::default();
         mat.name = name;
+        mat.specular_exponent = 8;
         mat
     }
 }

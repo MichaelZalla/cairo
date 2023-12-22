@@ -94,7 +94,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                materials.last_mut().unwrap().specular_exponent = value;
+                                materials.last_mut().unwrap().specular_exponent = value as i32;
                             }
 
                             // Emissive color
