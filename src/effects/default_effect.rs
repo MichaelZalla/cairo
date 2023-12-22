@@ -4,7 +4,7 @@ use crate::{
     image::sample_from_uv,
     material::Material,
     matrix::Mat4,
-    scene::light::{AmbientLight, DirectionalLight, PointLight},
+    scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -19,6 +19,7 @@ pub struct DefaultEffect {
     ambient_light: AmbientLight,
     directional_light: DirectionalLight,
     point_light: PointLight,
+    spot_light: SpotLight,
     specular_intensity: f32,
     default_specular_power: i32,
     active_material: Option<*const Material>,
@@ -33,6 +34,7 @@ impl DefaultEffect {
         ambient_light: AmbientLight,
         directional_light: DirectionalLight,
         point_light: PointLight,
+        spot_light: SpotLight,
     ) -> Self {
         return DefaultEffect {
             world_transform,
@@ -46,7 +48,8 @@ impl DefaultEffect {
             ambient_light,
             directional_light,
             point_light,
-            specular_intensity: 0.65,
+            spot_light,
+            specular_intensity: 0.5,
             default_specular_power: 8,
             active_material: None,
         };
@@ -256,12 +259,35 @@ impl Effect for DefaultEffect {
                 * similarity.powi(specular_exponent);
         }
 
+        // Calculate spot light contribution
+
+        let mut spot_light_contribution: Vec3 = Vec3::new();
+
+        let vertex_to_spot_light = self.spot_light.position - out.world_pos;
+
+        let distance_to_spot_light = vertex_to_spot_light.mag();
+
+        let direction_to_spot_light = vertex_to_spot_light / distance_to_spot_light;
+
+        let theta_angle =
+            (0.0 as f32).max((self.spot_light.direction).dot(direction_to_spot_light * -1.0));
+
+        let epsilon = self.spot_light.inner_cutoff_angle - self.spot_light.outer_cutoff_angle;
+
+        let spot_attenuation =
+            ((theta_angle - self.spot_light.outer_cutoff_angle) / epsilon).clamp(0.0, 1.0);
+
+        if theta_angle > self.spot_light.outer_cutoff_angle {
+            spot_light_contribution = self.spot_light.intensities * spot_attenuation;
+        }
+
         // Combine light intensities
 
         let total_contribution = ambient_contribution
             + directional_light_contribution
             + point_light_contribution
-            + specular_contribution;
+            + specular_contribution
+            + spot_light_contribution;
 
         // @TODO Honor each material's ambient, diffuse, and specular colors.
 

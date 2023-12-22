@@ -11,7 +11,7 @@ use cairo::{
     pipeline::{Pipeline, PipelineOptions},
     scene::{
         camera::Camera,
-        light::{AmbientLight, DirectionalLight, PointLight},
+        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
     vec::{
@@ -91,6 +91,29 @@ impl<'a> SpinningCubeScene<'a> {
             quadratic_attenuation: 2.619,
         };
 
+        let spot_light = SpotLight {
+            intensities: Vec3 {
+                x: 0.4,
+                y: 0.4,
+                z: 0.4,
+            },
+            position: Vec3 {
+                x: 0.0,
+                y: -5.0,
+                z: 0.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            inner_cutoff_angle: (PI / 18.0).cos(),
+            outer_cutoff_angle: (PI / 12.0).cos(),
+            constant_attenuation: 1.0,
+            linear_attenuation: 0.35,
+            quadratic_attenuation: 0.44,
+        };
+
         let pipeline_options = PipelineOptions {
             should_render_wireframe: false,
             should_render_shader: true,
@@ -130,6 +153,7 @@ impl<'a> SpinningCubeScene<'a> {
                 ambient_light,
                 directional_light,
                 point_light,
+                spot_light,
             ),
             pipeline_options,
         );
