@@ -34,7 +34,7 @@ pub struct GeneratePrimitivesScene<'a> {
     cameras: Vec<Camera>,
     active_camera_index: usize,
     // ambient_light: AmbientLight,
-    // directional_light: DirectionalLight,
+    directional_light: DirectionalLight,
     point_light: PointLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     prev_mouse_state: MouseState,
@@ -80,36 +80,40 @@ impl<'a> GeneratePrimitivesScene<'a> {
         // Define lights for our scene
         let ambient_light = AmbientLight {
             intensities: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
             },
         };
 
         let directional_light = DirectionalLight {
             intensities: Vec3 {
-                x: 0.3,
-                y: 0.3,
-                z: 0.3,
+                x: 0.1,
+                y: 0.1,
+                z: 0.1,
             },
             direction: Vec4 {
-                x: 0.25,
-                y: -1.0,
-                z: -0.25,
+                x: -1.0,
+                y: 0.0,
+                z: 1.0,
                 w: 1.0,
             },
         };
 
         let point_light = PointLight {
             intensities: Vec3 {
-                x: 0.4,
-                y: 0.4,
-                z: 0.4,
+                x: 0.15,
+                y: 0.1,
+                z: 0.75,
             },
-            position: Vec4::new(Default::default(), 1.0),
-            constant_attenuation: 0.382,
-            linear_attenuation: 1.0,
-            quadratic_attenuation: 2.619,
+            position: Vec3 {
+                x: 4.0,
+                y: -1.5,
+                z: 4.0,
+            },
+            constant_attenuation: 0.001,
+            linear_attenuation: 0.03,
+            quadratic_attenuation: 0.06,
         };
 
         // @TODO Pipeline to store a reference to PipelineOptions
@@ -122,13 +126,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let world_transform = Mat4::scaling(1.0);
 
-        let view_transform = Mat4::translation(Vec3 {
+        let view_inverse_transform = Mat4::translation(Vec3 {
             x: camera.position_inverse.x,
             y: camera.position_inverse.y,
             z: camera.position_inverse.z,
         });
-
-        let world_view_transform = world_transform * view_transform;
 
         let projection_transform = Mat4::projection_for_fov(
             FIELD_OF_VIEW,
@@ -140,7 +142,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let pipeline = Pipeline::new(
             graphics,
             DefaultEffect::new(
-                world_view_transform,
+                world_transform,
+                view_inverse_transform,
                 projection_transform,
                 ambient_light,
                 directional_light,
@@ -156,7 +159,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             cameras: vec![camera],
             active_camera_index: 0,
             // ambient_light,
-            // directional_light,
+            directional_light,
             point_light,
             viewport_width,
             viewport_height,
@@ -305,20 +308,24 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         self.pipeline
             .effect
-            .set_point_light_position(self.point_light.position * camera_view_inverse_transform);
+            .set_view_inverse_transform(camera_view_inverse_transform);
+
+        self.pipeline.effect.set_directional_light_direction(
+            (self.directional_light.direction * camera_view_inverse_transform).as_normal(),
+        );
+
+        self.pipeline
+            .effect
+            .set_point_light_position(self.point_light.position);
 
         for entity in r.as_slice() {
-            let world_transform = Mat4::scaling(0.5)
+            let world_transform = Mat4::scaling(1.0)
                 * Mat4::rotation_x(entity.rotation.x)
                 * Mat4::rotation_y(entity.rotation.y)
                 * Mat4::rotation_z(entity.rotation.z)
                 * Mat4::translation(entity.position);
 
-            let world_view_transform = world_transform * camera_view_inverse_transform;
-
-            self.pipeline
-                .effect
-                .set_world_view_transform(world_view_transform);
+            self.pipeline.effect.set_world_transform(world_transform);
 
             self.pipeline.render_mesh(&entity.mesh);
         }

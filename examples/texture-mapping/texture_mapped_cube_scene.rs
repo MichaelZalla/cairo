@@ -78,9 +78,9 @@ impl<'a> TextureMappedCubeScene<'a> {
         // Define lights for our scene
         let ambient_light = AmbientLight {
             intensities: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
+                x: 0.4,
+                y: 0.4,
+                z: 0.4,
             },
         };
 
@@ -91,20 +91,24 @@ impl<'a> TextureMappedCubeScene<'a> {
                 z: 0.3,
             },
             direction: Vec4 {
-                x: 0.25,
+                x: 0.0,
                 y: -1.0,
-                z: -0.25,
+                z: 0.0,
                 w: 1.0,
             },
         };
 
         let point_light = PointLight {
             intensities: Vec3 {
-                x: 0.4,
-                y: 0.4,
-                z: 0.4,
+                x: 0.7,
+                y: 0.7,
+                z: 0.7,
             },
-            position: Default::default(),
+            position: Vec3 {
+                x: 0.0,
+                y: -4.0,
+                z: 0.0,
+            },
             constant_attenuation: 0.382,
             linear_attenuation: 1.0,
             quadratic_attenuation: 2.619,
@@ -118,15 +122,13 @@ impl<'a> TextureMappedCubeScene<'a> {
             should_cull_backfaces: true,
         };
 
-        let world_transform = Mat4::new();
+        let world_transform = Mat4::scaling(1.0);
 
-        let view_transform = Mat4::translation(Vec3 {
+        let view_inverse_transform = Mat4::translation(Vec3 {
             x: camera.position_inverse.x,
             y: camera.position_inverse.y,
             z: camera.position_inverse.z,
         });
-
-        let world_view_transform = world_transform * view_transform;
 
         let projection_transform = Mat4::projection_for_fov(
             FIELD_OF_VIEW,
@@ -138,7 +140,8 @@ impl<'a> TextureMappedCubeScene<'a> {
         let pipeline = Pipeline::new(
             graphics,
             DefaultEffect::new(
-                world_view_transform,
+                world_transform,
+                view_inverse_transform,
                 projection_transform,
                 ambient_light,
                 directional_light,
@@ -303,20 +306,20 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         self.pipeline
             .effect
-            .set_point_light_position(self.point_light.position * camera_view_inverse_transform);
+            .set_view_inverse_transform(camera_view_inverse_transform);
+
+        self.pipeline
+            .effect
+            .set_point_light_position(self.point_light.position);
 
         for entity in r.as_slice() {
-            let world_transform = Mat4::scaling(0.5)
+            let world_transform = Mat4::scaling(1.0)
                 * Mat4::rotation_x(entity.rotation.x)
                 * Mat4::rotation_y(entity.rotation.y)
                 * Mat4::rotation_z(entity.rotation.z)
                 * Mat4::translation(entity.position);
 
-            let world_view_transform = world_transform * camera_view_inverse_transform;
-
-            self.pipeline
-                .effect
-                .set_world_view_transform(world_view_transform);
+            self.pipeline.effect.set_world_transform(world_transform);
 
             self.pipeline.render_mesh(&entity.mesh);
         }

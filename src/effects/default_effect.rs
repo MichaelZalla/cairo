@@ -10,6 +10,8 @@ use crate::{
 };
 
 pub struct DefaultEffect {
+    world_transform: Mat4,
+    view_inverse_transform: Mat4,
     world_view_transform: Mat4,
     projection_transform: Mat4,
     world_view_projection_transform: Mat4,
@@ -23,40 +25,53 @@ pub struct DefaultEffect {
 
 impl DefaultEffect {
     pub fn new(
-        world_view_transform: Mat4,
+        world_transform: Mat4,
+        view_inverse_transform: Mat4,
         projection_transform: Mat4,
         ambient_light: AmbientLight,
         directional_light: DirectionalLight,
         point_light: PointLight,
     ) -> Self {
         return DefaultEffect {
-            world_view_transform,
+            world_transform,
+            view_inverse_transform,
             projection_transform,
-            world_view_projection_transform: world_view_transform * projection_transform,
+            world_view_transform: world_transform * view_inverse_transform,
+            world_view_projection_transform: world_transform
+                * view_inverse_transform
+                * projection_transform,
             ambient_light,
             directional_light,
             point_light,
-            specular_intensity: 1.0,
-            specular_power: 10,
+            specular_intensity: 0.65,
+            specular_power: 2,
             active_material: None,
         };
     }
 
-    pub fn set_world_view_transform(&mut self, mat: Mat4) {
-        self.world_view_transform = mat;
+    pub fn set_world_transform(&mut self, mat: Mat4) {
+        self.world_transform = mat;
+
+        self.world_view_transform = self.world_transform * self.view_inverse_transform;
 
         self.world_view_projection_transform =
             self.world_view_transform * self.projection_transform;
     }
 
-    pub fn set_projection_transform(&mut self, mat: Mat4) {
-        self.projection_transform = mat;
+    pub fn set_view_inverse_transform(&mut self, mat: Mat4) {
+        self.view_inverse_transform = mat;
+
+        self.world_view_transform = self.world_transform * self.view_inverse_transform;
 
         self.world_view_projection_transform =
             self.world_view_transform * self.projection_transform;
     }
 
-    pub fn set_point_light_position(&mut self, position: Vec4) {
+    pub fn set_directional_light_direction(&mut self, direction: Vec4) {
+        self.directional_light.direction = direction;
+    }
+
+    pub fn set_point_light_position(&mut self, position: Vec3) {
         self.point_light.position = position;
     }
 }
@@ -87,7 +102,7 @@ impl Effect for DefaultEffect {
 
         out.p = Vec4::new(v.p, 1.0) * self.world_view_projection_transform;
 
-        let world_pos = Vec4::new(v.p, 1.0) * self.world_view_transform;
+        let world_pos = Vec4::new(v.p, 1.0) * self.world_transform;
 
         out.world_pos = Vec3 {
             x: world_pos.x,
@@ -95,7 +110,7 @@ impl Effect for DefaultEffect {
             z: world_pos.z,
         };
 
-        out.n = Vec4::new(v.n, 0.0) * self.world_view_transform;
+        out.n = Vec4::new(v.n, 0.0) * self.world_transform;
 
         out.n = out.n.as_normal();
 
@@ -151,52 +166,44 @@ impl Effect for DefaultEffect {
 
         // Calculate directional light intensity
 
-        let directional_light_direction_world_view =
-            (self.directional_light.direction * self.world_view_transform).as_normal();
-
         let directional_light_contribution = self.directional_light.intensities
-            * (0.0 as f32).max((surface_normal_vec3 * -1.0).dot(
-                Vec3 {
-                    x: directional_light_direction_world_view.x,
-                    y: directional_light_direction_world_view.y,
-                    z: directional_light_direction_world_view.z,
-                },
-                // Vec4::new(self.directional_light_direction, 1.0) * self.world_view_projection_transform
-            ));
+            * (0.0 as f32).max((surface_normal_vec3 * -1.0).dot(Vec3 {
+                x: self.directional_light.direction.x,
+                y: self.directional_light.direction.y,
+                z: self.directional_light.direction.z,
+            }));
 
         // Calculate point light intensity
 
-        let light_position_vec3 = Vec3 {
-            x: self.point_light.position.x,
-            y: self.point_light.position.y,
-            z: self.point_light.position.z,
-        };
-
-        let vertex_to_point_light = light_position_vec3 - out.world_pos;
+        let vertex_to_point_light = self.point_light.position - out.world_pos;
 
         let distance_to_point_light = vertex_to_point_light.mag();
 
-        let normal_to_point_light = vertex_to_point_light / distance_to_point_light;
+        let direction_to_point_light = vertex_to_point_light / distance_to_point_light;
 
-        let likeness = normal_to_point_light.dot(surface_normal_vec3 * -1.0);
-
-        let attentuation = 1.0
-            / (self.point_light.quadratic_attenuation * distance_to_point_light.powi(2)
-                + self.point_light.linear_attenuation * distance_to_point_light
-                + self.point_light.constant_attenuation);
+        let likeness = (0.0 as f32).max(surface_normal.dot(Vec4 {
+            x: direction_to_point_light.x,
+            y: direction_to_point_light.y,
+            z: direction_to_point_light.z,
+            w: 0.0,
+        }));
 
         let mut point_light_contribution: Vec3 = Vec3::new();
         let mut specular_contribution: Vec3 = Vec3::new();
 
-        if likeness < 0.0 {
-            point_light_contribution = self.point_light.intensities
-                * attentuation
-                * (0.0 as f32).max(surface_normal_vec3.dot(normal_to_point_light));
+        if likeness > 0.0 {
+            let attentuation = 1.0
+                / (self.point_light.quadratic_attenuation * distance_to_point_light.powi(2)
+                    + self.point_light.linear_attenuation * distance_to_point_light
+                    + self.point_light.constant_attenuation);
+
+            point_light_contribution =
+                self.point_light.intensities * attentuation * (0.0 as f32).max(likeness);
 
             // Calculate specular light intensity
 
             // point light projected onto surface normal
-            let w = surface_normal_vec3 * light_position_vec3.dot(surface_normal_vec3);
+            let w = surface_normal_vec3 * vertex_to_point_light.dot(surface_normal_vec3);
 
             // vector to reflected light ray
             let r = w * 2.0 - vertex_to_point_light;

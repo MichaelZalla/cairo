@@ -105,13 +105,11 @@ impl<'a> SpinningCubeScene<'a> {
 
         let world_transform = Mat4::new();
 
-        let view_transform = Mat4::translation(Vec3 {
+        let view_inverse_transform = Mat4::translation(Vec3 {
             x: camera.position_inverse.x,
             y: camera.position_inverse.y,
             z: camera.position_inverse.z,
         });
-
-        let world_view_transform = world_transform * view_transform;
 
         let aspect_ratio = graphics.buffer.width_over_height;
 
@@ -125,7 +123,8 @@ impl<'a> SpinningCubeScene<'a> {
         let pipeline = Pipeline::new(
             graphics,
             DefaultEffect::new(
-                world_view_transform,
+                world_transform,
+                view_inverse_transform,
                 projection_transform,
                 ambient_light,
                 directional_light,
@@ -260,11 +259,13 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         entity.rotation.y += 0.2 * PI * seconds_since_last_update;
         entity.rotation.y %= 2.0 * PI;
 
-        let world_transform = Mat4::scaling(0.5)
+        let world_transform = Mat4::scaling(1.0)
             * Mat4::rotation_x(entity.rotation.x)
             * Mat4::rotation_y(entity.rotation.y)
             * Mat4::rotation_z(entity.rotation.z)
             * Mat4::translation(entity.position);
+
+        self.pipeline.effect.set_world_transform(world_transform);
 
         let camera_translation_inverse = camera.position * -1.0;
 
@@ -274,14 +275,12 @@ impl<'a> Scene for SpinningCubeScene<'a> {
             z: camera_translation_inverse.z,
         });
 
-        let view_transform =
+        let view_inverse_transform =
             camera_translation_inverse_transform * camera.rotation_inverse_transform;
-
-        let world_view_transform = world_transform * view_transform;
 
         self.pipeline
             .effect
-            .set_world_view_transform(world_view_transform);
+            .set_view_inverse_transform(view_inverse_transform);
 
         self.prev_mouse_state = mouse_state.clone();
     }
