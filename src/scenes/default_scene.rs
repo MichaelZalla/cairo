@@ -121,6 +121,7 @@ impl<'a> DefaultScene<'a> {
             graphics,
             DefaultEffect::new(
                 world_transform,
+                camera.position,
                 view_inverse_transform,
                 projection_transform,
                 ambient_light,
@@ -304,6 +305,8 @@ impl<'a> Scene for DefaultScene<'a> {
         } else if left_joystick_position_normalized.y < -0.5 {
             camera.position += forward * camera_movement_step * camera.rotation_inverse_transposed;
         }
+
+        self.pipeline.effect.set_camera_position(camera.position);
 
         let right_joystick_position_normalized = Vec2 {
             x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,

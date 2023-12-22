@@ -102,9 +102,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 y: 0.0,
                 z: 0.0,
             },
-            constant_attenuation: 0.001,
-            linear_attenuation: 0.03,
-            quadratic_attenuation: 0.06,
+            constant_attenuation: 1.0,
+            linear_attenuation: 0.35,
+            quadratic_attenuation: 0.44,
         };
 
         // @TODO Pipeline to store a reference to PipelineOptions
@@ -134,6 +134,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             graphics,
             DefaultEffect::new(
                 world_transform,
+                camera.position,
                 view_inverse_transform,
                 projection_transform,
                 ambient_light,
@@ -226,6 +227,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 _ => {}
             }
         }
+
+        self.pipeline.effect.set_camera_position(camera.position);
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {

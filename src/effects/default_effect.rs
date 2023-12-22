@@ -11,6 +11,7 @@ use crate::{
 
 pub struct DefaultEffect {
     world_transform: Mat4,
+    view_position: Vec4,
     view_inverse_transform: Mat4,
     world_view_transform: Mat4,
     projection_transform: Mat4,
@@ -26,6 +27,7 @@ pub struct DefaultEffect {
 impl DefaultEffect {
     pub fn new(
         world_transform: Mat4,
+        view_position: Vec4,
         view_inverse_transform: Mat4,
         projection_transform: Mat4,
         ambient_light: AmbientLight,
@@ -34,6 +36,7 @@ impl DefaultEffect {
     ) -> Self {
         return DefaultEffect {
             world_transform,
+            view_position,
             view_inverse_transform,
             projection_transform,
             world_view_transform: world_transform * view_inverse_transform,
@@ -47,6 +50,10 @@ impl DefaultEffect {
             default_specular_power: 8,
             active_material: None,
         };
+    }
+
+    pub fn set_camera_position(&mut self, position: Vec4) {
+        self.view_position = position;
     }
 
     pub fn set_world_transform(&mut self, mat: Mat4) {
@@ -160,11 +167,11 @@ impl Effect for DefaultEffect {
             None => (),
         }
 
-        // Ambient light contribution
+        // Calculate ambient light contribution
 
         let ambient_contribution = self.ambient_light.intensities;
 
-        // Calculate directional light intensity
+        // Calculate directional light contribution
 
         let directional_light_contribution = self.directional_light.intensities
             * (0.0 as f32).max((surface_normal_vec3 * -1.0).dot(Vec3 {
@@ -173,7 +180,7 @@ impl Effect for DefaultEffect {
                 z: self.directional_light.direction.z,
             }));
 
-        // Calculate point light intensity
+        // Calculate point light and specular light contribution
 
         let vertex_to_point_light = self.point_light.position - out.world_pos;
 
@@ -213,28 +220,50 @@ impl Effect for DefaultEffect {
                 }
             }
 
-            // point light projected onto surface normal
-            let w = surface_normal_vec3 * vertex_to_point_light.dot(surface_normal_vec3);
+            let incoming_ray = vertex_to_point_light * -1.0;
 
-            // vector to reflected light ray
-            let r = w * 2.0 - vertex_to_point_light;
+            // Project the incoming ray forward through the fragment/surface
+            let absorbed_ray = out.world_pos + incoming_ray;
 
-            // normal for reflected light
-            let r_inverse_hat = r.as_normal() * -1.0;
+            // Project the incoming light ray onto the surface normal (i.e.,
+            // scaling the normal up or down)
+            let w = surface_normal_vec3 * incoming_ray.dot(surface_normal_vec3);
 
-            let similarity = (0.0 as f32).max(r_inverse_hat.dot(out.world_pos.as_normal()));
+            // Combine the absorbed ray with the scaled normal to find the
+            // reflected ray vector.
+            let u = w * 2.0;
+            let reflected_ray = u - absorbed_ray;
 
-            specular_contribution = self.point_light.intensities
+            // Get the reflected ray's direction from the surface
+            let reflected_ray_normal = reflected_ray.as_normal();
+
+            // Compute the similarity between the reflected ray's direction and
+            // the direction from our fragment to the viewer.
+            let view_direction_normal = (Vec3 {
+                x: self.view_position.x,
+                y: self.view_position.y,
+                z: self.view_position.z,
+            } - out.world_pos)
+                .as_normal();
+
+            let cosine_theta =
+                (1.0 as f32).min(reflected_ray_normal.dot(view_direction_normal * -1.0));
+
+            let similarity = (0.0 as f32).max(cosine_theta);
+
+            specular_contribution = point_light_contribution
                 * self.specular_intensity
                 * similarity.powi(specular_exponent);
         }
+
+        // Combine light intensities
 
         let total_contribution = ambient_contribution
             + directional_light_contribution
             + point_light_contribution
             + specular_contribution;
 
-        // Calculate our color based on mesh color and light intensities
+        // @TODO Honor each material's ambient, diffuse, and specular colors.
 
         let mut color: Vec3 = out.c;
 

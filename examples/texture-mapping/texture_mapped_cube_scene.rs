@@ -141,6 +141,7 @@ impl<'a> TextureMappedCubeScene<'a> {
             graphics,
             DefaultEffect::new(
                 world_transform,
+                camera.position,
                 view_inverse_transform,
                 projection_transform,
                 ambient_light,
@@ -231,6 +232,8 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
                 _ => {}
             }
         }
+
+        self.pipeline.effect.set_camera_position(camera.position);
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
