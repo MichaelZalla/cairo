@@ -13,3 +13,6 @@ data
 
 # builds
 target
+
+# Cargo lock
+Cargo.lock
