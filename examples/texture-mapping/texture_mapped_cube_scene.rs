@@ -98,20 +98,18 @@ impl<'a> TextureMappedCubeScene<'a> {
             },
         };
 
-        let point_light = PointLight {
-            intensities: Vec3 {
-                x: 0.7,
-                y: 0.7,
-                z: 0.7,
-            },
-            position: Vec3 {
-                x: 0.0,
-                y: -4.0,
-                z: 0.0,
-            },
-            constant_attenuation: 0.382,
-            linear_attenuation: 1.0,
-            quadratic_attenuation: 2.619,
+        let mut point_light = PointLight::new();
+
+        point_light.intensities = Vec3 {
+            x: 0.7,
+            y: 0.7,
+            z: 0.7,
+        };
+
+        point_light.position = Vec3 {
+            x: 0.0,
+            y: -4.0,
+            z: 0.0,
         };
 
         let spot_light = SpotLight {

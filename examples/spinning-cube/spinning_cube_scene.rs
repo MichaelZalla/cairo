@@ -79,16 +79,12 @@ impl<'a> SpinningCubeScene<'a> {
             },
         };
 
-        let point_light = PointLight {
-            intensities: Vec3 {
-                x: 0.4,
-                y: 0.4,
-                z: 0.4,
-            },
-            position: Default::default(),
-            constant_attenuation: 0.382,
-            linear_attenuation: 1.0,
-            quadratic_attenuation: 2.619,
+        let mut point_light = PointLight::new();
+
+        point_light.intensities = Vec3 {
+            x: 0.4,
+            y: 0.4,
+            z: 0.4,
         };
 
         let spot_light = SpotLight {

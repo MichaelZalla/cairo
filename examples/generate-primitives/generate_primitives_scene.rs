@@ -91,20 +91,12 @@ impl<'a> GeneratePrimitivesScene<'a> {
             },
         };
 
-        let point_light = PointLight {
-            intensities: Vec3 {
-                x: 0.15,
-                y: 0.1,
-                z: 0.75,
-            },
-            position: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            constant_attenuation: 1.0,
-            linear_attenuation: 0.35,
-            quadratic_attenuation: 0.44,
+        let mut point_light = PointLight::new();
+
+        point_light.intensities = Vec3 {
+            x: 0.15,
+            y: 0.1,
+            z: 0.75,
         };
 
         let spot_light = SpotLight {

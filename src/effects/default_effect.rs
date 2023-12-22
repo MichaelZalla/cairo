@@ -20,7 +20,6 @@ pub struct DefaultEffect {
     directional_light: DirectionalLight,
     point_light: PointLight,
     spot_light: SpotLight,
-    specular_intensity: f32,
     default_specular_power: i32,
     active_material: Option<*const Material>,
 }
@@ -49,7 +48,6 @@ impl DefaultEffect {
             directional_light,
             point_light,
             spot_light,
-            specular_intensity: 0.5,
             default_specular_power: 8,
             active_material: None,
         };
@@ -172,121 +170,41 @@ impl Effect for DefaultEffect {
 
         // Calculate ambient light contribution
 
-        let ambient_contribution = self.ambient_light.intensities;
+        let ambient_contribution = self.ambient_light.contribute();
 
         // Calculate directional light contribution
 
-        let directional_light_contribution = self.directional_light.intensities
-            * (0.0 as f32).max((surface_normal_vec3 * -1.0).dot(Vec3 {
-                x: self.directional_light.direction.x,
-                y: self.directional_light.direction.y,
-                z: self.directional_light.direction.z,
-            }));
+        let directional_light_contribution = self.directional_light.contribute(surface_normal_vec3);
 
-        // Calculate point light and specular light contribution
+        // Calculate point light contribution (including specular)
 
-        let vertex_to_point_light = self.point_light.position - out.world_pos;
+        let specular_exponent: i32;
 
-        let distance_to_point_light = vertex_to_point_light.mag();
-
-        let direction_to_point_light = vertex_to_point_light / distance_to_point_light;
-
-        let likeness = (0.0 as f32).max(surface_normal.dot(Vec4 {
-            x: direction_to_point_light.x,
-            y: direction_to_point_light.y,
-            z: direction_to_point_light.z,
-            w: 0.0,
-        }));
-
-        let mut point_light_contribution: Vec3 = Vec3::new();
-        let mut specular_contribution: Vec3 = Vec3::new();
-
-        if likeness > 0.0 {
-            let attentuation = 1.0
-                / (self.point_light.quadratic_attenuation * distance_to_point_light.powi(2)
-                    + self.point_light.linear_attenuation * distance_to_point_light
-                    + self.point_light.constant_attenuation);
-
-            point_light_contribution =
-                self.point_light.intensities * attentuation * (0.0 as f32).max(likeness);
-
-            // Calculate specular light intensity
-
-            let specular_exponent: i32;
-
-            match self.active_material {
-                Some(mat_raw_mut) => unsafe {
-                    specular_exponent = (*mat_raw_mut).specular_exponent;
-                },
-                None => {
-                    specular_exponent = self.default_specular_power;
-                }
+        match self.active_material {
+            Some(mat_raw_mut) => unsafe {
+                specular_exponent = (*mat_raw_mut).specular_exponent;
+            },
+            None => {
+                specular_exponent = self.default_specular_power;
             }
-
-            let incoming_ray = vertex_to_point_light * -1.0;
-
-            // Project the incoming ray forward through the fragment/surface
-            let absorbed_ray = out.world_pos + incoming_ray;
-
-            // Project the incoming light ray onto the surface normal (i.e.,
-            // scaling the normal up or down)
-            let w = surface_normal_vec3 * incoming_ray.dot(surface_normal_vec3);
-
-            // Combine the absorbed ray with the scaled normal to find the
-            // reflected ray vector.
-            let u = w * 2.0;
-            let reflected_ray = u - absorbed_ray;
-
-            // Get the reflected ray's direction from the surface
-            let reflected_ray_normal = reflected_ray.as_normal();
-
-            // Compute the similarity between the reflected ray's direction and
-            // the direction from our fragment to the viewer.
-            let view_direction_normal = (Vec3 {
-                x: self.view_position.x,
-                y: self.view_position.y,
-                z: self.view_position.z,
-            } - out.world_pos)
-                .as_normal();
-
-            let cosine_theta =
-                (1.0 as f32).min(reflected_ray_normal.dot(view_direction_normal * -1.0));
-
-            let similarity = (0.0 as f32).max(cosine_theta);
-
-            specular_contribution = point_light_contribution
-                * self.specular_intensity
-                * similarity.powi(specular_exponent);
         }
+
+        let point_light_contribution: Vec3 = self.point_light.contribute(
+            out.world_pos,
+            surface_normal_vec3,
+            self.view_position,
+            specular_exponent,
+        );
 
         // Calculate spot light contribution
 
-        let mut spot_light_contribution: Vec3 = Vec3::new();
-
-        let vertex_to_spot_light = self.spot_light.position - out.world_pos;
-
-        let distance_to_spot_light = vertex_to_spot_light.mag();
-
-        let direction_to_spot_light = vertex_to_spot_light / distance_to_spot_light;
-
-        let theta_angle =
-            (0.0 as f32).max((self.spot_light.direction).dot(direction_to_spot_light * -1.0));
-
-        let epsilon = self.spot_light.inner_cutoff_angle - self.spot_light.outer_cutoff_angle;
-
-        let spot_attenuation =
-            ((theta_angle - self.spot_light.outer_cutoff_angle) / epsilon).clamp(0.0, 1.0);
-
-        if theta_angle > self.spot_light.outer_cutoff_angle {
-            spot_light_contribution = self.spot_light.intensities * spot_attenuation;
-        }
+        let spot_light_contribution = self.spot_light.contribute(out.world_pos);
 
         // Combine light intensities
 
         let total_contribution = ambient_contribution
             + directional_light_contribution
             + point_light_contribution
-            + specular_contribution
             + spot_light_contribution;
 
         // @TODO Honor each material's ambient, diffuse, and specular colors.
