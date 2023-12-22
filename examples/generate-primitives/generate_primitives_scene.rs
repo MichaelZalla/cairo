@@ -91,13 +91,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             },
         };
 
-        let mut point_light = PointLight::new();
-
-        point_light.intensities = Vec3 {
-            x: 0.15,
-            y: 0.1,
-            z: 0.75,
-        };
+        let point_light = PointLight::new();
 
         let spot_light = SpotLight {
             intensities: Vec3 {
@@ -276,6 +270,15 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             }
         }
 
+        let phase_shift = 2.0 * PI / 3.0;
+        let max_intensity: f32 = 0.6;
+
+        self.point_light.intensities = Vec3 {
+            x: (self.seconds_ellapsed + phase_shift * 0.0).sin() / 2.0 + 0.5,
+            y: (self.seconds_ellapsed + phase_shift * 1.0).sin() / 2.0 + 0.5,
+            z: (self.seconds_ellapsed + phase_shift * 2.0).sin() / 2.0 + 0.5,
+        } * max_intensity;
+
         self.point_light.position = Vec3 {
             x: 7.0 * self.seconds_ellapsed.sin(),
             y: -3.0,
@@ -339,6 +342,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let entities = w.as_mut_slice();
 
         entities.last_mut().unwrap().position = self.point_light.position;
+
+        self.pipeline
+            .effect
+            .set_point_light_intensities(self.point_light.intensities);
 
         self.pipeline
             .effect

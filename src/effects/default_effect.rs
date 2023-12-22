@@ -79,6 +79,10 @@ impl DefaultEffect {
         self.directional_light.direction = direction;
     }
 
+    pub fn set_point_light_intensities(&mut self, intensities: Vec3) {
+        self.point_light.intensities = intensities;
+    }
+
     pub fn set_point_light_position(&mut self, position: Vec3) {
         self.point_light.position = position;
     }
