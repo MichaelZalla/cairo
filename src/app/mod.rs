@@ -312,6 +312,11 @@ impl App {
             mouse_state.position.0 = current_mouse_state.x();
             mouse_state.position.1 = current_mouse_state.y();
 
+            mouse_state.ndc_position.0 =
+                mouse_state.position.0 as f32 / self.window_info.window_width as f32;
+            mouse_state.ndc_position.1 =
+                mouse_state.position.1 as f32 / self.window_info.window_height as f32;
+
             // Update current scene
 
             let ticks_since_last_update: u64 =

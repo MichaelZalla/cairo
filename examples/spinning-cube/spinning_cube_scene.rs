@@ -138,6 +138,8 @@ impl<'a> Scene for SpinningCubeScene<'a> {
     ) {
         let mut context = self.shader_context.write().unwrap();
 
+        // Apply camera rotation based on mouse position delta
+
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(

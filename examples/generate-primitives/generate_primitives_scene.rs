@@ -218,6 +218,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         let uptime = app.timing_info.uptime_seconds;
 
+        // Apply camera rotation based on mouse position delta
+
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         for keycode in &keyboard_state.keys_pressed {
