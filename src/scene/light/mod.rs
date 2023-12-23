@@ -59,6 +59,7 @@ impl PointLight {
         world_pos: Vec3,
         surface_normal: Vec3,
         view_position: Vec4,
+        specular_intensity: f32,
         specular_exponent: i32,
     ) -> Vec3 {
         let mut point_contribution: Vec3 = Vec3::new();
@@ -114,7 +115,7 @@ impl PointLight {
             let similarity = (0.0 as f32).max(cosine_theta);
 
             specular_contribution =
-                point_contribution * self.specular_intensity * similarity.powi(specular_exponent);
+                point_contribution * specular_intensity * similarity.powi(specular_exponent);
         }
 
         return point_contribution + specular_contribution;

@@ -15,6 +15,7 @@ pub struct Material {
     pub diffuse_map: Option<TextureMap>,
     pub specular_color: Vec3,
     pub specular_exponent: i32, // aka "shininess"
+    pub specular_map: Option<TextureMap>,
     pub emissive_color: Vec3,
     pub dissolve: f32,
     pub transparency: f32,
@@ -78,6 +79,13 @@ impl fmt::Display for Material {
         )?;
 
         writeln!(v, "  > Specular exponent: {}", self.specular_exponent)?;
+
+        match &self.specular_map {
+            Some(map) => {
+                writeln!(v, "  > Specular map: {}", map.info.filepath)?;
+            }
+            None => (),
+        }
 
         writeln!(
             v,

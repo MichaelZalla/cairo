@@ -183,13 +183,28 @@ impl Effect for DefaultEffect {
         // Calculate point light contribution (including specular)
 
         let specular_exponent: i32;
+        let specular_intensity: f32;
 
         match self.active_material {
             Some(mat_raw_mut) => unsafe {
                 specular_exponent = (*mat_raw_mut).specular_exponent;
+
+                match &(*mat_raw_mut).specular_map {
+                    Some(map) => {
+                        let (r, g, b) = sample_from_uv(out.uv, map);
+                        let r_f = r as f32;
+                        let g_f = g as f32;
+                        let b_f = b as f32;
+                        specular_intensity = (r_f + g_f + b_f) / 255.0;
+                    }
+                    None => {
+                        specular_intensity = self.point_light.specular_intensity;
+                    }
+                }
             },
             None => {
                 specular_exponent = self.default_specular_power;
+                specular_intensity = self.point_light.specular_intensity;
             }
         }
 
@@ -197,6 +212,7 @@ impl Effect for DefaultEffect {
             out.world_pos,
             surface_normal_vec3,
             self.view_position,
+            specular_intensity,
             specular_exponent,
         );
 

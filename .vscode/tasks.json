@@ -70,6 +70,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example specular-map",
+      "windows": {
+        "command": "cargo run --example specular-map"
+      },
+      "linux": {
+        "command": "cargo run --example specular-map"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example texture-mapping",
       "windows": {
         "command": "cargo run --example texture-mapping"
