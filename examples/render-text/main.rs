@@ -29,7 +29,7 @@ fn main() -> Result<(), String> {
 
             let font_path = Path::new(&args[1]);
 
-            let mut font = ttf_context.load_font(font_path, 128)?;
+            let mut font = ttf_context.load_font(font_path, 16)?;
 
             // Set up our app
 

@@ -18,6 +18,9 @@
       "windows": {
         "command": "cargo build --examples"
       },
+      "osx": {
+        "command": "cargo build --examples"
+      },
       "linux": {
         "command": "cargo build --examples"
       }
@@ -30,6 +33,9 @@
       },
       "label": "Rust: cargo run --example basic-window",
       "windows": {
+        "command": "cargo run --example basic-window"
+      },
+      "osx": {
         "command": "cargo run --example basic-window"
       },
       "linux": {
@@ -46,6 +52,9 @@
       "windows": {
         "command": "cargo run --example spinning-cube"
       },
+      "osx": {
+        "command": "cargo run --example spinning-cube"
+      },
       "linux": {
         "command": "cargo run --example spinning-cube"
       }
@@ -58,6 +67,9 @@
       },
       "label": "Rust: cargo run --example generate-primitives",
       "windows": {
+        "command": "cargo run --example generate-primitives"
+      },
+      "osx": {
         "command": "cargo run --example generate-primitives"
       },
       "linux": {
@@ -88,6 +100,9 @@
       "windows": {
         "command": "cargo run --example texture-mapping"
       },
+      "osx": {
+        "command": "cargo run --example texture-mapping"
+      },
       "linux": {
         "command": "cargo run --example texture-mapping"
       }
@@ -102,6 +117,9 @@
       "windows": {
         "command": "cargo run --example multiple-scenes"
       },
+      "osx": {
+        "command": "cargo run --example multiple-scenes"
+      },
       "linux": {
         "command": "cargo run --example multiple-scenes"
       }
@@ -112,12 +130,15 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example render-text C:/Windows/Fonts/vgasys.fon",
+      "label": "Rust: cargo run --example render-text",
       "windows": {
         "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"
       },
+      "osx": {
+        "command": "cargo run --example render-text /System/Library/Fonts/Monaco.ttf"
+      },
       "linux": {
-        "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"
+        "command": "cargo run --example render-text"
       }
     },
     {
@@ -127,12 +148,15 @@
         "kind": "build",
         "isDefault": true
       },
-      "label": "Rust: cargo run --example ui-panels C:/Windows/Fonts/vgasys.fon",
+      "label": "Rust: cargo run --example ui-panels",
       "windows": {
         "command": "cargo run --example ui-panels C:/Windows/Fonts/vgasys.fon"
       },
+      "osx": {
+        "command": "cargo run --example ui-panels /System/Library/Fonts/Monaco.ttf"
+      },
       "linux": {
-        "command": "cargo run --example ui-panels C:/Windows/Fonts/vgasys.fon"
+        "command": "cargo run --example ui-panels"
       }
     },
   ]
