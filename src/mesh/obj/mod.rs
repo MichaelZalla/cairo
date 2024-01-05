@@ -28,6 +28,14 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
     let mut uvs: Vec<Vec2> = vec![];
     let mut faces: Vec<Face> = vec![];
 
+    // Counters
+
+    let mut vertex_counter: usize = 0;
+    let mut uv_counter: usize = 0;
+    let mut normal_counter: usize = 0;
+    let mut object_counter: usize = 0;
+    let mut group_counter: usize = 0;
+
     for (_, line) in lines.enumerate() {
         match line {
             Err(why) => println!("Error reading next line: {}", why),
@@ -52,6 +60,8 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                 );
 
                                 vertices.push(Vec3 { x, y, z });
+
+                                vertex_counter += 1;
                             }
                             // Texture (UV) coordinate, as (u, [v, w]), between 0 and 1. v, w are optional and default to 0.
                             "vt" => {
@@ -78,7 +88,9 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                     None => (),
                                 }
 
-                                uvs.push(Vec2 { x: u, y: v, z: w })
+                                uvs.push(Vec2 { x: u, y: v, z: w });
+
+                                uv_counter += 1;
                             }
                             // Vertex normal in (x,y,z) form; normal might not be a unit vector.
                             "vn" => {
@@ -91,6 +103,8 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                 };
 
                                 normals.push(vertex_normal);
+
+                                normal_counter += 1;
                             }
                             // Parameter space vertex
                             "vp" => (),
@@ -189,11 +203,15 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                             "o" => {
                                 let name = line_tokens.next().unwrap();
 
+                                object_counter += 1;
+
                                 object_name = Some(name.to_string());
                             }
                             // Named object polygon group
                             "g" => {
                                 let name = line_tokens.next().unwrap();
+
+                                group_counter += 1;
 
                                 group_name = Some(name.to_string());
                             }
@@ -244,6 +262,11 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         count,
         if count > 1 { "es" } else { "" },
         path_display
+    );
+
+    println!(
+        "Counted {} objects, {} groups, {} vertices, {} UVs, {} normals.",
+        object_counter, group_counter, vertex_counter, uv_counter, normal_counter
     );
 
     println!();
