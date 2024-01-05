@@ -188,7 +188,15 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                             // Bump map
                             "map_bump" | "bump" => {
-                                println!("@TODO Implementation for \"{}\".", "map_Disp");
+                                // [filepath]
+                                // Example:
+                                // bump cube_normal.png
+
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                materials.last_mut().unwrap().normal_map =
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
                             // Displacement map
