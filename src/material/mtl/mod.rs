@@ -156,15 +156,8 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // map_Ka cube.png
 
-                                let filepath = line_tokens.next().unwrap().to_string();
-
-                                let mtl_relative_filepath = mtl_file_path
-                                    .parent()
-                                    .unwrap()
-                                    .join(filepath)
-                                    .into_os_string()
-                                    .into_string()
-                                    .unwrap();
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
 
                                 materials.last_mut().unwrap().ambient_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
@@ -176,15 +169,8 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // map_Kd cube.png
 
-                                let filepath = line_tokens.next().unwrap().to_string();
-
-                                let mtl_relative_filepath = mtl_file_path
-                                    .parent()
-                                    .unwrap()
-                                    .join(filepath)
-                                    .into_os_string()
-                                    .into_string()
-                                    .unwrap();
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
 
                                 materials.last_mut().unwrap().diffuse_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
@@ -249,4 +235,18 @@ fn next_rgb<'a>(line_tokens: &mut SplitWhitespace<'a>) -> Vec3 {
     let b = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
     return Vec3 { x: r, y: g, z: b };
+}
+
+fn next_filepath<'a>(line_tokens: &mut SplitWhitespace<'a>, mtl_file_path: &Path) -> String {
+    let filepath = line_tokens.next().unwrap().to_string();
+
+    let mtl_relative_filepath = mtl_file_path
+        .parent()
+        .unwrap()
+        .join(filepath)
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+    return mtl_relative_filepath;
 }
