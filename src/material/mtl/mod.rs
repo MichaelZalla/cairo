@@ -5,11 +5,11 @@ use crate::{fs::read_lines, image::TextureMap, mesh::MaterialSource, vec::vec3::
 use super::Material;
 
 pub fn load_mtl(filepath: &str) -> Vec<Material> {
-    let path = Path::new(&filepath);
-    let path_display = path.display();
+    let mtl_file_path = Path::new(&filepath);
+    let mtl_file_path_display = mtl_file_path.display();
 
-    let lines = match read_lines(&path) {
-        Err(why) => panic!("Failed to open file {}: {}", path_display, why),
+    let lines = match read_lines(&mtl_file_path) {
+        Err(why) => panic!("Failed to open file {}: {}", mtl_file_path_display, why),
         Ok(lines) => lines,
     };
 
@@ -34,7 +34,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // newmtl cube
 
                                 let source = MaterialSource {
-                                    filepath: path_display.to_string(),
+                                    filepath: mtl_file_path_display.to_string(),
                                 };
 
                                 let name = line_tokens.next().unwrap().to_string();
@@ -158,7 +158,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let filepath = line_tokens.next().unwrap().to_string();
 
-                                let mtl_relative_filepath = path
+                                let mtl_relative_filepath = mtl_file_path
                                     .parent()
                                     .unwrap()
                                     .join(filepath)
@@ -178,7 +178,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let filepath = line_tokens.next().unwrap().to_string();
 
-                                let mtl_relative_filepath = path
+                                let mtl_relative_filepath = mtl_file_path
                                     .parent()
                                     .unwrap()
                                     .join(filepath)
@@ -225,7 +225,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
         "Parsed {} material{} from \"{}\".",
         count,
         if count > 1 { "s" } else { "" },
-        path_display
+        mtl_file_path_display
     );
 
     println!();
