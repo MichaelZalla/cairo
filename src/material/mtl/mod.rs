@@ -24,7 +24,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                 match line_tokens.next() {
                     None => (),
                     Some(first) => {
-                        match first {
+                        match first.to_lowercase().as_str() {
                             // Comment
                             "#" => (),
 
@@ -57,7 +57,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Ambient color
-                            "Ka" => {
+                            "ka" => {
                                 // R G B
                                 // Example:
                                 // Ka 0.0000 0.0000 0.0000
@@ -67,7 +67,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Diffuse color
-                            "Kd" => {
+                            "kd" => {
                                 // R G B
                                 // Example:
                                 // Kd 0.5880 0.5880 0.5880
@@ -77,7 +77,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Specular color
-                            "Ks" => {
+                            "ks" => {
                                 // R G B
                                 // Example:
                                 // Ks 0.0000 0.0000 0.0000
@@ -87,7 +87,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Specular exponent
-                            "Ns" => {
+                            "ns" => {
                                 // [0, 1000] range
                                 // Example:
                                 // Ns 10.0000
@@ -98,7 +98,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Emissive color
-                            "Ke" => {
+                            "ke" => {
                                 // R G B
                                 // Example:
                                 // Ke 0.0000 0.0000 0.0000
@@ -119,7 +119,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Transparency
-                            "Tr" => {
+                            "tr" => {
                                 // [0, 1] range
                                 // Example:
                                 // Tr 0.0000
@@ -130,7 +130,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Transmission filter color
-                            "Tf" => {
+                            "tf" => {
                                 // R G B
                                 // Example:
                                 // Tf 1.0000 1.0000 1.0000
@@ -140,7 +140,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Index of refraction
-                            "Ni" => {
+                            "ni" => {
                                 // [0.001, 10] range
                                 // Example:
                                 // Ni 1.5000
@@ -151,7 +151,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Ambient texture map
-                            "map_Ka" => {
+                            "map_ka" => {
                                 // [filepath]
                                 // Example:
                                 // map_Ka cube.png
@@ -171,7 +171,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Diffuse texture map (typically identical to map_Ka)
-                            "map_Kd" => {
+                            "map_kd" => {
                                 // [filepath]
                                 // Example:
                                 // map_Kd cube.png
@@ -191,7 +191,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Specular color map
-                            "map_Ks" => (),
+                            "map_ks" => (),
 
                             // Alpha map
                             "map_d" => (),
