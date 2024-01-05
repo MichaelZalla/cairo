@@ -191,22 +191,29 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Specular color map
-                            "map_ks" => (),
+                            "map_ks" => {
+                                println!("@TODO Implementation for \"{}\".", "map_Ks");
+                            }
 
                             // Alpha map
-                            "map_d" => (),
+                            "map_d" => {
+                                println!("@TODO Implementation for \"{}\".", "map_d");
+                            }
 
                             // Bump map
-                            "map_bump" => (),
-
-                            // Bump map (variant)
-                            "bump" => (),
+                            "map_bump" | "bump" => {
+                                println!("@TODO Implementation for \"{}\".", "map_Disp");
+                            }
 
                             // Displacement map
-                            "disp" => (),
+                            "map_disp" | "disp" => {
+                                println!("@TODO Implementation for \"{}\".", "map_Disp");
+                            }
 
                             // Stencil (decal) map
-                            "decal" => (),
+                            "decal" => {
+                                println!("@TODO Implementation for \"{}\".", "decal");
+                            }
 
                             // Unrecognized prefix
                             other => {
