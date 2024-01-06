@@ -1,8 +1,10 @@
+use std::collections::HashSet;
+use std::io::Error;
 use std::path::Path;
 
 use crate::fs::read_lines;
 
-use crate::material;
+use crate::material::{self, Material};
 use crate::mesh::{Face, MaterialSource};
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
@@ -18,12 +20,24 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         Ok(lines) => lines,
     };
 
-    let mut object_name: Option<String> = None;
-    let mut group_name: Option<String> = None;
+    let end_signal: std::vec::IntoIter<Result<String, Error>> =
+        vec![(Ok("o __default__".to_string()))].into_iter();
+
+    let chained = lines.chain(end_signal);
+
+    let mut objects: Vec<Mesh> = vec![];
+
     let mut material_source: Option<MaterialSource> = None;
-    let mut material_name: Option<String> = None;
+
+    // Global state
 
     let mut normals: Vec<Vec3> = vec![];
+
+    // Current object state
+
+    let mut group_name: Option<String> = None;
+    let mut object_name: Option<String> = None;
+    let mut material_name: Option<String> = None;
 
     let mut object_vertices: Vec<Vec3> = vec![];
     let mut object_uvs: Vec<Vec2> = vec![];
@@ -37,7 +51,10 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
     let mut object_counter: usize = 0;
     let mut group_counter: usize = 0;
 
-    for (_, line) in lines.enumerate() {
+    let mut vertex_index_offset_for_current_object: usize = 0;
+    let mut uv_index_offset_for_current_object: usize = 0;
+
+    for (_, line) in chained.enumerate() {
         match line {
             Err(why) => println!("Error reading next line: {}", why),
             Ok(line) => {
@@ -131,9 +148,15 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                 let mut v3_iter = line_tokens.next().unwrap().split("/");
 
                                 face.vertices = (
-                                    v1_iter.next().unwrap().parse::<usize>().unwrap() - 1,
-                                    v2_iter.next().unwrap().parse::<usize>().unwrap() - 1,
-                                    v3_iter.next().unwrap().parse::<usize>().unwrap() - 1,
+                                    v1_iter.next().unwrap().parse::<usize>().unwrap()
+                                        - 1
+                                        - vertex_index_offset_for_current_object,
+                                    v2_iter.next().unwrap().parse::<usize>().unwrap()
+                                        - 1
+                                        - vertex_index_offset_for_current_object,
+                                    v3_iter.next().unwrap().parse::<usize>().unwrap()
+                                        - 1
+                                        - vertex_index_offset_for_current_object,
                                 );
 
                                 let v1_uv_index = v1_iter.next();
@@ -144,11 +167,24 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                     Some(index) => {
                                         if index != "" {
                                             let v1_uv =
-                                                v1_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+                                                v1_uv_index.unwrap().parse::<usize>().unwrap()
+                                                    - 1
+                                                    - uv_index_offset_for_current_object;
                                             let v2_uv =
-                                                v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+                                                v2_uv_index.unwrap().parse::<usize>().unwrap()
+                                                    - 1
+                                                    - uv_index_offset_for_current_object;
                                             let v3_uv =
-                                                v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+                                                v3_uv_index.unwrap().parse::<usize>().unwrap()
+                                                    - 1
+                                                    - uv_index_offset_for_current_object;
+
+                                            if v1_uv > object_uvs.len() - 1
+                                                || v2_uv > object_uvs.len() - 1
+                                                || v3_uv > object_uvs.len() - 1
+                                            {
+                                                panic!("Invalid UV indices ({},{},{}) for UV group with size {}.", v1_uv, v2_uv, v3_uv, object_uvs.len())
+                                            }
 
                                             face.uvs = Some((v1_uv, v2_uv, v3_uv));
                                         }
@@ -163,12 +199,16 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                         let v2_normal_index = v2_iter.next();
                                         let v3_normal_index = v3_iter.next();
 
-                                        let v1_n =
-                                            v1_normal_index.unwrap().parse::<usize>().unwrap() - 1;
-                                        let v2_n =
-                                            v2_normal_index.unwrap().parse::<usize>().unwrap() - 1;
-                                        let v3_n =
-                                            v3_normal_index.unwrap().parse::<usize>().unwrap() - 1;
+                                        let v1_n_raw =
+                                            v1_normal_index.unwrap().parse::<usize>().unwrap();
+                                        let v2_n_raw =
+                                            v2_normal_index.unwrap().parse::<usize>().unwrap();
+                                        let v3_n_raw =
+                                            v3_normal_index.unwrap().parse::<usize>().unwrap();
+
+                                        let v1_n = v1_n_raw - 1;
+                                        let v2_n = v2_n_raw - 1;
+                                        let v3_n = v3_n_raw - 1;
 
                                         face.normals = Some((v1_n, v2_n, v3_n));
                                     }
@@ -202,14 +242,143 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                             }
                             // Named object
                             "o" => {
-                                let name = line_tokens.next().unwrap();
+                                // Assemble any previous mesh before continuing to this object
 
-                                object_counter += 1;
+                                vertex_index_offset_for_current_object = vertex_counter;
+                                uv_index_offset_for_current_object = uv_counter;
+
+                                // Coallesce all of this object's face normal indices into a set.
+
+                                let mut object_normal_indices_set = HashSet::<usize>::new();
+
+                                for face in &object_faces {
+                                    match face.normals {
+                                        Some(normals) => {
+                                            object_normal_indices_set.insert(normals.0);
+                                            object_normal_indices_set.insert(normals.1);
+                                            object_normal_indices_set.insert(normals.2);
+                                        }
+                                        None => (),
+                                    }
+                                }
+
+                                // Collect the set of unique normal indices into a Vec<usize>.
+
+                                let object_normal_indices_vec: Vec<usize> =
+                                    object_normal_indices_set.into_iter().collect();
+
+                                // Copy the set of all referenced normals into a Vec<Vec3>.
+
+                                let mut object_normals: Vec<Vec3> = vec![];
+
+                                for index in &object_normal_indices_vec {
+                                    object_normals.push(normals[*index].clone());
+                                }
+
+                                // Re-map each of the object's face normal
+                                // indices to its index in object_normals[].
+
+                                for face in &mut object_faces {
+                                    match &mut face.normals {
+                                        Some(normals) => {
+                                            let global_index_0 = normals.0;
+                                            let global_index_1 = normals.1;
+                                            let global_index_2 = normals.2;
+
+                                            match &object_normal_indices_vec
+                                                .iter()
+                                                .position(|&item| item == global_index_0)
+                                            {
+                                                Some(index) => {
+                                                    normals.0 = *index;
+                                                }
+                                                None => {
+                                                    panic!("Failed to find index {} in object normal indices list!", {global_index_0});
+                                                }
+                                            }
+
+                                            match &object_normal_indices_vec
+                                                .iter()
+                                                .position(|&item| item == global_index_1)
+                                            {
+                                                Some(index) => {
+                                                    normals.1 = *index;
+                                                }
+                                                None => {
+                                                    panic!("Failed to find index {} in object normal indices list!", {global_index_1});
+                                                }
+                                            }
+
+                                            match &object_normal_indices_vec
+                                                .iter()
+                                                .position(|&item| item == global_index_2)
+                                            {
+                                                Some(index) => {
+                                                    normals.2 = *index;
+                                                }
+                                                None => {
+                                                    panic!("Failed to find index {} in object normal indices list!", {global_index_2});
+                                                }
+                                            }
+                                        }
+                                        None => (),
+                                    }
+                                }
+
+                                if vertex_index_offset_for_current_object > 0 {
+                                    let mut accumulated_mesh = Mesh::new(
+                                        object_vertices,
+                                        object_uvs,
+                                        object_normals,
+                                        object_faces.clone(),
+                                    );
+
+                                    accumulated_mesh.object_source = path_display.to_string();
+
+                                    match object_name.to_owned() {
+                                        Some(name) => {
+                                            accumulated_mesh.object_name = name;
+                                        }
+                                        None => (),
+                                    }
+
+                                    match group_name.to_owned() {
+                                        Some(name) => {
+                                            accumulated_mesh.group_name = name;
+                                        }
+                                        None => (),
+                                    }
+
+                                    accumulated_mesh.material_source = material_source.clone();
+
+                                    match material_name.to_owned() {
+                                        Some(name) => {
+                                            accumulated_mesh.material_name = name;
+                                        }
+                                        None => (),
+                                    }
+
+                                    objects.push(accumulated_mesh);
+
+                                    object_counter += 1;
+                                }
+
+                                // Reset our state and accumulators
+
+                                object_vertices = vec![];
+                                object_uvs = vec![];
+
+                                group_name = None;
+                                material_name = None;
+
+                                let name = line_tokens.next().unwrap();
 
                                 object_name = Some(name.to_string());
                             }
                             // Named object polygon group
                             "g" => {
+                                object_faces = vec![];
+
                                 let name = line_tokens.next().unwrap();
 
                                 group_counter += 1;
@@ -229,44 +398,12 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         }
     }
 
-    let mut meshes = vec![Mesh::new(
-        object_vertices,
-        object_uvs,
-        normals,
-        object_faces,
-    )];
-
-    meshes.last_mut().unwrap().object_source = path_display.to_string();
-
-    match object_name {
-        Some(name) => {
-            meshes.last_mut().unwrap().object_name = name;
-        }
-        None => (),
-    }
-
-    match group_name {
-        Some(name) => {
-            meshes.last_mut().unwrap().group_name = name;
-        }
-        None => (),
-    }
-
-    meshes.last_mut().unwrap().material_source = material_source;
-
-    match material_name {
-        Some(name) => {
-            meshes.last_mut().unwrap().material_name = name;
-        }
-        None => (),
-    }
-
-    let count: usize = meshes.len();
+    let object_count: usize = objects.len();
 
     println!(
-        "Parsed {} mesh{} from \"{}\":",
-        count,
-        if count > 1 { "es" } else { "" },
+        "Parsed {} object{} from \"{}\":",
+        object_count,
+        if object_count > 1 { "s" } else { "" },
         path_display
     );
 
@@ -277,27 +414,30 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
 
     println!();
 
-    for mesh in meshes.as_mut_slice() {
-        // Load any materials from associated MTL files
+    // Parse the set of materials inside this OBJ file's MTL file
 
-        match &mesh.material_source {
-            Some(src) => {
-                // Parse the set of materials inside the MTL source
-                let materials = material::mtl::load_mtl(&src.filepath);
+    let materials: Vec<Material>;
 
-                // Find the material referenced by this mesh (via usemtl)
-                for i in 0..materials.len() {
-                    let mat = &materials[i];
-                    if mat.name == mesh.material_name {
-                        mesh.material = Some(mat.to_owned());
-                    }
-                }
+    match material_source {
+        Some(src) => materials = material::mtl::load_mtl(&src.filepath),
+        None => {
+            materials = vec![];
+        }
+    }
+
+    for mesh in objects.as_mut_slice() {
+        // Assign this mesh's material to it
+
+        for i in 0..materials.len() {
+            let mat = &materials[i];
+            if mat.name == mesh.material_name {
+                mesh.material = Some(mat.to_owned());
             }
-            None => (),
         }
 
+        // Print a summary of this mesh
         println!("{}", mesh);
     }
 
-    return meshes;
+    return objects;
 }
