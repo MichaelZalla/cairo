@@ -1,7 +1,6 @@
 use std::fmt;
 
 use super::vec::vec3::Vec3;
-use crate::material::Material;
 use crate::vec::vec2::Vec2;
 
 pub mod obj;
@@ -26,7 +25,7 @@ pub struct Mesh {
     pub group_name: String,
     pub material_source: Option<MaterialSource>,
     pub material_name: String,
-    pub material: Option<Material>,
+    pub material_index: Option<usize>,
     pub vertices: Vec<Vec3>,
     pub normals: Vec<Vec3>,
     pub uvs: Vec<Vec2>,
@@ -45,7 +44,7 @@ impl Default for Mesh {
             normals: vec![],
             uvs: vec![],
             faces: vec![],
-            material: None,
+            material_index: None,
         }
     }
 }
@@ -65,6 +64,12 @@ impl fmt::Display for Mesh {
             None => (),
         }
         writeln!(v, "  > Material name: {}", self.material_name)?;
+        match &self.material_index {
+            Some(index) => {
+                writeln!(v, "  > Material index: {}", index)?;
+            }
+            None => (),
+        }
         writeln!(v, "  > Vertices: {}", self.vertices.len())?;
         writeln!(v, "  > UVs: {}", self.uvs.len())?;
         writeln!(v, "  > Normals: {}", self.normals.len())?;

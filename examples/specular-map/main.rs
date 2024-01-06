@@ -67,11 +67,15 @@ fn main() -> Result<(), String> {
 
     container_material.specular_map = Some(container_specular_map);
 
+    // Collect materials
+
+    let materials: Vec<Material> = vec![checkerboard_material, container_material];
+
     // Assign textures to mesh materials
 
-    plane_mesh.material = Some(checkerboard_material);
+    plane_mesh.material_index = Some(0);
 
-    cube_mesh.material = Some(container_material);
+    cube_mesh.material_index = Some(1);
 
     // Assign the meshes to entities
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
@@ -87,7 +91,7 @@ fn main() -> Result<(), String> {
     let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
 
     point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material = Some(point_light_material);
+    point_light_mesh.material_index = None;
 
     let mut point_light_entity = Entity::new(&point_light_mesh);
 
@@ -108,6 +112,7 @@ fn main() -> Result<(), String> {
         app.canvas_width,
         app.canvas_height,
         &entities_rwl,
+        &materials,
     ));
 
     // Set up our app

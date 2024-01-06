@@ -10,7 +10,7 @@ use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
 
-pub fn load_obj(filepath: &str) -> Vec<Mesh> {
+pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<Vec<Material>>) {
     let path = Path::new(&filepath);
     let path_display = path.display();
     let path_parent = path.parent().unwrap();
@@ -418,7 +418,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
 
     let materials: Vec<Material>;
 
-    match material_source {
+    match &material_source {
         Some(src) => materials = material::mtl::load_mtl(&src.filepath),
         None => {
             materials = vec![];
@@ -428,10 +428,11 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
     for mesh in objects.as_mut_slice() {
         // Assign this mesh's material to it
 
-        for i in 0..materials.len() {
-            let mat = &materials[i];
-            if mat.name == mesh.material_name {
-                mesh.material = Some(mat.to_owned());
+        for material_index in 0..materials.len() {
+            let material = &materials[material_index];
+
+            if material.name == mesh.material_name {
+                mesh.material_index = Some(material_index);
             }
         }
 
@@ -439,5 +440,8 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         println!("{}", mesh);
     }
 
-    return objects;
+    match &material_source {
+        Some(_) => return (objects, Some(materials)),
+        None => return (objects, None),
+    }
 }

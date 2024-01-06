@@ -43,10 +43,14 @@ fn main() -> Result<(), String> {
 
     checkerboard_mat.diffuse_map = Some(checkerboard_texture);
 
-    plane_mesh.material = Some(checkerboard_mat.clone());
-    cube_mesh.material = Some(checkerboard_mat.clone());
-    cone_mesh.material = Some(checkerboard_mat.clone());
-    cylinder_mesh.material = Some(checkerboard_mat.clone());
+    // Initialize a materials collection
+
+    let materials: Vec<Material> = vec![checkerboard_mat];
+
+    plane_mesh.material_index = Some(0);
+    cube_mesh.material_index = Some(0);
+    cone_mesh.material_index = Some(0);
+    cylinder_mesh.material_index = Some(0);
 
     // Assign the meshes to entities
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
@@ -66,13 +70,13 @@ fn main() -> Result<(), String> {
     cylinder_entity.position.x += 4.0;
     cylinder_entity.position.y -= 1.5;
 
-    let mut point_light_material = Material::new("white".to_string());
-    point_light_material.diffuse_color = color::WHITE.to_vec3() / 255.0;
+    // let mut point_light_material = Material::new("white".to_string());
+    // point_light_material.diffuse_color = color::WHITE.to_vec3() / 255.0;
 
     let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
 
     point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material = Some(point_light_material);
+    point_light_mesh.material_index = None;
 
     let mut point_light_entity = Entity::new(&point_light_mesh);
 
@@ -98,6 +102,7 @@ fn main() -> Result<(), String> {
         app.canvas_width,
         app.canvas_height,
         &entities_rwl,
+        &materials,
     ));
 
     // Set up our app

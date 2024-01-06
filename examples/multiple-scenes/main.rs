@@ -19,10 +19,10 @@ static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     // Load meshes
-    let cube_meshes = load_obj(&"./data/obj/cube.obj");
+    let (cube_meshes, cube_materials) = load_obj(&"./data/obj/cube.obj");
     let cube_mesh = &cube_meshes[0];
 
-    let teapot_meshes = load_obj(&"./data/obj/teapot.obj");
+    let (teapot_meshes, teapot_materials) = load_obj(&"./data/obj/teapot.obj");
     let teapot_mesh = &teapot_meshes[0];
 
     // Assign meshes to new entities

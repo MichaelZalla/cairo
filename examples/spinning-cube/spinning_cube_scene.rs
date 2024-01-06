@@ -318,7 +318,7 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         let r = self.entities.read().unwrap();
 
         for entity in r.as_slice() {
-            self.pipeline.render_mesh(&entity.mesh);
+            self.pipeline.render_mesh(&entity.mesh, None);
         }
     }
 

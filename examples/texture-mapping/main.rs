@@ -25,34 +25,37 @@ fn main() -> Result<(), String> {
 
     // Load a cube mesh and its materials
 
-    let mut cube_meshes = mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
+    let (mut cube_meshes, mut cube_materials) =
+        mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
 
     let cube_mesh = &mut cube_meshes[0];
 
-    match &mut cube_mesh.material {
-        Some(mat) => {
-            // Ambient
-            match &mut mat.ambient_map {
-                Some(map) => {
-                    map.load(rendering_context)?;
+    match &mut cube_materials {
+        Some(mats) => {
+            for mat in mats {
+                // Ambient color map
+                match &mut mat.ambient_map {
+                    Some(map) => {
+                        map.load(rendering_context)?;
+                    }
+                    None => (),
                 }
-                None => (),
-            }
 
-            // Diffuse
-            match &mut mat.diffuse_map {
-                Some(map) => {
-                    map.load(rendering_context)?;
+                // Diffuse color map
+                match &mut mat.diffuse_map {
+                    Some(map) => {
+                        map.load(rendering_context)?;
+                    }
+                    None => (),
                 }
-                None => (),
-            }
 
-            // Normal
-            match &mut mat.normal_map {
-                Some(map) => {
-                    map.load(rendering_context)?;
+                // Normal map
+                match &mut mat.normal_map {
+                    Some(map) => {
+                        map.load(rendering_context)?;
+                    }
+                    None => (),
                 }
-                None => (),
             }
         }
         None => (),
@@ -65,10 +68,13 @@ fn main() -> Result<(), String> {
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
     let entities_rwl = RwLock::new(entities);
 
+    let mats = cube_materials.unwrap();
+
     // Instantiate our textured cube scene
     let scene = RefCell::new(TextureMappedCubeScene::new(
         rendering_context,
         &entities_rwl,
+        &mats,
     ));
 
     // Set up our app
