@@ -23,10 +23,11 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
     let mut material_source: Option<MaterialSource> = None;
     let mut material_name: Option<String> = None;
 
-    let mut vertices: Vec<Vec3> = vec![];
     let mut normals: Vec<Vec3> = vec![];
-    let mut uvs: Vec<Vec2> = vec![];
-    let mut faces: Vec<Face> = vec![];
+
+    let mut object_vertices: Vec<Vec3> = vec![];
+    let mut object_uvs: Vec<Vec2> = vec![];
+    let mut object_faces: Vec<Face> = vec![];
 
     // Counters
 
@@ -59,7 +60,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                     line_tokens.next().unwrap().parse::<f32>().unwrap(),
                                 );
 
-                                vertices.push(Vec3 { x, y, z });
+                                object_vertices.push(Vec3 { x, y, z });
 
                                 vertex_counter += 1;
                             }
@@ -88,7 +89,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                     None => (),
                                 }
 
-                                uvs.push(Vec2 { x: u, y: v, z: w });
+                                object_uvs.push(Vec2 { x: u, y: v, z: w });
 
                                 uv_counter += 1;
                             }
@@ -174,7 +175,7 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
                                     None => (),
                                 }
 
-                                faces.push(face);
+                                object_faces.push(face);
                             }
                             // Line element
                             "l" => (),
@@ -228,7 +229,12 @@ pub fn load_obj(filepath: &str) -> Vec<Mesh> {
         }
     }
 
-    let mut meshes = vec![Mesh::new(vertices, uvs, normals, faces)];
+    let mut meshes = vec![Mesh::new(
+        object_vertices,
+        object_uvs,
+        normals,
+        object_faces,
+    )];
 
     meshes.last_mut().unwrap().object_source = path_display.to_string();
 
