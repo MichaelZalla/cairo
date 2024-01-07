@@ -59,14 +59,11 @@ impl<'a> SpecularMapScene<'a> {
 
         // Set up a camera for rendering our cube scene
         let camera: Camera = Camera::new(
-            Vec4::new(
-                Vec3 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: -5.0,
-                },
-                1.0,
-            ),
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -5.0,
+            },
             Mat4::identity(),
         );
 
@@ -128,6 +125,8 @@ impl<'a> SpecularMapScene<'a> {
 
         let world_transform = Mat4::scaling(1.0);
 
+        let view_position = Vec4::new(camera.position, 1.0);
+
         let view_inverse_transform = camera.get_view_inverse_transform();
 
         let projection_transform = Mat4::projection_for_fov(
@@ -141,7 +140,7 @@ impl<'a> SpecularMapScene<'a> {
             graphics,
             DefaultEffect::new(
                 world_transform,
-                camera.position,
+                view_position,
                 view_inverse_transform,
                 projection_transform,
                 ambient_light,
@@ -211,34 +210,66 @@ impl<'a> Scene for SpecularMapScene<'a> {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::Up | Keycode::W { .. } => {
-                    camera.position +=
+                    let adjustment =
                         vec4::FORWARD * camera_movement_step * camera.rotation_inverse_transposed;
+                    camera.position += Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    }
                 }
                 Keycode::Down | Keycode::S { .. } => {
-                    camera.position -=
+                    let adjustment =
                         vec4::FORWARD * camera_movement_step * camera.rotation_inverse_transposed;
+                    camera.position -= Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    }
                 }
                 Keycode::Left | Keycode::A { .. } => {
-                    camera.position +=
+                    let adjustment =
                         vec4::LEFT * camera_movement_step * camera.rotation_inverse_transposed;
+                    camera.position += Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    }
                 }
                 Keycode::Right | Keycode::D { .. } => {
-                    camera.position -=
+                    let adjustment =
                         vec4::LEFT * camera_movement_step * camera.rotation_inverse_transposed;
+                    camera.position -= Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    }
                 }
                 Keycode::Q { .. } => {
-                    camera.position -=
+                    let adjustment =
                         vec4::UP * camera_movement_step * camera.rotation_inverse_transposed;
+                    camera.position -= Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    }
                 }
                 Keycode::E { .. } => {
-                    camera.position +=
+                    let adjustment =
                         vec4::UP * camera_movement_step * camera.rotation_inverse_transposed;
+                    camera.position += Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    }
                 }
                 _ => {}
             }
         }
 
-        self.pipeline.effect.set_camera_position(camera.position);
+        self.pipeline
+            .effect
+            .set_camera_position(Vec4::new(camera.position, 1.0));
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
