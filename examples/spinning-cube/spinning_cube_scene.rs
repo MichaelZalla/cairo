@@ -123,11 +123,7 @@ impl<'a> SpinningCubeScene<'a> {
 
         let world_transform = Mat4::new();
 
-        let view_inverse_transform = Mat4::translation(Vec3 {
-            x: camera.position_inverse.x,
-            y: camera.position_inverse.y,
-            z: camera.position_inverse.z,
-        });
+        let view_inverse_transform = camera.get_view_inverse_transform();
 
         let aspect_ratio = graphics.buffer.width_over_height;
 
@@ -289,20 +285,11 @@ impl<'a> Scene for SpinningCubeScene<'a> {
 
         self.pipeline.effect.set_world_transform(world_transform);
 
-        let camera_translation_inverse = camera.position * -1.0;
-
-        let camera_translation_inverse_transform = Mat4::translation(Vec3 {
-            x: camera_translation_inverse.x,
-            y: camera_translation_inverse.y,
-            z: camera_translation_inverse.z,
-        });
-
-        let view_inverse_transform =
-            camera_translation_inverse_transform * camera.rotation_inverse_transform;
+        let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         self.pipeline
             .effect
-            .set_view_inverse_transform(view_inverse_transform);
+            .set_view_inverse_transform(camera_view_inverse_transform);
 
         self.prev_mouse_state = mouse_state.clone();
     }

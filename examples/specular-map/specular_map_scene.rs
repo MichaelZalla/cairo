@@ -128,11 +128,7 @@ impl<'a> SpecularMapScene<'a> {
 
         let world_transform = Mat4::scaling(1.0);
 
-        let view_inverse_transform = Mat4::translation(Vec3 {
-            x: camera.position_inverse.x,
-            y: camera.position_inverse.y,
-            z: camera.position_inverse.z,
-        });
+        let view_inverse_transform = camera.get_view_inverse_transform();
 
         let projection_transform = Mat4::projection_for_fov(
             FIELD_OF_VIEW,
@@ -330,16 +326,7 @@ impl<'a> Scene for SpecularMapScene<'a> {
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
-        let camera_translation_inverse = camera.position * -1.0;
-
-        let camera_translation_inverse_transform = Mat4::translation(Vec3 {
-            x: camera_translation_inverse.x,
-            y: camera_translation_inverse.y,
-            z: camera_translation_inverse.z,
-        });
-
-        let camera_view_inverse_transform =
-            camera_translation_inverse_transform * camera.rotation_inverse_transform;
+        let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         self.pipeline
             .effect
