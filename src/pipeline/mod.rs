@@ -12,6 +12,13 @@ use super::{
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
+// @TODO Take near and far values in Pipeline constructor, or read from some
+// shared config.
+static NEAR: f32 = 0.5;
+static NEAR_RECIPROCAL: f32 = 1.0 / NEAR;
+static FAR: f32 = 10000.0;
+static FAR_RECIPROCAL: f32 = 1.0 / FAR;
+
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
     v0: T,
@@ -456,16 +463,21 @@ where
             );
         }
 
-        if z < self.z_buffer[z_buffer_index] {
-            self.z_buffer[z_buffer_index] = z;
-            Some((z_buffer_index, z))
+        // Non-linear depth test
+        // https://youtu.be/3xGKu4T4SCU?si=v7nkYrg2sFYozfZ5&t=139
+
+        // (1/z - 1/n) / (1/f - 1/n)
+        let non_linear_z = (1.0 / z - NEAR_RECIPROCAL) / (FAR_RECIPROCAL - NEAR_RECIPROCAL);
+
+        if non_linear_z < self.z_buffer[z_buffer_index] {
+            Some((z_buffer_index, non_linear_z))
         } else {
             None
         }
     }
 
-    fn set_z_buffer(&mut self, index: usize, z: f32) {
-        self.z_buffer[index] = z;
+    fn set_z_buffer(&mut self, index: usize, non_linear_z: f32) {
+        self.z_buffer[index] = non_linear_z;
     }
 
     fn set_pixel(&mut self, x: u32, y: u32, z: f32, interpolant: &mut T::VertexOut) {
@@ -479,7 +491,7 @@ where
         }
 
         match self.test_z_buffer(x, y, interpolant.p.z) {
-            Some((index, z)) => {
+            Some((index, non_linear_z)) => {
                 let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
                 let result = self.effect.ps(&linear_space_interpolant);
@@ -487,7 +499,7 @@ where
                 match result {
                     Some(color) => {
                         self.graphics.set_pixel(x, y, color);
-                        self.set_z_buffer(index, z);
+                        self.set_z_buffer(index, non_linear_z);
                     }
                     None => (),
                 }
