@@ -8,8 +8,8 @@ pub struct AmbientLight {
 }
 
 impl AmbientLight {
-    pub fn contribute(self) -> Vec3 {
-        return self.intensities;
+    pub fn contribute(self, ambient_intensity_factor: f32) -> Vec3 {
+        return self.intensities * ambient_intensity_factor;
     }
 }
 

@@ -11,6 +11,7 @@ pub struct Material {
     pub illumination_model: u8,
     pub ambient_color: Vec3,
     pub ambient_map: Option<TextureMap>,
+    pub ambient_occlusion_map: Option<TextureMap>,
     pub diffuse_color: Vec3,
     pub diffuse_map: Option<TextureMap>,
     pub specular_color: Vec3,
@@ -56,6 +57,13 @@ impl fmt::Display for Material {
         match &self.ambient_map {
             Some(map) => {
                 writeln!(v, "  > Ambient map: {}", map.info.filepath)?;
+            }
+            None => (),
+        }
+
+        match &self.ambient_occlusion_map {
+            Some(map) => {
+                writeln!(v, "  > Ambient occlusion map: {}", map.info.filepath)?;
             }
             None => (),
         }

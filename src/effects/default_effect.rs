@@ -193,7 +193,22 @@ impl Effect for DefaultEffect {
 
         // Calculate ambient light contribution
 
-        let ambient_contribution = self.ambient_light.contribute();
+        let mut ambient_factor: f32 = 1.0;
+
+        match self.active_material {
+            Some(mat_raw_mut) => unsafe {
+                match &(*mat_raw_mut).ambient_occlusion_map {
+                    Some(map) => {
+                        let (r, _g, _b) = sample_from_uv(out.uv, map);
+                        ambient_factor = r as f32 / 255.0;
+                    }
+                    None => (),
+                }
+            },
+            None => (),
+        }
+
+        let ambient_contribution = self.ambient_light.contribute(ambient_factor);
 
         // Calculate directional light contribution
 
