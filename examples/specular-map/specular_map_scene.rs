@@ -299,6 +299,10 @@ impl<'a> Scene for SpecularMapScene<'a> {
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta
 
+            if entity.mesh.object_name == "point_light" {
+                entity.position = self.point_light.position;
+            }
+
             if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {
                 continue;
             }
@@ -323,7 +327,7 @@ impl<'a> Scene for SpecularMapScene<'a> {
             self.pipeline.clear_z_buffer();
         }
 
-        let mut w = self.entities.write().unwrap();
+        let r = self.entities.read().unwrap();
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
@@ -346,10 +350,6 @@ impl<'a> Scene for SpecularMapScene<'a> {
             (self.directional_light.direction * camera_view_inverse_transform).as_normal(),
         );
 
-        let entities = w.as_mut_slice();
-
-        entities.last_mut().unwrap().position = self.point_light.position;
-
         self.pipeline
             .effect
             .set_point_light_intensities(self.point_light.intensities);
@@ -358,7 +358,7 @@ impl<'a> Scene for SpecularMapScene<'a> {
             .effect
             .set_point_light_position(self.point_light.position);
 
-        for entity in w.as_slice() {
+        for entity in r.as_slice() {
             let world_transform = Mat4::scaling(1.0)
                 * Mat4::rotation_x(entity.rotation.x)
                 * Mat4::rotation_y(entity.rotation.y)
