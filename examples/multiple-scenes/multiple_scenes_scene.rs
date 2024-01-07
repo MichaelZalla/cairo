@@ -117,7 +117,7 @@ impl<'a> MultipleScenesScene<'a> {
 
         let world_transform = Mat4::scaling(1.0);
 
-        let view_position = Vec4::new(camera.position, 1.0);
+        let view_position = Vec4::new(camera.get_position(), 1.0);
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
@@ -222,64 +222,84 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         );
 
         for keycode in &keyboard_state.keys_pressed {
+            let position = camera.get_position();
+
             match keycode {
                 Keycode::Up | Keycode::W { .. } => {
                     let adjustment =
                         forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-                    camera.position += Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    };
+                    camera.set_position(
+                        position
+                            + Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Down | Keycode::S { .. } => {
                     let adjustment =
                         forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-                    camera.position -= Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    };
+                    camera.set_position(
+                        position
+                            - Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Left | Keycode::A { .. } => {
                     let adjustment =
                         left * camera_movement_step * camera.rotation_inverse_transposed;
 
-                    camera.position += Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    };
+                    camera.set_position(
+                        position
+                            + Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Right | Keycode::D { .. } => {
                     let adjustment =
                         left * camera_movement_step * camera.rotation_inverse_transposed;
 
-                    camera.position -= Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    };
+                    camera.set_position(
+                        position
+                            - Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Q { .. } => {
                     let adjustment = up * camera_movement_step * camera.rotation_inverse_transposed;
 
-                    camera.position -= Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    };
+                    camera.set_position(
+                        position
+                            - Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::E { .. } => {
                     let adjustment = up * camera_movement_step * camera.rotation_inverse_transposed;
 
-                    camera.position += Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    };
+                    camera.set_position(
+                        position
+                            + Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
@@ -316,21 +336,29 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         }
 
         if game_controller_state.buttons.dpad_up {
+            let position = camera.get_position();
             let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.position += Vec3 {
-                x: adjustment.x,
-                y: adjustment.y,
-                z: adjustment.z,
-            };
+            camera.set_position(
+                position
+                    + Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    },
+            );
         } else if game_controller_state.buttons.dpad_down {
+            let position = camera.get_position();
             let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.position -= Vec3 {
-                x: adjustment.x,
-                y: adjustment.y,
-                z: adjustment.z,
-            };
+            camera.set_position(
+                position
+                    - Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    },
+            );
         }
 
         let left_joystick_position_normalized = Vec2 {
@@ -340,44 +368,60 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         };
 
         if left_joystick_position_normalized.x > 0.5 {
+            let position = camera.get_position();
             let adjustment = left * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.position -= Vec3 {
-                x: adjustment.x,
-                y: adjustment.y,
-                z: adjustment.z,
-            };
+            camera.set_position(
+                position
+                    - Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    },
+            );
         } else if left_joystick_position_normalized.x < -0.5 {
+            let position = camera.get_position();
             let adjustment = left * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.position += Vec3 {
-                x: adjustment.x,
-                y: adjustment.y,
-                z: adjustment.z,
-            };
+            camera.set_position(
+                position
+                    + Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    },
+            );
         }
 
         if left_joystick_position_normalized.y > 0.5 {
+            let position = camera.get_position();
             let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.position -= Vec3 {
-                x: adjustment.x,
-                y: adjustment.y,
-                z: adjustment.z,
-            };
+            camera.set_position(
+                position
+                    - Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    },
+            );
         } else if left_joystick_position_normalized.y < -0.5 {
+            let position = camera.get_position();
             let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.position += Vec3 {
-                x: adjustment.x,
-                y: adjustment.y,
-                z: adjustment.z,
-            };
+            camera.set_position(
+                position
+                    + Vec3 {
+                        x: adjustment.x,
+                        y: adjustment.y,
+                        z: adjustment.z,
+                    },
+            );
         }
 
         self.pipeline
             .effect
-            .set_camera_position(Vec4::new(camera.position, 1.0));
+            .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         let right_joystick_position_normalized = Vec2 {
             x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,

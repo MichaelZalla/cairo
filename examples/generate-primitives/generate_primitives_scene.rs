@@ -125,7 +125,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let world_transform = Mat4::scaling(1.0);
 
-        let view_position = Vec4::new(camera.position, 1.0);
+        let view_position = Vec4::new(camera.get_position(), 1.0);
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
@@ -207,60 +207,86 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
+            let position = camera.get_position();
+
             match keycode {
                 Keycode::Up | Keycode::W { .. } => {
                     let adjustment =
                         vec4::FORWARD * camera_movement_step * camera.rotation_inverse_transposed;
-                    camera.position += Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    }
+
+                    camera.set_position(
+                        position
+                            + Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Down | Keycode::S { .. } => {
                     let adjustment =
                         vec4::FORWARD * camera_movement_step * camera.rotation_inverse_transposed;
-                    camera.position -= Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    }
+
+                    camera.set_position(
+                        position
+                            - Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Left | Keycode::A { .. } => {
                     let adjustment =
                         vec4::LEFT * camera_movement_step * camera.rotation_inverse_transposed;
-                    camera.position += Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    }
+
+                    camera.set_position(
+                        position
+                            + Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Right | Keycode::D { .. } => {
                     let adjustment =
                         vec4::LEFT * camera_movement_step * camera.rotation_inverse_transposed;
-                    camera.position -= Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    }
+
+                    camera.set_position(
+                        position
+                            - Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::Q { .. } => {
                     let adjustment =
                         vec4::UP * camera_movement_step * camera.rotation_inverse_transposed;
-                    camera.position -= Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    }
+
+                    camera.set_position(
+                        position
+                            - Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 Keycode::E { .. } => {
                     let adjustment =
                         vec4::UP * camera_movement_step * camera.rotation_inverse_transposed;
-                    camera.position += Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    }
+
+                    camera.set_position(
+                        position
+                            + Vec3 {
+                                x: adjustment.x,
+                                y: adjustment.y,
+                                z: adjustment.z,
+                            },
+                    );
                 }
                 _ => {}
             }
@@ -268,7 +294,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         self.pipeline
             .effect
-            .set_camera_position(Vec4::new(camera.position, 1.0));
+            .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {

@@ -2,7 +2,7 @@ use crate::{matrix::Mat4, vec::vec3::Vec3};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
-    pub position: Vec3,
+    position: Vec3,
     pub rotation_inverse_transform: Mat4,
     pub rotation_inverse_transposed: Mat4,
 }
@@ -14,6 +14,14 @@ impl Camera {
             rotation_inverse_transform,
             rotation_inverse_transposed: rotation_inverse_transform.transposed(),
         };
+    }
+
+    pub fn get_position(&self) -> Vec3 {
+        self.position
+    }
+
+    pub fn set_position(&mut self, position: Vec3) {
+        self.position = position
     }
 
     pub fn get_view_inverse_transform(&self) -> Mat4 {
