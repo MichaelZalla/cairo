@@ -26,6 +26,8 @@ static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 100.0;
 
+static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
+
 pub struct TextureMappedCubeScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
@@ -73,9 +75,6 @@ impl<'a> TextureMappedCubeScene<'a> {
                 1.0,
             ),
             Mat4::identity(),
-            150.0,
-            0.0,
-            6.0,
         );
 
         // Define lights for our scene
@@ -227,7 +226,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         // Apply camera movement based on keyboard or gamepad input
 
-        let camera_movement_step = camera.movement_speed * 0.1 * seconds_since_last_update;
+        let camera_movement_step = CAMERA_MOVEMENT_SPEED * 0.1 * seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {

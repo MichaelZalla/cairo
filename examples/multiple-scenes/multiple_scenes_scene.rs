@@ -21,6 +21,8 @@ static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10.0;
 
+static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
+
 pub struct MultipleScenesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
@@ -48,9 +50,6 @@ impl<'a> MultipleScenesScene<'a> {
                 1.0,
             ),
             Mat4::identity(),
-            150.0,
-            0.0,
-            6.0,
         );
 
         // Define (shared) lights for our scenes
@@ -196,8 +195,7 @@ impl<'a> Scene for MultipleScenesScene<'a> {
             * Mat4::rotation_y(-mouse_x_delta * 2.0 * PI)
             * Mat4::rotation_x(-mouse_y_delta * 2.0 * PI);
 
-        let camera_movement_step = camera.movement_speed * seconds_since_last_update;
-        let camera_roll_step = camera.roll_speed * seconds_since_last_update;
+        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
 
         camera.rotation_inverse_transposed = camera.rotation_inverse_transform.transposed();
 
@@ -254,14 +252,6 @@ impl<'a> Scene for MultipleScenesScene<'a> {
                     camera.position +=
                         up * camera_movement_step * camera.rotation_inverse_transposed;
                 }
-                Keycode::Z { .. } => {
-                    camera.rotation_inverse_transform =
-                        camera.rotation_inverse_transform * Mat4::rotation_z(-camera_roll_step);
-                }
-                Keycode::C { .. } => {
-                    camera.rotation_inverse_transform =
-                        camera.rotation_inverse_transform * Mat4::rotation_z(camera_roll_step);
-                }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
                         !self.pipeline_options.should_render_wireframe;
@@ -300,12 +290,6 @@ impl<'a> Scene for MultipleScenesScene<'a> {
             camera.position += forward * camera_movement_step * camera.rotation_inverse_transposed;
         } else if game_controller_state.buttons.dpad_down {
             camera.position -= forward * camera_movement_step * camera.rotation_inverse_transposed;
-        } else if game_controller_state.buttons.dpad_left {
-            camera.rotation_inverse_transform =
-                camera.rotation_inverse_transform * Mat4::rotation_z(-camera_roll_step);
-        } else if game_controller_state.buttons.dpad_right {
-            camera.rotation_inverse_transform =
-                camera.rotation_inverse_transform * Mat4::rotation_z(camera_roll_step);
         }
 
         let left_joystick_position_normalized = Vec2 {
@@ -336,10 +320,7 @@ impl<'a> Scene for MultipleScenesScene<'a> {
 
         let yaw_delta = -right_joystick_position_normalized.x * PI / 32.0;
         let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
-        let roll_delta = -yaw_delta * 0.5;
-
-        camera.roll += roll_delta;
-        camera.roll = camera.roll % (2.0 * PI);
+        let _roll_delta = -yaw_delta * 0.5;
 
         camera.rotation_inverse_transform = camera.rotation_inverse_transform
             * Mat4::rotation_y(yaw_delta)
