@@ -12,5 +12,5 @@ pub trait Effect {
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut;
 
-    fn ps(&self, interpolant: &Self::VertexOut) -> Color;
+    fn ps(&self, interpolant: &Self::VertexOut) -> Option<Color>;
 }

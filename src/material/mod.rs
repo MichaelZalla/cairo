@@ -19,6 +19,7 @@ pub struct Material {
     pub emissive_color: Vec3,
     pub dissolve: f32,
     pub transparency: f32,
+    pub alpha_map: Option<TextureMap>,
     pub transmission_filter_color: Vec3,
     pub index_of_refraction: f32,
     pub normal_map: Option<TextureMap>,
@@ -96,6 +97,13 @@ impl fmt::Display for Material {
         writeln!(v, "  > Dissolve: {}", self.dissolve)?;
 
         writeln!(v, "  > Transparency: {}", self.transparency)?;
+
+        match &self.alpha_map {
+            Some(map) => {
+                writeln!(v, "  > Alpha map: {}", map.info.filepath)?;
+            }
+            None => (),
+        }
 
         writeln!(
             v,

@@ -183,7 +183,11 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                             // Alpha map
                             "map_d" => {
-                                println!("@TODO Implementation for \"{}\".", "map_d");
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                materials.last_mut().unwrap().alpha_map =
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
                             // Bump map

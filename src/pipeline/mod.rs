@@ -446,7 +446,7 @@ where
         }
     }
 
-    fn test_and_set_z_buffer(&mut self, x: u32, y: u32, z: f32) -> bool {
+    fn test_z_buffer(&mut self, x: u32, y: u32, z: f32) -> Option<(usize, f32)> {
         let z_buffer_index = (y * self.graphics.buffer.width + x) as usize;
 
         if z_buffer_index >= self.z_buffer.len() {
@@ -458,10 +458,14 @@ where
 
         if z < self.z_buffer[z_buffer_index] {
             self.z_buffer[z_buffer_index] = z;
-            return true;
+            Some((z_buffer_index, z))
         } else {
-            return false;
+            None
         }
+    }
+
+    fn set_z_buffer(&mut self, index: usize, z: f32) {
+        self.z_buffer[index] = z;
     }
 
     fn set_pixel(&mut self, x: u32, y: u32, z: f32, interpolant: &mut T::VertexOut) {
@@ -474,12 +478,21 @@ where
             return;
         }
 
-        if self.test_and_set_z_buffer(x, y, interpolant.p.z) {
-            let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
+        match self.test_z_buffer(x, y, interpolant.p.z) {
+            Some((index, z)) => {
+                let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
-            let color = self.effect.ps(&linear_space_interpolant);
+                let result = self.effect.ps(&linear_space_interpolant);
 
-            self.graphics.set_pixel(x, y, color);
+                match result {
+                    Some(color) => {
+                        self.graphics.set_pixel(x, y, color);
+                        self.set_z_buffer(index, z);
+                    }
+                    None => (),
+                }
+            }
+            None => {}
         }
     }
 

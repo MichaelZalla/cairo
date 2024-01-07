@@ -133,8 +133,27 @@ impl Effect for DefaultEffect {
         return out;
     }
 
-    fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Color {
+    fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Option<Color> {
         let out = interpolant;
+
+        // Check if this fragment can be discarded
+
+        match self.active_material {
+            Some(mat_raw_mut) => unsafe {
+                match &(*mat_raw_mut).alpha_map {
+                    Some(texture) => {
+                        // Read in a per-fragment normal, with components in the range [0, 255].
+                        let (r, _g, _b) = sample_from_uv(out.uv, texture);
+
+                        if r < 4 {
+                            return None;
+                        }
+                    }
+                    None => (),
+                }
+            },
+            None => (),
+        }
 
         // Calculate all lighting contributions
 
@@ -249,11 +268,11 @@ impl Effect for DefaultEffect {
 
         color = *((color * total_contribution).saturate()) * 255.0;
 
-        return Color {
+        return Some(Color {
             r: color.x as u8,
             g: color.y as u8,
             b: color.z as u8,
             a: 255 as u8,
-        };
+        });
     }
 }
