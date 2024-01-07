@@ -167,9 +167,9 @@ impl Vec3 {
 }
 
 pub const UP: Vec3 = Vec3 {
-    x: 0.0,
-    y: -1.0,
-    z: 0.0,
+    x: -0.0,
+    y: 1.0,
+    z: -0.0,
 };
 
 pub const LEFT: Vec3 = Vec3 {

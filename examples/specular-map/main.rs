@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
 
     let mut cube_entity = Entity::new(&cube_mesh);
-    cube_entity.position.y -= 1.5;
+    cube_entity.position.y += 1.5;
 
     // Orbiting point light
 
@@ -97,7 +97,7 @@ fn main() -> Result<(), String> {
 
     point_light_entity.position = Vec3 {
         x: 0.0,
-        y: -5.0,
+        y: 5.0,
         z: 0.0,
     };
 

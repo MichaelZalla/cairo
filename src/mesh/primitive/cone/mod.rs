@@ -92,21 +92,21 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         // Generate a ring of faces around the base
 
         faces.push(Face {
-            // (bottom_center, ring_i + 1, ring_i) (clockwise)
-            vertices: (bottom_center_index, i as usize + 1, i as usize),
+            // (ring_i, ring_i + 1, bottom_center) (clockwise)
+            vertices: (i as usize, i as usize + 1, bottom_center_index),
             // (down, down, down)
             normals: Some((0, 0, 0)),
-            // (center, ring_i + 1, ring_i) (clockwise)
-            uvs: Some((center_uv_index, i as usize + 1, i as usize)),
+            // (ring_i, ring_i + 1, center) (clockwise)
+            uvs: Some((i as usize, i as usize + 1, center_uv_index)),
         });
 
-        // (top_center, ring_i, ring_i + 1) (counter-clockwise)
-        let vertex_indices = (top_center_index, i as usize, i as usize + 1);
+        // (ring_i + 1, ring_i, top_center) (counter-clockwise)
+        let vertex_indices = (i as usize + 1, i as usize, top_center_index);
 
         // @TODO Smooth normals for cone sides
         normals.push(
-            (vertices[vertex_indices.1] - top_center_vertex)
-                .cross(vertices[vertex_indices.2] - top_center_vertex)
+            (vertices[vertex_indices.1] - vertices[vertex_indices.0])
+                .cross(vertices[vertex_indices.2] - vertices[vertex_indices.0])
                 .as_normal(),
         );
 
@@ -116,8 +116,8 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
             vertices: vertex_indices,
             // (normal to the face)
             normals: Some((normal_index, normal_index, normal_index)),
-            // (center, ring_i, ring_i + 1) (counter-clockwise)
-            uvs: Some((center_uv_index, i as usize, i as usize + 1)),
+            // (ring_i + 1, ring_i, center) (counter-clockwise)
+            uvs: Some((i as usize + 1, i as usize, center_uv_index)),
         });
     }
 

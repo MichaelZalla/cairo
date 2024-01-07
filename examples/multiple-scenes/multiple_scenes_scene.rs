@@ -14,7 +14,11 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec2::Vec2,
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 static FIELD_OF_VIEW: f32 = 100.0;
@@ -46,7 +50,7 @@ impl<'a> MultipleScenesScene<'a> {
                 y: 0.0,
                 z: -5.0,
             },
-            Mat4::identity(),
+            Default::default(),
         );
 
         // Define (shared) lights for our scenes
@@ -186,120 +190,37 @@ impl<'a> Scene for MultipleScenesScene<'a> {
 
         let camera = self.cameras[self.active_camera_index].borrow_mut();
 
-        camera.rotation_inverse_transform = camera.rotation_inverse_transform
-            * Mat4::rotation_y(-mouse_x_delta * 2.0 * PI)
-            * Mat4::rotation_x(-mouse_y_delta * 2.0 * PI);
+        let pitch = camera.get_pitch();
+        let yaw = camera.get_yaw();
 
-        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
-
-        camera.rotation_inverse_transposed = camera.rotation_inverse_transform.transposed();
+        camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
+        camera.set_yaw(yaw + mouse_x_delta * 2.0 * PI);
 
         // Apply camera movement based on keyboard or gamepad input
 
-        let up = Vec4::new(
-            Vec3 {
-                x: 0.0,
-                y: -1.0,
-                z: 0.0,
-            },
-            1.0,
-        );
-        let left = Vec4::new(
-            Vec3 {
-                x: -1.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            1.0,
-        );
-        let forward = Vec4::new(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 1.0,
-            },
-            1.0,
-        );
+        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
             let position = camera.get_position();
 
             match keycode {
                 Keycode::Up | Keycode::W { .. } => {
-                    let adjustment =
-                        forward * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            + Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position + camera.get_forward() * camera_movement_step);
                 }
                 Keycode::Down | Keycode::S { .. } => {
-                    let adjustment =
-                        forward * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            - Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position - camera.get_forward() * camera_movement_step);
                 }
                 Keycode::Left | Keycode::A { .. } => {
-                    let adjustment =
-                        left * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            + Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position - camera.get_right() * camera_movement_step);
                 }
                 Keycode::Right | Keycode::D { .. } => {
-                    let adjustment =
-                        left * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            - Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position + camera.get_right() * camera_movement_step);
                 }
                 Keycode::Q { .. } => {
-                    let adjustment = up * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            - Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position - vec3::UP * camera_movement_step);
                 }
                 Keycode::E { .. } => {
-                    let adjustment = up * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            + Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position + vec3::UP * camera_movement_step);
                 }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
@@ -337,28 +258,12 @@ impl<'a> Scene for MultipleScenesScene<'a> {
 
         if game_controller_state.buttons.dpad_up {
             let position = camera.get_position();
-            let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.set_position(
-                position
-                    + Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    },
-            );
+            camera.set_position(position + camera.get_forward() * camera_movement_step);
         } else if game_controller_state.buttons.dpad_down {
             let position = camera.get_position();
-            let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.set_position(
-                position
-                    - Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    },
-            );
+            camera.set_position(position - camera.get_forward() * camera_movement_step);
         }
 
         let left_joystick_position_normalized = Vec2 {
@@ -369,54 +274,22 @@ impl<'a> Scene for MultipleScenesScene<'a> {
 
         if left_joystick_position_normalized.x > 0.5 {
             let position = camera.get_position();
-            let adjustment = left * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.set_position(
-                position
-                    - Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    },
-            );
+            camera.set_position(position + camera.get_right() * camera_movement_step);
         } else if left_joystick_position_normalized.x < -0.5 {
             let position = camera.get_position();
-            let adjustment = left * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.set_position(
-                position
-                    + Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    },
-            );
+            camera.set_position(position - camera.get_right() * camera_movement_step);
         }
 
         if left_joystick_position_normalized.y > 0.5 {
             let position = camera.get_position();
-            let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.set_position(
-                position
-                    - Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    },
-            );
+            camera.set_position(position - camera.get_forward() * camera_movement_step);
         } else if left_joystick_position_normalized.y < -0.5 {
             let position = camera.get_position();
-            let adjustment = forward * camera_movement_step * camera.rotation_inverse_transposed;
 
-            camera.set_position(
-                position
-                    + Vec3 {
-                        x: adjustment.x,
-                        y: adjustment.y,
-                        z: adjustment.z,
-                    },
-            );
+            camera.set_position(position + camera.get_forward() * camera_movement_step);
         }
 
         self.pipeline
@@ -433,10 +306,11 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
         let _roll_delta = -yaw_delta * 0.5;
 
-        camera.rotation_inverse_transform = camera.rotation_inverse_transform
-            * Mat4::rotation_y(yaw_delta)
-            * Mat4::rotation_x(pitch_delta)
-            * Mat4::rotation_z(-yaw_delta * 0.5);
+        let pitch = camera.get_pitch();
+        let yaw = camera.get_yaw();
+
+        camera.set_pitch(pitch - pitch_delta * 2.0 * PI);
+        camera.set_yaw(yaw + yaw_delta * 2.0 * PI);
 
         let mut w = self.entities.write().unwrap();
 

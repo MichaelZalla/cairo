@@ -16,15 +16,15 @@ use cairo::{
         Scene,
     },
     vec::{
-        vec3::Vec3,
-        vec4::{self, Vec4},
+        vec3::{self, Vec3},
+        vec4::Vec4,
     },
 };
 
-static FIELD_OF_VIEW: f32 = 100.0;
+static FIELD_OF_VIEW: f32 = 75.0;
 
 static PROJECTION_Z_NEAR: f32 = 0.3;
-static PROJECTION_Z_FAR: f32 = 100.0;
+static PROJECTION_Z_FAR: f32 = 1000.0;
 
 static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
 
@@ -64,7 +64,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 y: 0.0,
                 z: -5.0,
             },
-            Mat4::identity(),
+            Default::default(),
         );
 
         // Define lights for our scene
@@ -84,10 +84,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
             },
             direction: Vec4 {
                 x: -1.0,
-                y: 0.0,
+                y: -1.0,
                 z: 1.0,
                 w: 1.0,
-            },
+            }
+            .as_normal(),
         };
 
         let point_light = PointLight::new();
@@ -100,12 +101,12 @@ impl<'a> GeneratePrimitivesScene<'a> {
             },
             position: Vec3 {
                 x: 0.0,
-                y: -10.0,
+                y: 12.0,
                 z: 0.0,
             },
             direction: Vec3 {
                 x: 0.0,
-                y: 1.0,
+                y: -1.0,
                 z: 0.0,
             },
             inner_cutoff_angle: (2.5 as f32).to_radians().cos(),
@@ -192,15 +193,15 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let mouse_x_delta = ndc_mouse_x - prev_ndc_mouse_x;
         let mouse_y_delta = ndc_mouse_y - prev_ndc_mouse_y;
 
-        // Apply camera rotation based on mouse position delta
+        // Update camera pitch and yaw, based on mouse position deltas.
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
-        camera.rotation_inverse_transform = camera.rotation_inverse_transform
-            * Mat4::rotation_y(-mouse_x_delta * 2.0 * PI)
-            * Mat4::rotation_x(-mouse_y_delta * 2.0 * PI);
+        let pitch = camera.get_pitch();
+        let yaw = camera.get_yaw();
 
-        camera.rotation_inverse_transposed = camera.rotation_inverse_transform.transposed();
+        camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
+        camera.set_yaw(yaw + mouse_x_delta * 2.0 * PI);
 
         // Apply camera movement based on keyboard or gamepad input
 
@@ -211,82 +212,22 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
             match keycode {
                 Keycode::Up | Keycode::W { .. } => {
-                    let adjustment =
-                        vec4::FORWARD * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            + Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position + camera.get_forward() * camera_movement_step);
                 }
                 Keycode::Down | Keycode::S { .. } => {
-                    let adjustment =
-                        vec4::FORWARD * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            - Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position - camera.get_forward() * camera_movement_step);
                 }
                 Keycode::Left | Keycode::A { .. } => {
-                    let adjustment =
-                        vec4::LEFT * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            + Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position - camera.get_right() * camera_movement_step);
                 }
                 Keycode::Right | Keycode::D { .. } => {
-                    let adjustment =
-                        vec4::LEFT * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            - Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position + camera.get_right() * camera_movement_step);
                 }
                 Keycode::Q { .. } => {
-                    let adjustment =
-                        vec4::UP * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            - Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position - vec3::UP * camera_movement_step);
                 }
                 Keycode::E { .. } => {
-                    let adjustment =
-                        vec4::UP * camera_movement_step * camera.rotation_inverse_transposed;
-
-                    camera.set_position(
-                        position
-                            + Vec3 {
-                                x: adjustment.x,
-                                y: adjustment.y,
-                                z: adjustment.z,
-                            },
-                    );
+                    camera.set_position(position + vec3::UP * camera_movement_step);
                 }
                 _ => {}
             }
@@ -337,7 +278,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         self.point_light.position = Vec3 {
             x: 7.0 * self.seconds_ellapsed.sin(),
-            y: -3.0,
+            y: 1.0,
             z: 7.0 * self.seconds_ellapsed.cos(),
         };
 

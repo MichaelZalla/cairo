@@ -60,15 +60,15 @@ fn main() -> Result<(), String> {
 
     let mut cube_entity = Entity::new(&cube_mesh);
     cube_entity.position.x -= 4.0;
-    cube_entity.position.y -= 1.5;
+    cube_entity.position.y += 1.0;
 
     let mut cone_entity = Entity::new(&cone_mesh);
     cone_entity.position.x -= 0.0;
-    cone_entity.position.y -= 1.5;
+    cone_entity.position.y += 1.0;
 
     let mut cylinder_entity = Entity::new(&cylinder_mesh);
     cylinder_entity.position.x += 4.0;
-    cylinder_entity.position.y -= 1.5;
+    cylinder_entity.position.y += 1.0;
 
     // let mut point_light_material = Material::new("white".to_string());
     // point_light_material.diffuse_color = color::WHITE.to_vec3() / 255.0;
@@ -82,7 +82,7 @@ fn main() -> Result<(), String> {
 
     point_light_entity.position = Vec3 {
         x: 4.0,
-        y: -1.5,
+        y: 3.0,
         z: 4.0,
     };
 

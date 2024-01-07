@@ -107,6 +107,10 @@ impl<T: std::default::Default + std::marker::Copy, const N: usize> Mat<T, N> {
             elements: [[T::default(); N]; N],
         }
     }
+
+    pub fn new_from_elements(elements: [[T; N]; N]) -> Self {
+        Mat { elements }
+    }
 }
 
 impl<const N: usize> Mat<f32, N> {

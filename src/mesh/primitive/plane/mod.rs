@@ -52,34 +52,34 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
     for z in 0..depth_divisions {
         for x in 0..width_divisions {
             let face_1 = Face {
-                // (far_left, far_right, near_left) (clockwise)
+                // (near_left, far_right, far_left) (counter-clockwise)
                 vertices: (
-                    (z * pitch + x) as usize,
-                    (z * pitch + x + 1) as usize,
                     ((z + 1) * pitch + x) as usize,
+                    (z * pitch + x + 1) as usize,
+                    (z * pitch + x) as usize,
                 ),
-                // (top_left, top_right, bottom_left) (clockwise)
+                // (bottom_left, top_right, top_left) (counter-clockwise)
                 uvs: Some((
-                    (z * pitch + x) as usize,
-                    (z * pitch + x + 1) as usize,
                     ((z + 1) * pitch + x) as usize,
+                    (z * pitch + x + 1) as usize,
+                    (z * pitch + x) as usize,
                 )),
                 // (up, up, up)
                 normals: Some((0, 0, 0)),
             };
 
             let face_2 = Face {
-                // (near_left, far_right, near_right) (clockwise)
+                // (near_left, far_right, near_right) (counter-clockwise)
                 vertices: (
-                    ((z + 1) * pitch + x) as usize,
-                    (z * pitch + x + 1) as usize,
                     ((z + 1) * pitch + x + 1) as usize,
+                    (z * pitch + x + 1) as usize,
+                    ((z + 1) * pitch + x) as usize,
                 ),
-                // (bottom_left, top_right, bottom_right) (clockwise)
+                // (bottom_left, top_right, bottom_right) (counter-clockwise)
                 uvs: Some((
-                    ((z + 1) * pitch + x) as usize,
-                    (z * pitch + x + 1) as usize,
                     ((z + 1) * pitch + x + 1) as usize,
+                    (z * pitch + x + 1) as usize,
+                    ((z + 1) * pitch + x) as usize,
                 )),
                 // (up, up, up)
                 normals: Some((0, 0, 0)),

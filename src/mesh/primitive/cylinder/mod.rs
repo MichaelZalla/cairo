@@ -118,22 +118,22 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         // Generate a top face
 
         faces.push(Face {
-            // (top_center, top_ring_left, top_ring_right) (clockwise)
-            vertices: (top_center, top_ring_left, top_ring_right),
+            // (top_ring_right, top_ring_left, top_center) (counter-clockwise)
+            vertices: (top_ring_right, top_ring_left, top_center),
             // (up, up, up)
             normals: Some((0, 0, 0)),
-            // (center, ring_i, ring_i + 1) (clockwise)
-            uvs: Some((center_uv_index, i as usize, i as usize + 1)),
+            // (ring_i + 1, ring_i, center) (counter-clockwise)
+            uvs: Some((i as usize + 1, i as usize, center_uv_index)),
         });
 
         // Generate a bottom face
         faces.push(Face {
-            // (bottom_center, bottom_ring_right, bottom_ring_left) (clockwise)
-            vertices: (bottom_center, bottom_ring_right, bottom_ring_left),
+            // (bottom_ring_left, bottom_ring_right, bottom_center) (counter-clockwise)
+            vertices: (bottom_ring_left, bottom_ring_right, bottom_center),
             // (down, down, down)
             normals: Some((1, 1, 1)),
-            // (center, ring_i + 1, ring_i) (clockwise)
-            uvs: Some((center_uv_index, i as usize + 1, i as usize)),
+            // (ring_i, ring_i + 1, center) (counter-clockwise)
+            uvs: Some((i as usize, i as usize + 1, center_uv_index)),
         });
 
         // Generate 2 side faces (for each quad)
@@ -178,8 +178,8 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         let uv_strip_bottom_left_index = uv_strips_start_index + i * 4 + 2;
         let uv_strip_bottom_right_index = uv_strips_start_index + i * 4 + 3;
 
-        // (top_ring_left, bottom_ring_left, top_ring_right) (clockwise)
-        let vertex_indices_1 = (top_ring_left, bottom_ring_left, top_ring_right);
+        // (top_ring_right, bottom_ring_left, top_ring_left) (counter-clockwise)
+        let vertex_indices_1 = (top_ring_right, bottom_ring_left, top_ring_left);
 
         // @TODO Smooth normals for cylinder sides
         normals.push(
@@ -194,16 +194,16 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
             vertices: vertex_indices_1,
             // (normal to the face)
             normals: Some((normal_index, normal_index, normal_index)),
-            // (uv_strip_top_left, uv_strip_bottom_left, uv_strip_top_right) (clockwise)
+            // (uv_strip_top_right, uv_strip_bottom_left, uv_strip_top_left) (counter-clockwise)
             uvs: Some((
-                uv_strip_top_left_index,
-                uv_strip_bottom_left_index,
                 uv_strip_top_right_index,
+                uv_strip_bottom_left_index,
+                uv_strip_top_left_index,
             )),
         });
 
-        // (bottom_ring_left, bottom_ring_right, top_ring_right) (clockwise)
-        let vertex_indices_2 = (bottom_ring_left, bottom_ring_right, top_ring_right);
+        // (top_ring_right, bottom_ring_right, bottom_ring_left) (counter-clockwise)
+        let vertex_indices_2 = (top_ring_right, bottom_ring_right, bottom_ring_left);
 
         // @TODO Smooth normals for cylinder sides
         normals.push(
@@ -218,11 +218,11 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
             vertices: vertex_indices_2,
             // (normal to the face)
             normals: Some((normal_index, normal_index, normal_index)),
-            // (uv_strip_bottom_left, uv_strip_bottom_right, uv_strip_top_right) (clockwise)
+            // (uv_strip_top_right, uv_strip_bottom_right, uv_strip_bottom_left) (counter-clockwise)
             uvs: Some((
-                uv_strip_bottom_left_index,
-                uv_strip_bottom_right_index,
                 uv_strip_top_right_index,
+                uv_strip_bottom_right_index,
+                uv_strip_bottom_left_index,
             )),
         });
     }
