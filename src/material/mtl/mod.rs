@@ -191,7 +191,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                             }
 
                             // Bump map
-                            "map_bump" | "bump" => {
+                            "map_bump" | "bump" | "map_disp" | "disp" => {
                                 // [filepath]
                                 // Example:
                                 // bump cube_normal.png
@@ -201,11 +201,6 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 materials.last_mut().unwrap().normal_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
-                            }
-
-                            // Displacement map
-                            "map_disp" | "disp" => {
-                                println!("@TODO Implementation for \"{}\".", "map_Disp");
                             }
 
                             // Stencil (decal) map
