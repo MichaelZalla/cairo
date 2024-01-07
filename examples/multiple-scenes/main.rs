@@ -2,6 +2,8 @@ extern crate sdl2;
 
 use std::{cell::RefCell, cmp::min, sync::RwLock};
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
@@ -9,9 +11,11 @@ use cairo::{
     graphics::{Graphics, PixelBuffer},
     mesh::obj::load_obj,
     scene::Scene,
-    scenes::default_scene::DefaultScene,
 };
-use sdl2::keyboard::Keycode;
+
+mod multiple_scenes_scene;
+
+use multiple_scenes_scene::MultipleScenesScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
 static WINDOW_WIDTH: u32 = 1080;
@@ -40,8 +44,8 @@ fn main() -> Result<(), String> {
     };
 
     let scenes = RefCell::new(vec![
-        DefaultScene::new(graphics.clone(), &entities_rwl),
-        DefaultScene::new(graphics.clone(), &entities2_rwl),
+        MultipleScenesScene::new(graphics.clone(), &entities_rwl),
+        MultipleScenesScene::new(graphics.clone(), &entities2_rwl),
     ]);
 
     let current_scene_index = RefCell::new(min(0, scenes.borrow().len() - 1));

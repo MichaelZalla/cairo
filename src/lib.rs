@@ -23,4 +23,3 @@ pub mod vec;
 pub mod vertex;
 
 pub mod effects;
-pub mod scenes;

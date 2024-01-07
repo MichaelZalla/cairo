@@ -2,7 +2,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use sdl2::keyboard::Keycode;
 
-use crate::{
+use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     effects::default_effect::DefaultEffect,
     entity::Entity,
@@ -21,7 +21,7 @@ static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10.0;
 
-pub struct DefaultScene<'a> {
+pub struct MultipleScenesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
     screen_width: u32,
@@ -35,7 +35,7 @@ pub struct DefaultScene<'a> {
     prev_mouse_state: MouseState,
 }
 
-impl<'a> DefaultScene<'a> {
+impl<'a> MultipleScenesScene<'a> {
     pub fn new(graphics: Graphics, entities: &'a RwLock<Vec<&'a mut Entity<'a>>>) -> Self {
         // Set up a camera for rendering our scenes
         let camera: Camera = Camera::new(
@@ -107,7 +107,7 @@ impl<'a> DefaultScene<'a> {
             quadratic_attenuation: 0.44,
         };
 
-        let pipeline_options = crate::pipeline::PipelineOptions {
+        let pipeline_options = PipelineOptions {
             should_render_wireframe: false,
             should_render_shader: true,
             should_render_normals: false,
@@ -151,7 +151,7 @@ impl<'a> DefaultScene<'a> {
             pipeline_options,
         );
 
-        return DefaultScene {
+        return MultipleScenesScene {
             pipeline,
             pipeline_options,
             entities,
@@ -167,7 +167,7 @@ impl<'a> DefaultScene<'a> {
     }
 }
 
-impl<'a> Scene for DefaultScene<'a> {
+impl<'a> Scene for MultipleScenesScene<'a> {
     fn update(
         &mut self,
         keyboard_state: &KeyboardState,
