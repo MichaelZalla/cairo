@@ -2,6 +2,7 @@ use std::cmp;
 use std::fmt;
 use std::ops;
 
+use super::vec3;
 use super::vec3::Vec3;
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -172,29 +173,8 @@ impl Vec4 {
     }
 }
 
-pub const UP: Vec4 = Vec4::new(
-    Vec3 {
-        x: 0.0,
-        y: -1.0,
-        z: 0.0,
-    },
-    1.0,
-);
+pub const UP: Vec4 = Vec4::new(vec3::UP, 1.0);
 
-pub const LEFT: Vec4 = Vec4::new(
-    Vec3 {
-        x: -1.0,
-        y: 0.0,
-        z: 0.0,
-    },
-    1.0,
-);
+pub const LEFT: Vec4 = Vec4::new(vec3::LEFT, 1.0);
 
-pub const FORWARD: Vec4 = Vec4::new(
-    Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 1.0,
-    },
-    1.0,
-);
+pub const FORWARD: Vec4 = Vec4::new(vec3::FORWARD, 1.0);
