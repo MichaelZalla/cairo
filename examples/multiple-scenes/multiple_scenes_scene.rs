@@ -14,24 +14,16 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    vec::{
-        vec2::Vec2,
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 static FIELD_OF_VIEW: f32 = 100.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10.0;
 
-static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
-
 pub struct MultipleScenesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    canvas_width: u32,
-    canvas_height: u32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     ambient_light: AmbientLight,
@@ -114,11 +106,6 @@ impl<'a> MultipleScenesScene<'a> {
             should_cull_backfaces: true,
         };
 
-        let buffer = &graphics.buffer;
-
-        let canvas_width = buffer.width;
-        let canvas_height = buffer.height;
-
         let world_transform = Mat4::scaling(1.0);
 
         let view_position = Vec4::new(camera.get_position(), 1.0);
@@ -158,8 +145,6 @@ impl<'a> MultipleScenesScene<'a> {
             ambient_light,
             directional_light,
             point_light,
-            canvas_width,
-            canvas_height,
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -173,47 +158,21 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
-        // Translate relative mouse movements to NDC values (in the range [0, 1]).
+        let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
+        camera.update(
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+            seconds_since_last_update,
+        );
 
-        // Apply camera rotation based on mouse position delta
-
-        let camera = self.cameras[self.active_camera_index].borrow_mut();
-
-        let pitch = camera.get_pitch();
-        let yaw = camera.get_yaw();
-
-        camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
-        camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
-
-        // Apply camera movement based on keyboard or gamepad input
-
-        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
+        self.pipeline
+            .effect
+            .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         for keycode in &keyboard_state.keys_pressed {
-            let position = camera.get_position();
-
             match keycode {
-                Keycode::Up | Keycode::W { .. } => {
-                    camera.set_position(position + camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Down | Keycode::S { .. } => {
-                    camera.set_position(position - camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Left | Keycode::A { .. } => {
-                    camera.set_position(position - camera.get_right() * camera_movement_step);
-                }
-                Keycode::Right | Keycode::D { .. } => {
-                    camera.set_position(position + camera.get_right() * camera_movement_step);
-                }
-                Keycode::Q { .. } => {
-                    camera.set_position(position - vec3::UP * camera_movement_step);
-                }
-                Keycode::E { .. } => {
-                    camera.set_position(position + vec3::UP * camera_movement_step);
-                }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
                         !self.pipeline_options.should_render_wireframe;
@@ -247,62 +206,6 @@ impl<'a> Scene for MultipleScenesScene<'a> {
 
             self.pipeline.set_options(self.pipeline_options);
         }
-
-        if game_controller_state.buttons.dpad_up {
-            let position = camera.get_position();
-
-            camera.set_position(position + camera.get_forward() * camera_movement_step);
-        } else if game_controller_state.buttons.dpad_down {
-            let position = camera.get_position();
-
-            camera.set_position(position - camera.get_forward() * camera_movement_step);
-        }
-
-        let left_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.left.position.x as f32 / std::i16::MAX as f32,
-            y: game_controller_state.joysticks.left.position.y as f32 / std::i16::MAX as f32,
-            z: 1.0,
-        };
-
-        if left_joystick_position_normalized.x > 0.5 {
-            let position = camera.get_position();
-
-            camera.set_position(position + camera.get_right() * camera_movement_step);
-        } else if left_joystick_position_normalized.x < -0.5 {
-            let position = camera.get_position();
-
-            camera.set_position(position - camera.get_right() * camera_movement_step);
-        }
-
-        if left_joystick_position_normalized.y > 0.5 {
-            let position = camera.get_position();
-
-            camera.set_position(position - camera.get_forward() * camera_movement_step);
-        } else if left_joystick_position_normalized.y < -0.5 {
-            let position = camera.get_position();
-
-            camera.set_position(position + camera.get_forward() * camera_movement_step);
-        }
-
-        self.pipeline
-            .effect
-            .set_camera_position(Vec4::new(camera.get_position(), 1.0));
-
-        let right_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,
-            y: game_controller_state.joysticks.right.position.y as f32 / std::i16::MAX as f32,
-            z: 1.0,
-        };
-
-        let yaw_delta = -right_joystick_position_normalized.x * PI / 32.0;
-        let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
-        let _roll_delta = -yaw_delta * 0.5;
-
-        let pitch = camera.get_pitch();
-        let yaw = camera.get_yaw();
-
-        camera.set_pitch(pitch - pitch_delta * 2.0 * PI);
-        camera.set_yaw(yaw - yaw_delta * 2.0 * PI);
 
         let mut w = self.entities.write().unwrap();
 

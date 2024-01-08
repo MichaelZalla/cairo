@@ -16,22 +16,15 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 1000.0;
 
-static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
-
 pub struct GeneratePrimitivesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    canvas_width: u32,
-    canvas_height: u32,
     aspect_ratio: f32,
     field_of_view: f32,
     cameras: Vec<Camera>,
@@ -170,8 +163,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             directional_light,
             point_light,
             spot_light,
-            canvas_width,
-            canvas_height,
             prev_mouse_state: MouseState::new(),
             looking_at_point_light: false,
             seconds_ellapsed: 0.0,
@@ -195,44 +186,15 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         &mut self,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
+        game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
         self.seconds_ellapsed += seconds_since_last_update;
 
-        // Translate relative mouse movements to NDC values (in the range [0, 1]).
-
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
-
-        // Apply camera movement based on keyboard or gamepad input
-
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
-        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
-
         for keycode in &keyboard_state.keys_pressed {
-            let position = camera.get_position();
-
             match keycode {
-                Keycode::Up | Keycode::W { .. } => {
-                    camera.set_position(position + camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Down | Keycode::S { .. } => {
-                    camera.set_position(position - camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Left | Keycode::A { .. } => {
-                    camera.set_position(position - camera.get_right() * camera_movement_step);
-                }
-                Keycode::Right | Keycode::D { .. } => {
-                    camera.set_position(position + camera.get_right() * camera_movement_step);
-                }
-                Keycode::Q { .. } => {
-                    camera.set_position(position - vec3::UP * camera_movement_step);
-                }
-                Keycode::E { .. } => {
-                    camera.set_position(position + vec3::UP * camera_movement_step);
-                }
                 Keycode::L { .. } => {
                     self.looking_at_point_light = !self.looking_at_point_light;
                 }
@@ -243,13 +205,12 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         if self.looking_at_point_light {
             camera.set_target_position(self.point_light.position);
         } else {
-            // Update camera pitch and yaw, based on mouse position deltas.
-
-            let pitch = camera.get_pitch();
-            let yaw = camera.get_yaw();
-
-            camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
-            camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
+            camera.update(
+                keyboard_state,
+                mouse_state,
+                game_controller_state,
+                seconds_since_last_update,
+            );
         }
 
         self.pipeline

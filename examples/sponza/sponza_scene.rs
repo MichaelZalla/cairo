@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, sync::RwLock};
 
 use sdl2::keyboard::Keycode;
 
@@ -16,16 +16,11 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 10000.0;
-
-static CAMERA_MOVEMENT_SPEED: f32 = 300.0;
 
 static SPONZA_CENTER: Vec3 = Vec3 {
     x: -572.3847 + 500.0,
@@ -38,8 +33,6 @@ pub struct SponzaScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
     bilinear_active: bool,
-    canvas_width: u32,
-    canvas_height: u32,
     aspect_ratio: f32,
     field_of_view: f32,
     cameras: Vec<Camera>,
@@ -56,8 +49,8 @@ impl<'a> SponzaScene<'a> {
         entities: &'a RwLock<Vec<Entity<'a>>>,
         materials: &'a MaterialCache,
     ) -> Self {
-        // Set up a camera for rendering our cube scene
-        let camera: Camera = Camera::new(
+        // Set up a camera for rendering our scene
+        let mut camera: Camera = Camera::new(
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -65,6 +58,8 @@ impl<'a> SponzaScene<'a> {
             },
             Vec3::new(),
         );
+
+        camera.movement_speed = 300.0;
 
         // Define lights for our scene
         let ambient_light = AmbientLight {
@@ -126,11 +121,6 @@ impl<'a> SponzaScene<'a> {
             should_cull_backfaces: true,
         };
 
-        let graphics_buffer = &graphics.buffer;
-
-        let screen_width = graphics_buffer.width;
-        let screen_height = graphics_buffer.height;
-
         let world_transform = Mat4::new();
 
         let view_position = Vec4::new(camera.get_position(), 1.0);
@@ -175,8 +165,6 @@ impl<'a> SponzaScene<'a> {
             cameras: vec![camera],
             active_camera_index: 0,
             point_light,
-            canvas_width: screen_width,
-            canvas_height: screen_height,
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -187,63 +175,19 @@ impl<'a> Scene for SponzaScene<'a> {
         &mut self,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
+        game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
         self.seconds_ellapsed += seconds_since_last_update;
-        // Translate relative mouse movements to NDC values (in the range [0, 1]).
-
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
-
-        // Update camera pitch and yaw, based on mouse position deltas.
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
-        let pitch = camera.get_pitch();
-        let yaw = camera.get_yaw();
-
-        camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
-        camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
-
-        // Apply camera movement based on keyboard or gamepad input
-
-        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
-
-        for keycode in &keyboard_state.keys_pressed {
-            let position = camera.get_position();
-
-            match keycode {
-                Keycode::Up | Keycode::W { .. } => {
-                    camera.set_position(position + camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Down | Keycode::S { .. } => {
-                    camera.set_position(position - camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Left | Keycode::A { .. } => {
-                    camera.set_position(position - camera.get_right() * camera_movement_step);
-                }
-                Keycode::Right | Keycode::D { .. } => {
-                    camera.set_position(position + camera.get_right() * camera_movement_step);
-                }
-                Keycode::Q { .. } => {
-                    camera.set_position(position - vec3::UP * camera_movement_step);
-                }
-                Keycode::E { .. } => {
-                    camera.set_position(position + vec3::UP * camera_movement_step);
-                }
-                Keycode::L { .. } => {
-                    camera.set_target_position(self.point_light.position);
-                }
-                Keycode::B { .. } => {
-                    self.bilinear_active = !self.bilinear_active;
-                    self.pipeline
-                        .effect
-                        .set_bilinear_active(self.bilinear_active);
-                }
-                _ => {}
-            }
-        }
+        camera.update(
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+            seconds_since_last_update,
+        );
 
         self.pipeline
             .effect
@@ -251,6 +195,12 @@ impl<'a> Scene for SponzaScene<'a> {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
+                Keycode::B { .. } => {
+                    self.bilinear_active = !self.bilinear_active;
+                    self.pipeline
+                        .effect
+                        .set_bilinear_active(self.bilinear_active);
+                }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
                         !self.pipeline_options.should_render_wireframe;

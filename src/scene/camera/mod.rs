@@ -1,12 +1,19 @@
 use std::f32::consts::PI;
 
+use sdl2::keyboard::Keycode;
+
 use crate::{
+    device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
-    vec::vec3::{self, Vec3},
+    vec::{
+        vec2::Vec2,
+        vec3::{self, Vec3},
+    },
 };
 
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
+    pub movement_speed: f32,
     position: Vec3,
     forward: Vec3,
     up: Vec3,
@@ -26,6 +33,7 @@ impl Camera {
             pitch: 0.0,
             yaw: PI / 2.0,
             roll: 0.0,
+            movement_speed: 50.0,
         };
 
         camera.set_target_position(target);
@@ -125,5 +133,92 @@ impl Camera {
 
     pub fn get_view_inverse_transform(&self) -> Mat4 {
         self.get_lookat_matrix()
+    }
+
+    pub fn update(
+        &mut self,
+        keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
+        game_controller_state: &GameControllerState,
+        seconds_since_last_update: f32,
+    ) {
+        // Apply camera movement based on mouse input.
+
+        // Translate relative mouse movements to NDC values (in the range [0, 1]).
+
+        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 640.0;
+        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 480.0;
+
+        // Update camera pitch and yaw, based on mouse position deltas.
+
+        self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
+        self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
+
+        // Apply camera movement based on keyboard input.
+
+        let camera_movement_step = self.movement_speed * seconds_since_last_update;
+
+        for keycode in &keyboard_state.keys_pressed {
+            match keycode {
+                Keycode::Up | Keycode::W { .. } => {
+                    self.set_position(self.position + self.get_forward() * camera_movement_step);
+                }
+                Keycode::Down | Keycode::S { .. } => {
+                    self.set_position(self.position - self.get_forward() * camera_movement_step);
+                }
+                Keycode::Left | Keycode::A { .. } => {
+                    self.set_position(self.position - self.get_right() * camera_movement_step);
+                }
+                Keycode::Right | Keycode::D { .. } => {
+                    self.set_position(self.position + self.get_right() * camera_movement_step);
+                }
+                Keycode::Q { .. } => {
+                    self.set_position(self.position - vec3::UP * camera_movement_step);
+                }
+                Keycode::E { .. } => {
+                    self.set_position(self.position + vec3::UP * camera_movement_step);
+                }
+                _ => {}
+            }
+        }
+
+        // Apply camera movement based on gamepad input.
+
+        if game_controller_state.buttons.dpad_up {
+            self.set_position(self.position + self.get_forward() * camera_movement_step);
+        } else if game_controller_state.buttons.dpad_down {
+            self.set_position(self.position - self.get_forward() * camera_movement_step);
+        }
+
+        let left_joystick_position_normalized = Vec2 {
+            x: game_controller_state.joysticks.left.position.x as f32 / std::i16::MAX as f32,
+            y: game_controller_state.joysticks.left.position.y as f32 / std::i16::MAX as f32,
+            z: 1.0,
+        };
+
+        if left_joystick_position_normalized.x > 0.5 {
+            self.set_position(self.position + self.get_right() * camera_movement_step);
+        } else if left_joystick_position_normalized.x < -0.5 {
+            self.set_position(self.position - self.get_right() * camera_movement_step);
+        }
+
+        if left_joystick_position_normalized.y > 0.5 {
+            self.set_position(self.position - self.get_forward() * camera_movement_step);
+        } else if left_joystick_position_normalized.y < -0.5 {
+            self.set_position(self.position + self.get_forward() * camera_movement_step);
+        }
+
+        let right_joystick_position_normalized = Vec2 {
+            x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,
+            y: game_controller_state.joysticks.right.position.y as f32 / std::i16::MAX as f32,
+            z: 1.0,
+        };
+
+        let yaw_delta = -right_joystick_position_normalized.x * PI / 32.0;
+        let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
+        let _roll_delta = -yaw_delta * 0.5;
+
+        self.set_pitch(self.pitch - pitch_delta * 2.0 * PI);
+        self.set_yaw(self.yaw - yaw_delta * 2.0 * PI);
     }
 }

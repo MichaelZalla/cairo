@@ -16,10 +16,7 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 static FIELD_OF_VIEW: f32 = 75.0;
@@ -27,13 +24,9 @@ static FIELD_OF_VIEW: f32 = 75.0;
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 100.0;
 
-static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
-
 pub struct SpecularMapScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    canvas_width: u32,
-    canvas_height: u32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -165,8 +158,6 @@ impl<'a> SpecularMapScene<'a> {
             directional_light,
             point_light,
             spot_light,
-            canvas_width,
-            canvas_height,
             prev_mouse_state: MouseState::new(),
             seconds_ellapsed: 0.0,
         };
@@ -178,61 +169,19 @@ impl<'a> Scene for SpecularMapScene<'a> {
         &mut self,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
+        game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
         self.seconds_ellapsed += seconds_since_last_update;
 
-        // Translate relative mouse movements to NDC values (in the range [0, 1]).
-
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
-
-        // Update camera pitch and yaw, based on mouse position deltas.
-
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
-        let pitch = camera.get_pitch();
-        let yaw = camera.get_yaw();
-
-        camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
-        camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
-
-        // Apply camera movement based on keyboard or gamepad input
-
-        let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
-
-        for keycode in &keyboard_state.keys_pressed {
-            let position = camera.get_position();
-
-            match keycode {
-                Keycode::Up | Keycode::W { .. } => {
-                    camera.set_position(position + camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Down | Keycode::S { .. } => {
-                    camera.set_position(position - camera.get_forward() * camera_movement_step);
-                }
-                Keycode::Left | Keycode::A { .. } => {
-                    camera.set_position(position - camera.get_right() * camera_movement_step);
-                }
-                Keycode::Right | Keycode::D { .. } => {
-                    camera.set_position(position + camera.get_right() * camera_movement_step);
-                }
-                Keycode::Q { .. } => {
-                    camera.set_position(position - vec3::UP * camera_movement_step);
-                }
-                Keycode::E { .. } => {
-                    camera.set_position(position + vec3::UP * camera_movement_step);
-                }
-                Keycode::B { .. } => {
-                    self.bilinear_active = !self.bilinear_active;
-                    self.pipeline
-                        .effect
-                        .set_bilinear_active(self.bilinear_active);
-                }
-                _ => {}
-            }
-        }
+        camera.update(
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+            seconds_since_last_update,
+        );
 
         self.pipeline
             .effect
@@ -240,6 +189,12 @@ impl<'a> Scene for SpecularMapScene<'a> {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
+                Keycode::B { .. } => {
+                    self.bilinear_active = !self.bilinear_active;
+                    self.pipeline
+                        .effect
+                        .set_bilinear_active(self.bilinear_active);
+                }
                 Keycode::Num1 { .. } => {
                     self.pipeline_options.should_render_wireframe =
                         !self.pipeline_options.should_render_wireframe;
