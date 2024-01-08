@@ -24,8 +24,7 @@ pub struct Mesh {
     pub object_name: String,
     pub group_name: String,
     pub material_source: Option<MaterialSource>,
-    pub material_name: String,
-    pub material_index: Option<usize>,
+    pub material_name: Option<String>,
     pub vertices: Vec<Vec3>,
     pub normals: Vec<Vec3>,
     pub uvs: Vec<Vec2>,
@@ -39,12 +38,11 @@ impl Default for Mesh {
             object_name: "__undefined__".to_string(),
             group_name: "__undefined__".to_string(),
             material_source: Default::default(),
-            material_name: "__undefined__".to_string(),
+            material_name: None,
             vertices: vec![],
             normals: vec![],
             uvs: vec![],
             faces: vec![],
-            material_index: None,
         }
     }
 }
@@ -63,10 +61,9 @@ impl fmt::Display for Mesh {
             }
             None => (),
         }
-        writeln!(v, "  > Material name: {}", self.material_name)?;
-        match &self.material_index {
-            Some(index) => {
-                writeln!(v, "  > Material index: {}", index)?;
+        match &self.material_name {
+            Some(name) => {
+                writeln!(v, "  > Material name: {}", name)?;
             }
             None => (),
         }

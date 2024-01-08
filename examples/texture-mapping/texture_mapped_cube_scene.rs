@@ -8,7 +8,7 @@ use cairo::{
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::{Graphics, PixelBuffer},
-    material::Material,
+    material::cache::MaterialCache,
     matrix::Mat4,
     pipeline::{Pipeline, PipelineOptions},
     scene::{
@@ -40,7 +40,7 @@ pub struct TextureMappedCubeScene<'a> {
     // directional_light: DirectionalLight,
     point_light: PointLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-    materials: &'a Vec<Material>,
+    materials: &'a MaterialCache,
     prev_mouse_state: MouseState,
 }
 
@@ -48,7 +48,7 @@ impl<'a> TextureMappedCubeScene<'a> {
     pub fn new(
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-        materials: &'a Vec<Material>,
+        materials: &'a MaterialCache,
     ) -> Self {
         let canvas_output_size = rendering_context
             .canvas

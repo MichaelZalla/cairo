@@ -8,7 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     image::TextureMap,
-    material::Material,
+    material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
     vec::vec3::Vec3,
@@ -28,7 +28,8 @@ fn main() -> Result<(), String> {
     let rendering_context = &app.context.rendering_context;
 
     // Generate primitive meshes
-    let mut plane_mesh = mesh::primitive::plane::generate(30.0, 30.0, 8, 8);
+
+    let mut plane_mesh = mesh::primitive::plane::generate(32.0, 32.0, 1, 1);
     let mut cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
     let mut cone_mesh = mesh::primitive::cone::generate(2.0, 2.0, 40);
     let mut cylinder_mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
@@ -43,14 +44,21 @@ fn main() -> Result<(), String> {
 
     checkerboard_mat.diffuse_map = Some(checkerboard_texture);
 
-    // Initialize a materials collection
+    // Point light "material"
 
-    let materials: Vec<Material> = vec![checkerboard_mat];
+    let mut point_light_mat = Material::new("white".to_string());
+    point_light_mat.diffuse_color = color::WHITE.to_vec3() / 255.0;
 
-    plane_mesh.material_index = Some(0);
-    cube_mesh.material_index = Some(0);
-    cone_mesh.material_index = Some(0);
-    cylinder_mesh.material_index = Some(0);
+    // Collect materials
+
+    let mut material_cache = MaterialCache::new();
+
+    // Assign textures to mesh materials
+
+    plane_mesh.material_name = Some(checkerboard_mat.name.clone());
+    cube_mesh.material_name = Some(checkerboard_mat.name.clone());
+    cone_mesh.material_name = Some(checkerboard_mat.name.clone());
+    cylinder_mesh.material_name = Some(checkerboard_mat.name.clone());
 
     // Assign the meshes to entities
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
@@ -76,7 +84,10 @@ fn main() -> Result<(), String> {
     let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
 
     point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material_index = None;
+    point_light_mesh.material_name = Some(point_light_mat.name.clone());
+
+    material_cache.insert(checkerboard_mat.name.to_string(), checkerboard_mat);
+    material_cache.insert(point_light_mat.name.to_string(), point_light_mat);
 
     let mut point_light_entity = Entity::new(&point_light_mesh);
 
@@ -102,7 +113,7 @@ fn main() -> Result<(), String> {
         app.canvas_width,
         app.canvas_height,
         &entities_rwl,
-        &materials,
+        &material_cache,
     ));
 
     // Set up our app

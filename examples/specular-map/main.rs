@@ -8,7 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     image::TextureMap,
-    material::Material,
+    material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
     vec::vec3::Vec3,
@@ -67,15 +67,22 @@ fn main() -> Result<(), String> {
 
     container_material.specular_map = Some(container_specular_map);
 
-    // Collect materials
-
-    let materials: Vec<Material> = vec![checkerboard_material, container_material];
-
     // Assign textures to mesh materials
 
-    plane_mesh.material_index = Some(0);
+    plane_mesh.material_name = Some(checkerboard_material.name.clone());
 
-    cube_mesh.material_index = Some(1);
+    cube_mesh.material_name = Some(container_material.name.clone());
+
+    // Collect materials
+
+    let mut material_cache = MaterialCache::new();
+
+    material_cache.insert(
+        checkerboard_material.name.to_string(),
+        checkerboard_material,
+    );
+
+    material_cache.insert(container_material.name.to_string(), container_material);
 
     // Assign the meshes to entities
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
@@ -91,7 +98,7 @@ fn main() -> Result<(), String> {
     let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
 
     point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material_index = None;
+    point_light_mesh.material_name = Some(point_light_material.name.clone());
 
     let mut point_light_entity = Entity::new(&point_light_mesh);
 
@@ -100,6 +107,8 @@ fn main() -> Result<(), String> {
         y: 5.0,
         z: 0.0,
     };
+
+    material_cache.insert(point_light_material.name.to_string(), point_light_material);
 
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> =
@@ -112,7 +121,7 @@ fn main() -> Result<(), String> {
         app.canvas_width,
         app.canvas_height,
         &entities_rwl,
-        &materials,
+        &material_cache,
     ));
 
     // Set up our app

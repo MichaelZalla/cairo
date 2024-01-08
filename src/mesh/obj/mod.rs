@@ -4,13 +4,14 @@ use std::path::Path;
 
 use crate::fs::read_lines;
 
-use crate::material::{self, Material};
+use crate::material;
+use crate::material::cache::MaterialCache;
 use crate::mesh::{Face, MaterialSource};
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
 
-pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<Vec<Material>>) {
+pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
     let path = Path::new(&filepath);
     let path_display = path.display();
     let path_parent = path.parent().unwrap();
@@ -353,7 +354,7 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<Vec<Material>>) {
 
                                     match material_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_mesh.material_name = name;
+                                            accumulated_mesh.material_name = Some(name);
                                         }
                                         None => (),
                                     }
@@ -414,34 +415,18 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<Vec<Material>>) {
 
     println!();
 
-    // Parse the set of materials inside this OBJ file's MTL file
-
-    let materials: Vec<Material>;
-
-    match &material_source {
-        Some(src) => materials = material::mtl::load_mtl(&src.filepath),
-        None => {
-            materials = vec![];
-        }
-    }
-
     for mesh in objects.as_mut_slice() {
-        // Assign this mesh's material to it
-
-        for material_index in 0..materials.len() {
-            let material = &materials[material_index];
-
-            if material.name == mesh.material_name {
-                mesh.material_index = Some(material_index);
-            }
-        }
-
         // Print a summary of this mesh
         println!("{}", mesh);
     }
 
+    // Parse the set of materials inside this OBJ file's MTL file
+
     match &material_source {
-        Some(_) => return (objects, Some(materials)),
-        None => return (objects, None),
+        Some(src) => {
+            let material_cache = material::mtl::load_mtl(&src.filepath);
+            (objects, Some(material_cache))
+        }
+        None => (objects, None),
     }
 }

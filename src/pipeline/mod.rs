@@ -1,5 +1,5 @@
 use crate::{
-    material::Material,
+    material::{cache::MaterialCache, Material},
     mesh::Face,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -77,14 +77,14 @@ where
         self.options = options;
     }
 
-    pub fn render_mesh(&mut self, mesh: &Mesh, materials: Option<&Vec<Material>>) {
-        match &mesh.material_index {
-            Some(index) => {
-                match materials {
-                    Some(mats) => {
-                        // Set the pipeline effect's active material to this mesh's
-                        // material
-                        let mat = &mats[*index];
+    pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
+        match &mesh.material_name {
+            Some(name) => {
+                match material_cache {
+                    Some(cache) => {
+                        // Set the pipeline effect's active material to this
+                        // mesh's material.
+                        let mat = cache.get(name).unwrap();
                         let mat_raw_mut = &*mat as *const Material;
 
                         self.effect.set_active_material(Some(mat_raw_mut));

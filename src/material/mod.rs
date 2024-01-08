@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::{color, image::TextureMap, mesh::MaterialSource, vec::vec3::Vec3};
 
+pub mod cache;
 pub mod mtl;
 
 #[derive(Debug, Clone, Default)]

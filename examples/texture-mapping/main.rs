@@ -25,16 +25,16 @@ fn main() -> Result<(), String> {
 
     // Load a cube mesh and its materials
 
-    let (mut cube_meshes, mut cube_materials) =
+    let (mut cube_meshes, mut cube_material_cache) =
         mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
 
     let cube_mesh = &mut cube_meshes[0];
 
-    match &mut cube_materials {
-        Some(mats) => {
-            for mat in mats {
+    match &mut cube_material_cache {
+        Some(cache) => {
+            for material in cache.values_mut() {
                 // Ambient color map
-                match &mut mat.ambient_map {
+                match &mut material.ambient_map {
                     Some(map) => {
                         map.load(rendering_context)?;
                     }
@@ -42,7 +42,7 @@ fn main() -> Result<(), String> {
                 }
 
                 // Diffuse color map
-                match &mut mat.diffuse_map {
+                match &mut material.diffuse_map {
                     Some(map) => {
                         map.load(rendering_context)?;
                     }
@@ -50,7 +50,7 @@ fn main() -> Result<(), String> {
                 }
 
                 // Normal map
-                match &mut mat.normal_map {
+                match &mut material.normal_map {
                     Some(map) => {
                         map.load(rendering_context)?;
                     }
@@ -68,13 +68,13 @@ fn main() -> Result<(), String> {
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
     let entities_rwl = RwLock::new(entities);
 
-    let mats = cube_materials.unwrap();
+    let cache = cube_material_cache.unwrap();
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(TextureMappedCubeScene::new(
         rendering_context,
         &entities_rwl,
-        &mats,
+        &cache,
     ));
 
     // Set up our app

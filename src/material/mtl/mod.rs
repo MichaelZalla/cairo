@@ -2,9 +2,11 @@ use std::{path::Path, str::SplitWhitespace};
 
 use crate::{fs::read_lines, image::TextureMap, mesh::MaterialSource, vec::vec3::Vec3};
 
+use super::cache::MaterialCache;
+
 use super::Material;
 
-pub fn load_mtl(filepath: &str) -> Vec<Material> {
+pub fn load_mtl(filepath: &str) -> MaterialCache {
     let mtl_file_path = Path::new(&filepath);
     let mtl_file_path_display = mtl_file_path.display();
 
@@ -13,7 +15,9 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
         Ok(lines) => lines,
     };
 
-    let mut materials: Vec<Material> = vec![];
+    let mut cache: MaterialCache = MaterialCache::new();
+
+    let mut current_material_name: Option<String> = None;
 
     for (_, line) in lines.enumerate() {
         match line {
@@ -39,11 +43,13 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let name = line_tokens.next().unwrap().to_string();
 
-                                let mut mat = Material::new(name);
+                                current_material_name = Some(name.clone());
 
-                                mat.material_source = Some(source);
+                                let mut material = Material::new(name.clone());
 
-                                materials.push(mat);
+                                material.material_source = Some(source);
+
+                                cache.insert(name.clone(), material);
                             }
 
                             // Illumination model
@@ -53,7 +59,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // illum 2
                                 let value = line_tokens.next().unwrap().parse::<u8>().unwrap();
 
-                                materials.last_mut().unwrap().illumination_model = value;
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .illumination_model = value;
                             }
 
                             // Ambient color
@@ -62,8 +71,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // Ka 0.0000 0.0000 0.0000
 
-                                materials.last_mut().unwrap().ambient_color =
-                                    next_rgb(&mut line_tokens);
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .ambient_color = next_rgb(&mut line_tokens);
                             }
 
                             // Diffuse color
@@ -72,8 +83,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // Kd 0.5880 0.5880 0.5880
 
-                                materials.last_mut().unwrap().diffuse_color =
-                                    next_rgb(&mut line_tokens);
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .diffuse_color = next_rgb(&mut line_tokens);
                             }
 
                             // Specular color
@@ -82,8 +95,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // Ks 0.0000 0.0000 0.0000
 
-                                materials.last_mut().unwrap().specular_color =
-                                    next_rgb(&mut line_tokens);
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .specular_color = next_rgb(&mut line_tokens);
                             }
 
                             // Specular exponent
@@ -94,7 +109,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                materials.last_mut().unwrap().specular_exponent = value as i32;
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .specular_exponent = value as i32;
                             }
 
                             // Emissive color
@@ -103,8 +121,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // Ke 0.0000 0.0000 0.0000
 
-                                materials.last_mut().unwrap().emissive_color =
-                                    next_rgb(&mut line_tokens);
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .emissive_color = next_rgb(&mut line_tokens);
                             }
 
                             // Dissolve (opaqueness)
@@ -115,7 +135,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                materials.last_mut().unwrap().dissolve = value;
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .dissolve = value;
                             }
 
                             // Transparency
@@ -126,7 +149,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                materials.last_mut().unwrap().transparency = value;
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .transparency = value;
                             }
 
                             // Transmission filter color
@@ -135,8 +161,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 // Example:
                                 // Tf 1.0000 1.0000 1.0000
 
-                                materials.last_mut().unwrap().transmission_filter_color =
-                                    next_rgb(&mut line_tokens);
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .transmission_filter_color = next_rgb(&mut line_tokens);
                             }
 
                             // Index of refraction
@@ -147,7 +175,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                materials.last_mut().unwrap().index_of_refraction = value;
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .index_of_refraction = value;
                             }
 
                             // Ambient texture map
@@ -159,7 +190,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                materials.last_mut().unwrap().ambient_map =
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .ambient_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
@@ -172,7 +206,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                materials.last_mut().unwrap().diffuse_map =
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .diffuse_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
@@ -186,7 +223,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                materials.last_mut().unwrap().alpha_map =
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .alpha_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
@@ -199,7 +239,10 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                materials.last_mut().unwrap().normal_map =
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .normal_map =
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
@@ -219,7 +262,7 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
         }
     }
 
-    let count = materials.len();
+    let count = cache.len();
 
     println!(
         "Parsed {} material{} from \"{}\".",
@@ -229,11 +272,11 @@ pub fn load_mtl(filepath: &str) -> Vec<Material> {
     );
 
     println!();
-    for mat in &materials {
-        println!("{}", mat);
+    for material in cache.values() {
+        println!("{}", material);
     }
 
-    return materials;
+    return cache;
 }
 
 fn next_rgb<'a>(line_tokens: &mut SplitWhitespace<'a>) -> Vec3 {
