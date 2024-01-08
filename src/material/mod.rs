@@ -1,6 +1,9 @@
 use std::fmt;
 
-use crate::{color, image::TextureMap, mesh::MaterialSource, vec::vec3::Vec3};
+use crate::{
+    color, context::ApplicationRenderingContext, image::TextureMap, mesh::MaterialSource,
+    vec::vec3::Vec3,
+};
 
 pub mod cache;
 pub mod mtl;
@@ -33,6 +36,49 @@ impl Material {
         mat.name = name;
         mat.specular_exponent = 8;
         mat
+    }
+
+    pub fn load_all_maps(
+        &mut self,
+        rendering_context: &ApplicationRenderingContext,
+    ) -> Result<(), String> {
+        // Ambient map
+        match &mut self.ambient_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        // Ambient occlusion map
+        match &mut self.ambient_occlusion_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        // Diffuse map
+        match &mut self.diffuse_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        // Specular map
+        match &mut self.specular_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        // Normal map
+        match &mut self.normal_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        // Alpha map
+        match &mut self.alpha_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        Ok(())
     }
 }
 
