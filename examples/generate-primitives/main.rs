@@ -67,7 +67,7 @@ fn main() -> Result<(), String> {
 
     // Collect materials
 
-    let mut material_cache = MaterialCache::new();
+    let mut material_cache: MaterialCache = Default::default();
 
     // Assign textures to mesh materials
 
@@ -102,8 +102,8 @@ fn main() -> Result<(), String> {
     point_light_mesh.object_name = "point_light".to_string();
     point_light_mesh.material_name = Some(point_light_mat.name.clone());
 
-    material_cache.insert(checkerboard_mat.name.to_string(), checkerboard_mat);
-    material_cache.insert(point_light_mat.name.to_string(), point_light_mat);
+    material_cache.insert(checkerboard_mat);
+    material_cache.insert(point_light_mat);
 
     let mut point_light_entity = Entity::new(&point_light_mesh);
 

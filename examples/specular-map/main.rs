@@ -75,14 +75,11 @@ fn main() -> Result<(), String> {
 
     // Collect materials
 
-    let mut material_cache = MaterialCache::new();
+    let mut material_cache: MaterialCache = Default::default();
 
-    material_cache.insert(
-        checkerboard_material.name.to_string(),
-        checkerboard_material,
-    );
+    material_cache.insert(checkerboard_material);
 
-    material_cache.insert(container_material.name.to_string(), container_material);
+    material_cache.insert(container_material);
 
     // Assign the meshes to entities
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
@@ -108,7 +105,7 @@ fn main() -> Result<(), String> {
         z: 0.0,
     };
 
-    material_cache.insert(point_light_material.name.to_string(), point_light_material);
+    material_cache.insert(point_light_material);
 
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> =

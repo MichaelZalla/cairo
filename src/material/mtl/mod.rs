@@ -15,7 +15,7 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
         Ok(lines) => lines,
     };
 
-    let mut cache: MaterialCache = MaterialCache::new();
+    let mut cache: MaterialCache = Default::default();
 
     let mut current_material_name: Option<String> = None;
 
@@ -49,7 +49,7 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
 
                                 material.material_source = Some(source);
 
-                                cache.insert(name.clone(), material);
+                                cache.insert(material);
                             }
 
                             // Illumination model
