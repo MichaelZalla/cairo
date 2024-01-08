@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
+    effect::Effect,
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::{Graphics, PixelBuffer},
@@ -40,6 +41,7 @@ pub struct SpecularMapScene<'a> {
     spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
+    bilinear_active: bool,
     prev_mouse_state: MouseState,
     seconds_ellapsed: f32,
 }
@@ -156,6 +158,7 @@ impl<'a> SpecularMapScene<'a> {
             pipeline_options,
             entities,
             materials,
+            bilinear_active: false,
             cameras: vec![camera],
             active_camera_index: 0,
             // ambient_light,
@@ -220,6 +223,12 @@ impl<'a> Scene for SpecularMapScene<'a> {
                 }
                 Keycode::E { .. } => {
                     camera.set_position(position + vec3::UP * camera_movement_step);
+                }
+                Keycode::B { .. } => {
+                    self.bilinear_active = !self.bilinear_active;
+                    self.pipeline
+                        .effect
+                        .set_bilinear_active(self.bilinear_active);
                 }
                 _ => {}
             }

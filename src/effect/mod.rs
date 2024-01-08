@@ -10,6 +10,8 @@ pub trait Effect {
 
     fn set_projection(&mut self, projection_transform: Mat4);
 
+    fn set_bilinear_active(&mut self, active: bool);
+
     fn set_active_material(&mut self, material_option: Option<*const Material>);
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut;

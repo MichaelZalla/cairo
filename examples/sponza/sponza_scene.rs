@@ -37,6 +37,7 @@ pub struct SponzaScene<'a> {
     seconds_ellapsed: f32,
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
+    bilinear_active: bool,
     canvas_width: u32,
     canvas_height: u32,
     aspect_ratio: f32,
@@ -166,6 +167,7 @@ impl<'a> SponzaScene<'a> {
             seconds_ellapsed: 0.0,
             pipeline,
             pipeline_options,
+            bilinear_active: false,
             entities,
             materials,
             aspect_ratio,
@@ -232,6 +234,12 @@ impl<'a> Scene for SponzaScene<'a> {
                 }
                 Keycode::L { .. } => {
                     camera.set_target_position(self.point_light.position);
+                }
+                Keycode::B { .. } => {
+                    self.bilinear_active = !self.bilinear_active;
+                    self.pipeline
+                        .effect
+                        .set_bilinear_active(self.bilinear_active);
                 }
                 _ => {}
             }

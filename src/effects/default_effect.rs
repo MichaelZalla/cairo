@@ -1,7 +1,7 @@
 use crate::{
     color::{self, Color},
     effect::Effect,
-    image::sample_nearest,
+    image::{sample_bilinear, sample_nearest},
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
@@ -17,6 +17,7 @@ pub struct DefaultEffect {
     projection_transform: Mat4,
     world_view_projection_transform: Mat4,
     ambient_light: AmbientLight,
+    bilinear_active: bool,
     directional_light: DirectionalLight,
     point_light: PointLight,
     spot_light: SpotLight,
@@ -45,6 +46,7 @@ impl DefaultEffect {
                 * view_inverse_transform
                 * projection_transform,
             ambient_light,
+            bilinear_active: false,
             directional_light,
             point_light,
             spot_light,
@@ -102,6 +104,19 @@ impl Effect for DefaultEffect {
 
     fn set_projection(&mut self, projection_transform: Mat4) {
         self.projection_transform = projection_transform;
+    }
+
+    fn set_bilinear_active(&mut self, active: bool) {
+        self.bilinear_active = active;
+
+        println!(
+            "Bilinear sampling {}.",
+            if self.bilinear_active {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        );
     }
 
     fn set_active_material(&mut self, material_option: Option<*const Material>) {
@@ -277,7 +292,11 @@ impl Effect for DefaultEffect {
             Some(mat_raw_mut) => unsafe {
                 match &(*mat_raw_mut).diffuse_map {
                     Some(texture) => {
-                        let (r, g, b) = sample_nearest(out.uv, texture);
+                        let (r, g, b) = if self.bilinear_active {
+                            sample_bilinear(out.uv, texture)
+                        } else {
+                            sample_nearest(out.uv, texture)
+                        };
 
                         color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                     }
