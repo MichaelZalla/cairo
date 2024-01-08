@@ -38,6 +38,7 @@ pub struct GeneratePrimitivesScene<'a> {
     // ambient_light: AmbientLight,
     directional_light: DirectionalLight,
     point_light: PointLight,
+    spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     prev_mouse_state: MouseState,
@@ -70,17 +71,17 @@ impl<'a> GeneratePrimitivesScene<'a> {
         // Define lights for our scene
         let ambient_light = AmbientLight {
             intensities: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
+                x: 0.05,
+                y: 0.05,
+                z: 0.05,
             },
         };
 
         let directional_light = DirectionalLight {
             intensities: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
+                x: 0.05,
+                y: 0.05,
+                z: 0.05,
             },
             direction: Vec4 {
                 x: -1.0,
@@ -109,9 +110,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 y: -1.0,
                 z: 0.0,
             },
-            inner_cutoff_angle: (2.5 as f32).to_radians().cos(),
-            outer_cutoff_angle: (17.5 as f32).to_radians().cos(),
-            constant_attenuation: 0.6,
+            inner_cutoff_angle: (25.0 as f32).to_radians().cos(),
+            outer_cutoff_angle: (40.0 as f32).to_radians().cos(),
+            constant_attenuation: 1.0,
             linear_attenuation: 0.35,
             quadratic_attenuation: 0.44,
         };
@@ -162,6 +163,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             // ambient_light,
             directional_light,
             point_light,
+            spot_light,
             canvas_width,
             canvas_height,
             prev_mouse_state: MouseState::new(),
@@ -268,19 +270,29 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         }
 
         let phase_shift = 2.0 * PI / 3.0;
-        let max_intensity: f32 = 0.6;
+        let orbit_radius: f32 = 10.0;
+
+        let max_point_light_intensity: f32 = 1.0;
 
         self.point_light.intensities = Vec3 {
             x: (self.seconds_ellapsed + phase_shift * 0.0).sin() / 2.0 + 0.5,
             y: (self.seconds_ellapsed + phase_shift * 1.0).sin() / 2.0 + 0.5,
             z: (self.seconds_ellapsed + phase_shift * 2.0).sin() / 2.0 + 0.5,
-        } * max_intensity;
+        } * max_point_light_intensity;
 
         self.point_light.position = Vec3 {
-            x: 7.0 * self.seconds_ellapsed.sin(),
+            x: orbit_radius * (self.seconds_ellapsed * 0.66).sin(),
             y: 1.0,
-            z: 7.0 * self.seconds_ellapsed.cos(),
+            z: orbit_radius * (self.seconds_ellapsed * 0.66).cos(),
         };
+
+        let max_spot_light_intensity: f32 = 0.6;
+
+        self.spot_light.intensities = Vec3 {
+            x: (self.seconds_ellapsed + phase_shift * 0.0).cos() / 2.0 + 0.5,
+            y: (self.seconds_ellapsed + phase_shift * 1.0).cos() / 2.0 + 0.5,
+            z: (self.seconds_ellapsed + phase_shift * 2.0).cos() / 2.0 + 0.5,
+        } * max_spot_light_intensity;
 
         let mut entities = self.entities.write().unwrap();
 
@@ -336,6 +348,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         self.pipeline
             .effect
             .set_point_light_position(self.point_light.position);
+
+        self.pipeline
+            .effect
+            .set_spot_light_intensities(self.spot_light.intensities);
 
         for entity in r.as_slice() {
             let world_transform = Mat4::scaling(1.0)

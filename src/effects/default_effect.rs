@@ -86,6 +86,10 @@ impl DefaultEffect {
     pub fn set_point_light_position(&mut self, position: Vec3) {
         self.point_light.position = position;
     }
+
+    pub fn set_spot_light_intensities(&mut self, intensities: Vec3) {
+        self.spot_light.intensities = intensities;
+    }
 }
 
 impl Effect for DefaultEffect {
