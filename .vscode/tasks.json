@@ -96,6 +96,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example sponza",
+      "windows": {
+        "command": "cargo run --example sponza"
+      },
+      "linux": {
+        "command": "cargo run --example sponza"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example texture-mapping",
       "windows": {
         "command": "cargo run --example texture-mapping"
