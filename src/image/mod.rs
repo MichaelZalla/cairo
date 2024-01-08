@@ -81,6 +81,29 @@ impl TextureMap {
 
         Ok(())
     }
+
+    pub fn map<T>(&mut self, mut callback: T) -> Result<(), String>
+    where
+        T: FnMut(u8, u8, u8) -> (u8, u8, u8),
+    {
+        if self.is_loaded == false {
+            return Err("Called TextureMap::map() on an unloaded texture!".to_string());
+        }
+
+        for i in 0..(self.width * self.height) as usize {
+            let r = self.pixel_data[i * 3];
+            let g = self.pixel_data[i * 3 + 1];
+            let b = self.pixel_data[i * 3 + 2];
+
+            let (r_new, g_new, b_new) = callback(r, g, b);
+
+            self.pixel_data[i * 3] = r_new;
+            self.pixel_data[i * 3 + 1] = g_new;
+            self.pixel_data[i * 3 + 2] = b_new;
+        }
+
+        Ok(())
+    }
 }
 
 pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {

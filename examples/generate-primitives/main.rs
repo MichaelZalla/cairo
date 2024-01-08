@@ -37,12 +37,28 @@ fn main() -> Result<(), String> {
     // Create a new textured material
     let mut checkerboard_mat = Material::new("checkerboard".to_string());
 
-    let mut checkerboard_texture =
-        TextureMap::new(&"./examples/generate-primitives/assets/checkerboard.png");
+    let mut checkerboard_diffuse_map =
+        TextureMap::new(&"./examples/generate-primitives/assets/checkerboard.jpg");
 
-    checkerboard_texture.load(rendering_context)?;
+    // Checkerboard material
 
-    checkerboard_mat.diffuse_map = Some(checkerboard_texture);
+    checkerboard_diffuse_map.load(rendering_context)?;
+
+    let checkerboard_specular_map = checkerboard_diffuse_map.clone();
+
+    // Pump up diffuse value of the darkest pixels
+    checkerboard_diffuse_map.map(|r, g, b| {
+        if r < 4 && g < 4 && b < 4 {
+            return (18, 18, 18);
+        }
+        (r, g, b)
+    })?;
+
+    checkerboard_mat.diffuse_map = Some(checkerboard_diffuse_map);
+
+    checkerboard_mat.specular_exponent = 8;
+
+    checkerboard_mat.specular_map = Some(checkerboard_specular_map);
 
     // Point light "material"
 
