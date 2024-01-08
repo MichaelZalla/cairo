@@ -32,8 +32,8 @@ static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
 pub struct TextureMappedCubeScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    viewport_width: u32,
-    viewport_height: u32,
+    canvas_width: u32,
+    canvas_height: u32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     // ambient_light: AmbientLight,
@@ -57,12 +57,13 @@ impl<'a> TextureMappedCubeScene<'a> {
             .output_size()
             .unwrap();
 
-        let viewport_width = canvas_output_size.0;
-        let viewport_height = canvas_output_size.1;
-        let aspect_ratio = viewport_width as f32 / viewport_height as f32;
+        let canvas_width = canvas_output_size.0;
+        let canvas_height = canvas_output_size.1;
+
+        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
 
         let graphics = Graphics {
-            buffer: PixelBuffer::new(viewport_width, viewport_height),
+            buffer: PixelBuffer::new(canvas_width, canvas_height),
         };
 
         // Set up a camera for rendering our cube scene
@@ -181,8 +182,8 @@ impl<'a> TextureMappedCubeScene<'a> {
             // ambient_light,
             // directional_light,
             point_light,
-            viewport_width,
-            viewport_height,
+            canvas_width,
+            canvas_height,
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -200,12 +201,11 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let mouse_position = mouse_state.position;
 
-        let ndc_mouse_x = mouse_position.0 as f32 / self.viewport_width as f32;
-        let ndc_mouse_y = mouse_position.1 as f32 / self.viewport_height as f32;
+        let ndc_mouse_x = mouse_position.0 as f32 / self.canvas_width as f32;
+        let ndc_mouse_y = mouse_position.1 as f32 / self.canvas_height as f32;
 
-        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.viewport_width as f32;
-        let prev_ndc_mouse_y =
-            self.prev_mouse_state.position.1 as f32 / self.viewport_height as f32;
+        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.canvas_width as f32;
+        let prev_ndc_mouse_y = self.prev_mouse_state.position.1 as f32 / self.canvas_height as f32;
 
         let mouse_x_delta = ndc_mouse_x - prev_ndc_mouse_x;
         let mouse_y_delta = ndc_mouse_y - prev_ndc_mouse_y;

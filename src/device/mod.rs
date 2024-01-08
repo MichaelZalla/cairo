@@ -33,6 +33,7 @@ impl Default for MouseEvent {
 pub struct MouseState {
     pub button_event: Option<MouseEvent>,
     pub position: (i32, i32),
+    pub relative_motion: (i32, i32),
     pub wheel_did_move: bool,
     pub wheel_y: i32,
     pub wheel_direction: MouseWheelDirection,
@@ -43,6 +44,7 @@ impl MouseState {
         return MouseState {
             button_event: None,
             position: (0, 0),
+            relative_motion: (0, 0),
             wheel_did_move: false,
             wheel_y: 0,
             wheel_direction: MouseWheelDirection::Unknown(0),

@@ -30,8 +30,8 @@ static CAMERA_MOVEMENT_SPEED: f32 = 50.0;
 pub struct MultipleScenesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    screen_width: u32,
-    screen_height: u32,
+    canvas_width: u32,
+    canvas_height: u32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     ambient_light: AmbientLight,
@@ -116,8 +116,8 @@ impl<'a> MultipleScenesScene<'a> {
 
         let buffer = &graphics.buffer;
 
-        let screen_width = buffer.width;
-        let screen_height = buffer.height;
+        let canvas_width = buffer.width;
+        let canvas_height = buffer.height;
 
         let world_transform = Mat4::scaling(1.0);
 
@@ -158,8 +158,8 @@ impl<'a> MultipleScenesScene<'a> {
             ambient_light,
             directional_light,
             point_light,
-            screen_width,
-            screen_height,
+            canvas_width,
+            canvas_height,
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -173,18 +173,10 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
-        // Calculate mouse position delta
+        // Translate relative mouse movements to NDC values (in the range [0, 1]).
 
-        let mouse_position = mouse_state.position;
-
-        let ndc_mouse_x = mouse_position.0 as f32 / self.screen_width as f32;
-        let ndc_mouse_y = mouse_position.1 as f32 / self.screen_height as f32;
-
-        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.screen_width as f32;
-        let prev_ndc_mouse_y = self.prev_mouse_state.position.1 as f32 / self.screen_height as f32;
-
-        let mouse_x_delta = ndc_mouse_x - prev_ndc_mouse_x;
-        let mouse_y_delta = ndc_mouse_y - prev_ndc_mouse_y;
+        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
+        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
 
         // Apply camera rotation based on mouse position delta
 

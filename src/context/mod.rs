@@ -113,6 +113,11 @@ pub fn get_application_context(
             let screen_width = window.size().0;
             let screen_height = window.size().1;
 
+            // Captures mouse movements even when mouse position is constrained
+            // to the window border.
+            sdl_context.mouse().set_relative_mouse_mode(true);
+
+            // Begin with the cursor at the center of the viewport.
             sdl_context.mouse().warp_mouse_in_window(
                 &window,
                 (screen_width / 2) as i32,

@@ -125,10 +125,11 @@ impl App {
                 match event {
                     Event::Quit { .. } => break 'main,
 
-                    // Event::MouseMotion { x, y, .. } => {
-                    //     last_known_mouse_x = x;
-                    //     last_known_mouse_y = y;
-                    // }
+                    Event::MouseMotion { xrel, yrel, .. } => {
+                        mouse_state.relative_motion.0 = xrel;
+                        mouse_state.relative_motion.1 = yrel;
+                    }
+
                     Event::MouseWheel { direction, y, .. } => {
                         mouse_state.wheel_did_move = true;
                         mouse_state.wheel_direction = direction;
@@ -257,6 +258,7 @@ impl App {
             let cw = &mut self.context.rendering_context.canvas.write().unwrap();
 
             let attrs = backbuffer.query();
+
             let scale_x: f32 = attrs.width as f32 / self.canvas_width as f32;
             let scale_y: f32 = attrs.height as f32 / self.canvas_height as f32;
 

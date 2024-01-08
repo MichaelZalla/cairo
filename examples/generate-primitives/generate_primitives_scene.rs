@@ -182,18 +182,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
     ) {
         self.seconds_ellapsed += seconds_since_last_update;
 
-        // Calculate mouse position delta
+        // Translate relative mouse movements to NDC values (in the range [0, 1]).
 
-        let mouse_position = mouse_state.position;
-
-        let ndc_mouse_x = mouse_position.0 as f32 / self.canvas_width as f32;
-        let ndc_mouse_y = mouse_position.1 as f32 / self.canvas_height as f32;
-
-        let prev_ndc_mouse_x = self.prev_mouse_state.position.0 as f32 / self.canvas_width as f32;
-        let prev_ndc_mouse_y = self.prev_mouse_state.position.1 as f32 / self.canvas_height as f32;
-
-        let mouse_x_delta = ndc_mouse_x - prev_ndc_mouse_x;
-        let mouse_y_delta = ndc_mouse_y - prev_ndc_mouse_y;
+        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
+        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
 
         // Update camera pitch and yaw, based on mouse position deltas.
 
