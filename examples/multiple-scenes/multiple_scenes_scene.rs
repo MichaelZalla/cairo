@@ -194,7 +194,7 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         let yaw = camera.get_yaw();
 
         camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
-        camera.set_yaw(yaw + mouse_x_delta * 2.0 * PI);
+        camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
 
         // Apply camera movement based on keyboard or gamepad input
 
@@ -310,7 +310,7 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         let yaw = camera.get_yaw();
 
         camera.set_pitch(pitch - pitch_delta * 2.0 * PI);
-        camera.set_yaw(yaw + yaw_delta * 2.0 * PI);
+        camera.set_yaw(yaw - yaw_delta * 2.0 * PI);
 
         let mut w = self.entities.write().unwrap();
 

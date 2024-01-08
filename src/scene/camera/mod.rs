@@ -51,6 +51,16 @@ impl Camera {
         self.up = self.forward.cross(self.right).as_normal();
     }
 
+    fn look_in_direction(&mut self) {
+        let direction = Vec3 {
+            x: self.yaw.cos() * self.pitch.cos(),
+            y: self.pitch.sin(),
+            z: self.yaw.sin() * self.pitch.cos(),
+        };
+
+        self.set_target_position(self.position + direction)
+    }
+
     pub fn get_forward(&self) -> Vec3 {
         self.forward
     }
@@ -68,7 +78,9 @@ impl Camera {
     }
 
     pub fn set_pitch(&mut self, pitch: f32) {
-        self.pitch = pitch.max(PI / 2.0).min(3.0 * PI / 2.0);
+        self.pitch = pitch.max(-PI / 2.0).min(PI / 2.0);
+
+        self.look_in_direction();
     }
 
     pub fn get_yaw(&self) -> f32 {
@@ -77,14 +89,16 @@ impl Camera {
 
     pub fn set_yaw(&mut self, yaw: f32) {
         self.yaw = yaw;
+
+        self.look_in_direction();
     }
 
     pub fn get_roll(&self) -> f32 {
         self.roll
     }
 
-    pub fn set_roll(&mut self, roll: f32) {
-        self.roll = roll;
+    pub fn set_roll(&mut self, _roll: f32) {
+        unimplemented!()
     }
 
     pub fn get_lookat_matrix(&self) -> Mat4 {
