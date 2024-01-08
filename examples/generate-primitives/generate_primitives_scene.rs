@@ -19,14 +19,9 @@ use cairo::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-static PROJECTION_Z_NEAR: f32 = 0.3;
-static PROJECTION_Z_FAR: f32 = 1000.0;
-
 pub struct GeneratePrimitivesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
     pipeline_options: PipelineOptions,
-    aspect_ratio: f32,
-    field_of_view: f32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     // ambient_light: AmbientLight,
@@ -51,8 +46,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
         };
 
-        // Set up a camera for rendering our cube scene
+        let aspect_ratio = graphics.buffer.width_over_height;
+
+        // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
+            aspect_ratio,
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -124,16 +122,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
-        let aspect_ratio = graphics.buffer.width_over_height;
-
-        let field_of_view: f32 = 75.0;
-
-        let projection_transform = Mat4::projection_for_fov(
-            field_of_view,
-            aspect_ratio,
-            PROJECTION_Z_NEAR,
-            PROJECTION_Z_FAR,
-        );
+        let projection_transform = camera.get_projection();
 
         let pipeline = Pipeline::new(
             graphics,
@@ -155,8 +144,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             pipeline_options,
             entities,
             materials,
-            aspect_ratio,
-            field_of_view,
             cameras: vec![camera],
             active_camera_index: 0,
             // ambient_light,
@@ -167,17 +154,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             looking_at_point_light: false,
             seconds_ellapsed: 0.0,
         };
-    }
-
-    fn regenerate_projection(&mut self) {
-        let projection_transform = Mat4::projection_for_fov(
-            self.field_of_view,
-            self.aspect_ratio,
-            PROJECTION_Z_NEAR,
-            PROJECTION_Z_FAR,
-        );
-
-        self.pipeline.effect.set_projection(projection_transform);
     }
 }
 
@@ -211,6 +187,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 game_controller_state,
                 seconds_since_last_update,
             );
+
+            self.pipeline.effect.set_projection(camera.get_projection());
         }
 
         self.pipeline
@@ -245,21 +223,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 }
                 _ => {}
             }
-        }
-
-        if mouse_state.wheel_did_move {
-            self.field_of_view -= mouse_state.wheel_y as f32;
-
-            self.field_of_view = self.field_of_view.max(1.0).min(120.0);
-
-            let projection_transform = Mat4::projection_for_fov(
-                self.field_of_view,
-                self.aspect_ratio,
-                PROJECTION_Z_NEAR,
-                PROJECTION_Z_FAR,
-            );
-
-            self.pipeline.effect.set_projection(projection_transform);
         }
 
         let phase_shift = 2.0 * PI / 3.0;

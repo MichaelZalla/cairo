@@ -5,6 +5,7 @@ use sdl2::keyboard::Keycode;
 use cairo::{
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
+    effect::Effect,
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::{Graphics, PixelBuffer},
@@ -18,11 +19,6 @@ use cairo::{
     },
     vec::{vec3::Vec3, vec4::Vec4},
 };
-
-static FIELD_OF_VIEW: f32 = 100.0;
-
-static PROJECTION_Z_NEAR: f32 = 0.15;
-static PROJECTION_Z_FAR: f32 = 100.0;
 
 pub struct TextureMappedCubeScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
@@ -53,14 +49,13 @@ impl<'a> TextureMappedCubeScene<'a> {
         let canvas_width = canvas_output_size.0;
         let canvas_height = canvas_output_size.1;
 
-        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
-
         let graphics = Graphics {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
         };
 
-        // Set up a camera for rendering our cube scene
+        // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
+            graphics.buffer.width_over_height,
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -143,12 +138,7 @@ impl<'a> TextureMappedCubeScene<'a> {
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
-        let projection_transform = Mat4::projection_for_fov(
-            FIELD_OF_VIEW,
-            aspect_ratio,
-            PROJECTION_Z_NEAR,
-            PROJECTION_Z_FAR,
-        );
+        let projection_transform = camera.get_projection();
 
         let pipeline = Pipeline::new(
             graphics,
@@ -200,6 +190,8 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
         self.pipeline
             .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
+
+        self.pipeline.effect.set_projection(camera.get_projection());
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {

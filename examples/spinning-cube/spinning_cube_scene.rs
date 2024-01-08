@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
+    effect::Effect,
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::Graphics,
@@ -16,11 +17,6 @@ use cairo::{
     },
     vec::{vec3::Vec3, vec4::Vec4},
 };
-
-static FIELD_OF_VIEW: f32 = 100.0;
-
-static PROJECTION_Z_NEAR: f32 = 0.3;
-static PROJECTION_Z_FAR: f32 = 100.0;
 
 pub struct SpinningCubeScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
@@ -36,8 +32,9 @@ pub struct SpinningCubeScene<'a> {
 
 impl<'a> SpinningCubeScene<'a> {
     pub fn new(graphics: Graphics, entities: &'a RwLock<Vec<&'a mut Entity<'a>>>) -> Self {
-        // Set up a camera for rendering our cube scene
+        // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
+            graphics.buffer.width_over_height,
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -113,14 +110,7 @@ impl<'a> SpinningCubeScene<'a> {
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
-        let aspect_ratio = graphics.buffer.width_over_height;
-
-        let projection_transform = Mat4::projection_for_fov(
-            FIELD_OF_VIEW,
-            aspect_ratio,
-            PROJECTION_Z_NEAR,
-            PROJECTION_Z_FAR,
-        );
+        let projection_transform = camera.get_projection();
 
         let pipeline = Pipeline::new(
             graphics,
@@ -171,6 +161,8 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         self.pipeline
             .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
+
+        self.pipeline.effect.set_projection(camera.get_projection());
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
