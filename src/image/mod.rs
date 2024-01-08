@@ -109,16 +109,19 @@ impl TextureMap {
 pub fn sample_nearest(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
-    let uv_x_safe = if uv.x < 0.0 || uv.x >= 1.0 {
-        uv.x.rem_euclid(1.0)
-    } else {
-        uv.x
-    };
-
-    let uv_y_safe = if uv.y < 0.0 || uv.y >= 1.0 {
-        uv.y.rem_euclid(1.0)
-    } else {
-        uv.y
+    // Wraps UV coordinates into the range [0.0, 1.0).
+    let wrapped_uv = Vec2 {
+        x: if uv.x < 0.0 || uv.x >= 1.0 {
+            uv.x.rem_euclid(1.0)
+        } else {
+            uv.x
+        },
+        y: if uv.y < 0.0 || uv.y >= 1.0 {
+            uv.y.rem_euclid(1.0)
+        } else {
+            uv.y
+        },
+        z: 1.0,
     };
 
     debug_assert!(
@@ -126,8 +129,10 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
             == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
     );
 
-    let texel_x = ((1.0 - uv_x_safe) * (map.width - 1) as f32) as u32;
-    let texel_y = ((1.0 - uv_y_safe) * (map.height - 1) as f32) as u32;
+    // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
+
+    let texel_x = ((1.0 - wrapped_uv.x) * (map.width - 1) as f32) as u32;
+    let texel_y = ((1.0 - wrapped_uv.y) * (map.height - 1) as f32) as u32;
 
     let texel_color_index = TextureMap::BYTES_PER_PIXEL * (texel_y * map.width + texel_x) as usize;
 
