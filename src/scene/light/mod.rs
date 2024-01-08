@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use crate::color;
 use crate::vec::vec3::Vec3;
 use crate::vec::vec4::Vec4;
@@ -135,6 +137,31 @@ pub struct SpotLight {
 }
 
 impl SpotLight {
+    pub fn new() -> Self {
+        SpotLight {
+            intensities: Vec3 {
+                x: 0.5,
+                y: 0.5,
+                z: 0.5,
+            },
+            position: Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: -1.0,
+                z: 0.0,
+            },
+            inner_cutoff_angle: (PI / 45.0).cos(),
+            outer_cutoff_angle: (PI / 25.0).cos(),
+            constant_attenuation: 1.0,
+            linear_attenuation: 0.35,
+            quadratic_attenuation: 0.44,
+        }
+    }
+
     pub fn contribute(self, world_pos: Vec3) -> Vec3 {
         let mut spot_light_contribution: Vec3 = Vec3::new();
 
