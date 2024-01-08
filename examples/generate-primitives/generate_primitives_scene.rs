@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
+    effect::Effect,
     effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::{Graphics, PixelBuffer},
@@ -21,8 +22,6 @@ use cairo::{
     },
 };
 
-static FIELD_OF_VIEW: f32 = 75.0;
-
 static PROJECTION_Z_NEAR: f32 = 0.3;
 static PROJECTION_Z_FAR: f32 = 1000.0;
 
@@ -33,6 +32,8 @@ pub struct GeneratePrimitivesScene<'a> {
     pipeline_options: PipelineOptions,
     canvas_width: u32,
     canvas_height: u32,
+    aspect_ratio: f32,
+    field_of_view: f32,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     // ambient_light: AmbientLight,
@@ -53,8 +54,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
     ) -> Self {
-        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
-
         let graphics = Graphics {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
         };
@@ -132,8 +131,12 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
+        let aspect_ratio = graphics.buffer.width_over_height;
+
+        let field_of_view: f32 = 75.0;
+
         let projection_transform = Mat4::projection_for_fov(
-            FIELD_OF_VIEW,
+            field_of_view,
             aspect_ratio,
             PROJECTION_Z_NEAR,
             PROJECTION_Z_FAR,
@@ -159,6 +162,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
             pipeline_options,
             entities,
             materials,
+            aspect_ratio,
+            field_of_view,
             cameras: vec![camera],
             active_camera_index: 0,
             // ambient_light,
@@ -171,6 +176,17 @@ impl<'a> GeneratePrimitivesScene<'a> {
             looking_at_point_light: false,
             seconds_ellapsed: 0.0,
         };
+    }
+
+    fn regenerate_projection(&mut self) {
+        let projection_transform = Mat4::projection_for_fov(
+            self.field_of_view,
+            self.aspect_ratio,
+            PROJECTION_Z_NEAR,
+            PROJECTION_Z_FAR,
+        );
+
+        self.pipeline.effect.set_projection(projection_transform);
     }
 }
 
@@ -268,6 +284,21 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 }
                 _ => {}
             }
+        }
+
+        if mouse_state.wheel_did_move {
+            self.field_of_view -= mouse_state.wheel_y as f32;
+
+            self.field_of_view = self.field_of_view.max(1.0).min(120.0);
+
+            let projection_transform = Mat4::projection_for_fov(
+                self.field_of_view,
+                self.aspect_ratio,
+                PROJECTION_Z_NEAR,
+                PROJECTION_Z_FAR,
+            );
+
+            self.pipeline.effect.set_projection(projection_transform);
         }
 
         let phase_shift = 2.0 * PI / 3.0;

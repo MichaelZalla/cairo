@@ -100,6 +100,10 @@ impl Effect for DefaultEffect {
         return self.projection_transform;
     }
 
+    fn set_projection(&mut self, projection_transform: Mat4) {
+        self.projection_transform = projection_transform;
+    }
+
     fn set_active_material(&mut self, material_option: Option<*const Material>) {
         match material_option {
             Some(mat_raw_mut) => {
