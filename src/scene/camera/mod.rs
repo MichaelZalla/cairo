@@ -24,7 +24,7 @@ impl Camera {
             up: vec3::UP,
             right: vec3::LEFT * -1.0,
             pitch: 0.0,
-            yaw: 0.0,
+            yaw: PI / 2.0,
             roll: 0.0,
         };
 

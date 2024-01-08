@@ -113,6 +113,12 @@ pub fn get_application_context(
             let screen_width = window.size().0;
             let screen_height = window.size().1;
 
+            sdl_context.mouse().warp_mouse_in_window(
+                &window,
+                (screen_width / 2) as i32,
+                (screen_height / 2) as i32,
+            );
+
             let rendering_context =
                 get_application_rendering_context(window, vertical_sync).unwrap();
 
