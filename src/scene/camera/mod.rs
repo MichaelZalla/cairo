@@ -80,14 +80,16 @@ impl Camera {
         self.up = self.forward.cross(self.right).as_normal();
     }
 
-    fn look_in_direction(&mut self) {
-        let direction = Vec3 {
+    pub fn get_direction(&self) -> Vec3 {
+        Vec3 {
             x: self.yaw.cos() * self.pitch.cos(),
             y: self.pitch.sin(),
             z: self.yaw.sin() * self.pitch.cos(),
-        };
+        }
+    }
 
-        self.set_target_position(self.position + direction)
+    fn look_in_direction(&mut self) {
+        self.set_target_position(self.position + self.get_direction())
     }
 
     pub fn get_forward(&self) -> Vec3 {
