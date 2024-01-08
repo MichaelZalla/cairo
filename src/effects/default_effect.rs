@@ -1,7 +1,7 @@
 use crate::{
     color::{self, Color},
     effect::Effect,
-    image::sample_from_uv,
+    image::sample_nearest,
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
@@ -147,7 +147,7 @@ impl Effect for DefaultEffect {
                 match &(*mat_raw_mut).alpha_map {
                     Some(texture) => {
                         // Read in a per-fragment normal, with components in the range [0, 255].
-                        let (r, _g, _b) = sample_from_uv(out.uv, texture);
+                        let (r, _g, _b) = sample_nearest(out.uv, texture);
 
                         if r < 4 {
                             return None;
@@ -174,7 +174,7 @@ impl Effect for DefaultEffect {
                 unsafe {
                     match &(*mat_raw_mut).normal_map {
                         Some(texture) => {
-                            let (r, g, b) = sample_from_uv(out.uv, texture);
+                            let (r, g, b) = sample_nearest(out.uv, texture);
 
                             let _map_normal = Vec4 {
                                 x: (r as f32 / 255.0) * 2.0 - 1.0,
@@ -203,7 +203,7 @@ impl Effect for DefaultEffect {
             Some(mat_raw_mut) => unsafe {
                 match &(*mat_raw_mut).ambient_occlusion_map {
                     Some(map) => {
-                        let (r, _g, _b) = sample_from_uv(out.uv, map);
+                        let (r, _g, _b) = sample_nearest(out.uv, map);
                         ambient_factor = r as f32 / 255.0;
                     }
                     None => (),
@@ -229,7 +229,7 @@ impl Effect for DefaultEffect {
 
                 match &(*mat_raw_mut).specular_map {
                     Some(map) => {
-                        let (r, g, b) = sample_from_uv(out.uv, map);
+                        let (r, g, b) = sample_nearest(out.uv, map);
                         let r_f = r as f32;
                         let g_f = g as f32;
                         let b_f = b as f32;
@@ -273,7 +273,7 @@ impl Effect for DefaultEffect {
             Some(mat_raw_mut) => unsafe {
                 match &(*mat_raw_mut).diffuse_map {
                     Some(texture) => {
-                        let (r, g, b) = sample_from_uv(out.uv, texture);
+                        let (r, g, b) = sample_nearest(out.uv, texture);
 
                         color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                     }

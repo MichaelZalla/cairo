@@ -106,7 +106,7 @@ impl TextureMap {
     }
 }
 
-pub fn sample_from_uv(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
+pub fn sample_nearest(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
     let uv_x_safe = if uv.x < 0.0 || uv.x >= 1.0 {
