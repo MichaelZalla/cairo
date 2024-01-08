@@ -42,6 +42,7 @@ pub struct GeneratePrimitivesScene<'a> {
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     prev_mouse_state: MouseState,
+    looking_at_point_light: bool,
     seconds_ellapsed: f32,
 }
 
@@ -167,6 +168,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             canvas_width,
             canvas_height,
             prev_mouse_state: MouseState::new(),
+            looking_at_point_light: false,
             seconds_ellapsed: 0.0,
         };
     }
@@ -187,17 +189,9 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let mouse_x_delta = mouse_state.relative_motion.0 as f32 / self.canvas_width as f32;
         let mouse_y_delta = mouse_state.relative_motion.1 as f32 / self.canvas_height as f32;
 
-        // Update camera pitch and yaw, based on mouse position deltas.
+        // Apply camera movement based on keyboard or gamepad input
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
-
-        let pitch = camera.get_pitch();
-        let yaw = camera.get_yaw();
-
-        camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
-        camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
-
-        // Apply camera movement based on keyboard or gamepad input
 
         let camera_movement_step = CAMERA_MOVEMENT_SPEED * seconds_since_last_update;
 
@@ -223,8 +217,23 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 Keycode::E { .. } => {
                     camera.set_position(position + vec3::UP * camera_movement_step);
                 }
+                Keycode::L { .. } => {
+                    self.looking_at_point_light = !self.looking_at_point_light;
+                }
                 _ => {}
             }
+        }
+
+        if self.looking_at_point_light {
+            camera.set_target_position(self.point_light.position);
+        } else {
+            // Update camera pitch and yaw, based on mouse position deltas.
+
+            let pitch = camera.get_pitch();
+            let yaw = camera.get_yaw();
+
+            camera.set_pitch(pitch - mouse_y_delta * 2.0 * PI);
+            camera.set_yaw(yaw - mouse_x_delta * 2.0 * PI);
         }
 
         self.pipeline
