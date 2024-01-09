@@ -8,7 +8,7 @@ use crate::vec::{
 
 use super::{Face, Mesh};
 
-use crate::image;
+use crate::texture;
 
 pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     assert!(divisions >= 3);
@@ -24,7 +24,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     let bottom_center_vertex = top_center_vertex * -1.0;
 
-    let center_uv = vec2::Vec2::interpolate(image::uv::TOP_LEFT, image::uv::BOTTOM_RIGHT, 0.5);
+    let center_uv = vec2::Vec2::interpolate(texture::uv::TOP_LEFT, texture::uv::BOTTOM_RIGHT, 0.5);
 
     let mut top_ring_vertices: Vec<Vec3> = vec![];
     let mut bottom_ring_vertices: Vec<Vec3> = vec![];

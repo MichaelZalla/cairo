@@ -1,5 +1,5 @@
 use crate::{
-    image,
+    texture,
     vec::{vec2::Vec2, vec3::Vec3, vec4},
 };
 
@@ -86,10 +86,10 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     ];
 
     let uvs: Vec<Vec2> = vec![
-        image::uv::TOP_LEFT,     // 0
-        image::uv::TOP_RIGHT,    // 1
-        image::uv::BOTTOM_LEFT,  // 2
-        image::uv::BOTTOM_RIGHT, // 3
+        texture::uv::TOP_LEFT,     // 0
+        texture::uv::TOP_RIGHT,    // 1
+        texture::uv::BOTTOM_LEFT,  // 2
+        texture::uv::BOTTOM_RIGHT, // 3
     ];
 
     let normals: Vec<Vec3> = vec![

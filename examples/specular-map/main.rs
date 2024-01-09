@@ -7,10 +7,10 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    image::TextureMap,
     material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
+    texture::TextureMap,
     vec::vec3::Vec3,
 };
 

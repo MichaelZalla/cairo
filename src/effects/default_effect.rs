@@ -1,10 +1,10 @@
 use crate::{
     color::{self, Color},
     effect::Effect,
-    image::{sample_bilinear, sample_nearest},
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+    texture::{sample_bilinear, sample_nearest},
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
