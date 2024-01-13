@@ -6,6 +6,7 @@ use sdl2::render::TextureAccess;
 use crate::context::ApplicationRenderingContext;
 use crate::debug_print;
 
+pub mod cubemap;
 pub mod sample;
 pub mod uv;
 

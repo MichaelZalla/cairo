@@ -133,6 +133,15 @@ impl ops::MulAssign<Vec4> for Vec4 {
 }
 
 impl Vec4 {
+    pub fn abs(self) -> Self {
+        Vec4 {
+            x: self.x.abs(),
+            y: self.y.abs(),
+            z: self.z.abs(),
+            w: self.w.abs(),
+        }
+    }
+
     pub fn mag(self) -> f32 {
         return ((self.x.powi(2) + self.y.powi(2) + self.z.powi(2)) / 2.0).sqrt();
     }

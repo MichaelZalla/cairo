@@ -1,6 +1,8 @@
 use crate::{
     material::{cache::MaterialCache, Material},
     mesh::Face,
+    scene::camera::Camera,
+    texture::cubemap::CubeMap,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -18,6 +20,8 @@ static NEAR: f32 = 0.5;
 static NEAR_RECIPROCAL: f32 = 1.0 / NEAR;
 static FAR: f32 = 10000.0;
 static FAR_RECIPROCAL: f32 = 1.0 / FAR;
+
+static Z_BUFFER_MAX_DEPTH: f32 = 1.0;
 
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
@@ -53,7 +57,7 @@ where
         let mut z_buffer: Vec<f32> = Vec::with_capacity(z_buffer_size);
 
         for _ in 0..z_buffer_size {
-            z_buffer.push(f32::MAX);
+            z_buffer.push(Z_BUFFER_MAX_DEPTH);
         }
 
         let buffer_width_over_2 = (graphics.buffer.width as f32) / 2.0;
@@ -101,13 +105,77 @@ where
         self.effect.set_active_material(None);
     }
 
+    pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
+        for (index, z_non_linear) in self.z_buffer.iter().enumerate() {
+            // If this pixel was not shaded by our fragment shader
+
+            if *z_non_linear == Z_BUFFER_MAX_DEPTH {
+                // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
+
+                let pixel_coordinate_screen_space = Vec3 {
+                    x: index as f32 % self.graphics.buffer.width as f32,
+                    y: index as f32 / self.graphics.buffer.width as f32,
+                    z: 0.0,
+                };
+
+                let pixel_coordinate_ndc_space = Vec4 {
+                    x: pixel_coordinate_screen_space.x / self.graphics.buffer.width as f32,
+                    y: pixel_coordinate_screen_space.y / self.graphics.buffer.height as f32,
+                    z: -1.0,
+                    w: 1.0,
+                };
+
+                // Transform our screen-space coordinate by the camera's inverse projection.
+
+                let pixel_coordinate_projection_space =
+                    pixel_coordinate_ndc_space * camera.get_projection_inverse();
+
+                // Camera-direction vector in camera-view-space: (0, 0, -1)
+
+                // Compute pixel coordinate in camera-view-space.
+
+                // Near-plane coordinates in camera-view-space:
+                //
+                //  x: -1 to 1
+                //  y: -1 to 1 (y is up)
+                //  z: -1 (near) to 1 (far)
+
+                let pixel_coordinate_camera_view_space: Vec4 = Vec4 {
+                    x: -1.0 + pixel_coordinate_projection_space.x * 2.0,
+                    y: -1.0 + (1.0 - pixel_coordinate_projection_space.y) * 2.0,
+                    z: 1.0,
+                    w: 1.0, // ???????
+                };
+
+                // Transform camera-view-space coordinate to world-space coordinate.
+
+                // Note: Treating the camera's position as the world-space origin.
+
+                let pixel_coordinate_world_space =
+                    pixel_coordinate_camera_view_space * camera.get_view_rotation_transform();
+
+                let normal = pixel_coordinate_world_space.as_normal();
+
+                // Sample the cubemap using our world-space direction-offset.
+
+                let color = skybox.sample(&normal);
+
+                self.graphics.set_pixel(
+                    pixel_coordinate_screen_space.x as u32,
+                    pixel_coordinate_screen_space.y as u32,
+                    color,
+                );
+            }
+        }
+    }
+
     pub fn clear_pixel_buffer(&mut self) {
         self.graphics.buffer.clear(color::BLACK);
     }
 
     pub fn clear_z_buffer(&mut self) {
         for i in 0..self.z_buffer.len() {
-            self.z_buffer[i] = f32::MAX;
+            self.z_buffer[i] = Z_BUFFER_MAX_DEPTH;
         }
     }
 

@@ -82,6 +82,23 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example skybox",
+      "windows": {
+        "command": "cargo run --example skybox"
+      },
+      "osx": {
+        "command": "cargo run --example skybox"
+      },
+      "linux": {
+        "command": "cargo run --example skybox"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example specular-map",
       "windows": {
         "command": "cargo run --example specular-map"

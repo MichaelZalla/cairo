@@ -19,6 +19,7 @@ pub struct Camera {
     projection_z_near: f32,
     projection_z_far: f32,
     projection_transform: Mat4,
+    projection_inverse_transform: Mat4,
     position: Vec3,
     forward: Vec3,
     up: Vec3,
@@ -31,10 +32,18 @@ pub struct Camera {
 impl Camera {
     pub fn new(aspect_ratio: f32, position: Vec3, target: Vec3) -> Self {
         let field_of_view = 75.0;
+
         let projection_z_near = 0.3;
         let projection_z_far = 1000.0;
 
         let projection_transform = Mat4::projection_for_fov(
+            field_of_view,
+            aspect_ratio,
+            projection_z_near,
+            projection_z_far,
+        );
+
+        let projection_inverse_transform = Mat4::projection_inverse_for_fov(
             field_of_view,
             aspect_ratio,
             projection_z_near,
@@ -48,6 +57,7 @@ impl Camera {
             projection_z_far,
             movement_speed: 50.0,
             projection_transform,
+            projection_inverse_transform,
             position,
             forward: vec3::FORWARD,
             up: vec3::UP,
@@ -158,8 +168,24 @@ impl Camera {
         self.get_lookat_matrix()
     }
 
+    pub fn get_view_rotation_transform(&self) -> Mat4 {
+        let (f, r, u) = (self.forward, self.right, self.up);
+
+        Mat4::new_from_elements([
+            // Row-major ordering
+            [r.x, r.y, r.z, 0.0],
+            [u.x, u.y, u.z, 0.0],
+            [f.x, f.y, f.z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn get_projection(&self) -> Mat4 {
         self.projection_transform
+    }
+
+    pub fn get_projection_inverse(&self) -> Mat4 {
+        self.projection_inverse_transform
     }
 
     pub fn update(
@@ -189,6 +215,13 @@ impl Camera {
             self.field_of_view = self.field_of_view.max(1.0).min(120.0);
 
             self.projection_transform = Mat4::projection_for_fov(
+                self.field_of_view,
+                self.aspect_ratio,
+                self.projection_z_near,
+                self.projection_z_far,
+            );
+
+            self.projection_inverse_transform = Mat4::projection_inverse_for_fov(
                 self.field_of_view,
                 self.aspect_ratio,
                 self.projection_z_near,
