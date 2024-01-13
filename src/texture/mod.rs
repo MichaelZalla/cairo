@@ -4,6 +4,7 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
 use crate::context::ApplicationRenderingContext;
+use crate::debug_print;
 
 pub mod sample;
 pub mod uv;
@@ -18,9 +19,10 @@ pub struct TextureMap {
     pub info: TextureMapInfo,
     pub is_loaded: bool,
     pub is_tileable: bool,
+    pub is_mipmapped: bool,
     pub width: u32,
     pub height: u32,
-    pub pixel_data: Vec<u8>,
+    pub levels: Vec<Vec<u8>>,
 }
 
 impl TextureMap {
@@ -33,14 +35,15 @@ impl TextureMap {
             },
             is_loaded: false,
             is_tileable: false,
+            is_mipmapped: false,
             width: 0,
             height: 0,
-            pixel_data: vec![],
+            levels: vec![],
         }
     }
 
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
-        // Load the map's pixel data on-demand
+        // Load the map's native-sized pixel data on-demand.
 
         let mut canvas = rendering_context.canvas.write().unwrap();
 
@@ -74,14 +77,62 @@ impl TextureMap {
                     .read_pixels(None, PixelFormatEnum::RGB24)
                     .unwrap();
 
-                self.pixel_data.resize(pixels.len(), 0);
-                self.pixel_data.copy_from_slice(pixels.as_slice());
+                let mut native_sized_pixel_data: Vec<u8> = vec![];
+
+                native_sized_pixel_data.resize(pixels.len(), 0);
+
+                native_sized_pixel_data.copy_from_slice(pixels.as_slice());
+
+                self.levels.push(native_sized_pixel_data);
             })
             .unwrap();
 
         self.is_loaded = true;
 
+        if self.is_mipmapped && self.levels.len() == 0 {
+            self.make_mipmaps()?
+        }
+
         Ok(())
+    }
+
+    pub fn enable_mipmapping(&mut self) -> Result<(), String> {
+        if self.is_mipmapped {
+            debug_print!("Called Texture::enable_mipmapping() on a Texture that already has mipmapping enabled!");
+            return Ok(());
+        }
+
+        // Validate that this texture is suitable for mipmapping.
+        let levels = (self.width as f32).log2() + 1.0;
+
+        if self.width != self.height || levels.fract() != 0.0 {
+            return Err(String::from("Called TextureMap::make_mipmaps() on a texture whose dimensions do not support mipmapping."));
+        }
+
+        self.is_mipmapped = true;
+
+        if !self.is_loaded {
+            // If the texture isn't yet loaded, return.
+
+            return Ok(());
+        }
+
+        // Otherwise, generate the data for each mipmap level.
+        self.make_mipmaps()
+    }
+
+    fn make_mipmaps(&mut self) -> Result<(), String> {
+        let levels = (self.width as f32).log2() + 1.0;
+
+        // Generate each level of our mipmapped texture
+        for level_index in 1..levels as usize {
+            let dimension = self.width as u32 / (2 as u32).pow(level_index as u32);
+
+            self.levels
+                .push(get_half_scaled(dimension, self.levels.last().unwrap()));
+        }
+
+        return Ok(());
     }
 
     pub fn map<T>(&mut self, mut callback: T) -> Result<(), String>
@@ -92,18 +143,66 @@ impl TextureMap {
             return Err("Called TextureMap::map() on an unloaded texture!".to_string());
         }
 
+        let native_sized_pixel_data = &mut self.levels[0];
+
         for i in 0..(self.width * self.height) as usize {
-            let r = self.pixel_data[i * 3];
-            let g = self.pixel_data[i * 3 + 1];
-            let b = self.pixel_data[i * 3 + 2];
+            let r = native_sized_pixel_data[i * 3];
+            let g = native_sized_pixel_data[i * 3 + 1];
+            let b = native_sized_pixel_data[i * 3 + 2];
 
             let (r_new, g_new, b_new) = callback(r, g, b);
 
-            self.pixel_data[i * 3] = r_new;
-            self.pixel_data[i * 3 + 1] = g_new;
-            self.pixel_data[i * 3 + 2] = b_new;
+            native_sized_pixel_data[i * 3] = r_new;
+            native_sized_pixel_data[i * 3 + 1] = g_new;
+            native_sized_pixel_data[i * 3 + 2] = b_new;
         }
 
         Ok(())
     }
+}
+
+fn get_half_scaled(half_scaled_dimension: u32, pixel_data: &Vec<u8>) -> Vec<u8> {
+    let mut result: Vec<u8> = vec![];
+
+    let full_scale_stride = half_scaled_dimension as usize * 2 * TextureMap::BYTES_PER_PIXEL;
+
+    let half_scale_stride = half_scaled_dimension as usize * TextureMap::BYTES_PER_PIXEL;
+    let half_scaled_pixel_count = half_scaled_dimension as usize * half_scaled_dimension as usize;
+
+    result.resize(half_scaled_pixel_count * TextureMap::BYTES_PER_PIXEL, 255);
+
+    for small_y in 0..half_scaled_dimension as usize {
+        for small_x in 0..half_scaled_dimension as usize {
+            let big_y = small_y * 2;
+            let big_x = small_x * 2;
+
+            let mut r: u32 = 0;
+            let mut g: u32 = 0;
+            let mut b: u32 = 0;
+
+            let top_left = big_y * full_scale_stride + big_x * TextureMap::BYTES_PER_PIXEL;
+            let top_right = top_left + TextureMap::BYTES_PER_PIXEL;
+            let bottom_left = top_left + full_scale_stride;
+            let bottom_right = bottom_left + TextureMap::BYTES_PER_PIXEL;
+
+            for index in [top_left, top_right, bottom_left, bottom_right].iter() {
+                r += pixel_data[*index] as u32;
+                g += pixel_data[*index + 1] as u32;
+                b += pixel_data[*index + 2] as u32;
+            }
+
+            let half_scaled_index =
+                small_y * half_scale_stride + small_x * TextureMap::BYTES_PER_PIXEL;
+
+            let r_u8 = (r as f32 / 4.0) as u8;
+            let g_u8 = (g as f32 / 4.0) as u8;
+            let b_u8 = (b as f32 / 4.0) as u8;
+
+            result[half_scaled_index] = r_u8;
+            result[half_scaled_index + 1] = g_u8;
+            result[half_scaled_index + 2] = b_u8;
+        }
+    }
+
+    return result;
 }

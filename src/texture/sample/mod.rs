@@ -4,7 +4,7 @@ use crate::vec::vec2::Vec2;
 
 use super::TextureMap;
 
-pub fn sample_nearest(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
+pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
     // Wraps UV coordinates into the range [0.0, 1.0).
@@ -23,19 +23,30 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     };
 
     debug_assert!(
-        map.pixel_data.len()
+        map.levels[0].len()
             == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
     );
 
+    // Determine our map dimensions, based on the level index.
+    let level_width = match level_index {
+        Some(index) => map.width / (2 as u32).pow(index as u32),
+        None => map.width,
+    };
+
+    let level_height = match level_index {
+        Some(index) => map.height / (2 as u32).pow(index as u32),
+        None => map.height,
+    };
+
     // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
 
-    let texel_x = (1.0 - wrapped_uv.x) * (map.width - 1) as f32;
-    let texel_y = (1.0 - wrapped_uv.y) * (map.height - 1) as f32;
+    let texel_x = (1.0 - wrapped_uv.x) * (level_width - 1) as f32;
+    let texel_y = (1.0 - wrapped_uv.y) * (level_height - 1) as f32;
 
-    return sample_from_texel((texel_x, texel_y), map);
+    return sample_from_texel((texel_x, texel_y), map, level_index);
 }
 
-pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
+pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
     // Wraps UV coordinates into the range [0.0, 1.0).
@@ -53,15 +64,37 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
         z: 1.0,
     };
 
+    // Determine our map dimensions, based on the level index.
+    let level_width = match level_index {
+        Some(index) => map.width / (2 as u32).pow(index as u32),
+        None => map.width,
+    };
+
+    let level_height = match level_index {
+        Some(index) => map.height / (2 as u32).pow(index as u32),
+        None => map.height,
+    };
+
     debug_assert!(
-        map.pixel_data.len()
-            == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
+        level_index == None || level_index.unwrap() < map.levels.len(),
+        "map={}, level_index={}, map.levels.len={}",
+        map.info.filepath,
+        level_index.unwrap(),
+        map.levels.len(),
+    );
+
+    debug_assert!(
+        level_width > 0 && level_height > 0,
+        "map={}, level_width={}, level_height={}",
+        map.info.filepath,
+        level_width,
+        level_height
     );
 
     // Maps the wrapped UV coordinate to a fractional texel coordinate.
     let wrapped_uv_as_fractional_texel = Vec2 {
-        x: ((1.0 - uv_safe.x) * (map.width - 1) as f32),
-        y: ((1.0 - uv_safe.y) * (map.height - 1) as f32),
+        x: ((1.0 - uv_safe.x) * (level_width - 1) as f32),
+        y: ((1.0 - uv_safe.y) * (level_height - 1) as f32),
         z: 1.0,
     };
 
@@ -74,7 +107,7 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     let g: f32;
     let b: f32;
 
-    let nearest_neighbors = get_neighbors(wrapped_uv_as_fractional_texel, map);
+    let nearest_neighbors = get_neighbors(wrapped_uv_as_fractional_texel, map, level_index);
 
     match nearest_neighbors {
         // Case: One neighbor (top-left)
@@ -87,14 +120,14 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
         (None, None, Some(texel), None) |
 
         // Case: One neighbor (bottom-right)
-        (None, None, None, Some(texel)) => return sample_from_texel(texel, map),
+        (None, None, None, Some(texel)) => return sample_from_texel(texel, map, level_index),
 
         // Case: Two neighbors (left column)
         (Some(top_left), None, Some(bottom_left), None) => {
             // Interpolate between top_left and bottom_left (based on uv.y).
 
-            let sample_a = sample_from_texel(top_left, map);
-            let sample_b = sample_from_texel(bottom_left, map);
+            let sample_a = sample_from_texel(top_left, map, level_index);
+            let sample_b = sample_from_texel(bottom_left, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.y - top_left.1;
 
@@ -107,8 +140,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
         (None, Some(top_right), None, Some(bottom_right)) => {
             // Interpolate between top_right and bottom_right (based on uv.y).
 
-            let sample_a = sample_from_texel(top_right, map);
-            let sample_b = sample_from_texel(bottom_right, map);
+            let sample_a = sample_from_texel(top_right, map, level_index);
+            let sample_b = sample_from_texel(bottom_right, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.y - top_right.1;
 
@@ -121,8 +154,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
         (Some(top_left), Some(top_right), None, None) => {
             // Interpolate between top_left and top_right (based on uv.x).
 
-            let sample_a = sample_from_texel(top_left, map);
-            let sample_b = sample_from_texel(top_right, map);
+            let sample_a = sample_from_texel(top_left, map, level_index);
+            let sample_b = sample_from_texel(top_right, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.x - top_left.0;
 
@@ -135,8 +168,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
         (None, None, Some(bottom_left), Some(bottom_right)) => {
             // Interpolate between bottom_left and bottom_right (based on uv.x).
 
-            let sample_a = sample_from_texel(bottom_left, map);
-            let sample_b = sample_from_texel(bottom_right, map);
+            let sample_a = sample_from_texel(bottom_left, map, level_index);
+            let sample_b = sample_from_texel(bottom_right, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.x - bottom_left.0;
 
@@ -151,8 +184,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
             let alpha_y = wrapped_uv_as_fractional_texel.y - top_left.1;
 
             // 1. Interpolate between top_left and top_right (based on uv.x).
-            let sample_a_1 = sample_from_texel(top_left, map);
-            let sample_b_1 = sample_from_texel(top_right, map);
+            let sample_a_1 = sample_from_texel(top_left, map, level_index);
+            let sample_b_1 = sample_from_texel(top_right, map, level_index);
 
             let r_1 = sample_a_1.0 as f32 + (sample_b_1.0 as f32 - sample_a_1.0 as f32) * alpha_x;
             let g_1 = sample_a_1.1 as f32 + (sample_b_1.1 as f32 - sample_a_1.1 as f32) * alpha_x;
@@ -160,8 +193,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
 
             // 2. Interpolate between bottom_left and bottom_right (based on uv.x).
 
-            let sample_a_2 = sample_from_texel(bottom_left, map);
-            let sample_b_2 = sample_from_texel(bottom_right, map);
+            let sample_a_2 = sample_from_texel(bottom_left, map, level_index);
+            let sample_b_2 = sample_from_texel(bottom_right, map, level_index);
 
             let r_2 = sample_a_2.0 as f32 + (sample_b_2.0 as f32 - sample_a_2.0 as f32) * alpha_x;
             let g_2 = sample_a_2.1 as f32 + (sample_b_2.1 as f32 - sample_a_2.1 as f32) * alpha_x;
@@ -187,11 +220,29 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap) -> (u8, u8, u8) {
     (r as u8, g as u8, b as u8)
 }
 
-fn sample_from_texel(texel: (f32, f32), map: &TextureMap) -> (u8, u8, u8) {
-    let texel_color_index =
-        TextureMap::BYTES_PER_PIXEL * (texel.1 as u32 * map.width + texel.0 as u32) as usize;
+fn sample_from_texel(
+    texel: (f32, f32),
+    map: &TextureMap,
+    level_index: Option<usize>,
+) -> (u8, u8, u8) {
+    // Determine our map width based on the level index
+    let level_width = match level_index {
+        Some(index) => map.width / (2 as u32).pow(index as u32),
+        None => map.width,
+    };
 
-    let pixels = &map.pixel_data;
+    let texel_color_index =
+        TextureMap::BYTES_PER_PIXEL * (texel.1 as u32 * level_width + texel.0 as u32) as usize;
+
+    let pixels = match level_index {
+        Some(index) => {
+            if index >= map.levels.len() {
+                panic!();
+            }
+            &map.levels[index]
+        }
+        None => &map.levels[0],
+    };
 
     debug_assert!(texel_color_index < pixels.len());
 
@@ -205,6 +256,7 @@ fn sample_from_texel(texel: (f32, f32), map: &TextureMap) -> (u8, u8, u8) {
 pub fn get_neighbors(
     fractional_texel: Vec2,
     map: &TextureMap,
+    level_index: Option<usize>,
 ) -> (
     Option<(f32, f32)>,
     Option<(f32, f32)>,
@@ -261,25 +313,28 @@ pub fn get_neighbors(
         bottom_right = (nearest_x + 1.0, nearest_y + 1.0);
     }
 
-    // Determine each neighboring texel's contribution.
+    // Determine our map dimensions, based on the level index.
+    let level_width = match level_index {
+        Some(index) => (map.width / (2 as u32).pow(index as u32)) as f32,
+        None => map.width as f32,
+    };
 
-    if map.is_tileable {
+    let level_height = match level_index {
+        Some(index) => (map.height / (2 as u32).pow(index as u32)) as f32,
+        None => map.height as f32,
+    };
+
+    if map.is_tileable || level_width == 1.0 {
         return (
+            Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
+            Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),
             Some((
-                top_left.0.rem(map.width as f32),
-                top_left.1.rem(map.height as f32),
+                bottom_left.0.rem(level_width),
+                bottom_left.1.rem(level_height),
             )),
             Some((
-                top_right.0.rem(map.width as f32),
-                top_right.1.rem(map.height as f32),
-            )),
-            Some((
-                bottom_left.0.rem(map.width as f32),
-                bottom_left.1.rem(map.height as f32),
-            )),
-            Some((
-                bottom_right.0.rem(map.width as f32),
-                bottom_right.1.rem(map.height as f32),
+                bottom_right.0.rem(level_width),
+                bottom_right.1.rem(level_height),
             )),
         );
     }
@@ -290,17 +345,17 @@ pub fn get_neighbors(
         } else {
             None
         },
-        if top_right.0 < (map.width - 1) as f32 && top_right.1 >= 0.0 {
+        if top_right.0 < (level_width - 1.0) && top_right.1 >= 0.0 {
             Some((top_right.0, top_right.1))
         } else {
             None
         },
-        if bottom_left.0 >= 0.0 && bottom_left.1 < (map.height - 1) as f32 {
+        if bottom_left.0 >= 0.0 && bottom_left.1 < (level_height - 1.0) {
             Some((bottom_left.0, bottom_left.1))
         } else {
             None
         },
-        if bottom_right.0 < (map.width - 1) as f32 && bottom_right.1 < (map.height - 1) as f32 {
+        if bottom_right.0 < (level_width - 1.0) && bottom_right.1 < (level_height - 1.0) {
             Some((bottom_right.0, bottom_right.1))
         } else {
             None
