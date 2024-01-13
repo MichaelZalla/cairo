@@ -22,6 +22,7 @@ pub struct Material {
     pub specular_exponent: i32, // aka "shininess"
     pub specular_map: Option<TextureMap>,
     pub emissive_color: Vec3,
+    pub emissive_map: Option<TextureMap>,
     pub dissolve: f32,
     pub transparency: f32,
     pub alpha_map: Option<TextureMap>,
@@ -62,6 +63,12 @@ impl Material {
 
         // Specular map
         match &mut self.specular_map {
+            Some(map) => map.load(rendering_context)?,
+            None => (),
+        }
+
+        // Emissive map
+        match &mut self.emissive_map {
             Some(map) => map.load(rendering_context)?,
             None => (),
         }
@@ -148,6 +155,13 @@ impl fmt::Display for Material {
             "  > Emissive color: {}",
             color::Color::from_vec3(self.emissive_color)
         )?;
+
+        match &self.emissive_map {
+            Some(map) => {
+                writeln!(v, "  > Emissive map: {}", map.info.filepath)?;
+            }
+            None => (),
+        }
 
         writeln!(v, "  > Dissolve: {}", self.dissolve)?;
 

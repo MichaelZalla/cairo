@@ -277,12 +277,31 @@ impl Effect for DefaultEffect {
 
         let spot_light_contribution = self.spot_light.contribute(out.world_pos);
 
+        // Calculate emissive light contribution
+
+        let mut emissive_light_contribution: Vec3 = Default::default();
+
+        match self.active_material {
+            Some(mat_raw_mut) => unsafe {
+                match &(*mat_raw_mut).emissive_map {
+                    Some(texture) => {
+                        let (r, g, b) = sample_nearest(out.uv, texture, None);
+
+                        emissive_light_contribution = Color::rgb(r, g, b).to_vec3() / 255.0;
+                    }
+                    None => emissive_light_contribution = (*mat_raw_mut).emissive_color,
+                }
+            },
+            None => (),
+        }
+
         // Combine light intensities
 
         let total_contribution = ambient_contribution
             + directional_light_contribution
             + point_light_contribution
-            + spot_light_contribution;
+            + spot_light_contribution
+            + emissive_light_contribution;
 
         // @TODO Honor each material's ambient, diffuse, and specular colors.
 

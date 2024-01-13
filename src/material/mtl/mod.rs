@@ -218,6 +218,11 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 println!("@TODO Implementation for \"{}\".", "map_Ks");
                             }
 
+                            // Emissive color map
+                            "map_ke" => {
+                                println!("@TODO Implementation for \"{}\".", "map_Ke");
+                            }
+
                             // Alpha map
                             "map_d" => {
                                 let mtl_relative_filepath =

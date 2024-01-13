@@ -96,6 +96,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example emissive-map",
+      "windows": {
+        "command": "cargo run --example emissive-map"
+      },
+      "linux": {
+        "command": "cargo run --example emissive-map"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example sponza",
       "windows": {
         "command": "cargo run --example sponza"
