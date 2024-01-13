@@ -100,7 +100,7 @@ fn main() -> Result<(), String> {
 
                 // Blit panel pixels (local space) onto global pixels
 
-                graphics.blit(
+                graphics.buffer.blit(
                     panel_info.x,
                     panel_info.y,
                     panel_info.width,

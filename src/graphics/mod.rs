@@ -32,6 +32,22 @@ impl PixelBuffer {
         }
         self
     }
+
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, pixels: &Vec<u32>) -> () {
+        debug_assert!(pixels.len() as u32 == width * height);
+
+        for x in left..(left + width) {
+            for y in top..(top + height) {
+                let src_pixel_index = ((y - top) * width + (x - left)) as usize;
+
+                let src_pixel_value = pixels[src_pixel_index];
+
+                let dest_pixel_index = (y * self.width + x) as usize;
+
+                self.pixels[dest_pixel_index] = src_pixel_value;
+            }
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -162,20 +178,6 @@ impl Graphics {
                     p[i + 1].y as u32,
                     color,
                 );
-            }
-        }
-    }
-
-    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, pixels: &Vec<u32>) -> () {
-        for x in left..(left + width) {
-            for y in top..(top + height) {
-                let src_pixel_index = ((y - top) * width + (x - left)) as usize;
-
-                let src_pixel_value = pixels[src_pixel_index];
-
-                let dest_pixel_index = (y * self.buffer.width + x) as usize;
-
-                self.buffer.pixels[dest_pixel_index] = src_pixel_value;
             }
         }
     }
