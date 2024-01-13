@@ -480,7 +480,7 @@ where
         self.z_buffer[index] = non_linear_z;
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, z: f32, interpolant: &mut T::VertexOut) {
+    fn set_pixel(&mut self, x: u32, y: u32, interpolant: &mut T::VertexOut) {
         if x > (self.graphics.buffer.width - 1)
             || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32
                 - 1)
@@ -508,117 +508,128 @@ where
         }
     }
 
-    fn flat_top_triangle_fill(&mut self, v0: T::VertexOut, v1: T::VertexOut, v2: T::VertexOut) {
-        // @NOTE(mzalla) v0 as top-left vertex
-        // @NOTE(mzalla) v1 as top-right vertex
-        // @NOTE(mzalla) v2 as bottom vertex
+    fn flat_top_triangle_fill(
+        &mut self,
+        top_left: T::VertexOut,
+        top_right: T::VertexOut,
+        bottom: T::VertexOut,
+    ) {
+        let delta_y = bottom.p.y - top_left.p.y;
 
-        let left_step_x = (v2.p.x - v0.p.x) / (v2.p.y - v0.p.y);
-        let right_step_x = (v2.p.x - v1.p.x) / (v2.p.y - v1.p.y);
+        // Calculate the change (step) for left and right sides, as we
+        // rasterize downwards with each scanline.
+        let top_left_step = (bottom - top_left) / delta_y;
+        let top_right_step = (bottom - top_right) / delta_y;
 
-        let left_step_z = (v2.p.z - v0.p.z) / (v2.p.y - v0.p.y);
-        let right_step_z = (v2.p.z - v1.p.z) / (v2.p.y - v1.p.y);
+        // Create the right edge interpolant.
+        let mut right_edge_interpolant = top_right;
 
-        let y_start = ((v0.p.y - 0.5).ceil() as u32)
-            .max(0)
-            .min(self.graphics.buffer.height - 1);
-        let y_end = ((v2.p.y - 0.5).ceil() as u32).min(self.graphics.buffer.height - 1);
-
-        let mut lhs = v0.clone();
-        let lhs_step = (v2 - v0) / (y_end - y_start) as f32;
-
-        let mut rhs = v1.clone();
-        let rhs_step = (v2 - v1) / (y_end - y_start) as f32;
-
-        for y in y_start..y_end {
-            let delta_y = y as f32 + 0.5 - v0.p.y;
-
-            let x_left = v0.p.x + left_step_x * delta_y;
-            let x_right = v1.p.x + right_step_x * delta_y;
-            let x_span = x_right - x_left;
-
-            let z_start: f32 = v0.p.z + left_step_z * delta_y;
-            let z_end: f32 = v1.p.z + right_step_z * delta_y;
-            let z_span: f32 = z_end - z_start;
-
-            let x_start = ((x_left - 0.5).ceil() as u32)
-                .max(0)
-                .min(self.graphics.buffer.width - 1);
-            let x_end = ((x_right - 0.5).ceil() as u32).min(self.graphics.buffer.width - 1);
-
-            let mut cursor = lhs.clone();
-            let cursor_step = (rhs - cursor) / (x_end - x_start) as f32;
-
-            for x in x_start..x_end {
-                let x_relative = x - x_start;
-                let x_progress: f32 = x_relative as f32 / x_span as f32;
-
-                let z = z_start + z_span * x_progress;
-
-                self.set_pixel(x, y, z, &mut cursor);
-
-                cursor = cursor + cursor_step;
-            }
-
-            lhs = lhs + lhs_step;
-            rhs = rhs + rhs_step;
-        }
+        self.flat_triangle_fill(
+            &top_left,
+            // &top_right,
+            &bottom,
+            &top_left_step,
+            &top_right_step,
+            &mut right_edge_interpolant,
+        );
     }
 
-    fn flat_bottom_triangle_fill(&mut self, v0: T::VertexOut, v1: T::VertexOut, v2: T::VertexOut) {
-        // @NOTE(mzalla) v0 as top vertex
-        // @NOTE(mzalla) v1 as bottom-left vertex
-        // @NOTE(mzalla) v2 as bottom-right vertex
+    fn flat_bottom_triangle_fill(
+        &mut self,
+        top: T::VertexOut,
+        bottom_left: T::VertexOut,
+        bottom_right: T::VertexOut,
+    ) {
+        let delta_y = bottom_right.p.y - top.p.y;
 
-        let left_step_x = (v1.p.x - v0.p.x) / (v1.p.y - v0.p.y);
-        let right_step_x = (v2.p.x - v0.p.x) / (v2.p.y - v0.p.y);
+        // Calculate the change (step) for both left and right sides, as we
+        // rasterize downwards with each scanline.
+        let bottom_left_step = (bottom_left - top) / delta_y;
+        let bottom_right_step = (bottom_right - top) / delta_y;
 
-        let left_step_z = (v1.p.z - v0.p.z) / (v1.p.y - v0.p.y);
-        let right_step_z = (v2.p.z - v0.p.z) / (v2.p.y - v0.p.y);
+        // Create the right edge interpolant.
+        let mut right_edge_interpolant = top;
 
-        let y_start = ((v0.p.y - 0.5).ceil() as u32)
-            .max(0)
-            .min(self.graphics.buffer.height - 1);
-        let y_end = ((v2.p.y - 0.5).ceil() as u32).min(self.graphics.buffer.height - 1);
+        self.flat_triangle_fill(
+            &top,
+            // &bottom_left,
+            &bottom_right,
+            &bottom_left_step,
+            &bottom_right_step,
+            &mut right_edge_interpolant,
+        );
+    }
 
-        let mut lhs = v0.clone();
-        let lhs_step = (v1 - v0) / (y_end - y_start) as f32;
+    fn flat_triangle_fill(
+        &mut self,
+        it0: &T::VertexOut,
+        // it1: &T::VertexOut,
+        it2: &T::VertexOut,
+        left_step: &T::VertexOut,
+        right_step: &T::VertexOut,
+        right_edge_interpolant: &mut T::VertexOut,
+    ) {
+        // it0 will always be a top vertex.
+        // it1 is either a top or a bottom vertex.
+        // it2 will always be a bottom vertex.
 
-        let mut rhs = v0.clone();
-        let rhs_step = (v2 - v0) / (y_end - y_start) as f32;
+        // Case 1. Flat-top triangle:
+        //  - Left-edge interpolant begins at top-left vertex.
+        //  - Right-edge interpolant begins at top-right vertex.
 
+        // Case 2. Flat-bottom triangle:
+        //  - Left-edge and right-edge interpolants both begin at top vertex.
+
+        // Left edge is always it0
+        let mut left_edge_interpolant = it0.clone();
+
+        // Calculate our start and end Y (end here is non-inclusive), such that
+        // they are non-fractional screen coordinates.
+        let y_start: u32 = u32::max((it0.p.y - 0.5).ceil() as u32, 0);
+        let y_end: u32 = u32::min(
+            (it2.p.y - 0.5).ceil() as u32,
+            self.graphics.buffer.height - 1,
+        );
+
+        // Adjust both interpolants to account for us snapping y-start and y-end
+        // to their nearest whole pixel coordinates.
+        left_edge_interpolant += *left_step * (y_start as f32 + 0.5 - it0.p.y);
+        *right_edge_interpolant += *right_step * (y_start as f32 + 0.5 - it0.p.y);
+
+        // Rasterization loop
         for y in y_start..y_end {
-            let delta_y = y as f32 + 0.5 - v0.p.y;
+            // Calculate our start and end X (end here is non-inclusive), such
+            // that they are non-fractional screen coordinates.
+            let x_start = u32::max((left_edge_interpolant.p.x - 0.5).ceil() as u32, 0);
+            let x_end = u32::min(
+                (right_edge_interpolant.p.x - 0.5).ceil() as u32,
+                self.graphics.buffer.width - 1,
+            );
 
-            let x_left = v0.p.x + left_step_x * delta_y;
-            let x_right = v0.p.x + right_step_x * delta_y;
-            let x_span = x_right - x_left;
+            // Create an interpolant that we can move across our horizontal
+            // scanline.
+            let mut line_interpolant = left_edge_interpolant.clone();
 
-            let z_start: f32 = v0.p.z + left_step_z * delta_y;
-            let z_end: f32 = v0.p.z + right_step_z * delta_y;
-            let z_span: f32 = z_end - z_start;
+            // Calculate the width of our scanline, for this Y position.
+            let dx = right_edge_interpolant.p.x - left_edge_interpolant.p.x;
 
-            let x_start = ((x_left - 0.5).ceil() as u32)
-                .max(0)
-                .min(self.graphics.buffer.width - 1);
-            let x_end = ((x_right - 0.5).ceil() as u32).min(self.graphics.buffer.width - 1);
+            // Calculate the change (step) for our horizontal interpolant, based
+            // on the width of our scanline.
+            let line_interpolant_step = (*right_edge_interpolant - line_interpolant) / dx;
 
-            let mut cursor = lhs.clone();
-            let cursor_step = (rhs - cursor) / (x_end - x_start) as f32;
+            // Prestep our scanline interpolant to account for us snapping
+            // x-start and x-end to their nearest whole pixel coordinates.
+            line_interpolant +=
+                line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.p.x);
 
             for x in x_start..x_end {
-                let x_relative = x - x_start;
-                let x_progress: f32 = x_relative as f32 / x_span as f32;
+                self.set_pixel(x, y, &mut line_interpolant);
 
-                let z = z_start + z_span * x_progress;
-
-                self.set_pixel(x, y, z, &mut cursor);
-
-                cursor = cursor + cursor_step;
+                line_interpolant += line_interpolant_step;
             }
 
-            lhs = lhs + lhs_step;
-            rhs = rhs + rhs_step;
+            left_edge_interpolant += *left_step;
+            *right_edge_interpolant += *right_step;
         }
     }
 

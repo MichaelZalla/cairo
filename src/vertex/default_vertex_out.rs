@@ -1,6 +1,6 @@
 use std::{
     fmt::{Display, Formatter, Result},
-    ops::{Add, Div, Mul, MulAssign, Sub},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Sub},
 };
 
 use crate::vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4};
@@ -34,6 +34,16 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
             uv: self.uv + rhs.uv,
             world_pos: self.world_pos + rhs.world_pos,
         }
+    }
+}
+
+impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
+    fn add_assign(&mut self, rhs: DefaultVertexOut) {
+        self.p += rhs.p;
+        self.n += rhs.n;
+        self.c += rhs.c;
+        self.uv += rhs.uv;
+        self.world_pos += rhs.world_pos;
     }
 }
 
