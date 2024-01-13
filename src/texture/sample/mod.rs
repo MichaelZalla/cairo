@@ -1,3 +1,5 @@
+use std::ops::Rem;
+
 use crate::vec::vec2::Vec2;
 
 use super::TextureMap;
@@ -260,6 +262,27 @@ pub fn get_neighbors(
     }
 
     // Determine each neighboring texel's contribution.
+
+    if map.is_tileable {
+        return (
+            Some((
+                top_left.0.rem(map.width as f32),
+                top_left.1.rem(map.height as f32),
+            )),
+            Some((
+                top_right.0.rem(map.width as f32),
+                top_right.1.rem(map.height as f32),
+            )),
+            Some((
+                bottom_left.0.rem(map.width as f32),
+                bottom_left.1.rem(map.height as f32),
+            )),
+            Some((
+                bottom_right.0.rem(map.width as f32),
+                bottom_right.1.rem(map.height as f32),
+            )),
+        );
+    }
 
     (
         if top_left.0 >= 0.0 && top_left.1 >= 0.0 {

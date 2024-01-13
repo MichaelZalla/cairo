@@ -17,6 +17,7 @@ pub struct TextureMapInfo {
 pub struct TextureMap {
     pub info: TextureMapInfo,
     pub is_loaded: bool,
+    pub is_tileable: bool,
     pub width: u32,
     pub height: u32,
     pub pixel_data: Vec<u8>,
@@ -31,6 +32,7 @@ impl TextureMap {
                 filepath: filepath.to_string(),
             },
             is_loaded: false,
+            is_tileable: false,
             width: 0,
             height: 0,
             pixel_data: vec![],

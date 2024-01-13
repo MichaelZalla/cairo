@@ -42,6 +42,8 @@ fn main() -> Result<(), String> {
 
     // Checkerboard material
 
+    checkerboard_diffuse_map.is_tileable = true;
+
     checkerboard_diffuse_map.load(rendering_context)?;
 
     let checkerboard_specular_map = checkerboard_diffuse_map.clone();
