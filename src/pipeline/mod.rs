@@ -560,7 +560,6 @@ where
                 - 1)
         {
             // Prevents panic! inside of self.graphics.set_pixel();
-
             return;
         }
 
@@ -568,15 +567,14 @@ where
             Some((index, non_linear_z)) => {
                 let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
-                let result = self.effect.ps(&linear_space_interpolant);
-
-                match result {
-                    Some(color) => {
-                        self.graphics.set_pixel(x, y, color);
-                        self.set_z_buffer(index, non_linear_z);
-                    }
-                    None => (),
+                if self.effect.ts(&linear_space_interpolant) == false {
+                    return;
                 }
+
+                self.set_z_buffer(index, non_linear_z);
+
+                self.graphics
+                    .set_pixel(x, y, self.effect.ps(&linear_space_interpolant));
             }
             None => {}
         }

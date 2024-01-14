@@ -156,7 +156,7 @@ impl Effect for DefaultEffect {
         return out;
     }
 
-    fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Option<Color> {
+    fn ts(&self, interpolant: &<Self as Effect>::VertexOut) -> bool {
         let out = interpolant;
 
         // Check if this fragment can be discarded
@@ -169,7 +169,7 @@ impl Effect for DefaultEffect {
                         let (r, _g, _b) = sample_nearest(out.uv, texture, None);
 
                         if r < 4 {
-                            return None;
+                            return false;
                         }
                     }
                     None => (),
@@ -177,6 +177,12 @@ impl Effect for DefaultEffect {
             },
             None => (),
         }
+
+        return true;
+    }
+
+    fn ps(&self, interpolant: &<Self as Effect>::VertexOut) -> Color {
+        let out = interpolant;
 
         // Calculate all lighting contributions
 
@@ -329,11 +335,11 @@ impl Effect for DefaultEffect {
 
         color = *((color * total_contribution).saturate()) * 255.0;
 
-        return Some(Color {
+        return Color {
             r: color.x as u8,
             g: color.y as u8,
             b: color.z as u8,
             a: 255 as u8,
-        });
+        };
     }
 }
