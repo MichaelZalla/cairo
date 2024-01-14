@@ -52,11 +52,11 @@ where
     T: Effect,
 {
     pub fn new(graphics: Graphics, effect: T, options: PipelineOptions) -> Self {
-        let z_buffer_size: usize = (graphics.buffer.width * graphics.buffer.height) as usize;
+        let pixel_count: usize = (graphics.buffer.width * graphics.buffer.height) as usize;
 
-        let mut z_buffer: Vec<f32> = Vec::with_capacity(z_buffer_size);
+        let mut z_buffer: Vec<f32> = Vec::with_capacity(pixel_count);
 
-        for _ in 0..z_buffer_size {
+        for _ in 0..pixel_count {
             z_buffer.push(Z_BUFFER_MAX_DEPTH);
         }
 
