@@ -10,7 +10,7 @@ use cairo::{
     entity::Entity,
     graphics::Graphics,
     matrix::Mat4,
-    pipeline::{Pipeline, PipelineOptions},
+    pipeline::{options::PipelineOptions, Pipeline},
     scene::{
         camera::Camera,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},

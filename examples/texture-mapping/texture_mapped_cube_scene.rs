@@ -11,7 +11,7 @@ use cairo::{
     graphics::{Graphics, PixelBuffer},
     material::cache::MaterialCache,
     matrix::Mat4,
-    pipeline::{Pipeline, PipelineOptions},
+    pipeline::{options::PipelineOptions, Pipeline},
     scene::{
         camera::Camera,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},

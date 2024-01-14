@@ -6,7 +6,7 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-use self::zbuffer::ZBuffer;
+use self::{options::PipelineOptions, zbuffer::ZBuffer};
 
 use super::{
     color::{self, Color},
@@ -16,6 +16,7 @@ use super::{
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
+pub mod options;
 mod zbuffer;
 
 #[derive(Copy, Clone, Default)]
@@ -23,14 +24,6 @@ struct Triangle<T> {
     v0: T,
     v1: T,
     v2: T,
-}
-
-#[derive(Copy, Clone, Default)]
-pub struct PipelineOptions {
-    pub should_render_wireframe: bool,
-    pub should_render_shader: bool,
-    pub should_render_normals: bool,
-    pub should_cull_backfaces: bool,
 }
 
 pub struct Pipeline<T> {
