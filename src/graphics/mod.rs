@@ -26,6 +26,22 @@ impl PixelBuffer {
         };
     }
 
+    pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
+        if x > (self.width - 1) || y > (self.pixels.len() as u32 / self.width as u32 - 1) {
+            // panic!("Call to PixelBuffer.set_pixel() with invalid coordinate ({},{})!", x, y);
+            return;
+        }
+
+        let pixel_index = (y * self.width + x) as usize;
+
+        let r = color.r as u32;
+        let g = (color.g as u32).rotate_left(8);
+        let b = (color.b as u32).rotate_left(16);
+        let a = (color.a as u32).rotate_left(24);
+
+        self.pixels[pixel_index] = r | g | b | a;
+    }
+
     pub fn clear(&mut self, color: Color) -> &Self {
         for i in 0..self.pixels.len() {
             self.pixels[i] = color.to_u32();
@@ -68,24 +84,6 @@ impl Graphics {
         return &self.buffer.pixels;
     }
 
-    pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        if x > (self.buffer.width - 1)
-            || y > (self.buffer.pixels.len() as u32 / self.buffer.width as u32 - 1)
-        {
-            // panic!("Call to draw::set_pixel with invalid coordinate ({},{})!", x, y);
-            return;
-        }
-
-        let pixel_index = (y * self.buffer.width + x) as usize;
-
-        let r = color.r as u32;
-        let g = (color.g as u32).rotate_left(8);
-        let b = (color.b as u32).rotate_left(16);
-        let a = (color.a as u32).rotate_left(24);
-
-        self.buffer.pixels[pixel_index] = r | g | b | a;
-    }
-
     pub fn line(&mut self, mut x1: u32, mut y1: u32, mut x2: u32, mut y2: u32, color: Color) {
         // y = m*x + b
         // x = (y - b) / m
@@ -111,7 +109,7 @@ impl Graphics {
             let max_y = max(y1, y2);
 
             for y in min_y..max_y {
-                self.set_pixel(x1, y, color);
+                self.buffer.set_pixel(x1, y, color);
             }
         } else if y2 == y1 {
             // Horizontal line
@@ -122,7 +120,7 @@ impl Graphics {
             let max_x = max(x1, x2);
 
             for x in min_x..max_x {
-                self.set_pixel(x, y1, color);
+                self.buffer.set_pixel(x, y1, color);
             }
         } else {
             // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
@@ -143,7 +141,7 @@ impl Graphics {
 
                 // Vertical-ish line
                 for y in y1..y2 {
-                    self.set_pixel(((y as f32 - b) / m) as u32, y, color);
+                    self.buffer.set_pixel(((y as f32 - b) / m) as u32, y, color);
                 }
             } else {
                 if x2 < x1 {
@@ -154,7 +152,7 @@ impl Graphics {
 
                 // Horizontal-ish line
                 for x in x1..x2 {
-                    self.set_pixel(x, (m * x as f32 + b) as u32, color);
+                    self.buffer.set_pixel(x, (m * x as f32 + b) as u32, color);
                 }
             }
         }
@@ -214,7 +212,7 @@ impl Graphics {
                 let a = text_surface_pixels[text_surface_pixels_index + 3];
 
                 if a != 0 {
-                    self.set_pixel(
+                    self.buffer.set_pixel(
                         op.x + x,
                         op.y + y,
                         Color {

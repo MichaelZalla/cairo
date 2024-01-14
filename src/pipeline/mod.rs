@@ -166,7 +166,7 @@ where
 
                 let color = skybox.sample(&normal);
 
-                self.graphics.set_pixel(
+                self.graphics.buffer.set_pixel(
                     pixel_coordinate_screen_space.x as u32,
                     pixel_coordinate_screen_space.y as u32,
                     color,
@@ -559,7 +559,7 @@ where
             || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32
                 - 1)
         {
-            // Prevents panic! inside of self.graphics.set_pixel();
+            // Prevents panic! inside of self.graphics.buffer.set_pixel();
             return;
         }
 
@@ -574,6 +574,7 @@ where
                 self.set_z_buffer(index, non_linear_z);
 
                 self.graphics
+                    .buffer
                     .set_pixel(x, y, self.effect.ps(&linear_space_interpolant));
             }
             None => {}
