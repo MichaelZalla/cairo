@@ -81,6 +81,12 @@ where
         self.options = options;
     }
 
+    pub fn begin_frame(&mut self) {
+        self.clear_pixel_buffer();
+
+        self.clear_z_buffer();
+    }
+
     pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
         match &mesh.material_name {
             Some(name) => {

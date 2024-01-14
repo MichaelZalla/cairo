@@ -253,11 +253,7 @@ impl<'a> Scene for SponzaScene<'a> {
     }
 
     fn render(&mut self) {
-        self.pipeline.clear_pixel_buffer();
-
-        if self.pipeline_options.should_render_shader {
-            self.pipeline.clear_z_buffer();
-        }
+        self.pipeline.begin_frame();
 
         let r = self.entities.read().unwrap();
 
