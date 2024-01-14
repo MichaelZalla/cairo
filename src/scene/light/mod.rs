@@ -53,9 +53,7 @@ impl PointLight {
             quadratic_attenuation: 0.44,
         }
     }
-}
 
-impl PointLight {
     pub fn contribute(
         self,
         world_pos: Vec3,
