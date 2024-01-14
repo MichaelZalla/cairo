@@ -175,11 +175,11 @@ where
         }
     }
 
-    pub fn clear_pixel_buffer(&mut self) {
+    fn clear_pixel_buffer(&mut self) {
         self.graphics.buffer.clear(color::BLACK);
     }
 
-    pub fn clear_z_buffer(&mut self) {
+    fn clear_z_buffer(&mut self) {
         for i in 0..self.z_buffer.len() {
             self.z_buffer[i] = Z_BUFFER_MAX_DEPTH;
         }
