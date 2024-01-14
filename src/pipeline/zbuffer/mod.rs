@@ -1,15 +1,16 @@
-// @TODO Read near and far values from active camera.
-static NEAR: f32 = 0.5;
-static NEAR_RECIPROCAL: f32 = 1.0 / NEAR;
-static FAR: f32 = 10000.0;
-static FAR_RECIPROCAL: f32 = 1.0 / FAR;
-
 pub static MAX_DEPTH: f32 = 1.0;
 
-pub struct ZBuffer(pub Vec<f32>, usize);
+pub struct ZBuffer {
+    pub values: Vec<f32>,
+    stride: usize,
+    projection_z_near: f32,
+    projection_z_far: f32,
+    projection_z_near_reciprocal: f32,
+    projection_z_far_reciprocal: f32,
+}
 
 impl ZBuffer {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(width: u32, height: u32, projection_z_near: f32, projection_z_far: f32) -> Self {
         let len = width as usize * height as usize;
 
         let mut buffer: Vec<f32> = Vec::with_capacity(len);
@@ -18,19 +19,26 @@ impl ZBuffer {
             buffer.push(MAX_DEPTH);
         }
 
-        Self(buffer, width as usize)
+        Self {
+            values: buffer,
+            stride: width as usize,
+            projection_z_near,
+            projection_z_near_reciprocal: 1.0 / projection_z_near,
+            projection_z_far,
+            projection_z_far_reciprocal: 1.0 / projection_z_far,
+        }
     }
 
     pub fn clear(&mut self) {
-        for i in 0..self.0.len() {
-            self.0[i] = MAX_DEPTH;
+        for i in 0..self.values.len() {
+            self.values[i] = MAX_DEPTH;
         }
     }
 
     pub fn test(&mut self, x: u32, y: u32, z: f32) -> Option<(usize, f32)> {
-        let index = (y * self.1 as u32 + x) as usize;
+        let index = (y * self.stride as u32 + x) as usize;
 
-        if index >= self.0.len() {
+        if index >= self.values.len() {
             panic!(
                 "Call to ZBuffer.test() with invalid coordinate ({},{})!",
                 x, y
@@ -41,9 +49,11 @@ impl ZBuffer {
         // https://youtu.be/3xGKu4T4SCU?si=v7nkYrg2sFYozfZ5&t=139
 
         // (1/z - 1/n) / (1/f - 1/n)
-        let non_linear_z = (1.0 / z - NEAR_RECIPROCAL) / (FAR_RECIPROCAL - NEAR_RECIPROCAL);
 
-        if non_linear_z < self.0[index] {
+        let non_linear_z = (1.0 / z - self.projection_z_near_reciprocal)
+            / (self.projection_z_far_reciprocal - self.projection_z_near_reciprocal);
+
+        if non_linear_z < self.values[index] {
             Some((index, non_linear_z))
         } else {
             None
@@ -51,6 +61,6 @@ impl ZBuffer {
     }
 
     pub fn set(&mut self, index: usize, non_linear_z: f32) {
-        self.0[index] = non_linear_z;
+        self.values[index] = non_linear_z;
     }
 }

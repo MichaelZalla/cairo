@@ -116,6 +116,8 @@ impl<'a> MultipleScenesScene<'a> {
 
         let pipeline = Pipeline::new(
             graphics,
+            camera.get_projection_z_near(),
+            camera.get_projection_z_far(),
             DefaultEffect::new(
                 world_transform,
                 view_position,

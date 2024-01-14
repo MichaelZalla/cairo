@@ -46,8 +46,19 @@ impl<'a, T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pi
 where
     T: Effect,
 {
-    pub fn new(graphics: Graphics, effect: T, options: PipelineOptions) -> Self {
-        let z_buffer = ZBuffer::new(graphics.buffer.width, graphics.buffer.height);
+    pub fn new(
+        graphics: Graphics,
+        projection_z_near: f32,
+        projection_z_far: f32,
+        effect: T,
+        options: PipelineOptions,
+    ) -> Self {
+        let z_buffer = ZBuffer::new(
+            graphics.buffer.width,
+            graphics.buffer.height,
+            projection_z_near,
+            projection_z_far,
+        );
 
         let buffer_width_over_2 = (graphics.buffer.width as f32) / 2.0;
         let buffer_height_over_2 = (graphics.buffer.height as f32) / 2.0;
@@ -101,7 +112,7 @@ where
     }
 
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
-        for (index, z_non_linear) in self.z_buffer.0.iter().enumerate() {
+        for (index, z_non_linear) in self.z_buffer.values.iter().enumerate() {
             // If this pixel was not shaded by our fragment shader
 
             if *z_non_linear == zbuffer::MAX_DEPTH {

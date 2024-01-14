@@ -72,6 +72,14 @@ impl Camera {
         return camera;
     }
 
+    pub fn get_projection_z_near(&self) -> f32 {
+        self.projection_z_near
+    }
+
+    pub fn get_projection_z_far(&self) -> f32 {
+        self.projection_z_far
+    }
+
     pub fn set_projection_z_far(&mut self, far: f32) {
         self.projection_z_far = far;
 
