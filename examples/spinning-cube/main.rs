@@ -6,7 +6,7 @@ use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{Graphics, PixelBuffer},
+    graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
 };

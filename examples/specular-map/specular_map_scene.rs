@@ -7,7 +7,7 @@ use cairo::{
     effect::Effect,
     effects::default_effect::DefaultEffect,
     entity::Entity,
-    graphics::{Graphics, PixelBuffer},
+    graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
     matrix::Mat4,
     pipeline::{options::PipelineOptions, Pipeline},

@@ -7,7 +7,7 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{Graphics, PixelBuffer},
+    graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
 };

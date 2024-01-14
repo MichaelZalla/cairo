@@ -4,7 +4,7 @@ use cairo::{
     app::App,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::{Graphics, PixelBuffer},
+    graphics::{pixelbuffer::PixelBuffer, Graphics},
 };
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;

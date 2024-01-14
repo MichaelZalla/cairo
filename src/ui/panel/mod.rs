@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::{Graphics, PixelBuffer},
+    graphics::{pixelbuffer::PixelBuffer, Graphics},
     vec::vec2::Vec2,
 };
 
