@@ -359,6 +359,8 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
                                         None => (),
                                     }
 
+                                    println!("Parsed object {}.", accumulated_mesh.object_name);
+
                                     objects.push(accumulated_mesh);
 
                                     object_counter += 1;
