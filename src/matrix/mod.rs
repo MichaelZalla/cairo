@@ -286,6 +286,14 @@ impl Mat<f32, 4> {
 
 pub type Mat3 = Mat<f32, 3>;
 
+impl Default for Mat3 {
+    fn default() -> Self {
+        Self {
+            elements: [[f32::default(); 3]; 3],
+        }
+    }
+}
+
 impl ops::MulAssign<Mat3> for Vec3 {
     fn mul_assign(&mut self, rhs: Mat3) {
         let result = self.clone() * rhs;
@@ -314,6 +322,14 @@ impl ops::Mul<Mat3> for Vec3 {
 }
 
 pub type Mat4 = Mat<f32, 4>;
+
+impl Default for Mat4 {
+    fn default() -> Self {
+        Self {
+            elements: [[f32::default(); 4]; 4],
+        }
+    }
+}
 
 impl ops::MulAssign<Mat4> for Vec4 {
     fn mul_assign(&mut self, rhs: Mat4) {
