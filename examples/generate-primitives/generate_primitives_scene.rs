@@ -62,17 +62,17 @@ impl<'a> GeneratePrimitivesScene<'a> {
         // Define lights for our scene
         let ambient_light = AmbientLight {
             intensities: Vec3 {
-                x: 0.05,
-                y: 0.05,
-                z: 0.05,
+                x: 0.1,
+                y: 0.1,
+                z: 0.1,
             },
         };
 
         let directional_light = DirectionalLight {
             intensities: Vec3 {
-                x: 0.05,
-                y: 0.05,
-                z: 0.05,
+                x: 0.15,
+                y: 0.15,
+                z: 0.15,
             },
             direction: Vec4 {
                 x: -1.0,
@@ -85,28 +85,14 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let point_light = PointLight::new();
 
-        let spot_light = SpotLight {
-            intensities: Vec3 {
-                x: 0.7,
-                y: 0.7,
-                z: 0.7,
-            },
-            position: Vec3 {
-                x: 0.0,
-                y: 12.0,
-                z: 0.0,
-            },
-            direction: Vec3 {
-                x: 0.0,
-                y: -1.0,
-                z: 0.0,
-            },
-            inner_cutoff_angle: (25.0 as f32).to_radians().cos(),
-            outer_cutoff_angle: (40.0 as f32).to_radians().cos(),
-            constant_attenuation: 1.0,
-            linear_attenuation: 0.35,
-            quadratic_attenuation: 0.44,
-        };
+        let mut spot_light = SpotLight::new();
+
+        spot_light.inner_cutoff_angle = (PI / 60.0).cos();
+        spot_light.outer_cutoff_angle = (PI / 15.0).cos();
+
+        spot_light.constant_attenuation = 1.0;
+        spot_light.linear_attenuation = 0.22;
+        spot_light.quadratic_attenuation = 0.20;
 
         // @TODO Pipeline to store a reference to PipelineOptions
         let pipeline_options = PipelineOptions {
