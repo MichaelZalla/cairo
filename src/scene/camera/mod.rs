@@ -72,6 +72,24 @@ impl Camera {
         return camera;
     }
 
+    pub fn set_projection_z_far(&mut self, far: f32) {
+        self.projection_z_far = far;
+
+        self.projection_transform = Mat4::projection_for_fov(
+            self.field_of_view,
+            self.aspect_ratio,
+            self.projection_z_near,
+            self.projection_z_far,
+        );
+
+        self.projection_inverse_transform = Mat4::projection_inverse_for_fov(
+            self.field_of_view,
+            self.aspect_ratio,
+            self.projection_z_near,
+            self.projection_z_far,
+        );
+    }
+
     pub fn get_position(&self) -> Vec3 {
         self.position
     }

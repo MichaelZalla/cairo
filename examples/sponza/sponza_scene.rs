@@ -3,6 +3,7 @@ use std::{borrow::BorrowMut, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
+    context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     effect::Effect,
     effects::default_effect::DefaultEffect,
@@ -16,6 +17,7 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
+    texture::cubemap::CubeMap,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -34,6 +36,7 @@ pub struct SponzaScene<'a> {
     active_camera_index: usize,
     point_light: PointLight,
     entities: &'a RwLock<Vec<Entity<'a>>>,
+    skybox: CubeMap,
     materials: &'a MaterialCache,
     prev_mouse_state: MouseState,
 }
@@ -41,6 +44,7 @@ pub struct SponzaScene<'a> {
 impl<'a> SponzaScene<'a> {
     pub fn new(
         graphics: Graphics,
+        rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<Entity<'a>>>,
         materials: &'a MaterialCache,
     ) -> Self {
@@ -56,6 +60,8 @@ impl<'a> SponzaScene<'a> {
         );
 
         camera.movement_speed = 300.0;
+
+        camera.set_projection_z_far(10000.0);
 
         // Define lights for our scene
         let ambient_light = AmbientLight {
@@ -110,6 +116,10 @@ impl<'a> SponzaScene<'a> {
         spot_light.linear_attenuation = 0.0014;
         spot_light.quadratic_attenuation = 0.000007;
 
+        let mut skybox = CubeMap::from_cross("examples/skybox/assets/grass_sky.jpg");
+
+        skybox.load(rendering_context).unwrap();
+
         let pipeline_options = PipelineOptions {
             should_render_wireframe: false,
             should_render_shader: true,
@@ -146,6 +156,7 @@ impl<'a> SponzaScene<'a> {
             pipeline_options,
             bilinear_active: false,
             entities,
+            skybox,
             materials,
             cameras: vec![camera],
             active_camera_index: 0,
@@ -216,20 +227,9 @@ impl<'a> Scene for SponzaScene<'a> {
             }
         }
 
-        let orbit_radius: f32 = 250.0;
-
-        self.point_light.position = SPONZA_CENTER
-            + Vec3 {
-                x: (self.seconds_ellapsed).sin() * orbit_radius,
-                y: 0.0,
-                z: (self.seconds_ellapsed).cos() * orbit_radius,
-            };
-
         self.pipeline
             .effect
             .set_point_light_position(self.point_light.position);
-
-        camera.set_target_position(self.point_light.position);
 
         let mut entities = self.entities.write().unwrap();
 
@@ -261,6 +261,10 @@ impl<'a> Scene for SponzaScene<'a> {
             self.pipeline
                 .render_mesh(&entity.mesh, Some(self.materials));
         }
+
+        let camera = self.cameras[self.active_camera_index];
+
+        self.pipeline.render_skybox(&self.skybox, &camera);
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {

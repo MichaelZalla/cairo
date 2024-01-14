@@ -18,7 +18,7 @@ use self::sponza_scene::SponzaScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
 
-static CANVAS_WIDTH: u32 = 640;
+static CANVAS_WIDTH: u32 = 960;
 static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
@@ -58,6 +58,7 @@ fn main() -> Result<(), String> {
         Graphics {
             buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
         },
+        rendering_context,
         &entities_rwl,
         &materials,
     ));
