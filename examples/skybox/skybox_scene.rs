@@ -131,6 +131,8 @@ impl<'a> SkyboxScene<'a> {
             pipeline_options,
         );
 
+        // Option 1. Skybox as a set of 6 separate textures.
+
         let mut skybox = CubeMap::new([
             "examples/skybox/assets/front.jpg",
             "examples/skybox/assets/back.jpg",
@@ -139,6 +141,14 @@ impl<'a> SkyboxScene<'a> {
             "examples/skybox/assets/left.jpg",
             "examples/skybox/assets/right.jpg",
         ]);
+
+        // Option 2. Skybox as one horizontal cross texture.
+
+        // let mut skybox = CubeMap::from_cross("examples/skybox/assets/temple.png");
+
+        // Option 3. Skybox as one vertical cross texture.
+
+        // let mut skybox = CubeMap::from_cross("examples/skybox/assets/vertical_cross.png");
 
         skybox.load(rendering_context).unwrap();
 
