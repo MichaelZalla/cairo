@@ -27,7 +27,7 @@ struct Triangle<T> {
 }
 
 pub struct Pipeline<T> {
-    options: PipelineOptions,
+    pub options: PipelineOptions,
     graphics: Graphics,
     buffer_width_over_2: f32,
     buffer_height_over_2: f32,
@@ -68,10 +68,6 @@ where
 
     pub fn get_pixel_data(&self) -> &Vec<u32> {
         return self.graphics.buffer.get_pixel_data();
-    }
-
-    pub fn set_options(&mut self, options: PipelineOptions) {
-        self.options = options;
     }
 
     pub fn begin_frame(&mut self) {

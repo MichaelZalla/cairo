@@ -1,7 +1,5 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
-use sdl2::keyboard::Keycode;
-
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     effect::Effect,
@@ -20,7 +18,6 @@ use cairo::{
 
 pub struct MultipleScenesScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
-    pipeline_options: PipelineOptions,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     ambient_light: AmbientLight,
@@ -133,7 +130,6 @@ impl<'a> MultipleScenesScene<'a> {
 
         return MultipleScenesScene {
             pipeline,
-            pipeline_options,
             entities,
             cameras: vec![camera],
             active_camera_index: 0,
@@ -163,46 +159,14 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         );
 
         self.pipeline
+            .options
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
             .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         self.pipeline.effect.set_projection(camera.get_projection());
-
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                Keycode::Num1 { .. } => {
-                    self.pipeline_options.should_render_wireframe =
-                        !self.pipeline_options.should_render_wireframe;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                Keycode::Num2 { .. } => {
-                    self.pipeline_options.should_render_shader =
-                        !self.pipeline_options.should_render_shader;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                Keycode::Num3 { .. } => {
-                    self.pipeline_options.should_render_normals =
-                        !self.pipeline_options.should_render_normals;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                _ => {}
-            }
-        }
-
-        if game_controller_state.buttons.x {
-            self.pipeline_options.should_render_wireframe =
-                !self.pipeline_options.should_render_wireframe;
-
-            self.pipeline.set_options(self.pipeline_options);
-        } else if game_controller_state.buttons.y {
-            self.pipeline_options.should_render_normals =
-                !self.pipeline_options.should_render_normals;
-
-            self.pipeline.set_options(self.pipeline_options);
-        }
 
         let mut w = self.entities.write().unwrap();
 

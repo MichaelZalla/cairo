@@ -65,10 +65,10 @@ fn main() -> Result<(), String> {
 
         for keycode in keyboard_state.keys_pressed.to_owned() {
             match keycode {
-                Keycode::Num4 { .. } => {
+                Keycode::Num5 { .. } => {
                     new_index = min(scenes_len - 1, 0);
                 }
-                Keycode::Num5 { .. } => {
+                Keycode::Num6 { .. } => {
                     new_index = min(scenes_len - 1, 1);
                 }
                 _ => {}

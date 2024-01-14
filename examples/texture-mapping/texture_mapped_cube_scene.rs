@@ -22,7 +22,6 @@ use cairo::{
 
 pub struct TextureMappedCubeScene<'a> {
     pipeline: Pipeline<DefaultEffect>,
-    pipeline_options: PipelineOptions,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     // ambient_light: AmbientLight,
@@ -159,7 +158,6 @@ impl<'a> TextureMappedCubeScene<'a> {
 
         return TextureMappedCubeScene {
             pipeline,
-            pipeline_options,
             entities,
             materials,
             cameras: vec![camera],
@@ -190,40 +188,14 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
         );
 
         self.pipeline
+            .options
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
             .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         self.pipeline.effect.set_projection(camera.get_projection());
-
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                Keycode::Num1 { .. } => {
-                    self.pipeline_options.should_render_wireframe =
-                        !self.pipeline_options.should_render_wireframe;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                Keycode::Num2 { .. } => {
-                    self.pipeline_options.should_render_shader =
-                        !self.pipeline_options.should_render_shader;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                Keycode::Num3 { .. } => {
-                    self.pipeline_options.should_render_normals =
-                        !self.pipeline_options.should_render_normals;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                Keycode::Num4 { .. } => {
-                    self.pipeline_options.should_cull_backfaces =
-                        !self.pipeline_options.should_cull_backfaces;
-
-                    self.pipeline.set_options(self.pipeline_options);
-                }
-                _ => {}
-            }
-        }
 
         let mut entities = self.entities.write().unwrap();
 
