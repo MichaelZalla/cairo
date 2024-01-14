@@ -34,7 +34,7 @@ fn main() -> Result<(), String> {
         //       based on some borrowed state.
 
         // @TODO Return reference to a captured variable?
-        return Ok(graphics.get_pixel_data().clone());
+        return Ok(graphics.buffer.get_pixel_data().clone());
     };
 
     let app = App::new("examples/basic-window", WINDOW_WIDTH, ASPECT_RATIO);

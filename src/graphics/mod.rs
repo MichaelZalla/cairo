@@ -26,6 +26,10 @@ impl PixelBuffer {
         };
     }
 
+    pub fn get_pixel_data(&self) -> &Vec<u32> {
+        return &self.pixels;
+    }
+
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         if x > (self.width - 1) || y > (self.pixels.len() as u32 / self.width as u32 - 1) {
             // panic!("Call to PixelBuffer.set_pixel() with invalid coordinate ({},{})!", x, y);
@@ -80,10 +84,6 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub fn get_pixel_data(&self) -> &Vec<u32> {
-        return &self.buffer.pixels;
-    }
-
     pub fn line(&mut self, mut x1: u32, mut y1: u32, mut x2: u32, mut y2: u32, color: Color) {
         // y = m*x + b
         // x = (y - b) / m

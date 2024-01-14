@@ -67,7 +67,7 @@ fn main() -> Result<(), String> {
                         },
                     )?;
 
-                    return Ok(panel_graphics.get_pixel_data().clone());
+                    return Ok(panel_graphics.buffer.get_pixel_data().clone());
                 },
             ));
 
@@ -108,7 +108,7 @@ fn main() -> Result<(), String> {
                     &panel_pixel_data,
                 );
 
-                return Ok(graphics.get_pixel_data().clone());
+                return Ok(graphics.buffer.get_pixel_data().clone());
             };
 
             let app = App::new("examples/ui-panels", CANVAS_WIDTH, ASPECT_RATIO);

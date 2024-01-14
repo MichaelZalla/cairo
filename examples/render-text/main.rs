@@ -85,7 +85,7 @@ fn main() -> Result<(), String> {
                 )?;
 
                 // @TODO(mzalla) Return reference to a captured variable???
-                return Ok(graphics.get_pixel_data().clone());
+                return Ok(graphics.buffer.get_pixel_data().clone());
             };
 
             let app = App::new("examples/render-text", WINDOW_WIDTH, ASPECT_RATIO);

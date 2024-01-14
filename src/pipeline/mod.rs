@@ -74,7 +74,7 @@ where
     }
 
     pub fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.graphics.get_pixel_data();
+        return self.graphics.buffer.get_pixel_data();
     }
 
     pub fn set_options(&mut self, options: PipelineOptions) {
