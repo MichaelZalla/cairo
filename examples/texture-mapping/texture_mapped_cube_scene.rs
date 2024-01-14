@@ -185,6 +185,12 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
             seconds_since_last_update,
         );
 
+        let camera_view_inverse_transform = camera.get_view_inverse_transform();
+
+        self.pipeline
+            .effect
+            .set_view_inverse_transform(camera_view_inverse_transform);
+
         self.pipeline
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
@@ -223,18 +229,6 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
         self.pipeline.begin_frame();
 
         let r = self.entities.read().unwrap();
-
-        let camera = (self.cameras[self.active_camera_index]).borrow_mut();
-
-        let camera_view_inverse_transform = camera.get_view_inverse_transform();
-
-        self.pipeline
-            .effect
-            .set_view_inverse_transform(camera_view_inverse_transform);
-
-        self.pipeline
-            .effect
-            .set_point_light_position(self.point_light.position);
 
         for entity in r.as_slice() {
             let world_transform = Mat4::scaling(1.0)

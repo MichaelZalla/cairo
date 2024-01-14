@@ -177,6 +177,16 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             self.pipeline.effect.set_projection(camera.get_projection());
         }
 
+        let camera_view_inverse_transform = camera.get_view_inverse_transform();
+
+        self.pipeline
+            .effect
+            .set_view_inverse_transform(camera_view_inverse_transform);
+
+        self.pipeline.effect.set_directional_light_direction(
+            (self.directional_light.direction * camera_view_inverse_transform).as_normal(),
+        );
+
         self.pipeline
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
@@ -206,6 +216,14 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             z: orbit_radius * (self.seconds_ellapsed * 0.66).cos(),
         };
 
+        self.pipeline
+            .effect
+            .set_point_light_intensities(self.point_light.intensities);
+
+        self.pipeline
+            .effect
+            .set_point_light_position(self.point_light.position);
+
         let max_spot_light_intensity: f32 = 0.6;
 
         self.spot_light.intensities = Vec3 {
@@ -213,6 +231,18 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             y: (self.seconds_ellapsed + phase_shift * 1.0).cos() / 2.0 + 0.5,
             z: (self.seconds_ellapsed + phase_shift * 2.0).cos() / 2.0 + 0.5,
         } * max_spot_light_intensity;
+
+        // self.pipeline
+        //     .effect
+        //     .set_spot_light_position(camera.get_position());
+
+        // self.pipeline
+        //     .effect
+        //     .set_spot_light_direction(camera.get_direction());
+
+        self.pipeline
+            .effect
+            .set_spot_light_intensities(self.spot_light.intensities);
 
         let mut entities = self.entities.write().unwrap();
 
@@ -244,30 +274,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         self.pipeline.begin_frame();
 
         let r = self.entities.read().unwrap();
-
-        let camera = (self.cameras[self.active_camera_index]).borrow_mut();
-
-        let camera_view_inverse_transform = camera.get_view_inverse_transform();
-
-        self.pipeline
-            .effect
-            .set_view_inverse_transform(camera_view_inverse_transform);
-
-        self.pipeline.effect.set_directional_light_direction(
-            (self.directional_light.direction * camera_view_inverse_transform).as_normal(),
-        );
-
-        self.pipeline
-            .effect
-            .set_point_light_intensities(self.point_light.intensities);
-
-        self.pipeline
-            .effect
-            .set_point_light_position(self.point_light.position);
-
-        self.pipeline
-            .effect
-            .set_spot_light_intensities(self.spot_light.intensities);
 
         for entity in r.as_slice() {
             let world_transform = Mat4::scaling(1.0)
