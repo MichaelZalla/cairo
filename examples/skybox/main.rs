@@ -9,6 +9,7 @@ use cairo::{
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
+    shader::ShaderContext,
 };
 
 mod skybox_scene;
@@ -35,6 +36,8 @@ fn main() -> Result<(), String> {
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
     let entities_rwl = RwLock::new(entities);
 
+    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SkyboxScene::new(
         Graphics {
@@ -42,6 +45,7 @@ fn main() -> Result<(), String> {
         },
         rendering_context,
         &entities_rwl,
+        &shader_context_rwl,
     ));
 
     // Set up our app

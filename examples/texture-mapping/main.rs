@@ -8,6 +8,7 @@ use cairo::{
     entity::Entity,
     mesh,
     scene::Scene,
+    shader::ShaderContext,
 };
 
 mod texture_mapped_cube_scene;
@@ -48,11 +49,14 @@ fn main() -> Result<(), String> {
 
     let cache = cube_material_cache.unwrap();
 
+    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+
     // Instantiate our textured cube scene
     let scene = RefCell::new(TextureMappedCubeScene::new(
         rendering_context,
         &entities_rwl,
         &cache,
+        &shader_context_rwl,
     ));
 
     // Set up our app

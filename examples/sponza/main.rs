@@ -4,12 +4,12 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::App,
-    color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
+    shader::ShaderContext,
 };
 
 mod sponza_scene;
@@ -53,6 +53,8 @@ fn main() -> Result<(), String> {
 
     let materials = atrium_materials.unwrap();
 
+    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SponzaScene::new(
         Graphics {
@@ -61,6 +63,7 @@ fn main() -> Result<(), String> {
         rendering_context,
         &entities_rwl,
         &materials,
+        &shader_context_rwl,
     ));
 
     // Set up our app

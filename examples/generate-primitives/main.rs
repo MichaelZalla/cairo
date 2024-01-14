@@ -10,6 +10,7 @@ use cairo::{
     material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
+    shader::ShaderContext,
     texture::TextureMap,
     vec::vec3::Vec3,
 };
@@ -126,12 +127,15 @@ fn main() -> Result<(), String> {
 
     let entities_rwl = RwLock::new(entities);
 
+    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+
     // Instantiate our textured cube scene
     let scene = RefCell::new(GeneratePrimitivesScene::new(
         app.canvas_width,
         app.canvas_height,
         &entities_rwl,
         &material_cache,
+        &shader_context_rwl,
     ));
 
     // Set up our app

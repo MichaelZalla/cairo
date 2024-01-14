@@ -11,6 +11,7 @@ use cairo::{
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh::obj::load_obj,
     scene::Scene,
+    shader::ShaderContext,
 };
 
 mod multiple_scenes_scene;
@@ -23,10 +24,10 @@ static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     // Load meshes
-    let (cube_meshes, cube_materials) = load_obj(&"./data/obj/cube.obj");
+    let (cube_meshes, _cube_materials) = load_obj(&"./data/obj/cube.obj");
     let cube_mesh = &cube_meshes[0];
 
-    let (teapot_meshes, teapot_materials) = load_obj(&"./data/obj/teapot.obj");
+    let (teapot_meshes, _teapot_materials) = load_obj(&"./data/obj/teapot.obj");
     let teapot_mesh = &teapot_meshes[0];
 
     // Assign meshes to new entities
@@ -39,13 +40,15 @@ fn main() -> Result<(), String> {
     let entities2 = vec![&mut teapot_entity];
     let entities2_rwl = RwLock::new(entities2);
 
+    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+
     let graphics = Graphics {
         buffer: PixelBuffer::new(WINDOW_WIDTH, WINDOW_HEIGHT),
     };
 
     let scenes = RefCell::new(vec![
-        MultipleScenesScene::new(graphics.clone(), &entities_rwl),
-        MultipleScenesScene::new(graphics.clone(), &entities2_rwl),
+        MultipleScenesScene::new(graphics.clone(), &entities_rwl, &shader_context_rwl),
+        MultipleScenesScene::new(graphics.clone(), &entities2_rwl, &shader_context_rwl),
     ]);
 
     let current_scene_index = RefCell::new(min(0, scenes.borrow().len() - 1));

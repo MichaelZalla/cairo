@@ -1,7 +1,14 @@
+use std::sync::RwLock;
+
 use crate::{
     material::{cache::MaterialCache, Material},
     mesh::Face,
     scene::camera::Camera,
+    shader::{alpha::AlphaShader, fragment::FragmentShader, vertex::VertexShader, ShaderContext},
+    shaders::{
+        default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
+        default_vertex_shader::DefaultVertexShader,
+    },
     texture::cubemap::CubeMap,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -10,7 +17,6 @@ use self::{options::PipelineOptions, zbuffer::ZBuffer};
 
 use super::{
     color::{self, Color},
-    effect::Effect,
     graphics::Graphics,
     mesh::Mesh,
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
@@ -26,24 +32,40 @@ struct Triangle<T> {
     v2: T,
 }
 
-pub struct Pipeline<T> {
+pub struct Pipeline<
+    'a,
+    V = DefaultVertexShader<'a>,
+    A = DefaultAlphaShader<'a>,
+    F = DefaultFragmentShader<'a>,
+> where
+    V: VertexShader<'a>,
+    A: AlphaShader<'a>,
+    F: FragmentShader<'a>,
+{
     pub options: PipelineOptions,
     graphics: Graphics,
     buffer_width_over_2: f32,
     buffer_height_over_2: f32,
     z_buffer: ZBuffer,
-    pub effect: T,
+    pub shader_context: &'a RwLock<ShaderContext>,
+    vertex_shader: V,
+    alpha_shader: A,
+    pub fragment_shader: F,
 }
 
-impl<'a, T: Effect<VertexIn = DefaultVertexIn, VertexOut = DefaultVertexOut>> Pipeline<T>
+impl<'a, V, A, F> Pipeline<'a, V, A, F>
 where
-    T: Effect,
+    V: VertexShader<'a>,
+    A: AlphaShader<'a>,
+    F: FragmentShader<'a>,
 {
     pub fn new(
         graphics: Graphics,
         projection_z_near: f32,
         projection_z_far: f32,
-        effect: T,
+        shader_context: &'a RwLock<ShaderContext>,
+        vertex_shader: V,
+        fragment_shader: F,
         options: PipelineOptions,
     ) -> Self {
         let z_buffer = ZBuffer::new(
@@ -56,13 +78,18 @@ where
         let buffer_width_over_2 = (graphics.buffer.width as f32) / 2.0;
         let buffer_height_over_2 = (graphics.buffer.height as f32) / 2.0;
 
+        let alpha_shader = AlphaShader::new(shader_context);
+
         return Pipeline {
             options,
             graphics,
             buffer_width_over_2: buffer_width_over_2,
             buffer_height_over_2: buffer_height_over_2,
             z_buffer,
-            effect,
+            shader_context,
+            vertex_shader,
+            alpha_shader,
+            fragment_shader,
         };
     }
 
@@ -77,27 +104,35 @@ where
     }
 
     pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
-        match &mesh.material_name {
-            Some(name) => {
-                match material_cache {
-                    Some(cache) => {
-                        // Set the pipeline effect's active material to this
-                        // mesh's material.
-                        let mat = cache.get(name).unwrap();
-                        let mat_raw_mut = &*mat as *const Material;
+        {
+            let mut context = self.shader_context.write().unwrap();
 
-                        self.effect.set_active_material(Some(mat_raw_mut));
+            match &mesh.material_name {
+                Some(name) => {
+                    match material_cache {
+                        Some(cache) => {
+                            // Set the pipeline effect's active material to this
+                            // mesh's material.
+                            let mat = cache.get(name).unwrap();
+                            let mat_raw_mut = &*mat as *const Material;
+
+                            context.set_active_material(Some(mat_raw_mut));
+                        }
+                        None => (),
                     }
-                    None => (),
                 }
+                None => (),
             }
-            None => (),
         }
 
         self.process_world_vertices(&mesh);
 
         // Reset the pipeline effect's active material
-        self.effect.set_active_material(None);
+        {
+            let mut context = self.shader_context.write().unwrap();
+
+            context.set_active_material(None);
+        }
     }
 
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
@@ -226,14 +261,14 @@ where
 
         let world_vertices = vertices_in
             .into_iter()
-            .map(|v_in| return self.effect.vs(v_in))
+            .map(|v_in| return self.vertex_shader.call(&v_in))
             .collect();
 
         self.process_triangles(&mesh.faces, world_vertices);
     }
 
-    fn process_triangles(&mut self, faces: &Vec<Face>, world_vertices: Vec<T::VertexOut>) {
-        let mut triangles: Vec<Triangle<T::VertexOut>> = vec![];
+    fn process_triangles(&mut self, faces: &Vec<Face>, world_vertices: Vec<DefaultVertexOut>) {
+        let mut triangles: Vec<Triangle<DefaultVertexOut>> = vec![];
 
         for face_index in 0..faces.len() {
             // Cull backfaces
@@ -279,7 +314,8 @@ where
             .cross(vertices[2] - vertices[0])
             .as_normal();
 
-        let projected_origin = Vec4::new(Default::default(), 1.0) * self.effect.get_projection();
+        let projected_origin = Vec4::new(Default::default(), 1.0)
+            * self.shader_context.read().unwrap().get_projection();
 
         let dot_product = vertex_normal.dot(
             vertices[0].as_normal()
@@ -299,7 +335,7 @@ where
 
     fn should_cull_from_homogeneous_space(
         &mut self,
-        triangle: &mut Triangle<T::VertexOut>,
+        triangle: &mut Triangle<DefaultVertexOut>,
     ) -> bool {
         if triangle.v0.p.x > triangle.v0.p.w
             && triangle.v1.p.x > triangle.v1.p.w
@@ -343,12 +379,12 @@ where
         return false;
     }
 
-    fn clip1(&mut self, v0: T::VertexOut, v1: T::VertexOut, v2: T::VertexOut) {
+    fn clip1(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
         let a_alpha = -(v0.p.z) / (v1.p.z - v0.p.z);
         let b_alpha = -(v0.p.z) / (v2.p.z - v0.p.z);
 
-        let a_prime = T::VertexOut::interpolate(v0, v1, a_alpha);
-        let b_prime = T::VertexOut::interpolate(v0, v2, b_alpha);
+        let a_prime = DefaultVertexOut::interpolate(v0, v1, a_alpha);
+        let b_prime = DefaultVertexOut::interpolate(v0, v2, b_alpha);
 
         let mut triangle1 = Triangle {
             v0: a_prime,
@@ -366,12 +402,12 @@ where
         self.post_process_triangle_vertices(&mut triangle2);
     }
 
-    fn clip2(&mut self, v0: T::VertexOut, v1: T::VertexOut, v2: T::VertexOut) {
+    fn clip2(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
         let a_alpha = -(v0.p.z) / (v2.p.z - v0.p.z);
         let b_alpha = -(v1.p.z) / (v2.p.z - v1.p.z);
 
-        let a_prime = T::VertexOut::interpolate(v0, v2, a_alpha);
-        let b_prime = T::VertexOut::interpolate(v1, v2, b_alpha);
+        let a_prime = DefaultVertexOut::interpolate(v0, v2, a_alpha);
+        let b_prime = DefaultVertexOut::interpolate(v1, v2, b_alpha);
 
         let mut triangle = Triangle {
             v0: a_prime,
@@ -382,7 +418,7 @@ where
         self.post_process_triangle_vertices(&mut triangle);
     }
 
-    fn process_triangle(&mut self, triangle: &mut Triangle<T::VertexOut>) {
+    fn process_triangle(&mut self, triangle: &mut Triangle<DefaultVertexOut>) {
         // @TODO(mzalla) Geometry shader?
 
         if self.should_cull_from_homogeneous_space(triangle) {
@@ -418,7 +454,7 @@ where
         }
     }
 
-    fn transform_to_ndc_space(&mut self, v: &mut T::VertexOut) {
+    fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {
         let w_inverse = 1.0 / v.p.w;
 
         *v *= w_inverse;
@@ -429,7 +465,7 @@ where
         v.p.w = w_inverse;
     }
 
-    fn post_process_triangle_vertices(&mut self, triangle: &mut Triangle<T::VertexOut>) {
+    fn post_process_triangle_vertices(&mut self, triangle: &mut Triangle<DefaultVertexOut>) {
         // World-space to screen-space (NDC) transform
 
         let world_vertices = [triangle.v0, triangle.v1, triangle.v2];
@@ -506,7 +542,7 @@ where
         }
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, interpolant: &mut T::VertexOut) {
+    fn set_pixel(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
         if x > (self.graphics.buffer.width - 1)
             || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32
                 - 1)
@@ -519,7 +555,7 @@ where
             Some((index, non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
-                if self.effect.ts(&linear_space_interpolant) == false {
+                if self.alpha_shader.call(&linear_space_interpolant) == false {
                     return;
                 }
 
@@ -527,9 +563,11 @@ where
 
                 linear_space_interpolant.depth = non_linear_z;
 
-                self.graphics
-                    .buffer
-                    .set_pixel(x, y, self.effect.ps(&linear_space_interpolant));
+                self.graphics.buffer.set_pixel(
+                    x,
+                    y,
+                    self.fragment_shader.call(&linear_space_interpolant),
+                );
             }
             None => {}
         }
@@ -537,9 +575,9 @@ where
 
     fn flat_top_triangle_fill(
         &mut self,
-        top_left: T::VertexOut,
-        top_right: T::VertexOut,
-        bottom: T::VertexOut,
+        top_left: DefaultVertexOut,
+        top_right: DefaultVertexOut,
+        bottom: DefaultVertexOut,
     ) {
         let delta_y = bottom.p.y - top_left.p.y;
 
@@ -563,9 +601,9 @@ where
 
     fn flat_bottom_triangle_fill(
         &mut self,
-        top: T::VertexOut,
-        bottom_left: T::VertexOut,
-        bottom_right: T::VertexOut,
+        top: DefaultVertexOut,
+        bottom_left: DefaultVertexOut,
+        bottom_right: DefaultVertexOut,
     ) {
         let delta_y = bottom_right.p.y - top.p.y;
 
@@ -589,12 +627,12 @@ where
 
     fn flat_triangle_fill(
         &mut self,
-        it0: &T::VertexOut,
-        // it1: &T::VertexOut,
-        it2: &T::VertexOut,
-        left_step: &T::VertexOut,
-        right_step: &T::VertexOut,
-        right_edge_interpolant: &mut T::VertexOut,
+        it0: &DefaultVertexOut,
+        // it1: &DefaultVertexOut,
+        it2: &DefaultVertexOut,
+        left_step: &DefaultVertexOut,
+        right_step: &DefaultVertexOut,
+        right_edge_interpolant: &mut DefaultVertexOut,
     ) {
         // it0 will always be a top vertex.
         // it1 is either a top or a bottom vertex.
@@ -660,7 +698,7 @@ where
         }
     }
 
-    fn triangle_fill(&mut self, v0: T::VertexOut, v1: T::VertexOut, v2: T::VertexOut) {
+    fn triangle_fill(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
         let mut tri = vec![v0, v1, v2];
 
         // Sorts points by y-value (highest-to-lowest)
@@ -702,7 +740,7 @@ where
 
             let alpha_split = (tri[1].p.y - tri[0].p.y) / (tri[2].p.y - tri[0].p.y);
 
-            let split_vertex = T::VertexOut::interpolate(tri[0], tri[2], alpha_split);
+            let split_vertex = DefaultVertexOut::interpolate(tri[0], tri[2], alpha_split);
 
             if tri[1].p.x < split_vertex.p.x {
                 // Major right

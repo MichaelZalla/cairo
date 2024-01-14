@@ -3,8 +3,6 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use cairo::{
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
-    effect::Effect,
-    effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::Graphics,
     matrix::Mat4,
@@ -14,15 +12,22 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
+    shader::fragment::FragmentShader,
+    shader::vertex::VertexShader,
+    shader::ShaderContext,
+    shaders::{
+        default_fragment_shader::DefaultFragmentShader, default_vertex_shader::DefaultVertexShader,
+    },
     texture::cubemap::CubeMap,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
 pub struct SkyboxScene<'a> {
-    pipeline: Pipeline<DefaultEffect>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+    shader_context: &'a RwLock<ShaderContext>,
     skybox: CubeMap,
     prev_mouse_state: MouseState,
 }
@@ -32,6 +37,7 @@ impl<'a> SkyboxScene<'a> {
         graphics: Graphics,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+        shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
@@ -108,20 +114,29 @@ impl<'a> SkyboxScene<'a> {
 
         let projection_transform = camera.get_projection();
 
+        let mut context = shader_context.write().unwrap();
+
+        context.set_world_transform(world_transform);
+        context.set_camera_position(view_position);
+        context.set_view_inverse_transform(view_inverse_transform);
+        context.set_projection(projection_transform);
+
+        context.set_ambient_light(ambient_light);
+        context.set_directional_light(directional_light);
+        context.set_point_light(point_light);
+        context.set_spot_light(spot_light);
+
+        let vertex_shader = DefaultVertexShader::new(shader_context);
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context, None);
+
         let pipeline = Pipeline::new(
             graphics,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
-            DefaultEffect::new(
-                world_transform,
-                view_position,
-                view_inverse_transform,
-                projection_transform,
-                ambient_light,
-                directional_light,
-                point_light,
-                spot_light,
-            ),
+            shader_context,
+            vertex_shader,
+            fragment_shader,
             pipeline_options,
         );
 
@@ -149,6 +164,7 @@ impl<'a> SkyboxScene<'a> {
         return SkyboxScene {
             pipeline,
             entities,
+            shader_context,
             skybox,
             cameras: vec![camera],
             active_camera_index: 0,
@@ -165,6 +181,8 @@ impl<'a> Scene for SkyboxScene<'a> {
         game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
+        let mut context = self.shader_context.write().unwrap();
+
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
@@ -179,14 +197,12 @@ impl<'a> Scene for SkyboxScene<'a> {
             .update(keyboard_state, mouse_state, game_controller_state);
 
         self.pipeline
-            .effect
+            .fragment_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        self.pipeline
-            .effect
-            .set_camera_position(Vec4::new(camera.get_position(), 1.0));
+        context.set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
-        self.pipeline.effect.set_projection(camera.get_projection());
+        context.set_projection(camera.get_projection());
 
         let mut entities = self.entities.write().unwrap();
 
@@ -209,13 +225,11 @@ impl<'a> Scene for SkyboxScene<'a> {
             * Mat4::rotation_z(entity.rotation.z)
             * Mat4::translation(entity.position);
 
-        self.pipeline.effect.set_world_transform(world_transform);
+        context.set_world_transform(world_transform);
 
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
-        self.pipeline
-            .effect
-            .set_view_inverse_transform(camera_view_inverse_transform);
+        context.set_view_inverse_transform(camera_view_inverse_transform);
 
         self.prev_mouse_state = mouse_state.clone();
     }
@@ -226,6 +240,18 @@ impl<'a> Scene for SkyboxScene<'a> {
         let r = self.entities.read().unwrap();
 
         for entity in r.as_slice() {
+            let world_transform = Mat4::scaling(1.0)
+                * Mat4::rotation_x(entity.rotation.x)
+                * Mat4::rotation_y(entity.rotation.y)
+                * Mat4::rotation_z(entity.rotation.z)
+                * Mat4::translation(entity.position);
+
+            {
+                let mut context = self.shader_context.write().unwrap();
+
+                context.set_world_transform(world_transform);
+            }
+
             self.pipeline.render_mesh(&entity.mesh, None);
         }
 

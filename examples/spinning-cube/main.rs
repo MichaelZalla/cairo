@@ -9,6 +9,7 @@ use cairo::{
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
+    shader::ShaderContext,
 };
 
 mod spinning_cube_scene;
@@ -31,12 +32,15 @@ fn main() -> Result<(), String> {
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
     let entities_rwl = RwLock::new(entities);
 
+    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SpinningCubeScene::new(
         Graphics {
             buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
         },
         &entities_rwl,
+        &shader_context_rwl,
     ));
 
     // Set up our app

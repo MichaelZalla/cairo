@@ -4,8 +4,6 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
-    effect::Effect,
-    effects::default_effect::DefaultEffect,
     entity::Entity,
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
@@ -16,19 +14,23 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
+    shader::{fragment::FragmentShader, ShaderContext},
+    shaders::{
+        default_fragment_shader::DefaultFragmentShader, default_vertex_shader::DefaultVertexShader,
+    },
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
 pub struct GeneratePrimitivesScene<'a> {
-    pipeline: Pipeline<DefaultEffect>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
-    // ambient_light: AmbientLight,
     directional_light: DirectionalLight,
     point_light: PointLight,
     spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
+    shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
     looking_at_point_light: bool,
     seconds_ellapsed: f32,
@@ -40,6 +42,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
+        shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         let graphics = Graphics {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
@@ -103,20 +106,31 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let projection_transform = camera.get_projection();
 
+        let mut context = shader_context.write().unwrap();
+
+        context.set_world_transform(world_transform);
+        context.set_camera_position(view_position);
+        context.set_view_inverse_transform(view_inverse_transform);
+        context.set_projection(projection_transform);
+
+        context.set_ambient_light(ambient_light);
+        context.set_directional_light(directional_light);
+        context.set_point_light(point_light);
+        context.set_spot_light(spot_light);
+
+        let vertex_shader = DefaultVertexShader {
+            context: shader_context,
+        };
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context, None);
+
         let pipeline = Pipeline::new(
             graphics,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
-            DefaultEffect::new(
-                world_transform,
-                view_position,
-                view_inverse_transform,
-                projection_transform,
-                ambient_light,
-                directional_light,
-                point_light,
-                spot_light,
-            ),
+            shader_context,
+            vertex_shader,
+            fragment_shader,
             pipeline_options,
         );
 
@@ -124,9 +138,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
             pipeline,
             entities,
             materials,
+            shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
-            // ambient_light,
             directional_light,
             point_light,
             spot_light,
@@ -145,6 +159,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         game_controller_state: &GameControllerState,
         seconds_since_last_update: f32,
     ) {
+        let mut context = self.shader_context.write().unwrap();
+
         self.seconds_ellapsed += seconds_since_last_update;
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
@@ -168,30 +184,28 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 seconds_since_last_update,
             );
 
-            self.pipeline.effect.set_projection(camera.get_projection());
+            context.set_projection(camera.get_projection());
         }
 
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
-        self.pipeline
-            .effect
-            .set_view_inverse_transform(camera_view_inverse_transform);
+        context.set_view_inverse_transform(camera_view_inverse_transform);
 
-        self.pipeline.effect.set_directional_light_direction(
-            (self.directional_light.direction * camera_view_inverse_transform).as_normal(),
-        );
+        context.set_directional_light(DirectionalLight {
+            intensities: self.directional_light.intensities,
+            direction: (self.directional_light.direction * camera_view_inverse_transform)
+                .as_normal(),
+        });
 
         self.pipeline
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
         self.pipeline
-            .effect
+            .fragment_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        self.pipeline
-            .effect
-            .set_camera_position(Vec4::new(camera.get_position(), 1.0));
+        context.set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         let phase_shift = 2.0 * PI / 3.0;
         let orbit_radius: f32 = 10.0;
@@ -210,13 +224,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             z: orbit_radius * (self.seconds_ellapsed * 0.66).cos(),
         };
 
-        self.pipeline
-            .effect
-            .set_point_light_intensities(self.point_light.intensities);
-
-        self.pipeline
-            .effect
-            .set_point_light_position(self.point_light.position);
+        context.set_point_light(self.point_light);
 
         let max_spot_light_intensity: f32 = 0.6;
 
@@ -226,17 +234,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             z: (self.seconds_ellapsed + phase_shift * 2.0).cos() / 2.0 + 0.5,
         } * max_spot_light_intensity;
 
-        // self.pipeline
-        //     .effect
-        //     .set_spot_light_position(camera.get_position());
-
-        // self.pipeline
-        //     .effect
-        //     .set_spot_light_direction(camera.get_direction());
-
-        self.pipeline
-            .effect
-            .set_spot_light_intensities(self.spot_light.intensities);
+        context.set_spot_light(self.spot_light);
 
         let mut entities = self.entities.write().unwrap();
 
@@ -276,7 +274,11 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 * Mat4::rotation_z(entity.rotation.z)
                 * Mat4::translation(entity.position);
 
-            self.pipeline.effect.set_world_transform(world_transform);
+            {
+                let mut context = self.shader_context.write().unwrap();
+
+                context.set_world_transform(world_transform);
+            }
 
             self.pipeline
                 .render_mesh(&entity.mesh, Some(self.materials));
