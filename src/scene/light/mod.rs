@@ -4,7 +4,7 @@ use crate::color;
 use crate::vec::vec3::Vec3;
 use crate::vec::vec4::Vec4;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct AmbientLight {
     pub intensities: Vec3,
 }
@@ -15,7 +15,7 @@ impl AmbientLight {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct DirectionalLight {
     pub intensities: Vec3,
     pub direction: Vec4,
@@ -32,7 +32,7 @@ impl DirectionalLight {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct PointLight {
     pub intensities: Vec3,
     pub specular_intensity: f32,
@@ -122,7 +122,7 @@ impl PointLight {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct SpotLight {
     pub intensities: Vec3,
     pub position: Vec3,
