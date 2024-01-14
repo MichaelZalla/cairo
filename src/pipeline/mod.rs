@@ -6,6 +6,8 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
+use self::zbuffer::ZBuffer;
+
 use super::{
     color::{self, Color},
     effect::Effect,
@@ -14,7 +16,7 @@ use super::{
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
-static Z_BUFFER_MAX_DEPTH: f32 = 1.0;
+mod zbuffer;
 
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
@@ -36,7 +38,7 @@ pub struct Pipeline<T> {
     graphics: Graphics,
     buffer_width_over_2: f32,
     buffer_height_over_2: f32,
-    z_buffer: Vec<f32>,
+    z_buffer: ZBuffer,
     pub effect: T,
 }
 
@@ -45,13 +47,7 @@ where
     T: Effect,
 {
     pub fn new(graphics: Graphics, effect: T, options: PipelineOptions) -> Self {
-        let pixel_count: usize = (graphics.buffer.width * graphics.buffer.height) as usize;
-
-        let mut z_buffer: Vec<f32> = Vec::with_capacity(pixel_count);
-
-        for _ in 0..pixel_count {
-            z_buffer.push(Z_BUFFER_MAX_DEPTH);
-        }
+        let z_buffer = ZBuffer::new(graphics.buffer.width, graphics.buffer.height);
 
         let buffer_width_over_2 = (graphics.buffer.width as f32) / 2.0;
         let buffer_height_over_2 = (graphics.buffer.height as f32) / 2.0;
@@ -77,7 +73,7 @@ where
     pub fn begin_frame(&mut self) {
         self.clear_pixel_buffer();
 
-        self.clear_z_buffer();
+        self.z_buffer.clear();
     }
 
     pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
@@ -105,10 +101,10 @@ where
     }
 
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
-        for (index, z_non_linear) in self.z_buffer.iter().enumerate() {
+        for (index, z_non_linear) in self.z_buffer.0.iter().enumerate() {
             // If this pixel was not shaded by our fragment shader
 
-            if *z_non_linear == Z_BUFFER_MAX_DEPTH {
+            if *z_non_linear == zbuffer::MAX_DEPTH {
                 // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
                 let pixel_coordinate_screen_space = Vec3 {
@@ -170,12 +166,6 @@ where
 
     fn clear_pixel_buffer(&mut self) {
         self.graphics.buffer.clear(color::BLACK);
-    }
-
-    fn clear_z_buffer(&mut self) {
-        for i in 0..self.z_buffer.len() {
-            self.z_buffer[i] = Z_BUFFER_MAX_DEPTH;
-        }
     }
 
     fn process_world_vertices(&mut self, mesh: &Mesh) {
@@ -520,38 +510,6 @@ where
         }
     }
 
-    fn test_z_buffer(&mut self, x: u32, y: u32, z: f32) -> Option<(usize, f32)> {
-        let z_buffer_index = (y * self.graphics.buffer.width + x) as usize;
-
-        if z_buffer_index >= self.z_buffer.len() {
-            panic!(
-                "Call to draw::set_pixel with invalid coordinate ({},{})!",
-                x, y
-            );
-        }
-
-        // Non-linear depth test
-        // https://youtu.be/3xGKu4T4SCU?si=v7nkYrg2sFYozfZ5&t=139
-
-        static NEAR: f32 = 0.5;
-        static NEAR_RECIPROCAL: f32 = 1.0 / NEAR;
-        static FAR: f32 = 10000.0;
-        static FAR_RECIPROCAL: f32 = 1.0 / FAR;
-
-        // (1/z - 1/n) / (1/f - 1/n)
-        let non_linear_z = (1.0 / z - NEAR_RECIPROCAL) / (FAR_RECIPROCAL - NEAR_RECIPROCAL);
-
-        if non_linear_z < self.z_buffer[z_buffer_index] {
-            Some((z_buffer_index, non_linear_z))
-        } else {
-            None
-        }
-    }
-
-    fn set_z_buffer(&mut self, index: usize, non_linear_z: f32) {
-        self.z_buffer[index] = non_linear_z;
-    }
-
     fn set_pixel(&mut self, x: u32, y: u32, interpolant: &mut T::VertexOut) {
         if x > (self.graphics.buffer.width - 1)
             || y > (self.graphics.buffer.pixels.len() as u32 / self.graphics.buffer.width as u32
@@ -561,7 +519,7 @@ where
             return;
         }
 
-        match self.test_z_buffer(x, y, interpolant.p.z) {
+        match self.z_buffer.test(x, y, interpolant.p.z) {
             Some((index, non_linear_z)) => {
                 let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
@@ -569,7 +527,7 @@ where
                     return;
                 }
 
-                self.set_z_buffer(index, non_linear_z);
+                self.z_buffer.set(index, non_linear_z);
 
                 self.graphics
                     .buffer
