@@ -71,7 +71,7 @@ where
     }
 
     pub fn begin_frame(&mut self) {
-        self.clear_pixel_buffer();
+        self.graphics.buffer.clear(color::BLACK);
 
         self.z_buffer.clear();
     }
@@ -162,10 +162,6 @@ where
                 );
             }
         }
-    }
-
-    fn clear_pixel_buffer(&mut self) {
-        self.graphics.buffer.clear(color::BLACK);
     }
 
     fn process_world_vertices(&mut self, mesh: &Mesh) {
