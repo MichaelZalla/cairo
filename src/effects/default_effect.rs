@@ -14,19 +14,39 @@ use crate::{
 
 struct DefaultEffectOptions {
     bilinear_active: bool,
+    ambient_occlusion_mapping_active: bool,
+    diffuse_mapping_active: bool,
+    normal_mapping_active: bool,
+    specular_mapping_active: bool,
+    emissive_mapping_active: bool,
 }
 
 impl DefaultEffectOptions {
     fn update(
         &mut self,
         keyboard_state: &KeyboardState,
-        mouse_state: &MouseState,
-        game_controller_state: &GameControllerState,
+        _mouse_state: &MouseState,
+        _game_controller_state: &GameControllerState,
     ) {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::B { .. } => {
                     self.bilinear_active = !self.bilinear_active;
+                }
+                Keycode::O { .. } => {
+                    self.ambient_occlusion_mapping_active = !self.ambient_occlusion_mapping_active;
+                }
+                Keycode::P { .. } => {
+                    self.diffuse_mapping_active = !self.diffuse_mapping_active;
+                }
+                Keycode::N { .. } => {
+                    self.normal_mapping_active = !self.normal_mapping_active;
+                }
+                Keycode::M { .. } => {
+                    self.specular_mapping_active = !self.specular_mapping_active;
+                }
+                Keycode::K { .. } => {
+                    self.emissive_mapping_active = !self.emissive_mapping_active;
                 }
                 _ => {}
             }
@@ -64,6 +84,11 @@ impl DefaultEffect {
         return DefaultEffect {
             options: DefaultEffectOptions {
                 bilinear_active: false,
+                ambient_occlusion_mapping_active: false,
+                diffuse_mapping_active: false,
+                normal_mapping_active: false,
+                specular_mapping_active: false,
+                emissive_mapping_active: false,
             },
             world_transform,
             view_position,
@@ -220,8 +245,8 @@ impl Effect for DefaultEffect {
             z: surface_normal.z,
         };
 
-        match self.active_material {
-            Some(mat_raw_mut) => {
+        match (self.options.normal_mapping_active, self.active_material) {
+            (true, Some(mat_raw_mut)) => {
                 unsafe {
                     match &(*mat_raw_mut).normal_map {
                         Some(texture) => {
@@ -243,15 +268,18 @@ impl Effect for DefaultEffect {
                     }
                 }
             }
-            None => (),
+            _ => (),
         }
 
         // Calculate ambient light contribution
 
         let mut ambient_factor: f32 = 1.0;
 
-        match self.active_material {
-            Some(mat_raw_mut) => unsafe {
+        match (
+            self.options.ambient_occlusion_mapping_active,
+            self.active_material,
+        ) {
+            (true, Some(mat_raw_mut)) => unsafe {
                 match &(*mat_raw_mut).ambient_occlusion_map {
                     Some(map) => {
                         let (r, _g, _b) = sample_nearest(out.uv, map, None);
@@ -260,7 +288,7 @@ impl Effect for DefaultEffect {
                     None => (),
                 }
             },
-            None => (),
+            _ => (),
         }
 
         let ambient_contribution = self.ambient_light.contribute(ambient_factor);
@@ -278,15 +306,18 @@ impl Effect for DefaultEffect {
             Some(mat_raw_mut) => unsafe {
                 specular_exponent = (*mat_raw_mut).specular_exponent;
 
-                match &(*mat_raw_mut).specular_map {
-                    Some(map) => {
+                match (
+                    self.options.specular_mapping_active,
+                    &(*mat_raw_mut).specular_map,
+                ) {
+                    (true, Some(map)) => {
                         let (r, g, b) = sample_nearest(out.uv, map, None);
                         let r_f = r as f32;
                         let g_f = g as f32;
                         let b_f = b as f32;
                         specular_intensity = (r_f + g_f + b_f) / 255.0;
                     }
-                    None => {
+                    _ => {
                         specular_intensity = self.point_light.specular_intensity;
                     }
                 }
@@ -313,8 +344,8 @@ impl Effect for DefaultEffect {
 
         let mut emissive_light_contribution: Vec3 = Default::default();
 
-        match self.active_material {
-            Some(mat_raw_mut) => unsafe {
+        match (self.options.emissive_mapping_active, self.active_material) {
+            (true, Some(mat_raw_mut)) => unsafe {
                 match &(*mat_raw_mut).emissive_map {
                     Some(texture) => {
                         let (r, g, b) = sample_nearest(out.uv, texture, None);
@@ -324,7 +355,7 @@ impl Effect for DefaultEffect {
                     None => emissive_light_contribution = (*mat_raw_mut).emissive_color,
                 }
             },
-            None => (),
+            _ => (),
         }
 
         // Combine light intensities
@@ -341,8 +372,11 @@ impl Effect for DefaultEffect {
 
         match self.active_material {
             Some(mat_raw_mut) => unsafe {
-                match &(*mat_raw_mut).diffuse_map {
-                    Some(texture) => {
+                match (
+                    self.options.diffuse_mapping_active,
+                    &(*mat_raw_mut).diffuse_map,
+                ) {
+                    (true, Some(texture)) => {
                         let (r, g, b) = if self.options.bilinear_active {
                             sample_bilinear(out.uv, texture, None)
                         } else {
@@ -351,7 +385,7 @@ impl Effect for DefaultEffect {
 
                         color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                     }
-                    None => {
+                    _ => {
                         color = (*mat_raw_mut).diffuse_color;
                     }
                 }
