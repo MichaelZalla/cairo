@@ -53,18 +53,15 @@ fn main() -> Result<(), String> {
 
     let mut lava_material = Material::new("container".to_string());
 
-    let mut lava_diffuse_map = TextureMap::new(&"./examples/emissive-map/assets/lava.png");
+    let lava_diffuse_map = TextureMap::new(&"./examples/emissive-map/assets/lava.png");
 
-    let mut lava_emissive_map =
-        TextureMap::new(&"./examples/emissive-map/assets/lava_emissive.png");
-
-    lava_diffuse_map.load(rendering_context)?;
+    let lava_emissive_map = TextureMap::new(&"./examples/emissive-map/assets/lava_emissive.png");
 
     lava_material.diffuse_map = Some(lava_diffuse_map);
 
-    lava_emissive_map.load(rendering_context)?;
-
     lava_material.emissive_map = Some(lava_emissive_map);
+
+    lava_material.load_all_maps(rendering_context).unwrap();
 
     // Assign textures to mesh materials
 

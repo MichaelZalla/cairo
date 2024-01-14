@@ -53,19 +53,16 @@ fn main() -> Result<(), String> {
 
     let mut container_material = Material::new("container".to_string());
 
-    let mut container_diffuse_map =
-        TextureMap::new(&"./examples/specular-map/assets/container2.png");
+    let container_diffuse_map = TextureMap::new(&"./examples/specular-map/assets/container2.png");
 
-    let mut container_specular_map =
+    let container_specular_map =
         TextureMap::new(&"./examples/specular-map/assets/container2_specular.png");
-
-    container_diffuse_map.load(rendering_context)?;
 
     container_material.diffuse_map = Some(container_diffuse_map);
 
-    container_specular_map.load(rendering_context)?;
-
     container_material.specular_map = Some(container_specular_map);
+
+    container_material.load_all_maps(rendering_context).unwrap();
 
     // Assign textures to mesh materials
 

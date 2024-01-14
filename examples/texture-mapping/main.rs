@@ -33,29 +33,7 @@ fn main() -> Result<(), String> {
     match &mut cube_material_cache {
         Some(cache) => {
             for material in cache.values_mut() {
-                // Ambient color map
-                match &mut material.ambient_map {
-                    Some(map) => {
-                        map.load(rendering_context)?;
-                    }
-                    None => (),
-                }
-
-                // Diffuse color map
-                match &mut material.diffuse_map {
-                    Some(map) => {
-                        map.load(rendering_context)?;
-                    }
-                    None => (),
-                }
-
-                // Normal map
-                match &mut material.normal_map {
-                    Some(map) => {
-                        map.load(rendering_context)?;
-                    }
-                    None => (),
-                }
+                material.load_all_maps(rendering_context).unwrap();
             }
         }
         None => (),
