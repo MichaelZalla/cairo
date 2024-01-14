@@ -143,7 +143,7 @@ impl Vec4 {
     }
 
     pub fn mag(self) -> f32 {
-        return ((self.x.powi(2) + self.y.powi(2) + self.z.powi(2)) / 2.0).sqrt();
+        return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
     }
 
     pub fn dot(self, rhs: Vec4) -> f32 {
