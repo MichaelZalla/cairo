@@ -14,13 +14,6 @@ use super::{
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
-// @TODO Take near and far values in Pipeline constructor, or read from some
-// shared config.
-static NEAR: f32 = 0.5;
-static NEAR_RECIPROCAL: f32 = 1.0 / NEAR;
-static FAR: f32 = 10000.0;
-static FAR_RECIPROCAL: f32 = 1.0 / FAR;
-
 static Z_BUFFER_MAX_DEPTH: f32 = 1.0;
 
 #[derive(Copy, Clone, Default)]
@@ -539,6 +532,11 @@ where
 
         // Non-linear depth test
         // https://youtu.be/3xGKu4T4SCU?si=v7nkYrg2sFYozfZ5&t=139
+
+        static NEAR: f32 = 0.5;
+        static NEAR_RECIPROCAL: f32 = 1.0 / NEAR;
+        static FAR: f32 = 10000.0;
+        static FAR_RECIPROCAL: f32 = 1.0 / FAR;
 
         // (1/z - 1/n) / (1/f - 1/n)
         let non_linear_z = (1.0 / z - NEAR_RECIPROCAL) / (FAR_RECIPROCAL - NEAR_RECIPROCAL);
