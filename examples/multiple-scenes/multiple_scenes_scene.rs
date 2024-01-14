@@ -164,6 +164,10 @@ impl<'a> Scene for MultipleScenesScene<'a> {
 
         self.pipeline
             .effect
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
+            .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         self.pipeline.effect.set_projection(camera.get_projection());

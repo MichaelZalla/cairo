@@ -1,5 +1,8 @@
+use sdl2::keyboard::Keycode;
+
 use crate::{
     color::{self, Color},
+    device::{GameControllerState, KeyboardState, MouseState},
     effect::Effect,
     material::Material,
     matrix::Mat4,
@@ -9,7 +12,30 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
+struct DefaultEffectOptions {
+    bilinear_active: bool,
+}
+
+impl DefaultEffectOptions {
+    fn update(
+        &mut self,
+        keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
+        game_controller_state: &GameControllerState,
+    ) {
+        for keycode in &keyboard_state.keys_pressed {
+            match keycode {
+                Keycode::B { .. } => {
+                    self.bilinear_active = !self.bilinear_active;
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
 pub struct DefaultEffect {
+    options: DefaultEffectOptions,
     world_transform: Mat4,
     view_position: Vec4,
     view_inverse_transform: Mat4,
@@ -17,7 +43,6 @@ pub struct DefaultEffect {
     projection_transform: Mat4,
     world_view_projection_transform: Mat4,
     ambient_light: AmbientLight,
-    bilinear_active: bool,
     directional_light: DirectionalLight,
     point_light: PointLight,
     spot_light: SpotLight,
@@ -37,6 +62,9 @@ impl DefaultEffect {
         spot_light: SpotLight,
     ) -> Self {
         return DefaultEffect {
+            options: DefaultEffectOptions {
+                bilinear_active: false,
+            },
             world_transform,
             view_position,
             view_inverse_transform,
@@ -46,7 +74,6 @@ impl DefaultEffect {
                 * view_inverse_transform
                 * projection_transform,
             ambient_light,
-            bilinear_active: false,
             directional_light,
             point_light,
             spot_light,
@@ -106,19 +133,6 @@ impl Effect for DefaultEffect {
         self.projection_transform = projection_transform;
     }
 
-    fn set_bilinear_active(&mut self, active: bool) {
-        self.bilinear_active = active;
-
-        println!(
-            "Bilinear sampling {}.",
-            if self.bilinear_active {
-                "enabled"
-            } else {
-                "disabled"
-            }
-        );
-    }
-
     fn set_active_material(&mut self, material_option: Option<*const Material>) {
         match material_option {
             Some(mat_raw_mut) => {
@@ -128,6 +142,18 @@ impl Effect for DefaultEffect {
                 self.active_material = None;
             }
         }
+    }
+
+    fn update(
+        &mut self,
+        keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
+        game_controller_state: &GameControllerState,
+    ) {
+        // Delegates update to DefaultEffectOptions
+
+        self.options
+            .update(keyboard_state, mouse_state, game_controller_state);
     }
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut {
@@ -317,7 +343,7 @@ impl Effect for DefaultEffect {
             Some(mat_raw_mut) => unsafe {
                 match &(*mat_raw_mut).diffuse_map {
                     Some(texture) => {
-                        let (r, g, b) = if self.bilinear_active {
+                        let (r, g, b) = if self.options.bilinear_active {
                             sample_bilinear(out.uv, texture, None)
                         } else {
                             sample_nearest(out.uv, texture, None)

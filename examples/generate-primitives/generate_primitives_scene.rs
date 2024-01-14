@@ -183,6 +183,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         self.pipeline
             .effect
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
+            .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         let phase_shift = 2.0 * PI / 3.0;

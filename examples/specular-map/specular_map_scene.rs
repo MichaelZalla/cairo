@@ -1,7 +1,5 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
-use sdl2::keyboard::Keycode;
-
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     effect::Effect,
@@ -28,7 +26,6 @@ pub struct SpecularMapScene<'a> {
     spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
-    bilinear_active: bool,
     prev_mouse_state: MouseState,
     seconds_ellapsed: f32,
 }
@@ -140,7 +137,6 @@ impl<'a> SpecularMapScene<'a> {
             pipeline,
             entities,
             materials,
-            bilinear_active: false,
             cameras: vec![camera],
             active_camera_index: 0,
             // ambient_light,
@@ -178,21 +174,13 @@ impl<'a> Scene for SpecularMapScene<'a> {
 
         self.pipeline
             .effect
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
+            .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         self.pipeline.effect.set_projection(camera.get_projection());
-
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                Keycode::B { .. } => {
-                    self.bilinear_active = !self.bilinear_active;
-                    self.pipeline
-                        .effect
-                        .set_bilinear_active(self.bilinear_active);
-                }
-                _ => {}
-            }
-        }
 
         let phase_shift = 2.0 * PI / 3.0;
         let max_intensity: f32 = 0.6;

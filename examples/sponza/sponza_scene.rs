@@ -1,7 +1,5 @@
 use std::{borrow::BorrowMut, sync::RwLock};
 
-use sdl2::keyboard::Keycode;
-
 use cairo::{
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
@@ -30,7 +28,6 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 pub struct SponzaScene<'a> {
     seconds_ellapsed: f32,
     pipeline: Pipeline<DefaultEffect>,
-    bilinear_active: bool,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     point_light: PointLight,
@@ -154,7 +151,6 @@ impl<'a> SponzaScene<'a> {
         return SponzaScene {
             seconds_ellapsed: 0.0,
             pipeline,
-            bilinear_active: false,
             entities,
             skybox,
             materials,
@@ -191,21 +187,13 @@ impl<'a> Scene for SponzaScene<'a> {
 
         self.pipeline
             .effect
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
+            .effect
             .set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
         self.pipeline.effect.set_projection(camera.get_projection());
-
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                Keycode::B { .. } => {
-                    self.bilinear_active = !self.bilinear_active;
-                    self.pipeline
-                        .effect
-                        .set_bilinear_active(self.bilinear_active);
-                }
-                _ => {}
-            }
-        }
 
         self.pipeline
             .effect

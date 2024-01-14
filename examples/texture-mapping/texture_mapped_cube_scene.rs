@@ -1,7 +1,5 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
-use sdl2::keyboard::Keycode;
-
 use cairo::{
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
@@ -189,6 +187,10 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         self.pipeline
             .options
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        self.pipeline
+            .effect
             .update(keyboard_state, mouse_state, game_controller_state);
 
         self.pipeline

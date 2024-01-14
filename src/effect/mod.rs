@@ -1,4 +1,7 @@
-use crate::material::Material;
+use crate::{
+    device::{GameControllerState, KeyboardState, MouseState},
+    material::Material,
+};
 
 use super::{color::Color, matrix::Mat4};
 
@@ -10,9 +13,14 @@ pub trait Effect {
 
     fn set_projection(&mut self, projection_transform: Mat4);
 
-    fn set_bilinear_active(&mut self, active: bool);
-
     fn set_active_material(&mut self, material_option: Option<*const Material>);
+
+    fn update(
+        &mut self,
+        keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
+        game_controller_state: &GameControllerState,
+    );
 
     fn vs(&self, v: Self::VertexIn) -> Self::VertexOut;
 
