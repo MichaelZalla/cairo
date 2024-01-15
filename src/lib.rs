@@ -9,6 +9,8 @@ pub mod color;
 pub mod context;
 pub mod debug;
 pub mod device;
+pub mod effect;
+pub mod effects;
 pub mod entity;
 pub mod font;
 pub mod fs;

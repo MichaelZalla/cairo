@@ -86,6 +86,7 @@ fn main() -> Result<(), String> {
     let mut cylinder_mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
 
     // Create a new textured material
+
     let mut checkerboard_mat = Material::new("checkerboard".to_string());
 
     let mut checkerboard_diffuse_map = TextureMap::new(&"./assets/textures/checkerboard.jpg");
@@ -99,6 +100,7 @@ fn main() -> Result<(), String> {
     let checkerboard_specular_map = checkerboard_diffuse_map.clone();
 
     // Pump up diffuse value of the darkest pixels
+
     checkerboard_diffuse_map.map(|r, g, b| {
         if r < 4 && g < 4 && b < 4 {
             return (18, 18, 18);
@@ -145,6 +147,7 @@ fn main() -> Result<(), String> {
     cylinder_mesh.material_name = Some(checkerboard_mat.name.clone());
 
     // Assign the meshes to entities
+
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
 
     plane_entity.position.x -= 5.0;
@@ -167,6 +170,7 @@ fn main() -> Result<(), String> {
     material_cache.insert(spot_light_decal_mat);
 
     // Wrap the entity collection in a memory-safe container
+
     let entities: Vec<&mut Entity> = vec![
         &mut plane_entity,
         &mut cube_entity,
@@ -179,6 +183,7 @@ fn main() -> Result<(), String> {
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
     // Instantiate our textured cube scene
+
     let scene = RefCell::new(GeneratePrimitivesScene::new(
         &framebuffer_rwl,
         font_cache_rwl,

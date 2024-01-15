@@ -175,6 +175,23 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example post-effects",
+      "windows": {
+        "command": "cargo run --example post-effects"
+      },
+      "osx": {
+        "command": "cargo run --example post-effects"
+      },
+      "linux": {
+        "command": "cargo run --example post-effects"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example render-text",
       "windows": {
         "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"

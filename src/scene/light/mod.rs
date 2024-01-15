@@ -50,7 +50,7 @@ impl PointLight {
             specular_intensity: 0.5,
             position: Vec3 {
                 x: 0.0,
-                y: 1.0,
+                y: 10.0,
                 z: 0.0,
             },
             constant_attenuation: 1.0,
@@ -161,7 +161,7 @@ impl SpotLight {
             },
             position: Vec3 {
                 x: 0.0,
-                y: 1.0,
+                y: 10.0,
                 z: 0.0,
             },
             direction: Vec3 {

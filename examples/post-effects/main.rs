@@ -5,7 +5,10 @@ use std::{cell::RefCell, sync::RwLock};
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
+    color,
     device::{GameControllerState, KeyboardState, MouseState},
+    effect::Effect,
+    effects::{dilation_effect::DilationEffect, invert_effect::InvertEffect},
     entity::Entity,
     material::{cache::MaterialCache, Material},
     mesh,
@@ -14,14 +17,13 @@ use cairo::{
     texture::TextureMap,
 };
 
-mod emissive_map_scene;
+mod post_effects_scene;
 
-use self::emissive_map_scene::EmissiveMapScene;
+use self::post_effects_scene::PostEffectsScene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/emissive-map".to_string(),
-        relative_mouse_mode: true,
+        title: "examples/post-effects".to_string(),
         ..Default::default()
     };
 
@@ -92,22 +94,25 @@ fn main() -> Result<(), String> {
     let mut cube_entity = Entity::new(&cube_mesh);
     cube_entity.position.y = 3.0;
 
-    // Orbiting point light
-
     // Wrap the entity collection in a memory-safe container
+
     let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity];
 
     let entities_rwl = RwLock::new(entities);
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
-    // Instantiate our textured cube scene
-    let scene = RefCell::new(EmissiveMapScene::new(
+    // Instantiate our spinning cube scene
+    let scene = RefCell::new(PostEffectsScene::new(
         &framebuffer_rwl,
         &entities_rwl,
         &material_cache,
         &shader_context_rwl,
     ));
+
+    // Create several screen-space post-processing effects.
+    let outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
+    let _invert_effect = InvertEffect::new();
 
     // Set up our app
     let mut update = |app: &mut App,
@@ -115,21 +120,39 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> () {
-        // Delegate the update to our textured cube scene
+        // Delegate the update to our spinning cube scene
 
         scene
             .borrow_mut()
-            .update(app, keyboard_state, mouse_state, game_controller_state);
+            .update(app, &keyboard_state, &mouse_state, &game_controller_state);
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our textured cube scene
+        // Delegate the rendering to our spinning cube scene
 
-        scene.borrow_mut().render();
+        let mut scene_mut = scene.borrow_mut();
 
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        scene_mut.render();
 
-        return Ok(framebuffer.get_all().clone());
+        let prepost = framebuffer_rwl.read().unwrap().get_all().clone();
+
+        // Perform a post-processing pass by applying the dilation effect.
+
+        let mut buffer =
+            Buffer2D::from_data(window_info.canvas_width, window_info.canvas_height, prepost);
+
+        let effects: Vec<&dyn Effect> = vec![
+            &outline_effect,
+            // &invert_effect,
+        ];
+
+        for effect in effects {
+            effect.apply(&mut buffer);
+        }
+
+        // Return the post-processed pixels.
+
+        Ok(buffer.get_all().clone())
     };
 
     app.run(&mut update, &mut render)?;
