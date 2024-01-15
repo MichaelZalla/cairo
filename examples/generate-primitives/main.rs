@@ -12,7 +12,6 @@ use cairo::{
     scene::Scene,
     shader::ShaderContext,
     texture::TextureMap,
-    vec::vec3::Vec3,
 };
 
 mod generate_primitives_scene;
@@ -97,24 +96,8 @@ fn main() -> Result<(), String> {
     cylinder_entity.position.x += 4.0;
     cylinder_entity.position.y += 1.0;
 
-    // let mut point_light_material = Material::new("white".to_string());
-    // point_light_material.diffuse_color = color::WHITE.to_vec3() / 255.0;
-
-    let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
-
-    point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material_name = Some(point_light_mat.name.clone());
-
     material_cache.insert(checkerboard_mat);
     material_cache.insert(point_light_mat);
-
-    let mut point_light_entity = Entity::new(&point_light_mesh);
-
-    point_light_entity.position = Vec3 {
-        x: 4.0,
-        y: 3.0,
-        z: 4.0,
-    };
 
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> = vec![
@@ -122,7 +105,6 @@ fn main() -> Result<(), String> {
         &mut cube_entity,
         &mut cone_entity,
         &mut cylinder_entity,
-        &mut point_light_entity,
     ];
 
     let entities_rwl = RwLock::new(entities);

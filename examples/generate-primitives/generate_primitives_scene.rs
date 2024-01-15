@@ -285,11 +285,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let rotation_speed = 0.3;
 
         for entity in entities.as_mut_slice() {
-            if entity.mesh.object_name == "point_light" {
-                entity.position = self.point_lights[0].position;
-            }
-
-            if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {
+            if entity.mesh.object_name == "plane" {
                 continue;
             }
 
@@ -326,6 +322,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
             self.pipeline
                 .render_mesh(&entity.mesh, Some(self.materials));
+        }
+
+        for light in &self.point_lights {
+            self.pipeline.render_point_light(&light);
         }
     }
 

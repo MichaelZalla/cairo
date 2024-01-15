@@ -2,8 +2,9 @@ use std::sync::RwLock;
 
 use crate::{
     material::{cache::MaterialCache, Material},
-    mesh::Face,
-    scene::camera::Camera,
+    matrix::Mat4,
+    mesh::{primitive::cube, Face},
+    scene::{camera::Camera, light::PointLight},
     shader::{alpha::AlphaShader, fragment::FragmentShader, vertex::VertexShader, ShaderContext},
     shaders::{
         default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
@@ -51,6 +52,7 @@ pub struct Pipeline<
     vertex_shader: V,
     alpha_shader: A,
     pub fragment_shader: F,
+    default_cube_mesh: Mesh,
 }
 
 impl<'a, V, A, F> Pipeline<'a, V, A, F>
@@ -80,6 +82,8 @@ where
 
         let alpha_shader = AlphaShader::new(shader_context);
 
+        let default_cube_mesh = cube::generate(1.0, 1.0, 1.0);
+
         return Pipeline {
             options,
             graphics,
@@ -90,6 +94,7 @@ where
             vertex_shader,
             alpha_shader,
             fragment_shader,
+            default_cube_mesh,
         };
     }
 
@@ -101,6 +106,29 @@ where
         self.graphics.buffer.clear(color::BLACK);
 
         self.z_buffer.clear();
+    }
+
+    pub fn render_point_light(&mut self, light: &PointLight) {
+        // Cache original render options.
+        let previous_options = self.options.clone();
+
+        self.options.should_render_shader = false;
+        self.options.should_render_wireframe = true;
+
+        // Apply a world transform based on our point light's position.
+        let world_transform = Mat4::scaling(0.25) * Mat4::translation(light.position);
+
+        {
+            let mut context = self.shader_context.write().unwrap();
+
+            context.set_world_transform(world_transform);
+        }
+
+        // Render a wireframe cube representation of our light.
+        self.process_world_vertices(&self.default_cube_mesh.clone());
+
+        // Restore the original render options.
+        self.options = previous_options;
     }
 
     pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
