@@ -517,13 +517,15 @@ where
 
         match self.z_buffer.test(x, y, interpolant.p.z) {
             Some((index, non_linear_z)) => {
-                let linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
+                let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
                 if self.effect.ts(&linear_space_interpolant) == false {
                     return;
                 }
 
                 self.z_buffer.set(index, non_linear_z);
+
+                linear_space_interpolant.depth = non_linear_z;
 
                 self.graphics
                     .buffer

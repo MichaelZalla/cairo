@@ -12,6 +12,7 @@ pub struct DefaultVertexOut {
     pub c: Vec3,
     pub uv: Vec2,
     pub world_pos: Vec3,
+    pub depth: f32,
 }
 
 impl DefaultVertexOut {
@@ -33,6 +34,7 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
             c: self.c + rhs.c,
             uv: self.uv + rhs.uv,
             world_pos: self.world_pos + rhs.world_pos,
+            depth: 1.0,
         }
     }
 }
@@ -44,6 +46,7 @@ impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
         self.c += rhs.c;
         self.uv += rhs.uv;
         self.world_pos += rhs.world_pos;
+        self.depth += rhs.depth;
     }
 }
 
@@ -56,6 +59,7 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
             c: self.c - rhs.c,
             uv: self.uv - rhs.uv,
             world_pos: self.world_pos - rhs.world_pos,
+            depth: self.depth - rhs.depth,
         }
     }
 }
@@ -69,6 +73,7 @@ impl Mul<f32> for DefaultVertexOut {
             c: self.c * scalar,
             uv: self.uv * scalar,
             world_pos: self.world_pos * scalar,
+            depth: self.depth * scalar,
         }
     }
 }
@@ -80,6 +85,7 @@ impl MulAssign<f32> for DefaultVertexOut {
         self.c *= scalar;
         self.uv *= scalar;
         self.world_pos *= scalar;
+        self.depth *= scalar;
     }
 }
 
@@ -92,6 +98,7 @@ impl Div<f32> for DefaultVertexOut {
             c: self.c / scalar,
             uv: self.uv / scalar,
             world_pos: self.world_pos / scalar,
+            depth: self.depth / scalar,
         }
     }
 }
