@@ -34,7 +34,8 @@ pub struct SponzaScene<'a> {
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
-    point_light: PointLight,
+    point_lights: Vec<PointLight>,
+    spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<Entity<'a>>>,
     skybox: CubeMap,
     materials: &'a MaterialCache,
@@ -141,8 +142,8 @@ impl<'a> SponzaScene<'a> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_point_light(point_light);
-        context.set_spot_light(spot_light);
+        context.set_point_light(0, point_light);
+        context.set_spot_light(0, spot_light);
 
         let vertex_shader = DefaultVertexShader::new(shader_context);
 
@@ -167,7 +168,8 @@ impl<'a> SponzaScene<'a> {
             shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
-            point_light,
+            point_lights: vec![point_light],
+            spot_lights: vec![spot_light],
             prev_mouse_state: MouseState::new(),
         };
     }
@@ -206,7 +208,7 @@ impl<'a> Scene for SponzaScene<'a> {
 
         context.set_projection(camera.get_projection());
 
-        context.set_point_light(self.point_light);
+        context.set_point_light(0, self.point_lights[0]);
 
         let mut entities = self.entities.write().unwrap();
 

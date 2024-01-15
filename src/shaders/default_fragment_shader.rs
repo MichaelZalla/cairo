@@ -106,12 +106,12 @@ impl<'a> FragmentShader<'a> for DefaultFragmentShader<'a> {
 
         // Calculate point light contribution (including specular)
 
-        let specular_exponent: i32;
-        let specular_intensity: f32;
+        let mut material_specular_exponent: Option<i32> = None;
+        let mut material_specular_intensity: Option<f32> = None;
 
         match context.active_material {
             Some(mat_raw_mut) => unsafe {
-                specular_exponent = (*mat_raw_mut).specular_exponent;
+                material_specular_exponent = Some((*mat_raw_mut).specular_exponent);
 
                 match (
                     self.options.specular_mapping_active,
@@ -119,33 +119,50 @@ impl<'a> FragmentShader<'a> for DefaultFragmentShader<'a> {
                 ) {
                     (true, Some(map)) => {
                         let (r, g, b) = sample_nearest(out.uv, map, None);
+
                         let r_f = r as f32;
                         let g_f = g as f32;
                         let b_f = b as f32;
-                        specular_intensity = (r_f + g_f + b_f) / 255.0;
+
+                        material_specular_intensity = Some((r_f + g_f + b_f) / 255.0);
                     }
-                    _ => {
-                        specular_intensity = context.point_light.specular_intensity;
-                    }
+                    _ => (),
                 }
             },
-            None => {
-                specular_exponent = context.default_specular_power;
-                specular_intensity = context.point_light.specular_intensity;
-            }
+            None => (),
         }
 
-        let point_light_contribution: Vec3 = context.point_light.contribute(
-            out.world_pos,
-            surface_normal_vec3,
-            context.view_position,
-            specular_intensity,
-            specular_exponent,
-        );
+        // Calculate point light contributions.
 
-        // Calculate spot light contribution
+        let mut point_light_contribution: Vec3 = Default::default();
 
-        let spot_light_contribution = context.spot_light.contribute(out.world_pos);
+        for point_light in &context.point_lights {
+            let specular_exponent: i32 = match material_specular_exponent {
+                Some(exponent) => exponent,
+                None => context.default_specular_power,
+            };
+
+            let specular_intensity: f32 = match material_specular_intensity {
+                Some(intensity) => intensity,
+                None => point_light.specular_intensity,
+            };
+
+            point_light_contribution += point_light.contribute(
+                out.world_pos,
+                surface_normal_vec3,
+                context.view_position,
+                specular_intensity,
+                specular_exponent,
+            );
+        }
+
+        // Calculate spot light contributions.
+
+        let mut spot_light_contribution: Vec3 = Default::default();
+
+        for spot_light in &context.spot_lights {
+            spot_light_contribution += spot_light.contribute(out.world_pos);
+        }
 
         // Calculate emissive light contribution
 

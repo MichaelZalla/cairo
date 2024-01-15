@@ -143,8 +143,8 @@ impl<'a> TextureMappedCubeScene<'a> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_point_light(point_light);
-        context.set_spot_light(spot_light);
+        context.set_point_light(0, point_light);
+        context.set_spot_light(0, spot_light);
 
         let vertex_shader = DefaultVertexShader::new(shader_context);
 

@@ -22,8 +22,8 @@ pub struct ShaderContext {
     pub active_material: Option<*const Material>,
     pub ambient_light: AmbientLight,
     pub directional_light: DirectionalLight,
-    pub point_light: PointLight,
-    pub spot_light: SpotLight,
+    pub point_lights: Vec<PointLight>,
+    pub spot_lights: Vec<SpotLight>,
 }
 
 impl ShaderContext {
@@ -34,8 +34,8 @@ impl ShaderContext {
         projection_transform: Mat4,
         ambient_light: AmbientLight,
         directional_light: DirectionalLight,
-        point_light: PointLight,
-        spot_light: SpotLight,
+        point_lights: Vec<PointLight>,
+        spot_lights: Vec<SpotLight>,
     ) -> Self {
         Self {
             flags: 0,
@@ -51,8 +51,8 @@ impl ShaderContext {
             active_material: None,
             ambient_light,
             directional_light,
-            point_light,
-            spot_light,
+            point_lights,
+            spot_lights,
         }
     }
 
@@ -95,12 +95,24 @@ impl ShaderContext {
         self.directional_light = light;
     }
 
-    pub fn set_point_light(&mut self, light: PointLight) {
-        self.point_light = light;
+    pub fn set_point_light(&mut self, index: usize, light: PointLight) {
+        if index > self.point_lights.len() {
+            panic!("Called ShaderContext.set_point_light() with an index greater than point_lights.len()!");
+        } else if index == self.point_lights.len() {
+            self.point_lights.push(light);
+        } else {
+            self.point_lights[index] = light;
+        }
     }
 
-    pub fn set_spot_light(&mut self, light: SpotLight) {
-        self.spot_light = light;
+    pub fn set_spot_light(&mut self, index: usize, light: SpotLight) {
+        if index > self.point_lights.len() {
+            panic!("Called ShaderContext.set_spot_light() with an index greater than spot_lights.len()!");
+        } else if index == self.spot_lights.len() {
+            self.spot_lights.push(light);
+        } else {
+            self.spot_lights[index] = light;
+        }
     }
 
     pub fn set_active_material(&mut self, material_option: Option<*const Material>) {

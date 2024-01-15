@@ -26,8 +26,8 @@ pub struct GeneratePrimitivesScene<'a> {
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
-    point_light: PointLight,
-    spot_light: SpotLight,
+    point_lights: Vec<PointLight>,
+    spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -85,16 +85,15 @@ impl<'a> GeneratePrimitivesScene<'a> {
             .as_normal(),
         };
 
-        let point_light = PointLight::new();
+        let mut point_lights: Vec<PointLight> = vec![PointLight::new()];
 
-        let mut spot_light = SpotLight::new();
+        let mut spot_lights: Vec<SpotLight> = vec![SpotLight::new()];
 
-        spot_light.inner_cutoff_angle = (PI / 60.0).cos();
-        spot_light.outer_cutoff_angle = (PI / 15.0).cos();
-
-        spot_light.constant_attenuation = 1.0;
-        spot_light.linear_attenuation = 0.22;
-        spot_light.quadratic_attenuation = 0.20;
+        spot_lights[0].position = Vec3 {
+            x: -6.0,
+            y: 15.0,
+            z: -6.0,
+        };
 
         let pipeline_options: PipelineOptions = Default::default();
 
@@ -115,8 +114,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_point_light(point_light);
-        context.set_spot_light(spot_light);
+        context.set_point_light(0, point_lights[0]);
+        context.set_spot_light(0, spot_lights[0]);
 
         let vertex_shader = DefaultVertexShader {
             context: shader_context,
@@ -142,8 +141,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
             cameras: vec![camera],
             active_camera_index: 0,
             directional_light,
-            point_light,
-            spot_light,
+            point_lights,
+            spot_lights,
             prev_mouse_state: MouseState::new(),
             looking_at_point_light: false,
             seconds_ellapsed: 0.0,
@@ -175,7 +174,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         }
 
         if self.looking_at_point_light {
-            camera.set_target_position(self.point_light.position);
+            camera.set_target_position(self.point_lights[0].position);
         } else {
             camera.update(
                 keyboard_state,
@@ -212,29 +211,29 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         let max_point_light_intensity: f32 = 1.0;
 
-        self.point_light.intensities = Vec3 {
+        self.point_lights[0].intensities = Vec3 {
             x: (self.seconds_ellapsed + phase_shift * 0.0).sin() / 2.0 + 0.5,
             y: (self.seconds_ellapsed + phase_shift * 1.0).sin() / 2.0 + 0.5,
             z: (self.seconds_ellapsed + phase_shift * 2.0).sin() / 2.0 + 0.5,
         } * max_point_light_intensity;
 
-        self.point_light.position = Vec3 {
+        self.point_lights[0].position = Vec3 {
             x: orbit_radius * (self.seconds_ellapsed * 0.66).sin(),
             y: 1.0,
             z: orbit_radius * (self.seconds_ellapsed * 0.66).cos(),
         };
 
-        context.set_point_light(self.point_light);
+        context.set_point_light(0, self.point_lights[0]);
 
         let max_spot_light_intensity: f32 = 0.6;
 
-        self.spot_light.intensities = Vec3 {
+        self.spot_lights[0].intensities = Vec3 {
             x: (self.seconds_ellapsed + phase_shift * 0.0).cos() / 2.0 + 0.5,
             y: (self.seconds_ellapsed + phase_shift * 1.0).cos() / 2.0 + 0.5,
             z: (self.seconds_ellapsed + phase_shift * 2.0).cos() / 2.0 + 0.5,
         } * max_spot_light_intensity;
 
-        context.set_spot_light(self.spot_light);
+        context.set_spot_light(0, self.spot_lights[0]);
 
         let mut entities = self.entities.write().unwrap();
 
@@ -242,7 +241,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         for entity in entities.as_mut_slice() {
             if entity.mesh.object_name == "point_light" {
-                entity.position = self.point_light.position;
+                entity.position = self.point_lights[0].position;
             }
 
             if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {

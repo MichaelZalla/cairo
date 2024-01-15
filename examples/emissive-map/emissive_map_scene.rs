@@ -125,8 +125,8 @@ impl<'a> EmissiveMapScene<'a> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_point_light(point_light);
-        context.set_spot_light(spot_light);
+        context.set_point_light(0, point_light);
+        context.set_spot_light(0, spot_light);
 
         let vertex_shader = DefaultVertexShader::new(shader_context);
 
@@ -221,7 +221,7 @@ impl<'a> Scene for EmissiveMapScene<'a> {
             z: orbital_radius * self.seconds_ellapsed.cos(),
         };
 
-        context.set_point_light(self.point_light);
+        context.set_point_light(0, self.point_light);
 
         let mut entities = self.entities.write().unwrap();
 

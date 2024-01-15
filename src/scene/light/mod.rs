@@ -47,7 +47,11 @@ impl PointLight {
         PointLight {
             intensities: color::WHITE.to_vec3() / 255.0,
             specular_intensity: 0.5,
-            position: Default::default(),
+            position: Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
             constant_attenuation: 1.0,
             linear_attenuation: 0.35,
             quadratic_attenuation: 0.44,

@@ -26,6 +26,8 @@ pub struct SkyboxScene<'a> {
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
+    point_lights: Vec<PointLight>,
+    spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     shader_context: &'a RwLock<ShaderContext>,
     skybox: CubeMap,
@@ -123,8 +125,8 @@ impl<'a> SkyboxScene<'a> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_point_light(point_light);
-        context.set_spot_light(spot_light);
+        context.set_point_light(0, point_light);
+        context.set_spot_light(0, spot_light);
 
         let vertex_shader = DefaultVertexShader::new(shader_context);
 
@@ -168,6 +170,8 @@ impl<'a> SkyboxScene<'a> {
             skybox,
             cameras: vec![camera],
             active_camera_index: 0,
+            point_lights: vec![point_light],
+            spot_lights: vec![spot_light],
             prev_mouse_state: MouseState::new(),
         };
     }
