@@ -116,12 +116,7 @@ impl<'a> SponzaScene<'a> {
 
         skybox.load(rendering_context).unwrap();
 
-        let pipeline_options = PipelineOptions {
-            should_render_wireframe: false,
-            should_render_shader: true,
-            should_render_normals: false,
-            should_cull_backfaces: true,
-        };
+        let pipeline_options: PipelineOptions = Default::default();
 
         let world_transform = Mat4::new();
 

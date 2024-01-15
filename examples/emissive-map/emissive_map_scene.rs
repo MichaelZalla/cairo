@@ -100,7 +100,6 @@ impl<'a> EmissiveMapScene<'a> {
             quadratic_attenuation: 0.44,
         };
 
-        // @TODO Pipeline to store a reference to PipelineOptions
         let pipeline_options = PipelineOptions {
             should_render_wireframe: false,
             should_render_shader: true,
