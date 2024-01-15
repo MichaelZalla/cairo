@@ -327,6 +327,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         for light in &self.point_lights {
             self.pipeline.render_point_light(&light);
         }
+
+        for light in &self.spot_lights {
+            self.pipeline.render_spot_light(&light);
+        }
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {

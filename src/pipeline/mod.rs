@@ -4,7 +4,10 @@ use crate::{
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
     mesh::{primitive::cube, Face},
-    scene::{camera::Camera, light::PointLight},
+    scene::{
+        camera::Camera,
+        light::{PointLight, SpotLight},
+    },
     shader::{alpha::AlphaShader, fragment::FragmentShader, vertex::VertexShader, ShaderContext},
     shaders::{
         default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
@@ -109,6 +112,14 @@ where
     }
 
     pub fn render_point_light(&mut self, light: &PointLight) {
+        self.render_wireframe_cube(light.position, 0.2);
+    }
+
+    pub fn render_spot_light(&mut self, light: &SpotLight) {
+        self.render_wireframe_cube(light.position, 0.2);
+    }
+
+    fn render_wireframe_cube(&mut self, position: Vec3, scale: f32) {
         // Cache original render options.
         let previous_options = self.options.clone();
 
@@ -116,7 +127,8 @@ where
         self.options.should_render_wireframe = true;
 
         // Apply a world transform based on our point light's position.
-        let world_transform = Mat4::scaling(0.25) * Mat4::translation(light.position);
+        let world_transform =
+            Mat4::scaling(scale) * Mat4::scaling(scale) * Mat4::translation(position);
 
         {
             let mut context = self.shader_context.write().unwrap();
