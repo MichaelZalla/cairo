@@ -85,7 +85,26 @@ impl<'a> GeneratePrimitivesScene<'a> {
             .as_normal(),
         };
 
-        let mut point_lights: Vec<PointLight> = vec![PointLight::new()];
+        let mut point_lights: Vec<PointLight> = vec![];
+
+        let light_grid_subdivisions: usize = 4;
+        let light_grid_size = 20.0;
+
+        for x in 0..(light_grid_subdivisions + 1) {
+            for z in 0..(light_grid_subdivisions + 1) {
+                let mut light = PointLight::new();
+
+                light.position = Vec3 {
+                    x: -(light_grid_size / 2.0)
+                        + (x as f32 / light_grid_subdivisions as f32) * light_grid_size,
+                    y: 1.0,
+                    z: -(light_grid_size / 2.0)
+                        + (z as f32 / light_grid_subdivisions as f32) * light_grid_size,
+                };
+
+                point_lights.push(light);
+            }
+        }
 
         let mut spot_lights: Vec<SpotLight> = vec![SpotLight::new()];
 
@@ -114,7 +133,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_point_light(0, point_lights[0]);
+
+        for (index, light) in point_lights.iter().enumerate() {
+            context.set_point_light(index, *light);
+        }
+
         context.set_spot_light(0, spot_lights[0]);
 
         let vertex_shader = DefaultVertexShader {
@@ -206,31 +229,53 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         context.set_camera_position(Vec4::new(camera.get_position(), 1.0));
 
-        let phase_shift = 2.0 * PI / 3.0;
-        let orbit_radius: f32 = 10.0;
+        let color_channel_phase_shift = 2.0 * PI / 3.0;
 
-        let max_point_light_intensity: f32 = 1.0;
+        let light_speed_factor = 0.66;
+        let light_count = self.point_lights.len();
 
-        self.point_lights[0].intensities = Vec3 {
-            x: (self.seconds_ellapsed + phase_shift * 0.0).sin() / 2.0 + 0.5,
-            y: (self.seconds_ellapsed + phase_shift * 1.0).sin() / 2.0 + 0.5,
-            z: (self.seconds_ellapsed + phase_shift * 2.0).sin() / 2.0 + 0.5,
-        } * max_point_light_intensity;
+        for (index, light) in self.point_lights.iter_mut().enumerate() {
+            let orbit_radius: f32 = 12.0;
+            let max_point_light_intensity: f32 = 1.0;
 
-        self.point_lights[0].position = Vec3 {
-            x: orbit_radius * (self.seconds_ellapsed * 0.66).sin(),
-            y: 1.0,
-            z: orbit_radius * (self.seconds_ellapsed * 0.66).cos(),
-        };
+            let light_phase_shift = (2.0 * PI / (light_count as f32)) * index as f32;
 
-        context.set_point_light(0, self.point_lights[0]);
+            light.intensities = Vec3 {
+                x: (self.seconds_ellapsed + color_channel_phase_shift * 0.0 + light_phase_shift)
+                    .sin()
+                    / 2.0
+                    + 0.5,
+                y: (self.seconds_ellapsed + color_channel_phase_shift * 1.0 + light_phase_shift)
+                    .sin()
+                    / 2.0
+                    + 0.5,
+                z: (self.seconds_ellapsed + color_channel_phase_shift * 2.0 + light_phase_shift)
+                    .sin()
+                    / 2.0
+                    + 0.5,
+            } * max_point_light_intensity;
+
+            let offset = index % 2 == 0;
+
+            light.position = Vec3 {
+                x: orbit_radius
+                    * ((self.seconds_ellapsed * light_speed_factor) + light_phase_shift).sin()
+                    * if offset { 1.5 } else { 1.0 },
+                y: 1.0,
+                z: orbit_radius
+                    * ((self.seconds_ellapsed * light_speed_factor) + light_phase_shift).cos()
+                    * if offset { 1.5 } else { 1.0 },
+            };
+
+            context.set_point_light(index, *light);
+        }
 
         let max_spot_light_intensity: f32 = 0.6;
 
         self.spot_lights[0].intensities = Vec3 {
-            x: (self.seconds_ellapsed + phase_shift * 0.0).cos() / 2.0 + 0.5,
-            y: (self.seconds_ellapsed + phase_shift * 1.0).cos() / 2.0 + 0.5,
-            z: (self.seconds_ellapsed + phase_shift * 2.0).cos() / 2.0 + 0.5,
+            x: (self.seconds_ellapsed + color_channel_phase_shift * 0.0).cos() / 2.0 + 0.5,
+            y: (self.seconds_ellapsed + color_channel_phase_shift * 1.0).cos() / 2.0 + 0.5,
+            z: (self.seconds_ellapsed + color_channel_phase_shift * 2.0).cos() / 2.0 + 0.5,
         } * max_spot_light_intensity;
 
         context.set_spot_light(0, self.spot_lights[0]);
