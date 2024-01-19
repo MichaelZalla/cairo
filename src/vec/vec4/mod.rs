@@ -133,6 +133,14 @@ impl ops::MulAssign<Vec4> for Vec4 {
 }
 
 impl Vec4 {
+    pub fn to_vec3(self) -> Vec3 {
+        Vec3 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+        }
+    }
+
     pub fn abs(self) -> Self {
         Vec4 {
             x: self.x.abs(),

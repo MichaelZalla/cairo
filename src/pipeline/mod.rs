@@ -55,7 +55,6 @@ pub struct Pipeline<
     vertex_shader: V,
     alpha_shader: A,
     pub fragment_shader: F,
-    default_cube_mesh: Mesh,
 }
 
 impl<'a, V, A, F> Pipeline<'a, V, A, F>
@@ -85,8 +84,6 @@ where
 
         let alpha_shader = AlphaShader::new(shader_context);
 
-        let default_cube_mesh = cube::generate(1.0, 1.0, 1.0);
-
         return Pipeline {
             options,
             graphics,
@@ -97,7 +94,6 @@ where
             vertex_shader,
             alpha_shader,
             fragment_shader,
-            default_cube_mesh,
         };
     }
 
@@ -143,6 +139,56 @@ where
         );
     }
 
+    fn render_point_indicator(&mut self, position: Vec3, scale: f32) {
+        // X-axis (red)
+
+        self.render_line(
+            Vec3 {
+                x: -1.0 * scale,
+                y: 0.0,
+                z: 0.0,
+            } + position,
+            Vec3 {
+                x: 1.0 * scale,
+                y: 0.0,
+                z: 0.0,
+            } + position,
+            color::RED,
+        );
+
+        // Y-axis (blue)
+
+        self.render_line(
+            Vec3 {
+                x: 0.0,
+                y: -1.0 * scale,
+                z: 0.0,
+            } + position,
+            Vec3 {
+                x: 0.0,
+                y: 1.0 * scale,
+                z: 0.0,
+            } + position,
+            color::BLUE,
+        );
+
+        // Z-axis (green)
+
+        self.render_line(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -1.0 * scale,
+            } + position,
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0 * scale,
+            } + position,
+            color::GREEN,
+        );
+    }
+
     pub fn render_camera(&mut self, camera: &Camera) {
         let origin = camera.get_position();
 
@@ -183,35 +229,55 @@ where
     }
 
     pub fn render_point_light(&mut self, light: &PointLight) {
-        self.render_wireframe_cube(light.position, 0.2);
+        self.render_point_indicator(light.position, 0.2);
     }
 
     pub fn render_spot_light(&mut self, light: &SpotLight) {
-        self.render_wireframe_cube(light.position, 0.2);
-    }
+        self.render_point_indicator(light.position, 0.2);
 
-    fn render_wireframe_cube(&mut self, position: Vec3, scale: f32) {
-        // Cache original render options.
-        let previous_options = self.options.clone();
+        let start = light.position;
+        let end = light.position + light.direction.as_normal() * light.influence_distance;
 
-        self.options.should_render_shader = false;
-        self.options.should_render_wireframe = true;
+        self.render_line(start, end, color::WHITE);
 
-        // Apply a world transform based on our point light's position.
-        let world_transform =
-            Mat4::scaling(scale) * Mat4::scaling(scale) * Mat4::translation(position);
+        // Draw sides for cutoff angles.
 
-        {
-            let mut context = self.shader_context.write().unwrap();
+        let down_normal = Vec4::new((end - start).as_normal(), 1.0);
 
-            context.set_world_transform(world_transform);
-        }
+        let mut draw_sides = |cutoff_angle: f32, cutoff_angle_cos: f32, color: Color| {
+            let hypotenuse_ratio = 1.0 / cutoff_angle_cos;
 
-        // Render a wireframe cube representation of our light.
-        self.process_world_vertices(&self.default_cube_mesh.clone());
+            let normal_rotated_x = (down_normal * Mat4::rotation_x(cutoff_angle)).as_normal();
+            let normal_rotated_neg_x = (down_normal * Mat4::rotation_x(-cutoff_angle)).as_normal();
 
-        // Restore the original render options.
-        self.options = previous_options;
+            let x = normal_rotated_x.to_vec3() * hypotenuse_ratio * light.influence_distance;
+            let neg_x =
+                normal_rotated_neg_x.to_vec3() * hypotenuse_ratio * light.influence_distance;
+
+            let normal_rotated_z = (down_normal * Mat4::rotation_z(cutoff_angle)).as_normal();
+            let normal_rotated_neg_z = (down_normal * Mat4::rotation_z(-cutoff_angle)).as_normal();
+
+            let z = normal_rotated_z.to_vec3() * hypotenuse_ratio * light.influence_distance;
+            let neg_z =
+                normal_rotated_neg_z.to_vec3() * hypotenuse_ratio * light.influence_distance;
+
+            self.render_line(start, start + x, color);
+            self.render_line(start, start + neg_x, color);
+
+            self.render_line(start, start + z, color);
+            self.render_line(start, start + neg_z, color);
+
+            self.render_line(start + x, start + z, color);
+            self.render_line(start + z, start + neg_x, color);
+            self.render_line(start + neg_x, start + neg_z, color);
+            self.render_line(start + neg_z, start + x, color);
+        };
+
+        draw_sides(
+            light.outer_cutoff_angle,
+            light.outer_cutoff_angle_cos,
+            color::YELLOW,
+        );
     }
 
     pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {

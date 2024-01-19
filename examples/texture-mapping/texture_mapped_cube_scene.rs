@@ -101,30 +101,7 @@ impl<'a> TextureMappedCubeScene<'a> {
             z: 0.0,
         };
 
-        let spot_light = SpotLight {
-            intensities: Vec3 {
-                x: 0.4,
-                y: 0.4,
-                z: 0.4,
-            },
-            position: Vec3 {
-                x: 0.0,
-                y: 5.0,
-                z: 0.0,
-            },
-            direction: Vec3 {
-                x: 0.0,
-                y: -1.0,
-                z: 0.0,
-            },
-            inner_cutoff_angle: (PI / 18.0),
-            inner_cutoff_angle_cos: (PI / 18.0).cos(),
-            outer_cutoff_angle: (PI / 12.0),
-            outer_cutoff_angle_cos: (PI / 12.0).cos(),
-            constant_attenuation: 1.0,
-            linear_attenuation: 0.35,
-            quadratic_attenuation: 0.44,
-        };
+        let spot_light = SpotLight::new();
 
         let pipeline_options: PipelineOptions = Default::default();
 

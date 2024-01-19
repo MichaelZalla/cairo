@@ -82,30 +82,7 @@ impl<'a> SpecularMapScene<'a> {
 
         let point_light = PointLight::new();
 
-        let spot_light = SpotLight {
-            intensities: Vec3 {
-                x: 0.7,
-                y: 0.7,
-                z: 0.7,
-            },
-            position: Vec3 {
-                x: 0.0,
-                y: 10.0,
-                z: 0.0,
-            },
-            direction: Vec3 {
-                x: 0.0,
-                y: 1.0,
-                z: 0.0,
-            },
-            inner_cutoff_angle: (2.5 as f32).to_radians(),
-            inner_cutoff_angle_cos: (2.5 as f32).to_radians().cos(),
-            outer_cutoff_angle: (17.5 as f32).to_radians(),
-            outer_cutoff_angle_cos: (17.5 as f32).to_radians().cos(),
-            constant_attenuation: 0.6,
-            linear_attenuation: 0.35,
-            quadratic_attenuation: 0.44,
-        };
+        let spot_light = SpotLight::new();
 
         let pipeline_options: PipelineOptions = Default::default();
 

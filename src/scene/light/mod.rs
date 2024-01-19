@@ -40,11 +40,12 @@ pub struct PointLight {
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
+    pub influence_distance: f32,
 }
 
 impl PointLight {
     pub fn new() -> Self {
-        PointLight {
+        let mut light = PointLight {
             intensities: color::WHITE.to_vec3() / 255.0,
             specular_intensity: 0.5,
             position: Vec3 {
@@ -55,7 +56,16 @@ impl PointLight {
             constant_attenuation: 1.0,
             linear_attenuation: 0.35,
             quadratic_attenuation: 0.44,
-        }
+            influence_distance: 0.0,
+        };
+
+        light.influence_distance = get_approximate_influence_distance(
+            light.quadratic_attenuation,
+            light.linear_attenuation,
+            light.constant_attenuation,
+        );
+
+        light
     }
 
     pub fn contribute(
@@ -138,11 +148,12 @@ pub struct SpotLight {
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
+    pub influence_distance: f32,
 }
 
 impl SpotLight {
     pub fn new() -> Self {
-        SpotLight {
+        let mut light = SpotLight {
             intensities: Vec3 {
                 x: 0.5,
                 y: 0.5,
@@ -163,9 +174,18 @@ impl SpotLight {
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
             outer_cutoff_angle_cos: (PI / 8.0).cos(),
             constant_attenuation: 1.0,
-            linear_attenuation: 0.35,
-            quadratic_attenuation: 0.44,
-        }
+            linear_attenuation: 0.09,
+            quadratic_attenuation: 0.032,
+            influence_distance: 0.0,
+        };
+
+        light.influence_distance = get_approximate_influence_distance(
+            light.quadratic_attenuation,
+            light.linear_attenuation,
+            light.constant_attenuation,
+        );
+
+        light
     }
 
     pub fn contribute(self, world_pos: Vec3) -> Vec3 {
@@ -190,4 +210,31 @@ impl SpotLight {
 
         spot_light_contribution
     }
+}
+
+fn get_approximate_influence_distance(
+    quadratic_attenuation: f32,
+    linear_attenuation: f32,
+    constant_attenuation: f32,
+) -> f32 {
+    // y = 1.0 / (0.35x + 0.44x^2 + 1), from -20.0 to 20.0
+
+    let mut distance: f32 = 0.01;
+
+    let mut attenuation = 1.0
+        / (quadratic_attenuation * distance * distance
+            + linear_attenuation * distance
+            + constant_attenuation);
+
+    while attenuation > 0.2 {
+        distance += 0.01;
+        attenuation = 1.0
+            / (quadratic_attenuation * distance * distance
+                + linear_attenuation * distance
+                + constant_attenuation);
+    }
+
+    distance -= 0.01;
+
+    distance
 }
