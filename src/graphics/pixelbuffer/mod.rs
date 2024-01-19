@@ -24,6 +24,16 @@ impl PixelBuffer {
         return &self.pixels;
     }
 
+    pub fn get_pixel(&self, x: u32, y: u32) -> Color {
+        let pixel_index = (y * self.width + x) as usize;
+
+        let r = self.pixels[pixel_index] as u8;
+        let g = self.pixels[pixel_index].rotate_right(8) as u8;
+        let b = self.pixels[pixel_index].rotate_right(16) as u8;
+
+        Color::rgb(r, g, b)
+    }
+
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         if x > (self.width - 1) || y > (self.height - 1) {
             // panic!("Call to PixelBuffer.set_pixel() with invalid coordinate ({},{})!", x, y);
