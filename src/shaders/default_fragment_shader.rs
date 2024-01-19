@@ -220,12 +220,24 @@ impl<'a> FragmentShader<'a> for DefaultFragmentShader<'a> {
             None => {}
         }
 
-        color = *((color * total_contribution).saturate()) * 255.0;
+        color = Vec3 {
+            x: color.x * color.x,
+            y: color.y * color.y,
+            z: color.z * color.z,
+        };
+
+        color = *((color * total_contribution).saturate());
+
+        color = Vec3 {
+            x: color.x.sqrt(),
+            y: color.y.sqrt(),
+            z: color.z.sqrt(),
+        };
 
         return Color {
-            r: color.x as u8,
-            g: color.y as u8,
-            b: color.z as u8,
+            r: (color.x * 255.0) as u8,
+            g: (color.y * 255.0) as u8,
+            b: (color.z * 255.0) as u8,
             a: 255 as u8,
         };
     }
