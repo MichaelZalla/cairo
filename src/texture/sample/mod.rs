@@ -24,7 +24,11 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 
     debug_assert!(
         map.levels[0].len()
-            == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize
+            == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize,
+        "levels.len = {}, map.width={}, map.height={}",
+        map.levels.len(),
+        map.width,
+        map.height
     );
 
     // Determine our map dimensions, based on the level index.
