@@ -190,6 +190,10 @@ where
         );
     }
 
+    pub fn render_world_axes(&mut self, scale: f32) {
+        self.render_point_indicator(Default::default(), scale)
+    }
+
     pub fn render_camera(&mut self, camera: &Camera) {
         let origin = camera.get_position();
 

@@ -241,6 +241,8 @@ impl<'a> Scene for SponzaScene<'a> {
                 .render_mesh(&entity.mesh, Some(self.materials));
         }
 
+        self.pipeline.render_world_axes(300.0);
+
         self.pipeline.render_point_light(
             &self.point_lights[0],
             Some(&camera),
