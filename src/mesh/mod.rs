@@ -6,7 +6,7 @@ use crate::vec::vec2::Vec2;
 pub mod obj;
 pub mod primitive;
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct Face {
     pub vertices: (usize, usize, usize), // Indices into Vec<Vec3>
     pub normals: Option<(usize, usize, usize)>, // Indices into Vec<Vec3>
@@ -18,7 +18,7 @@ pub struct MaterialSource {
     pub filepath: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Mesh {
     pub object_source: String,
     pub object_name: String,
