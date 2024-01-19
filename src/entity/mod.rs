@@ -1,6 +1,6 @@
 use super::{
     mesh::{primitive, Mesh},
-    physics::collision::{aabb::AABB, mesh_oct_tree::MeshOctTree},
+    physics::collision::aabb::AABB,
     vec::vec3::Vec3,
 };
 
@@ -10,39 +10,17 @@ pub struct Entity<'a> {
     pub rotation: Vec3,
     pub mesh: &'a Mesh,
     pub bounds: AABB,
-    pub oct_tree: MeshOctTree<'a>,
 }
 
 impl<'a> Entity<'a> {
     pub fn new(mesh: &'a Mesh) -> Self {
         let bounds = Entity::make_bounding_box(&mesh);
 
-        let width = bounds.right - bounds.left;
-        let height = bounds.top - bounds.bottom;
-        let depth = bounds.near - bounds.far;
-
-        let collider_mesh_center = Vec3 {
-            x: bounds.left + width / 2.0,
-            y: bounds.bottom + height / 2.0,
-            z: bounds.near - depth / 2.0,
-        };
-
-        let largest_dimension = width.max(height).max(depth);
-
-        let half_dimension = largest_dimension / 2.0;
-
-        let level_capacity = 64;
-
-        let oct_tree_bounds = AABB::new(collider_mesh_center, half_dimension);
-
-        let oct_tree = MeshOctTree::new(mesh, level_capacity, oct_tree_bounds);
-
         return Entity {
             position: Vec3::new(),
             rotation: Vec3::new(),
             mesh,
             bounds,
-            oct_tree,
         };
     }
 
