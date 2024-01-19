@@ -182,59 +182,25 @@ where
             if *z_non_linear == zbuffer::MAX_DEPTH {
                 // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
-                let pixel_coordinate_screen_space = Vec3 {
-                    x: index as f32 % self.graphics.buffer.width as f32,
-                    y: index as f32 / self.graphics.buffer.width as f32,
-                    z: 0.0,
-                };
+                let screen_x: u32 = (index as f32 % self.graphics.buffer.width as f32) as u32;
+                let screen_y: u32 = (index as f32 / self.graphics.buffer.width as f32) as u32;
 
-                let pixel_coordinate_ndc_space = Vec4 {
-                    x: pixel_coordinate_screen_space.x / self.graphics.buffer.width as f32,
-                    y: pixel_coordinate_screen_space.y / self.graphics.buffer.height as f32,
-                    z: -1.0,
-                    w: 1.0,
-                };
-
-                // Transform our screen-space coordinate by the camera's inverse projection.
-
-                let pixel_coordinate_projection_space =
-                    pixel_coordinate_ndc_space * camera.get_projection_inverse();
-
-                // Camera-direction vector in camera-view-space: (0, 0, -1)
-
-                // Compute pixel coordinate in camera-view-space.
-
-                // Near-plane coordinates in camera-view-space:
-                //
-                //  x: -1 to 1
-                //  y: -1 to 1 (y is up)
-                //  z: -1 (near) to 1 (far)
-
-                let pixel_coordinate_camera_view_space: Vec4 = Vec4 {
-                    x: -1.0 + pixel_coordinate_projection_space.x * 2.0,
-                    y: -1.0 + (1.0 - pixel_coordinate_projection_space.y) * 2.0,
-                    z: 1.0,
-                    w: 1.0, // ???????
-                };
-
-                // Transform camera-view-space coordinate to world-space coordinate.
-
-                // Note: Treating the camera's position as the world-space origin.
-
-                let pixel_coordinate_world_space =
-                    pixel_coordinate_camera_view_space * camera.get_view_rotation_transform();
+                let pixel_coordinate_world_space = camera.get_pixel_world_space_position(
+                    screen_x,
+                    screen_y,
+                    self.graphics.buffer.width,
+                    self.graphics.buffer.height,
+                );
 
                 let normal = pixel_coordinate_world_space.as_normal();
 
                 // Sample the cubemap using our world-space direction-offset.
 
-                let color = skybox.sample(&normal);
+                let skybox_color = skybox.sample(&normal);
 
-                self.graphics.buffer.set_pixel(
-                    pixel_coordinate_screen_space.x as u32,
-                    pixel_coordinate_screen_space.y as u32,
-                    color,
-                );
+                self.graphics
+                    .buffer
+                    .set_pixel(screen_x, screen_y, skybox_color);
             }
         }
     }

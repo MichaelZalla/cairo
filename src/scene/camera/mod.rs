@@ -8,6 +8,7 @@ use crate::{
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
+        vec4::Vec4,
     },
 };
 
@@ -212,6 +213,52 @@ impl Camera {
 
     pub fn get_projection_inverse(&self) -> Mat4 {
         self.projection_inverse_transform
+    }
+
+    pub fn get_pixel_world_space_position(
+        &self,
+        screen_x: u32,
+        screen_y: u32,
+        width: u32,
+        height: u32,
+    ) -> Vec4 {
+        let pixel_coordinate_ndc_space = Vec4 {
+            x: screen_x as f32 / width as f32,
+            y: screen_y as f32 / height as f32,
+            z: -1.0,
+            w: 1.0,
+        };
+
+        // Transform our screen-space coordinate by the camera's inverse projection.
+
+        let pixel_coordinate_projection_space =
+            pixel_coordinate_ndc_space * self.get_projection_inverse();
+
+        // Camera-direction vector in camera-view-space: (0, 0, -1)
+
+        // Compute pixel coordinate in camera-view-space.
+
+        // Near-plane coordinates in camera-view-space:
+        //
+        //  x: -1 to 1
+        //  y: -1 to 1 (y is up)
+        //  z: -1 (near) to 1 (far)
+
+        let pixel_coordinate_camera_view_space: Vec4 = Vec4 {
+            x: -1.0 + pixel_coordinate_projection_space.x * 2.0,
+            y: -1.0 + (1.0 - pixel_coordinate_projection_space.y) * 2.0,
+            z: 1.0,
+            w: 1.0, // ???????
+        };
+
+        // Transform camera-view-space coordinate to world-space coordinate.
+
+        // Note: Treating the camera's position as the world-space origin.
+
+        let pixel_coordinate_world_space =
+            pixel_coordinate_camera_view_space * self.get_view_rotation_transform();
+
+        pixel_coordinate_world_space
     }
 
     pub fn update(
