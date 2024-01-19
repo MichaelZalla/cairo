@@ -1,5 +1,6 @@
 use super::{Face, Mesh};
 
+pub mod billboard;
 pub mod cone;
 pub mod cube;
 pub mod cylinder;
