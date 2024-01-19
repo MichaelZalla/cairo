@@ -2,6 +2,7 @@ use crate::{
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+    texture::cubemap::CubeMap,
     vec::vec4::Vec4,
 };
 
@@ -20,6 +21,7 @@ pub struct ShaderContext {
     pub world_view_projection_transform: Mat4,
     pub default_specular_power: i32,
     pub active_material: Option<*const Material>,
+    pub active_environment_map: Option<*const CubeMap>,
     pub ambient_light: AmbientLight,
     pub directional_light: DirectionalLight,
     pub point_lights: Vec<PointLight>,
@@ -49,6 +51,7 @@ impl ShaderContext {
                 * projection_transform,
             default_specular_power: 8,
             active_material: None,
+            active_environment_map: None,
             ambient_light,
             directional_light,
             point_lights,
@@ -122,6 +125,17 @@ impl ShaderContext {
             }
             None => {
                 self.active_material = None;
+            }
+        }
+    }
+
+    pub fn set_active_environment_map(&mut self, skybox: Option<*const CubeMap>) {
+        match skybox {
+            Some(mat_raw_mut) => {
+                self.active_environment_map = Some(mat_raw_mut);
+            }
+            None => {
+                self.active_environment_map = None;
             }
         }
     }

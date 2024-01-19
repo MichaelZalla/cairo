@@ -241,6 +241,14 @@ impl<'a> Scene for SkyboxScene<'a> {
     fn render(&mut self) {
         self.pipeline.begin_frame();
 
+        {
+            let mut context = self.shader_context.write().unwrap();
+
+            let mat_raw_mut = &self.skybox as *const CubeMap;
+
+            context.set_active_environment_map(Some(mat_raw_mut));
+        }
+
         let r = self.entities.read().unwrap();
 
         for entity in r.as_slice() {
@@ -257,6 +265,12 @@ impl<'a> Scene for SkyboxScene<'a> {
             }
 
             self.pipeline.render_mesh(&entity.mesh, None);
+        }
+
+        {
+            let mut context = self.shader_context.write().unwrap();
+
+            context.set_active_environment_map(None);
         }
 
         let camera = self.cameras[self.active_camera_index];
