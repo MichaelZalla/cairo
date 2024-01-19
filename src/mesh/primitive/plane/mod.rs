@@ -1,4 +1,7 @@
-use crate::vec::{vec2::Vec2, vec3::Vec3, vec4};
+use crate::vec::{
+    vec2::Vec2,
+    vec3::{self, Vec3},
+};
 
 use super::{Face, Mesh};
 
@@ -35,11 +38,7 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
 
     // Generate normals
 
-    let up = Vec3 {
-        x: vec4::UP.x,
-        y: vec4::UP.y,
-        z: vec4::UP.z,
-    };
+    let up = vec3::UP;
 
     let normals = vec![up];
 

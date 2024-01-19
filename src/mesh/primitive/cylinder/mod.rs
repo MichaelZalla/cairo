@@ -2,8 +2,7 @@ use std::f32::consts::PI;
 
 use crate::vec::{
     vec2::{self, Vec2},
-    vec3::Vec3,
-    vec4,
+    vec3::{self, Vec3},
 };
 
 use super::{Face, Mesh};
@@ -15,12 +14,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     // Generate vertices and UVs
 
-    let top_center_vertex = Vec3 {
-        x: vec4::UP.x,
-        y: vec4::UP.y,
-        z: vec4::UP.z,
-    } * height
-        / 2.0;
+    let top_center_vertex = vec3::UP * height / 2.0;
 
     let bottom_center_vertex = top_center_vertex * -1.0;
 
@@ -90,11 +84,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     // Generate normals
 
-    let up = Vec3 {
-        x: vec4::UP.x,
-        y: vec4::UP.y,
-        z: vec4::UP.z,
-    };
+    let up = vec3::UP;
 
     let down = up * -1.0;
 
