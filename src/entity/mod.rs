@@ -14,14 +14,12 @@ pub struct Entity<'a> {
 
 impl<'a> Entity<'a> {
     pub fn new(mesh: &'a Mesh) -> Self {
-        let bounds = Entity::make_bounding_box(&mesh);
-
-        return Entity {
+        Entity {
             position: Vec3::new(),
             rotation: Vec3::new(),
             mesh,
-            bounds,
-        };
+            bounds: Entity::make_bounding_box(&mesh),
+        }
     }
 
     fn make_bounding_box(mesh: &Mesh) -> AABB {
