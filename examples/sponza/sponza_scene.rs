@@ -38,7 +38,7 @@ pub struct SponzaScene<'a> {
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<Entity<'a>>>,
     skybox: CubeMap,
-    materials: &'a MaterialCache,
+    materials: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
 }
@@ -48,7 +48,7 @@ impl<'a> SponzaScene<'a> {
         graphics: Graphics,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<Entity<'a>>>,
-        materials: &'a MaterialCache,
+        materials: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         // Set up a camera for rendering our scene
@@ -232,6 +232,8 @@ impl<'a> Scene for SponzaScene<'a> {
     fn render(&mut self) {
         self.pipeline.begin_frame();
 
+        let camera = self.cameras[self.active_camera_index];
+
         let r = self.entities.read().unwrap();
 
         for entity in r.as_slice() {
@@ -239,7 +241,17 @@ impl<'a> Scene for SponzaScene<'a> {
                 .render_mesh(&entity.mesh, Some(self.materials));
         }
 
-        let camera = self.cameras[self.active_camera_index];
+        self.pipeline.render_point_light(
+            &self.point_lights[0],
+            Some(&camera),
+            Some(&mut self.materials),
+        );
+
+        self.pipeline.render_spot_light(
+            &self.spot_lights[0],
+            Some(&camera),
+            Some(&mut self.materials),
+        );
 
         self.pipeline.render_skybox(&self.skybox, &camera);
     }

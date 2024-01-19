@@ -1,9 +1,10 @@
 use std::sync::RwLock;
 
 use crate::{
+    entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
-    mesh::{primitive::cube, Face},
+    mesh::{self, primitive::cube, Face},
     scene::{
         camera::Camera,
         light::{PointLight, SpotLight},
@@ -228,12 +229,98 @@ where
         );
     }
 
-    pub fn render_point_light(&mut self, light: &PointLight) {
-        self.render_point_indicator(light.position, 0.2);
+    fn render_light(
+        &mut self,
+        light_position: Vec3,
+        light_intensities: Vec3,
+        light_influence_distance: f32,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+        is_spot_light: bool,
+    ) {
+        match material_cache {
+            Some(materials) => {
+                let light_material_name = if is_spot_light {
+                    "spot_light_decal"
+                } else {
+                    "point_light_decal"
+                };
+
+                let billboard_scale: f32 = if is_spot_light { 1.25 } else { 0.75 };
+
+                let mut light_quad = mesh::primitive::billboard::generate(
+                    camera.unwrap(),
+                    billboard_scale,
+                    billboard_scale,
+                );
+
+                let light_mat = materials.get_mut(&light_material_name.to_string());
+
+                match light_mat {
+                    Some(material) => {
+                        material.diffuse_color = light_intensities;
+
+                        light_quad.material_name = Some(light_material_name.to_string());
+
+                        let mut light_quad_entity = Entity::new(&light_quad);
+
+                        light_quad_entity.position = light_position;
+
+                        let world_transform = Mat4::scaling(1.0)
+                            * Mat4::rotation_x(light_quad_entity.rotation.x)
+                            * Mat4::rotation_y(light_quad_entity.rotation.y)
+                            * Mat4::rotation_z(light_quad_entity.rotation.z)
+                            * Mat4::translation(light_quad_entity.position);
+
+                        {
+                            let mut context = self.shader_context.write().unwrap();
+
+                            context.set_world_transform(world_transform);
+                        }
+
+                        self.render_mesh(&light_quad_entity.mesh, Some(materials));
+                    }
+                    None => {
+                        self.render_point_indicator(light_position, light_influence_distance * 0.2);
+                    }
+                }
+            }
+            None => {
+                self.render_point_indicator(light_position, light_influence_distance * 0.2);
+            }
+        }
     }
 
-    pub fn render_spot_light(&mut self, light: &SpotLight) {
-        self.render_point_indicator(light.position, 0.2);
+    pub fn render_point_light(
+        &mut self,
+        light: &PointLight,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+    ) {
+        self.render_light(
+            light.position,
+            light.intensities,
+            light.influence_distance,
+            camera,
+            material_cache,
+            false,
+        );
+    }
+
+    pub fn render_spot_light(
+        &mut self,
+        light: &SpotLight,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+    ) {
+        self.render_light(
+            light.position,
+            light.intensities,
+            light.influence_distance,
+            camera,
+            material_cache,
+            true,
+        );
 
         let start = light.position;
         let end = light.position + light.direction.as_normal() * light.influence_distance;

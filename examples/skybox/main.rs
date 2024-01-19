@@ -7,6 +7,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     graphics::{pixelbuffer::PixelBuffer, Graphics},
+    material::cache::MaterialCache,
     mesh,
     scene::Scene,
     shader::ShaderContext,
@@ -25,6 +26,8 @@ fn main() -> Result<(), String> {
     let app = App::new("examples/skybox", CANVAS_WIDTH, ASPECT_RATIO);
 
     let rendering_context = &app.context.rendering_context;
+
+    let mut material_cache: MaterialCache = Default::default();
 
     // Generate a cube mesh
     let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
@@ -45,6 +48,7 @@ fn main() -> Result<(), String> {
         },
         rendering_context,
         &entities_rwl,
+        &mut material_cache,
         &shader_context_rwl,
     ));
 

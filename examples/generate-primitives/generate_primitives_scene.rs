@@ -29,7 +29,7 @@ pub struct GeneratePrimitivesScene<'a> {
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-    materials: &'a MaterialCache,
+    materials: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
     looking_at_point_light: bool,
@@ -41,7 +41,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         canvas_width: u32,
         canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-        materials: &'a MaterialCache,
+        materials: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         let graphics = Graphics {
@@ -351,17 +351,27 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         }
 
         for (index, camera) in self.cameras.iter().enumerate() {
-            if index != self.active_camera_index {
-                self.pipeline.render_camera(camera);
+            if index == self.active_camera_index {
+                for light in &self.point_lights {
+                    self.pipeline.render_point_light(
+                        &light,
+                        Some(&camera),
+                        Some(&mut self.materials),
+                    );
+                }
+
+                for light in &self.spot_lights {
+                    self.pipeline.render_spot_light(
+                        &light,
+                        Some(&camera),
+                        Some(&mut self.materials),
+                    );
+                }
+
+                continue;
             }
-        }
 
-        for light in &self.point_lights {
-            self.pipeline.render_point_light(&light);
-        }
-
-        for light in &self.spot_lights {
-            self.pipeline.render_spot_light(&light);
+            self.pipeline.render_camera(camera);
         }
     }
 

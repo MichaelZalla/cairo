@@ -51,7 +51,7 @@ fn main() -> Result<(), String> {
     // Wrap the entity collection in a memory-safe container
     let entities_rwl = RwLock::new(entities);
 
-    let materials = atrium_materials.unwrap();
+    let mut materials = atrium_materials.unwrap();
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
         },
         rendering_context,
         &entities_rwl,
-        &materials,
+        &mut materials,
         &shader_context_rwl,
     ));
 

@@ -5,6 +5,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     graphics::Graphics,
+    material::cache::MaterialCache,
     matrix::Mat4,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
@@ -29,6 +30,7 @@ pub struct SkyboxScene<'a> {
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+    material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     skybox: CubeMap,
     prev_mouse_state: MouseState,
@@ -39,6 +41,7 @@ impl<'a> SkyboxScene<'a> {
         graphics: Graphics,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+        material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         // Set up a camera for rendering our scene
@@ -145,6 +148,7 @@ impl<'a> SkyboxScene<'a> {
         return SkyboxScene {
             pipeline,
             entities,
+            material_cache,
             shader_context,
             skybox,
             cameras: vec![camera],
@@ -255,6 +259,12 @@ impl<'a> Scene for SkyboxScene<'a> {
         let camera = self.cameras[self.active_camera_index];
 
         self.pipeline.render_skybox(&self.skybox, &camera);
+
+        self.pipeline.render_point_light(
+            &self.point_lights[0],
+            Some(&camera),
+            Some(&mut self.material_cache),
+        );
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {

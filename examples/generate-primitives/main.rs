@@ -116,7 +116,7 @@ fn main() -> Result<(), String> {
         app.canvas_width,
         app.canvas_height,
         &entities_rwl,
-        &material_cache,
+        &mut material_cache,
         &shader_context_rwl,
     ));
 
