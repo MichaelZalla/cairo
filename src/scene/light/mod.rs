@@ -132,7 +132,9 @@ pub struct SpotLight {
     pub position: Vec3,
     pub direction: Vec3,
     pub inner_cutoff_angle: f32,
+    pub inner_cutoff_angle_cos: f32,
     pub outer_cutoff_angle: f32,
+    pub outer_cutoff_angle_cos: f32,
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
@@ -156,8 +158,10 @@ impl SpotLight {
                 y: -1.0,
                 z: 0.0,
             },
-            inner_cutoff_angle: (PI / 45.0).cos(),
-            outer_cutoff_angle: (PI / 25.0).cos(),
+            inner_cutoff_angle: (PI / 12.0),
+            outer_cutoff_angle: (PI / 8.0),
+            inner_cutoff_angle_cos: (PI / 12.0).cos(),
+            outer_cutoff_angle_cos: (PI / 8.0).cos(),
             constant_attenuation: 1.0,
             linear_attenuation: 0.35,
             quadratic_attenuation: 0.44,
@@ -175,11 +179,12 @@ impl SpotLight {
 
         let theta_angle = (0.0 as f32).max((self.direction).dot(direction_to_spot_light * -1.0));
 
-        let epsilon = self.inner_cutoff_angle - self.outer_cutoff_angle;
+        let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
 
-        let spot_attenuation = ((theta_angle - self.outer_cutoff_angle) / epsilon).clamp(0.0, 1.0);
+        let spot_attenuation =
+            ((theta_angle - self.outer_cutoff_angle_cos) / epsilon).clamp(0.0, 1.0);
 
-        if theta_angle > self.outer_cutoff_angle {
+        if theta_angle > self.outer_cutoff_angle_cos {
             spot_light_contribution = self.intensities * spot_attenuation;
         }
 
