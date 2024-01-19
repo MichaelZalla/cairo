@@ -44,7 +44,7 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 
     // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
 
-    let texel_x = (1.0 - wrapped_uv.x) * (level_width - 1) as f32;
+    let texel_x = wrapped_uv.x * (level_width - 1) as f32;
     let texel_y = (1.0 - wrapped_uv.y) * (level_height - 1) as f32;
 
     return sample_from_texel((texel_x, texel_y), map, level_index);
@@ -97,7 +97,7 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
 
     // Maps the wrapped UV coordinate to a fractional texel coordinate.
     let wrapped_uv_as_fractional_texel = Vec2 {
-        x: ((1.0 - uv_safe.x) * (level_width - 1) as f32),
+        x: (uv_safe.x * (level_width - 1) as f32),
         y: ((1.0 - uv_safe.y) * (level_height - 1) as f32),
         z: 1.0,
     };
