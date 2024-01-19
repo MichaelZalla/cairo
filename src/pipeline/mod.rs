@@ -111,6 +111,77 @@ where
         self.z_buffer.clear();
     }
 
+    pub fn render_line(&mut self, start: Vec3, end: Vec3, color: Color) {
+        let start_vertex_in = DefaultVertexIn {
+            p: start,
+            // ..Default::default(),
+            n: Default::default(),
+            uv: Default::default(),
+            c: color.to_vec3() / 255.0,
+        };
+
+        let end_vertex_in = DefaultVertexIn {
+            p: end,
+            // ..Default::default(),
+            n: Default::default(),
+            uv: Default::default(),
+            c: color.to_vec3() / 255.0,
+        };
+
+        let mut start_vertex_out = self.vertex_shader.call(&start_vertex_in);
+        let mut end_vertex_out = self.vertex_shader.call(&end_vertex_in);
+
+        self.transform_to_ndc_space(&mut start_vertex_out);
+        self.transform_to_ndc_space(&mut end_vertex_out);
+
+        self.graphics.line(
+            start_vertex_out.p.x as u32,
+            start_vertex_out.p.y as u32,
+            end_vertex_out.p.x as u32,
+            end_vertex_out.p.y as u32,
+            color,
+        );
+    }
+
+    pub fn render_camera(&mut self, camera: &Camera) {
+        let origin = camera.get_position();
+
+        // Target
+        self.render_line(origin, camera.get_target(), color::WHITE);
+
+        let aspect_ratio = camera.get_aspect_ratio();
+
+        let right_for_aspect_ratio = camera.get_right() * aspect_ratio;
+
+        // Top
+        self.render_line(
+            origin + camera.get_up() - right_for_aspect_ratio,
+            origin + camera.get_up() + right_for_aspect_ratio,
+            color::WHITE,
+        );
+
+        // Bottom
+        self.render_line(
+            origin - camera.get_up() - right_for_aspect_ratio,
+            origin - camera.get_up() + right_for_aspect_ratio,
+            color::WHITE,
+        );
+
+        // Left
+        self.render_line(
+            origin - right_for_aspect_ratio - camera.get_up(),
+            origin - right_for_aspect_ratio + camera.get_up(),
+            color::WHITE,
+        );
+
+        // Right
+        self.render_line(
+            origin + right_for_aspect_ratio - camera.get_up(),
+            origin + right_for_aspect_ratio + camera.get_up(),
+            color::WHITE,
+        );
+    }
+
     pub fn render_point_light(&mut self, light: &PointLight) {
         self.render_wireframe_cube(light.position, 0.2);
     }

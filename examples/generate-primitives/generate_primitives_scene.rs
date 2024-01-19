@@ -51,14 +51,36 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let aspect_ratio = graphics.buffer.width_over_height;
 
         // Set up a camera for rendering our scene
-        let camera: Camera = Camera::new(
+        let mut camera: Camera = Camera::new(
             aspect_ratio,
+            Vec3 {
+                x: 15.0,
+                y: 8.0,
+                z: -15.0,
+            },
             Vec3 {
                 x: 0.0,
                 y: 0.0,
-                z: -5.0,
+                z: -7.5,
+            }
+            .as_normal(),
+        );
+
+        camera.movement_speed = 10.0;
+
+        let camera2: Camera = Camera::new(
+            aspect_ratio,
+            Vec3 {
+                x: -15.0,
+                y: 8.0,
+                z: -15.0,
             },
-            Default::default(),
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -7.5,
+            }
+            .as_normal(),
         );
 
         // Define lights for our scene
@@ -161,7 +183,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             entities,
             materials,
             shader_context,
-            cameras: vec![camera],
+            cameras: vec![camera, camera2],
             active_camera_index: 0,
             directional_light,
             point_lights,
@@ -270,6 +292,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             context.set_point_light(index, *light);
         }
 
+        let camera2 = (self.cameras[1]).borrow_mut();
+
+        camera2.set_target_position(self.point_lights[0].position);
+
         let max_spot_light_intensity: f32 = 0.6;
 
         self.spot_lights[0].intensities = Vec3 {
@@ -322,6 +348,12 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
             self.pipeline
                 .render_mesh(&entity.mesh, Some(self.materials));
+        }
+
+        for (index, camera) in self.cameras.iter().enumerate() {
+            if index != self.active_camera_index {
+                self.pipeline.render_camera(camera);
+            }
         }
 
         for light in &self.point_lights {

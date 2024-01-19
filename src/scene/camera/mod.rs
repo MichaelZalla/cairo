@@ -22,6 +22,7 @@ pub struct Camera {
     projection_transform: Mat4,
     projection_inverse_transform: Mat4,
     position: Vec3,
+    target: Vec3,
     forward: Vec3,
     up: Vec3,
     right: Vec3,
@@ -60,6 +61,7 @@ impl Camera {
             projection_transform,
             projection_inverse_transform,
             position,
+            target: vec3::FORWARD,
             forward: vec3::FORWARD,
             up: vec3::UP,
             right: vec3::LEFT * -1.0,
@@ -71,6 +73,10 @@ impl Camera {
         camera.set_target_position(target);
 
         return camera;
+    }
+
+    pub fn get_aspect_ratio(&self) -> f32 {
+        self.aspect_ratio
     }
 
     pub fn get_projection_z_near(&self) -> f32 {
@@ -107,6 +113,10 @@ impl Camera {
         self.position = position;
     }
 
+    pub fn get_target(&self) -> Vec3 {
+        self.target
+    }
+
     pub fn set_target_position(&mut self, target: Vec3) {
         let world_up = vec3::UP;
 
@@ -115,6 +125,8 @@ impl Camera {
         self.right = world_up.cross(self.forward).as_normal();
 
         self.up = self.forward.cross(self.right).as_normal();
+
+        self.target = target;
     }
 
     pub fn get_direction(&self) -> Vec3 {
