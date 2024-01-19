@@ -167,7 +167,7 @@ where
 
         self.process_world_vertices(&mesh);
 
-        // Reset the pipeline effect's active material
+        // Reset the shader context's original active material.
         {
             let mut context = self.shader_context.write().unwrap();
 
