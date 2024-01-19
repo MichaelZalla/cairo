@@ -371,6 +371,33 @@ where
         );
     }
 
+    pub fn render_entity(&mut self, entity: &Entity, material_cache: Option<&MaterialCache>) {
+        let world_transform = Mat4::scaling(1.0)
+            * Mat4::rotation_x(entity.rotation.x)
+            * Mat4::rotation_y(entity.rotation.y)
+            * Mat4::rotation_z(entity.rotation.z)
+            * Mat4::translation(entity.position);
+
+        let original_world_transform: Mat4;
+
+        {
+            let mut context = self.shader_context.write().unwrap();
+
+            original_world_transform = context.get_world_transform();
+
+            context.set_world_transform(world_transform);
+        }
+
+        self.render_mesh(&entity.mesh, material_cache);
+
+        // Reset the shader context's original world transform.
+        {
+            let mut context = self.shader_context.write().unwrap();
+
+            context.set_world_transform(original_world_transform);
+        }
+    }
+
     pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
         {
             let mut context = self.shader_context.write().unwrap();

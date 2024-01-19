@@ -72,6 +72,10 @@ impl ShaderContext {
         self.view_position = position;
     }
 
+    pub fn get_world_transform(&mut self) -> Mat4 {
+        self.world_transform
+    }
+
     pub fn set_world_transform(&mut self, mat: Mat4) {
         self.world_transform = mat;
 

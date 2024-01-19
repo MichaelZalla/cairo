@@ -81,8 +81,6 @@ impl<'a> SpinningCubeScene<'a> {
 
         let pipeline_options: PipelineOptions = Default::default();
 
-        let world_transform = Mat4::new();
-
         let view_position = Vec4::new(camera.get_position(), 1.0);
 
         let view_inverse_transform = camera.get_view_inverse_transform();
@@ -91,7 +89,6 @@ impl<'a> SpinningCubeScene<'a> {
 
         let mut context = shader_context.write().unwrap();
 
-        context.set_world_transform(world_transform);
         context.set_camera_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
         context.set_projection(projection_transform);
@@ -172,14 +169,6 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         entity.rotation.y += 0.2 * PI * seconds_since_last_update;
         entity.rotation.y %= 2.0 * PI;
 
-        let world_transform = Mat4::scaling(1.0)
-            * Mat4::rotation_x(entity.rotation.x)
-            * Mat4::rotation_y(entity.rotation.y)
-            * Mat4::rotation_z(entity.rotation.z)
-            * Mat4::translation(entity.position);
-
-        context.set_world_transform(world_transform);
-
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
@@ -190,22 +179,8 @@ impl<'a> Scene for SpinningCubeScene<'a> {
     fn render(&mut self) {
         self.pipeline.begin_frame();
 
-        let r = self.entities.read().unwrap();
-
-        for entity in r.as_slice() {
-            let world_transform = Mat4::scaling(1.0)
-                * Mat4::rotation_x(entity.rotation.x)
-                * Mat4::rotation_y(entity.rotation.y)
-                * Mat4::rotation_z(entity.rotation.z)
-                * Mat4::translation(entity.position);
-
-            {
-                let mut context = self.shader_context.write().unwrap();
-
-                context.set_world_transform(world_transform);
-            }
-
-            self.pipeline.render_mesh(&entity.mesh, None);
+        for entity in self.entities.read().unwrap().as_slice() {
+            self.pipeline.render_entity(&entity, None);
         }
     }
 

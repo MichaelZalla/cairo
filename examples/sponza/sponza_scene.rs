@@ -125,8 +125,6 @@ impl<'a> SponzaScene<'a> {
 
         let pipeline_options: PipelineOptions = Default::default();
 
-        let world_transform = Mat4::new();
-
         let view_position = Vec4::new(camera.get_position(), 1.0);
 
         let view_inverse_transform = camera.get_view_inverse_transform();
@@ -135,7 +133,6 @@ impl<'a> SponzaScene<'a> {
 
         let mut context = shader_context.write().unwrap();
 
-        context.set_world_transform(world_transform);
         context.set_camera_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
         context.set_projection(projection_transform);
@@ -210,18 +207,6 @@ impl<'a> Scene for SponzaScene<'a> {
 
         context.set_point_light(0, self.point_lights[0]);
 
-        let mut entities = self.entities.write().unwrap();
-
-        let entity = &mut entities[0];
-
-        let world_transform = Mat4::scaling(1.0)
-            * Mat4::rotation_x(entity.rotation.x)
-            * Mat4::rotation_y(entity.rotation.y)
-            * Mat4::rotation_z(entity.rotation.z)
-            * Mat4::translation(entity.position);
-
-        context.set_world_transform(world_transform);
-
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
@@ -234,11 +219,8 @@ impl<'a> Scene for SponzaScene<'a> {
 
         let camera = self.cameras[self.active_camera_index];
 
-        let r = self.entities.read().unwrap();
-
-        for entity in r.as_slice() {
-            self.pipeline
-                .render_mesh(&entity.mesh, Some(self.materials));
+        for entity in self.entities.read().unwrap().as_slice() {
+            self.pipeline.render_entity(&entity, Some(self.materials));
         }
 
         self.pipeline.render_world_axes(300.0);
