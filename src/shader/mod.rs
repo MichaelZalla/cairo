@@ -19,7 +19,7 @@ pub struct ShaderContext {
     pub world_view_transform: Mat4,
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
-    pub default_specular_power: i32,
+    pub default_specular_exponent: i32,
     pub active_material: Option<*const Material>,
     pub active_environment_map: Option<*const CubeMap>,
     pub ambient_light: AmbientLight,
@@ -49,7 +49,7 @@ impl ShaderContext {
             world_view_projection_transform: world_transform
                 * view_inverse_transform
                 * projection_transform,
-            default_specular_power: 8,
+            default_specular_exponent: 8,
             active_material: None,
             active_environment_map: None,
             ambient_light,

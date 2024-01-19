@@ -139,7 +139,7 @@ impl<'a> FragmentShader<'a> for DefaultFragmentShader<'a> {
         for point_light in &context.point_lights {
             let specular_exponent: i32 = match material_specular_exponent {
                 Some(exponent) => exponent,
-                None => context.default_specular_power,
+                None => context.default_specular_exponent,
             };
 
             let specular_intensity: f32 = match material_specular_intensity {
