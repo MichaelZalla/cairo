@@ -52,11 +52,12 @@ impl<'a> FragmentShader<'a> for UvTestFragmentShader<'a> {
 
     fn update(
         &mut self,
-        _keyboard_state: &KeyboardState,
-        _mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
+        keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
+        game_controller_state: &GameControllerState,
     ) {
-        // Do nothing
+        self.options
+            .update(keyboard_state, mouse_state, game_controller_state);
     }
 
     fn call(&self, out: &DefaultVertexOut) -> Color {
