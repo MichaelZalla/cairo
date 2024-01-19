@@ -25,7 +25,7 @@ impl PixelBuffer {
     }
 
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        if x > (self.width - 1) || y > (self.pixels.len() as u32 / self.width as u32 - 1) {
+        if x > (self.width - 1) || y > (self.height - 1) {
             // panic!("Call to PixelBuffer.set_pixel() with invalid coordinate ({},{})!", x, y);
             return;
         }
