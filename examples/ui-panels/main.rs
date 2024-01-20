@@ -63,7 +63,7 @@ fn main() -> Result<(), String> {
 
             panel_graphics.text(
                 &font,
-                TextOperation {
+                &TextOperation {
                     text: &info.title,
                     x: 8,
                     y: 8,

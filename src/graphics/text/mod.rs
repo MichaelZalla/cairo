@@ -13,7 +13,7 @@ pub struct TextOperation<'a> {
 }
 
 impl Graphics {
-    pub fn text(&mut self, font: &Font, op: TextOperation) -> Result<(), String> {
+    pub fn text(&mut self, font: &Font, op: &TextOperation) -> Result<(), String> {
         // Generate a new text rendering (surface)
 
         let surface = font

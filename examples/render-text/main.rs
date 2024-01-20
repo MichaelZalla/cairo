@@ -65,7 +65,7 @@ fn main() -> Result<(), String> {
 
         graphics.text(
             &font,
-            TextOperation {
+            &TextOperation {
                 text: &(format!("Uptime: {}s", now_seconds.borrow())),
                 x: 12,
                 y: 12,
@@ -80,7 +80,7 @@ fn main() -> Result<(), String> {
 
         graphics.text(
             &font,
-            TextOperation {
+            &TextOperation {
                 text: &(format!(
                     "Mouse position: ({},{})",
                     mouse_x.borrow(),
