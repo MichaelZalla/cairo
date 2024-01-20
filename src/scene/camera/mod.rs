@@ -158,7 +158,7 @@ impl Camera {
     }
 
     pub fn set_pitch(&mut self, pitch: f32) {
-        self.pitch = pitch.max(-PI / 2.0).min(PI / 2.0);
+        self.pitch = pitch.max(-PI / 2.0 * 0.999).min(PI / 2.0 * 0.999);
 
         self.look_in_direction();
     }
