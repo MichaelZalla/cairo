@@ -111,18 +111,14 @@ where
     pub fn render_line(&mut self, start: Vec3, end: Vec3, color: Color) {
         let start_vertex_in = DefaultVertexIn {
             p: start,
-            // ..Default::default(),
-            n: Default::default(),
-            uv: Default::default(),
             c: color.to_vec3() / 255.0,
+            ..Default::default()
         };
 
         let end_vertex_in = DefaultVertexIn {
             p: end,
-            // ..Default::default(),
-            n: Default::default(),
-            uv: Default::default(),
             c: color.to_vec3() / 255.0,
+            ..Default::default()
         };
 
         let mut start_vertex_out = self.vertex_shader.call(&start_vertex_in);
