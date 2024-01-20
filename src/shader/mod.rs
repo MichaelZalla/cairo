@@ -10,7 +10,6 @@ pub mod alpha;
 pub mod fragment;
 pub mod vertex;
 
-#[derive(Default)]
 pub struct ShaderContext {
     pub flags: u32,
     pub world_transform: Mat4,
@@ -26,6 +25,27 @@ pub struct ShaderContext {
     pub directional_light: DirectionalLight,
     pub point_lights: Vec<PointLight>,
     pub spot_lights: Vec<SpotLight>,
+}
+
+impl Default for ShaderContext {
+    fn default() -> Self {
+        Self {
+            flags: Default::default(),
+            world_transform: Mat4::identity(),
+            view_position: Default::default(),
+            view_inverse_transform: Mat4::identity(),
+            world_view_transform: Mat4::identity(),
+            projection_transform: Mat4::identity(),
+            world_view_projection_transform: Default::default(),
+            default_specular_exponent: Default::default(),
+            active_material: Default::default(),
+            active_environment_map: Default::default(),
+            ambient_light: Default::default(),
+            directional_light: Default::default(),
+            point_lights: Default::default(),
+            spot_lights: Default::default(),
+        }
+    }
 }
 
 impl ShaderContext {
