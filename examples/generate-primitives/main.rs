@@ -4,7 +4,6 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::App,
-    color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
@@ -74,10 +73,26 @@ fn main() -> Result<(), String> {
 
     checkerboard_mat.specular_map = Some(checkerboard_specular_map);
 
-    // Point light "material"
+    // Point light decal material
 
-    let mut point_light_mat = Material::new("white".to_string());
-    point_light_mat.diffuse_color = color::WHITE.to_vec3() / 255.0;
+    let mut point_light_decal_mat = Material::new("point_light_decal".to_string());
+
+    point_light_decal_mat.alpha_map =
+        Some(TextureMap::new(&"./assets/decals/point_light_small.png"));
+
+    point_light_decal_mat.emissive_map = point_light_decal_mat.alpha_map.clone();
+
+    point_light_decal_mat.load_all_maps(rendering_context)?;
+
+    // Spot light decal material
+
+    let mut spot_light_decal_mat = Material::new("spot_light_decal".to_string());
+
+    spot_light_decal_mat.alpha_map = Some(TextureMap::new(&"./assets/decals/spot_light_small.png"));
+
+    spot_light_decal_mat.emissive_map = spot_light_decal_mat.alpha_map.clone();
+
+    spot_light_decal_mat.load_all_maps(rendering_context)?;
 
     // Collect materials
 
@@ -109,7 +124,8 @@ fn main() -> Result<(), String> {
     cylinder_entity.position.y += 1.0;
 
     material_cache.insert(checkerboard_mat);
-    material_cache.insert(point_light_mat);
+    material_cache.insert(point_light_decal_mat);
+    material_cache.insert(spot_light_decal_mat);
 
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> = vec![
