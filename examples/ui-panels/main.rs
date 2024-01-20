@@ -6,7 +6,7 @@ use cairo::{
     app::App,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::{pixelbuffer::PixelBuffer, Graphics, TextOperation},
+    graphics::{pixelbuffer::PixelBuffer, text::TextOperation, Graphics},
     ui::panel::{Panel, PanelInfo},
 };
 
