@@ -48,8 +48,7 @@ fn main() -> Result<(), String> {
     // Create a new textured material
     let mut checkerboard_mat = Material::new("checkerboard".to_string());
 
-    let mut checkerboard_diffuse_map =
-        TextureMap::new(&"./examples/generate-primitives/assets/checkerboard.jpg");
+    let mut checkerboard_diffuse_map = TextureMap::new(&"./assets/textures/checkerboard.jpg");
 
     // Checkerboard material
 

@@ -39,8 +39,7 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_material = Material::new("checkerboard".to_string());
 
-    let mut checkerboard_diffuse_map =
-        TextureMap::new(&"./examples/emissive-map/assets/checkerboard.jpg");
+    let mut checkerboard_diffuse_map = TextureMap::new(&"./assets/textures/checkerboard.jpg");
 
     checkerboard_diffuse_map.load(rendering_context)?;
 
