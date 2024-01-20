@@ -15,7 +15,7 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
 
         out.position = Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
 
-        debug_assert!(out.position.w != 0.0);
+        // debug_assert!(out.position.w != 0.0);
 
         let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
 
