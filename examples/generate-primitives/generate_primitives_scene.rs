@@ -71,9 +71,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let camera2: Camera = Camera::new(
             aspect_ratio,
             Vec3 {
-                x: -15.0,
+                x: 4.0,
                 y: 8.0,
-                z: -15.0,
+                z: -4.0,
             },
             Vec3 {
                 x: 0.0,

@@ -24,6 +24,8 @@ impl<'a> VertexShader<'a> for DefaultVertexShader<'a> {
 
         out.p = Vec4::new(v.p, 1.0) * context.world_view_projection_transform;
 
+        debug_assert!(out.p.w != 0.0);
+
         let world_pos = Vec4::new(v.p, 1.0) * context.world_transform;
 
         out.world_pos = Vec3 {
@@ -33,7 +35,6 @@ impl<'a> VertexShader<'a> for DefaultVertexShader<'a> {
         };
 
         out.n = Vec4::new(v.n, 0.0) * context.world_transform;
-
         out.n = out.n.as_normal();
 
         out.c = v.c.clone();
