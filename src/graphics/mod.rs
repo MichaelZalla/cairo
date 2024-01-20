@@ -126,24 +126,29 @@ impl Graphics {
         }
     }
 
-    pub fn crosshair(&mut self, x: i32, y: i32, length: u16, color: Color) {
-        // Horizontal segment
-        self.line(
-            (x - length as i32 / 2).max(0),
-            y,
-            x + length as i32 / 2,
-            y,
-            color,
-        );
+    pub fn crosshair(&mut self, x: i32, y: i32, length: u16, thickness: u16, color: Color) {
+        for i in 0..thickness {
+            let offset_x = x - (thickness as i32 / 2) + i as i32;
+            let offset_y = y - (thickness as i32 / 2) + i as i32;
 
-        // Vertical segment
-        self.line(
-            x,
-            (y - length as i32 / 2).max(0),
-            x,
-            y + length as i32 / 2,
-            color,
-        );
+            // Horizontal segment
+            self.line(
+                (x - length as i32 / 2).max(0),
+                offset_y,
+                x + length as i32 / 2,
+                offset_y,
+                color,
+            );
+
+            // Vertical segment
+            self.line(
+                offset_x,
+                (y - length as i32 / 2).max(0),
+                offset_x,
+                y + length as i32 / 2,
+                color,
+            );
+        }
     }
 
     fn clip_line(
