@@ -1,6 +1,13 @@
+use std::borrow::BorrowMut;
+
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
-use crate::{color::Color, texture::TextureBuffer};
+use crate::{
+    color::{self, Color},
+    debug::message::DebugMessageBuffer,
+    font::{cache::FontCache, FontInfo},
+    texture::TextureBuffer,
+};
 
 use super::Graphics;
 
@@ -49,6 +56,33 @@ impl Graphics {
         Ok(())
     }
 
+    pub fn render_debug_messages(
+        &mut self,
+        font_cache: &mut FontCache,
+        font_info: &FontInfo,
+        position: (u32, u32),
+        padding_ems: f32,
+        buffer: &mut DebugMessageBuffer,
+    ) {
+        let mut y_offset = position.1;
+
+        for msg in buffer.borrow_mut() {
+            let op = TextOperation {
+                text: &msg,
+                x: position.0,
+                y: y_offset,
+                color: color::WHITE,
+            };
+
+            self.text_using_font_cache(font_cache, &font_info, &op)
+                .unwrap();
+
+            y_offset += (font_info.point_size as f32 * padding_ems) as u32;
+        }
+
+        buffer.drain();
+    }
+
     fn make_text_texture(
         &mut self,
         font: &Font,
@@ -76,5 +110,17 @@ impl Graphics {
             text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
 
         Ok((text_canvas_width, text_canvas_height, text_surface_pixels))
+    }
+
+    fn text_using_font_cache(
+        &mut self,
+        font_cache: &mut FontCache,
+        font_info: &FontInfo,
+        text_operation: &TextOperation,
+    ) -> Result<(), String> {
+        match (*font_cache).load(font_info) {
+            Ok(font) => self.text(&font, text_operation),
+            Err(e) => return Err(e.to_string()),
+        }
     }
 }

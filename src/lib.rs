@@ -6,6 +6,7 @@ pub mod macros;
 pub mod app;
 pub mod color;
 pub mod context;
+pub mod debug;
 pub mod device;
 pub mod entity;
 pub mod font;

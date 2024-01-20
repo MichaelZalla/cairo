@@ -7,6 +7,7 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
+    font::{cache::FontCache, FontInfo},
     material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
@@ -26,6 +27,17 @@ fn main() -> Result<(), String> {
     let app = App::new("examples/generate-primitives", CANVAS_WIDTH, ASPECT_RATIO);
 
     let rendering_context = &app.context.rendering_context;
+
+    // Fonts
+
+    let font_info = FontInfo {
+        filepath: "C:/Windows/Fonts/vgasys.fon".to_string(),
+        point_size: 16,
+    };
+
+    let font_cache_rwl = RwLock::new(FontCache::new(app.context.ttf_context));
+
+    font_cache_rwl.write().unwrap().load(&font_info)?;
 
     // Generate primitive meshes
 
@@ -115,6 +127,8 @@ fn main() -> Result<(), String> {
     let scene = RefCell::new(GeneratePrimitivesScene::new(
         app.canvas_width,
         app.canvas_height,
+        &font_cache_rwl,
+        &font_info,
         &entities_rwl,
         &mut material_cache,
         &shader_context_rwl,

@@ -3,8 +3,10 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
+    debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
+    font::{cache::FontCache, FontInfo},
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
     matrix::Mat4,
@@ -22,6 +24,8 @@ use cairo::{
 };
 
 pub struct GeneratePrimitivesScene<'a> {
+    framebuffer: Graphics,
+    debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -29,6 +33,8 @@ pub struct GeneratePrimitivesScene<'a> {
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+    font_cache_rwl: &'a RwLock<FontCache<'static>>,
+    font_info: FontInfo,
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
@@ -40,15 +46,23 @@ impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
         canvas_width: u32,
         canvas_height: u32,
+        font_cache_rwl: &'a RwLock<FontCache<'static>>,
+        font_info: &'a FontInfo,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let graphics = Graphics {
+        let framebuffer = Graphics {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
         };
 
-        let aspect_ratio = graphics.buffer.width_over_height;
+        let debug_message_buffer: DebugMessageBuffer = Default::default();
+
+        let pipeline_framebuffer = Graphics {
+            buffer: PixelBuffer::new(canvas_width, canvas_height),
+        };
+
+        let aspect_ratio = pipeline_framebuffer.buffer.width_over_height;
 
         // Set up a camera for rendering our scene
         let mut camera: Camera = Camera::new(
@@ -166,7 +180,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let fragment_shader = DefaultFragmentShader::new(shader_context, None);
 
         let pipeline = Pipeline::new(
-            graphics,
+            pipeline_framebuffer,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,
@@ -176,8 +190,12 @@ impl<'a> GeneratePrimitivesScene<'a> {
         );
 
         return GeneratePrimitivesScene {
+            framebuffer,
+            debug_message_buffer,
             pipeline,
             entities,
+            font_cache_rwl,
+            font_info: font_info.clone(),
             material_cache,
             shader_context,
             cameras: vec![camera, camera2],
@@ -323,6 +341,24 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         }
 
         self.prev_mouse_state = mouse_state.clone();
+
+        // Write to debug log
+
+        self.debug_message_buffer
+            .write(format!("Seconds ellapsed: {:.*}", 2, self.seconds_ellapsed));
+
+        self.debug_message_buffer
+            .write(format!("Cameras in scene: {}", self.cameras.len()));
+
+        self.debug_message_buffer.write(format!(
+            "Active camera: Camera {}",
+            self.active_camera_index
+        ));
+
+        self.debug_message_buffer.write(format!(
+            "Looking at point light: {}",
+            self.looking_at_point_light
+        ));
     }
 
     fn render(&mut self) {
@@ -356,9 +392,31 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
             self.pipeline.render_camera(camera);
         }
+
+        // Render debug messages
+
+        self.framebuffer.buffer.blit(
+            0,
+            0,
+            self.framebuffer.buffer.width,
+            self.framebuffer.buffer.height,
+            self.pipeline.get_pixel_data(),
+        );
+
+        {
+            let mut font_cache = self.font_cache_rwl.write().unwrap();
+
+            self.framebuffer.render_debug_messages(
+                &mut font_cache,
+                &self.font_info,
+                (12, 12),
+                1.0,
+                &mut self.debug_message_buffer,
+            );
+        }
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.pipeline.get_pixel_data();
+        return self.framebuffer.buffer.get_pixel_data();
     }
 }
