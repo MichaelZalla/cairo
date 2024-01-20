@@ -2,6 +2,7 @@ use std::sync::RwLock;
 
 use sdl2::{
     render::{BlendMode, Canvas, Texture, TextureCreator},
+    ttf::Sdl2TtfContext,
     video::{Window, WindowContext},
     EventPump, TimerSubsystem,
 };
@@ -12,6 +13,7 @@ const GAME_CONTROLLER_COUNT: usize = 4;
 
 pub struct ApplicationContext {
     pub rendering_context: ApplicationRenderingContext,
+    pub ttf_context: &'static Sdl2TtfContext,
     pub screen_width: u32,
     pub screen_height: u32,
     pub timer: TimerSubsystem,
@@ -36,6 +38,24 @@ pub fn get_application_context(
     sdl_context.mouse().show_cursor(show_cursor);
 
     let timer = sdl_context.timer()?;
+
+    let ttf_context: &'static Sdl2TtfContext;
+
+    match sdl2::ttf::init() {
+        Ok(context) => {
+            println!("Initialized TTF font subsystem.");
+
+            let boxed = Box::new(context);
+
+            ttf_context = Box::leak(boxed);
+        }
+        Err(e) => {
+            return Err(format!(
+                "Error initializing TTF font subsystem: '{}'",
+                e.to_string()
+            ))
+        }
+    }
 
     let game_controller_subsystem = sdl_context.game_controller()?;
 
@@ -131,6 +151,7 @@ pub fn get_application_context(
                 screen_width,
                 screen_height,
                 rendering_context,
+                ttf_context,
                 timer,
                 game_controllers,
                 events,
