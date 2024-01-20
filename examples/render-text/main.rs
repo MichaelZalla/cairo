@@ -77,7 +77,7 @@ fn main() -> Result<(), String> {
                 let x = *mouse_x.borrow();
                 let y = *mouse_y.borrow();
 
-                graphics.crosshair(x, y, 18, 2, 4, color::YELLOW);
+                graphics.crosshair(x, y, 24, 2, 6, true, color::YELLOW);
 
                 graphics.text(
                     &font,

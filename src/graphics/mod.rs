@@ -133,17 +133,18 @@ impl Graphics {
         length: u16,
         thickness: u16,
         mut gap: u16,
+        center_dot: bool,
         color: Color,
     ) {
-        gap = gap.min(length / 2 - 1);
+        gap = gap.min((length as f32 / 2.0).ceil() as u16);
 
         for i in 0..thickness {
-            let offset_x = x - (thickness as i32 / 2) + i as i32;
-            let offset_y = y - (thickness as i32 / 2) + i as i32;
+            let offset_x = x - (thickness as f32 / 2.0).ceil() as i32 + i as i32;
+            let offset_y = y - (thickness as f32 / 2.0).ceil() as i32 + i as i32;
 
             // Horizontal segments
             self.line(
-                x - length as i32 / 2,
+                x - (length as f32 / 2.0).ceil() as i32,
                 offset_y,
                 x - gap as i32,
                 offset_y,
@@ -153,7 +154,7 @@ impl Graphics {
             self.line(
                 x + gap as i32,
                 offset_y,
-                x + length as i32 / 2,
+                x + (length as f32 / 2.0).ceil() as i32,
                 offset_y,
                 color,
             );
@@ -162,7 +163,7 @@ impl Graphics {
 
             self.line(
                 offset_x,
-                y - length as i32 / 2,
+                y - (length as f32 / 2.0).ceil() as i32,
                 offset_x,
                 y - gap as i32,
                 color,
@@ -172,9 +173,21 @@ impl Graphics {
                 offset_x,
                 y + gap as i32,
                 offset_x,
-                y + length as i32 / 2,
+                y + (length as f32 / 2.0).ceil() as i32,
                 color,
             );
+
+            // Center dot
+
+            if center_dot {
+                self.line(
+                    x - (thickness as f32 / 2.0).ceil() as i32,
+                    offset_y,
+                    x + (thickness as f32 / 2.0).ceil() as i32,
+                    offset_y,
+                    color,
+                );
+            }
         }
     }
 
