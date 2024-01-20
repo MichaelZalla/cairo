@@ -284,8 +284,8 @@ impl Camera {
 
         // Translate relative mouse movements to NDC values (in the range [0, 1]).
 
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 640.0;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 480.0;
+        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 400.0;
+        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 400.0;
 
         // Update camera pitch and yaw, based on mouse position deltas.
 
