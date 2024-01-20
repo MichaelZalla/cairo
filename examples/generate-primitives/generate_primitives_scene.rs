@@ -29,7 +29,7 @@ pub struct GeneratePrimitivesScene<'a> {
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-    materials: &'a mut MaterialCache,
+    material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
     looking_at_point_light: bool,
@@ -41,7 +41,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         canvas_width: u32,
         canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-        materials: &'a mut MaterialCache,
+        material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         let graphics = Graphics {
@@ -178,7 +178,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         return GeneratePrimitivesScene {
             pipeline,
             entities,
-            materials,
+            material_cache,
             shader_context,
             cameras: vec![camera, camera2],
             active_camera_index: 0,
@@ -329,7 +329,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         self.pipeline.begin_frame();
 
         for entity in self.entities.read().unwrap().as_slice() {
-            self.pipeline.render_entity(&entity, Some(self.materials));
+            self.pipeline
+                .render_entity(&entity, Some(self.material_cache));
         }
 
         for (index, camera) in self.cameras.iter().enumerate() {
@@ -338,7 +339,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                     self.pipeline.render_point_light(
                         &light,
                         Some(&camera),
-                        Some(&mut self.materials),
+                        Some(&mut self.material_cache),
                     );
                 }
 
@@ -346,7 +347,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                     self.pipeline.render_spot_light(
                         &light,
                         Some(&camera),
-                        Some(&mut self.materials),
+                        Some(&mut self.material_cache),
                     );
                 }
 
