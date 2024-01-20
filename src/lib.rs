@@ -8,6 +8,7 @@ pub mod color;
 pub mod context;
 pub mod device;
 pub mod entity;
+pub mod font;
 pub mod fs;
 pub mod graphics;
 pub mod material;

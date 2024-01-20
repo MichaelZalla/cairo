@@ -1,11 +1,12 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, path::Path};
+use std::{cell::RefCell, env};
 
 use cairo::{
     app::App,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
+    font::{cache::FontCache, FontInfo},
     graphics::{pixelbuffer::PixelBuffer, text::TextOperation, Graphics},
 };
 
@@ -27,9 +28,12 @@ fn main() -> Result<(), String> {
                 return Ok(());
             }
 
-            let font_path = Path::new(&args[1]);
+            let font_info = FontInfo {
+                filepath: args[1].to_string(),
+                point_size: 16,
+            };
 
-            let mut font = ttf_context.load_font(font_path, 16)?;
+            let mut font_cache = FontCache::new(&ttf_context);
 
             // Set up our app
 
@@ -58,7 +62,7 @@ fn main() -> Result<(), String> {
 
                 // Render some text to our pixel buffer
 
-                font.set_style(sdl2::ttf::FontStyle::NORMAL);
+                let font = font_cache.load(&font_info).unwrap();
 
                 graphics.text(
                     &font,
