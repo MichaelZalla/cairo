@@ -80,7 +80,6 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        // @TODO(mzalla) Return reference to a captured variable???
         return Ok(scene.borrow_mut().get_pixel_data().clone());
     };
 

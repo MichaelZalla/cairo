@@ -92,7 +92,6 @@ fn main() -> Result<(), String> {
             },
         )?;
 
-        // @TODO(mzalla) Return reference to a captured variable???
         return Ok(graphics.buffer.get_pixel_data().clone());
     };
 

@@ -33,7 +33,6 @@ fn main() -> Result<(), String> {
         // @TODO Write some pixel data to the pixel buffer,
         //       based on some borrowed state.
 
-        // @TODO Return reference to a captured variable?
         return Ok(graphics.buffer.get_pixel_data().clone());
     };
 
