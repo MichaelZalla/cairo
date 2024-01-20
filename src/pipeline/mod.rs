@@ -128,14 +128,23 @@ where
         let mut start_vertex_out = self.vertex_shader.call(&start_vertex_in);
         let mut end_vertex_out = self.vertex_shader.call(&end_vertex_in);
 
-        self.transform_to_ndc_space(&mut start_vertex_out);
-        self.transform_to_ndc_space(&mut end_vertex_out);
+        self.render_line_2(&mut start_vertex_out, &mut end_vertex_out, color);
+    }
+
+    pub fn render_line_2(
+        &mut self,
+        start: &mut DefaultVertexOut,
+        end: &mut DefaultVertexOut,
+        color: Color,
+    ) {
+        self.transform_to_ndc_space(start);
+        self.transform_to_ndc_space(end);
 
         self.graphics.line(
-            start_vertex_out.p.x as u32,
-            start_vertex_out.p.y as u32,
-            end_vertex_out.p.x as u32,
-            end_vertex_out.p.y as u32,
+            start.p.x as i32,
+            start.p.y as i32,
+            end.p.x as i32,
+            end.p.y as i32,
             color,
         );
     }
@@ -793,10 +802,10 @@ where
                 let to = screen_vertex_relative_normal;
 
                 self.graphics.line(
-                    from.x as u32,
-                    from.y as u32,
-                    to.x as u32,
-                    to.y as u32,
+                    from.x as i32,
+                    from.y as i32,
+                    to.x as i32,
+                    to.y as i32,
                     color::RED,
                 );
             }
