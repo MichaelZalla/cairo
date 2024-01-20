@@ -1,6 +1,6 @@
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
-use crate::color::Color;
+use crate::{color::Color, texture::TextureBuffer};
 
 use super::Graphics;
 
@@ -14,6 +14,46 @@ pub struct TextOperation<'a> {
 
 impl Graphics {
     pub fn text(&mut self, font: &Font, op: &TextOperation) -> Result<(), String> {
+        // Generate a texture for this text operation.
+
+        let (width, height, bytes) = self.make_text_texture(font, op).unwrap();
+
+        // Copy the rendered pixels to this buffer, at location (op.x, op.y).
+
+        let start_x = op.x;
+        let start_y = op.y;
+
+        for y in 0..height {
+            for x in 0..width {
+                let index = (x as usize + y as usize * width as usize) * 4;
+
+                let a = bytes[index + 3];
+
+                if a == 0 {
+                    continue;
+                }
+
+                self.buffer.set_pixel(
+                    start_x + x,
+                    start_y + y,
+                    Color {
+                        r: bytes[index],
+                        g: bytes[index + 1],
+                        b: bytes[index + 2],
+                        a,
+                    },
+                )
+            }
+        }
+
+        Ok(())
+    }
+
+    fn make_text_texture(
+        &mut self,
+        font: &Font,
+        op: &TextOperation,
+    ) -> Result<(u32, u32, TextureBuffer), String> {
         // Generate a new text rendering (surface)
 
         let surface = font
@@ -35,30 +75,6 @@ impl Graphics {
         let text_surface_pixels =
             text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
 
-        // Copy the rendered pixels to the graphics buffer, with padding
-
-        for y in 0..text_canvas_height {
-            for x in 0..text_canvas_width {
-                let text_surface_pixels_index =
-                    (x as usize + y as usize * text_canvas_width as usize) * 4;
-
-                let a = text_surface_pixels[text_surface_pixels_index + 3];
-
-                if a != 0 {
-                    self.buffer.set_pixel(
-                        op.x + x,
-                        op.y + y,
-                        Color {
-                            r: text_surface_pixels[text_surface_pixels_index],
-                            g: text_surface_pixels[text_surface_pixels_index + 1],
-                            b: text_surface_pixels[text_surface_pixels_index + 2],
-                            a,
-                        },
-                    )
-                }
-            }
-        }
-
-        Ok(())
+        Ok((text_canvas_width, text_canvas_height, text_surface_pixels))
     }
 }

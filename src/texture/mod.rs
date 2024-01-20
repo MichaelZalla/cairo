@@ -10,6 +10,8 @@ pub mod cubemap;
 pub mod sample;
 pub mod uv;
 
+pub type TextureBuffer = Vec<u8>;
+
 #[derive(Debug, Clone, Default)]
 pub struct TextureMapInfo {
     pub filepath: String,
@@ -23,7 +25,7 @@ pub struct TextureMap {
     pub is_mipmapped: bool,
     pub width: u32,
     pub height: u32,
-    pub levels: Vec<Vec<u8>>,
+    pub levels: Vec<TextureBuffer>,
 }
 
 impl TextureMap {
