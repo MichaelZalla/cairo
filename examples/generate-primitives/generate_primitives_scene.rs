@@ -20,6 +20,7 @@ use cairo::{
         default_fragment_shader::DefaultFragmentShader,
         default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
+    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -39,7 +40,6 @@ pub struct GeneratePrimitivesScene<'a> {
     shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
     looking_at_point_light: bool,
-    seconds_ellapsed: f32,
 }
 
 impl<'a> GeneratePrimitivesScene<'a> {
@@ -205,7 +205,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             spot_lights,
             prev_mouse_state: MouseState::new(),
             looking_at_point_light: false,
-            seconds_ellapsed: 0.0,
         };
     }
 }
@@ -213,14 +212,14 @@ impl<'a> GeneratePrimitivesScene<'a> {
 impl<'a> Scene for GeneratePrimitivesScene<'a> {
     fn update(
         &mut self,
+        timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        seconds_since_last_update: f32,
     ) {
         let mut context = self.shader_context.write().unwrap();
 
-        self.seconds_ellapsed += seconds_since_last_update;
+        let uptime = timing_info.uptime_seconds;
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
@@ -237,10 +236,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             camera.set_target_position(self.point_lights[0].position);
         } else {
             camera.update(
+                timing_info,
                 keyboard_state,
                 mouse_state,
                 game_controller_state,
-                seconds_since_last_update,
             );
 
             context.set_projection(camera.get_projection());
@@ -278,29 +277,20 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             let light_phase_shift = (2.0 * PI / (light_count as f32)) * index as f32;
 
             light.intensities = Vec3 {
-                x: (self.seconds_ellapsed + color_channel_phase_shift * 0.0 + light_phase_shift)
-                    .sin()
-                    / 2.0
-                    + 0.5,
-                y: (self.seconds_ellapsed + color_channel_phase_shift * 1.0 + light_phase_shift)
-                    .sin()
-                    / 2.0
-                    + 0.5,
-                z: (self.seconds_ellapsed + color_channel_phase_shift * 2.0 + light_phase_shift)
-                    .sin()
-                    / 2.0
-                    + 0.5,
+                x: (uptime + color_channel_phase_shift * 0.0 + light_phase_shift).sin() / 2.0 + 0.5,
+                y: (uptime + color_channel_phase_shift * 1.0 + light_phase_shift).sin() / 2.0 + 0.5,
+                z: (uptime + color_channel_phase_shift * 2.0 + light_phase_shift).sin() / 2.0 + 0.5,
             } * max_point_light_intensity;
 
             let offset = index % 2 == 0;
 
             light.position = Vec3 {
                 x: orbit_radius
-                    * ((self.seconds_ellapsed * light_speed_factor) + light_phase_shift).sin()
+                    * ((uptime * light_speed_factor) + light_phase_shift).sin()
                     * if offset { 1.5 } else { 1.0 },
                 y: 1.0,
                 z: orbit_radius
-                    * ((self.seconds_ellapsed * light_speed_factor) + light_phase_shift).cos()
+                    * ((uptime * light_speed_factor) + light_phase_shift).cos()
                     * if offset { 1.5 } else { 1.0 },
             };
 
@@ -314,9 +304,9 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let max_spot_light_intensity: f32 = 0.6;
 
         self.spot_lights[0].intensities = Vec3 {
-            x: (self.seconds_ellapsed + color_channel_phase_shift * 0.0).cos() / 2.0 + 0.5,
-            y: (self.seconds_ellapsed + color_channel_phase_shift * 1.0).cos() / 2.0 + 0.5,
-            z: (self.seconds_ellapsed + color_channel_phase_shift * 2.0).cos() / 2.0 + 0.5,
+            x: (uptime + color_channel_phase_shift * 0.0).cos() / 2.0 + 0.5,
+            y: (uptime + color_channel_phase_shift * 1.0).cos() / 2.0 + 0.5,
+            z: (uptime + color_channel_phase_shift * 2.0).cos() / 2.0 + 0.5,
         } * max_spot_light_intensity;
 
         context.set_spot_light(0, self.spot_lights[0]);
@@ -330,13 +320,13 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 continue;
             }
 
-            entity.rotation.z += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.z += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.z %= 2.0 * PI;
 
-            entity.rotation.x += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.x += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.x %= 2.0 * PI;
 
-            entity.rotation.y += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
 
@@ -345,7 +335,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         // Write to debug log
 
         self.debug_message_buffer
-            .write(format!("Seconds ellapsed: {:.*}", 2, self.seconds_ellapsed));
+            .write(format!("Seconds ellapsed: {:.*}", 2, uptime));
 
         self.debug_message_buffer
             .write(format!("Cameras in scene: {}", self.cameras.len()));

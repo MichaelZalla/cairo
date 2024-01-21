@@ -21,6 +21,7 @@ use cairo::{
         default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
     texture::cubemap::CubeMap,
+    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -31,7 +32,6 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 };
 
 pub struct SponzaScene<'a> {
-    seconds_ellapsed: f32,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -165,7 +165,6 @@ impl<'a> SponzaScene<'a> {
         );
 
         return SponzaScene {
-            seconds_ellapsed: 0.0,
             pipeline,
             entities,
             skybox,
@@ -183,22 +182,20 @@ impl<'a> SponzaScene<'a> {
 impl<'a> Scene for SponzaScene<'a> {
     fn update(
         &mut self,
+        timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        seconds_since_last_update: f32,
     ) {
         let mut context = self.shader_context.write().unwrap();
-
-        self.seconds_ellapsed += seconds_since_last_update;
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
+            timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,
-            seconds_since_last_update,
         );
 
         self.pipeline

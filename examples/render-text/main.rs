@@ -8,6 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::{pixelbuffer::PixelBuffer, text::TextOperation, Graphics},
+    time::TimingInfo,
 };
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
@@ -44,12 +45,12 @@ fn main() -> Result<(), String> {
     let mouse_x = RefCell::new(0);
     let mouse_y = RefCell::new(0);
 
-    let mut update = |_keyboard_state: &KeyboardState,
+    let mut update = |timing_info: &TimingInfo,
+                      _keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
-                      _game_controller_state: &GameControllerState,
-                      seconds_since_last_update: f32|
+                      _game_controller_state: &GameControllerState|
      -> () {
-        *now_seconds.borrow_mut() += seconds_since_last_update;
+        *now_seconds.borrow_mut() += timing_info.seconds_since_last_update;
         *mouse_x.borrow_mut() = mouse_state.position.0;
         *mouse_y.borrow_mut() = mouse_state.position.1;
     };

@@ -8,6 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::{pixelbuffer::PixelBuffer, text::TextOperation, Graphics},
+    time::TimingInfo,
     ui::panel::{Panel, PanelInfo},
 };
 
@@ -51,10 +52,10 @@ fn main() -> Result<(), String> {
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
         },
-        |_keyboard_state: &KeyboardState,
+        |_timing_info: &TimingInfo,
+         _keyboard_state: &KeyboardState,
          _mouse_state: &MouseState,
-         _game_controller_state: &GameControllerState,
-         _seconds_since_last_update: f32|
+         _game_controller_state: &GameControllerState|
          -> () {
             // @TODO(mzalla) Update panel tree in response to mouse events
         },
@@ -77,18 +78,18 @@ fn main() -> Result<(), String> {
 
     root_panel.borrow_mut().split()?;
 
-    let mut update = |keyboard_state: &KeyboardState,
+    let mut update = |timing_info: &TimingInfo,
+                      keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
-                      game_controller_state: &GameControllerState,
-                      seconds_since_last_update: f32|
+                      game_controller_state: &GameControllerState|
      -> () {
         // Delegrate update actions to the root panel
 
         ((*root_panel.borrow_mut()).update)(
+            timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,
-            seconds_since_last_update,
         )
     };
 

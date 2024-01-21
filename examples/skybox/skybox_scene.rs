@@ -20,6 +20,7 @@ use cairo::{
         default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
     texture::cubemap::CubeMap,
+    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -167,20 +168,20 @@ impl<'a> SkyboxScene<'a> {
 impl<'a> Scene for SkyboxScene<'a> {
     fn update(
         &mut self,
+        timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        seconds_since_last_update: f32,
     ) {
         let mut context = self.shader_context.write().unwrap();
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
+            timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,
-            seconds_since_last_update,
         );
 
         self.pipeline
@@ -201,13 +202,13 @@ impl<'a> Scene for SkyboxScene<'a> {
 
         // Mesh rotation via our time delta
 
-        entity.rotation.z += 0.2 * PI * seconds_since_last_update;
+        entity.rotation.z += 0.2 * PI * timing_info.seconds_since_last_update;
         entity.rotation.z %= 2.0 * PI;
 
-        entity.rotation.x += 0.2 * PI * seconds_since_last_update;
+        entity.rotation.x += 0.2 * PI * timing_info.seconds_since_last_update;
         entity.rotation.x %= 2.0 * PI;
 
-        entity.rotation.y += 0.2 * PI * seconds_since_last_update;
+        entity.rotation.y += 0.2 * PI * timing_info.seconds_since_last_update;
         entity.rotation.y %= 2.0 * PI;
 
         let camera_view_inverse_transform = camera.get_view_inverse_transform();

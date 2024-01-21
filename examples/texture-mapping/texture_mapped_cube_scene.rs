@@ -20,6 +20,7 @@ use cairo::{
         default_fragment_shader::DefaultFragmentShader,
         default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
+    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -156,20 +157,20 @@ impl<'a> TextureMappedCubeScene<'a> {
 impl<'a> Scene for TextureMappedCubeScene<'a> {
     fn update(
         &mut self,
+        timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        seconds_since_last_update: f32,
     ) {
         let mut context = self.shader_context.write().unwrap();
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
+            timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,
-            seconds_since_last_update,
         );
 
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
@@ -190,7 +191,7 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
 
         let mut entities = self.entities.write().unwrap();
 
-        let rotation_speed = 0.1 * seconds_since_last_update;
+        let rotation_speed = 0.1 * timing_info.seconds_since_last_update;
 
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta

@@ -9,6 +9,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
+    time::TimingInfo,
 };
 
 mod sponza_scene;
@@ -65,17 +66,17 @@ fn main() -> Result<(), String> {
     ));
 
     // Set up our app
-    let mut update = |keyboard_state: &KeyboardState,
+    let mut update = |timing_info: &TimingInfo,
+                      keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
-                      game_controller_state: &GameControllerState,
-                      seconds_since_last_update: f32|
+                      game_controller_state: &GameControllerState|
      -> () {
         // Delegate the update to our spinning cube scene
         scene.borrow_mut().update(
+            &timing_info,
             &keyboard_state,
             &mouse_state,
             &game_controller_state,
-            seconds_since_last_update,
         );
     };
 

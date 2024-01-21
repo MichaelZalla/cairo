@@ -6,18 +6,21 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::render::BlendMode;
 
-use crate::debug_print;
-use crate::device::{
-    GameController, GameControllerState, KeyboardState, MouseEvent, MouseEventKind, MouseState,
+use crate::{
+    context::{get_application_context, get_backbuffer, ApplicationContext},
+    debug_print,
+    device::{
+        GameController, GameControllerState, KeyboardState, MouseEvent, MouseEventKind, MouseState,
+    },
+    time::TimingInfo,
 };
-
-use crate::context::{get_application_context, get_backbuffer, ApplicationContext};
 
 pub struct App {
     pub canvas_width: u32,
     pub canvas_height: u32,
-    pub context: ApplicationContext,
     pub aspect_ratio: f32,
+    pub context: ApplicationContext,
+    pub timing_info: TimingInfo,
 }
 
 impl App {
@@ -34,17 +37,20 @@ impl App {
         )
         .unwrap();
 
+        let timing_info: TimingInfo = Default::default();
+
         return App {
             canvas_width,
             canvas_height,
             context,
             aspect_ratio,
+            timing_info,
         };
     }
 
     pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
     where
-        U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+        U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
         R: FnMut() -> Result<Vec<u32>, String>,
     {
         let texture_creator = self
@@ -92,13 +98,13 @@ impl App {
 
             let seconds_slept: f32 = ticks_slept as f32 / ticks_per_second as f32;
 
-            let milliseconds_slept = seconds_slept * 1000.0;
+            self.timing_info.milliseconds_slept = seconds_slept * 1000.0;
 
             debug_print!(
                 "Slept for {} ticks, {}s, {}ms!",
                 ticks_slept,
                 seconds_slept,
-                milliseconds_slept
+                self.timing_info.milliseconds_slept
             );
 
             // Event polling
@@ -241,14 +247,16 @@ impl App {
             let ticks_since_last_update =
                 self.context.timer.performance_counter() - last_update_tick;
 
-            let seconds_since_last_update =
+            self.timing_info.seconds_since_last_update =
                 ticks_since_last_update as f32 / ticks_per_second as f32;
 
+            self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
+
             update(
+                &self.timing_info,
                 &keyboard_state,
                 &mouse_state,
                 &game_controller.state,
-                seconds_since_last_update,
             );
 
             last_update_tick = self.context.timer.performance_counter();
@@ -303,7 +311,8 @@ impl App {
 
             // let frames_per_second = ticks_for_current_frame as f64 / ticks_per_second as f64;
 
-            let frames_per_second = ticks_per_second / ticks_for_current_frame;
+            self.timing_info.frames_per_second =
+                (ticks_per_second as f64 / ticks_for_current_frame as f64) as f32;
 
             let unused_ticks: u64;
 
@@ -316,18 +325,16 @@ impl App {
                 unused_ticks = 0;
             }
 
+            self.timing_info.unused_seconds =
+                (unused_ticks as f64 / ticks_per_second as f64) as f32;
+
+            self.timing_info.unused_milliseconds = self.timing_info.unused_seconds * 1000.0;
+
             let unused_seconds = (unused_ticks as f64 / ticks_per_second as f64) as f64;
             let unused_milliseconds = unused_seconds * 1000.0;
 
             if current_tick % 50 == 0 {
-                debug_print!("===========================");
-                debug_print!("ticks_per_second={}", ticks_per_second);
-                debug_print!("frame_start_tick={}", frame_start_tick);
-                debug_print!("frame_end_tick={}", frame_end_tick);
-                debug_print!("desired_ticks_per_frame={}", desired_ticks_per_frame);
-                debug_print!("ticks_for_current_frame={}", ticks_for_current_frame);
-                debug_print!("unused_ticks={}", unused_ticks);
-                debug_print!("frames_per_second={}", frames_per_second);
+                debug_print!("frames_per_second={}", self.timing_info.frames_per_second);
                 debug_print!("unused_seconds={}", unused_seconds);
                 debug_print!("unused_milliseconds={}", unused_milliseconds);
             }
@@ -336,7 +343,9 @@ impl App {
 
             // Sleep if we can...
 
-            self.context.timer.delay(unused_milliseconds.floor() as u32);
+            self.context
+                .timer
+                .delay(self.timing_info.unused_milliseconds.floor() as u32);
 
             current_tick += 1;
         }

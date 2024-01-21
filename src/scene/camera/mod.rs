@@ -5,6 +5,7 @@ use sdl2::keyboard::Keycode;
 use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
+    time::TimingInfo,
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
@@ -275,10 +276,10 @@ impl Camera {
 
     pub fn update(
         &mut self,
+        timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        seconds_since_last_update: f32,
     ) {
         // Apply camera movement based on mouse input.
 
@@ -316,7 +317,7 @@ impl Camera {
 
         // Apply camera movement based on keyboard input.
 
-        let camera_movement_step = self.movement_speed * seconds_since_last_update;
+        let camera_movement_step = self.movement_speed * timing_info.seconds_since_last_update;
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {

@@ -24,6 +24,7 @@ use cairo::{
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DefaultVertexShader,
     },
+    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -37,7 +38,6 @@ pub struct SpecularMapScene<'a> {
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     prev_mouse_state: MouseState,
-    seconds_ellapsed: f32,
 }
 
 impl<'a> SpecularMapScene<'a> {
@@ -141,7 +141,6 @@ impl<'a> SpecularMapScene<'a> {
             directional_light,
             point_light,
             prev_mouse_state: MouseState::new(),
-            seconds_ellapsed: 0.0,
         };
     }
 }
@@ -149,22 +148,22 @@ impl<'a> SpecularMapScene<'a> {
 impl<'a> Scene for SpecularMapScene<'a> {
     fn update(
         &mut self,
+        timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
-        seconds_since_last_update: f32,
     ) {
         let mut context = self.shader_context.write().unwrap();
 
-        self.seconds_ellapsed += seconds_since_last_update;
+        let uptime = timing_info.uptime_seconds;
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
+            timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,
-            seconds_since_last_update,
         );
 
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
@@ -193,17 +192,17 @@ impl<'a> Scene for SpecularMapScene<'a> {
         let max_intensity: f32 = 0.6;
 
         self.point_light.intensities = Vec3 {
-            x: (self.seconds_ellapsed + phase_shift * 0.0).sin() / 2.0 + 0.5,
-            y: (self.seconds_ellapsed + phase_shift * 1.0).sin() / 2.0 + 0.5,
-            z: (self.seconds_ellapsed + phase_shift * 2.0).sin() / 2.0 + 0.5,
+            x: (uptime + phase_shift * 0.0).sin() / 2.0 + 0.5,
+            y: (uptime + phase_shift * 1.0).sin() / 2.0 + 0.5,
+            z: (uptime + phase_shift * 2.0).sin() / 2.0 + 0.5,
         } * max_intensity;
 
         let orbital_radius: f32 = 3.0;
 
         self.point_light.position = Vec3 {
-            x: orbital_radius * self.seconds_ellapsed.sin(),
+            x: orbital_radius * uptime.sin(),
             y: 1.0,
-            z: orbital_radius * self.seconds_ellapsed.cos(),
+            z: orbital_radius * uptime.cos(),
         };
 
         context.set_point_light(0, self.point_light);
@@ -223,13 +222,13 @@ impl<'a> Scene for SpecularMapScene<'a> {
                 continue;
             }
 
-            entity.rotation.z += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.z += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.z %= 2.0 * PI;
 
-            entity.rotation.x += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.x += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.x %= 2.0 * PI;
 
-            entity.rotation.y += 1.0 * rotation_speed * PI * seconds_since_last_update;
+            entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
 

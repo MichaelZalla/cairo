@@ -4,6 +4,7 @@ use crate::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     graphics::{pixelbuffer::PixelBuffer, Graphics},
+    time::TimingInfo,
     vec::vec2::Vec2,
 };
 
@@ -18,7 +19,7 @@ pub struct PanelInfo {
 
 pub struct Panel<U, R>
 where
-    U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+    U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
     R: FnMut(&mut Graphics, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub info: PanelInfo,
@@ -32,12 +33,12 @@ where
 
 impl<U, R> Panel<U, R>
 where
-    U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+    U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
     R: FnMut(&mut Graphics, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub fn new(info: PanelInfo, update: U, render: R) -> Self
     where
-        U: FnMut(&KeyboardState, &MouseState, &GameControllerState, f32) -> (),
+        U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
         R: FnMut(&mut Graphics, &PanelInfo) -> Result<Vec<u32>, String>,
     {
         let graphics = Graphics {

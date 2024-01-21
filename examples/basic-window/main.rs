@@ -5,6 +5,7 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     graphics::{pixelbuffer::PixelBuffer, Graphics},
+    time::TimingInfo,
 };
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
@@ -18,10 +19,10 @@ fn main() -> Result<(), String> {
         buffer: PixelBuffer::new(WINDOW_WIDTH, WINDOW_HEIGHT),
     };
 
-    let mut update = |_keyboard_state: &KeyboardState,
+    let mut update = |_timing_info: &TimingInfo,
+                      _keyboard_state: &KeyboardState,
                       _mouse_state: &MouseState,
-                      _game_controller_state: &GameControllerState,
-                      _delta_t_seconds: f32|
+                      _game_controller_state: &GameControllerState|
      -> () {
         // @TODO Update any borrowed state here.
     };
