@@ -265,13 +265,6 @@ impl App {
 
             let cw = &mut self.context.rendering_context.canvas.write().unwrap();
 
-            let attrs = backbuffer.query();
-
-            let scale_x: f32 = attrs.width as f32 / self.canvas_width as f32;
-            let scale_y: f32 = attrs.height as f32 / self.canvas_height as f32;
-
-            cw.set_scale(scale_x, scale_y)?;
-
             backbuffer
                 .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
@@ -298,6 +291,9 @@ impl App {
                 .unwrap();
 
             // Flip buffers
+
+            // Note that Canvas<Window>::copy() will automatically stretch our
+            // backbuffer to fit the current window size, if `dst` is `None`.
 
             cw.copy(&backbuffer, None, None)?;
 
