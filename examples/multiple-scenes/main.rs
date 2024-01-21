@@ -5,10 +5,9 @@ use std::{cell::RefCell, cmp::min, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    app::App,
+    app::{App, AppWindowInfo},
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh::obj::load_obj,
     scene::Scene,
     shader::ShaderContext,
@@ -19,11 +18,14 @@ mod multiple_scenes_scene;
 
 use multiple_scenes_scene::MultipleScenesScene;
 
-static ASPECT_RATIO: f32 = 16.0 / 9.0;
-static CANVAS_WIDTH: u32 = 1080;
-static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
-
 fn main() -> Result<(), String> {
+    let mut window_info = AppWindowInfo {
+        title: "examples/multiple-scenes".to_string(),
+        ..Default::default()
+    };
+
+    let app = App::new(&mut window_info);
+
     // Load meshes
     let (cube_meshes, _cube_materials) = load_obj(&"./data/obj/cube.obj");
     let cube_mesh = &cube_meshes[0];
@@ -45,14 +47,14 @@ fn main() -> Result<(), String> {
 
     let scenes = RefCell::new(vec![
         MultipleScenesScene::new(
-            CANVAS_WIDTH,
-            CANVAS_HEIGHT,
+            window_info.canvas_width,
+            window_info.canvas_height,
             &entities_rwl,
             &shader_context_rwl,
         ),
         MultipleScenesScene::new(
-            CANVAS_WIDTH,
-            CANVAS_HEIGHT,
+            window_info.canvas_width,
+            window_info.canvas_height,
             &entities2_rwl,
             &shader_context_rwl,
         ),
@@ -104,8 +106,6 @@ fn main() -> Result<(), String> {
             .get_pixel_data()
             .clone());
     };
-
-    let app = App::new("examples/multiple-scenes", CANVAS_WIDTH, ASPECT_RATIO);
 
     app.run(&mut update, &mut render)?;
 

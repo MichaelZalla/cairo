@@ -3,10 +3,9 @@ extern crate sdl2;
 use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
-    app::App,
+    app::{App, AppWindowInfo},
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
     mesh,
     scene::Scene,
@@ -18,13 +17,13 @@ mod skybox_scene;
 
 use self::skybox_scene::SkyboxScene;
 
-static ASPECT_RATIO: f32 = 16.0 / 9.0;
-
-static CANVAS_WIDTH: u32 = 960;
-static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
-
 fn main() -> Result<(), String> {
-    let app = App::new("examples/skybox", CANVAS_WIDTH, ASPECT_RATIO);
+    let mut window_info = AppWindowInfo {
+        title: "examples/skybox".to_string(),
+        ..Default::default()
+    };
+
+    let app = App::new(&mut window_info);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -44,8 +43,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SkyboxScene::new(
-        CANVAS_WIDTH,
-        CANVAS_HEIGHT,
+        window_info.canvas_width,
+        window_info.canvas_height,
         rendering_context,
         &entities_rwl,
         &mut material_cache,

@@ -7,6 +7,8 @@ use sdl2::{
     EventPump, TimerSubsystem,
 };
 
+use crate::app::AppWindowInfo;
+
 use super::device::GameController;
 
 const GAME_CONTROLLER_COUNT: usize = 4;
@@ -25,17 +27,10 @@ pub struct ApplicationRenderingContext {
     pub canvas: RwLock<Canvas<Window>>,
 }
 
-pub fn get_application_context(
-    window_title: &str,
-    canvas_width: u32,
-    canvas_height: u32,
-    full_screen: bool,
-    show_cursor: bool,
-    vertical_sync: bool,
-) -> Result<ApplicationContext, String> {
+pub fn get_application_context(window_info: &AppWindowInfo) -> Result<ApplicationContext, String> {
     let sdl_context = sdl2::init()?;
 
-    sdl_context.mouse().show_cursor(show_cursor);
+    sdl_context.mouse().show_cursor(window_info.show_cursor);
 
     let timer = sdl_context.timer()?;
 
@@ -116,13 +111,17 @@ pub fn get_application_context(
 
     let video_subsystem = sdl_context.video()?;
 
-    let mut window_builder = video_subsystem.window(window_title, canvas_width, canvas_height);
+    let mut window_builder = video_subsystem.window(
+        &window_info.title,
+        window_info.canvas_width,
+        window_info.canvas_height,
+    );
 
     // window_builder.opengl()
     // window_builder.position_centered()
     // window_builder.borderless();
 
-    if full_screen {
+    if window_info.full_screen {
         // Will verride `canvas_width` and `canvas_height` for the current
         // desktop resolution;
         window_builder.fullscreen_desktop();
@@ -145,7 +144,7 @@ pub fn get_application_context(
             );
 
             let rendering_context =
-                get_application_rendering_context(window, vertical_sync).unwrap();
+                get_application_rendering_context(window, window_info.vertical_sync).unwrap();
 
             Ok(ApplicationContext {
                 screen_width,

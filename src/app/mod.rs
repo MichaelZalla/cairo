@@ -15,35 +15,56 @@ use crate::{
     time::TimingInfo,
 };
 
-pub struct App {
+#[derive(Debug, Clone)]
+pub struct AppWindowInfo {
+    pub title: String,
     pub canvas_width: u32,
     pub canvas_height: u32,
-    pub aspect_ratio: f32,
+    pub window_width: u32,
+    pub window_height: u32,
+    pub full_screen: bool,
+    pub show_cursor: bool,
+    pub vertical_sync: bool,
+}
+
+impl Default for AppWindowInfo {
+    fn default() -> Self {
+        Self {
+            title: "App".to_string(),
+            canvas_width: 960,
+            canvas_height: 540,
+            full_screen: false,
+            show_cursor: true,
+            vertical_sync: false,
+            window_width: 0,
+            window_height: 0,
+        }
+    }
+}
+
+pub struct App {
+    pub window_info: AppWindowInfo,
     pub context: ApplicationContext,
     pub timing_info: TimingInfo,
 }
 
 impl App {
-    pub fn new(window_title: &str, canvas_width: u32, aspect_ratio: f32) -> Self {
-        let canvas_height: u32 = (canvas_width as f32 / aspect_ratio) as u32;
-
-        let context = get_application_context(
-            window_title,
-            canvas_width,
-            canvas_height,
-            false,
-            false,
-            true,
-        )
-        .unwrap();
+    pub fn new(window_info: &mut AppWindowInfo) -> Self {
+        let context = get_application_context(&window_info).unwrap();
 
         let timing_info: TimingInfo = Default::default();
 
+        window_info.window_width = context.screen_width;
+        window_info.window_height = context.screen_height;
+
+        let mut app_window_info = window_info.clone();
+
+        app_window_info.window_width = context.screen_width;
+        app_window_info.window_height = context.screen_height;
+
         return App {
-            canvas_width,
-            canvas_height,
+            window_info: app_window_info,
             context,
-            aspect_ratio,
             timing_info,
         };
     }
@@ -62,8 +83,8 @@ impl App {
             .texture_creator();
 
         let mut backbuffer = get_backbuffer(
-            self.canvas_width,
-            self.canvas_height,
+            self.window_info.canvas_width,
+            self.window_info.canvas_height,
             &texture_creator,
             BlendMode::None,
         )

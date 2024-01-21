@@ -3,10 +3,9 @@ extern crate sdl2;
 use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
-    app::App,
+    app::{App, AppWindowInfo},
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
     shader::ShaderContext,
@@ -17,12 +16,14 @@ mod spinning_cube_scene;
 
 use self::spinning_cube_scene::SpinningCubeScene;
 
-static ASPECT_RATIO: f32 = 16.0 / 9.0;
-
-static CANVAS_WIDTH: u32 = 960;
-static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
-
 fn main() -> Result<(), String> {
+    let mut window_info = AppWindowInfo {
+        title: "examples/spinning-cube".to_string(),
+        ..Default::default()
+    };
+
+    let app = App::new(&mut window_info);
+
     // Generate a cube mesh
     let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
@@ -37,8 +38,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SpinningCubeScene::new(
-        CANVAS_WIDTH,
-        CANVAS_HEIGHT,
+        window_info.canvas_width,
+        window_info.canvas_height,
         &entities_rwl,
         &shader_context_rwl,
     ));
@@ -66,8 +67,6 @@ fn main() -> Result<(), String> {
 
         return Ok(scene.borrow_mut().get_pixel_data().clone());
     };
-
-    let app = App::new("examples/spinning-cube", CANVAS_WIDTH, ASPECT_RATIO);
 
     app.run(&mut update, &mut render)?;
 

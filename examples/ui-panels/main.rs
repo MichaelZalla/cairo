@@ -3,7 +3,7 @@ extern crate sdl2;
 use std::{cell::RefCell, env};
 
 use cairo::{
-    app::App,
+    app::{App, AppWindowInfo},
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
@@ -12,13 +12,13 @@ use cairo::{
     ui::panel::{Panel, PanelInfo},
 };
 
-static ASPECT_RATIO: f32 = 16.0 / 9.0;
-
-static CANVAS_WIDTH: u32 = 1920;
-static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
-
 fn main() -> Result<(), String> {
-    let app = App::new("examples/ui-panels", CANVAS_WIDTH, ASPECT_RATIO);
+    let mut window_info = AppWindowInfo {
+        title: "examples/ui-panels".to_string(),
+        ..Default::default()
+    };
+
+    let app = App::new(&mut window_info);
 
     // Load a system font
 
@@ -40,7 +40,7 @@ fn main() -> Result<(), String> {
     // Set up our app
 
     let mut graphics = Graphics {
-        buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
+        buffer: PixelBuffer::new(window_info.window_width, window_info.window_height),
     };
 
     let root_panel = RefCell::new(Panel::new(
@@ -49,8 +49,8 @@ fn main() -> Result<(), String> {
             title: "Root Panel".to_string(),
             x: 0,
             y: 0,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
+            width: window_info.window_width,
+            height: window_info.window_height,
         },
         |_timing_info: &TimingInfo,
          _keyboard_state: &KeyboardState,

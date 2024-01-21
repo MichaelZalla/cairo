@@ -1,7 +1,6 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
-    context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     graphics::{pixelbuffer::PixelBuffer, Graphics},
@@ -36,21 +35,12 @@ pub struct TextureMappedCubeScene<'a> {
 
 impl<'a> TextureMappedCubeScene<'a> {
     pub fn new(
-        rendering_context: &ApplicationRenderingContext,
+        canvas_width: u32,
+        canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let canvas_output_size = rendering_context
-            .canvas
-            .read()
-            .unwrap()
-            .output_size()
-            .unwrap();
-
-        let canvas_width = canvas_output_size.0;
-        let canvas_height = canvas_output_size.1;
-
         let graphics = Graphics {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
         };

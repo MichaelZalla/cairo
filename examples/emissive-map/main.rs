@@ -3,7 +3,7 @@ extern crate sdl2;
 use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
-    app::App,
+    app::{App, AppWindowInfo},
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -20,12 +20,13 @@ mod emissive_map_scene;
 
 use self::emissive_map_scene::EmissiveMapScene;
 
-static ASPECT_RATIO: f32 = 16.0 / 9.0;
-
-static CANVAS_WIDTH: u32 = 960;
-
 fn main() -> Result<(), String> {
-    let app = App::new("examples/emissive-map", CANVAS_WIDTH, ASPECT_RATIO);
+    let mut window_info = AppWindowInfo {
+        title: "examples/emissive-map".to_string(),
+        ..Default::default()
+    };
+
+    let app = App::new(&mut window_info);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -115,8 +116,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(EmissiveMapScene::new(
-        app.canvas_width,
-        app.canvas_height,
+        window_info.canvas_width,
+        window_info.canvas_height,
         &entities_rwl,
         &material_cache,
         &shader_context_rwl,

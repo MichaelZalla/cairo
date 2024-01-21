@@ -3,7 +3,7 @@ extern crate sdl2;
 use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
-    app::App,
+    app::{App, AppWindowInfo},
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     mesh,
@@ -16,12 +16,13 @@ mod texture_mapped_cube_scene;
 
 use self::texture_mapped_cube_scene::TextureMappedCubeScene;
 
-static ASPECT_RATIO: f32 = 16.0 / 9.0;
-
-static CANVAS_WIDTH: u32 = 960;
-
 fn main() -> Result<(), String> {
-    let app = App::new("examples/texture-mapped-cube", CANVAS_WIDTH, ASPECT_RATIO);
+    let mut window_info = AppWindowInfo {
+        title: "examples/texture-mapping".to_string(),
+        ..Default::default()
+    };
+
+    let app = App::new(&mut window_info);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -53,8 +54,9 @@ fn main() -> Result<(), String> {
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
     // Instantiate our textured cube scene
-    let scene = RefCell::new(TextureMappedCubeScene::new(
-        rendering_context,
+    let scene: RefCell<TextureMappedCubeScene<'_>> = RefCell::new(TextureMappedCubeScene::new(
+        window_info.canvas_width,
+        window_info.canvas_height,
         &entities_rwl,
         &cache,
         &shader_context_rwl,
