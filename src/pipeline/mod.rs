@@ -545,7 +545,7 @@ where
         }
     }
 
-    pub fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
+    fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
         {
             let mut context = self.shader_context.write().unwrap();
 
