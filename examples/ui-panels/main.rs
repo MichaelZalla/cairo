@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env};
+use std::{cell::RefCell, env, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -15,6 +15,7 @@ use cairo::{
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/ui-panels".to_string(),
+        show_cursor: true,
         ..Default::default()
     };
 
@@ -76,6 +77,8 @@ fn main() -> Result<(), String> {
         },
     ));
 
+    let current_mouse_state: RwLock<MouseState> = RwLock::new(Default::default());
+
     root_panel.borrow_mut().split()?;
 
     let mut update = |timing_info: &TimingInfo,
@@ -90,7 +93,11 @@ fn main() -> Result<(), String> {
             keyboard_state,
             mouse_state,
             game_controller_state,
-        )
+        );
+
+        // Cache the mouse state (position) so that we can render a crosshair.
+
+        current_mouse_state.write().unwrap().position = mouse_state.position;
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
@@ -112,6 +119,14 @@ fn main() -> Result<(), String> {
             panel_info.height,
             &panel_pixel_data,
         );
+
+        // Render a custom crosshair
+
+        let mouse_state = current_mouse_state.read().unwrap();
+
+        let (x, y) = (mouse_state.position.0, mouse_state.position.1);
+
+        graphics.crosshair(x, y, 24, 2, 6, true, color::YELLOW);
 
         return Ok(graphics.buffer.get_pixel_data().clone());
     };

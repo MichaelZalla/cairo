@@ -39,6 +39,19 @@ pub struct MouseState {
     pub wheel_direction: MouseWheelDirection,
 }
 
+impl Default for MouseState {
+    fn default() -> Self {
+        Self {
+            button_event: None,
+            position: (0, 0),
+            relative_motion: (0, 0),
+            wheel_did_move: false,
+            wheel_y: 0,
+            wheel_direction: MouseWheelDirection::Unknown(0),
+        }
+    }
+}
+
 impl MouseState {
     pub fn new() -> Self {
         return MouseState {
