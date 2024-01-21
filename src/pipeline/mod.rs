@@ -193,16 +193,19 @@ where
         self.render_line_2(&mut start_vertex_out, &mut end_vertex_out, color);
     }
 
-    pub fn render_line_2(
+    fn render_line_2(
         &mut self,
         start: &mut DefaultVertexOut,
         end: &mut DefaultVertexOut,
         color: Color,
     ) {
-        // @TODO Clip to view frustum
-
         self.transform_to_ndc_space(start);
         self.transform_to_ndc_space(end);
+
+        // Cull lines that are completely in front of our near plane (z1 <= 0 and z2 <= 0).
+        if start.p.z <= 0.0 && end.p.z <= 0.0 {
+            return;
+        }
 
         self.graphics.line(
             start.p.x as i32,
