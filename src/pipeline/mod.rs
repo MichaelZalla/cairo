@@ -347,19 +347,7 @@ where
 
                         light_quad_entity.position = light_position;
 
-                        let world_transform = Mat4::scaling(1.0)
-                            * Mat4::rotation_x(light_quad_entity.rotation.x)
-                            * Mat4::rotation_y(light_quad_entity.rotation.y)
-                            * Mat4::rotation_z(light_quad_entity.rotation.z)
-                            * Mat4::translation(light_quad_entity.position);
-
-                        {
-                            let mut context = self.shader_context.write().unwrap();
-
-                            context.set_world_transform(world_transform);
-                        }
-
-                        self.render_mesh(&light_quad_entity.mesh, Some(materials));
+                        self.render_entity(&light_quad_entity, Some(&materials));
                     }
                     None => {
                         self.render_point_indicator(light_position, light_influence_distance * 0.2);
