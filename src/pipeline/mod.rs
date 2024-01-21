@@ -898,7 +898,7 @@ where
     }
 
     fn test_and_set_g_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
-        if x > (self.graphics.buffer.width - 1) || y > (self.graphics.buffer.height as u32 - 1) {
+        if x > (self.g_buffer.width - 1) || y > (self.g_buffer.height as u32 - 1) {
             // Prevents panic! inside of self.graphics.buffer.set_pixel();
             return;
         }

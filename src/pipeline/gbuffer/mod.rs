@@ -1,6 +1,8 @@
 use crate::shader::geometry::sample::GeometrySample;
 
 pub struct GBuffer {
+    pub width: u32,
+    pub height: u32,
     pub samples: Vec<GeometrySample>,
 }
 
@@ -10,7 +12,11 @@ impl GBuffer {
 
         samples.resize(width as usize * height as usize, Default::default());
 
-        Self { samples }
+        Self {
+            width,
+            height,
+            samples,
+        }
     }
 
     pub fn clear(&mut self) {
