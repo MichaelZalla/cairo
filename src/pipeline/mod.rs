@@ -4,21 +4,24 @@ use crate::{
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
-    mesh::{self, primitive::cube, Face},
+    mesh::{self, Face},
     scene::{
         camera::Camera,
         light::{PointLight, SpotLight},
     },
-    shader::{alpha::AlphaShader, fragment::FragmentShader, vertex::VertexShader, ShaderContext},
+    shader::{
+        alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
+        vertex::VertexShader, ShaderContext,
+    },
     shaders::{
         default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
-        default_vertex_shader::DefaultVertexShader,
+        default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
     texture::cubemap::CubeMap,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-use self::{options::PipelineOptions, zbuffer::ZBuffer};
+use self::{gbuffer::GBuffer, options::PipelineOptions, zbuffer::ZBuffer};
 
 use super::{
     color::{self, Color},
@@ -27,6 +30,7 @@ use super::{
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
+mod gbuffer;
 pub mod options;
 mod zbuffer;
 
@@ -39,30 +43,35 @@ struct Triangle<T> {
 
 pub struct Pipeline<
     'a,
+    F = DefaultFragmentShader<'a>,
     V = DefaultVertexShader<'a>,
     A = DefaultAlphaShader<'a>,
-    F = DefaultFragmentShader<'a>,
+    G = DefaultGeometryShader<'a>,
 > where
+    F: FragmentShader<'a>,
     V: VertexShader<'a>,
     A: AlphaShader<'a>,
-    F: FragmentShader<'a>,
+    G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
     graphics: Graphics,
     buffer_width_over_2: f32,
     buffer_height_over_2: f32,
     z_buffer: ZBuffer,
+    g_buffer: GBuffer,
     pub shader_context: &'a RwLock<ShaderContext>,
     vertex_shader: V,
     alpha_shader: A,
-    pub fragment_shader: F,
+    pub geometry_shader: G,
+    fragment_shader: F,
 }
 
-impl<'a, V, A, F> Pipeline<'a, V, A, F>
+impl<'a, F, V, A, G> Pipeline<'a, F, V, A, G>
 where
+    F: FragmentShader<'a>,
     V: VertexShader<'a>,
     A: AlphaShader<'a>,
-    F: FragmentShader<'a>,
+    G: GeometryShader<'a>,
 {
     pub fn new(
         graphics: Graphics,
@@ -70,6 +79,7 @@ where
         projection_z_far: f32,
         shader_context: &'a RwLock<ShaderContext>,
         vertex_shader: V,
+        geometry_shader: G,
         fragment_shader: F,
         options: PipelineOptions,
     ) -> Self {
@@ -79,6 +89,8 @@ where
             projection_z_near,
             projection_z_far,
         );
+
+        let g_buffer = GBuffer::new(graphics.buffer.width, graphics.buffer.height);
 
         let buffer_width_over_2 = (graphics.buffer.width as f32) / 2.0;
         let buffer_height_over_2 = (graphics.buffer.height as f32) / 2.0;
@@ -91,9 +103,11 @@ where
             buffer_width_over_2: buffer_width_over_2,
             buffer_height_over_2: buffer_height_over_2,
             z_buffer,
+            g_buffer,
             shader_context,
             vertex_shader,
             alpha_shader,
+            geometry_shader,
             fragment_shader,
         };
     }
@@ -106,6 +120,21 @@ where
         self.graphics.buffer.clear(color::BLACK);
 
         self.z_buffer.clear();
+
+        self.g_buffer.clear();
+    }
+
+    pub fn end_frame(&mut self) {
+        for (index, sample) in self.g_buffer.samples.iter().enumerate() {
+            if sample.stencil == true {
+                let x = index as u32 % self.graphics.buffer.width;
+                let y = index as u32 / self.graphics.buffer.width;
+
+                let color = self.fragment_shader.call(&sample);
+
+                self.graphics.buffer.set_pixel(x, y, color);
+            }
+        }
     }
 
     pub fn render_point(
@@ -868,7 +897,7 @@ where
         }
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
+    fn test_and_set_g_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
         if x > (self.graphics.buffer.width - 1) || y > (self.graphics.buffer.height as u32 - 1) {
             // Prevents panic! inside of self.graphics.buffer.set_pixel();
             return;
@@ -886,11 +915,10 @@ where
 
                 linear_space_interpolant.depth = non_linear_z;
 
-                self.graphics.buffer.set_pixel(
-                    x,
-                    y,
-                    self.fragment_shader.call(&linear_space_interpolant),
-                );
+                let mut_sample = &mut self.g_buffer.samples[index];
+
+                self.geometry_shader
+                    .call(&linear_space_interpolant, mut_sample);
             }
             None => {}
         }
@@ -1011,7 +1039,7 @@ where
                 line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.p.x);
 
             for x in x_start..x_end {
-                self.set_pixel(x, y, &mut line_interpolant);
+                self.test_and_set_g_buffer(x, y, &mut line_interpolant);
 
                 line_interpolant += line_interpolant_step;
             }

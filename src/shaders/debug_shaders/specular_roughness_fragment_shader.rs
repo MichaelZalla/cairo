@@ -5,22 +5,24 @@ use crate::{
     shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
 };
 
-pub struct EmissiveFragmentShader<'a> {
+pub struct SpecularRoughnessFragmentShader<'a> {
     context: &'a RwLock<ShaderContext>,
 }
 
-impl<'a> FragmentShader<'a> for EmissiveFragmentShader<'a> {
+impl<'a> FragmentShader<'a> for SpecularRoughnessFragmentShader<'a> {
     fn new(context: &'a RwLock<ShaderContext>) -> Self {
         Self { context }
     }
 
     fn call(&self, sample: &GeometrySample) -> Color {
-        // Emit only the emissive color for this fragment.
+        // Emit only the specular roughness (exponent) for this fragment.
+
+        let value = (255.0 - (255.0 / 64.0 * sample.specular_exponent as f32).max(0.0)) as u8;
 
         return Color {
-            r: (sample.emissive.x as f32 * 255.0) as u8,
-            g: (sample.emissive.y as f32 * 255.0) as u8,
-            b: (sample.emissive.z as f32 * 255.0) as u8,
+            r: value,
+            g: value,
+            b: value,
             a: 255 as u8,
         };
     }

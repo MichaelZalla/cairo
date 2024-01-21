@@ -2,43 +2,22 @@ use std::sync::RwLock;
 
 use crate::{
     color::Color,
-    device::{GameControllerState, KeyboardState, MouseState},
-    shader::{
-        fragment::{FragmentShader, FragmentShaderOptions},
-        ShaderContext,
-    },
-    vertex::default_vertex_out::DefaultVertexOut,
+    shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
 };
 
 pub struct DepthFragmentShader<'a> {
-    options: FragmentShaderOptions,
     context: &'a RwLock<ShaderContext>,
 }
 
 impl<'a> FragmentShader<'a> for DepthFragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>, options: Option<FragmentShaderOptions>) -> Self {
-        match options {
-            Some(options) => Self { context, options },
-            None => Self {
-                context,
-                options: Default::default(),
-            },
-        }
+    fn new(context: &'a RwLock<ShaderContext>) -> Self {
+        Self { context }
     }
 
-    fn update(
-        &mut self,
-        _keyboard_state: &KeyboardState,
-        _mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
-    ) {
-        // Do nothing
-    }
-
-    fn call(&self, out: &DefaultVertexOut) -> Color {
+    fn call(&self, sample: &GeometrySample) -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
 
-        let non_linear_depth: f32 = out.depth;
+        let non_linear_depth: f32 = sample.depth;
 
         //               nlz = (1/z - 1/n) / (1/f - 1/n)
         // nlz * (1/f - 1/n) = 1/z - 1/n

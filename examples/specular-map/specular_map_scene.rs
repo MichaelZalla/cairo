@@ -5,7 +5,6 @@ use cairo::{
     entity::Entity,
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
-    matrix::Mat4,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
         camera::Camera,
@@ -13,16 +12,23 @@ use cairo::{
         Scene,
     },
     shader::fragment::FragmentShader,
+    shader::geometry::GeometryShader,
     shader::vertex::VertexShader,
     shader::ShaderContext,
     shaders::{
-        default_fragment_shader::DefaultFragmentShader, default_vertex_shader::DefaultVertexShader,
+        debug_shaders::{
+            specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
+            specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
+        },
+        default_fragment_shader::DefaultFragmentShader,
+        default_geometry_shader::DefaultGeometryShader,
+        default_vertex_shader::DefaultVertexShader,
     },
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
 pub struct SpecularMapScene<'a> {
-    pipeline: Pipeline<'a>,
+    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -105,16 +111,21 @@ impl<'a> SpecularMapScene<'a> {
 
         let vertex_shader = DefaultVertexShader::new(shader_context);
 
-        let mut fragment_shader = DefaultFragmentShader::new(shader_context, None);
+        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
-        fragment_shader.options.specular_mapping_active = true;
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
 
-        let mut pipeline = Pipeline::new(
+        // let fragment_shader = SpecularIntensityFragmentShader::new(shader_context);
+
+        // let fragment_shader = SpecularRoughnessFragmentShader::new(shader_context);
+
+        let pipeline = Pipeline::new(
             graphics,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,
             vertex_shader,
+            geometry_shader,
             fragment_shader,
             pipeline_options,
         );
@@ -170,7 +181,7 @@ impl<'a> Scene for SpecularMapScene<'a> {
             .update(keyboard_state, mouse_state, game_controller_state);
 
         self.pipeline
-            .fragment_shader
+            .geometry_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
         context.set_camera_position(Vec4::new(camera.get_position(), 1.0));
@@ -230,6 +241,8 @@ impl<'a> Scene for SpecularMapScene<'a> {
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
+
+        self.pipeline.end_frame();
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {

@@ -2,31 +2,18 @@ use std::sync::RwLock;
 
 use crate::{
     color::Color,
-    device::{GameControllerState, KeyboardState, MouseState},
-    shader::{
-        fragment::{FragmentShader, FragmentShaderOptions},
-        ShaderContext,
-    },
-    texture::{
-        sample::{sample_bilinear, sample_nearest},
-        TextureMap,
-    },
-    vertex::default_vertex_out::DefaultVertexOut,
+    shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
+    texture::{sample::sample_bilinear, TextureMap},
 };
 
 pub struct UvTestFragmentShader<'a> {
-    options: FragmentShaderOptions,
     context: &'a RwLock<ShaderContext>,
     texture_map: Option<TextureMap>,
 }
 
 impl<'a> UvTestFragmentShader<'a> {
-    pub fn from_texture_map(
-        context: &'a RwLock<ShaderContext>,
-        texture_map: TextureMap,
-        options: Option<FragmentShaderOptions>,
-    ) -> Self {
-        let mut shader = UvTestFragmentShader::new(context, options);
+    pub fn from_texture_map(context: &'a RwLock<ShaderContext>, texture_map: TextureMap) -> Self {
+        let mut shader = UvTestFragmentShader::new(context);
 
         shader.texture_map = Some(texture_map);
 
@@ -35,32 +22,14 @@ impl<'a> UvTestFragmentShader<'a> {
 }
 
 impl<'a> FragmentShader<'a> for UvTestFragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>, options: Option<FragmentShaderOptions>) -> Self {
-        match options {
-            Some(options) => Self {
-                context,
-                options,
-                texture_map: None,
-            },
-            None => Self {
-                context,
-                options: Default::default(),
-                texture_map: None,
-            },
+    fn new(context: &'a RwLock<ShaderContext>) -> Self {
+        Self {
+            context,
+            texture_map: None,
         }
     }
 
-    fn update(
-        &mut self,
-        keyboard_state: &KeyboardState,
-        mouse_state: &MouseState,
-        game_controller_state: &GameControllerState,
-    ) {
-        self.options
-            .update(keyboard_state, mouse_state, game_controller_state);
-    }
-
-    fn call(&self, out: &DefaultVertexOut) -> Color {
+    fn call(&self, sample: &GeometrySample) -> Color {
         // Emit an RGB representation of this fragment's interpolated UV.
 
         let r: u8;
@@ -68,17 +37,11 @@ impl<'a> FragmentShader<'a> for UvTestFragmentShader<'a> {
         let b: u8;
 
         match &self.texture_map {
-            Some(texture) => {
-                (r, g, b) = if self.options.bilinear_active {
-                    sample_bilinear(out.uv, texture, None)
-                } else {
-                    sample_nearest(out.uv, texture, None)
-                };
-            }
+            Some(texture) => (r, g, b) = sample_bilinear(sample.uv, texture, None),
             None => {
-                r = (out.uv.x * 255.0) as u8;
-                g = (out.uv.y * 255.0) as u8;
-                b = (out.uv.z * 255.0) as u8;
+                r = (sample.uv.x * 255.0) as u8;
+                g = (sample.uv.y * 255.0) as u8;
+                b = (sample.uv.z * 255.0) as u8;
             }
         }
 

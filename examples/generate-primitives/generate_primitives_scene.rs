@@ -9,16 +9,16 @@ use cairo::{
     font::{cache::FontCache, FontInfo},
     graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
-    matrix::Mat4,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
         camera::Camera,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{fragment::FragmentShader, ShaderContext},
+    shader::{fragment::FragmentShader, geometry::GeometryShader, ShaderContext},
     shaders::{
-        default_fragment_shader::DefaultFragmentShader, default_vertex_shader::DefaultVertexShader,
+        default_fragment_shader::DefaultFragmentShader,
+        default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
     vec::{vec3::Vec3, vec4::Vec4},
 };
@@ -26,7 +26,7 @@ use cairo::{
 pub struct GeneratePrimitivesScene<'a> {
     framebuffer: Graphics,
     debug_message_buffer: DebugMessageBuffer,
-    pipeline: Pipeline<'a>,
+    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -177,7 +177,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
             context: shader_context,
         };
 
-        let fragment_shader = DefaultFragmentShader::new(shader_context, None);
+        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
 
         let pipeline = Pipeline::new(
             pipeline_framebuffer,
@@ -185,6 +187,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             camera.get_projection_z_far(),
             shader_context,
             vertex_shader,
+            geometry_shader,
             fragment_shader,
             pipeline_options,
         );
@@ -261,7 +264,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             .update(keyboard_state, mouse_state, game_controller_state);
 
         self.pipeline
-            .fragment_shader
+            .geometry_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
         context.set_camera_position(Vec4::new(camera.get_position(), 1.0));
@@ -392,6 +395,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
             self.pipeline.render_camera(camera);
         }
+
+        self.pipeline.end_frame();
 
         // Render debug messages
 

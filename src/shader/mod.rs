@@ -8,6 +8,7 @@ use crate::{
 
 pub mod alpha;
 pub mod fragment;
+pub mod geometry;
 pub mod vertex;
 
 pub struct ShaderContext {
@@ -37,7 +38,7 @@ impl Default for ShaderContext {
             world_view_transform: Mat4::identity(),
             projection_transform: Mat4::identity(),
             world_view_projection_transform: Default::default(),
-            default_specular_exponent: Default::default(),
+            default_specular_exponent: 8,
             active_material: Default::default(),
             active_environment_map: Default::default(),
             ambient_light: Default::default(),
