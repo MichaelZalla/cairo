@@ -129,6 +129,12 @@ where
 
         let x = vertex_out.p.x as u32;
         let y = vertex_out.p.y as u32;
+        let z = vertex_out.p.z;
+
+        // Cull points that are in front of our near plane (z <= 0).
+        if z <= 0.0 {
+            return;
+        }
 
         match material_cache {
             Some(materials) => {
@@ -156,13 +162,11 @@ where
                         self.render_entity(&light_quad_entity, Some(materials));
                     }
                     None => {
-                        // @TODO Clip to view frustum
                         self.graphics.buffer.set_pixel(x, y, color);
                     }
                 }
             }
             None => {
-                // @TODO Clip to view frustum
                 self.graphics.buffer.set_pixel(x, y, color);
             }
         }
