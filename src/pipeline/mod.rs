@@ -149,39 +149,48 @@ where
     pub fn begin_frame(&mut self) {
         self.forward_framebuffer.buffer.clear(color::BLACK);
 
-        self.deferred_framebuffer.buffer.clear(color::BLACK);
+        self.composite_framebuffer.buffer.clear(color::BLACK);
 
-        self.z_buffer.clear();
+        if self.options.should_render_shader {
+            self.deferred_framebuffer.buffer.clear(color::BLACK);
 
-        self.g_buffer.clear();
+            self.z_buffer.clear();
+
+            self.g_buffer.clear();
+        }
     }
 
     pub fn end_frame(&mut self) {
-        // Perform deferred lighting pass
+        if self.options.should_render_shader {
+            // Perform deferred lighting pass
 
-        for (index, sample) in self.g_buffer.samples.iter().enumerate() {
-            if sample.stencil == true {
-                let x = index as u32 % self.deferred_framebuffer.buffer.width;
-                let y = index as u32 / self.deferred_framebuffer.buffer.width;
+            for (index, sample) in self.g_buffer.samples.iter().enumerate() {
+                if sample.stencil == true {
+                    let x = index as u32 % self.deferred_framebuffer.buffer.width;
+                    let y = index as u32 / self.deferred_framebuffer.buffer.width;
 
-                let color = self.fragment_shader.call(&sample);
+                    let color = self.fragment_shader.call(&sample);
 
-                self.deferred_framebuffer.buffer.set_pixel(x, y, color);
+                    self.deferred_framebuffer.buffer.set_pixel(x, y, color);
+                }
             }
         }
 
         // Compose deferred and forward rendering frames together.
 
         let forward_frame = self.forward_framebuffer.buffer.get_pixel_data();
-        let deferred_frame = self.deferred_framebuffer.buffer.get_pixel_data();
 
-        self.composite_framebuffer.buffer.blit(
-            0,
-            0,
-            self.deferred_framebuffer.buffer.width,
-            self.deferred_framebuffer.buffer.height,
-            deferred_frame,
-        );
+        if self.options.should_render_shader {
+            let deferred_frame = self.deferred_framebuffer.buffer.get_pixel_data();
+
+            self.composite_framebuffer.buffer.blit(
+                0,
+                0,
+                self.deferred_framebuffer.buffer.width,
+                self.deferred_framebuffer.buffer.height,
+                deferred_frame,
+            );
+        }
 
         for (index, value) in forward_frame.iter().enumerate() {
             self.composite_framebuffer
