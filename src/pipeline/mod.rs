@@ -55,7 +55,9 @@ pub struct Pipeline<
     G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
+    forward_framebuffer: Graphics,
     deferred_framebuffer: Graphics,
+    composite_framebuffer: Graphics,
     canvas_width: u32,
     canvas_width_over_2: f32,
     canvas_height: u32,
@@ -96,7 +98,15 @@ where
 
         // Allocate framebuffers.
 
+        let forward_framebuffer = Graphics {
+            buffer: PixelBuffer::new(canvas_width, canvas_height),
+        };
+
         let deferred_framebuffer = Graphics {
+            buffer: PixelBuffer::new(canvas_width, canvas_height),
+        };
+
+        let composite_framebuffer = Graphics {
             buffer: PixelBuffer::new(canvas_width, canvas_height),
         };
 
@@ -118,7 +128,9 @@ where
             canvas_width_over_2: buffer_width_over_2,
             canvas_height,
             canvas_height_over_2: buffer_height_over_2,
+            forward_framebuffer,
             deferred_framebuffer,
+            composite_framebuffer,
             z_buffer,
             g_buffer,
             shader_context,
@@ -131,10 +143,12 @@ where
     }
 
     pub fn get_pixel_data(&'a self) -> &'a Vec<u32> {
-        return self.deferred_framebuffer.buffer.get_pixel_data();
+        return self.composite_framebuffer.buffer.get_pixel_data();
     }
 
     pub fn begin_frame(&mut self) {
+        self.forward_framebuffer.buffer.clear(color::BLACK);
+
         self.deferred_framebuffer.buffer.clear(color::BLACK);
 
         self.z_buffer.clear();
@@ -143,6 +157,8 @@ where
     }
 
     pub fn end_frame(&mut self) {
+        // Perform deferred lighting pass
+
         for (index, sample) in self.g_buffer.samples.iter().enumerate() {
             if sample.stencil == true {
                 let x = index as u32 % self.deferred_framebuffer.buffer.width;
@@ -152,6 +168,25 @@ where
 
                 self.deferred_framebuffer.buffer.set_pixel(x, y, color);
             }
+        }
+
+        // Compose deferred and forward rendering frames together.
+
+        let forward_frame = self.forward_framebuffer.buffer.get_pixel_data();
+        let deferred_frame = self.deferred_framebuffer.buffer.get_pixel_data();
+
+        self.composite_framebuffer.buffer.blit(
+            0,
+            0,
+            self.deferred_framebuffer.buffer.width,
+            self.deferred_framebuffer.buffer.height,
+            deferred_frame,
+        );
+
+        for (index, value) in forward_frame.iter().enumerate() {
+            self.composite_framebuffer
+                .buffer
+                .set_pixel_raw(index, *value, color::BLACK.to_u32());
         }
     }
 
@@ -209,12 +244,12 @@ where
                         self.render_entity(&light_quad_entity, Some(materials));
                     }
                     None => {
-                        self.deferred_framebuffer.buffer.set_pixel(x, y, color);
+                        self.forward_framebuffer.buffer.set_pixel(x, y, color);
                     }
                 }
             }
             None => {
-                self.deferred_framebuffer.buffer.set_pixel(x, y, color);
+                self.forward_framebuffer.buffer.set_pixel(x, y, color);
             }
         }
     }
@@ -254,7 +289,7 @@ where
             return;
         }
 
-        self.deferred_framebuffer.line(
+        self.forward_framebuffer.line(
             start.p.x as i32,
             start.p.y as i32,
             end.p.x as i32,
@@ -550,15 +585,15 @@ where
                 // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
                 let screen_x: u32 =
-                    (index as f32 % self.deferred_framebuffer.buffer.width as f32) as u32;
+                    (index as f32 % self.forward_framebuffer.buffer.width as f32) as u32;
                 let screen_y: u32 =
-                    (index as f32 / self.deferred_framebuffer.buffer.width as f32) as u32;
+                    (index as f32 / self.forward_framebuffer.buffer.width as f32) as u32;
 
                 let pixel_coordinate_world_space = camera.get_pixel_world_space_position(
                     screen_x,
                     screen_y,
-                    self.deferred_framebuffer.buffer.width,
-                    self.deferred_framebuffer.buffer.height,
+                    self.forward_framebuffer.buffer.width,
+                    self.forward_framebuffer.buffer.height,
                 );
 
                 let normal = pixel_coordinate_world_space.as_normal();
@@ -567,7 +602,7 @@ where
 
                 let skybox_color = skybox.sample(&normal);
 
-                self.deferred_framebuffer
+                self.forward_framebuffer
                     .buffer
                     .set_pixel(screen_x, screen_y, skybox_color);
             }
@@ -886,7 +921,7 @@ where
                 };
             }
 
-            self.deferred_framebuffer.poly_line(points.as_slice(), c);
+            self.forward_framebuffer.poly_line(points.as_slice(), c);
         }
 
         if self.options.should_render_normals {
@@ -906,7 +941,7 @@ where
                 let from = v.p;
                 let to = screen_vertex_relative_normal;
 
-                self.deferred_framebuffer.line(
+                self.forward_framebuffer.line(
                     from.x as i32,
                     from.y as i32,
                     to.x as i32,

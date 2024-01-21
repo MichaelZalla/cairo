@@ -50,6 +50,14 @@ impl PixelBuffer {
         self.pixels[pixel_index] = r | g | b | a;
     }
 
+    pub fn set_pixel_raw(&mut self, index: usize, value: u32, key_color: u32) {
+        debug_assert!(index < self.pixels.len());
+
+        if value != key_color {
+            self.pixels[index] = value;
+        }
+    }
+
     pub fn clear(&mut self, color: Color) -> &Self {
         for i in 0..self.pixels.len() {
             self.pixels[i] = color.to_u32();
