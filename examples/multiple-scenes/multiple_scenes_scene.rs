@@ -32,12 +32,13 @@ pub struct MultipleScenesScene<'a> {
 
 impl<'a> MultipleScenesScene<'a> {
     pub fn new(
-        graphics: Graphics,
+        canvas_width: u32,
+        canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
         // Set up a camera for rendering our scenes
-        let aspect_ratio = graphics.buffer.width_over_height;
+        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
 
         let camera: Camera = Camera::new(
             aspect_ratio,
@@ -108,7 +109,8 @@ impl<'a> MultipleScenesScene<'a> {
         let fragment_shader = DefaultFragmentShader::new(shader_context);
 
         let pipeline = Pipeline::new(
-            graphics,
+            canvas_width,
+            canvas_height,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,

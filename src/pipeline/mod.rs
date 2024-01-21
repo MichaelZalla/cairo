@@ -2,6 +2,7 @@ use std::sync::RwLock;
 
 use crate::{
     entity::Entity,
+    graphics::pixelbuffer::PixelBuffer,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
     mesh::{self, Face},
@@ -54,9 +55,11 @@ pub struct Pipeline<
     G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
-    graphics: Graphics,
-    buffer_width_over_2: f32,
-    buffer_height_over_2: f32,
+    deferred_framebuffer: Graphics,
+    canvas_width: u32,
+    canvas_width_over_2: f32,
+    canvas_height: u32,
+    canvas_height_over_2: f32,
     z_buffer: ZBuffer,
     g_buffer: GBuffer,
     pub shader_context: &'a RwLock<ShaderContext>,
@@ -74,7 +77,8 @@ where
     G: GeometryShader<'a>,
 {
     pub fn new(
-        graphics: Graphics,
+        canvas_width: u32,
+        canvas_height: u32,
         projection_z_near: f32,
         projection_z_far: f32,
         shader_context: &'a RwLock<ShaderContext>,
@@ -83,25 +87,38 @@ where
         fragment_shader: F,
         options: PipelineOptions,
     ) -> Self {
+        let alpha_shader = AlphaShader::new(shader_context);
+
+        //
+
+        let buffer_width_over_2 = (canvas_width as f32) / 2.0;
+        let buffer_height_over_2 = (canvas_height as f32) / 2.0;
+
+        // Allocate framebuffers.
+
+        let deferred_framebuffer = Graphics {
+            buffer: PixelBuffer::new(canvas_width, canvas_height),
+        };
+
+        // Allocate Z-buffer.
+
         let z_buffer = ZBuffer::new(
-            graphics.buffer.width,
-            graphics.buffer.height,
+            canvas_width,
+            canvas_height,
             projection_z_near,
             projection_z_far,
         );
 
-        let g_buffer = GBuffer::new(graphics.buffer.width, graphics.buffer.height);
+        // Allocate G-buffer.
 
-        let buffer_width_over_2 = (graphics.buffer.width as f32) / 2.0;
-        let buffer_height_over_2 = (graphics.buffer.height as f32) / 2.0;
-
-        let alpha_shader = AlphaShader::new(shader_context);
+        let g_buffer = GBuffer::new(canvas_width, canvas_height);
 
         return Pipeline {
-            options,
-            graphics,
-            buffer_width_over_2: buffer_width_over_2,
-            buffer_height_over_2: buffer_height_over_2,
+            canvas_width,
+            canvas_width_over_2: buffer_width_over_2,
+            canvas_height,
+            canvas_height_over_2: buffer_height_over_2,
+            deferred_framebuffer,
             z_buffer,
             g_buffer,
             shader_context,
@@ -109,15 +126,16 @@ where
             alpha_shader,
             geometry_shader,
             fragment_shader,
+            options,
         };
     }
 
     pub fn get_pixel_data(&'a self) -> &'a Vec<u32> {
-        return self.graphics.buffer.get_pixel_data();
+        return self.deferred_framebuffer.buffer.get_pixel_data();
     }
 
     pub fn begin_frame(&mut self) {
-        self.graphics.buffer.clear(color::BLACK);
+        self.deferred_framebuffer.buffer.clear(color::BLACK);
 
         self.z_buffer.clear();
 
@@ -127,12 +145,12 @@ where
     pub fn end_frame(&mut self) {
         for (index, sample) in self.g_buffer.samples.iter().enumerate() {
             if sample.stencil == true {
-                let x = index as u32 % self.graphics.buffer.width;
-                let y = index as u32 / self.graphics.buffer.width;
+                let x = index as u32 % self.deferred_framebuffer.buffer.width;
+                let y = index as u32 / self.deferred_framebuffer.buffer.width;
 
                 let color = self.fragment_shader.call(&sample);
 
-                self.graphics.buffer.set_pixel(x, y, color);
+                self.deferred_framebuffer.buffer.set_pixel(x, y, color);
             }
         }
     }
@@ -191,12 +209,12 @@ where
                         self.render_entity(&light_quad_entity, Some(materials));
                     }
                     None => {
-                        self.graphics.buffer.set_pixel(x, y, color);
+                        self.deferred_framebuffer.buffer.set_pixel(x, y, color);
                     }
                 }
             }
             None => {
-                self.graphics.buffer.set_pixel(x, y, color);
+                self.deferred_framebuffer.buffer.set_pixel(x, y, color);
             }
         }
     }
@@ -236,7 +254,7 @@ where
             return;
         }
 
-        self.graphics.line(
+        self.deferred_framebuffer.line(
             start.p.x as i32,
             start.p.y as i32,
             end.p.x as i32,
@@ -531,14 +549,16 @@ where
             if *z_non_linear == zbuffer::MAX_DEPTH {
                 // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
-                let screen_x: u32 = (index as f32 % self.graphics.buffer.width as f32) as u32;
-                let screen_y: u32 = (index as f32 / self.graphics.buffer.width as f32) as u32;
+                let screen_x: u32 =
+                    (index as f32 % self.deferred_framebuffer.buffer.width as f32) as u32;
+                let screen_y: u32 =
+                    (index as f32 / self.deferred_framebuffer.buffer.width as f32) as u32;
 
                 let pixel_coordinate_world_space = camera.get_pixel_world_space_position(
                     screen_x,
                     screen_y,
-                    self.graphics.buffer.width,
-                    self.graphics.buffer.height,
+                    self.deferred_framebuffer.buffer.width,
+                    self.deferred_framebuffer.buffer.height,
                 );
 
                 let normal = pixel_coordinate_world_space.as_normal();
@@ -547,7 +567,7 @@ where
 
                 let skybox_color = skybox.sample(&normal);
 
-                self.graphics
+                self.deferred_framebuffer
                     .buffer
                     .set_pixel(screen_x, screen_y, skybox_color);
             }
@@ -814,8 +834,8 @@ where
 
         *v *= w_inverse;
 
-        v.p.x = (v.p.x + 1.0) * self.buffer_width_over_2;
-        v.p.y = (-v.p.y + 1.0) * self.buffer_height_over_2;
+        v.p.x = (v.p.x + 1.0) * self.canvas_width_over_2;
+        v.p.y = (-v.p.y + 1.0) * self.canvas_height_over_2;
 
         v.p.w = w_inverse;
     }
@@ -866,7 +886,7 @@ where
                 };
             }
 
-            self.graphics.poly_line(points.as_slice(), c);
+            self.deferred_framebuffer.poly_line(points.as_slice(), c);
         }
 
         if self.options.should_render_normals {
@@ -877,16 +897,16 @@ where
 
                 let screen_vertex_relative_normal = Vec2 {
                     x: (world_vertex_relative_normal.x * w_inverse + 1.0)
-                        * self.buffer_width_over_2,
+                        * self.canvas_width_over_2,
                     y: (-world_vertex_relative_normal.y * w_inverse + 1.0)
-                        * self.buffer_height_over_2,
+                        * self.canvas_height_over_2,
                     z: 0.0,
                 };
 
                 let from = v.p;
                 let to = screen_vertex_relative_normal;
 
-                self.graphics.line(
+                self.deferred_framebuffer.line(
                     from.x as i32,
                     from.y as i32,
                     to.x as i32,
@@ -1004,7 +1024,7 @@ where
         let y_start: u32 = u32::max((it0.p.y - 0.5).ceil() as u32, 0);
         let y_end: u32 = u32::min(
             (it2.p.y - 0.5).ceil() as u32,
-            self.graphics.buffer.height - 1,
+            self.deferred_framebuffer.buffer.height - 1,
         );
 
         // Adjust both interpolants to account for us snapping y-start and y-end
@@ -1019,7 +1039,7 @@ where
             let x_start = u32::max((left_edge_interpolant.p.x - 0.5).ceil() as u32, 0);
             let x_end = u32::min(
                 (right_edge_interpolant.p.x - 0.5).ceil() as u32,
-                self.graphics.buffer.width - 1,
+                self.deferred_framebuffer.buffer.width - 1,
             );
 
             // Create an interpolant that we can move across our horizontal

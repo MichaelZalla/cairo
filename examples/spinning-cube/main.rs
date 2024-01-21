@@ -36,9 +36,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SpinningCubeScene::new(
-        Graphics {
-            buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
-        },
+        CANVAS_WIDTH,
+        CANVAS_HEIGHT,
         &entities_rwl,
         &shader_context_rwl,
     ));

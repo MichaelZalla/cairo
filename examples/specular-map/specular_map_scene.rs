@@ -120,7 +120,8 @@ impl<'a> SpecularMapScene<'a> {
         // let fragment_shader = SpecularRoughnessFragmentShader::new(shader_context);
 
         let pipeline = Pipeline::new(
-            graphics,
+            canvas_width,
+            canvas_height,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,

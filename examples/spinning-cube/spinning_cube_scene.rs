@@ -3,7 +3,6 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::Graphics,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
         camera::Camera,
@@ -32,13 +31,16 @@ pub struct SpinningCubeScene<'a> {
 
 impl<'a> SpinningCubeScene<'a> {
     pub fn new(
-        graphics: Graphics,
+        canvas_width: u32,
+        canvas_height: u32,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
+        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
+
         // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
-            graphics.buffer.width_over_height,
+            aspect_ratio,
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -106,7 +108,8 @@ impl<'a> SpinningCubeScene<'a> {
         let fragment_shader = DefaultFragmentShader::new(shader_context);
 
         let pipeline = Pipeline::new(
-            graphics,
+            canvas_width,
+            canvas_height,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,

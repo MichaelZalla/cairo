@@ -19,8 +19,8 @@ mod multiple_scenes_scene;
 use multiple_scenes_scene::MultipleScenesScene;
 
 static ASPECT_RATIO: f32 = 16.0 / 9.0;
-static WINDOW_WIDTH: u32 = 1080;
-static WINDOW_HEIGHT: u32 = (WINDOW_WIDTH as f32 / ASPECT_RATIO) as u32;
+static CANVAS_WIDTH: u32 = 1080;
+static CANVAS_HEIGHT: u32 = (CANVAS_WIDTH as f32 / ASPECT_RATIO) as u32;
 
 fn main() -> Result<(), String> {
     // Load meshes
@@ -42,13 +42,19 @@ fn main() -> Result<(), String> {
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
-    let graphics = Graphics {
-        buffer: PixelBuffer::new(WINDOW_WIDTH, WINDOW_HEIGHT),
-    };
-
     let scenes = RefCell::new(vec![
-        MultipleScenesScene::new(graphics.clone(), &entities_rwl, &shader_context_rwl),
-        MultipleScenesScene::new(graphics.clone(), &entities2_rwl, &shader_context_rwl),
+        MultipleScenesScene::new(
+            CANVAS_WIDTH,
+            CANVAS_HEIGHT,
+            &entities_rwl,
+            &shader_context_rwl,
+        ),
+        MultipleScenesScene::new(
+            CANVAS_WIDTH,
+            CANVAS_HEIGHT,
+            &entities2_rwl,
+            &shader_context_rwl,
+        ),
     ]);
 
     let current_scene_index = RefCell::new(min(0, scenes.borrow().len() - 1));
@@ -98,7 +104,7 @@ fn main() -> Result<(), String> {
             .clone());
     };
 
-    let app = App::new("examples/multiple-scenes", WINDOW_WIDTH, ASPECT_RATIO);
+    let app = App::new("examples/multiple-scenes", CANVAS_WIDTH, ASPECT_RATIO);
 
     app.run(&mut update, &mut render)?;
 

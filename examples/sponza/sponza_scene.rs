@@ -46,15 +46,18 @@ pub struct SponzaScene<'a> {
 
 impl<'a> SponzaScene<'a> {
     pub fn new(
-        graphics: Graphics,
+        canvas_width: u32,
+        canvas_height: u32,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<Entity<'a>>>,
         materials: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
+        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
+
         // Set up a camera for rendering our scene
         let mut camera: Camera = Camera::new(
-            graphics.buffer.width_over_height,
+            aspect_ratio,
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -150,7 +153,8 @@ impl<'a> SponzaScene<'a> {
         let fragment_shader = DefaultFragmentShader::new(shader_context);
 
         let pipeline = Pipeline::new(
-            graphics,
+            canvas_width,
+            canvas_height,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,

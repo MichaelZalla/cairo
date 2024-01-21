@@ -43,9 +43,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SkyboxScene::new(
-        Graphics {
-            buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
-        },
+        CANVAS_WIDTH,
+        CANVAS_HEIGHT,
         rendering_context,
         &entities_rwl,
         &mut material_cache,

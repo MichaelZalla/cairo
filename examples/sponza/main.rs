@@ -6,7 +6,6 @@ use cairo::{
     app::App,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
     mesh,
     scene::Scene,
     shader::ShaderContext,
@@ -57,9 +56,8 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SponzaScene::new(
-        Graphics {
-            buffer: PixelBuffer::new(CANVAS_WIDTH, CANVAS_HEIGHT),
-        },
+        CANVAS_WIDTH,
+        CANVAS_HEIGHT,
         rendering_context,
         &entities_rwl,
         &mut materials,

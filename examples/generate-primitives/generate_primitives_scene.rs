@@ -58,11 +58,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
-        let pipeline_framebuffer = Graphics {
-            buffer: PixelBuffer::new(canvas_width, canvas_height),
-        };
-
-        let aspect_ratio = pipeline_framebuffer.buffer.width_over_height;
+        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
 
         // Set up a camera for rendering our scene
         let mut camera: Camera = Camera::new(
@@ -182,7 +178,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let fragment_shader = DefaultFragmentShader::new(shader_context);
 
         let pipeline = Pipeline::new(
-            pipeline_framebuffer,
+            canvas_width,
+            canvas_height,
             camera.get_projection_z_near(),
             camera.get_projection_z_far(),
             shader_context,
