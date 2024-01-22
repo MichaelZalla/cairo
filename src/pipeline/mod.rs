@@ -196,6 +196,37 @@ where
     }
 
     pub fn render_entity(&mut self, entity: &Entity, material_cache: Option<&MaterialCache>) {
+        // Cull the entire entity, if possible, based on its bounds.
+
+        if entity.mesh.normals.len() > 1 {
+            let mut keep = false;
+
+            for face in entity.bounds_mesh.faces.iter() {
+                let object_vertices_in = self.get_vertices_in(&entity.bounds_mesh, &face);
+
+                let world_vertices: Vec<DefaultVertexOut> = object_vertices_in
+                    .into_iter()
+                    .map(|v_in| return self.vertex_shader.call(&v_in))
+                    .collect();
+
+                let mut tri: Triangle<DefaultVertexOut> = Triangle {
+                    v0: world_vertices[0],
+                    v1: world_vertices[1],
+                    v2: world_vertices[2],
+                };
+
+                if !self.should_cull_from_homogeneous_space(&mut tri) {
+                    keep = true;
+                }
+            }
+
+            if keep == false {
+                return;
+            }
+        }
+
+        // Otherwise, cull individual triangles.
+
         let world_transform = Mat4::scaling(1.0)
             * Mat4::rotation_x(entity.rotation.x)
             * Mat4::rotation_y(entity.rotation.y)
@@ -254,6 +285,55 @@ where
         }
     }
 
+    fn get_vertices_in(&self, mesh: &Mesh, face: &Face) -> [DefaultVertexIn; 3] {
+        let v0_in = DefaultVertexIn {
+            p: mesh.vertices[face.vertices.0].clone(),
+            n: if face.normals.is_some() {
+                mesh.normals[face.normals.unwrap().0].clone()
+            } else {
+                Default::default()
+            },
+            uv: if face.uvs.is_some() {
+                mesh.uvs[face.uvs.unwrap().0].clone()
+            } else {
+                Default::default()
+            },
+            c: color::WHITE.to_vec3() / 255.0,
+        };
+
+        let v1_in = DefaultVertexIn {
+            p: mesh.vertices[face.vertices.1].clone(),
+            n: if face.normals.is_some() {
+                mesh.normals[face.normals.unwrap().1].clone()
+            } else {
+                Default::default()
+            },
+            uv: if face.uvs.is_some() {
+                mesh.uvs[face.uvs.unwrap().1].clone()
+            } else {
+                Default::default()
+            },
+            c: color::WHITE.to_vec3() / 255.0,
+        };
+
+        let v2_in = DefaultVertexIn {
+            p: mesh.vertices[face.vertices.2].clone(),
+            n: if face.normals.is_some() {
+                mesh.normals[face.normals.unwrap().2].clone()
+            } else {
+                Default::default()
+            },
+            uv: if face.uvs.is_some() {
+                mesh.uvs[face.uvs.unwrap().2].clone()
+            } else {
+                Default::default()
+            },
+            c: color::WHITE.to_vec3() / 255.0,
+        };
+
+        [v0_in, v1_in, v2_in]
+    }
+
     fn process_world_vertices(&mut self, mesh: &Mesh) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
@@ -262,50 +342,7 @@ where
         for face_index in 0..mesh.faces.len() {
             let face = mesh.faces[face_index];
 
-            let v0_in = DefaultVertexIn {
-                p: mesh.vertices[face.vertices.0].clone(),
-                n: if face.normals.is_some() {
-                    mesh.normals[face.normals.unwrap().0].clone()
-                } else {
-                    Default::default()
-                },
-                uv: if face.uvs.is_some() {
-                    mesh.uvs[face.uvs.unwrap().0].clone()
-                } else {
-                    Default::default()
-                },
-                c: color::WHITE.to_vec3() / 255.0,
-            };
-
-            let v1_in = DefaultVertexIn {
-                p: mesh.vertices[face.vertices.1].clone(),
-                n: if face.normals.is_some() {
-                    mesh.normals[face.normals.unwrap().1].clone()
-                } else {
-                    Default::default()
-                },
-                uv: if face.uvs.is_some() {
-                    mesh.uvs[face.uvs.unwrap().1].clone()
-                } else {
-                    Default::default()
-                },
-                c: color::WHITE.to_vec3() / 255.0,
-            };
-
-            let v2_in = DefaultVertexIn {
-                p: mesh.vertices[face.vertices.2].clone(),
-                n: if face.normals.is_some() {
-                    mesh.normals[face.normals.unwrap().2].clone()
-                } else {
-                    Default::default()
-                },
-                uv: if face.uvs.is_some() {
-                    mesh.uvs[face.uvs.unwrap().2].clone()
-                } else {
-                    Default::default()
-                },
-                c: color::WHITE.to_vec3() / 255.0,
-            };
+            let [v0_in, v1_in, v2_in] = self.get_vertices_in(mesh, &face);
 
             vertices_in.push(v0_in);
             vertices_in.push(v1_in);

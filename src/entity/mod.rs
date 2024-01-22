@@ -10,15 +10,20 @@ pub struct Entity<'a> {
     pub rotation: Vec3,
     pub mesh: &'a Mesh,
     pub bounds: AABB,
+    pub bounds_mesh: Mesh,
 }
 
 impl<'a> Entity<'a> {
     pub fn new(mesh: &'a Mesh) -> Self {
+        let bounds = Entity::make_bounding_box(&mesh);
+        let bounds_mesh = Entity::make_bounding_box_mesh(&bounds);
+
         Entity {
             position: Vec3::new(),
             rotation: Vec3::new(),
             mesh,
-            bounds: Entity::make_bounding_box(&mesh),
+            bounds,
+            bounds_mesh,
         }
     }
 
@@ -83,7 +88,6 @@ impl<'a> Entity<'a> {
 
         for v in bounding_box_mesh.vertices.as_mut_slice() {
             *v += bounds.center;
-            // v.c = color::YELLOW.to_vec3() / 255.0;
         }
 
         return bounding_box_mesh;
