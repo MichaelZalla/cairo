@@ -131,7 +131,7 @@ where
     }
 
     pub fn get_pixel_data(&'a self) -> &'a Vec<u32> {
-        return self.composite_framebuffer.get_pixel_data();
+        return self.composite_framebuffer.get_pixels_u32();
     }
 
     pub fn begin_frame(&mut self) {
@@ -166,10 +166,10 @@ where
 
         // Compose deferred and forward rendering frames together.
 
-        let forward_frame = self.forward_framebuffer.get_pixel_data();
+        let forward_frame = self.forward_framebuffer.get_pixels_u32();
 
         if self.options.should_render_shader {
-            let deferred_frame = self.deferred_framebuffer.get_pixel_data();
+            let deferred_frame = self.deferred_framebuffer.get_pixels_u32();
 
             self.composite_framebuffer.blit(
                 0,

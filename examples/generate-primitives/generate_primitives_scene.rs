@@ -408,6 +408,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.framebuffer.get_pixel_data();
+        return self.framebuffer.get_pixels_u32();
     }
 }

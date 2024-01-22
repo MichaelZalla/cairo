@@ -20,7 +20,7 @@ impl PixelBuffer {
         };
     }
 
-    pub fn get_pixel_data(&self) -> &Vec<u32> {
+    pub fn get_pixels_u32(&self) -> &Vec<u32> {
         return &self.pixels;
     }
 

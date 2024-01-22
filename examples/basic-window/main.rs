@@ -35,7 +35,7 @@ fn main() -> Result<(), String> {
         // @TODO Write some pixel data to the pixel buffer,
         //       based on some borrowed state.
 
-        return Ok(framebuffer.get_pixel_data().clone());
+        return Ok(framebuffer.get_pixels_u32().clone());
     };
 
     app.run(&mut update, &mut render)?;

@@ -96,7 +96,7 @@ fn main() -> Result<(), String> {
             },
         )?;
 
-        return Ok(framebuffer.get_pixel_data().clone());
+        return Ok(framebuffer.get_pixels_u32().clone());
     };
 
     app.run(&mut update, &mut render)?;

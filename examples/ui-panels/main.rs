@@ -72,7 +72,7 @@ fn main() -> Result<(), String> {
                 },
             )?;
 
-            return Ok(framebuffer.get_pixel_data().clone());
+            return Ok(framebuffer.get_pixels_u32().clone());
         },
     ));
 
@@ -127,7 +127,7 @@ fn main() -> Result<(), String> {
 
         Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, color::YELLOW);
 
-        return Ok(framebuffer.get_pixel_data().clone());
+        return Ok(framebuffer.get_pixels_u32().clone());
     };
 
     app.run(&mut update, &mut render)?;
