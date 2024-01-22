@@ -20,10 +20,10 @@ pub struct PanelInfo {
 pub struct Panel<U, R>
 where
     U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-    R: FnMut(&mut Graphics, &PanelInfo) -> Result<Vec<u32>, String>,
+    R: FnMut(&mut PixelBuffer, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub info: PanelInfo,
-    graphics: Graphics,
+    buffer: PixelBuffer,
     pub update: U,
     _render: R,
     left: Option<Rc<Panel<U, R>>>,
@@ -34,20 +34,18 @@ where
 impl<U, R> Panel<U, R>
 where
     U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-    R: FnMut(&mut Graphics, &PanelInfo) -> Result<Vec<u32>, String>,
+    R: FnMut(&mut PixelBuffer, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub fn new(info: PanelInfo, update: U, render: R) -> Self
     where
         U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-        R: FnMut(&mut Graphics, &PanelInfo) -> Result<Vec<u32>, String>,
+        R: FnMut(&mut PixelBuffer, &PanelInfo) -> Result<Vec<u32>, String>,
     {
-        let graphics = Graphics {
-            buffer: PixelBuffer::new(info.width, info.height),
-        };
+        let buffer = PixelBuffer::new(info.width, info.height);
 
         return Panel {
             info,
-            graphics,
+            buffer,
             update,
             _render: render,
             left: None,
@@ -60,7 +58,7 @@ where
         // Renders a border around the panel's boundaries
         self.render_border();
 
-        return (self._render)(&mut self.graphics, &self.info);
+        return (self._render)(&mut self.buffer, &self.info);
     }
 
     fn render_border(&mut self) {
@@ -96,7 +94,7 @@ where
             },
         ];
 
-        self.graphics.poly_line(&panel_bounds, color::YELLOW);
+        Graphics::poly_line(&mut self.buffer, &panel_bounds, color::YELLOW);
     }
 
     pub fn split(&mut self) -> Result<(), String> {

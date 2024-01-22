@@ -1,5 +1,6 @@
 use crate::{
     color::{self, Color},
+    graphics::Graphics,
     pipeline::Pipeline,
     shader::{
         alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
@@ -103,7 +104,8 @@ where
             return;
         }
 
-        self.forward_framebuffer.line(
+        Graphics::line(
+            &mut self.forward_framebuffer,
             start.p.x as i32,
             start.p.y as i32,
             end.p.x as i32,

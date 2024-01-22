@@ -74,12 +74,12 @@ where
                         self.render_entity(&light_quad_entity, Some(materials));
                     }
                     None => {
-                        self.forward_framebuffer.buffer.set_pixel(x, y, color);
+                        self.forward_framebuffer.set_pixel(x, y, color);
                     }
                 }
             }
             None => {
-                self.forward_framebuffer.buffer.set_pixel(x, y, color);
+                self.forward_framebuffer.set_pixel(x, y, color);
             }
         }
     }

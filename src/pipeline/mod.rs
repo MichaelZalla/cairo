@@ -51,9 +51,9 @@ pub struct Pipeline<
     G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
-    forward_framebuffer: Graphics,
-    deferred_framebuffer: Graphics,
-    composite_framebuffer: Graphics,
+    forward_framebuffer: PixelBuffer,
+    deferred_framebuffer: PixelBuffer,
+    composite_framebuffer: PixelBuffer,
     canvas_width: u32,
     canvas_width_over_2: f32,
     canvas_height: u32,
@@ -94,17 +94,9 @@ where
 
         // Allocate framebuffers.
 
-        let forward_framebuffer = Graphics {
-            buffer: PixelBuffer::new(canvas_width, canvas_height),
-        };
-
-        let deferred_framebuffer = Graphics {
-            buffer: PixelBuffer::new(canvas_width, canvas_height),
-        };
-
-        let composite_framebuffer = Graphics {
-            buffer: PixelBuffer::new(canvas_width, canvas_height),
-        };
+        let forward_framebuffer = PixelBuffer::new(canvas_width, canvas_height);
+        let deferred_framebuffer = PixelBuffer::new(canvas_width, canvas_height);
+        let composite_framebuffer = PixelBuffer::new(canvas_width, canvas_height);
 
         // Allocate Z-buffer.
 
@@ -139,16 +131,16 @@ where
     }
 
     pub fn get_pixel_data(&'a self) -> &'a Vec<u32> {
-        return self.composite_framebuffer.buffer.get_pixel_data();
+        return self.composite_framebuffer.get_pixel_data();
     }
 
     pub fn begin_frame(&mut self) {
-        self.forward_framebuffer.buffer.clear(color::BLACK);
+        self.forward_framebuffer.clear(color::BLACK);
 
-        self.composite_framebuffer.buffer.clear(color::BLACK);
+        self.composite_framebuffer.clear(color::BLACK);
 
         if self.options.should_render_shader {
-            self.deferred_framebuffer.buffer.clear(color::BLACK);
+            self.deferred_framebuffer.clear(color::BLACK);
 
             self.z_buffer.clear();
 
@@ -162,35 +154,34 @@ where
 
             for (index, sample) in self.g_buffer.samples.iter().enumerate() {
                 if sample.stencil == true {
-                    let x = index as u32 % self.deferred_framebuffer.buffer.width;
-                    let y = index as u32 / self.deferred_framebuffer.buffer.width;
+                    let x = index as u32 % self.deferred_framebuffer.width;
+                    let y = index as u32 / self.deferred_framebuffer.width;
 
                     let color = self.fragment_shader.call(&sample);
 
-                    self.deferred_framebuffer.buffer.set_pixel(x, y, color);
+                    self.deferred_framebuffer.set_pixel(x, y, color);
                 }
             }
         }
 
         // Compose deferred and forward rendering frames together.
 
-        let forward_frame = self.forward_framebuffer.buffer.get_pixel_data();
+        let forward_frame = self.forward_framebuffer.get_pixel_data();
 
         if self.options.should_render_shader {
-            let deferred_frame = self.deferred_framebuffer.buffer.get_pixel_data();
+            let deferred_frame = self.deferred_framebuffer.get_pixel_data();
 
-            self.composite_framebuffer.buffer.blit(
+            self.composite_framebuffer.blit(
                 0,
                 0,
-                self.deferred_framebuffer.buffer.width,
-                self.deferred_framebuffer.buffer.height,
+                self.deferred_framebuffer.width,
+                self.deferred_framebuffer.height,
                 deferred_frame,
             );
         }
 
         for (index, value) in forward_frame.iter().enumerate() {
             self.composite_framebuffer
-                .buffer
                 .set_pixel_raw(index, *value, color::BLACK.to_u32());
         }
     }
@@ -603,7 +594,7 @@ where
                 };
             }
 
-            self.forward_framebuffer.poly_line(points.as_slice(), c);
+            Graphics::poly_line(&mut self.forward_framebuffer, points.as_slice(), c);
         }
 
         if self.options.should_render_normals {
@@ -623,7 +614,8 @@ where
                 let from = v.p;
                 let to = screen_vertex_relative_normal;
 
-                self.forward_framebuffer.line(
+                Graphics::line(
+                    &mut self.forward_framebuffer,
                     from.x as i32,
                     from.y as i32,
                     to.x as i32,
@@ -741,7 +733,7 @@ where
         let y_start: u32 = u32::max((it0.p.y - 0.5).ceil() as u32, 0);
         let y_end: u32 = u32::min(
             (it2.p.y - 0.5).ceil() as u32,
-            self.deferred_framebuffer.buffer.height - 1,
+            self.deferred_framebuffer.height - 1,
         );
 
         // Adjust both interpolants to account for us snapping y-start and y-end
@@ -756,7 +748,7 @@ where
             let x_start = u32::max((left_edge_interpolant.p.x - 0.5).ceil() as u32, 0);
             let x_end = u32::min(
                 (right_edge_interpolant.p.x - 0.5).ceil() as u32,
-                self.deferred_framebuffer.buffer.width - 1,
+                self.deferred_framebuffer.width - 1,
             );
 
             // Create an interpolant that we can move across our horizontal

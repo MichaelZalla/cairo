@@ -25,7 +25,7 @@ use cairo::{
 };
 
 pub struct GeneratePrimitivesScene<'a> {
-    framebuffer: Graphics,
+    framebuffer: PixelBuffer,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
@@ -52,9 +52,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = Graphics {
-            buffer: PixelBuffer::new(canvas_width, canvas_height),
-        };
+        let framebuffer = PixelBuffer::new(canvas_width, canvas_height);
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
@@ -387,18 +385,19 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         // Render debug messages
 
-        self.framebuffer.buffer.blit(
+        self.framebuffer.blit(
             0,
             0,
-            self.framebuffer.buffer.width,
-            self.framebuffer.buffer.height,
+            self.framebuffer.width,
+            self.framebuffer.height,
             self.pipeline.get_pixel_data(),
         );
 
         {
             let mut font_cache = self.font_cache_rwl.write().unwrap();
 
-            self.framebuffer.render_debug_messages(
+            Graphics::render_debug_messages(
+                &mut self.framebuffer,
                 &mut font_cache,
                 &self.font_info,
                 (12, 12),
@@ -409,6 +408,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
     }
 
     fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.framebuffer.buffer.get_pixel_data();
+        return self.framebuffer.get_pixel_data();
     }
 }

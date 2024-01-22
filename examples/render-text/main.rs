@@ -37,9 +37,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut graphics = Graphics {
-        buffer: PixelBuffer::new(window_info.window_width, window_info.window_height),
-    };
+    let mut framebuffer = PixelBuffer::new(window_info.window_width, window_info.window_height);
 
     let now_seconds = RefCell::new(0.0);
 
@@ -59,13 +57,14 @@ fn main() -> Result<(), String> {
     let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
 
-        graphics.buffer.clear(color::BLACK);
+        framebuffer.clear(color::BLACK);
 
         // Render some text to our pixel buffer
 
         let font = font_cache.load(&font_info).unwrap();
 
-        graphics.text(
+        Graphics::text(
+            &mut framebuffer,
             &font,
             &TextOperation {
                 text: &(format!("Uptime: {}s", now_seconds.borrow())),
@@ -78,9 +77,12 @@ fn main() -> Result<(), String> {
         let x = *mouse_x.borrow();
         let y = *mouse_y.borrow();
 
-        graphics.crosshair(x, y, 24, 2, 6, true, color::YELLOW);
+        Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, color::YELLOW);
 
-        graphics.text(
+        let framebuffer_height = framebuffer.height;
+
+        Graphics::text(
+            &mut framebuffer,
             &font,
             &TextOperation {
                 text: &(format!(
@@ -89,12 +91,12 @@ fn main() -> Result<(), String> {
                     mouse_y.borrow()
                 )),
                 x: 12,
-                y: graphics.buffer.height - 12 - 16,
+                y: framebuffer_height - 12 - 16,
                 color: color::YELLOW,
             },
         )?;
 
-        return Ok(graphics.buffer.get_pixel_data().clone());
+        return Ok(framebuffer.get_pixel_data().clone());
     };
 
     app.run(&mut update, &mut render)?;

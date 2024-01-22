@@ -4,7 +4,7 @@ use cairo::{
     app::{App, AppWindowInfo},
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
+    graphics::pixelbuffer::PixelBuffer,
     time::TimingInfo,
 };
 
@@ -18,9 +18,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut graphics = Graphics {
-        buffer: PixelBuffer::new(window_info.window_width, window_info.window_height),
-    };
+    let mut framebuffer = PixelBuffer::new(window_info.window_width, window_info.window_height);
 
     let mut update = |_timing_info: &TimingInfo,
                       _keyboard_state: &KeyboardState,
@@ -32,12 +30,12 @@ fn main() -> Result<(), String> {
 
     let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
-        graphics.buffer.clear(color::BLACK);
+        framebuffer.clear(color::BLACK);
 
         // @TODO Write some pixel data to the pixel buffer,
         //       based on some borrowed state.
 
-        return Ok(graphics.buffer.get_pixel_data().clone());
+        return Ok(framebuffer.get_pixel_data().clone());
     };
 
     app.run(&mut update, &mut render)?;

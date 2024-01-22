@@ -40,9 +40,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut graphics = Graphics {
-        buffer: PixelBuffer::new(window_info.window_width, window_info.window_height),
-    };
+    let mut framebuffer = PixelBuffer::new(window_info.window_width, window_info.window_height);
 
     let root_panel = RefCell::new(Panel::new(
         PanelInfo {
@@ -60,10 +58,11 @@ fn main() -> Result<(), String> {
          -> () {
             // @TODO(mzalla) Update panel tree in response to mouse events
         },
-        |panel_graphics: &mut Graphics, info: &PanelInfo| -> Result<Vec<u32>, String> {
+        |framebuffer: &mut PixelBuffer, info: &PanelInfo| -> Result<Vec<u32>, String> {
             let font = font_cache.load(&font_info).unwrap();
 
-            panel_graphics.text(
+            Graphics::text(
+                framebuffer,
                 &font,
                 &TextOperation {
                     text: &info.title,
@@ -73,7 +72,7 @@ fn main() -> Result<(), String> {
                 },
             )?;
 
-            return Ok(panel_graphics.buffer.get_pixel_data().clone());
+            return Ok(framebuffer.get_pixel_data().clone());
         },
     ));
 
@@ -102,7 +101,7 @@ fn main() -> Result<(), String> {
 
     let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
-        graphics.buffer.clear(color::WHITE);
+        framebuffer.clear(color::WHITE);
 
         // Delegate render call to the root panel
 
@@ -112,7 +111,7 @@ fn main() -> Result<(), String> {
 
         // Blit panel pixels (local space) onto global pixels
 
-        graphics.buffer.blit(
+        framebuffer.blit(
             panel_info.x,
             panel_info.y,
             panel_info.width,
@@ -126,9 +125,9 @@ fn main() -> Result<(), String> {
 
         let (x, y) = (mouse_state.position.0, mouse_state.position.1);
 
-        graphics.crosshair(x, y, 24, 2, 6, true, color::YELLOW);
+        Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, color::YELLOW);
 
-        return Ok(graphics.buffer.get_pixel_data().clone());
+        return Ok(framebuffer.get_pixel_data().clone());
     };
 
     app.run(&mut update, &mut render)?;

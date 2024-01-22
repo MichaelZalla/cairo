@@ -9,7 +9,7 @@ use crate::{
     texture::TextureBuffer,
 };
 
-use super::Graphics;
+use super::{pixelbuffer::PixelBuffer, Graphics};
 
 #[derive(Clone)]
 pub struct TextOperation<'a> {
@@ -20,10 +20,10 @@ pub struct TextOperation<'a> {
 }
 
 impl Graphics {
-    pub fn text(&mut self, font: &Font, op: &TextOperation) -> Result<(), String> {
+    pub fn text(buffer: &mut PixelBuffer, font: &Font, op: &TextOperation) -> Result<(), String> {
         // Generate a texture for this text operation.
 
-        let (width, height, bytes) = self.make_text_texture(font, op).unwrap();
+        let (width, height, bytes) = Graphics::make_text_texture(buffer, font, op).unwrap();
 
         // Copy the rendered pixels to this buffer, at location (op.x, op.y).
 
@@ -40,7 +40,7 @@ impl Graphics {
                     continue;
                 }
 
-                self.buffer.set_pixel(
+                buffer.set_pixel(
                     start_x + x,
                     start_y + y,
                     Color {
@@ -57,16 +57,16 @@ impl Graphics {
     }
 
     pub fn render_debug_messages(
-        &mut self,
+        buffer: &mut PixelBuffer,
         font_cache: &mut FontCache,
         font_info: &FontInfo,
         position: (u32, u32),
         padding_ems: f32,
-        buffer: &mut DebugMessageBuffer,
+        debug_messages: &mut DebugMessageBuffer,
     ) {
         let mut y_offset = position.1;
 
-        for msg in buffer.borrow_mut() {
+        for msg in debug_messages.borrow_mut() {
             let op = TextOperation {
                 text: &msg,
                 x: position.0,
@@ -74,17 +74,16 @@ impl Graphics {
                 color: color::WHITE,
             };
 
-            self.text_using_font_cache(font_cache, &font_info, &op)
-                .unwrap();
+            Graphics::text_using_font_cache(buffer, font_cache, &font_info, &op).unwrap();
 
             y_offset += (font_info.point_size as f32 * padding_ems) as u32;
         }
 
-        buffer.drain();
+        debug_messages.drain();
     }
 
     fn make_text_texture(
-        &mut self,
+        buffer: &mut PixelBuffer,
         font: &Font,
         op: &TextOperation,
     ) -> Result<(u32, u32, TextureBuffer), String> {
@@ -113,13 +112,13 @@ impl Graphics {
     }
 
     fn text_using_font_cache(
-        &mut self,
+        buffer: &mut PixelBuffer,
         font_cache: &mut FontCache,
         font_info: &FontInfo,
         text_operation: &TextOperation,
     ) -> Result<(), String> {
         match (*font_cache).load(font_info) {
-            Ok(font) => self.text(&font, text_operation),
+            Ok(font) => Graphics::text(buffer, &font, text_operation),
             Err(e) => return Err(e.to_string()),
         }
     }

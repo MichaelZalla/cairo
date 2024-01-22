@@ -49,7 +49,7 @@ impl<'a> SkyboxScene<'a> {
         let aspect_ratio = canvas_width as f32 / canvas_height as f32;
 
         // Set up a camera for rendering our scene
-        let mut camera: Camera = Camera::new(
+        let camera: Camera = Camera::new(
             aspect_ratio,
             Vec3 {
                 x: 0.0,

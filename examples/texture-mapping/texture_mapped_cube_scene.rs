@@ -3,7 +3,6 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
     material::cache::MaterialCache,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
@@ -41,13 +40,9 @@ impl<'a> TextureMappedCubeScene<'a> {
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let graphics = Graphics {
-            buffer: PixelBuffer::new(canvas_width, canvas_height),
-        };
-
         // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
-            graphics.buffer.width_over_height,
+            canvas_width as f32 / canvas_height as f32,
             Vec3 {
                 x: 0.0,
                 y: 0.0,

@@ -22,16 +22,14 @@ where
             if *z_non_linear == zbuffer::MAX_DEPTH {
                 // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
-                let screen_x: u32 =
-                    (index as f32 % self.forward_framebuffer.buffer.width as f32) as u32;
-                let screen_y: u32 =
-                    (index as f32 / self.forward_framebuffer.buffer.width as f32) as u32;
+                let screen_x: u32 = (index as f32 % self.forward_framebuffer.width as f32) as u32;
+                let screen_y: u32 = (index as f32 / self.forward_framebuffer.width as f32) as u32;
 
                 let pixel_coordinate_world_space = camera.get_pixel_world_space_position(
                     screen_x,
                     screen_y,
-                    self.forward_framebuffer.buffer.width,
-                    self.forward_framebuffer.buffer.height,
+                    self.forward_framebuffer.width,
+                    self.forward_framebuffer.height,
                 );
 
                 let normal = pixel_coordinate_world_space.as_normal();
@@ -41,7 +39,6 @@ where
                 let skybox_color = skybox.sample(&normal);
 
                 self.forward_framebuffer
-                    .buffer
                     .set_pixel(screen_x, screen_y, skybox_color);
             }
         }
