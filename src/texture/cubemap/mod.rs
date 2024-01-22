@@ -3,6 +3,7 @@ use std::fmt;
 use crate::{
     color::{self, Color},
     context::ApplicationRenderingContext,
+    graphics::pixelbuffer::PixelBuffer,
     texture::sample::sample_nearest,
     vec::{vec2::Vec2, vec4::Vec4},
 };
@@ -86,7 +87,7 @@ impl CubeMap {
                 map.height / 4
             };
 
-            let cross_pixel_data = &map.levels[0];
+            let cross_buffer = &map.levels[0];
 
             for (side_index, side_map) in self.sides.iter_mut().enumerate() {
                 let side = match side_index {
@@ -100,14 +101,6 @@ impl CubeMap {
 
                 side_map.width = dimension;
                 side_map.height = dimension;
-
-                let mut pixel_data: Vec<u8> = vec![];
-
-                let new_len = dimension as usize * dimension as usize * TextureMap::BYTES_PER_PIXEL;
-
-                pixel_data.resize(new_len, 0);
-
-                assert!(pixel_data.len() == new_len);
 
                 let block_coordinate: (u32, u32);
 
@@ -139,6 +132,14 @@ impl CubeMap {
 
                 // Blit the corresponding pixels into this texture map's root level.
 
+                let mut bytes: Vec<u8> = vec![];
+
+                let new_len = dimension as usize * dimension as usize * TextureMap::BYTES_PER_PIXEL;
+
+                bytes.resize(new_len, 0);
+
+                assert!(bytes.len() == new_len);
+
                 for global_y in block_pixel_coordinate.1..(block_pixel_coordinate.1 + dimension) {
                     for global_x in block_pixel_coordinate.0..(block_pixel_coordinate.0 + dimension)
                     {
@@ -159,15 +160,15 @@ impl CubeMap {
                             * TextureMap::BYTES_PER_PIXEL)
                             + local_x as usize * TextureMap::BYTES_PER_PIXEL;
 
-                        pixel_data[local_pixel_index] = cross_pixel_data[global_pixel_index];
-                        pixel_data[local_pixel_index + 1] =
-                            cross_pixel_data[global_pixel_index + 1];
-                        pixel_data[local_pixel_index + 2] =
-                            cross_pixel_data[global_pixel_index + 2];
+                        bytes[local_pixel_index] = cross_buffer.data[global_pixel_index];
+                        bytes[local_pixel_index + 1] = cross_buffer.data[global_pixel_index + 1];
+                        bytes[local_pixel_index + 2] = cross_buffer.data[global_pixel_index + 2];
                     }
                 }
 
-                side_map.levels.push(pixel_data);
+                let buffer = PixelBuffer::from_data(dimension, dimension, bytes);
+
+                side_map.levels.push(buffer);
 
                 side_map.is_loaded = true;
             }

@@ -1,7 +1,9 @@
-#[derive(Clone)]
+use std::fmt::Debug;
+
+#[derive(Clone, Debug)]
 pub struct PixelBuffer<T = u32>
 where
-    T: Default + PartialEq + Copy + Clone,
+    T: Default + PartialEq + Copy + Clone + Debug,
 {
     pub width: u32,
     pub height: u32,
@@ -12,7 +14,7 @@ where
 
 impl<T> PixelBuffer<T>
 where
-    T: Default + PartialEq + Copy + Clone,
+    T: Default + PartialEq + Copy + Clone + Debug,
 {
     pub fn new(width: u32, height: u32) -> Self {
         return PixelBuffer {
@@ -21,6 +23,16 @@ where
             width_over_height: width as f32 / height as f32,
             height_over_width: height as f32 / width as f32,
             data: vec![Default::default(); (width * height) as usize],
+        };
+    }
+
+    pub fn from_data(width: u32, height: u32, data: Vec<T>) -> Self {
+        return PixelBuffer {
+            width,
+            height,
+            width_over_height: width as f32 / height as f32,
+            height_over_width: height as f32 / width as f32,
+            data,
         };
     }
 

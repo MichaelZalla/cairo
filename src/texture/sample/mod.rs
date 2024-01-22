@@ -23,7 +23,7 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
     };
 
     debug_assert!(
-        map.levels[0].len()
+        map.levels[0].data.len()
             == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize,
         "levels.len = {}, map.width={}, map.height={}",
         map.levels.len(),
@@ -238,7 +238,7 @@ fn sample_from_texel(
     let texel_color_index =
         TextureMap::BYTES_PER_PIXEL * (texel.1 as u32 * level_width + texel.0 as u32) as usize;
 
-    let pixels = match level_index {
+    let buffer = match level_index {
         Some(index) => {
             if index >= map.levels.len() {
                 panic!();
@@ -248,12 +248,12 @@ fn sample_from_texel(
         None => &map.levels[0],
     };
 
-    debug_assert!(texel_color_index < pixels.len());
+    debug_assert!(texel_color_index < buffer.data.len());
 
     return (
-        pixels[texel_color_index],
-        pixels[texel_color_index + 1],
-        pixels[texel_color_index + 2],
+        buffer.data[texel_color_index],
+        buffer.data[texel_color_index + 1],
+        buffer.data[texel_color_index + 2],
     );
 }
 

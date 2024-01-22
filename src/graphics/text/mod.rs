@@ -20,10 +20,14 @@ pub struct TextOperation<'a> {
 }
 
 impl Graphics {
-    pub fn text(buffer: &mut PixelBuffer, font: &Font, op: &TextOperation) -> Result<(), String> {
+    pub fn text(
+        dest_buffer: &mut PixelBuffer,
+        font: &Font,
+        op: &TextOperation,
+    ) -> Result<(), String> {
         // Generate a texture for this text operation.
 
-        let (width, height, bytes) = Graphics::make_text_texture(buffer, font, op).unwrap();
+        let (width, height, src_buffer) = Graphics::make_text_texture(font, op).unwrap();
 
         // Copy the rendered pixels to this buffer, at location (op.x, op.y).
 
@@ -34,21 +38,21 @@ impl Graphics {
             for x in 0..width {
                 let index = (x as usize + y as usize * width as usize) * 4;
 
-                let a = bytes[index + 3];
+                let a = src_buffer.data[index + 3];
 
                 if a == 0 {
                     continue;
                 }
 
                 let value = Color {
-                    r: bytes[index],
-                    g: bytes[index + 1],
-                    b: bytes[index + 2],
+                    r: src_buffer.data[index],
+                    g: src_buffer.data[index + 1],
+                    b: src_buffer.data[index + 2],
                     a,
                 }
                 .to_u32();
 
-                buffer.set(start_x + x, start_y + y, value)
+                dest_buffer.set(start_x + x, start_y + y, value)
             }
         }
 
@@ -82,7 +86,6 @@ impl Graphics {
     }
 
     fn make_text_texture(
-        buffer: &mut PixelBuffer,
         font: &Font,
         op: &TextOperation,
     ) -> Result<(u32, u32, TextureBuffer), String> {
@@ -101,13 +104,14 @@ impl Graphics {
 
         let text_surface_canvas_size = text_surface_canvas.output_size()?;
 
-        let text_canvas_width = text_surface_canvas_size.0;
-        let text_canvas_height = text_surface_canvas_size.1;
+        let width = text_surface_canvas_size.0;
+        let height = text_surface_canvas_size.1;
 
-        let text_surface_pixels =
-            text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
+        let bytes = text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
 
-        Ok((text_canvas_width, text_canvas_height, text_surface_pixels))
+        let buffer = PixelBuffer::from_data(width, height, bytes);
+
+        Ok((width, height, buffer))
     }
 
     fn text_using_font_cache(

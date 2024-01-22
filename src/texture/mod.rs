@@ -5,12 +5,13 @@ use sdl2::render::TextureAccess;
 
 use crate::context::ApplicationRenderingContext;
 use crate::debug_print;
+use crate::graphics::pixelbuffer::PixelBuffer;
 
 pub mod cubemap;
 pub mod sample;
 pub mod uv;
 
-pub type TextureBuffer = Vec<u8>;
+pub type TextureBuffer = PixelBuffer<u8>;
 
 #[derive(Debug, Clone, Default)]
 pub struct TextureMapInfo {
@@ -80,13 +81,15 @@ impl TextureMap {
                     .read_pixels(None, PixelFormatEnum::RGB24)
                     .unwrap();
 
-                let mut native_sized_pixel_data: Vec<u8> = vec![];
+                let mut original_size_bytes: Vec<u8> = vec![];
 
-                native_sized_pixel_data.resize(pixels.len(), 0);
+                original_size_bytes.resize(pixels.len(), 0);
 
-                native_sized_pixel_data.copy_from_slice(pixels.as_slice());
+                original_size_bytes.copy_from_slice(pixels.as_slice());
 
-                self.levels.push(native_sized_pixel_data);
+                let buffer = PixelBuffer::from_data(self.width, self.height, original_size_bytes);
+
+                self.levels.push(buffer);
             })
             .unwrap();
 
@@ -131,8 +134,10 @@ impl TextureMap {
         for level_index in 1..levels as usize {
             let dimension = self.width as u32 / (2 as u32).pow(level_index as u32);
 
+            let bytes = get_half_scaled(dimension, &self.levels.last().unwrap().data);
+
             self.levels
-                .push(get_half_scaled(dimension, self.levels.last().unwrap()));
+                .push(PixelBuffer::from_data(dimension, dimension, bytes));
         }
 
         return Ok(());
@@ -146,18 +151,18 @@ impl TextureMap {
             return Err("Called TextureMap::map() on an unloaded texture!".to_string());
         }
 
-        let native_sized_pixel_data = &mut self.levels[0];
+        let original_size_buffer = &mut self.levels[0];
 
         for i in 0..(self.width * self.height) as usize {
-            let r = native_sized_pixel_data[i * 3];
-            let g = native_sized_pixel_data[i * 3 + 1];
-            let b = native_sized_pixel_data[i * 3 + 2];
+            let r = original_size_buffer.data[i * 3];
+            let g = original_size_buffer.data[i * 3 + 1];
+            let b = original_size_buffer.data[i * 3 + 2];
 
             let (r_new, g_new, b_new) = callback(r, g, b);
 
-            native_sized_pixel_data[i * 3] = r_new;
-            native_sized_pixel_data[i * 3 + 1] = g_new;
-            native_sized_pixel_data[i * 3 + 2] = b_new;
+            original_size_buffer.data[i * 3] = r_new;
+            original_size_buffer.data[i * 3 + 1] = g_new;
+            original_size_buffer.data[i * 3 + 2] = b_new;
         }
 
         Ok(())
