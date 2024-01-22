@@ -34,6 +34,8 @@ impl Graphics {
             }
         }
 
+        let color_u32 = color.to_u32();
+
         // y = m*x + b
         // x = (y - b) / m
         // m = (y2-y1)/(x2-x1)
@@ -58,7 +60,7 @@ impl Graphics {
             let max_y = max(y1, y2);
 
             for y in min_y..max_y {
-                buffer.set_pixel(x1 as u32, y as u32, color);
+                buffer.set(x1 as u32, y as u32, color_u32);
             }
         } else if y2 == y1 {
             // Horizontal line
@@ -69,7 +71,7 @@ impl Graphics {
             let max_x = max(x1, x2);
 
             for x in min_x..max_x {
-                buffer.set_pixel(x as u32, y1 as u32, color);
+                buffer.set(x as u32, y1 as u32, color_u32);
             }
         } else {
             // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
@@ -90,7 +92,7 @@ impl Graphics {
 
                 // Vertical-ish line
                 for y in y1..y2 {
-                    buffer.set_pixel(((y as f32 - b) / m) as u32, y as u32, color);
+                    buffer.set(((y as f32 - b) / m) as u32, y as u32, color_u32);
                 }
             } else {
                 if x2 < x1 {
@@ -101,7 +103,7 @@ impl Graphics {
 
                 // Horizontal-ish line
                 for x in x1..x2 {
-                    buffer.set_pixel(x as u32, (m * x as f32 + b) as u32, color);
+                    buffer.set(x as u32, (m * x as f32 + b) as u32, color_u32);
                 }
             }
         }

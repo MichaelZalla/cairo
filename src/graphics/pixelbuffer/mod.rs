@@ -1,71 +1,62 @@
-use crate::color::Color;
-
 #[derive(Clone)]
-pub struct PixelBuffer {
+pub struct PixelBuffer<T = u32>
+where
+    T: Default + PartialEq + Copy + Clone,
+{
     pub width: u32,
     pub height: u32,
     pub width_over_height: f32,
     pub height_over_width: f32,
-    pub pixels: Vec<u32>,
+    pub data: Vec<T>,
 }
 
-impl PixelBuffer {
+impl<T> PixelBuffer<T>
+where
+    T: Default + PartialEq + Copy + Clone,
+{
     pub fn new(width: u32, height: u32) -> Self {
         return PixelBuffer {
             width,
             height,
             width_over_height: width as f32 / height as f32,
             height_over_width: height as f32 / width as f32,
-            pixels: vec![0 as u32; (width * height) as usize],
+            data: vec![Default::default(); (width * height) as usize],
         };
     }
 
-    pub fn get_pixels_u32(&self) -> &Vec<u32> {
-        return &self.pixels;
+    pub fn get_all(&self) -> &Vec<T> {
+        return &self.data;
     }
 
-    pub fn get_pixel(&self, x: u32, y: u32) -> Color {
-        let pixel_index = (y * self.width + x) as usize;
-
-        let r = self.pixels[pixel_index] as u8;
-        let g = self.pixels[pixel_index].rotate_right(8) as u8;
-        let b = self.pixels[pixel_index].rotate_right(16) as u8;
-
-        Color::rgb(r, g, b)
+    pub fn get(&self, x: u32, y: u32) -> &T {
+        &self.data[(y * self.width + x) as usize]
     }
 
-    pub fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
+    pub fn set(&mut self, x: u32, y: u32, value: T) {
         if x > (self.width - 1) || y > (self.height - 1) {
-            // panic!("Call to PixelBuffer.set_pixel() with invalid coordinate ({},{})!", x, y);
+            // panic!("Call to PixelBuffer.set() with invalid coordinate ({},{})!", x, y);
             return;
         }
 
-        let pixel_index = (y * self.width + x) as usize;
-
-        let r = color.r as u32;
-        let g = (color.g as u32).rotate_left(8);
-        let b = (color.b as u32).rotate_left(16);
-        let a = (color.a as u32).rotate_left(24);
-
-        self.pixels[pixel_index] = r | g | b | a;
+        self.data[(y * self.width + x) as usize] = value;
     }
 
-    pub fn set_pixel_raw(&mut self, index: usize, value: u32, key_color: u32) {
-        debug_assert!(index < self.pixels.len());
+    pub fn set_raw(&mut self, index: usize, value: T, key_color: T) {
+        debug_assert!(index < self.data.len());
 
         if value != key_color {
-            self.pixels[index] = value;
+            self.data[index] = value;
         }
     }
 
-    pub fn clear(&mut self, color: Color) -> &Self {
-        for i in 0..self.pixels.len() {
-            self.pixels[i] = color.to_u32();
+    pub fn clear(&mut self, value: T) -> &Self {
+        for i in 0..self.data.len() {
+            self.data[i] = value;
         }
         self
     }
 
-    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, pixels: &Vec<u32>) -> () {
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, pixels: &Vec<T>) -> () {
         debug_assert!(pixels.len() as u32 == width * height);
 
         for x in left..(left + width) {
@@ -76,7 +67,7 @@ impl PixelBuffer {
 
                 let dest_pixel_index = (y * self.width + x) as usize;
 
-                self.pixels[dest_pixel_index] = src_pixel_value;
+                self.data[dest_pixel_index] = src_pixel_value;
             }
         }
     }

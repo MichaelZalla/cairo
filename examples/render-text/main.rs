@@ -57,7 +57,7 @@ fn main() -> Result<(), String> {
     let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
 
-        framebuffer.clear(color::BLACK);
+        framebuffer.clear(color::BLACK.to_u32());
 
         // Render some text to our pixel buffer
 
@@ -96,7 +96,7 @@ fn main() -> Result<(), String> {
             },
         )?;
 
-        return Ok(framebuffer.get_pixels_u32().clone());
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;

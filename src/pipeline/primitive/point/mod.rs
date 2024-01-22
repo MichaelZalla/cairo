@@ -48,6 +48,8 @@ where
             return;
         }
 
+        let color_u32 = color.to_u32();
+
         match material_cache {
             Some(materials) => {
                 let mat_name = material_name.unwrap();
@@ -74,12 +76,12 @@ where
                         self.render_entity(&light_quad_entity, Some(materials));
                     }
                     None => {
-                        self.forward_framebuffer.set_pixel(x, y, color);
+                        self.forward_framebuffer.set(x, y, color_u32);
                     }
                 }
             }
             None => {
-                self.forward_framebuffer.set_pixel(x, y, color);
+                self.forward_framebuffer.set(x, y, color_u32);
             }
         }
     }

@@ -39,7 +39,7 @@ where
                 let skybox_color = skybox.sample(&normal);
 
                 self.forward_framebuffer
-                    .set_pixel(screen_x, screen_y, skybox_color);
+                    .set(screen_x, screen_y, skybox_color.to_u32());
             }
         }
     }

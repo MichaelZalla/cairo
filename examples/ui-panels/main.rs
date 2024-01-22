@@ -72,7 +72,7 @@ fn main() -> Result<(), String> {
                 },
             )?;
 
-            return Ok(framebuffer.get_pixels_u32().clone());
+            return Ok(framebuffer.get_all().clone());
         },
     ));
 
@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
 
     let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
-        framebuffer.clear(color::WHITE);
+        framebuffer.clear(color::WHITE.to_u32());
 
         // Delegate render call to the root panel
 
@@ -127,7 +127,7 @@ fn main() -> Result<(), String> {
 
         Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, color::YELLOW);
 
-        return Ok(framebuffer.get_pixels_u32().clone());
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;

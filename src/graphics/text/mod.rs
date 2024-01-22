@@ -40,16 +40,15 @@ impl Graphics {
                     continue;
                 }
 
-                buffer.set_pixel(
-                    start_x + x,
-                    start_y + y,
-                    Color {
-                        r: bytes[index],
-                        g: bytes[index + 1],
-                        b: bytes[index + 2],
-                        a,
-                    },
-                )
+                let value = Color {
+                    r: bytes[index],
+                    g: bytes[index + 1],
+                    b: bytes[index + 2],
+                    a,
+                }
+                .to_u32();
+
+                buffer.set(start_x + x, start_y + y, value)
             }
         }
 

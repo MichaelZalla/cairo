@@ -131,16 +131,18 @@ where
     }
 
     pub fn get_pixel_data(&'a self) -> &'a Vec<u32> {
-        return self.composite_framebuffer.get_pixels_u32();
+        return self.composite_framebuffer.get_all();
     }
 
     pub fn begin_frame(&mut self) {
-        self.forward_framebuffer.clear(color::BLACK);
+        let black_u32 = color::BLACK.to_u32();
 
-        self.composite_framebuffer.clear(color::BLACK);
+        self.forward_framebuffer.clear(black_u32);
+
+        self.composite_framebuffer.clear(black_u32);
 
         if self.options.should_render_shader {
-            self.deferred_framebuffer.clear(color::BLACK);
+            self.deferred_framebuffer.clear(black_u32);
 
             self.z_buffer.clear();
 
@@ -159,17 +161,17 @@ where
 
                     let color = self.fragment_shader.call(&sample);
 
-                    self.deferred_framebuffer.set_pixel(x, y, color);
+                    self.deferred_framebuffer.set(x, y, color.to_u32());
                 }
             }
         }
 
         // Compose deferred and forward rendering frames together.
 
-        let forward_frame = self.forward_framebuffer.get_pixels_u32();
+        let forward_frame = self.forward_framebuffer.get_all();
 
         if self.options.should_render_shader {
-            let deferred_frame = self.deferred_framebuffer.get_pixels_u32();
+            let deferred_frame = self.deferred_framebuffer.get_all();
 
             self.composite_framebuffer.blit(
                 0,
@@ -182,7 +184,7 @@ where
 
         for (index, value) in forward_frame.iter().enumerate() {
             self.composite_framebuffer
-                .set_pixel_raw(index, *value, color::BLACK.to_u32());
+                .set_raw(index, *value, color::BLACK.to_u32());
         }
     }
 
