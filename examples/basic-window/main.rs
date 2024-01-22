@@ -2,9 +2,9 @@ extern crate sdl2;
 
 use cairo::{
     app::{App, AppWindowInfo},
+    buffer::PixelBuffer,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::pixelbuffer::PixelBuffer,
     time::TimingInfo,
 };
 

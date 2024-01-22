@@ -3,13 +3,14 @@ use std::borrow::BorrowMut;
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
 use crate::{
+    buffer::PixelBuffer,
     color::{self, Color},
     debug::message::DebugMessageBuffer,
     font::{cache::FontCache, FontInfo},
     texture::TextureBuffer,
 };
 
-use super::{pixelbuffer::PixelBuffer, Graphics};
+use super::Graphics;
 
 #[derive(Clone)]
 pub struct TextOperation<'a> {

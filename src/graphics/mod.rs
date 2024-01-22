@@ -1,11 +1,9 @@
 use std::cmp::{max, min};
 
-use crate::{color::Color, vec::vec2};
+use crate::{buffer::PixelBuffer, color::Color, vec::vec2};
 
-use self::pixelbuffer::PixelBuffer;
-
-pub mod pixelbuffer;
 pub mod text;
+
 #[derive(Clone)]
 pub struct Graphics {}
 

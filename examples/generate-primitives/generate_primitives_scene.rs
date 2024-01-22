@@ -3,11 +3,12 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
+    buffer::PixelBuffer,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
+    graphics::Graphics,
     material::cache::MaterialCache,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{

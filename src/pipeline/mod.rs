@@ -1,8 +1,8 @@
 use std::sync::RwLock;
 
 use crate::{
+    buffer::PixelBuffer,
     entity::Entity,
-    graphics::pixelbuffer::PixelBuffer,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
     mesh::Face,

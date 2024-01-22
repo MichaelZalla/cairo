@@ -3,9 +3,9 @@ use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
+use crate::buffer::PixelBuffer;
 use crate::context::ApplicationRenderingContext;
 use crate::debug_print;
-use crate::graphics::pixelbuffer::PixelBuffer;
 
 pub mod cubemap;
 pub mod sample;

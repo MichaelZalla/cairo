@@ -1,9 +1,9 @@
 use std::fmt;
 
 use crate::{
+    buffer::PixelBuffer,
     color::{self, Color},
     context::ApplicationRenderingContext,
-    graphics::pixelbuffer::PixelBuffer,
     texture::sample::sample_nearest,
     vec::{vec2::Vec2, vec4::Vec4},
 };

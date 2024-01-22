@@ -4,6 +4,7 @@ extern crate sdl2;
 pub mod macros;
 
 pub mod app;
+pub mod buffer;
 pub mod color;
 pub mod context;
 pub mod debug;

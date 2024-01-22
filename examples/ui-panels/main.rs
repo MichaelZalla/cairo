@@ -4,10 +4,11 @@ use std::{cell::RefCell, env, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
+    buffer::PixelBuffer,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::{pixelbuffer::PixelBuffer, text::TextOperation, Graphics},
+    graphics::{text::TextOperation, Graphics},
     time::TimingInfo,
     ui::panel::{Panel, PanelInfo},
 };

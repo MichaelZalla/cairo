@@ -1,9 +1,10 @@
 use std::rc::Rc;
 
 use crate::{
+    buffer::PixelBuffer,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::{pixelbuffer::PixelBuffer, Graphics},
+    graphics::Graphics,
     time::TimingInfo,
     vec::vec2::Vec2,
 };
