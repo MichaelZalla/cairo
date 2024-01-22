@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::{
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     color::{self, Color},
     context::ApplicationRenderingContext,
     texture::sample::sample_nearest,
@@ -166,7 +166,7 @@ impl CubeMap {
                     }
                 }
 
-                let buffer = PixelBuffer::from_data(dimension, dimension, bytes);
+                let buffer = Buffer2D::from_data(dimension, dimension, bytes);
 
                 side_map.levels.push(buffer);
 

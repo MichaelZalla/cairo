@@ -3,7 +3,7 @@ use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
-use crate::buffer::PixelBuffer;
+use crate::buffer::Buffer2D;
 use crate::context::ApplicationRenderingContext;
 use crate::debug_print;
 
@@ -11,7 +11,7 @@ pub mod cubemap;
 pub mod sample;
 pub mod uv;
 
-pub type TextureBuffer = PixelBuffer<u8>;
+pub type TextureBuffer = Buffer2D<u8>;
 
 #[derive(Debug, Clone, Default)]
 pub struct TextureMapInfo {
@@ -87,7 +87,7 @@ impl TextureMap {
 
                 original_size_bytes.copy_from_slice(pixels.as_slice());
 
-                let buffer = PixelBuffer::from_data(self.width, self.height, original_size_bytes);
+                let buffer = Buffer2D::from_data(self.width, self.height, original_size_bytes);
 
                 self.levels.push(buffer);
             })
@@ -137,7 +137,7 @@ impl TextureMap {
             let bytes = get_half_scaled(dimension, &self.levels.last().unwrap().data);
 
             self.levels
-                .push(PixelBuffer::from_data(dimension, dimension, bytes));
+                .push(Buffer2D::from_data(dimension, dimension, bytes));
         }
 
         return Ok(());

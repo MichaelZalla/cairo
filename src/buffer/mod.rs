@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 #[derive(Clone, Debug)]
-pub struct PixelBuffer<T = u32>
+pub struct Buffer2D<T = u32>
 where
     T: Default + PartialEq + Copy + Clone + Debug,
 {
@@ -12,12 +12,12 @@ where
     pub data: Vec<T>,
 }
 
-impl<T> PixelBuffer<T>
+impl<T> Buffer2D<T>
 where
     T: Default + PartialEq + Copy + Clone + Debug,
 {
     pub fn new(width: u32, height: u32) -> Self {
-        return PixelBuffer {
+        return Buffer2D {
             width,
             height,
             width_over_height: width as f32 / height as f32,
@@ -27,7 +27,7 @@ where
     }
 
     pub fn from_data(width: u32, height: u32, data: Vec<T>) -> Self {
-        return PixelBuffer {
+        return Buffer2D {
             width,
             height,
             width_over_height: width as f32 / height as f32,
@@ -46,7 +46,8 @@ where
 
     pub fn set(&mut self, x: u32, y: u32, value: T) {
         if x > (self.width - 1) || y > (self.height - 1) {
-            // panic!("Call to PixelBuffer.set() with invalid coordinate ({},{})!", x, y);
+            // panic!("Call to Buffer2D.set() with invalid index coordinate ({},{})!", x, y);
+
             return;
         }
 
@@ -68,14 +69,14 @@ where
         self
     }
 
-    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, pixels: &Vec<T>) -> () {
-        debug_assert!(pixels.len() as u32 == width * height);
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) -> () {
+        debug_assert!(data.len() as u32 == width * height);
 
         for x in left..(left + width) {
             for y in top..(top + height) {
                 let src_pixel_index = ((y - top) * width + (x - left)) as usize;
 
-                let src_pixel_value = pixels[src_pixel_index];
+                let src_pixel_value = data[src_pixel_index];
 
                 let dest_pixel_index = (y * self.width + x) as usize;
 

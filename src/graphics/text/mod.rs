@@ -3,7 +3,7 @@ use std::borrow::BorrowMut;
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
 use crate::{
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     color::{self, Color},
     debug::message::DebugMessageBuffer,
     font::{cache::FontCache, FontInfo},
@@ -21,11 +21,7 @@ pub struct TextOperation<'a> {
 }
 
 impl Graphics {
-    pub fn text(
-        dest_buffer: &mut PixelBuffer,
-        font: &Font,
-        op: &TextOperation,
-    ) -> Result<(), String> {
+    pub fn text(dest_buffer: &mut Buffer2D, font: &Font, op: &TextOperation) -> Result<(), String> {
         // Generate a texture for this text operation.
 
         let (width, height, src_buffer) = Graphics::make_text_texture(font, op).unwrap();
@@ -61,7 +57,7 @@ impl Graphics {
     }
 
     pub fn render_debug_messages(
-        buffer: &mut PixelBuffer,
+        buffer: &mut Buffer2D,
         font_cache: &mut FontCache,
         font_info: &FontInfo,
         position: (u32, u32),
@@ -110,13 +106,13 @@ impl Graphics {
 
         let bytes = text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
 
-        let buffer = PixelBuffer::from_data(width, height, bytes);
+        let buffer = Buffer2D::from_data(width, height, bytes);
 
         Ok((width, height, buffer))
     }
 
     fn text_using_font_cache(
-        buffer: &mut PixelBuffer,
+        buffer: &mut Buffer2D,
         font_cache: &mut FontCache,
         font_info: &FontInfo,
         text_operation: &TextOperation,

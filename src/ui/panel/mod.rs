@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     graphics::Graphics,
@@ -21,10 +21,10 @@ pub struct PanelInfo {
 pub struct Panel<U, R>
 where
     U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-    R: FnMut(&mut PixelBuffer, &PanelInfo) -> Result<Vec<u32>, String>,
+    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub info: PanelInfo,
-    buffer: PixelBuffer,
+    buffer: Buffer2D,
     pub update: U,
     _render: R,
     left: Option<Rc<Panel<U, R>>>,
@@ -35,14 +35,14 @@ where
 impl<U, R> Panel<U, R>
 where
     U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-    R: FnMut(&mut PixelBuffer, &PanelInfo) -> Result<Vec<u32>, String>,
+    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub fn new(info: PanelInfo, update: U, render: R) -> Self
     where
         U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-        R: FnMut(&mut PixelBuffer, &PanelInfo) -> Result<Vec<u32>, String>,
+        R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
     {
-        let buffer = PixelBuffer::new(info.width, info.height);
+        let buffer = Buffer2D::new(info.width, info.height);
 
         return Panel {
             info,

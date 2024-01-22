@@ -3,7 +3,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -26,7 +26,7 @@ use cairo::{
 };
 
 pub struct GeneratePrimitivesScene<'a> {
-    framebuffer: PixelBuffer,
+    framebuffer: Buffer2D,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
@@ -53,7 +53,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = PixelBuffer::new(canvas_width, canvas_height);
+        let framebuffer = Buffer2D::new(canvas_width, canvas_height);
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 

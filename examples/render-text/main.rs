@@ -4,7 +4,7 @@ use std::{cell::RefCell, env};
 
 use cairo::{
     app::{App, AppWindowInfo},
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
@@ -38,7 +38,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = PixelBuffer::new(window_info.window_width, window_info.window_height);
+    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height);
 
     let now_seconds = RefCell::new(0.0);
 

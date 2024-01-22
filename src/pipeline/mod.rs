@@ -1,7 +1,7 @@
 use std::sync::RwLock;
 
 use crate::{
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
@@ -51,9 +51,9 @@ pub struct Pipeline<
     G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
-    forward_framebuffer: PixelBuffer,
-    deferred_framebuffer: PixelBuffer,
-    composite_framebuffer: PixelBuffer,
+    forward_framebuffer: Buffer2D,
+    deferred_framebuffer: Buffer2D,
+    composite_framebuffer: Buffer2D,
     canvas_width: u32,
     canvas_width_over_2: f32,
     canvas_height: u32,
@@ -94,9 +94,9 @@ where
 
         // Allocate framebuffers.
 
-        let forward_framebuffer = PixelBuffer::new(canvas_width, canvas_height);
-        let deferred_framebuffer = PixelBuffer::new(canvas_width, canvas_height);
-        let composite_framebuffer = PixelBuffer::new(canvas_width, canvas_height);
+        let forward_framebuffer = Buffer2D::new(canvas_width, canvas_height);
+        let deferred_framebuffer = Buffer2D::new(canvas_width, canvas_height);
+        let composite_framebuffer = Buffer2D::new(canvas_width, canvas_height);
 
         // Allocate Z-buffer.
 

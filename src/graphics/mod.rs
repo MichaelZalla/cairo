@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use crate::{buffer::PixelBuffer, color::Color, vec::vec2};
+use crate::{buffer::Buffer2D, color::Color, vec::vec2};
 
 pub mod text;
 
@@ -9,7 +9,7 @@ pub struct Graphics {}
 
 impl Graphics {
     pub fn line(
-        buffer: &mut PixelBuffer,
+        buffer: &mut Buffer2D,
         mut x1: i32,
         mut y1: i32,
         mut x2: i32,
@@ -107,7 +107,7 @@ impl Graphics {
         }
     }
 
-    pub fn poly_line(buffer: &mut PixelBuffer, p: &[vec2::Vec2], color: Color) {
+    pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], color: Color) {
         for i in 0..p.len() {
             if i == p.len() - 1 {
                 Graphics::line(
@@ -132,7 +132,7 @@ impl Graphics {
     }
 
     pub fn crosshair(
-        buffer: &mut PixelBuffer,
+        buffer: &mut Buffer2D,
         x: i32,
         y: i32,
         length: u16,
@@ -202,7 +202,7 @@ impl Graphics {
     }
 
     fn clip_line(
-        buffer: &PixelBuffer,
+        buffer: &Buffer2D,
         mut x1: i32,
         mut y1: i32,
         mut x2: i32,

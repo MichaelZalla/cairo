@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use cairo::{
     app::{App, AppWindowInfo},
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     time::TimingInfo,
@@ -18,7 +18,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = PixelBuffer::new(window_info.window_width, window_info.window_height);
+    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height);
 
     let mut update = |_timing_info: &TimingInfo,
                       _keyboard_state: &KeyboardState,

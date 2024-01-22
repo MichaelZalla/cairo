@@ -4,7 +4,7 @@ use std::{cell::RefCell, env, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
-    buffer::PixelBuffer,
+    buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
@@ -41,7 +41,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = PixelBuffer::new(window_info.window_width, window_info.window_height);
+    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height);
 
     let root_panel = RefCell::new(Panel::new(
         PanelInfo {
@@ -59,7 +59,7 @@ fn main() -> Result<(), String> {
          -> () {
             // @TODO(mzalla) Update panel tree in response to mouse events
         },
-        |framebuffer: &mut PixelBuffer, info: &PanelInfo| -> Result<Vec<u32>, String> {
+        |framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<Vec<u32>, String> {
             let font = font_cache.load(&font_info).unwrap();
 
             Graphics::text(
