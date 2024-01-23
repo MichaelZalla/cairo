@@ -51,10 +51,14 @@ where
     }
 
     pub fn get(&self, x: u32, y: u32) -> &T {
+        debug_assert!(x < self.width && y < self.height);
+
         &self.data[(y * self.width + x) as usize]
     }
 
     pub fn set(&mut self, x: u32, y: u32, value: T) {
+        debug_assert!(x < self.width && y < self.height);
+
         if x > (self.width - 1) || y > (self.height - 1) {
             // panic!("Call to Buffer2D.set() with invalid index coordinate ({},{})!", x, y);
 
