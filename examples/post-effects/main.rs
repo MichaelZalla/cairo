@@ -8,7 +8,10 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     effect::Effect,
-    effects::{dilation_effect::DilationEffect, invert_effect::InvertEffect},
+    effects::{
+        dilation_effect::DilationEffect, grayscale_effect::GrayscaleEffect,
+        invert_effect::InvertEffect,
+    },
     entity::Entity,
     material::{cache::MaterialCache, Material},
     mesh,
@@ -111,8 +114,9 @@ fn main() -> Result<(), String> {
     ));
 
     // Create several screen-space post-processing effects.
-    let outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
+    let _outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
     let _invert_effect = InvertEffect::new();
+    let grayscale_effect = GrayscaleEffect::new();
 
     // Set up our app
     let mut update = |app: &mut App,
@@ -142,8 +146,9 @@ fn main() -> Result<(), String> {
             Buffer2D::from_data(window_info.canvas_width, window_info.canvas_height, prepost);
 
         let effects: Vec<&dyn Effect> = vec![
-            &outline_effect,
+            // &outline_effect,
             // &invert_effect,
+            &grayscale_effect,
         ];
 
         for effect in effects {
