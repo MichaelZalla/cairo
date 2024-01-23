@@ -44,7 +44,7 @@ impl Effect for KernelEffect {
                     sum += color * self.weights[index] as f32;
                 }
 
-                out.set(x, y, Color::from_vec3(sum).to_u32());
+                out.set(x, y, Color::from_vec3(sum / self.total as f32).to_u32());
             }
         }
 
