@@ -29,7 +29,7 @@ pub struct SkyboxScene<'a> {
     cameras: Vec<Camera>,
     active_camera_index: usize,
     point_lights: Vec<PointLight>,
-    spot_lights: Vec<SpotLight>,
+    _spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -159,7 +159,7 @@ impl<'a> SkyboxScene<'a> {
             cameras: vec![camera],
             active_camera_index: 0,
             point_lights: vec![point_light],
-            spot_lights: vec![spot_light],
+            _spot_lights: vec![spot_light],
             prev_mouse_state: MouseState::new(),
         };
     }

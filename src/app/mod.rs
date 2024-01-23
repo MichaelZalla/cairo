@@ -348,7 +348,7 @@ impl App {
             self.timing_info.unused_milliseconds = self.timing_info.unused_seconds * 1000.0;
 
             let unused_seconds = (unused_ticks as f64 / ticks_per_second as f64) as f64;
-            let unused_milliseconds = unused_seconds * 1000.0;
+            let _unused_milliseconds = unused_seconds * 1000.0;
 
             if current_tick % 50 == 0 {
                 debug_print!("frames_per_second={}", self.timing_info.frames_per_second);

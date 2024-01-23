@@ -29,7 +29,7 @@ pub struct EmissiveMapScene<'a> {
     active_camera_index: usize,
     directional_light: DirectionalLight,
     point_light: PointLight,
-    spot_light: SpotLight,
+    _spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -131,7 +131,7 @@ impl<'a> EmissiveMapScene<'a> {
             // ambient_light,
             directional_light,
             point_light,
-            spot_light,
+            _spot_light: spot_light,
             prev_mouse_state: MouseState::new(),
         };
     }
