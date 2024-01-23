@@ -4,7 +4,6 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
-    color,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::{cache::MaterialCache, Material},
@@ -13,7 +12,6 @@ use cairo::{
     shader::ShaderContext,
     texture::TextureMap,
     time::TimingInfo,
-    vec::vec3::Vec3,
 };
 
 mod emissive_map_scene;
@@ -87,28 +85,8 @@ fn main() -> Result<(), String> {
 
     // Orbiting point light
 
-    let mut white_mat = Material::new("white".to_string());
-
-    white_mat.diffuse_color = color::WHITE.to_vec3();
-
-    let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
-
-    point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material_name = Some(white_mat.name.clone());
-
-    let mut point_light_entity = Entity::new(&point_light_mesh);
-
-    point_light_entity.position = Vec3 {
-        x: 0.0,
-        y: 3.0,
-        z: 0.0,
-    };
-
-    material_cache.insert(white_mat);
-
     // Wrap the entity collection in a memory-safe container
-    let entities: Vec<&mut Entity> =
-        vec![&mut plane_entity, &mut cube_entity, &mut point_light_entity];
+    let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity];
 
     let entities_rwl = RwLock::new(entities);
 

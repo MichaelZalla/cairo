@@ -207,10 +207,6 @@ impl<'a> Scene for EmissiveMapScene<'a> {
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta
 
-            if entity.mesh.object_name == "point_light" {
-                entity.position = self.point_light.position;
-            }
-
             if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {
                 continue;
             }
@@ -234,6 +230,9 @@ impl<'a> Scene for EmissiveMapScene<'a> {
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
+
+        self.pipeline
+            .render_point_light(&self.point_light, None, None);
 
         self.pipeline.end_frame();
     }
