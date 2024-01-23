@@ -36,17 +36,33 @@ impl Color {
         return Color { r, g, b, a: 0xff };
     }
 
-    // pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
-    // 	return Color { r, g, b, a }
-    // }
+    pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
+        return Color { r, g, b, a };
+    }
 
-    // @NOTE(mzalla) Check out:
-    // https://doc.rust-lang.org/rust-by-example/conversion/from_into.html
+    pub const fn from_u32(bytes: u32) -> Self {
+        Self {
+            r: (bytes) as u8,
+            g: (bytes >> 8) as u8,
+            b: (bytes >> 16) as u8,
+            a: (bytes >> 24) as u8,
+        }
+    }
+
     pub const fn to_u32(&self) -> u32 {
         return (self.r as u32)
             | (self.g as u32) << 8
             | (self.b as u32) << 16
             | (self.a as u32) << 24;
+    }
+
+    pub fn from_vec3(color: Vec3) -> Self {
+        Self {
+            r: (color.x * 255.0) as u8,
+            g: (color.y * 255.0) as u8,
+            b: (color.z * 255.0) as u8,
+            a: 255 as u8,
+        }
     }
 
     pub fn to_vec3(&self) -> Vec3 {
@@ -55,14 +71,5 @@ impl Color {
             y: self.g as f32,
             z: self.b as f32,
         };
-    }
-
-    pub fn from_vec3(color: Vec3) -> Color {
-        Color {
-            r: (color.x * 255.0) as u8,
-            g: (color.y * 255.0) as u8,
-            b: (color.z * 255.0) as u8,
-            a: 255 as u8,
-        }
     }
 }
