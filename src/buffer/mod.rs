@@ -16,28 +16,38 @@ impl<T> Buffer2D<T>
 where
     T: Default + PartialEq + Copy + Clone + Debug,
 {
-    pub fn new(width: u32, height: u32) -> Self {
-        return Buffer2D {
+    pub fn new(width: u32, height: u32, fill_value: Option<T>) -> Self {
+        let width_over_height = width as f32 / height as f32;
+        let height_over_width = height as f32 / width as f32;
+
+        let value: T = match fill_value {
+            Some(fill_value) => fill_value,
+            None => Default::default(),
+        };
+
+        let data: Vec<T> = vec![value; (width * height) as usize];
+
+        Self {
             width,
             height,
-            width_over_height: width as f32 / height as f32,
-            height_over_width: height as f32 / width as f32,
-            data: vec![Default::default(); (width * height) as usize],
-        };
+            width_over_height,
+            height_over_width,
+            data,
+        }
     }
 
     pub fn from_data(width: u32, height: u32, data: Vec<T>) -> Self {
-        return Buffer2D {
+        Buffer2D {
             width,
             height,
             width_over_height: width as f32 / height as f32,
             height_over_width: height as f32 / width as f32,
             data,
-        };
+        }
     }
 
     pub fn get_all(&self) -> &Vec<T> {
-        return &self.data;
+        &self.data
     }
 
     pub fn get(&self, x: u32, y: u32) -> &T {
@@ -62,10 +72,16 @@ where
         }
     }
 
-    pub fn clear(&mut self, value: T) -> &Self {
+    pub fn clear(&mut self, value: Option<T>) -> &Self {
+        let fill_value: T = match value {
+            Some(value) => value,
+            None => Default::default(),
+        };
+
         for i in 0..self.data.len() {
-            self.data[i] = value;
+            self.data[i] = fill_value;
         }
+
         self
     }
 

@@ -41,7 +41,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height);
+    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let root_panel = RefCell::new(Panel::new(
         PanelInfo {
@@ -101,8 +101,10 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
+        let fill_value = color::WHITE.to_u32();
+
         // Clears pixel buffer
-        framebuffer.clear(color::WHITE.to_u32());
+        framebuffer.clear(Some(fill_value));
 
         // Delegate render call to the root panel
 

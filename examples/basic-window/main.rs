@@ -18,7 +18,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height);
+    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let mut update = |_timing_info: &TimingInfo,
                       _keyboard_state: &KeyboardState,
@@ -29,8 +29,10 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
+        let fill_value = color::BLACK.to_u32();
+
         // Clears pixel buffer
-        framebuffer.clear(color::BLACK.to_u32());
+        framebuffer.clear(Some(fill_value));
 
         // @TODO Write some pixel data to the pixel buffer,
         //       based on some borrowed state.

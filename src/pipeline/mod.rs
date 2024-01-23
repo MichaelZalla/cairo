@@ -94,9 +94,11 @@ where
 
         // Allocate framebuffers.
 
-        let forward_framebuffer = Buffer2D::new(canvas_width, canvas_height);
-        let deferred_framebuffer = Buffer2D::new(canvas_width, canvas_height);
-        let composite_framebuffer = Buffer2D::new(canvas_width, canvas_height);
+        let black = color::BLACK.to_u32();
+
+        let forward_framebuffer = Buffer2D::new(canvas_width, canvas_height, Some(black));
+        let deferred_framebuffer = Buffer2D::new(canvas_width, canvas_height, Some(black));
+        let composite_framebuffer = Buffer2D::new(canvas_width, canvas_height, Some(black));
 
         // Allocate Z-buffer.
 
@@ -135,14 +137,14 @@ where
     }
 
     pub fn begin_frame(&mut self) {
-        let black_u32 = color::BLACK.to_u32();
+        let fill_value = color::BLACK.to_u32();
 
-        self.forward_framebuffer.clear(black_u32);
+        self.forward_framebuffer.clear(Some(fill_value));
 
-        self.composite_framebuffer.clear(black_u32);
+        self.composite_framebuffer.clear(Some(fill_value));
 
         if self.options.should_render_shader {
-            self.deferred_framebuffer.clear(black_u32);
+            self.deferred_framebuffer.clear(Some(fill_value));
 
             self.z_buffer.clear();
 

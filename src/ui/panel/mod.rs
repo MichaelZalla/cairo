@@ -42,7 +42,7 @@ where
         U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
         R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
     {
-        let buffer = Buffer2D::new(info.width, info.height);
+        let buffer = Buffer2D::new(info.width, info.height, None);
 
         return Panel {
             info,

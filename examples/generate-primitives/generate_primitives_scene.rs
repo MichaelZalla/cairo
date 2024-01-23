@@ -53,7 +53,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = Buffer2D::new(canvas_width, canvas_height);
+        let framebuffer = Buffer2D::new(canvas_width, canvas_height, None);
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 

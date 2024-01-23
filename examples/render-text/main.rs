@@ -38,7 +38,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height);
+    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let now_seconds = RefCell::new(0.0);
 
@@ -57,8 +57,9 @@ fn main() -> Result<(), String> {
 
     let mut render = || -> Result<Vec<u32>, String> {
         // Clears pixel buffer
+        let fill_value = color::BLACK.to_u32();
 
-        framebuffer.clear(color::BLACK.to_u32());
+        framebuffer.clear(Some(fill_value));
 
         // Render some text to our pixel buffer
 
