@@ -8,7 +8,7 @@ use crate::{
         ShaderContext,
     },
     texture::sample::{sample_bilinear, sample_nearest},
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::vec4::Vec4,
     vertex::default_vertex_out::DefaultVertexOut,
 };
 

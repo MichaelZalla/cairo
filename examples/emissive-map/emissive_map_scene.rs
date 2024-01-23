@@ -15,9 +15,10 @@ use cairo::{
     shader::vertex::VertexShader,
     shader::ShaderContext,
     shaders::{
-        debug_shaders::emissive_fragment_shader::EmissiveFragmentShader,
+        // debug_shaders::emissive_fragment_shader::EmissiveFragmentShader,
         default_fragment_shader::DefaultFragmentShader,
-        default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
+        default_geometry_shader::DefaultGeometryShader,
+        default_vertex_shader::DefaultVertexShader,
     },
     time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},

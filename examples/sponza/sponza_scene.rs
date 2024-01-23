@@ -4,7 +4,6 @@ use cairo::{
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::Graphics,
     material::cache::MaterialCache,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{

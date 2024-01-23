@@ -3,7 +3,6 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    graphics::Graphics,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
         camera::Camera,

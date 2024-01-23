@@ -15,10 +15,10 @@ use cairo::{
     shader::vertex::VertexShader,
     shader::ShaderContext,
     shaders::{
-        debug_shaders::{
-            specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
-            specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
-        },
+        // debug_shaders::{
+        //     specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
+        //     specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
+        // },
         default_fragment_shader::DefaultFragmentShader,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DefaultVertexShader,
