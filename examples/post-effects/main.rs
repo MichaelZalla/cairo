@@ -10,7 +10,7 @@ use cairo::{
     effect::Effect,
     effects::{
         dilation_effect::DilationEffect, grayscale_effect::GrayscaleEffect,
-        invert_effect::InvertEffect,
+        invert_effect::InvertEffect, kernel_effect::KernelEffect,
     },
     entity::Entity,
     material::{cache::MaterialCache, Material},
@@ -116,7 +116,8 @@ fn main() -> Result<(), String> {
     // Create several screen-space post-processing effects.
     let _outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
     let _invert_effect = InvertEffect::new();
-    let grayscale_effect = GrayscaleEffect::new();
+    let _grayscale_effect = GrayscaleEffect::new();
+    let sharpen_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2]);
 
     // Set up our app
     let mut update = |app: &mut App,
@@ -148,7 +149,8 @@ fn main() -> Result<(), String> {
         let effects: Vec<&dyn Effect> = vec![
             // &outline_effect,
             // &invert_effect,
-            &grayscale_effect,
+            // &grayscale_effect,
+            &sharpen_effect,
         ];
 
         for effect in effects {

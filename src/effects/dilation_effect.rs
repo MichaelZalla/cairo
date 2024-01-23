@@ -1,4 +1,8 @@
-use crate::{buffer::Buffer2D, color::Color, effect::Effect};
+use crate::{
+    buffer::Buffer2D,
+    color::Color,
+    effect::{kernel::get_coordinates, Effect},
+};
 
 pub struct DilationEffect {
     rounds: u32,
@@ -32,39 +36,26 @@ impl DilationEffect {
                 if *color != self.key_color_u32 {
                     dest.set(x as u32, y as u32, *color);
 
-                    let neighbors: [(i32, i32); 8] = [
-                        // Above
-                        (x + 0, y - 1),
-                        // Top-right
-                        (x + 1, y - 1),
-                        // Right
-                        (x + 1, y + 0),
-                        // Bottom-right
-                        (x + 1, y + 1),
-                        // Below
-                        (x + 0, y + 1),
-                        // Bottom-left
-                        (x - 1, y + 1),
-                        // Left
-                        (x - 1, y + 0),
-                        // Top-left
-                        (x - 1, y - 1),
-                    ];
+                    for (index, (n_x, n_y)) in
+                        get_coordinates(x as i32, y as i32).iter().enumerate()
+                    {
+                        if index == 4 {
+                            // Skips center coordinate (4).
+                            continue;
+                        }
 
-                    for (x2, y2) in neighbors {
                         // Perform bounds-checking.
-
-                        if x2 < 0
-                            || x2 > (src.width - 1) as i32
-                            || y2 < 0
-                            || y2 > (src.height - 1) as i32
+                        if *n_x < 0
+                            || *n_x > (src.width - 1) as i32
+                            || *n_y < 0
+                            || *n_y > (src.height - 1) as i32
                         {
                             continue;
                         }
 
                         // Perform dilation (but only outside of the drawn objects).
-                        if *src.get(x2 as u32, y2 as u32) == self.key_color_u32 {
-                            dest.set(x2 as u32, y2 as u32, self.outline_color_u32)
+                        if *src.get(*n_x as u32, *n_y as u32) == self.key_color_u32 {
+                            dest.set(*n_x as u32, *n_y as u32, self.outline_color_u32)
                         }
                     }
                 }
