@@ -105,7 +105,7 @@ impl fmt::Display for Material {
         writeln!(
             v,
             "  > Ambient color: {}",
-            color::Color::from_vec3(self.ambient_color)
+            color::Color::from_vec3(self.ambient_color * 255.0)
         )?;
 
         match &self.ambient_map {
@@ -125,7 +125,7 @@ impl fmt::Display for Material {
         writeln!(
             v,
             "  > Diffuse color: {}",
-            color::Color::from_vec3(self.diffuse_color)
+            color::Color::from_vec3(self.diffuse_color * 255.0)
         )?;
 
         match &self.diffuse_map {
@@ -138,7 +138,7 @@ impl fmt::Display for Material {
         writeln!(
             v,
             "  > Specular color: {}",
-            color::Color::from_vec3(self.specular_color)
+            color::Color::from_vec3(self.specular_color * 255.0)
         )?;
 
         writeln!(v, "  > Specular exponent: {}", self.specular_exponent)?;
@@ -153,7 +153,7 @@ impl fmt::Display for Material {
         writeln!(
             v,
             "  > Emissive color: {}",
-            color::Color::from_vec3(self.emissive_color)
+            color::Color::from_vec3(self.emissive_color * 255.0)
         )?;
 
         match &self.emissive_map {
