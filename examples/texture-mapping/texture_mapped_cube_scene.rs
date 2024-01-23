@@ -29,7 +29,6 @@ pub struct TextureMappedCubeScene<'a> {
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
-    prev_mouse_state: MouseState,
 }
 
 impl<'a> TextureMappedCubeScene<'a> {
@@ -134,7 +133,6 @@ impl<'a> TextureMappedCubeScene<'a> {
             shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
-            prev_mouse_state: MouseState::new(),
         };
     }
 }
@@ -190,8 +188,6 @@ impl<'a> Scene for TextureMappedCubeScene<'a> {
             entity.rotation.y += 1.0 * rotation_speed * PI;
             entity.rotation.y %= 2.0 * PI;
         }
-
-        self.prev_mouse_state = mouse_state.clone();
     }
 
     fn render(&mut self) {

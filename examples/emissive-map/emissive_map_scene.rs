@@ -34,7 +34,6 @@ pub struct EmissiveMapScene<'a> {
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
-    prev_mouse_state: MouseState,
 }
 
 impl<'a> EmissiveMapScene<'a> {
@@ -133,7 +132,6 @@ impl<'a> EmissiveMapScene<'a> {
             directional_light,
             point_light,
             _spot_light: spot_light,
-            prev_mouse_state: MouseState::new(),
         };
     }
 }
@@ -220,8 +218,6 @@ impl<'a> Scene for EmissiveMapScene<'a> {
             entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
-
-        self.prev_mouse_state = mouse_state.clone();
     }
 
     fn render(&mut self) {

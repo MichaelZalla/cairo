@@ -27,7 +27,6 @@ pub struct SpinningCubeScene<'a> {
     active_camera_index: usize,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     shader_context: &'a RwLock<ShaderContext>,
-    prev_mouse_state: MouseState,
 }
 
 impl<'a> SpinningCubeScene<'a> {
@@ -126,7 +125,6 @@ impl<'a> SpinningCubeScene<'a> {
             shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
-            prev_mouse_state: MouseState::new(),
         };
     }
 }
@@ -180,8 +178,6 @@ impl<'a> Scene for SpinningCubeScene<'a> {
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
-
-        self.prev_mouse_state = mouse_state.clone();
     }
 
     fn render(&mut self) {

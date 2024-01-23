@@ -36,7 +36,6 @@ pub struct SpecularMapScene<'a> {
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
-    prev_mouse_state: MouseState,
 }
 
 impl<'a> SpecularMapScene<'a> {
@@ -135,7 +134,6 @@ impl<'a> SpecularMapScene<'a> {
             active_camera_index: 0,
             directional_light,
             point_light,
-            prev_mouse_state: MouseState::new(),
         };
     }
 }
@@ -226,8 +224,6 @@ impl<'a> Scene for SpecularMapScene<'a> {
             entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
-
-        self.prev_mouse_state = mouse_state.clone();
     }
 
     fn render(&mut self) {

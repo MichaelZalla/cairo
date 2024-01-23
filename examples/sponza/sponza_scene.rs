@@ -40,7 +40,6 @@ pub struct SponzaScene<'a> {
     skybox: CubeMap,
     materials: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
-    prev_mouse_state: MouseState,
 }
 
 impl<'a> SponzaScene<'a> {
@@ -173,7 +172,6 @@ impl<'a> SponzaScene<'a> {
             active_camera_index: 0,
             point_lights: vec![point_light],
             spot_lights: vec![spot_light],
-            prev_mouse_state: MouseState::new(),
         };
     }
 }
@@ -214,8 +212,6 @@ impl<'a> Scene for SponzaScene<'a> {
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
-
-        self.prev_mouse_state = mouse_state.clone();
     }
 
     fn render(&mut self) {

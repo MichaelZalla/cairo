@@ -39,7 +39,6 @@ pub struct GeneratePrimitivesScene<'a> {
     font_info: FontInfo,
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
-    prev_mouse_state: MouseState,
     looking_at_point_light: bool,
 }
 
@@ -202,7 +201,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             directional_light,
             point_lights,
             spot_lights,
-            prev_mouse_state: MouseState::new(),
             looking_at_point_light: false,
         };
     }
@@ -328,8 +326,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
-
-        self.prev_mouse_state = mouse_state.clone();
 
         // Write to debug log
 
