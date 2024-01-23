@@ -641,18 +641,20 @@ where
         }
 
         match self.z_buffer.test(x, y, interpolant.p.z) {
-            Some((index, non_linear_z)) => {
+            Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
                 if self.alpha_shader.call(&linear_space_interpolant) == false {
                     return;
                 }
 
-                self.z_buffer.set(index, non_linear_z);
+                self.z_buffer.set(x, y, non_linear_z);
 
                 linear_space_interpolant.depth = non_linear_z;
 
-                let mut_sample = &mut self.g_buffer.samples[index];
+                let g_buffer_index = (y * self.g_buffer.width + x) as usize;
+
+                let mut_sample = &mut self.g_buffer.samples[g_buffer_index];
 
                 self.geometry_shader
                     .call(&linear_space_interpolant, mut_sample);

@@ -16,7 +16,7 @@ where
     G: GeometryShader<'a>,
 {
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
-        for (index, z_non_linear) in self.z_buffer.values.iter().enumerate() {
+        for (index, z_non_linear) in self.z_buffer.iter().enumerate() {
             // If this pixel was not shaded by our fragment shader
 
             if *z_non_linear == zbuffer::MAX_DEPTH {
