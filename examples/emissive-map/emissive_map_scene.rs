@@ -25,7 +25,7 @@ use cairo::{
 };
 
 pub struct EmissiveMapScene<'a> {
-    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
