@@ -48,6 +48,6 @@ impl ZBuffer {
     }
 
     pub fn iter(&mut self) -> std::slice::Iter<'_, f32> {
-        self.buffer.data.iter()
+        self.buffer.iter()
     }
 }

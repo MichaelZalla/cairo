@@ -1,6 +1,6 @@
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct GeometrySample {
     pub stencil: bool, //  1 byte (aligned to 4)
     pub uv: Vec2,

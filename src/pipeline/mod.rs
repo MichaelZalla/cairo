@@ -156,7 +156,7 @@ where
         if self.options.should_render_shader {
             // Perform deferred lighting pass
 
-            for (index, sample) in self.g_buffer.samples.iter().enumerate() {
+            for (index, sample) in self.g_buffer.iter().enumerate() {
                 if sample.stencil == true {
                     let x = index as u32 % self.deferred_framebuffer.width;
                     let y = index as u32 / self.deferred_framebuffer.width;
@@ -635,11 +635,6 @@ where
     }
 
     fn test_and_set_g_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
-        if x > (self.g_buffer.width - 1) || y > (self.g_buffer.height as u32 - 1) {
-            // Prevents panic! inside of self.graphics.buffer.set_pixel();
-            return;
-        }
-
         match self.z_buffer.test(x, y, interpolant.p.z) {
             Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
@@ -652,12 +647,8 @@ where
 
                 linear_space_interpolant.depth = non_linear_z;
 
-                let g_buffer_index = (y * self.g_buffer.width + x) as usize;
-
-                let mut_sample = &mut self.g_buffer.samples[g_buffer_index];
-
-                self.geometry_shader
-                    .call(&linear_space_interpolant, mut_sample);
+                self.g_buffer
+                    .set(x, y, self.geometry_shader.call(&linear_space_interpolant));
             }
             None => {}
         }

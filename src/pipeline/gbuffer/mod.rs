@@ -1,32 +1,37 @@
-use crate::shader::geometry::sample::GeometrySample;
+use crate::{buffer::Buffer2D, shader::geometry::sample::GeometrySample};
 
 pub struct GBuffer {
-    pub width: u32,
-    pub height: u32,
-    pub samples: Vec<GeometrySample>,
+    pub buffer: Buffer2D<GeometrySample>,
 }
 
 impl GBuffer {
     pub fn new(width: u32, height: u32) -> Self {
-        let mut samples: Vec<GeometrySample> = vec![];
+        let buffer = Buffer2D::new(width, height, None);
 
-        samples.resize(width as usize * height as usize, Default::default());
-
-        Self {
-            width,
-            height,
-            samples,
-        }
+        Self { buffer }
     }
 
     pub fn clear(&mut self) {
-        for sample in &mut self.samples {
+        // Unsets the `stencil` flag for each sample.
+
+        for sample in self.buffer.iter_mut() {
             sample.stencil = false;
         }
     }
 
-    pub fn set(&mut self, index: usize, sample: GeometrySample) {
-        self.samples[index] = sample;
-        self.samples[index].stencil = true;
+    pub fn get(&self, x: u32, y: u32) -> &GeometrySample {
+        self.buffer.get(x, y)
+    }
+
+    pub fn set(&mut self, x: u32, y: u32, mut sample: GeometrySample) {
+        // Sets the `stencil` flag.
+
+        sample.stencil = true;
+
+        self.buffer.set(x, y, sample);
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, GeometrySample> {
+        self.buffer.iter()
     }
 }

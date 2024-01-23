@@ -74,6 +74,14 @@ where
         self.data[index] = value;
     }
 
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+        self.data.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, T> {
+        self.data.iter_mut()
+    }
+
     pub fn clear(&mut self, value: Option<T>) -> &Self {
         let fill_value: T = match value {
             Some(value) => value,

@@ -38,8 +38,10 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             .update(keyboard_state, mouse_state, game_controller_state);
     }
 
-    fn call(&self, interpolant: &DefaultVertexOut, out: &mut GeometrySample) {
+    fn call(&self, interpolant: &DefaultVertexOut) -> GeometrySample {
         let context: std::sync::RwLockReadGuard<'_, ShaderContext> = self.context.read().unwrap();
+
+        let mut out: GeometrySample = Default::default();
 
         out.stencil = true;
         out.uv = interpolant.uv;
@@ -178,5 +180,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                 out.emissive = Default::default();
             }
         }
+
+        out
     }
 }
