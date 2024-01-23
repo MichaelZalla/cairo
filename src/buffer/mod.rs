@@ -64,12 +64,10 @@ where
         self.data[(y * self.width + x) as usize] = value;
     }
 
-    pub fn set_raw(&mut self, index: usize, value: T, key_color: T) {
+    pub fn set_raw(&mut self, index: usize, value: T) {
         debug_assert!(index < self.data.len());
 
-        if value != key_color {
-            self.data[index] = value;
-        }
+        self.data[index] = value;
     }
 
     pub fn clear(&mut self, value: Option<T>) -> &Self {

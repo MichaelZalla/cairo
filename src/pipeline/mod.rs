@@ -184,9 +184,13 @@ where
             );
         }
 
+        // Skips pixels in our forward buffer if they weren't written to.
+        let keying_color = color::BLACK.to_u32();
+
         for (index, value) in forward_frame.iter().enumerate() {
-            self.composite_framebuffer
-                .set_raw(index, *value, color::BLACK.to_u32());
+            if *value != keying_color {
+                self.composite_framebuffer.set_raw(index, *value);
+            }
         }
     }
 
