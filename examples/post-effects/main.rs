@@ -115,9 +115,10 @@ fn main() -> Result<(), String> {
 
     // Create several screen-space post-processing effects.
     let _outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
-    let _invert_effect = InvertEffect::new();
     let _grayscale_effect = GrayscaleEffect::new();
-    let sharpen_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2]);
+    let _invert_effect = InvertEffect::new();
+    let _sharpen_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
+    let blur_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(8));
 
     // Set up our app
     let mut update = |app: &mut App,
@@ -150,7 +151,8 @@ fn main() -> Result<(), String> {
             // &outline_effect,
             // &invert_effect,
             // &grayscale_effect,
-            &sharpen_effect,
+            // &sharpen_effect,
+            &blur_effect,
         ];
 
         for effect in effects {
