@@ -118,7 +118,8 @@ fn main() -> Result<(), String> {
     let _grayscale_effect = GrayscaleEffect::new();
     let _invert_effect = InvertEffect::new();
     let _sharpen_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
-    let blur_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(8));
+    let _blur_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(8));
+    let edge_detection_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);
 
     // Set up our app
     let mut update = |app: &mut App,
@@ -152,7 +153,8 @@ fn main() -> Result<(), String> {
             // &invert_effect,
             // &grayscale_effect,
             // &sharpen_effect,
-            &blur_effect,
+            // &blur_effect,
+            &edge_detection_effect,
         ];
 
         for effect in effects {
