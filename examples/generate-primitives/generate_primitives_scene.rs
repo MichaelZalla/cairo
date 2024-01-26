@@ -40,6 +40,7 @@ pub struct GeneratePrimitivesScene<'a> {
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     looking_at_point_light: bool,
+    timing_info: TimingInfo,
 }
 
 impl<'a> GeneratePrimitivesScene<'a> {
@@ -202,6 +203,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             point_lights,
             spot_lights,
             looking_at_point_light: false,
+            timing_info: Default::default(),
         };
     }
 }
@@ -215,6 +217,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         game_controller_state: &GameControllerState,
     ) {
         let mut context = self.shader_context.write().unwrap();
+
+        self.timing_info = timing_info.clone();
 
         let uptime = timing_info.uptime_seconds;
 
@@ -328,6 +332,9 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         }
 
         // Write to debug log
+
+        self.debug_message_buffer
+            .write(format!("FPS: {:.*}", 0, timing_info.frames_per_second));
 
         self.debug_message_buffer
             .write(format!("Seconds ellapsed: {:.*}", 2, uptime));
