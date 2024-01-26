@@ -6,6 +6,7 @@ use crate::{
     color::Color,
     shader::{fragment::FragmentShaderFn, geometry::sample::GeometrySample, ShaderContext},
     texture::sample::sample_bilinear,
+    vec::vec3::Vec3,
 };
 
 pub const UvTestFragmentShader: FragmentShaderFn =
@@ -19,14 +20,18 @@ pub const UvTestFragmentShader: FragmentShaderFn =
         match context.active_test_uv_texture_map {
             Some(map_raw_mut) => unsafe {
                 let map = &(*map_raw_mut);
-                (r, g, b) = sample_bilinear(sample.uv, map, None)
-            },
-            None => {
-                r = (sample.uv.x * 255.0) as u8;
-                g = (sample.uv.y * 255.0) as u8;
-                b = (sample.uv.z * 255.0) as u8;
-            }
-        }
+                (r, g, b) = sample_bilinear(sample.uv, map, None);
 
-        Color::rgb(r, g, b)
+                Color::from_vec3(Vec3 {
+                    x: r as f32 / 255.0,
+                    y: g as f32 / 255.0,
+                    z: b as f32 / 255.0,
+                })
+            },
+            None => Color::from_vec3(Vec3 {
+                x: sample.uv.x,
+                y: sample.uv.y,
+                z: sample.uv.z,
+            }),
+        }
     };

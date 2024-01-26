@@ -142,7 +142,12 @@ impl Graphics {
 
         let surface = font
             .render(text)
-            .blended(SDLColor::RGBA(color.r, color.g, color.b, color.a))
+            .blended(SDLColor::RGBA(
+                color.r as u8,
+                color.g as u8,
+                color.b as u8,
+                color.a as u8,
+            ))
             .map_err(|e| e.to_string())?;
 
         // Read the pixel data from the rendered surface

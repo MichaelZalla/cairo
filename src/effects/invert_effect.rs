@@ -14,7 +14,11 @@ impl Effect for InvertEffect {
             for x in 0..buffer.width {
                 let color = Color::from_u32(*buffer.get(x, y));
 
-                let inverse = Color::rgb(255 - color.r, 255 - color.g, 255 - color.b);
+                let inverse = Color::rgb(
+                    255 - color.r as u8,
+                    255 - color.g as u8,
+                    255 - color.b as u8,
+                );
 
                 buffer.set(x, y, inverse.to_u32());
             }

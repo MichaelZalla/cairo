@@ -24,9 +24,9 @@ pub const NormalFragmentShader: FragmentShaderFn =
         //     (world_space_surface_normal * context.view_inverse_transform).as_normal();
 
         return Color {
-            r: (world_space_surface_normal.x * 255.0) as u8,
-            g: (world_space_surface_normal.y * 255.0) as u8,
-            b: ((1.0 - world_space_surface_normal.z) * 255.0) as u8,
-            a: 255 as u8,
+            r: world_space_surface_normal.x,
+            g: world_space_surface_normal.y,
+            b: (1.0 - world_space_surface_normal.z),
+            a: 1.0,
         };
     };

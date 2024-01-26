@@ -5,7 +5,6 @@ use sdl2::keyboard::Keycode;
 use cairo::{
     app::App,
     buffer::Buffer2D,
-    color,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -18,8 +17,18 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{geometry::GeometryShader, ShaderContext},
+    shader::{fragment::FragmentShaderFn, geometry::GeometryShader, ShaderContext},
     shaders::{
+        debug_shaders::{
+            albedo_fragment_shader::AlbedoFragmentShader,
+            depth_fragment_shader::DepthFragmentShader,
+            emissive_fragment_shader::EmissiveFragmentShader,
+            normal_fragment_shader::NormalFragmentShader,
+            specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
+            specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
+            stencil_fragment_shader::StencilFragmentShader,
+            uv_test_fragment_shader::UvTestFragmentShader,
+        },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -32,6 +41,8 @@ pub struct GeneratePrimitivesScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
+    fragment_shaders: Vec<FragmentShaderFn>,
+    active_fragment_shader_index: usize,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -61,7 +72,19 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
-        let fragment_shader = DEFAULT_FRAGMENT_SHADER;
+        let fragment_shaders = vec![
+            DEFAULT_FRAGMENT_SHADER,
+            AlbedoFragmentShader,
+            DepthFragmentShader,
+            EmissiveFragmentShader,
+            NormalFragmentShader,
+            SpecularIntensityFragmentShader,
+            SpecularRoughnessFragmentShader,
+            StencilFragmentShader,
+            UvTestFragmentShader,
+        ];
+
+        let active_fragment_shader_index: usize = 0;
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
@@ -82,6 +105,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
             }
             .as_normal(),
         );
+
+        camera.set_projection_z_far(100.0);
 
         camera.movement_speed = 10.0;
 
@@ -126,7 +151,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let mut point_lights: Vec<PointLight> = vec![];
 
-        let light_grid_subdivisions: usize = 4;
+        let light_grid_subdivisions: usize = 1;
         let light_grid_size = 20.0;
 
         for x in 0..(light_grid_subdivisions + 1) {
@@ -180,7 +205,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
             shader_context,
             vertex_shader,
             geometry_shader,
-            fragment_shader,
+            fragment_shaders[active_fragment_shader_index],
             pipeline_options,
         );
 
@@ -193,6 +218,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
             font_info,
             material_cache,
             shader_context,
+            fragment_shaders,
+            active_fragment_shader_index,
             cameras: vec![camera, camera2],
             active_camera_index: 0,
             directional_light,
@@ -224,6 +251,17 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
+                Keycode::H { .. } => {
+                    self.active_fragment_shader_index += 1;
+
+                    if self.active_fragment_shader_index == self.fragment_shaders.len() {
+                        self.active_fragment_shader_index = 0;
+                    }
+
+                    self.pipeline.set_fragment_shader(
+                        self.fragment_shaders[self.active_fragment_shader_index],
+                    );
+                }
                 Keycode::L { .. } => {
                     self.looking_at_point_light = !self.looking_at_point_light;
                 }
@@ -271,7 +309,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         for (index, light) in self.point_lights.iter_mut().enumerate() {
             let orbit_radius: f32 = 12.0;
-            let max_point_light_intensity: f32 = 1.0;
+            let max_point_light_intensity: f32 = 25.0;
 
             let light_phase_shift = (2.0 * PI / (light_count as f32)) * index as f32;
 
@@ -300,7 +338,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         camera2.set_target_position(self.point_lights[0].position);
 
-        let max_spot_light_intensity: f32 = 0.6;
+        let max_spot_light_intensity: f32 = 25.0;
 
         self.spot_lights[0].intensities = Vec3 {
             x: (uptime + color_channel_phase_shift * 0.0).cos() / 2.0 + 0.5,
@@ -345,12 +383,67 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         self.debug_message_buffer
             .write(format!("Seconds ellapsed: {:.*}", 2, uptime));
 
-        self.debug_message_buffer
-            .write(format!("Cameras in scene: {}", self.cameras.len()));
+        self.debug_message_buffer.write(format!(
+            "Wireframe: {}",
+            if self.pipeline.options.do_wireframe {
+                "On"
+            } else {
+                "Off"
+            }
+        ));
 
         self.debug_message_buffer.write(format!(
-            "Active camera: Camera {}",
-            self.active_camera_index
+            "Rasterized geometry: {}",
+            if self.pipeline.options.do_rasterized_geometry {
+                "On"
+            } else {
+                "Off"
+            }
+        ));
+
+        if self.pipeline.options.do_rasterized_geometry {
+            self.debug_message_buffer.write(format!(
+                "Culling reject mask: {:?}",
+                self.pipeline.options.face_culling_strategy.reject
+            ));
+
+            self.debug_message_buffer.write(format!(
+                "Culling window order: {:?}",
+                self.pipeline.options.face_culling_strategy.window_order
+            ));
+
+            self.debug_message_buffer.write(format!(
+                "Lighting: {}",
+                if self.pipeline.options.do_lighting {
+                    "On"
+                } else {
+                    "Off"
+                }
+            ));
+
+            self.debug_message_buffer.write(format!(
+                "Fragment shader: {}",
+                [
+                    "DEFAULT_FRAGMENT_SHADER",
+                    "AlbedoFragmentShader",
+                    "DepthFragmentShader",
+                    "EmissiveFragmentShader",
+                    "NormalFragmentShader",
+                    "SpecularIntensityFragmentShader",
+                    "SpecularRoughnessFragmentShader",
+                    "StencilFragmentShader",
+                    "UvTestFragmentShader",
+                ][self.active_fragment_shader_index]
+            ));
+        }
+
+        self.debug_message_buffer.write(format!(
+            "Visualize normals: {}",
+            if self.pipeline.options.do_visualize_normals {
+                "On"
+            } else {
+                "Off"
+            }
         ));
 
         self.debug_message_buffer.write(format!(
@@ -380,10 +473,10 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                     continue;
                 }
 
-                self.pipeline.render_entity_aabb(&entity, color::BLUE);
+                // self.pipeline.render_entity_aabb(&entity, color::BLUE);
             }
 
-            self.pipeline.render_ground_plane(1.0);
+            // self.pipeline.render_ground_plane(1.0);
 
             for (index, camera) in self.cameras.iter().enumerate() {
                 if index == self.active_camera_index {

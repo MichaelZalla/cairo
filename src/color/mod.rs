@@ -4,10 +4,10 @@ use super::vec::vec3::Vec3;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    pub a: u8,
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
 }
 
 pub static BLACK: Color = Color::rgb(0, 0, 0);
@@ -33,19 +33,29 @@ impl fmt::Display for Color {
 
 impl Color {
     pub const fn rgb(r: u8, g: u8, b: u8) -> Color {
-        return Color { r, g, b, a: 0xff };
+        return Color {
+            r: r as f32,
+            g: g as f32,
+            b: b as f32,
+            a: 255.0,
+        };
     }
 
     pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
-        return Color { r, g, b, a };
+        return Color {
+            r: r as f32,
+            g: g as f32,
+            b: b as f32,
+            a: a as f32,
+        };
     }
 
     pub const fn from_u32(bytes: u32) -> Self {
         Self {
-            r: (bytes) as u8,
-            g: (bytes >> 8) as u8,
-            b: (bytes >> 16) as u8,
-            a: (bytes >> 24) as u8,
+            r: ((bytes) as u8) as f32,
+            g: ((bytes >> 8) as u8) as f32,
+            b: ((bytes >> 16) as u8) as f32,
+            a: ((bytes >> 24) as u8) as f32,
         }
     }
 
@@ -58,18 +68,18 @@ impl Color {
 
     pub fn from_vec3(color: Vec3) -> Self {
         Self {
-            r: color.x as u8,
-            g: color.y as u8,
-            b: color.z as u8,
-            a: 255 as u8,
+            r: color.x,
+            g: color.y,
+            b: color.z,
+            a: 255.0,
         }
     }
 
     pub fn to_vec3(&self) -> Vec3 {
         return Vec3 {
-            x: self.r as f32,
-            y: self.g as f32,
-            z: self.b as f32,
+            x: self.r,
+            y: self.g,
+            z: self.b,
         };
     }
 }

@@ -11,12 +11,12 @@ pub const SpecularRoughnessFragmentShader: FragmentShaderFn =
     |_context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
         // Emit only the specular roughness (exponent) for this fragment.
 
-        let value = (255.0 - (255.0 / 64.0 * sample.specular_exponent as f32).max(0.0)) as u8;
+        let value = 1.0 - (1.0 / 64.0 * sample.specular_exponent as f32).max(0.0);
 
-        return Color {
+        Color {
             r: value,
             g: value,
             b: value,
-            a: 255 as u8,
-        };
+            a: 1.0,
+        }
     };

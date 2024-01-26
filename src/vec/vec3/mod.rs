@@ -19,11 +19,27 @@ impl Vec3 {
     pub fn new() -> Self {
         Default::default()
     }
+
+    pub fn ones() -> Self {
+        Vec3 {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        }
+    }
 }
 
 impl cmp::PartialEq for Vec3 {
     fn eq(&self, other: &Self) -> bool {
         self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
+impl ops::Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        self * -1.0
     }
 }
 
@@ -95,6 +111,25 @@ impl ops::Div<f32> for Vec3 {
             y: self.y / rhs,
             z: self.z / rhs,
         }
+    }
+}
+
+impl ops::Div<Vec3> for Vec3 {
+    type Output = Vec3;
+    fn div(self, rhs: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x / rhs.x,
+            y: self.y / rhs.y,
+            z: self.z / rhs.z,
+        }
+    }
+}
+
+impl ops::DivAssign<Vec3> for Vec3 {
+    fn div_assign(&mut self, rhs: Vec3) {
+        self.x /= rhs.x;
+        self.y /= rhs.y;
+        self.z /= rhs.z;
     }
 }
 

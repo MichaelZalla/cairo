@@ -54,7 +54,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         let mut color: Vec3 = sample.diffuse;
 
-        // sRGB space to linear space
+        // Transform sRGB space to linear space.
 
         color = Vec3 {
             x: color.x * color.x,
@@ -62,9 +62,26 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             z: color.z * color.z,
         };
 
-        color = *((color * total_contribution).saturate());
+        // Multiply by total lighting contribution and saturate.
 
-        // Linear space to sRGB space
+        color *= total_contribution;
+
+        // Reinhard tone mapping
+
+        // color /= color + Vec3::ones();
+
+        // Exposure tone mapping
+
+        static EXPOSURE: f32 = 1.0;
+
+        color = Vec3::ones()
+            - Vec3 {
+                x: (-color.x * EXPOSURE).exp(),
+                y: (-color.y * EXPOSURE).exp(),
+                z: (-color.z * EXPOSURE).exp(),
+            };
+
+        // Transform linear space to sRGB space.
 
         color = Vec3 {
             x: color.x.sqrt(),
@@ -72,10 +89,5 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             z: color.z.sqrt(),
         };
 
-        Color {
-            r: (color.x * 255.0) as u8,
-            g: (color.y * 255.0) as u8,
-            b: (color.z * 255.0) as u8,
-            a: 255 as u8,
-        }
+        Color::from_vec3(color)
     };

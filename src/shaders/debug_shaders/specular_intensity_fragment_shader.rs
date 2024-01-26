@@ -12,9 +12,9 @@ pub const SpecularIntensityFragmentShader: FragmentShaderFn =
         // Emit only the specular intensity for this fragment.
 
         return Color {
-            r: (sample.specular_intensity * 255.0) as u8,
-            g: (sample.specular_intensity * 255.0) as u8,
-            b: (sample.specular_intensity * 255.0) as u8,
-            a: 255 as u8,
+            r: sample.specular_intensity,
+            g: sample.specular_intensity,
+            b: sample.specular_intensity,
+            a: 1.0,
         };
     };

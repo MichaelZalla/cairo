@@ -59,7 +59,7 @@ where
 {
     pub options: PipelineOptions,
     forward_framebuffer: Option<Buffer2D>,
-    deferred_framebuffer: Option<Buffer2D>,
+    deferred_framebuffer: Option<Buffer2D<Vec3>>,
     composite_framebuffer: Option<&'a RwLock<Buffer2D>>,
     keying_color: u32,
     viewport: PipelineViewport,
@@ -159,29 +159,21 @@ where
 
                 self.set_viewport(&framebuffer);
 
-                let black = color::BLACK.to_u32();
-
                 match &self.forward_framebuffer {
                     Some(buffer) => {
                         if buffer.width != framebuffer.width || buffer.height != framebuffer.height
                         {
                             // Re-allocate a forward framebuffer.
 
-                            self.forward_framebuffer = Some(Buffer2D::new(
-                                framebuffer.width,
-                                framebuffer.height,
-                                Some(black),
-                            ))
+                            self.forward_framebuffer =
+                                Some(Buffer2D::new(framebuffer.width, framebuffer.height, None))
                         }
                     }
                     None => {
                         // Re-allocate a forward framebuffer.
 
-                        self.forward_framebuffer = Some(Buffer2D::new(
-                            framebuffer.width,
-                            framebuffer.height,
-                            Some(black),
-                        ))
+                        self.forward_framebuffer =
+                            Some(Buffer2D::new(framebuffer.width, framebuffer.height, None))
                     }
                 }
 
@@ -191,21 +183,15 @@ where
                         {
                             // Re-allocate a deferred framebuffer.
 
-                            self.deferred_framebuffer = Some(Buffer2D::new(
-                                framebuffer.width,
-                                framebuffer.height,
-                                Some(black),
-                            ));
+                            self.deferred_framebuffer =
+                                Some(Buffer2D::new(framebuffer.width, framebuffer.height, None));
                         }
                     }
                     None => {
                         // Re-allocate a deferred framebuffer.
 
-                        self.deferred_framebuffer = Some(Buffer2D::new(
-                            framebuffer.width,
-                            framebuffer.height,
-                            Some(black),
-                        ));
+                        self.deferred_framebuffer =
+                            Some(Buffer2D::new(framebuffer.width, framebuffer.height, None));
                     }
                 }
 
@@ -299,7 +285,9 @@ where
         if self.options.do_rasterized_geometry {
             match self.deferred_framebuffer.as_mut() {
                 Some(deferred_framebuffer) => {
-                    deferred_framebuffer.clear(Some(fill_value));
+                    let fill_value_vec3 = Color::from_u32(fill_value).to_vec3();
+
+                    deferred_framebuffer.clear(Some(fill_value_vec3));
                 }
                 None => (),
             }
@@ -337,13 +325,13 @@ where
                     let color = if self.options.do_lighting {
                         (self.fragment_shader)(&shader_context, &sample)
                     } else {
-                        Color::from_vec3(sample.diffuse * 255.0)
+                        Color::from_vec3(sample.diffuse)
                     };
 
                     self.deferred_framebuffer
                         .as_mut()
                         .unwrap()
-                        .set(x, y, color.to_u32());
+                        .set(x, y, color.to_vec3());
                 }
             }
         }
@@ -358,7 +346,17 @@ where
         };
 
         if self.options.do_rasterized_geometry {
-            composite_framebuffer.blit_from(0, 0, self.deferred_framebuffer.as_ref().unwrap());
+            let src = self.deferred_framebuffer.as_ref().unwrap();
+
+            for y in 0..composite_framebuffer.height {
+                for x in 0..composite_framebuffer.width {
+                    let color_hdr = *src.get(x, y);
+
+                    let color = Color::from_vec3(color_hdr * 255.0).to_u32();
+
+                    composite_framebuffer.set(x, y, color);
+                }
+            }
         }
 
         let forward_frame = self.forward_framebuffer.as_ref().unwrap().get_all();
@@ -849,7 +847,9 @@ where
     }
 
     fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
-        match self.z_buffer.as_mut().unwrap().test(x, y, interpolant.p.z) {
+        let z_buffer = self.z_buffer.as_mut().unwrap();
+
+        match z_buffer.test(x, y, interpolant.p.z) {
             Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
@@ -859,11 +859,16 @@ where
                     return;
                 }
 
-                self.z_buffer.as_mut().unwrap().set(x, y, non_linear_z);
+                z_buffer.set(x, y, non_linear_z);
 
                 match self.g_buffer.as_mut() {
                     Some(g_buffer) => {
-                        linear_space_interpolant.depth = linear_space_interpolant.p.z;
+                        let z = linear_space_interpolant.p.z;
+                        let near = z_buffer.get_projection_z_near();
+                        let far = z_buffer.get_projection_z_far();
+
+                        linear_space_interpolant.depth =
+                            ((z - near) / (far - near)).max(0.0).min(1.0);
 
                         g_buffer.set(x, y, self.geometry_shader.call(&linear_space_interpolant));
                     }
