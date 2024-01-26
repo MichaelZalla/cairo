@@ -375,8 +375,8 @@ impl Camera {
             z: 1.0,
         };
 
-        let yaw_delta = -right_joystick_position_normalized.x * PI / 32.0;
-        let pitch_delta = -right_joystick_position_normalized.y * PI / 32.0;
+        let yaw_delta = right_joystick_position_normalized.x * (PI / 64.0);
+        let pitch_delta = right_joystick_position_normalized.y * (PI / 64.0);
         let _roll_delta = -yaw_delta * 0.5;
 
         self.set_pitch(self.pitch - pitch_delta * 2.0 * PI);
