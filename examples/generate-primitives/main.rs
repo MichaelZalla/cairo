@@ -4,6 +4,7 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
@@ -22,6 +23,7 @@ use self::generate_primitives_scene::GeneratePrimitivesScene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/generate-primitives".to_string(),
+        full_screen: false,
         ..Default::default()
     };
 
@@ -39,6 +41,14 @@ fn main() -> Result<(), String> {
     let font_cache_rwl = RwLock::new(FontCache::new(app.context.ttf_context));
 
     font_cache_rwl.write().unwrap().load(&font_info)?;
+
+    // Default framebuffer
+
+    let framebuffer_rwl = RwLock::new(Buffer2D::new(
+        window_info.canvas_width,
+        window_info.canvas_height,
+        None,
+    ));
 
     // Generate primitive meshes
 
@@ -142,8 +152,7 @@ fn main() -> Result<(), String> {
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(GeneratePrimitivesScene::new(
-        window_info.canvas_width,
-        window_info.canvas_height,
+        &framebuffer_rwl,
         &font_cache_rwl,
         &font_info,
         &entities_rwl,
@@ -160,10 +169,10 @@ fn main() -> Result<(), String> {
         // Delegate the update to our textured cube scene
 
         scene.borrow_mut().update(
-            &timing_info,
-            &keyboard_state,
-            &mouse_state,
-            &game_controller_state,
+            timing_info,
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
         );
     };
 
@@ -172,7 +181,9 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        return Ok(scene.borrow_mut().get_pixel_data().clone());
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;

@@ -4,6 +4,7 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::{cache::MaterialCache, Material},
@@ -27,6 +28,14 @@ fn main() -> Result<(), String> {
     let app = App::new(&mut window_info);
 
     let rendering_context = &app.context.rendering_context;
+
+    // Default framebuffer
+
+    let framebuffer_rwl = RwLock::new(Buffer2D::new(
+        window_info.canvas_width,
+        window_info.canvas_height,
+        None,
+    ));
 
     // Generate primitive meshes
 
@@ -94,8 +103,7 @@ fn main() -> Result<(), String> {
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(EmissiveMapScene::new(
-        window_info.canvas_width,
-        window_info.canvas_height,
+        &framebuffer_rwl,
         &entities_rwl,
         &material_cache,
         &shader_context_rwl,
@@ -110,10 +118,10 @@ fn main() -> Result<(), String> {
         // Delegate the update to our textured cube scene
 
         scene.borrow_mut().update(
-            &timing_info,
-            &keyboard_state,
-            &mouse_state,
-            &game_controller_state,
+            timing_info,
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
         );
     };
 
@@ -122,7 +130,9 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        return Ok(scene.borrow_mut().get_pixel_data().clone());
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;

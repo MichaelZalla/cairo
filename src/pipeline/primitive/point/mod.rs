@@ -76,12 +76,18 @@ where
                         self.render_entity(&light_quad_entity, Some(materials));
                     }
                     None => {
-                        self.forward_framebuffer.set(x, y, color_u32);
+                        self.forward_framebuffer
+                            .as_mut()
+                            .unwrap()
+                            .set(x, y, color_u32);
                     }
                 }
             }
             None => {
-                self.forward_framebuffer.set(x, y, color_u32);
+                self.forward_framebuffer
+                    .as_mut()
+                    .unwrap()
+                    .set(x, y, color_u32);
             }
         }
     }

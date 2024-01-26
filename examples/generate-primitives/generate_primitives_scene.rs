@@ -27,7 +27,7 @@ use cairo::{
 };
 
 pub struct GeneratePrimitivesScene<'a> {
-    framebuffer: Buffer2D,
+    framebuffer_rwl: &'a RwLock<Buffer2D>,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
@@ -46,19 +46,26 @@ pub struct GeneratePrimitivesScene<'a> {
 
 impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
-        canvas_width: u32,
-        canvas_height: u32,
+        framebuffer_rwl: &'a RwLock<Buffer2D>,
         font_cache_rwl: &'a RwLock<FontCache<'static>>,
         font_info: &'a FontInfo,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = Buffer2D::new(canvas_width, canvas_height, None);
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        let vertex_shader = DefaultVertexShader {
+            context: shader_context,
+        };
+
+        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
-        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
+        let aspect_ratio = framebuffer.width_over_height;
 
         // Set up a camera for rendering our scene
         let mut camera: Camera = Camera::new(
@@ -169,19 +176,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         context.set_spot_light(0, spot_lights[0]);
 
-        let vertex_shader = DefaultVertexShader {
-            context: shader_context,
-        };
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
-
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
-
-        let pipeline = Pipeline::new(
-            canvas_width,
-            canvas_height,
-            camera.get_projection_z_near(),
-            camera.get_projection_z_far(),
+        let mut pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
             geometry_shader,
@@ -189,8 +184,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
             pipeline_options,
         );
 
+        pipeline.set_projection_z_near(camera.get_projection_z_near());
+        pipeline.set_projection_z_far(camera.get_projection_z_far());
+
         return GeneratePrimitivesScene {
-            framebuffer,
+            framebuffer_rwl,
             debug_message_buffer,
             pipeline,
             entities,
@@ -355,72 +353,68 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
     }
 
     fn render(&mut self) {
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+
         self.pipeline.begin_frame();
 
-        for entity in self.entities.read().unwrap().as_slice() {
-            self.pipeline
-                .render_entity(&entity, Some(self.material_cache));
+        {
+            for entity in self.entities.read().unwrap().as_slice() {
+                self.pipeline
+                    .render_entity(&entity, Some(self.material_cache));
 
-            if entity.mesh.object_name == "plane" {
-                continue;
-            }
-
-            self.pipeline.render_entity_aabb(&entity, color::BLUE);
-        }
-
-        self.pipeline.render_ground_plane(1.0);
-
-        for (index, camera) in self.cameras.iter().enumerate() {
-            if index == self.active_camera_index {
-                for light in &self.point_lights {
-                    self.pipeline.render_point_light(
-                        &light,
-                        Some(&camera),
-                        Some(&mut self.material_cache),
-                    );
+                if entity.mesh.object_name == "plane" {
+                    continue;
                 }
 
-                for light in &self.spot_lights {
-                    self.pipeline.render_spot_light(
-                        &light,
-                        Some(&camera),
-                        Some(&mut self.material_cache),
-                    );
-                }
-
-                continue;
+                self.pipeline.render_entity_aabb(&entity, color::BLUE);
             }
 
-            self.pipeline.render_camera(camera);
+            self.pipeline.render_ground_plane(1.0);
+
+            for (index, camera) in self.cameras.iter().enumerate() {
+                if index == self.active_camera_index {
+                    for light in &self.point_lights {
+                        self.pipeline.render_point_light(
+                            &light,
+                            Some(&camera),
+                            Some(&mut self.material_cache),
+                        );
+                    }
+
+                    for light in &self.spot_lights {
+                        self.pipeline.render_spot_light(
+                            &light,
+                            Some(&camera),
+                            Some(&mut self.material_cache),
+                        );
+                    }
+
+                    continue;
+                }
+
+                self.pipeline.render_camera(camera);
+            }
         }
 
         self.pipeline.end_frame();
 
         // Render debug messages
 
-        self.framebuffer.blit(
-            0,
-            0,
-            self.framebuffer.width,
-            self.framebuffer.height,
-            self.pipeline.get_pixel_data(),
-        );
-
         {
-            let mut font_cache = self.font_cache_rwl.write().unwrap();
+            let mut framebuffer = self.framebuffer_rwl.write().unwrap();
 
-            Graphics::render_debug_messages(
-                &mut self.framebuffer,
-                &mut font_cache,
-                &self.font_info,
-                (12, 12),
-                1.0,
-                &mut self.debug_message_buffer,
-            );
+            {
+                let mut font_cache = self.font_cache_rwl.write().unwrap();
+
+                Graphics::render_debug_messages(
+                    &mut framebuffer,
+                    &mut font_cache,
+                    &self.font_info,
+                    (12, 12),
+                    1.0,
+                    &mut self.debug_message_buffer,
+                );
+            }
         }
-    }
-
-    fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.framebuffer.get_all();
     }
 }

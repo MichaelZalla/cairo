@@ -15,6 +15,4 @@ pub trait Scene {
     );
 
     fn render(&mut self);
-
-    fn get_pixel_data(&self) -> &Vec<u32>;
 }

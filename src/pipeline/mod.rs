@@ -32,6 +32,9 @@ pub mod options;
 mod primitive;
 mod zbuffer;
 
+static DEFAULT_PROJECTION_Z_NEAR: f32 = 0.3;
+static DEFAULT_PROJECTION_Z_FAR: f32 = 1000.0;
+
 #[derive(Copy, Clone, Default)]
 struct Triangle<T> {
     v0: T,
@@ -52,15 +55,17 @@ pub struct Pipeline<
     G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
-    forward_framebuffer: Buffer2D,
-    deferred_framebuffer: Buffer2D,
-    composite_framebuffer: Buffer2D,
-    canvas_width: u32,
-    canvas_width_over_2: f32,
-    canvas_height: u32,
-    canvas_height_over_2: f32,
-    z_buffer: ZBuffer,
-    g_buffer: GBuffer,
+    forward_framebuffer: Option<Buffer2D>,
+    deferred_framebuffer: Option<Buffer2D>,
+    composite_framebuffer: Option<&'a RwLock<Buffer2D>>,
+    composite_framebuffer_width: u32,
+    composite_framebuffer_width_over_2: f32,
+    composite_framebuffer_height: u32,
+    composite_framebuffer_height_over_2: f32,
+    z_buffer: Option<ZBuffer>,
+    projection_z_near: f32,
+    projection_z_far: f32,
+    g_buffer: Option<GBuffer>,
     pub shader_context: &'a RwLock<ShaderContext>,
     vertex_shader: V,
     alpha_shader: A,
@@ -76,10 +81,6 @@ where
     G: GeometryShader<'a>,
 {
     pub fn new(
-        canvas_width: u32,
-        canvas_height: u32,
-        projection_z_near: f32,
-        projection_z_far: f32,
         shader_context: &'a RwLock<ShaderContext>,
         vertex_shader: V,
         geometry_shader: G,
@@ -88,40 +89,26 @@ where
     ) -> Self {
         let alpha_shader = AlphaShader::new(shader_context);
 
-        //
+        let forward_framebuffer = None;
 
-        let buffer_width_over_2 = (canvas_width as f32) / 2.0;
-        let buffer_height_over_2 = (canvas_height as f32) / 2.0;
+        let deferred_framebuffer = None;
 
-        // Allocate framebuffers.
+        let composite_framebuffer = None;
 
-        let black = color::BLACK.to_u32();
+        let z_buffer = None;
 
-        let forward_framebuffer = Buffer2D::new(canvas_width, canvas_height, Some(black));
-        let deferred_framebuffer = Buffer2D::new(canvas_width, canvas_height, Some(black));
-        let composite_framebuffer = Buffer2D::new(canvas_width, canvas_height, Some(black));
-
-        // Allocate Z-buffer.
-
-        let z_buffer = ZBuffer::new(
-            canvas_width,
-            canvas_height,
-            projection_z_near,
-            projection_z_far,
-        );
-
-        // Allocate G-buffer.
-
-        let g_buffer = GBuffer::new(canvas_width, canvas_height);
+        let g_buffer = None;
 
         return Pipeline {
-            canvas_width,
-            canvas_width_over_2: buffer_width_over_2,
-            canvas_height,
-            canvas_height_over_2: buffer_height_over_2,
             forward_framebuffer,
             deferred_framebuffer,
             composite_framebuffer,
+            composite_framebuffer_width: 0,
+            composite_framebuffer_width_over_2: 0.0,
+            composite_framebuffer_height: 0,
+            composite_framebuffer_height_over_2: 0.0,
+            projection_z_near: DEFAULT_PROJECTION_Z_NEAR,
+            projection_z_far: DEFAULT_PROJECTION_Z_FAR,
             z_buffer,
             g_buffer,
             shader_context,
@@ -133,34 +120,183 @@ where
         };
     }
 
-    pub fn get_pixel_data(&'a self) -> &'a Vec<u32> {
-        return self.composite_framebuffer.get_all();
+    pub fn set_projection_z_near(&mut self, depth: f32) {
+        self.projection_z_near = depth;
+
+        match self.z_buffer.as_mut() {
+            Some(z_buffer) => {
+                z_buffer.set_projection_z_near(depth);
+            }
+            None => (),
+        }
+    }
+
+    pub fn set_projection_z_far(&mut self, depth: f32) {
+        self.projection_z_far = depth;
+
+        match self.z_buffer.as_mut() {
+            Some(z_buffer) => {
+                z_buffer.set_projection_z_far(depth);
+            }
+            None => (),
+        }
+    }
+
+    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RwLock<Buffer2D>>) {
+        self.composite_framebuffer = framebuffer_option;
+
+        match framebuffer_option {
+            Some(framebuffer_rwl) => {
+                let framebuffer = framebuffer_rwl.read().unwrap();
+
+                self.composite_framebuffer_width = framebuffer.width;
+                self.composite_framebuffer_width_over_2 = (framebuffer.width / 2) as f32;
+                self.composite_framebuffer_height = framebuffer.height;
+                self.composite_framebuffer_height_over_2 = (framebuffer.height / 2) as f32;
+
+                let black = color::BLACK.to_u32();
+
+                match &self.forward_framebuffer {
+                    Some(buffer) => {
+                        if buffer.width != framebuffer.width || buffer.height != framebuffer.height
+                        {
+                            // Re-allocate a forward framebuffer.
+
+                            self.forward_framebuffer = Some(Buffer2D::new(
+                                framebuffer.width,
+                                framebuffer.height,
+                                Some(black),
+                            ))
+                        }
+                    }
+                    None => {
+                        // Re-allocate a forward framebuffer.
+
+                        self.forward_framebuffer = Some(Buffer2D::new(
+                            framebuffer.width,
+                            framebuffer.height,
+                            Some(black),
+                        ))
+                    }
+                }
+
+                match &self.deferred_framebuffer {
+                    Some(buffer) => {
+                        if buffer.width != framebuffer.width || buffer.height != framebuffer.height
+                        {
+                            // Re-allocate a deferred framebuffer.
+
+                            self.deferred_framebuffer = Some(Buffer2D::new(
+                                framebuffer.width,
+                                framebuffer.height,
+                                Some(black),
+                            ));
+                        }
+                    }
+                    None => {
+                        // Re-allocate a deferred framebuffer.
+
+                        self.deferred_framebuffer = Some(Buffer2D::new(
+                            framebuffer.width,
+                            framebuffer.height,
+                            Some(black),
+                        ));
+                    }
+                }
+
+                match &self.z_buffer {
+                    Some(zbuffer) => {
+                        if zbuffer.buffer.width != framebuffer.width
+                            || zbuffer.buffer.height != framebuffer.height
+                        {
+                            // Re-allocate a Z-buffer.
+
+                            self.z_buffer = Some(ZBuffer::new(
+                                framebuffer.width,
+                                framebuffer.height,
+                                self.projection_z_near,
+                                self.projection_z_far,
+                            ));
+                        }
+                    }
+                    None => {
+                        // Re-allocate a Z-buffer.
+
+                        self.z_buffer = Some(ZBuffer::new(
+                            framebuffer.width,
+                            framebuffer.height,
+                            self.projection_z_near,
+                            self.projection_z_far,
+                        ));
+                    }
+                }
+
+                match &self.g_buffer {
+                    Some(gbuffer) => {
+                        if gbuffer.buffer.width != framebuffer.width
+                            || gbuffer.buffer.height != framebuffer.height
+                        {
+                            // Re-allocate a G-buffer.
+
+                            self.g_buffer =
+                                Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                        }
+                    }
+                    None => {
+                        // Re-allocate a G-buffer.
+
+                        self.g_buffer = Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                    }
+                }
+            }
+            None => {
+                self.forward_framebuffer = None;
+                self.deferred_framebuffer = None;
+                self.z_buffer = None;
+                self.g_buffer = None;
+
+                return;
+            }
+        }
     }
 
     pub fn begin_frame(&mut self) {
         let fill_value = color::BLACK.to_u32();
 
-        self.forward_framebuffer.clear(Some(fill_value));
+        self.forward_framebuffer
+            .as_mut()
+            .unwrap()
+            .clear(Some(fill_value));
 
-        self.composite_framebuffer.clear(Some(fill_value));
+        self.composite_framebuffer
+            .unwrap()
+            .write()
+            .unwrap()
+            .clear(Some(fill_value));
 
         if self.options.show_rasterized_geometry {
-            self.deferred_framebuffer.clear(Some(fill_value));
+            self.deferred_framebuffer
+                .as_mut()
+                .unwrap()
+                .clear(Some(fill_value));
 
-            self.z_buffer.clear();
+            self.z_buffer.as_mut().unwrap().clear();
 
-            self.g_buffer.clear();
+            self.g_buffer.as_mut().unwrap().clear();
         }
     }
 
     pub fn end_frame(&mut self) {
         if self.options.show_rasterized_geometry {
-            // Perform deferred lighting pass
+            // Perform deferred lighting pass.
 
-            for (index, sample) in self.g_buffer.iter().enumerate() {
+            // Call the active fragment shader on every G-buffer sample that was
+            // written to by the rasterizer.
+
+            for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
                 if sample.stencil == true {
-                    let x = index as u32 % self.deferred_framebuffer.width;
-                    let y = index as u32 / self.deferred_framebuffer.width;
+                    let x = index as u32 % self.composite_framebuffer_width;
+                    let y = index as u32 / self.composite_framebuffer_width;
 
                     let color = if self.options.show_lighting {
                         self.fragment_shader.call(&sample)
@@ -168,33 +304,43 @@ where
                         Color::from_vec3(sample.diffuse * 255.0)
                     };
 
-                    self.deferred_framebuffer.set(x, y, color.to_u32());
+                    self.deferred_framebuffer
+                        .as_mut()
+                        .unwrap()
+                        .set(x, y, color.to_u32());
                 }
             }
         }
 
         // Compose deferred and forward rendering frames together.
 
-        let forward_frame = self.forward_framebuffer.get_all();
+        let mut composite_framebuffer = match self.composite_framebuffer {
+            Some(composite_framebuffer) => composite_framebuffer.write().unwrap(),
+            None => {
+                panic!("Called Pipeline::end_frame() with no bound composite framebuffer!");
+            }
+        };
 
         if self.options.show_rasterized_geometry {
-            let deferred_frame = self.deferred_framebuffer.get_all();
+            let deferred_frame = self.deferred_framebuffer.as_ref().unwrap().get_all();
 
-            self.composite_framebuffer.blit(
+            composite_framebuffer.blit(
                 0,
                 0,
-                self.deferred_framebuffer.width,
-                self.deferred_framebuffer.height,
+                self.composite_framebuffer_width,
+                self.composite_framebuffer_height,
                 deferred_frame,
             );
         }
+
+        let forward_frame = self.forward_framebuffer.as_ref().unwrap().get_all();
 
         // Skips pixels in our forward buffer if they weren't written to.
         let keying_color = color::BLACK.to_u32();
 
         for (index, value) in forward_frame.iter().enumerate() {
             if *value != keying_color {
-                self.composite_framebuffer.set_raw(index, *value);
+                composite_framebuffer.set_raw(index, *value);
             }
         }
     }
@@ -564,8 +710,8 @@ where
 
         *v *= w_inverse;
 
-        v.p.x = (v.p.x + 1.0) * self.canvas_width_over_2;
-        v.p.y = (-v.p.y + 1.0) * self.canvas_height_over_2;
+        v.p.x = (v.p.x + 1.0) * self.composite_framebuffer_width_over_2;
+        v.p.y = (-v.p.y + 1.0) * self.composite_framebuffer_height_over_2;
 
         v.p.w = w_inverse;
     }
@@ -608,7 +754,7 @@ where
             let wireframe_color = self.options.wireframe_color;
 
             Graphics::poly_line(
-                &mut self.forward_framebuffer,
+                &mut self.forward_framebuffer.as_mut().unwrap(),
                 points.as_slice(),
                 wireframe_color,
             );
@@ -622,9 +768,9 @@ where
 
                 let screen_vertex_relative_normal = Vec2 {
                     x: (world_vertex_relative_normal.x * w_inverse + 1.0)
-                        * self.canvas_width_over_2,
+                        * self.composite_framebuffer_width_over_2,
                     y: (-world_vertex_relative_normal.y * w_inverse + 1.0)
-                        * self.canvas_height_over_2,
+                        * self.composite_framebuffer_height_over_2,
                     z: 0.0,
                 };
 
@@ -632,7 +778,7 @@ where
                 let to = screen_vertex_relative_normal;
 
                 Graphics::line(
-                    &mut self.forward_framebuffer,
+                    &mut self.forward_framebuffer.as_mut().unwrap(),
                     from.x as i32,
                     from.y as i32,
                     to.x as i32,
@@ -643,8 +789,13 @@ where
         }
     }
 
-    fn test_and_set_g_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
-        match self.z_buffer.test(x, y, interpolant.p.z) {
+    fn test_z_buffer_and_set_g_buffer(
+        &mut self,
+        x: u32,
+        y: u32,
+        interpolant: &mut DefaultVertexOut,
+    ) {
+        match self.z_buffer.as_mut().unwrap().test(x, y, interpolant.p.z) {
             Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
@@ -652,12 +803,15 @@ where
                     return;
                 }
 
-                self.z_buffer.set(x, y, non_linear_z);
+                self.z_buffer.as_mut().unwrap().set(x, y, non_linear_z);
 
                 linear_space_interpolant.depth = non_linear_z;
 
-                self.g_buffer
-                    .set(x, y, self.geometry_shader.call(&linear_space_interpolant));
+                self.g_buffer.as_mut().unwrap().set(
+                    x,
+                    y,
+                    self.geometry_shader.call(&linear_space_interpolant),
+                );
             }
             None => {}
         }
@@ -743,7 +897,7 @@ where
         let y_start: u32 = u32::max((it0.p.y - 0.5).ceil() as u32, 0);
         let y_end: u32 = u32::min(
             (it2.p.y - 0.5).ceil() as u32,
-            self.deferred_framebuffer.height - 1,
+            self.composite_framebuffer_height - 1,
         );
 
         // Adjust both interpolants to account for us snapping y-start and y-end
@@ -758,7 +912,7 @@ where
             let x_start = u32::max((left_edge_interpolant.p.x - 0.5).ceil() as u32, 0);
             let x_end = u32::min(
                 (right_edge_interpolant.p.x - 0.5).ceil() as u32,
-                self.deferred_framebuffer.width - 1,
+                self.composite_framebuffer_width - 1,
             );
 
             // Create an interpolant that we can move across our horizontal
@@ -778,7 +932,7 @@ where
                 line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.p.x);
 
             for x in x_start..x_end {
-                self.test_and_set_g_buffer(x, y, &mut line_interpolant);
+                self.test_z_buffer_and_set_g_buffer(x, y, &mut line_interpolant);
 
                 line_interpolant += line_interpolant_step;
             }

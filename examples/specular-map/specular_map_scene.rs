@@ -1,6 +1,7 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::cache::MaterialCache,
@@ -12,7 +13,6 @@ use cairo::{
     },
     shader::fragment::FragmentShader,
     shader::geometry::GeometryShader,
-    shader::vertex::VertexShader,
     shader::ShaderContext,
     shaders::{
         // debug_shaders::{
@@ -28,11 +28,13 @@ use cairo::{
 };
 
 pub struct SpecularMapScene<'a> {
+    framebuffer_rwl: &'a RwLock<Buffer2D>,
     pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
     point_light: PointLight,
+    spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -40,15 +42,30 @@ pub struct SpecularMapScene<'a> {
 
 impl<'a> SpecularMapScene<'a> {
     pub fn new(
-        canvas_width: u32,
-        canvas_height: u32,
+        framebuffer_rwl: &'a RwLock<Buffer2D>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        let vertex_shader = DefaultVertexShader {
+            context: shader_context,
+        };
+
+        let mut geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        geometry_shader.options.specular_mapping_active = true;
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
+        // let fragment_shader = SpecularIntensityFragmentShader::new(shader_context);
+        // let fragment_shader = SpecularRoughnessFragmentShader::new(shader_context);
+
+        let aspect_ratio = framebuffer.width_over_height;
+
         // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
-            canvas_width as f32 / canvas_height as f32,
+            aspect_ratio,
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -82,7 +99,9 @@ impl<'a> SpecularMapScene<'a> {
 
         let point_light = PointLight::new();
 
-        let spot_light = SpotLight::new();
+        let mut spot_light = SpotLight::new();
+
+        spot_light.position.y = 10.0;
 
         let pipeline_options: PipelineOptions = Default::default();
 
@@ -103,21 +122,7 @@ impl<'a> SpecularMapScene<'a> {
         context.set_point_light(0, point_light);
         context.set_spot_light(0, spot_light);
 
-        let vertex_shader = DefaultVertexShader::new(shader_context);
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
-
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
-
-        // let fragment_shader = SpecularIntensityFragmentShader::new(shader_context);
-
-        // let fragment_shader = SpecularRoughnessFragmentShader::new(shader_context);
-
-        let pipeline = Pipeline::new(
-            canvas_width,
-            canvas_height,
-            camera.get_projection_z_near(),
-            camera.get_projection_z_far(),
+        let mut pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
             geometry_shader,
@@ -125,7 +130,11 @@ impl<'a> SpecularMapScene<'a> {
             pipeline_options,
         );
 
+        pipeline.set_projection_z_near(camera.get_projection_z_near());
+        pipeline.set_projection_z_far(camera.get_projection_z_far());
+
         return SpecularMapScene {
+            framebuffer_rwl,
             pipeline,
             entities,
             materials,
@@ -134,6 +143,7 @@ impl<'a> SpecularMapScene<'a> {
             active_camera_index: 0,
             directional_light,
             point_light,
+            spot_light,
         };
     }
 }
@@ -207,11 +217,7 @@ impl<'a> Scene for SpecularMapScene<'a> {
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta
 
-            if entity.mesh.object_name == "point_light" {
-                entity.position = self.point_light.position;
-            }
-
-            if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {
+            if entity.mesh.object_name == "plane" {
                 continue;
             }
 
@@ -227,16 +233,20 @@ impl<'a> Scene for SpecularMapScene<'a> {
     }
 
     fn render(&mut self) {
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+
         self.pipeline.begin_frame();
 
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
 
-        self.pipeline.end_frame();
-    }
+        self.pipeline
+            .render_point_light(&self.point_light, None, None);
 
-    fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.pipeline.get_pixel_data();
+        self.pipeline
+            .render_spot_light(&self.spot_light, None, None);
+
+        self.pipeline.end_frame();
     }
 }

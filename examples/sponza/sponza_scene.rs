@@ -1,6 +1,7 @@
 use std::{borrow::BorrowMut, sync::RwLock};
 
 use cairo::{
+    buffer::Buffer2D,
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -31,7 +32,8 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 };
 
 pub struct SponzaScene<'a> {
-    pipeline: Pipeline<'a>,
+    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     point_lights: Vec<PointLight>,
@@ -44,14 +46,21 @@ pub struct SponzaScene<'a> {
 
 impl<'a> SponzaScene<'a> {
     pub fn new(
-        canvas_width: u32,
-        canvas_height: u32,
+        framebuffer_rwl: &'a RwLock<Buffer2D>,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<Entity<'a>>>,
         materials: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        let vertex_shader = DefaultVertexShader::new(shader_context);
+
+        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
+
+        let aspect_ratio = framebuffer.width_over_height;
 
         // Set up a camera for rendering our scene
         let mut camera: Camera = Camera::new(
@@ -144,17 +153,7 @@ impl<'a> SponzaScene<'a> {
         context.set_point_light(0, point_light);
         context.set_spot_light(0, spot_light);
 
-        let vertex_shader = DefaultVertexShader::new(shader_context);
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
-
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
-
         let pipeline = Pipeline::new(
-            canvas_width,
-            canvas_height,
-            camera.get_projection_z_near(),
-            camera.get_projection_z_far(),
             shader_context,
             vertex_shader,
             geometry_shader,
@@ -163,6 +162,7 @@ impl<'a> SponzaScene<'a> {
         );
 
         return SponzaScene {
+            framebuffer_rwl,
             pipeline,
             entities,
             skybox,
@@ -215,6 +215,8 @@ impl<'a> Scene for SponzaScene<'a> {
     }
 
     fn render(&mut self) {
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+
         self.pipeline.begin_frame();
 
         let camera = self.cameras[self.active_camera_index];
@@ -240,9 +242,5 @@ impl<'a> Scene for SponzaScene<'a> {
         self.pipeline.render_skybox(&self.skybox, &camera);
 
         self.pipeline.end_frame();
-    }
-
-    fn get_pixel_data(&self) -> &Vec<u32> {
-        self.pipeline.get_pixel_data()
     }
 }

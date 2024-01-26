@@ -1,6 +1,7 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     pipeline::{options::PipelineOptions, Pipeline},
@@ -22,7 +23,8 @@ use cairo::{
 };
 
 pub struct MultipleScenesScene<'a> {
-    pipeline: Pipeline<'a>,
+    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
@@ -31,13 +33,21 @@ pub struct MultipleScenesScene<'a> {
 
 impl<'a> MultipleScenesScene<'a> {
     pub fn new(
-        canvas_width: u32,
-        canvas_height: u32,
+        framebuffer_rwl: &'a RwLock<Buffer2D>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        let vertex_shader = DefaultVertexShader::new(shader_context);
+
+        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
+
+        let aspect_ratio = framebuffer.width_over_height;
+
         // Set up a camera for rendering our scenes
-        let aspect_ratio = canvas_width as f32 / canvas_height as f32;
 
         let camera: Camera = Camera::new(
             aspect_ratio,
@@ -101,17 +111,7 @@ impl<'a> MultipleScenesScene<'a> {
         context.set_point_light(0, point_light);
         context.set_spot_light(0, spot_light);
 
-        let vertex_shader = DefaultVertexShader::new(shader_context);
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
-
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
-
         let pipeline = Pipeline::new(
-            canvas_width,
-            canvas_height,
-            camera.get_projection_z_near(),
-            camera.get_projection_z_far(),
             shader_context,
             vertex_shader,
             geometry_shader,
@@ -120,6 +120,7 @@ impl<'a> MultipleScenesScene<'a> {
         );
 
         return MultipleScenesScene {
+            framebuffer_rwl,
             pipeline,
             entities,
             shader_context,
@@ -196,6 +197,8 @@ impl<'a> Scene for MultipleScenesScene<'a> {
     }
 
     fn render(&mut self) {
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+
         self.pipeline.begin_frame();
 
         for entity in self.entities.read().unwrap().as_slice() {
@@ -203,9 +206,5 @@ impl<'a> Scene for MultipleScenesScene<'a> {
         }
 
         self.pipeline.end_frame();
-    }
-
-    fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.pipeline.get_pixel_data();
     }
 }

@@ -4,6 +4,7 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     mesh,
@@ -24,6 +25,14 @@ fn main() -> Result<(), String> {
 
     let app = App::new(&mut window_info);
 
+    // Default framebuffer
+
+    let framebuffer_rwl = RwLock::new(Buffer2D::new(
+        window_info.canvas_width,
+        window_info.canvas_height,
+        None,
+    ));
+
     // Generate a cube mesh
     let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
@@ -38,8 +47,7 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SpinningCubeScene::new(
-        window_info.canvas_width,
-        window_info.canvas_height,
+        &framebuffer_rwl,
         &entities_rwl,
         &shader_context_rwl,
     ));
@@ -65,7 +73,9 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        return Ok(scene.borrow_mut().get_pixel_data().clone());
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;

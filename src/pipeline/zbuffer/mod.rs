@@ -3,7 +3,7 @@ use crate::buffer::Buffer2D;
 pub static MAX_DEPTH: f32 = 1.0;
 
 pub struct ZBuffer {
-    buffer: Buffer2D<f32>,
+    pub buffer: Buffer2D<f32>,
     projection_z_near: f32,
     projection_z_far: f32,
     projection_z_near_reciprocal: f32,
@@ -21,6 +21,16 @@ impl ZBuffer {
             projection_z_far,
             projection_z_far_reciprocal: 1.0 / projection_z_far,
         }
+    }
+
+    pub fn set_projection_z_near(&mut self, depth: f32) {
+        self.projection_z_near = depth;
+        self.projection_z_near_reciprocal = 1.0 / depth;
+    }
+
+    pub fn set_projection_z_far(&mut self, depth: f32) {
+        self.projection_z_far = depth;
+        self.projection_z_far_reciprocal = 1.0 / depth;
     }
 
     pub fn clear(&mut self) {

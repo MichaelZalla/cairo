@@ -6,6 +6,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::{App, AppWindowInfo},
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     mesh::obj::load_obj,
@@ -25,6 +26,14 @@ fn main() -> Result<(), String> {
     };
 
     let app = App::new(&mut window_info);
+
+    // Default framebuffer
+
+    let framebuffer_rwl = RwLock::new(Buffer2D::new(
+        window_info.canvas_width,
+        window_info.canvas_height,
+        None,
+    ));
 
     // Load meshes
     let (cube_meshes, _cube_materials) = load_obj(&"./data/obj/cube.obj");
@@ -46,18 +55,8 @@ fn main() -> Result<(), String> {
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
     let scenes = RefCell::new(vec![
-        MultipleScenesScene::new(
-            window_info.canvas_width,
-            window_info.canvas_height,
-            &entities_rwl,
-            &shader_context_rwl,
-        ),
-        MultipleScenesScene::new(
-            window_info.canvas_width,
-            window_info.canvas_height,
-            &entities2_rwl,
-            &shader_context_rwl,
-        ),
+        MultipleScenesScene::new(&framebuffer_rwl, &entities_rwl, &shader_context_rwl),
+        MultipleScenesScene::new(&framebuffer_rwl, &entities2_rwl, &shader_context_rwl),
     ]);
 
     let current_scene_index = RefCell::new(min(0, scenes.borrow().len() - 1));
@@ -90,10 +89,10 @@ fn main() -> Result<(), String> {
         *current_scene_index.borrow_mut() = new_index;
 
         scenes.borrow_mut()[*current_scene_index.borrow()].update(
-            &timing_info,
-            &keyboard_state,
-            &mouse_state,
-            &game_controller_state,
+            timing_info,
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
         );
     };
 
@@ -102,9 +101,9 @@ fn main() -> Result<(), String> {
 
         scenes.borrow_mut()[*current_scene_index.borrow()].render();
 
-        return Ok(scenes.borrow_mut()[*current_scene_index.borrow()]
-            .get_pixel_data()
-            .clone());
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;

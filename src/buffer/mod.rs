@@ -46,6 +46,17 @@ where
         }
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width;
+
+        self.height = height;
+
+        self.width_over_height = width as f32 / height as f32;
+
+        self.data
+            .resize((width * height) as usize, Default::default());
+    }
+
     pub fn get_all(&self) -> &Vec<T> {
         &self.data
     }

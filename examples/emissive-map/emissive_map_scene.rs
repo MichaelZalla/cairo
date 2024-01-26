@@ -1,6 +1,7 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::cache::MaterialCache,
@@ -25,7 +26,8 @@ use cairo::{
 };
 
 pub struct EmissiveMapScene<'a> {
-    pipeline: Pipeline<'a>,
+    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -38,15 +40,27 @@ pub struct EmissiveMapScene<'a> {
 
 impl<'a> EmissiveMapScene<'a> {
     pub fn new(
-        canvas_width: u32,
-        canvas_height: u32,
+        framebuffer_rwl: &'a RwLock<Buffer2D>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        let vertex_shader = DefaultVertexShader::new(shader_context);
+
+        let mut geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        geometry_shader.options.emissive_mapping_active = true;
+
+        let fragment_shader = DefaultFragmentShader::new(shader_context);
+        // let fragment_shader = EmissiveFragmentShader::new(shader_context);
+
+        let aspect_ratio = framebuffer.width_over_height;
+
         // Set up a camera for rendering our scene
         let camera: Camera = Camera::new(
-            canvas_width as f32 / canvas_height as f32,
+            aspect_ratio,
             Vec3 {
                 x: 0.0,
                 y: 2.0,
@@ -80,7 +94,9 @@ impl<'a> EmissiveMapScene<'a> {
 
         let point_light = PointLight::new();
 
-        let spot_light = SpotLight::new();
+        let mut spot_light = SpotLight::new();
+
+        spot_light.position.y = 10.0;
 
         let pipeline_options: PipelineOptions = Default::default();
 
@@ -99,21 +115,9 @@ impl<'a> EmissiveMapScene<'a> {
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
         context.set_point_light(0, point_light);
-        context.set_spot_light(0, spot_light);
-
-        let vertex_shader = DefaultVertexShader::new(shader_context);
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
-
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
-
-        // let fragment_shader = EmissiveFragmentShader::new(shader_context);
+        // context.set_spot_light(0, spot_light);
 
         let pipeline = Pipeline::new(
-            canvas_width,
-            canvas_height,
-            camera.get_projection_z_near(),
-            camera.get_projection_z_far(),
             shader_context,
             vertex_shader,
             geometry_shader,
@@ -122,13 +126,13 @@ impl<'a> EmissiveMapScene<'a> {
         );
 
         return EmissiveMapScene {
+            framebuffer_rwl,
             pipeline,
             entities,
             materials,
             shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
-            // ambient_light,
             directional_light,
             point_light,
             _spot_light: spot_light,
@@ -221,6 +225,8 @@ impl<'a> Scene for EmissiveMapScene<'a> {
     }
 
     fn render(&mut self) {
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+
         self.pipeline.begin_frame();
 
         for entity in self.entities.read().unwrap().as_slice() {
@@ -230,10 +236,9 @@ impl<'a> Scene for EmissiveMapScene<'a> {
         self.pipeline
             .render_point_light(&self.point_light, None, None);
 
-        self.pipeline.end_frame();
-    }
+        // self.pipeline
+        //     .render_spot_light(&self.spot_light, None, None);
 
-    fn get_pixel_data(&self) -> &Vec<u32> {
-        return self.pipeline.get_pixel_data();
+        self.pipeline.end_frame();
     }
 }

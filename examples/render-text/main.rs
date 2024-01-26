@@ -51,6 +51,7 @@ fn main() -> Result<(), String> {
                       _game_controller_state: &GameControllerState|
      -> () {
         *now_seconds.borrow_mut() += timing_info.seconds_since_last_update;
+
         *mouse_x.borrow_mut() = mouse_state.position.0;
         *mouse_y.borrow_mut() = mouse_state.position.1;
     };

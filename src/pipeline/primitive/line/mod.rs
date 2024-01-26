@@ -155,7 +155,7 @@ where
         }
 
         Graphics::line(
-            &mut self.forward_framebuffer,
+            &mut self.forward_framebuffer.as_mut().unwrap(),
             start.p.x as i32,
             start.p.y as i32,
             end.p.x as i32,

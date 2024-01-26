@@ -4,7 +4,7 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
-    color,
+    buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::{cache::MaterialCache, Material},
@@ -13,7 +13,6 @@ use cairo::{
     shader::ShaderContext,
     texture::TextureMap,
     time::TimingInfo,
-    vec::vec3::Vec3,
 };
 
 mod specular_map_scene;
@@ -29,6 +28,14 @@ fn main() -> Result<(), String> {
     let app = App::new(&mut window_info);
 
     let rendering_context = &app.context.rendering_context;
+
+    // Default framebuffer
+
+    let framebuffer_rwl = RwLock::new(Buffer2D::new(
+        window_info.canvas_width,
+        window_info.canvas_height,
+        None,
+    ));
 
     // Generate primitive meshes
 
@@ -86,29 +93,8 @@ fn main() -> Result<(), String> {
     let mut cube_entity = Entity::new(&cube_mesh);
     cube_entity.position.y += 1.5;
 
-    // Orbiting point light
-
-    let mut point_light_material = Material::new("white".to_string());
-    point_light_material.diffuse_color = color::WHITE.to_vec3() / 255.0;
-
-    let mut point_light_mesh = mesh::primitive::cube::generate(0.2, 0.2, 0.2);
-
-    point_light_mesh.object_name = "point_light".to_string();
-    point_light_mesh.material_name = Some(point_light_material.name.clone());
-
-    let mut point_light_entity = Entity::new(&point_light_mesh);
-
-    point_light_entity.position = Vec3 {
-        x: 0.0,
-        y: 5.0,
-        z: 0.0,
-    };
-
-    material_cache.insert(point_light_material);
-
     // Wrap the entity collection in a memory-safe container
-    let entities: Vec<&mut Entity> =
-        vec![&mut plane_entity, &mut cube_entity, &mut point_light_entity];
+    let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity];
 
     let entities_rwl = RwLock::new(entities);
 
@@ -116,8 +102,7 @@ fn main() -> Result<(), String> {
 
     // Instantiate our textured cube scene
     let scene = RefCell::new(SpecularMapScene::new(
-        window_info.canvas_width,
-        window_info.canvas_height,
+        &framebuffer_rwl,
         &entities_rwl,
         &material_cache,
         &shader_context_rwl,
@@ -132,10 +117,10 @@ fn main() -> Result<(), String> {
         // Delegate the update to our textured cube scene
 
         scene.borrow_mut().update(
-            &timing_info,
-            &keyboard_state,
-            &mouse_state,
-            &game_controller_state,
+            timing_info,
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
         );
     };
 
@@ -144,7 +129,9 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        return Ok(scene.borrow_mut().get_pixel_data().clone());
+        let framebuffer = framebuffer_rwl.read().unwrap();
+
+        return Ok(framebuffer.get_all().clone());
     };
 
     app.run(&mut update, &mut render)?;
