@@ -1,5 +1,6 @@
 extern crate sdl2;
 
+use core::panic;
 use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
@@ -13,17 +14,39 @@ use cairo::{
     scene::Scene,
     shader::ShaderContext,
     texture::TextureMap,
-    time::TimingInfo,
 };
+use sdl2::keyboard::Keycode;
 
 mod generate_primitives_scene;
 
 use self::generate_primitives_scene::GeneratePrimitivesScene;
 
 fn main() -> Result<(), String> {
+    let resolutions = vec![
+        (320, 180),
+        (640, 320),
+        (800, 450),
+        (960, 540),
+        // (1024, 576),
+        // (1200, 675),
+        // (1280, 720),
+        // (1366, 768),
+        // (1920, 1080),
+        // (2560, 1440),
+    ];
+
+    let mut current_resolution_index: usize = 0;
+
+    let resolution = resolutions[current_resolution_index];
+
     let mut window_info = AppWindowInfo {
         title: "examples/generate-primitives".to_string(),
         full_screen: false,
+        vertical_sync: true,
+        window_width: 960,
+        window_height: 540,
+        canvas_width: resolution.0,
+        canvas_height: resolution.1,
         ..Default::default()
     };
 
@@ -161,19 +184,43 @@ fn main() -> Result<(), String> {
     ));
 
     // Set up our app
-    let mut update = |timing_info: &TimingInfo,
+    let mut update = |app: &mut App,
+                      //   timing_info: &TimingInfo,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
-                      game_controller_state: &GameControllerState|
-     -> () {
+                      game_controller_state: &GameControllerState| {
+        //
+
+        for keycode in &keyboard_state.keys_pressed {
+            match keycode {
+                Keycode::R { .. } => {
+                    // Resize the app's rendering canvas.
+
+                    current_resolution_index = (current_resolution_index + 1) % resolutions.len();
+
+                    let (width, height) = resolutions[current_resolution_index];
+
+                    match app.resize_canvas(width, height) {
+                        Ok(()) => {
+                            // Resize the framebuffer to match.
+                            let mut framebuffer = framebuffer_rwl.write().unwrap();
+
+                            framebuffer.resize(width, height);
+                        }
+                        Err(e) => {
+                            panic!("Failed to resize app canvas: {}", e);
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+
         // Delegate the update to our textured cube scene
 
-        scene.borrow_mut().update(
-            timing_info,
-            keyboard_state,
-            mouse_state,
-            game_controller_state,
-        );
+        scene
+            .borrow_mut()
+            .update(&app, &keyboard_state, &mouse_state, &game_controller_state);
     };
 
     let mut render = || -> Result<Vec<u32>, String> {

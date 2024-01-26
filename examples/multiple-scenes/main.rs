@@ -12,7 +12,6 @@ use cairo::{
     mesh::obj::load_obj,
     scene::Scene,
     shader::ShaderContext,
-    time::TimingInfo,
 };
 
 mod multiple_scenes_scene;
@@ -63,7 +62,7 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut update = |timing_info: &TimingInfo,
+    let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
@@ -89,7 +88,7 @@ fn main() -> Result<(), String> {
         *current_scene_index.borrow_mut() = new_index;
 
         scenes.borrow_mut()[*current_scene_index.borrow()].update(
-            timing_info,
+            app,
             keyboard_state,
             mouse_state,
             game_controller_state,

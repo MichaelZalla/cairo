@@ -9,7 +9,6 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::{text::TextOperation, Graphics},
-    time::TimingInfo,
     ui::panel::{Panel, PanelInfo},
 };
 
@@ -52,7 +51,7 @@ fn main() -> Result<(), String> {
             width: window_info.window_width,
             height: window_info.window_height,
         },
-        |_timing_info: &TimingInfo,
+        |_app: &mut App,
          _keyboard_state: &KeyboardState,
          _mouse_state: &MouseState,
          _game_controller_state: &GameControllerState|
@@ -81,7 +80,7 @@ fn main() -> Result<(), String> {
 
     root_panel.borrow_mut().split()?;
 
-    let mut update = |timing_info: &TimingInfo,
+    let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
@@ -89,7 +88,7 @@ fn main() -> Result<(), String> {
         // Delegrate update actions to the root panel
 
         ((*root_panel.borrow_mut()).update)(
-            timing_info,
+            app,
             keyboard_state,
             mouse_state,
             game_controller_state,

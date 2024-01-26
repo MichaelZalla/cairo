@@ -1,13 +1,12 @@
 use std::collections::HashSet;
 use std::ptr;
 
-use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
-use sdl2::render::BlendMode;
+use sdl2::{event::Event, render::Texture};
 
 use crate::{
-    context::{get_application_context, get_backbuffer, ApplicationContext},
+    context::{get_application_context, make_backbuffer, ApplicationContext},
     debug_print,
     device::{
         GameController, GameControllerState, KeyboardState, MouseEvent, MouseEventKind, MouseState,
@@ -36,8 +35,8 @@ impl Default for AppWindowInfo {
             full_screen: false,
             show_cursor: true,
             vertical_sync: false,
-            window_width: 0,
-            window_height: 0,
+            window_width: 960,
+            window_height: 540,
         }
     }
 }
@@ -45,6 +44,7 @@ impl Default for AppWindowInfo {
 pub struct App {
     pub window_info: AppWindowInfo,
     pub context: ApplicationContext,
+    pub backbuffer: Texture,
     pub timing_info: TimingInfo,
 }
 
@@ -62,34 +62,57 @@ impl App {
         app_window_info.window_width = context.screen_width;
         app_window_info.window_height = context.screen_height;
 
-        return App {
-            window_info: app_window_info,
-            context,
-            timing_info,
-        };
-    }
-
-    pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
-    where
-        U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
-        R: FnMut() -> Result<Vec<u32>, String>,
-    {
-        let texture_creator = self
-            .context
+        let texture_creator = context
             .rendering_context
             .canvas
             .read()
             .unwrap()
             .texture_creator();
 
-        let mut backbuffer = get_backbuffer(
-            self.window_info.canvas_width,
-            self.window_info.canvas_height,
+        let backbuffer = make_backbuffer(
+            window_info.canvas_width,
+            window_info.canvas_height,
             &texture_creator,
-            BlendMode::None,
+            None,
         )
         .unwrap();
 
+        return App {
+            window_info: app_window_info,
+            context,
+            backbuffer,
+            timing_info,
+        };
+    }
+
+    pub fn resize_canvas(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
+        let canvas = self.context.rendering_context.canvas.write().unwrap();
+
+        // Re-allocates a backbuffer.
+
+        let texture_creator = canvas.texture_creator();
+
+        match make_backbuffer(new_width, new_height, &texture_creator, None) {
+            Ok(texture) => {
+                self.backbuffer = texture;
+
+                self.window_info.canvas_width = new_width;
+                self.window_info.canvas_height = new_height;
+
+                Ok(())
+            }
+            Err(e) => Err(format!(
+                "Failed to reallocate backbuffer in App::resize_canvas(): {}",
+                e
+            )),
+        }
+    }
+
+    pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
+    where
+        U: FnMut(&mut Self, &KeyboardState, &MouseState, &GameControllerState),
+        R: FnMut() -> Result<Vec<u32>, String>,
+    {
         // Set up scene here!
 
         let ticks_per_second = self.context.timer.performance_frequency();
@@ -274,7 +297,7 @@ impl App {
             self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
 
             update(
-                &self.timing_info,
+                &mut self,
                 &keyboard_state,
                 &mouse_state,
                 &game_controller.state,
@@ -286,7 +309,7 @@ impl App {
 
             let cw = &mut self.context.rendering_context.canvas.write().unwrap();
 
-            backbuffer
+            self.backbuffer
                 .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
 
@@ -316,7 +339,7 @@ impl App {
             // Note that Canvas<Window>::copy() will automatically stretch our
             // backbuffer to fit the current window size, if `dst` is `None`.
 
-            cw.copy(&backbuffer, None, None)?;
+            cw.copy(&self.backbuffer, None, None)?;
 
             cw.present();
 

@@ -113,8 +113,8 @@ pub fn get_application_context(window_info: &AppWindowInfo) -> Result<Applicatio
 
     let mut window_builder = video_subsystem.window(
         &window_info.title,
-        window_info.canvas_width,
-        window_info.canvas_height,
+        window_info.window_width,
+        window_info.window_height,
     );
 
     // window_builder.opengl()
@@ -185,11 +185,11 @@ pub fn get_application_rendering_context<'a, 'r>(
     }
 }
 
-pub fn get_backbuffer<'r>(
+pub fn make_backbuffer<'r>(
     canvas_width: u32,
     canvas_height: u32,
     texture_creator: &'r TextureCreator<WindowContext>,
-    blend_mode: BlendMode,
+    blend_mode: Option<BlendMode>,
 ) -> Result<Texture, String> {
     match texture_creator.create_texture_streaming(
         sdl2::pixels::PixelFormatEnum::RGBA32,
@@ -207,7 +207,12 @@ pub fn get_backbuffer<'r>(
 
             match backbuffer.update(None, pixel_buffer, canvas_pitch as usize) {
                 Ok(_) => {
-                    backbuffer.set_blend_mode(blend_mode);
+                    let mode = match blend_mode {
+                        Some(mode) => mode,
+                        None => BlendMode::None,
+                    };
+
+                    backbuffer.set_blend_mode(mode);
 
                     return Ok(backbuffer);
                 }

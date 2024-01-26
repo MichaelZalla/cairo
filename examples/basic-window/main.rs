@@ -5,7 +5,6 @@ use cairo::{
     buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    time::TimingInfo,
 };
 
 fn main() -> Result<(), String> {
@@ -20,7 +19,7 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
-    let mut update = |_timing_info: &TimingInfo,
+    let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,
                       _mouse_state: &MouseState,
                       _game_controller_state: &GameControllerState|

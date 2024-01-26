@@ -1,11 +1,11 @@
 use std::rc::Rc;
 
 use crate::{
+    app::App,
     buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     graphics::Graphics,
-    time::TimingInfo,
     vec::vec2::Vec2,
 };
 
@@ -20,7 +20,7 @@ pub struct PanelInfo {
 
 pub struct Panel<U, R>
 where
-    U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
+    U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
     R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub info: PanelInfo,
@@ -34,12 +34,12 @@ where
 
 impl<U, R> Panel<U, R>
 where
-    U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
+    U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
     R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
 {
     pub fn new(info: PanelInfo, update: U, render: R) -> Self
     where
-        U: FnMut(&TimingInfo, &KeyboardState, &MouseState, &GameControllerState) -> (),
+        U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
         R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
     {
         let buffer = Buffer2D::new(info.width, info.height, None);

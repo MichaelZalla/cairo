@@ -9,7 +9,6 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::{text::TextOperation, Graphics},
-    time::TimingInfo,
 };
 
 fn main() -> Result<(), String> {
@@ -45,12 +44,12 @@ fn main() -> Result<(), String> {
     let mouse_x = RefCell::new(0);
     let mouse_y = RefCell::new(0);
 
-    let mut update = |timing_info: &TimingInfo,
+    let mut update = |app: &mut App,
                       _keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       _game_controller_state: &GameControllerState|
      -> () {
-        *now_seconds.borrow_mut() += timing_info.seconds_since_last_update;
+        *now_seconds.borrow_mut() += app.timing_info.seconds_since_last_update;
 
         *mouse_x.borrow_mut() = mouse_state.position.0;
         *mouse_y.borrow_mut() = mouse_state.position.1;

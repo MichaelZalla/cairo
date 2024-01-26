@@ -3,6 +3,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
+    app::App,
     buffer::Buffer2D,
     color,
     debug::message::DebugMessageBuffer,
@@ -210,16 +211,16 @@ impl<'a> GeneratePrimitivesScene<'a> {
 impl<'a> Scene for GeneratePrimitivesScene<'a> {
     fn update(
         &mut self,
-        timing_info: &TimingInfo,
+        app: &App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
         let mut context = self.shader_context.write().unwrap();
 
-        self.timing_info = timing_info.clone();
+        self.timing_info = app.timing_info.clone();
 
-        let uptime = timing_info.uptime_seconds;
+        let uptime = app.timing_info.uptime_seconds;
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
@@ -236,7 +237,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             camera.set_target_position(self.point_lights[0].position);
         } else {
             camera.update(
-                timing_info,
+                &app.timing_info,
                 keyboard_state,
                 mouse_state,
                 game_controller_state,
@@ -320,20 +321,28 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 continue;
             }
 
-            entity.rotation.z += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
+            entity.rotation.z +=
+                1.0 * rotation_speed * PI * app.timing_info.seconds_since_last_update;
             entity.rotation.z %= 2.0 * PI;
 
-            entity.rotation.x += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
+            entity.rotation.x +=
+                1.0 * rotation_speed * PI * app.timing_info.seconds_since_last_update;
             entity.rotation.x %= 2.0 * PI;
 
-            entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
+            entity.rotation.y +=
+                1.0 * rotation_speed * PI * app.timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
 
         // Write to debug log
 
+        self.debug_message_buffer.write(format!(
+            "Resolution: {}x{}",
+            app.window_info.canvas_width, app.window_info.canvas_height
+        ));
+
         self.debug_message_buffer
-            .write(format!("FPS: {:.*}", 0, timing_info.frames_per_second));
+            .write(format!("FPS: {:.*}", 0, app.timing_info.frames_per_second));
 
         self.debug_message_buffer
             .write(format!("Seconds ellapsed: {:.*}", 2, uptime));

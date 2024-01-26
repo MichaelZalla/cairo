@@ -1,6 +1,7 @@
 use std::{borrow::BorrowMut, sync::RwLock};
 
 use cairo::{
+    app::App,
     buffer::Buffer2D,
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
@@ -21,7 +22,6 @@ use cairo::{
         default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
     texture::cubemap::CubeMap,
-    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -179,7 +179,7 @@ impl<'a> SponzaScene<'a> {
 impl<'a> Scene for SponzaScene<'a> {
     fn update(
         &mut self,
-        timing_info: &TimingInfo,
+        app: &App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
@@ -189,7 +189,7 @@ impl<'a> Scene for SponzaScene<'a> {
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
-            timing_info,
+            &app.timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,

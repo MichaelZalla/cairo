@@ -10,7 +10,6 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    time::TimingInfo,
 };
 
 mod spinning_cube_scene;
@@ -53,19 +52,16 @@ fn main() -> Result<(), String> {
     ));
 
     // Set up our app
-    let mut update = |timing_info: &TimingInfo,
+    let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> () {
         // Delegate the update to our spinning cube scene
 
-        scene.borrow_mut().update(
-            timing_info,
-            &keyboard_state,
-            &mouse_state,
-            &game_controller_state,
-        );
+        scene
+            .borrow_mut()
+            .update(app, keyboard_state, mouse_state, game_controller_state);
     };
 
     let mut render = || -> Result<Vec<u32>, String> {

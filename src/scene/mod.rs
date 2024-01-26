@@ -1,4 +1,4 @@
-use crate::time::TimingInfo;
+use crate::app::App;
 
 use super::device::{GameControllerState, KeyboardState, MouseState};
 
@@ -8,7 +8,7 @@ pub mod light;
 pub trait Scene {
     fn update(
         &mut self,
-        timing_info: &TimingInfo,
+        app: &App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,

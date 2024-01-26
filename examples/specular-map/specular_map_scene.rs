@@ -1,6 +1,7 @@
 use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
+    app::App,
     buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -23,7 +24,6 @@ use cairo::{
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DefaultVertexShader,
     },
-    time::TimingInfo,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -151,19 +151,19 @@ impl<'a> SpecularMapScene<'a> {
 impl<'a> Scene for SpecularMapScene<'a> {
     fn update(
         &mut self,
-        timing_info: &TimingInfo,
+        app: &App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
         let mut context = self.shader_context.write().unwrap();
 
-        let uptime = timing_info.uptime_seconds;
+        let uptime = app.timing_info.uptime_seconds;
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
         camera.update(
-            timing_info,
+            &app.timing_info,
             keyboard_state,
             mouse_state,
             game_controller_state,
@@ -221,13 +221,16 @@ impl<'a> Scene for SpecularMapScene<'a> {
                 continue;
             }
 
-            entity.rotation.z += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
+            entity.rotation.z +=
+                1.0 * rotation_speed * PI * app.timing_info.seconds_since_last_update;
             entity.rotation.z %= 2.0 * PI;
 
-            entity.rotation.x += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
+            entity.rotation.x +=
+                1.0 * rotation_speed * PI * app.timing_info.seconds_since_last_update;
             entity.rotation.x %= 2.0 * PI;
 
-            entity.rotation.y += 1.0 * rotation_speed * PI * timing_info.seconds_since_last_update;
+            entity.rotation.y +=
+                1.0 * rotation_speed * PI * app.timing_info.seconds_since_last_update;
             entity.rotation.y %= 2.0 * PI;
         }
     }
