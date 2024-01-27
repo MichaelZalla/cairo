@@ -1,6 +1,5 @@
 extern crate sdl2;
 
-use core::panic;
 use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
@@ -35,7 +34,7 @@ fn main() -> Result<(), String> {
         // (2560, 1440),
     ];
 
-    let mut current_resolution_index: usize = 0;
+    let mut current_resolution_index: usize = 2;
 
     let resolution = resolutions[current_resolution_index];
 
@@ -43,8 +42,8 @@ fn main() -> Result<(), String> {
         title: "examples/generate-primitives".to_string(),
         full_screen: false,
         vertical_sync: true,
-        window_width: 960,
-        window_height: 540,
+        window_width: resolution.0,
+        window_height: resolution.1,
         canvas_width: resolution.0,
         canvas_height: resolution.1,
         ..Default::default()
@@ -200,17 +199,14 @@ fn main() -> Result<(), String> {
 
                     let (width, height) = resolutions[current_resolution_index];
 
-                    match app.resize_canvas(width, height) {
-                        Ok(()) => {
-                            // Resize the framebuffer to match.
-                            let mut framebuffer = framebuffer_rwl.write().unwrap();
+                    app.resize_window(width, height).unwrap();
 
-                            framebuffer.resize(width, height);
-                        }
-                        Err(e) => {
-                            panic!("Failed to resize app canvas: {}", e);
-                        }
-                    }
+                    app.resize_canvas(width, height).unwrap();
+
+                    // Resize the framebuffer to match.
+                    let mut framebuffer = framebuffer_rwl.write().unwrap();
+
+                    framebuffer.resize(width, height);
                 }
                 _ => (),
             }

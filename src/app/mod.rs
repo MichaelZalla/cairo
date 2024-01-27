@@ -85,6 +85,22 @@ impl App {
         };
     }
 
+    pub fn resize_window(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
+        let mut canvas = self.context.rendering_context.canvas.write().unwrap();
+
+        match canvas.window_mut().set_size(new_width, new_height) {
+            Ok(_) => {
+                // Update window info.
+
+                self.window_info.window_width = new_width;
+                self.window_info.window_height = new_height;
+
+                Ok(())
+            }
+            Err(e) => Err(format!("Failed to resize app window: {}", e)),
+        }
+    }
+
     pub fn resize_canvas(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
         let canvas = self.context.rendering_context.canvas.write().unwrap();
 
