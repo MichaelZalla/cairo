@@ -41,7 +41,7 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
-    let root_panel = RefCell::new(Panel::new(
+    let root_panel = Panel::new(
         PanelInfo {
             id: 0,
             title: "Root Panel".to_string(),
@@ -73,11 +73,13 @@ fn main() -> Result<(), String> {
 
             return Ok(framebuffer.get_all().clone());
         },
-    ));
+    );
+
+    let root_panel_rc = RefCell::new(root_panel);
 
     let current_mouse_state: RwLock<MouseState> = RwLock::new(Default::default());
 
-    root_panel.borrow_mut().split()?;
+    root_panel_rc.borrow_mut().split()?;
 
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
@@ -86,7 +88,7 @@ fn main() -> Result<(), String> {
      -> () {
         // Delegrate update actions to the root panel
 
-        ((*root_panel.borrow_mut()).update)(
+        ((*root_panel_rc.borrow_mut()).update)(
             app,
             keyboard_state,
             mouse_state,
@@ -106,9 +108,9 @@ fn main() -> Result<(), String> {
 
         // Delegate render call to the root panel
 
-        let panel_pixel_data = root_panel.borrow_mut().render()?;
+        let panel_pixel_data = root_panel_rc.borrow_mut().render()?;
 
-        let panel_info = &root_panel.borrow().info;
+        let panel_info = &root_panel_rc.borrow().info;
 
         // Blit panel pixels (local space) onto global pixels
 
