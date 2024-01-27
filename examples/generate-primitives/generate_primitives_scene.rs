@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     buffer::Buffer2D,
+    color,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -359,6 +360,12 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline
                 .render_entity(&entity, Some(self.material_cache));
+
+            if entity.mesh.object_name == "plane" {
+                continue;
+            }
+
+            self.pipeline.render_entity_aabb(&entity, color::BLUE);
         }
 
         for (index, camera) in self.cameras.iter().enumerate() {

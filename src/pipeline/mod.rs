@@ -195,6 +195,15 @@ where
     }
 
     pub fn render_entity(&mut self, entity: &Entity, material_cache: Option<&MaterialCache>) {
+        self.render_entity_mesh(entity, entity.mesh, material_cache);
+    }
+
+    fn render_entity_mesh(
+        &mut self,
+        entity: &Entity,
+        mesh: &Mesh,
+        material_cache: Option<&MaterialCache>,
+    ) {
         // Cull the entire entity, if possible, based on its bounds.
 
         if entity.mesh.normals.len() > 1 {
@@ -242,7 +251,7 @@ where
             context.set_world_transform(world_transform);
         }
 
-        self.render_mesh(&entity.mesh, material_cache);
+        self.render_mesh(mesh, material_cache);
 
         // Reset the shader context's original world transform.
         {
