@@ -44,7 +44,7 @@ fn main() -> Result<(), String> {
     let root_panel = Panel::new(
         PanelInfo {
             id: 0,
-            title: "Root Panel".to_string(),
+            title: "Panel 0".to_string(),
             x: 0,
             y: 0,
             width: window_info.window_width,
@@ -64,7 +64,7 @@ fn main() -> Result<(), String> {
                 panel_framebuffer,
                 &font,
                 &TextOperation {
-                    text: &info.title,
+                    text: &format!("Panel {}", info.id),
                     x: 8,
                     y: 8,
                     color: color::YELLOW,
