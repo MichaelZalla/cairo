@@ -368,6 +368,8 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             self.pipeline.render_entity_aabb(&entity, color::BLUE);
         }
 
+        self.pipeline.render_ground_plane(1.0);
+
         for (index, camera) in self.cameras.iter().enumerate() {
             if index == self.active_camera_index {
                 for light in &self.point_lights {

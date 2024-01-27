@@ -90,6 +90,56 @@ where
         self.render_point_indicator(Default::default(), scale)
     }
 
+    pub fn render_ground_plane(&mut self, scale: f32) {
+        for i in -10..10 + 1 {
+            // X-axis parallels
+
+            self.render_line(
+                Vec3 {
+                    x: -10.0 * scale,
+                    z: (i as f32 * scale),
+                    ..Default::default()
+                },
+                Vec3 {
+                    x: 10.0 * scale,
+                    z: (i as f32 * scale),
+                    ..Default::default()
+                },
+                if i == 0 { color::RED } else { color::WHITE },
+            );
+
+            // Z-axis parallels
+
+            self.render_line(
+                Vec3 {
+                    x: (i as f32 * scale),
+                    z: -10.0 * scale,
+                    ..Default::default()
+                },
+                Vec3 {
+                    x: (i as f32 * scale),
+                    z: 10.0 * scale,
+                    ..Default::default()
+                },
+                if i == 0 { color::GREEN } else { color::WHITE },
+            );
+
+            // Y-axis
+
+            self.render_line(
+                Vec3 {
+                    y: -10.0 * scale,
+                    ..Default::default()
+                },
+                Vec3 {
+                    y: 10.0 * scale,
+                    ..Default::default()
+                },
+                color::BLUE,
+            );
+        }
+    }
+
     fn render_line_from_out_vertices(
         &mut self,
         start: &mut DefaultVertexOut,
