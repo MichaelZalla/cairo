@@ -131,15 +131,15 @@ impl App {
         U: FnMut(&mut Self, &KeyboardState, &MouseState, &GameControllerState),
         R: FnMut() -> Result<Vec<u32>, String>,
     {
-        // Set up scene here!
+        let timer_subsystem = self.context.sdl_context.timer()?;
 
-        let ticks_per_second = self.context.timer.performance_frequency();
+        let ticks_per_second = timer_subsystem.performance_frequency();
 
         let frame_rate_limit = 120;
 
         let desired_ticks_per_frame: u64 = ticks_per_second / frame_rate_limit;
 
-        let mut frame_start: u64 = self.context.timer.performance_counter();
+        let mut frame_start: u64 = timer_subsystem.performance_counter();
         let mut frame_end: u64;
 
         let mut prev_mouse_clicks = HashSet::new();
@@ -147,14 +147,14 @@ impl App {
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
 
         let mut current_tick: u32 = 0;
-        let mut last_update_tick = self.context.timer.performance_counter();
+        let mut last_update_tick = timer_subsystem.performance_counter();
 
         // Main event loop
 
         'main: loop {
             // Main loop
 
-            let now = self.context.timer.performance_counter();
+            let now = timer_subsystem.performance_counter();
 
             let ticks_slept = now - frame_start;
 
@@ -171,7 +171,9 @@ impl App {
 
             // Event polling
 
-            let events = self.context.events.poll_iter();
+            let mut event_pump = self.context.sdl_context.event_pump()?;
+
+            let events = event_pump.poll_iter();
 
             let mut mouse_state = MouseState::new();
 
@@ -248,7 +250,7 @@ impl App {
 
             // Read the current mouse state
 
-            let current_mouse_state = self.context.events.mouse_state();
+            let current_mouse_state = event_pump.mouse_state();
 
             // Read any mouse click signals
 
@@ -306,8 +308,8 @@ impl App {
 
             // Update current scene
 
-            let ticks_since_last_update =
-                self.context.timer.performance_counter() - last_update_tick;
+            let ticks_since_last_update: u64 =
+                timer_subsystem.performance_counter() - last_update_tick;
 
             self.timing_info.seconds_since_last_update =
                 ticks_since_last_update as f32 / ticks_per_second as f32;
@@ -321,7 +323,7 @@ impl App {
                 &game_controller.state,
             );
 
-            last_update_tick = self.context.timer.performance_counter();
+            last_update_tick = timer_subsystem.performance_counter();
 
             // Render current scene to backbuffer
 
@@ -361,7 +363,7 @@ impl App {
 
             cw.present();
 
-            frame_end = self.context.timer.performance_counter();
+            frame_end = timer_subsystem.performance_counter();
 
             // Report framerate
 
@@ -397,13 +399,11 @@ impl App {
                 debug_print!("unused_milliseconds={}", unused_milliseconds);
             }
 
-            frame_start = self.context.timer.performance_counter();
+            frame_start = timer_subsystem.performance_counter();
 
             // Sleep if we can...
 
-            self.context
-                .timer
-                .delay(self.timing_info.unused_milliseconds.floor() as u32);
+            timer_subsystem.delay(self.timing_info.unused_milliseconds.floor() as u32);
 
             current_tick += 1;
         }

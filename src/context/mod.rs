@@ -4,7 +4,7 @@ use sdl2::{
     render::{BlendMode, Canvas, Texture, TextureCreator},
     ttf::Sdl2TtfContext,
     video::{Window, WindowContext},
-    EventPump, TimerSubsystem,
+    Sdl,
 };
 
 use crate::app::AppWindowInfo;
@@ -14,13 +14,12 @@ use super::device::GameController;
 const GAME_CONTROLLER_COUNT: usize = 4;
 
 pub struct ApplicationContext {
+    pub sdl_context: Sdl,
     pub rendering_context: ApplicationRenderingContext,
     pub ttf_context: &'static Sdl2TtfContext,
     pub screen_width: u32,
     pub screen_height: u32,
-    pub timer: TimerSubsystem,
     pub game_controllers: Vec<Option<GameController>>,
-    pub events: EventPump,
 }
 
 pub struct ApplicationRenderingContext {
@@ -31,8 +30,6 @@ pub fn get_application_context(window_info: &AppWindowInfo) -> Result<Applicatio
     let sdl_context = sdl2::init()?;
 
     sdl_context.mouse().show_cursor(window_info.show_cursor);
-
-    let timer = sdl_context.timer()?;
 
     let ttf_context: &'static Sdl2TtfContext;
 
@@ -107,8 +104,6 @@ pub fn get_application_context(window_info: &AppWindowInfo) -> Result<Applicatio
         }
     }
 
-    let events = sdl_context.event_pump()?;
-
     let video_subsystem = sdl_context.video()?;
 
     let mut window_builder = video_subsystem.window(
@@ -149,13 +144,12 @@ pub fn get_application_context(window_info: &AppWindowInfo) -> Result<Applicatio
                 get_application_rendering_context(window, window_info.vertical_sync).unwrap();
 
             Ok(ApplicationContext {
+                sdl_context,
                 screen_width,
                 screen_height,
                 rendering_context,
                 ttf_context,
-                timer,
                 game_controllers,
-                events,
             })
         }
         Err(e) => Err(e.to_string()),
