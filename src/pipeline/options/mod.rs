@@ -1,9 +1,13 @@
 use sdl2::keyboard::Keycode;
 
-use crate::device::{GameControllerState, KeyboardState, MouseState};
+use crate::{
+    color::{self, Color},
+    device::{GameControllerState, KeyboardState, MouseState},
+};
 
 #[derive(Copy, Clone)]
 pub struct PipelineOptions {
+    pub wireframe_color: Color,
     pub should_render_wireframe: bool,
     pub should_render_shader: bool,
     pub should_render_normals: bool,
@@ -13,6 +17,7 @@ pub struct PipelineOptions {
 impl Default for PipelineOptions {
     fn default() -> Self {
         Self {
+            wireframe_color: color::WHITE,
             should_render_wireframe: false,
             should_render_shader: true,
             should_render_normals: false,

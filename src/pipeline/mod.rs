@@ -20,7 +20,7 @@ use crate::{
 use self::{gbuffer::GBuffer, options::PipelineOptions, zbuffer::ZBuffer};
 
 use super::{
-    color::{self, Color},
+    color::{self},
     graphics::Graphics,
     mesh::Mesh,
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
@@ -591,18 +591,13 @@ where
                 });
             }
 
-            let mut c = color::WHITE;
+            let wireframe_color = self.options.wireframe_color;
 
-            if self.options.should_cull_backfaces == false {
-                c = Color {
-                    r: (world_vertices[0].c.x) as u8,
-                    g: (world_vertices[0].c.y) as u8,
-                    b: (world_vertices[0].c.z) as u8,
-                    a: 255,
-                };
-            }
-
-            Graphics::poly_line(&mut self.forward_framebuffer, points.as_slice(), c);
+            Graphics::poly_line(
+                &mut self.forward_framebuffer,
+                points.as_slice(),
+                wireframe_color,
+            );
         }
 
         if self.options.should_render_normals {
