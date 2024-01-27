@@ -20,10 +20,10 @@ where
 
         self.options = PipelineOptions {
             wireframe_color: color,
-            should_render_wireframe: true,
-            should_render_normals: false,
-            should_render_shader: false,
-            should_cull_backfaces: false,
+            show_wireframe: true,
+            show_rasterized_geometry: false,
+            show_normals: false,
+            cull_backfaces: false,
         };
 
         self.render_entity_mesh(entity, &entity.bounds_mesh, None);

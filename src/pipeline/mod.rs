@@ -143,7 +143,7 @@ where
 
         self.composite_framebuffer.clear(Some(fill_value));
 
-        if self.options.should_render_shader {
+        if self.options.show_rasterized_geometry {
             self.deferred_framebuffer.clear(Some(fill_value));
 
             self.z_buffer.clear();
@@ -153,7 +153,7 @@ where
     }
 
     pub fn end_frame(&mut self) {
-        if self.options.should_render_shader {
+        if self.options.show_rasterized_geometry {
             // Perform deferred lighting pass
 
             for (index, sample) in self.g_buffer.iter().enumerate() {
@@ -172,7 +172,7 @@ where
 
         let forward_frame = self.forward_framebuffer.get_all();
 
-        if self.options.should_render_shader {
+        if self.options.show_rasterized_geometry {
             let deferred_frame = self.deferred_framebuffer.get_all();
 
             self.composite_framebuffer.blit(
@@ -377,7 +377,7 @@ where
             let v1 = world_vertices[face_index * 3 + 1];
             let v2 = world_vertices[face_index * 3 + 2];
 
-            if self.options.should_cull_backfaces && self.is_backface(v0.p, v1.p, v2.p) {
+            if self.options.cull_backfaces && self.is_backface(v0.p, v1.p, v2.p) {
                 continue;
             }
 
@@ -585,11 +585,11 @@ where
         // Interpolate entire vertex (all attributes) when drawing (scanline
         // interpolant)
 
-        if self.options.should_render_shader {
+        if self.options.show_rasterized_geometry {
             self.triangle_fill(screen_vertices[0], screen_vertices[1], screen_vertices[2]);
         }
 
-        if self.options.should_render_wireframe {
+        if self.options.show_wireframe {
             let mut points: Vec<Vec2> = vec![];
 
             for v in screen_vertices {
@@ -609,7 +609,7 @@ where
             );
         }
 
-        if self.options.should_render_normals {
+        if self.options.show_normals {
             for (index, v) in screen_vertices.iter().enumerate() {
                 let world_vertex_relative_normal = world_vertex_relative_normals[index];
 

@@ -8,20 +8,20 @@ use crate::{
 #[derive(Copy, Clone)]
 pub struct PipelineOptions {
     pub wireframe_color: Color,
-    pub should_render_wireframe: bool,
-    pub should_render_shader: bool,
-    pub should_render_normals: bool,
-    pub should_cull_backfaces: bool,
+    pub show_wireframe: bool,
+    pub show_rasterized_geometry: bool,
+    pub show_normals: bool,
+    pub cull_backfaces: bool,
 }
 
 impl Default for PipelineOptions {
     fn default() -> Self {
         Self {
             wireframe_color: color::WHITE,
-            should_render_wireframe: false,
-            should_render_shader: true,
-            should_render_normals: false,
-            should_cull_backfaces: true,
+            show_wireframe: false,
+            show_rasterized_geometry: true,
+            show_normals: false,
+            cull_backfaces: true,
         }
     }
 }
@@ -36,25 +36,25 @@ impl PipelineOptions {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::Num1 { .. } => {
-                    self.should_render_wireframe = !self.should_render_wireframe;
+                    self.show_wireframe = !self.show_wireframe;
                 }
                 Keycode::Num2 { .. } => {
-                    self.should_render_shader = !self.should_render_shader;
+                    self.show_rasterized_geometry = !self.show_rasterized_geometry;
                 }
                 Keycode::Num3 { .. } => {
-                    self.should_render_normals = !self.should_render_normals;
+                    self.show_normals = !self.show_normals;
                 }
                 Keycode::Num4 { .. } => {
-                    self.should_cull_backfaces = !self.should_cull_backfaces;
+                    self.cull_backfaces = !self.cull_backfaces;
                 }
                 _ => {}
             }
         }
 
         if game_controller_state.buttons.x {
-            self.should_render_wireframe = !self.should_render_wireframe;
+            self.show_wireframe = !self.show_wireframe;
         } else if game_controller_state.buttons.y {
-            self.should_render_normals = !self.should_render_normals;
+            self.show_normals = !self.show_normals;
         }
     }
 }
