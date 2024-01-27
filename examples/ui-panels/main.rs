@@ -57,11 +57,11 @@ fn main() -> Result<(), String> {
          -> () {
             // @TODO(mzalla) Update panel tree in response to mouse events
         },
-        |framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<(), String> {
+        |panel_framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<(), String> {
             let font = font_cache.load(&font_info).unwrap();
 
             Graphics::text(
-                framebuffer,
+                panel_framebuffer,
                 &font,
                 &TextOperation {
                     text: &info.title,
