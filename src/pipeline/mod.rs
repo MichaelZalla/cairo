@@ -2,6 +2,7 @@ use std::sync::RwLock;
 
 use crate::{
     buffer::Buffer2D,
+    color::Color,
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
@@ -161,7 +162,11 @@ where
                     let x = index as u32 % self.deferred_framebuffer.width;
                     let y = index as u32 / self.deferred_framebuffer.width;
 
-                    let color = self.fragment_shader.call(&sample);
+                    let color = if self.options.show_lighting {
+                        self.fragment_shader.call(&sample)
+                    } else {
+                        Color::from_vec3(sample.diffuse * 255.0)
+                    };
 
                     self.deferred_framebuffer.set(x, y, color.to_u32());
                 }

@@ -10,6 +10,7 @@ pub struct PipelineOptions {
     pub wireframe_color: Color,
     pub show_wireframe: bool,
     pub show_rasterized_geometry: bool,
+    pub show_lighting: bool,
     pub show_normals: bool,
     pub cull_backfaces: bool,
 }
@@ -20,6 +21,7 @@ impl Default for PipelineOptions {
             wireframe_color: color::WHITE,
             show_wireframe: false,
             show_rasterized_geometry: true,
+            show_lighting: true,
             show_normals: false,
             cull_backfaces: true,
         }
@@ -42,9 +44,12 @@ impl PipelineOptions {
                     self.show_rasterized_geometry = !self.show_rasterized_geometry;
                 }
                 Keycode::Num3 { .. } => {
-                    self.show_normals = !self.show_normals;
+                    self.show_lighting = !self.show_lighting;
                 }
                 Keycode::Num4 { .. } => {
+                    self.show_normals = !self.show_normals;
+                }
+                Keycode::Num5 { .. } => {
                     self.cull_backfaces = !self.cull_backfaces;
                 }
                 _ => {}
