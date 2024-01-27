@@ -14,6 +14,9 @@ use crate::{
     time::TimingInfo,
 };
 
+static DEFAULT_WINDOW_WIDTH: u32 = 960;
+static DEFAULT_WINDOW_HEIGHT: u32 = 540;
+
 #[derive(Debug, Clone)]
 pub struct AppWindowInfo {
     pub title: String,
@@ -31,14 +34,14 @@ impl Default for AppWindowInfo {
     fn default() -> Self {
         Self {
             title: "App".to_string(),
-            canvas_width: 960,
-            canvas_height: 540,
+            window_width: DEFAULT_WINDOW_WIDTH,
+            window_height: DEFAULT_WINDOW_HEIGHT,
+            canvas_width: DEFAULT_WINDOW_WIDTH,
+            canvas_height: DEFAULT_WINDOW_HEIGHT,
             full_screen: false,
             show_cursor: true,
             relative_mouse_mode: false,
             vertical_sync: false,
-            window_width: 960,
-            window_height: 540,
         }
     }
 }
