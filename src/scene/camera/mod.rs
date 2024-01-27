@@ -290,8 +290,13 @@ impl Camera {
 
         // Update camera pitch and yaw, based on mouse position deltas.
 
-        self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
-        self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
+        if mouse_x_delta != 0.0 {
+            self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
+        }
+
+        if mouse_y_delta != 0.0 {
+            self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
+        }
 
         // Apply field-of-view zoom based on mousewheel input.
 
@@ -379,7 +384,12 @@ impl Camera {
         let pitch_delta = right_joystick_position_normalized.y * (PI / 64.0);
         let _roll_delta = -yaw_delta * 0.5;
 
-        self.set_pitch(self.pitch - pitch_delta * 2.0 * PI);
-        self.set_yaw(self.yaw - yaw_delta * 2.0 * PI);
+        if pitch_delta != 0.0 {
+            self.set_pitch(self.pitch - pitch_delta * 2.0 * PI);
+        }
+
+        if yaw_delta != 0.0 {
+            self.set_yaw(self.yaw - yaw_delta * 2.0 * PI);
+        }
     }
 }
