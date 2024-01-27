@@ -69,13 +69,6 @@ fn main() -> Result<(), String> {
             width: window_info.window_width,
             height: window_info.window_height,
         },
-        |_app: &mut App,
-         _keyboard_state: &KeyboardState,
-         _mouse_state: &MouseState,
-         _game_controller_state: &GameControllerState|
-         -> () {
-            // @TODO(mzalla) Update panel tree in response to mouse events
-        },
         render_rwl_option,
     );
 
@@ -83,21 +76,17 @@ fn main() -> Result<(), String> {
 
     let current_mouse_state: RwLock<MouseState> = RwLock::new(Default::default());
 
-    root_panel_rc.borrow_mut().split()?;
-
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> () {
-        // Delegrate update actions to the root panel
+        // Delegrate update actions to the root panel?
 
-        ((*root_panel_rc.borrow_mut()).update)(
-            app,
-            keyboard_state,
-            mouse_state,
-            game_controller_state,
-        );
+        root_panel_rc
+            .borrow_mut()
+            .update(app, keyboard_state, mouse_state, game_controller_state)
+            .unwrap();
 
         // Cache the mouse state (position) so that we can render a crosshair.
 
