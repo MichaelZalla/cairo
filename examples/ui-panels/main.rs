@@ -57,7 +57,7 @@ fn main() -> Result<(), String> {
          -> () {
             // @TODO(mzalla) Update panel tree in response to mouse events
         },
-        |framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<Vec<u32>, String> {
+        |framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<(), String> {
             let font = font_cache.load(&font_info).unwrap();
 
             Graphics::text(
@@ -69,9 +69,7 @@ fn main() -> Result<(), String> {
                     y: 8,
                     color: color::YELLOW,
                 },
-            )?;
-
-            return Ok(framebuffer.get_all().clone());
+            )
         },
     );
 
@@ -108,19 +106,13 @@ fn main() -> Result<(), String> {
 
         // Delegate render call to the root panel
 
-        let panel_pixel_data = root_panel_rc.borrow_mut().render()?;
+        let mut root = root_panel_rc.borrow_mut();
 
-        let panel_info = &root_panel_rc.borrow().info;
+        root.render()?;
 
         // Blit panel pixels (local space) onto global pixels
 
-        framebuffer.blit(
-            panel_info.x,
-            panel_info.y,
-            panel_info.width,
-            panel_info.height,
-            &panel_pixel_data,
-        );
+        framebuffer.blit_from(root.info.x, root.info.y, &root.buffer);
 
         return Ok(framebuffer.get_all().clone());
     };

@@ -21,10 +21,10 @@ pub struct PanelInfo {
 pub struct Panel<U, R>
 where
     U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
-    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
+    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
 {
     pub info: PanelInfo,
-    buffer: Buffer2D,
+    pub buffer: Buffer2D,
     pub update: U,
     _render: R,
     left: Option<Rc<Panel<U, R>>>,
@@ -35,12 +35,12 @@ where
 impl<U, R> Panel<U, R>
 where
     U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
-    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
+    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
 {
     pub fn new(info: PanelInfo, update: U, render: R) -> Self
     where
         U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
-        R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<Vec<u32>, String>,
+        R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
     {
         let buffer = Buffer2D::new(info.width, info.height, None);
 
@@ -55,11 +55,11 @@ where
         };
     }
 
-    pub fn render(&mut self) -> Result<Vec<u32>, String> {
+    pub fn render(&mut self) -> Result<(), String> {
         // Renders a border around the panel's boundaries
         self.render_border();
 
-        return (self._render)(&mut self.buffer, &self.info);
+        (self._render)(&mut self.buffer, &self.info)
     }
 
     fn render_border(&mut self) {
