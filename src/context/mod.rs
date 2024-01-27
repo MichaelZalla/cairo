@@ -134,7 +134,9 @@ pub fn get_application_context(window_info: &AppWindowInfo) -> Result<Applicatio
 
             // Captures mouse movements even when mouse position is constrained
             // to the window border.
-            sdl_context.mouse().set_relative_mouse_mode(true);
+            sdl_context
+                .mouse()
+                .set_relative_mouse_mode(window_info.relative_mouse_mode);
 
             // Begin with the cursor at the center of the viewport.
             sdl_context.mouse().warp_mouse_in_window(

@@ -23,6 +23,7 @@ pub struct AppWindowInfo {
     pub window_height: u32,
     pub full_screen: bool,
     pub show_cursor: bool,
+    pub relative_mouse_mode: bool,
     pub vertical_sync: bool,
 }
 
@@ -34,6 +35,7 @@ impl Default for AppWindowInfo {
             canvas_height: 540,
             full_screen: false,
             show_cursor: true,
+            relative_mouse_mode: false,
             vertical_sync: false,
             window_width: 960,
             window_height: 540,

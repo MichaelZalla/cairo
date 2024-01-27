@@ -19,6 +19,7 @@ use self::texture_mapped_cube_scene::TextureMappedCubeScene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/texture-mapping".to_string(),
+        relative_mouse_mode: true,
         ..Default::default()
     };
 

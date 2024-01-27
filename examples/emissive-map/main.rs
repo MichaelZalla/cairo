@@ -21,6 +21,7 @@ use self::emissive_map_scene::EmissiveMapScene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/emissive-map".to_string(),
+        relative_mouse_mode: true,
         ..Default::default()
     };
 

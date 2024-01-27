@@ -15,7 +15,6 @@ use cairo::{
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/ui-panels".to_string(),
-        show_cursor: true,
         ..Default::default()
     };
 
@@ -120,14 +119,6 @@ fn main() -> Result<(), String> {
             panel_info.height,
             &panel_pixel_data,
         );
-
-        // Render a custom crosshair
-
-        let mouse_state = current_mouse_state.read().unwrap();
-
-        let (x, y) = (mouse_state.position.0, mouse_state.position.1);
-
-        Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, color::YELLOW);
 
         return Ok(framebuffer.get_all().clone());
     };

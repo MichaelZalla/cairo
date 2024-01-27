@@ -42,6 +42,7 @@ fn main() -> Result<(), String> {
         title: "examples/generate-primitives".to_string(),
         full_screen: false,
         vertical_sync: true,
+        relative_mouse_mode: true,
         window_width: resolution.0,
         window_height: resolution.1,
         canvas_width: resolution.0,

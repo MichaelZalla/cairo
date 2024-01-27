@@ -21,6 +21,7 @@ use self::specular_map_scene::SpecularMapScene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/specular-map".to_string(),
+        relative_mouse_mode: true,
         ..Default::default()
     };
 

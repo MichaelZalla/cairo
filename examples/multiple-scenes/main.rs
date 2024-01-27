@@ -21,6 +21,7 @@ use multiple_scenes_scene::MultipleScenesScene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/multiple-scenes".to_string(),
+        relative_mouse_mode: true,
         ..Default::default()
     };
 

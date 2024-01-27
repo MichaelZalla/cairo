@@ -23,6 +23,7 @@ fn main() -> Result<(), String> {
         window_height: 520,
         canvas_width: 860,
         canvas_height: 520,
+        relative_mouse_mode: true,
         ..Default::default()
     };
 
