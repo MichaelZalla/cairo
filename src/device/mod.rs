@@ -7,14 +7,14 @@ use sdl2::{
     mouse::{MouseButton, MouseWheelDirection},
 };
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Debug)]
 pub enum MouseEventKind {
     #[default]
     Down,
     Up,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct MouseEvent {
     pub button: MouseButton,
     pub kind: MouseEventKind,
@@ -29,7 +29,7 @@ impl Default for MouseEvent {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct MouseState {
     pub button_event: Option<MouseEvent>,
     pub position: (i32, i32),
