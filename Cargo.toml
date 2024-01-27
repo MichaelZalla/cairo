@@ -12,9 +12,6 @@ build = "build.rs"
 debug_print_feature = []
 dead_code = []
 
-[dependencies]
-libmath = "0.2.1"
-
 [dependencies.sdl2]
 version = "0.36.0"
 default-features = false
