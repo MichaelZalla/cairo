@@ -41,6 +41,25 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
+    let render_rwl = RwLock::new(
+        |panel_framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<(), String> {
+            let font = font_cache.load(&font_info).unwrap();
+
+            Graphics::text(
+                panel_framebuffer,
+                &font,
+                &TextOperation {
+                    text: &format!("Panel {}", info.id),
+                    x: 8,
+                    y: 8,
+                    color: color::YELLOW,
+                },
+            )
+        },
+    );
+
+    let render_rwl_option = Some(&render_rwl);
+
     let root_panel = Panel::new(
         PanelInfo {
             id: 0,
@@ -57,20 +76,7 @@ fn main() -> Result<(), String> {
          -> () {
             // @TODO(mzalla) Update panel tree in response to mouse events
         },
-        |panel_framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<(), String> {
-            let font = font_cache.load(&font_info).unwrap();
-
-            Graphics::text(
-                panel_framebuffer,
-                &font,
-                &TextOperation {
-                    text: &format!("Panel {}", info.id),
-                    x: 8,
-                    y: 8,
-                    color: color::YELLOW,
-                },
-            )
-        },
+        render_rwl_option,
     );
 
     let root_panel_rc = RefCell::new(root_panel);

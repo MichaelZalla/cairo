@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::RwLock};
 
 use crate::{
     app::App,
@@ -18,7 +18,7 @@ pub struct PanelInfo {
     pub height: u32,
 }
 
-pub struct Panel<U, R>
+pub struct Panel<'a, U, R>
 where
     U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
     R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
@@ -26,18 +26,18 @@ where
     pub info: PanelInfo,
     pub buffer: Buffer2D,
     pub update: U,
-    _render: R,
-    left: Option<Rc<Panel<U, R>>>,
-    right: Option<Rc<Panel<U, R>>>,
+    render_rwl: Option<&'a RwLock<R>>,
+    left: Option<Rc<Panel<'a, U, R>>>,
+    right: Option<Rc<Panel<'a, U, R>>>,
     alpha: f32,
 }
 
-impl<U, R> Panel<U, R>
+impl<'a, U, R> Panel<'a, U, R>
 where
     U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
     R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
 {
-    pub fn new(info: PanelInfo, update: U, render: R) -> Self
+    pub fn new(info: PanelInfo, update: U, render_rwl: Option<&'a RwLock<R>>) -> Self
     where
         U: FnMut(&mut App, &KeyboardState, &MouseState, &GameControllerState) -> (),
         R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
@@ -48,7 +48,7 @@ where
             info,
             buffer,
             update,
-            _render: render,
+            render_rwl,
             left: None,
             right: None,
             alpha: 1.0,
@@ -59,7 +59,14 @@ where
         // Renders a border around the panel's boundaries
         self.render_border();
 
-        (self._render)(&mut self.buffer, &self.info)
+        match self.render_rwl {
+            Some(lock) => {
+                let mut callback = lock.write().unwrap();
+
+                (*callback)(&mut self.buffer, &self.info)
+            }
+            None => Ok(()),
+        }
     }
 
     fn render_border(&mut self) {
