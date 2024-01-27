@@ -322,15 +322,7 @@ where
         };
 
         if self.options.show_rasterized_geometry {
-            let deferred_frame = self.deferred_framebuffer.as_ref().unwrap().get_all();
-
-            composite_framebuffer.blit(
-                0,
-                0,
-                self.composite_framebuffer_width,
-                self.composite_framebuffer_height,
-                deferred_frame,
-            );
+            composite_framebuffer.blit_from(0, 0, self.deferred_framebuffer.as_ref().unwrap());
         }
 
         let forward_frame = self.forward_framebuffer.as_ref().unwrap().get_all();

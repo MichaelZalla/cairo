@@ -106,7 +106,7 @@ where
         self
     }
 
-    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) -> () {
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) {
         debug_assert!(data.len() as u32 == width * height);
 
         for x in left..(left + width) {
@@ -120,5 +120,9 @@ where
                 self.data[dest_pixel_index] = src_pixel_value;
             }
         }
+    }
+
+    pub fn blit_from(&mut self, left: u32, top: u32, other: &Buffer2D<T>) {
+        self.blit(left, top, other.width, other.height, other.get_all())
     }
 }
