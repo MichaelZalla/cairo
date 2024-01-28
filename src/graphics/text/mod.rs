@@ -28,20 +28,30 @@ impl Graphics {
 
         // Copy the rendered pixels to this buffer, at location (op.x, op.y).
 
-        let start_x = op.x;
-        let start_y = op.y;
+        Graphics::blit_u8_to_u32(&src_buffer, op.x, op.y, width, height, dest_buffer);
 
-        if start_x >= dest_buffer.width {
-            return Ok(());
+        Ok(())
+    }
+
+    pub fn blit_u8_to_u32(
+        src_buffer: &Buffer2D<u8>,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        dest_buffer: &mut Buffer2D<u32>,
+    ) {
+        if x >= dest_buffer.width {
+            return;
         }
 
-        if start_y >= dest_buffer.height {
-            return Ok(());
+        if y >= dest_buffer.height {
+            return;
         }
 
-        for y in 0..height.min(dest_buffer.height - op.y) {
-            for x in 0..width.min(dest_buffer.width - op.x) {
-                let index = (x as usize + y as usize * width as usize) * 4;
+        for y_rel in 0..height.min(dest_buffer.height - y) {
+            for x_rel in 0..width.min(dest_buffer.width - x) {
+                let index = (x_rel as usize + y_rel as usize * width as usize) * 4;
 
                 let a = src_buffer.data[index + 3];
 
@@ -57,11 +67,9 @@ impl Graphics {
                 }
                 .to_u32();
 
-                dest_buffer.set(start_x + x, start_y + y, value)
+                dest_buffer.set(x + x_rel, y + y_rel, value)
             }
         }
-
-        Ok(())
     }
 
     pub fn render_debug_messages(
@@ -90,7 +98,7 @@ impl Graphics {
         debug_messages.drain();
     }
 
-    fn make_text_texture(
+    pub fn make_text_texture(
         font: &Font,
         op: &TextOperation,
     ) -> Result<(u32, u32, TextureBuffer), String> {

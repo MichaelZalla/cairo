@@ -13,6 +13,8 @@ use crate::{
     ui::button::{do_button, ButtonOptions},
 };
 
+pub static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
+
 #[derive(Default, Debug)]
 pub struct PanelInfo {
     pub id: u32,
@@ -307,8 +309,6 @@ where
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &FontInfo,
     ) -> Result<(), String> {
-        static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
-
         let (x1, y1, x2, y2) = (
             0 as i32,
             PANEL_TITLE_BAR_HEIGHT as i32,
@@ -342,13 +342,21 @@ where
             static CLOSE_BUTTON_OFFSET: u32 = (PANEL_TITLE_BAR_HEIGHT - CLOSE_BUTTON_SIZE) / 2;
 
             let button_options = ButtonOptions {
-                x: CLOSE_BUTTON_OFFSET,
-                y: CLOSE_BUTTON_OFFSET,
+                x_offset: CLOSE_BUTTON_OFFSET,
+                y_offset: CLOSE_BUTTON_OFFSET,
+                label: "Close".to_string(),
                 align_right: true,
                 ..Default::default()
             };
 
-            if do_button(&self.info, &mut self.buffer, mouse_state, &button_options) {
+            if do_button(
+                &self.info,
+                &mut self.buffer,
+                mouse_state,
+                font_cache,
+                font_info,
+                &button_options,
+            ) {
                 println!("Closing panel {}...", self.info.id);
             }
         }

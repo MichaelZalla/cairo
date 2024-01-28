@@ -1,20 +1,22 @@
+use std::sync::RwLock;
+
 use sdl2::mouse::MouseButton;
 
 use crate::{
     buffer::Buffer2D,
     color::{self},
     device::{MouseEventKind, MouseState},
-    graphics::Graphics,
+    font::{cache::FontCache, FontInfo},
+    graphics::{text::TextOperation, Graphics},
 };
 
 use super::panel::PanelInfo;
 
 #[derive(Default, Debug)]
 pub struct ButtonOptions {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
+    pub x_offset: u32,
+    pub y_offset: u32,
+    pub label: String,
     pub align_right: bool,
 }
 
@@ -22,8 +24,24 @@ pub fn do_button(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
+    font_cache: &'static RwLock<FontCache<'static>>,
+    font_info: &FontInfo,
     options: &ButtonOptions,
 ) -> bool {
+    let op = TextOperation {
+        text: &options.label,
+        x: 0,
+        y: 0,
+        color: color::YELLOW,
+    };
+
+    let mut cache = font_cache.write().unwrap();
+
+    let font = cache.load(font_info).unwrap();
+
+    let (label_width, label_height, text_texture) =
+        Graphics::make_text_texture(font.as_ref(), &op).unwrap();
+
     let mut is_button_down: bool = false;
     let mut was_button_released: bool = false;
 
@@ -32,12 +50,12 @@ pub fn do_button(
     let (mut mouse_x, mut mouse_y) = (mouse_state.position.0 as u32, mouse_state.position.1 as u32);
 
     let x = if options.align_right {
-        panel_info.width - options.width - options.x
+        panel_info.width - label_width - options.x_offset
     } else {
-        options.x
+        options.x_offset
     };
 
-    let y = options.y;
+    let y = options.y_offset;
 
     if mouse_x >= panel_info.x && mouse_y >= panel_info.y {
         // Maps mouse_x and mouse_y into panel's local coordinates.
@@ -46,9 +64,9 @@ pub fn do_button(
         mouse_y -= panel_info.y;
 
         if mouse_x as u32 >= x
-            && mouse_x < x + options.width
+            && mouse_x < x + label_width
             && mouse_y >= y
-            && mouse_y < y + options.height
+            && mouse_y < y + label_height
         {
             // Check whether LMB was pressed or released inside of this button.
 
@@ -75,25 +93,42 @@ pub fn do_button(
     }
 
     // Render an unpressed or pressed button.
-    draw_button(panel_buffer, options, is_button_down, was_button_released);
+    draw_button(
+        panel_buffer,
+        x,
+        y,
+        label_width,
+        label_height,
+        &text_texture,
+        is_button_down,
+        was_button_released,
+    );
 
     was_button_released
 }
 
 fn draw_button(
     panel_buffer: &mut Buffer2D,
-    options: &ButtonOptions,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+    text_texture: &Buffer2D<u8>,
     was_pressed: bool,
     _was_released: bool,
 ) {
+    // Draw the button's text label.
+
+    Graphics::blit_u8_to_u32(text_texture, x, y, width, height, panel_buffer);
+
     // Draw the button's border.
 
     Graphics::rectangle(
         panel_buffer,
-        options.x,
-        options.y,
-        options.width,
-        options.height,
+        x,
+        y,
+        width,
+        height,
         if was_pressed {
             color::GREEN
         } else {
