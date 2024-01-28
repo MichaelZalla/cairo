@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-use super::panel::PanelInfo;
+use super::{context::UIContext, panel::PanelInfo};
 
 #[derive(Debug)]
 pub struct TextOptions {
@@ -42,6 +42,7 @@ impl Default for TextOptions {
 pub struct DoTextResult {}
 
 pub fn do_text(
+    _ui_context: &'static UIContext,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     font_cache_rwl: &'static RwLock<FontCache<'static>>,

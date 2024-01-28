@@ -11,6 +11,8 @@ use crate::{
     ui::button::{do_button, ButtonOptions},
 };
 
+use super::context::UIContext;
+
 pub static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
 
 #[derive(Default, Debug)]
@@ -164,6 +166,7 @@ where
         app: &mut App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
+        ui_context: &'static UIContext,
         font_cache: &'static RwLock<FontCache<'static>>,
         text_cache: &'static RwLock<TextCache<'static>>,
         font_info: &'static FontInfo,
@@ -177,6 +180,7 @@ where
                     app,
                     keyboard_state,
                     mouse_state,
+                    ui_context,
                     font_cache,
                     text_cache,
                     font_info,
@@ -188,6 +192,7 @@ where
                     app,
                     keyboard_state,
                     mouse_state,
+                    ui_context,
                     font_cache,
                     text_cache,
                     font_info,
@@ -229,7 +234,13 @@ where
                 self.draw_panel_border();
 
                 // Renders a default title-bar for this panel.
-                self.draw_panel_title_bar(mouse_state, font_cache, font_info, text_cache)?;
+                self.draw_panel_title_bar(
+                    mouse_state,
+                    ui_context,
+                    font_cache,
+                    font_info,
+                    text_cache,
+                )?;
             }
         }
 
@@ -349,6 +360,7 @@ where
     fn draw_panel_title_bar(
         &mut self,
         mouse_state: &MouseState,
+        ui_context: &'static UIContext,
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &'static FontInfo,
         text_cache: &'static RwLock<TextCache<'static>>,
@@ -392,6 +404,7 @@ where
             };
 
             if do_button(
+                ui_context,
                 &self.info,
                 &mut self.buffer,
                 mouse_state,

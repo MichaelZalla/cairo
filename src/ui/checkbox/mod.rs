@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-use super::panel::PanelInfo;
+use super::{context::UIContext, panel::PanelInfo};
 
 #[derive(Default, Debug)]
 pub struct CheckboxOptions {
@@ -34,6 +34,7 @@ pub struct DoCheckboxResult {
 }
 
 pub fn do_checkbox(
+    _ui_context: &'static UIContext,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,

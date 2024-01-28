@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-use super::panel::PanelInfo;
+use super::{context::UIContext, panel::PanelInfo};
 
 #[derive(Default, Debug)]
 pub struct ButtonOptions {
@@ -34,6 +34,7 @@ pub struct DoButtonResult {
 }
 
 pub fn do_button(
+    _ui_context: &'static UIContext,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,

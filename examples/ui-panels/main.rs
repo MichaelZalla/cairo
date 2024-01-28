@@ -12,6 +12,7 @@ use cairo::{
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
+        context::UIContext,
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
     },
@@ -57,6 +58,8 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
+    let ui_context: &'static mut UIContext = Box::leak(Box::new(Default::default()));
+
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
     let render_rwl = RwLock::new(
@@ -81,6 +84,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_button(
+                ui_context,
                 info,
                 buffer,
                 mouse_state,
@@ -95,6 +99,7 @@ fn main() -> Result<(), String> {
             }
 
             if do_button(
+                ui_context,
                 info,
                 buffer,
                 mouse_state,
@@ -129,6 +134,7 @@ fn main() -> Result<(), String> {
             let entry = checkboxes_model.entry(key.clone());
 
             if do_checkbox(
+                ui_context,
                 info,
                 buffer,
                 mouse_state,
@@ -160,6 +166,7 @@ fn main() -> Result<(), String> {
             };
 
             do_text(
+                ui_context,
                 info,
                 buffer,
                 font_cache,
@@ -169,6 +176,7 @@ fn main() -> Result<(), String> {
             );
 
             do_text(
+                ui_context,
                 info,
                 buffer,
                 font_cache,
@@ -185,6 +193,7 @@ fn main() -> Result<(), String> {
             let uptime = app.timing_info.uptime_seconds;
 
             do_text(
+                ui_context,
                 info,
                 buffer,
                 font_cache,
@@ -241,6 +250,7 @@ fn main() -> Result<(), String> {
                 app,
                 keyboard_state,
                 mouse_state,
+                ui_context,
                 font_cache,
                 text_cache,
                 font_info,
