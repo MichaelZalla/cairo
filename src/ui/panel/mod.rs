@@ -1,12 +1,10 @@
 use std::{borrow::BorrowMut, sync::RwLock};
 
-use sdl2::mouse::MouseButton;
-
 use crate::{
     app::App,
     buffer::Buffer2D,
     color,
-    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
+    device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
     graphics::Graphics,
@@ -72,10 +70,10 @@ where
 
     pub fn update(
         &mut self,
-        app: &mut App,
-        keyboard_state: &KeyboardState,
+        _app: &mut App,
+        _keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        game_controller_state: &GameControllerState,
+        _game_controller_state: &GameControllerState,
     ) -> Result<(), String> {
         let (x, y) = mouse_state.position;
 
@@ -84,83 +82,9 @@ where
             || y < self.info.y as i32
             || y >= (self.info.y + self.info.height) as i32
         {
-            // Click occurred outside of this panel.
+            // Mouse is not inside this panel.
 
             return Ok(());
-        }
-
-        let local_x = x - self.info.x as i32;
-        let local_y = y - self.info.y as i32;
-
-        match mouse_state.button_event {
-            Some(event) => {
-                match event.kind {
-                    MouseEventKind::Down => {
-                        // Click occurred inside of this panel
-
-                        let child_target: &mut Box<Panel<R>>;
-
-                        match self.left.borrow_mut() {
-                            Some(left) => {
-                                // Split panel scenario
-
-                                let right = self.right.as_mut().unwrap();
-
-                                if x < right.info.x as i32 {
-                                    // Occurred in left child
-
-                                    child_target = left;
-                                } else {
-                                    // Occurred in right child
-
-                                    child_target = right;
-                                }
-
-                                let mut local_mouse_state = mouse_state.clone();
-
-                                local_mouse_state.position.0 = local_x - child_target.info.x as i32;
-                                local_mouse_state.position.1 = local_y - child_target.info.y as i32;
-
-                                println!(
-                                    "[{}] Panel {} observed a click event ({:?}) at ({},{}) (local coords).",
-                                    self.info.id,
-                                    child_target.info.id,
-                                    event.button,
-                                    local_mouse_state.position.0,
-                                    local_mouse_state.position.1
-                                );
-
-                                if child_target.left.borrow_mut().is_none()
-                                    && event.button == MouseButton::Right
-                                {
-                                    self.merge()?;
-                                } else {
-                                    child_target.update(
-                                        app,
-                                        &keyboard_state,
-                                        &mouse_state,
-                                        &game_controller_state,
-                                    )?;
-                                }
-                            }
-                            _ => {
-                                // Merged panel scenario
-
-                                println!(
-                                    "[{}] Panel {} observed a click event ({:?}) at ({},{}) (local coords).",
-                                    self.info.id,
-                                    self.info.id,
-                                    event.button,
-                                    local_x,
-                                    local_y
-                                );
-                            }
-                        }
-                    }
-                    _ => (),
-                }
-            }
-            _ => (),
         }
 
         Ok(())
