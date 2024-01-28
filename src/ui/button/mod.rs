@@ -15,6 +15,7 @@ pub struct ButtonOptions {
     pub y: u32,
     pub width: u32,
     pub height: u32,
+    pub align_right: bool,
 }
 
 pub fn do_button(
@@ -30,7 +31,12 @@ pub fn do_button(
 
     let (mut mouse_x, mut mouse_y) = (mouse_state.position.0 as u32, mouse_state.position.1 as u32);
 
-    let x = options.x;
+    let x = if options.align_right {
+        panel_info.width - options.width - options.x
+    } else {
+        options.x
+    };
+
     let y = options.y;
 
     if mouse_x >= panel_info.x && mouse_y >= panel_info.y {

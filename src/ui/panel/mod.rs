@@ -344,6 +344,7 @@ where
             let button_options = ButtonOptions {
                 x: CLOSE_BUTTON_OFFSET,
                 y: CLOSE_BUTTON_OFFSET,
+                align_right: true,
                 ..Default::default()
             };
 
