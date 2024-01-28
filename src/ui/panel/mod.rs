@@ -25,7 +25,7 @@ pub struct PanelInfo {
 
 pub struct Panel<'a, R>
 where
-    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
+    R: FnMut(&PanelInfo, &mut Buffer2D) -> Result<(), String>,
 {
     pub info: PanelInfo,
     pub buffer: Buffer2D,
@@ -37,7 +37,7 @@ where
 
 impl<'a, R> Panel<'a, R>
 where
-    R: FnMut(&mut Buffer2D, &PanelInfo) -> Result<(), String>,
+    R: FnMut(&PanelInfo, &mut Buffer2D) -> Result<(), String>,
 {
     pub fn new(info: PanelInfo, render_rwl: Option<&'a RwLock<R>>) -> Self {
         let buffer = Buffer2D::new(info.width, info.height, None);
@@ -198,7 +198,7 @@ where
                     Some(lock) => {
                         let mut callback = lock.write().unwrap();
 
-                        (*callback)(&mut self.buffer, &self.info)?;
+                        (*callback)(&self.info, &mut self.buffer)?;
                     }
                     _ => {}
                 }

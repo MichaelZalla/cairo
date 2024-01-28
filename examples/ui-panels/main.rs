@@ -45,7 +45,7 @@ fn main() -> Result<(), String> {
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let render_rwl = RwLock::new(
-        |_panel_framebuffer: &mut Buffer2D, _info: &PanelInfo| -> Result<(), String> { Ok(()) },
+        |_info: &PanelInfo, _panel_framebuffer: &mut Buffer2D| -> Result<(), String> { Ok(()) },
     );
 
     let render_rwl_option = Some(&render_rwl);
