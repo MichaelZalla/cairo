@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, sync::RwLock};
+use std::{cell::RefCell, collections::HashMap, env, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -11,6 +11,7 @@ use cairo::{
     graphics::text::cache::TextCache,
     ui::{
         button::{do_button, ButtonOptions},
+        checkbox::{do_checkbox, CheckboxOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
     },
 };
@@ -55,6 +56,8 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
+    let mut checkboxes_model = HashMap::<String, bool>::new();
+
     let render_rwl = RwLock::new(
         |info: &PanelInfo,
          buffer: &mut Buffer2D,
@@ -84,6 +87,40 @@ fn main() -> Result<(), String> {
             .was_released
             {
                 println!("You clicked Button {}!", info.id);
+            }
+
+            let checkbox_options = CheckboxOptions {
+                label: format!("Checkbox {}", info.id).to_string(),
+                x_offset: 8,
+                y_offset: PANEL_TITLE_BAR_HEIGHT + 8 + 24,
+                ..Default::default()
+            };
+
+            let key = info.id.to_string();
+
+            checkboxes_model.entry(key.clone()).or_default();
+
+            let entry = checkboxes_model.entry(key.clone());
+
+            if do_checkbox(
+                info,
+                buffer,
+                mouse_state,
+                font_cache,
+                text_cache,
+                font_info,
+                &checkbox_options,
+                entry,
+            )
+            .was_released
+            {
+                let is_checked = checkboxes_model.entry(key.clone()).or_default();
+
+                println!(
+                    "Checkbox {} is now {}!",
+                    info.id,
+                    if *is_checked { "checked" } else { "unchecked" }
+                );
             }
 
             Ok(())
