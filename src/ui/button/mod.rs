@@ -46,7 +46,7 @@ pub fn do_button(
 
     let font = cache.load(font_info).unwrap();
 
-    let (label_width, label_height, text_texture) =
+    let (_texture_width, _texture_height, texture) =
         Graphics::make_text_texture(font.as_ref(), &op).unwrap();
 
     let mut is_down: bool = false;
@@ -57,7 +57,7 @@ pub fn do_button(
     let (mut mouse_x, mut mouse_y) = (mouse_state.position.0 as u32, mouse_state.position.1 as u32);
 
     let x = if options.align_right {
-        panel_info.width - label_width - options.x_offset
+        panel_info.width - texture.width - options.x_offset
     } else {
         options.x_offset
     };
@@ -71,9 +71,9 @@ pub fn do_button(
         mouse_y -= panel_info.y;
 
         if mouse_x as u32 >= x
-            && mouse_x < x + label_width
+            && mouse_x < x + texture.width
             && mouse_y >= y
-            && mouse_y < y + label_height
+            && mouse_y < y + texture.height
         {
             // Check whether LMB was pressed or released inside of this button.
 
@@ -105,16 +105,7 @@ pub fn do_button(
     };
 
     // Render an unpressed or pressed button.
-    draw_button(
-        panel_buffer,
-        x,
-        y,
-        label_width,
-        label_height,
-        &text_texture,
-        options,
-        &result,
-    );
+    draw_button(panel_buffer, x, y, &texture, options, &result);
 
     DoButtonResult {
         is_down,
@@ -126,15 +117,13 @@ fn draw_button(
     panel_buffer: &mut Buffer2D,
     x: u32,
     y: u32,
-    width: u32,
-    height: u32,
-    text_texture: &Buffer2D<u8>,
+    texture: &Buffer2D<u8>,
     options: &ButtonOptions,
     result: &DoButtonResult,
 ) {
     // Draw the button's text label.
 
-    Graphics::blit_u8_to_u32(text_texture, x, y, width, height, panel_buffer);
+    Graphics::blit_u8_to_u32(texture, x, y, texture.width, texture.height, panel_buffer);
 
     // Draw the button's border.
 
@@ -143,8 +132,8 @@ fn draw_button(
             panel_buffer,
             x,
             y,
-            width,
-            height,
+            texture.width,
+            texture.height,
             if result.is_down {
                 color::GREEN
             } else {
