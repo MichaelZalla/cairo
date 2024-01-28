@@ -1,6 +1,10 @@
 use std::cmp::{max, min};
 
-use crate::{buffer::Buffer2D, color::Color, vec::vec2};
+use crate::{
+    buffer::Buffer2D,
+    color::Color,
+    vec::vec2::{self, Vec2},
+};
 
 pub mod text;
 
@@ -129,6 +133,41 @@ impl Graphics {
                 );
             }
         }
+    }
+
+    pub fn rectangle(buffer: &mut Buffer2D, x: u32, y: u32, width: u32, height: u32, color: Color) {
+        // Draw borders.
+
+        Graphics::poly_line(
+            buffer,
+            &[
+                // Top left
+                Vec2 {
+                    x: x as f32,
+                    y: y as f32,
+                    z: 1.0,
+                },
+                // Top right
+                Vec2 {
+                    x: (x + width) as f32,
+                    y: y as f32,
+                    z: 1.0,
+                },
+                // Bottom right
+                Vec2 {
+                    x: (x + width) as f32,
+                    y: (y + height) as f32,
+                    z: 1.0,
+                },
+                // Bottom left
+                Vec2 {
+                    x: x as f32,
+                    y: (y + height) as f32,
+                    z: 1.0,
+                },
+            ],
+            color,
+        );
     }
 
     pub fn crosshair(

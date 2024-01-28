@@ -10,7 +10,6 @@ use crate::{
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
     graphics::Graphics,
-    vec::vec2::Vec2,
 };
 
 #[derive(Default, Debug)]
@@ -203,10 +202,10 @@ where
                 // Merged panel scenario
 
                 // Renders a border around the panel's boundaries.
-                self.render_border();
+                self.draw_panel_border();
 
                 // Renders a default title-bar for this panel.
-                self.render_title_bar(font_cache, font_info)?;
+                self.draw_panel_title_bar(font_cache, font_info)?;
 
                 // Runs the custom render callback, if any.
                 match self.render_rwl {
@@ -295,43 +294,16 @@ where
         Ok(())
     }
 
-    pub fn render_border(&mut self) {
-        let left = 0.0;
-        let top = 0.0;
-        let right = self.info.width as f32 - 1.0;
-        let bottom = self.info.height as f32 - 1.0;
+    pub fn draw_panel_border(&mut self) {
+        let x: u32 = 0;
+        let y = 0;
+        let width = self.info.width - 1;
+        let height = self.info.height - 1;
 
-        let panel_bounds = vec![
-            // Top-left
-            Vec2 {
-                y: top,
-                x: left,
-                z: 0.0,
-            },
-            // Top-right
-            Vec2 {
-                y: top,
-                x: right,
-                z: 0.0,
-            },
-            // Bottom-right
-            Vec2 {
-                y: bottom,
-                x: right,
-                z: 0.0,
-            },
-            // Bottom-left
-            Vec2 {
-                y: bottom,
-                x: left,
-                z: 0.0,
-            },
-        ];
-
-        Graphics::poly_line(&mut self.buffer, &panel_bounds, color::YELLOW);
+        Graphics::rectangle(&mut self.buffer, x, y, width, height, color::YELLOW)
     }
 
-    fn render_title_bar(
+    fn draw_panel_title_bar(
         &mut self,
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &FontInfo,
