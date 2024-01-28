@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
     let render_rwl = RwLock::new(
         |info: &PanelInfo,
          buffer: &mut Buffer2D,
-         _app: &mut App,
+         app: &mut App,
          _keyboard_state: &KeyboardState,
          mouse_state: &MouseState|
          -> Result<(), String> {
@@ -182,6 +182,8 @@ fn main() -> Result<(), String> {
                 },
             );
 
+            let uptime = app.timing_info.uptime_seconds;
+
             do_text(
                 info,
                 buffer,
@@ -190,7 +192,8 @@ fn main() -> Result<(), String> {
                 font_info,
                 &TextOptions {
                     y_offset: text_options.y_offset + 48,
-                    text: text_options.text.clone(),
+                    text: format!("Uptime: {}", uptime.to_string()),
+                    cache: false,
                     color: color::GREEN,
                     ..text_options
                 },

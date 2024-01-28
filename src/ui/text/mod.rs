@@ -15,13 +15,27 @@ use crate::{
 
 use super::panel::PanelInfo;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct TextOptions {
     pub x_offset: u32,
     pub y_offset: u32,
     pub text: String,
+    pub cache: bool,
     pub color: Color,
     pub align_right: bool,
+}
+
+impl Default for TextOptions {
+    fn default() -> Self {
+        Self {
+            x_offset: Default::default(),
+            y_offset: Default::default(),
+            text: Default::default(),
+            cache: true,
+            color: Default::default(),
+            align_right: Default::default(),
+        }
+    }
 }
 
 #[derive(Default, Debug)]
@@ -35,28 +49,48 @@ pub fn do_text(
     font_info: &'static FontInfo,
     options: &TextOptions,
 ) -> DoTextResult {
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.text);
+    let get_x_y = |texture: &Buffer2D<u8>| {
+        let x = if options.align_right {
+            panel_info.width - texture.width - options.x_offset
+        } else {
+            options.x_offset
+        };
 
-    let text_cache_key = TextCacheKey {
-        font_info,
-        text: options.text.clone(),
+        let y = options.y_offset;
+
+        (x, y)
     };
 
-    let text_cache = text_cache_rwl.read().unwrap();
+    match options.cache {
+        true => {
+            cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.text);
 
-    let texture = text_cache.get(&text_cache_key).unwrap();
+            let text_cache_key = TextCacheKey {
+                font_info,
+                text: options.text.clone(),
+            };
 
-    // Render a text span.
+            let text_cache = text_cache_rwl.read().unwrap();
 
-    let x = if options.align_right {
-        panel_info.width - texture.width - options.x_offset
-    } else {
-        options.x_offset
-    };
+            let texture_ref = text_cache.get(&text_cache_key).unwrap();
 
-    let y = options.y_offset;
+            let (x, y) = get_x_y(texture_ref);
 
-    draw_text(panel_buffer, x, y, texture, options);
+            draw_text(panel_buffer, x, y, texture_ref, options);
+        }
+        false => {
+            let mut font_cache = font_cache_rwl.write().unwrap();
+
+            let font = font_cache.load(font_info).unwrap();
+
+            let (_label_width, _label_height, texture) =
+                Graphics::make_text_texture(font.as_ref(), &options.text).unwrap();
+
+            let (x, y) = get_x_y(&texture);
+
+            draw_text(panel_buffer, x, y, &texture, options);
+        }
+    }
 
     DoTextResult {}
 }
