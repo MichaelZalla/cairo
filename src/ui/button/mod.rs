@@ -7,7 +7,13 @@ use crate::{
     color::{self},
     device::{MouseEventKind, MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::{text::TextOperation, Graphics},
+    graphics::{
+        text::{
+            cache::{cache_text, TextCache, TextCacheKey},
+            TextOperation,
+        },
+        Graphics,
+    },
 };
 
 use super::panel::PanelInfo;
@@ -31,8 +37,9 @@ pub fn do_button(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
-    font_cache: &'static RwLock<FontCache<'static>>,
-    font_info: &FontInfo,
+    font_cache_rwl: &'static RwLock<FontCache<'static>>,
+    text_cache_rwl: &'static RwLock<TextCache<'static>>,
+    font_info: &'static FontInfo,
     options: &ButtonOptions,
 ) -> DoButtonResult {
     let op = TextOperation {
@@ -42,12 +49,18 @@ pub fn do_button(
         color: color::YELLOW,
     };
 
-    let mut cache = font_cache.write().unwrap();
+    cache_text(font_cache_rwl, text_cache_rwl, font_info, &op);
 
-    let font = cache.load(font_info).unwrap();
+    let text_cache_key = TextCacheKey {
+        font_info,
+        text: op.text.clone(),
+    };
 
-    let (_texture_width, _texture_height, texture) =
-        Graphics::make_text_texture(font.as_ref(), &op).unwrap();
+    let text_cache = text_cache_rwl.read().unwrap();
+
+    let texture = text_cache.get(&text_cache_key).unwrap();
+
+    //
 
     let mut is_down: bool = false;
     let mut was_released: bool = false;
@@ -105,7 +118,7 @@ pub fn do_button(
     };
 
     // Render an unpressed or pressed button.
-    draw_button(panel_buffer, x, y, &texture, options, &result);
+    draw_button(panel_buffer, x, y, texture, options, &result);
 
     DoButtonResult {
         is_down,

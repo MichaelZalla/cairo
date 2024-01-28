@@ -8,6 +8,7 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
+    graphics::text::cache::TextCache,
     ui::{
         button::{do_button, ButtonOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
@@ -32,16 +33,23 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
-    let font_info = FontInfo {
+    let font_info: &'static FontInfo = Box::leak(Box::new(FontInfo {
         filepath: args[1].to_string(),
         point_size: 16,
-    };
+    }));
 
-    let font_cache = FontCache::new(app.context.ttf_context);
+    // Create a static font cache.
 
-    let font_cache_rwl = Box::new(RwLock::new(font_cache));
+    let font_cache: &'static mut RwLock<FontCache<'static>> = Box::leak(Box::new(RwLock::new(
+        FontCache::new(app.context.ttf_context),
+    )));
 
-    let font_cache_box_leaked: &'static mut RwLock<FontCache<'static>> = Box::leak(font_cache_rwl);
+    // Create a static text (texture) cache.
+
+    let _text_cache: TextCache = Default::default();
+
+    let text_cache: &'static mut RwLock<TextCache<'static>> =
+        Box::leak(Box::new(RwLock::new(_text_cache)));
 
     // Set up our app
 
@@ -68,8 +76,9 @@ fn main() -> Result<(), String> {
                 info,
                 buffer,
                 mouse_state,
-                font_cache_box_leaked,
-                &font_info,
+                font_cache,
+                text_cache,
+                font_info,
                 &button_options,
             )
             .was_released
@@ -119,8 +128,9 @@ fn main() -> Result<(), String> {
                 app,
                 keyboard_state,
                 mouse_state,
-                font_cache_box_leaked,
-                &font_info,
+                font_cache,
+                text_cache,
+                font_info,
             )
             .unwrap();
 

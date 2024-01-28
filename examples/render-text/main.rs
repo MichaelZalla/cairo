@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env};
+use std::{cell::RefCell, env, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -8,7 +8,10 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::{text::TextOperation, Graphics},
+    graphics::{
+        text::{cache::TextCache, TextOperation},
+        Graphics,
+    },
 };
 
 fn main() -> Result<(), String> {
@@ -33,7 +36,9 @@ fn main() -> Result<(), String> {
         point_size: 16,
     };
 
-    let mut font_cache = FontCache::new(app.context.ttf_context);
+    let font_cache_rwl = RwLock::new(FontCache::new(app.context.ttf_context));
+
+    let text_cache_rwl = RwLock::new(TextCache::new());
 
     // Set up our app
 
@@ -63,11 +68,11 @@ fn main() -> Result<(), String> {
 
         // Render some text to our pixel buffer
 
-        let font = font_cache.load(&font_info).unwrap();
-
         Graphics::text(
             &mut framebuffer,
-            &font,
+            &font_cache_rwl,
+            &text_cache_rwl,
+            &font_info,
             &TextOperation {
                 text: &(format!("Uptime: {}s", now_seconds.borrow())),
                 x: 12,
@@ -85,7 +90,9 @@ fn main() -> Result<(), String> {
 
         Graphics::text(
             &mut framebuffer,
-            &font,
+            &font_cache_rwl,
+            &text_cache_rwl,
+            &font_info,
             &TextOperation {
                 text: &(format!(
                     "Mouse position: ({},{})",

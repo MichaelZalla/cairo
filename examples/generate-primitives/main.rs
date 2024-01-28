@@ -8,6 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
+    graphics::text::cache::TextCache,
     material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
@@ -56,14 +57,18 @@ fn main() -> Result<(), String> {
 
     // Fonts
 
-    let font_info = FontInfo {
+    let font_info = Box::leak(Box::new(FontInfo {
         filepath: "C:/Windows/Fonts/vgasys.fon".to_string(),
         point_size: 16,
-    };
+    }));
 
-    let font_cache_rwl = RwLock::new(FontCache::new(app.context.ttf_context));
+    let font_cache_rwl = Box::leak(Box::new(RwLock::new(FontCache::new(
+        app.context.ttf_context,
+    ))));
 
     font_cache_rwl.write().unwrap().load(&font_info)?;
+
+    let text_cache_rwl = Box::leak(Box::new(RwLock::new(TextCache::new())));
 
     // Default framebuffer
 
@@ -176,8 +181,9 @@ fn main() -> Result<(), String> {
     // Instantiate our textured cube scene
     let scene = RefCell::new(GeneratePrimitivesScene::new(
         &framebuffer_rwl,
-        &font_cache_rwl,
-        &font_info,
+        font_cache_rwl,
+        text_cache_rwl,
+        font_info,
         &entities_rwl,
         &mut material_cache,
         &shader_context_rwl,

@@ -1,4 +1,4 @@
-use std::borrow::BorrowMut;
+use std::{borrow::BorrowMut, sync::RwLock};
 
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
@@ -10,7 +10,11 @@ use crate::{
     texture::TextureBuffer,
 };
 
+use self::cache::{cache_text, TextCache, TextCacheKey};
+
 use super::Graphics;
+
+pub mod cache;
 
 #[derive(Clone)]
 pub struct TextOperation<'a> {
@@ -21,14 +25,36 @@ pub struct TextOperation<'a> {
 }
 
 impl Graphics {
-    pub fn text(dest_buffer: &mut Buffer2D, font: &Font, op: &TextOperation) -> Result<(), String> {
+    pub fn text<'a>(
+        dest_buffer: &mut Buffer2D,
+        font_cache_rwl: &'a RwLock<FontCache>,
+        text_cache_rwl: &'a RwLock<TextCache<'a>>,
+        font_info: &'a FontInfo,
+        op: &TextOperation,
+    ) -> Result<(), String> {
         // Generate a texture for this text operation.
 
-        let (width, height, src_buffer) = Graphics::make_text_texture(font, op).unwrap();
+        let text_cache_key = TextCacheKey {
+            font_info,
+            text: op.text.clone(),
+        };
+
+        cache_text(font_cache_rwl, text_cache_rwl, font_info, op);
+
+        let text_cache = text_cache_rwl.read().unwrap();
+
+        let cached_texture = text_cache.get(&text_cache_key).unwrap();
 
         // Copy the rendered pixels to this buffer, at location (op.x, op.y).
 
-        Graphics::blit_u8_to_u32(&src_buffer, op.x, op.y, width, height, dest_buffer);
+        Graphics::blit_u8_to_u32(
+            &cached_texture,
+            op.x,
+            op.y,
+            cached_texture.width,
+            cached_texture.height,
+            dest_buffer,
+        );
 
         Ok(())
     }
@@ -73,9 +99,10 @@ impl Graphics {
     }
 
     pub fn render_debug_messages(
-        buffer: &mut Buffer2D,
-        font_cache: &mut FontCache,
-        font_info: &FontInfo,
+        dest_buffer: &mut Buffer2D,
+        font_cache: &'static RwLock<FontCache>,
+        text_cache: &'static RwLock<TextCache<'static>>,
+        font_info: &'static FontInfo,
         position: (u32, u32),
         padding_ems: f32,
         debug_messages: &mut DebugMessageBuffer,
@@ -90,7 +117,7 @@ impl Graphics {
                 color: color::WHITE,
             };
 
-            Graphics::text_using_font_cache(buffer, font_cache, &font_info, &op).unwrap();
+            Graphics::text(dest_buffer, font_cache, text_cache, &font_info, &op).unwrap();
 
             y_offset += (font_info.point_size as f32 * padding_ems) as u32;
         }
@@ -125,17 +152,5 @@ impl Graphics {
         let buffer = Buffer2D::from_data(width, height, bytes);
 
         Ok((width, height, buffer))
-    }
-
-    fn text_using_font_cache(
-        buffer: &mut Buffer2D,
-        font_cache: &mut FontCache,
-        font_info: &FontInfo,
-        text_operation: &TextOperation,
-    ) -> Result<(), String> {
-        match (*font_cache).load(font_info) {
-            Ok(font) => Graphics::text(buffer, &font, text_operation),
-            Err(e) => return Err(e.to_string()),
-        }
     }
 }

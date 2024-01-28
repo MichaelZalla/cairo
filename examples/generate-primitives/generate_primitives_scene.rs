@@ -10,7 +10,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
-    graphics::Graphics,
+    graphics::{text::cache::TextCache, Graphics},
     material::cache::MaterialCache,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
@@ -37,8 +37,9 @@ pub struct GeneratePrimitivesScene<'a> {
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-    font_cache_rwl: &'a RwLock<FontCache<'static>>,
-    font_info: FontInfo,
+    font_cache_rwl: &'static RwLock<FontCache<'static>>,
+    text_cache_rwl: &'static RwLock<TextCache<'static>>,
+    font_info: &'static FontInfo,
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
     looking_at_point_light: bool,
@@ -48,8 +49,9 @@ pub struct GeneratePrimitivesScene<'a> {
 impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
         framebuffer_rwl: &'a RwLock<Buffer2D>,
-        font_cache_rwl: &'a RwLock<FontCache<'static>>,
-        font_info: &'a FontInfo,
+        font_cache_rwl: &'static RwLock<FontCache<'static>>,
+        text_cache_rwl: &'static RwLock<TextCache<'static>>,
+        font_info: &'static FontInfo,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
@@ -194,7 +196,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
             pipeline,
             entities,
             font_cache_rwl,
-            font_info: font_info.clone(),
+            text_cache_rwl,
+            font_info,
             material_cache,
             shader_context,
             cameras: vec![camera, camera2],
@@ -412,16 +415,17 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         {
             let mut framebuffer = self.framebuffer_rwl.write().unwrap();
 
-            {
-                let mut font_cache = self.font_cache_rwl.write().unwrap();
+            let debug_messages = self.debug_message_buffer.borrow_mut();
 
+            {
                 Graphics::render_debug_messages(
                     &mut framebuffer,
-                    &mut font_cache,
-                    &self.font_info,
+                    self.font_cache_rwl,
+                    self.text_cache_rwl,
+                    self.font_info,
                     (12, 12),
                     1.0,
-                    &mut self.debug_message_buffer,
+                    debug_messages,
                 );
             }
         }

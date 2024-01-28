@@ -7,7 +7,7 @@ use crate::{
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
-    graphics::Graphics,
+    graphics::{text::cache::TextCache, Graphics},
     ui::button::{do_button, ButtonOptions},
 };
 
@@ -165,18 +165,33 @@ where
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
         font_cache: &'static RwLock<FontCache<'static>>,
-        font_info: &FontInfo,
+        text_cache: &'static RwLock<TextCache<'static>>,
+        font_info: &'static FontInfo,
     ) -> Result<(), String> {
         match self.left.borrow_mut() {
             Some(left) => {
                 // Split panel scenario
 
                 // 1. Render left panel to left panel pixel buffer
-                left.render(app, keyboard_state, mouse_state, font_cache, font_info)?;
+                left.render(
+                    app,
+                    keyboard_state,
+                    mouse_state,
+                    font_cache,
+                    text_cache,
+                    font_info,
+                )?;
 
                 // 2. Render right panel to right panel pixel buffer
                 let right = self.right.as_mut().unwrap();
-                right.render(app, keyboard_state, mouse_state, font_cache, font_info)?;
+                right.render(
+                    app,
+                    keyboard_state,
+                    mouse_state,
+                    font_cache,
+                    text_cache,
+                    font_info,
+                )?;
 
                 // 3. Blit left and right panel pixel buffers onto parent pixel buffer
                 self.buffer.blit_from(
@@ -214,7 +229,7 @@ where
                 self.draw_panel_border();
 
                 // Renders a default title-bar for this panel.
-                self.draw_panel_title_bar(mouse_state, font_cache, font_info)?;
+                self.draw_panel_title_bar(mouse_state, font_cache, font_info, text_cache)?;
             }
         }
 
@@ -335,7 +350,8 @@ where
         &mut self,
         mouse_state: &MouseState,
         font_cache: &'static RwLock<FontCache<'static>>,
-        font_info: &FontInfo,
+        font_info: &'static FontInfo,
+        text_cache: &'static RwLock<TextCache<'static>>,
     ) -> Result<(), String> {
         let (x1, y1, x2, y2) = (
             0 as i32,
@@ -347,15 +363,13 @@ where
         Graphics::line(&mut self.buffer, x1, y1, x2, y2, color::YELLOW);
 
         {
-            let mut cache = font_cache.write().unwrap();
-
-            let font = cache.load(&font_info).unwrap();
-
             let spacing = PANEL_TITLE_BAR_HEIGHT / 2 - font_info.point_size as u32 / 2;
 
             Graphics::text(
                 &mut self.buffer,
-                &font,
+                font_cache,
+                text_cache,
+                font_info,
                 &TextOperation {
                     text: &format!("Panel {}", self.info.id),
                     x: spacing,
@@ -382,6 +396,7 @@ where
                 &mut self.buffer,
                 mouse_state,
                 font_cache,
+                text_cache,
                 font_info,
                 &button_options,
             )
