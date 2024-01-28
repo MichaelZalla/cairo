@@ -10,6 +10,7 @@ use crate::{
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
     graphics::Graphics,
+    ui::button::do_button,
 };
 
 #[derive(Default, Debug)]
@@ -61,6 +62,10 @@ where
             right: None,
             alpha: 1.0,
         };
+    }
+
+    pub fn is_root(&self) -> bool {
+        self.info.id == 0
     }
 
     pub fn update(
@@ -147,13 +152,6 @@ where
                                     local_x,
                                     local_y
                                 );
-
-                                match event.button {
-                                    MouseButton::Left => {
-                                        self.split(0.5)?;
-                                    }
-                                    _ => {}
-                                }
                             }
                         }
                     }
@@ -205,7 +203,7 @@ where
                 self.draw_panel_border();
 
                 // Renders a default title-bar for this panel.
-                self.draw_panel_title_bar(font_cache, font_info)?;
+                self.draw_panel_title_bar(mouse_state, font_cache, font_info)?;
 
                 // Runs the custom render callback, if any.
                 match self.render_rwl {
@@ -305,6 +303,7 @@ where
 
     fn draw_panel_title_bar(
         &mut self,
+        mouse_state: &MouseState,
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &FontInfo,
     ) -> Result<(), String> {
@@ -336,6 +335,30 @@ where
                     color: color::YELLOW,
                 },
             )?;
+        }
+
+        if !self.is_root() {
+            static CLOSE_BUTTON_SIZE: u32 = 14;
+            static CLOSE_BUTTON_OFFSET: u32 = (PANEL_TITLE_BAR_HEIGHT - CLOSE_BUTTON_SIZE) / 2;
+
+            let (x, y, width, height) = (
+                self.info.width - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_OFFSET - 1,
+                CLOSE_BUTTON_OFFSET,
+                CLOSE_BUTTON_SIZE,
+                CLOSE_BUTTON_SIZE,
+            );
+
+            if do_button(
+                &self.info,
+                &mut self.buffer,
+                mouse_state,
+                x,
+                y,
+                width,
+                height,
+            ) {
+                println!("Should merge panel {} with its sibling.", self.info.id);
+            }
         }
 
         Ok(())
