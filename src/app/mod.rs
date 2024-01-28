@@ -145,7 +145,7 @@ impl App {
         let mut frame_start: u64 = timer_subsystem.performance_counter();
         let mut frame_end: u64;
 
-        let mut prev_mouse_clicks = HashSet::new();
+        let mut prev_mouse_buttons_down = HashSet::new();
 
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
 
@@ -257,12 +257,13 @@ impl App {
 
             // Read any mouse click signals
 
-            let mouse_clicks = current_mouse_state.pressed_mouse_buttons().collect();
+            let mouse_buttons_down: HashSet<MouseButton> =
+                current_mouse_state.pressed_mouse_buttons().collect();
 
             // Get the difference between the old and new signals
 
-            let old_mouse_clicks = &prev_mouse_clicks - &mouse_clicks;
-            let new_mouse_clicks = &mouse_clicks - &prev_mouse_clicks;
+            let old_mouse_clicks = &prev_mouse_buttons_down - &mouse_buttons_down;
+            let new_mouse_clicks = &mouse_buttons_down - &prev_mouse_buttons_down;
 
             // Use the difference to construct any button-click event(s)
 
@@ -300,7 +301,7 @@ impl App {
                 }
             }
 
-            prev_mouse_clicks = mouse_clicks;
+            prev_mouse_buttons_down = mouse_buttons_down;
 
             prev_game_controller_state = game_controller.state.clone();
 
