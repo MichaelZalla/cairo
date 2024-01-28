@@ -292,7 +292,7 @@ where
         Ok(())
     }
 
-    pub fn draw_panel_border(&mut self) {
+    fn draw_panel_border(&mut self) {
         let x: u32 = 0;
         let y = 0;
         let width = self.info.width - 1;
