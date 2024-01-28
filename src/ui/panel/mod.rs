@@ -7,10 +7,13 @@ use crate::{
     buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
+    font::{cache::FontCache, FontInfo},
+    graphics::text::TextOperation,
     graphics::Graphics,
     vec::vec2::Vec2,
 };
 
+#[derive(Default, Debug)]
 pub struct PanelInfo {
     pub id: u32,
     pub title: String,
@@ -152,20 +155,21 @@ where
         Ok(())
     }
 
-    pub fn render(&mut self) -> Result<(), String> {
-        // Renders a border around the panel's boundaries
-        self.render_border();
-
+    pub fn render(
+        &mut self,
+        font_cache: &'static RwLock<FontCache<'static>>,
+        font_info: &FontInfo,
+    ) -> Result<(), String> {
         match self.left.borrow_mut() {
             Some(left) => {
                 // Split panel scenario
 
                 // 1. Render left panel to left panel pixel buffer
-                left.render()?;
+                left.render(font_cache, font_info)?;
 
                 // 2. Render right panel to right panel pixel buffer
                 let right = self.right.as_mut().unwrap();
-                right.render()?;
+                right.render(font_cache, font_info)?;
 
                 // 3. Blit left and right panel pixel buffers onto parent pixel buffer
                 self.buffer.blit_from(
@@ -183,6 +187,13 @@ where
             _ => {
                 // Merged panel scenario
 
+                // Renders a border around the panel's boundaries.
+                self.render_border();
+
+                // Renders a default title-bar for this panel.
+                self.render_title_bar(font_cache, font_info)?;
+
+                // Runs the custom render callback, if any.
                 match self.render_rwl {
                     Some(lock) => {
                         let mut callback = lock.write().unwrap();
@@ -213,10 +224,13 @@ where
 
         let render_left = self.render_rwl.take();
 
+        let left_id = self.info.id * 2 + 1;
+        let right_id = left_id + 1;
+
         self.left = Some(Box::new(Panel::new(
             PanelInfo {
-                title: format!("{} - Left", self.info.title).to_string(),
-                id: self.info.id * 2 + 1,
+                title: format!("Panel {}", left_id).to_string(),
+                id: left_id,
                 x: self.info.x,                                 /* + padding as u32*/
                 y: self.info.y,                                 /* + padding as u32*/
                 width: (self.info.width as f32 * alpha) as u32, /* - (1.5 * padding) as u32*/
@@ -227,8 +241,8 @@ where
 
         self.right = Some(Box::new(Panel::new(
             PanelInfo {
-                title: format!("{} - Right", self.info.title).to_string(),
-                id: self.info.id * 2 + 2,
+                title: format!("Panel {}", right_id).to_string(),
+                id: right_id,
                 x: self.info.x + (self.info.width as f32 * alpha) as u32, /* + (0.5 * padding) as u32*/
                 y: self.info.y,                                           /* + padding as u32 */
                 width: (self.info.width as f32 * (1.0 - alpha)) as u32, /* - (1.5 * padding) as u32*/
@@ -294,5 +308,43 @@ where
         ];
 
         Graphics::poly_line(&mut self.buffer, &panel_bounds, color::YELLOW);
+    }
+
+    fn render_title_bar(
+        &mut self,
+        font_cache: &'static RwLock<FontCache<'static>>,
+        font_info: &FontInfo,
+    ) -> Result<(), String> {
+        static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
+
+        let (x1, y1, x2, y2) = (
+            0 as i32,
+            PANEL_TITLE_BAR_HEIGHT as i32,
+            self.info.width as i32,
+            PANEL_TITLE_BAR_HEIGHT as i32,
+        );
+
+        Graphics::line(&mut self.buffer, x1, y1, x2, y2, color::YELLOW);
+
+        {
+            let mut cache = font_cache.write().unwrap();
+
+            let font = cache.load(&font_info).unwrap();
+
+            let spacing = PANEL_TITLE_BAR_HEIGHT / 2 - font_info.point_size as u32 / 2;
+
+            Graphics::text(
+                &mut self.buffer,
+                &font,
+                &TextOperation {
+                    text: &format!("Panel {}", self.info.id),
+                    x: spacing,
+                    y: spacing,
+                    color: color::YELLOW,
+                },
+            )?;
+        }
+
+        Ok(())
     }
 }

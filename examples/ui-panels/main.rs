@@ -8,7 +8,6 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::{text::TextOperation, Graphics},
     ui::panel::{Panel, PanelInfo},
 };
 
@@ -35,39 +34,28 @@ fn main() -> Result<(), String> {
         point_size: 16,
     };
 
-    let mut font_cache = FontCache::new(app.context.ttf_context);
+    let font_cache = FontCache::new(app.context.ttf_context);
+
+    let font_cache_rwl = Box::new(RwLock::new(font_cache));
+
+    let font_cache_box_leaked: &'static mut RwLock<FontCache<'static>> = Box::leak(font_cache_rwl);
 
     // Set up our app
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let render_rwl = RwLock::new(
-        |panel_framebuffer: &mut Buffer2D, info: &PanelInfo| -> Result<(), String> {
-            let font = font_cache.load(&font_info).unwrap();
-
-            Graphics::text(
-                panel_framebuffer,
-                &font,
-                &TextOperation {
-                    text: &format!("Panel {}", info.id),
-                    x: 8,
-                    y: 8,
-                    color: color::YELLOW,
-                },
-            )
-        },
+        |_panel_framebuffer: &mut Buffer2D, _info: &PanelInfo| -> Result<(), String> { Ok(()) },
     );
 
     let render_rwl_option = Some(&render_rwl);
 
     let root_panel = Panel::new(
         PanelInfo {
-            id: 0,
             title: "Panel 0".to_string(),
-            x: 0,
-            y: 0,
             width: window_info.window_width,
             height: window_info.window_height,
+            ..Default::default()
         },
         render_rwl_option,
     );
@@ -103,7 +91,7 @@ fn main() -> Result<(), String> {
 
         let mut root = root_panel_rc.borrow_mut();
 
-        root.render()?;
+        root.render(font_cache_box_leaked, &font_info)?;
 
         // Blit panel pixels (local space) onto global pixels
 
