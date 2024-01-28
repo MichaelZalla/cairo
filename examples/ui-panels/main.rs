@@ -8,7 +8,10 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
-    ui::panel::{Panel, PanelInfo},
+    ui::{
+        button::{do_button, ButtonOptions},
+        panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
+    },
 };
 
 fn main() -> Result<(), String> {
@@ -45,17 +48,40 @@ fn main() -> Result<(), String> {
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let render_rwl = RwLock::new(
-        |_info: &PanelInfo,
-         _panel_framebuffer: &mut Buffer2D,
+        |info: &PanelInfo,
+         buffer: &mut Buffer2D,
          _app: &mut App,
          _keyboard_state: &KeyboardState,
-         _mouse_state: &MouseState|
-         -> Result<(), String> { Ok(()) },
+         mouse_state: &MouseState|
+         -> Result<(), String> {
+            buffer.clear(None);
+
+            let button_options = ButtonOptions {
+                label: format!("Button {}", info.id).to_string(),
+                x_offset: 8,
+                y_offset: PANEL_TITLE_BAR_HEIGHT + 8,
+                with_border: true,
+                ..Default::default()
+            };
+
+            if do_button(
+                info,
+                buffer,
+                mouse_state,
+                font_cache_box_leaked,
+                &font_info,
+                &button_options,
+            ) {
+                println!("You clicked Button {}!", info.id);
+            }
+
+            Ok(())
+        },
     );
 
     let render_rwl_option = Some(&render_rwl);
 
-    let root_panel = Panel::new(
+    let mut root_panel = Panel::new(
         PanelInfo {
             title: "Panel 0".to_string(),
             width: window_info.window_width,
@@ -64,6 +90,8 @@ fn main() -> Result<(), String> {
         },
         render_rwl_option,
     );
+
+    root_panel.split(0.5)?;
 
     let root_panel_rc = RefCell::new(root_panel);
 

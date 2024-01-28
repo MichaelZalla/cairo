@@ -201,12 +201,6 @@ where
             _ => {
                 // Merged panel scenario
 
-                // Renders a border around the panel's boundaries.
-                self.draw_panel_border();
-
-                // Renders a default title-bar for this panel.
-                self.draw_panel_title_bar(mouse_state, font_cache, font_info)?;
-
                 // Runs the custom render callback, if any.
                 match self.render_rwl {
                     Some(lock) => {
@@ -222,6 +216,12 @@ where
                     }
                     _ => {}
                 }
+
+                // Renders a border around the panel's boundaries.
+                self.draw_panel_border();
+
+                // Renders a default title-bar for this panel.
+                self.draw_panel_title_bar(mouse_state, font_cache, font_info)?;
             }
         }
 
