@@ -70,10 +70,10 @@ where
 
     pub fn update(
         &mut self,
-        _app: &mut App,
-        _keyboard_state: &KeyboardState,
+        app: &mut App,
+        keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
+        game_controller_state: &GameControllerState,
     ) -> Result<(), String> {
         let (x, y) = mouse_state.position;
 
@@ -85,6 +85,20 @@ where
             // Mouse is not inside this panel.
 
             return Ok(());
+        }
+
+        match self.left.as_mut() {
+            Some(left) => {
+                left.update(app, keyboard_state, mouse_state, game_controller_state)?;
+            }
+            None => (),
+        }
+
+        match self.right.as_mut() {
+            Some(right) => {
+                right.update(app, keyboard_state, mouse_state, game_controller_state)?;
+            }
+            None => (),
         }
 
         Ok(())
