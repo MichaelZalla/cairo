@@ -2,7 +2,7 @@ use std::fmt;
 
 use super::vec::vec3::Vec3;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct Color {
     pub r: u8,
     pub g: u8,

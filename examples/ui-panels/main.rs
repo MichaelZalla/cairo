@@ -13,6 +13,7 @@ use cairo::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
+        text::{do_text, TextOptions},
     },
 };
 
@@ -65,10 +66,14 @@ fn main() -> Result<(), String> {
          _keyboard_state: &KeyboardState,
          mouse_state: &MouseState|
          -> Result<(), String> {
+            // Clear the panel buffer for drawing.
+
             buffer.clear(None);
 
+            // Draw a button in this panel.
+
             let button_options = ButtonOptions {
-                label: format!("Button {}", info.id).to_string(),
+                label: format!("Bordered button").to_string(),
                 x_offset: 8,
                 y_offset: PANEL_TITLE_BAR_HEIGHT + 8,
                 with_border: true,
@@ -89,10 +94,31 @@ fn main() -> Result<(), String> {
                 println!("You clicked Button {}!", info.id);
             }
 
+            if do_button(
+                info,
+                buffer,
+                mouse_state,
+                font_cache,
+                text_cache,
+                font_info,
+                &ButtonOptions {
+                    label: format!("Borderless button").to_string(),
+                    with_border: false,
+                    y_offset: button_options.y_offset + 24,
+                    ..button_options
+                },
+            )
+            .was_released
+            {
+                println!("You clicked Button {}!", info.id);
+            }
+
+            // Draw a checkbox in this panel.
+
             let checkbox_options = CheckboxOptions {
                 label: format!("Checkbox {}", info.id).to_string(),
-                x_offset: 8,
-                y_offset: PANEL_TITLE_BAR_HEIGHT + 8 + 24,
+                x_offset: button_options.x_offset,
+                y_offset: button_options.y_offset + 48,
                 ..Default::default()
             };
 
@@ -122,6 +148,53 @@ fn main() -> Result<(), String> {
                     if *is_checked { "checked" } else { "unchecked" }
                 );
             }
+
+            // Draw a text label in this panel.
+
+            let text_options = TextOptions {
+                x_offset: button_options.x_offset,
+                y_offset: checkbox_options.y_offset + 24,
+                text: format!("Welcome to Panel {}!", info.id),
+                color: color::WHITE,
+                ..Default::default()
+            };
+
+            do_text(
+                info,
+                buffer,
+                font_cache,
+                text_cache,
+                font_info,
+                &text_options,
+            );
+
+            do_text(
+                info,
+                buffer,
+                font_cache,
+                text_cache,
+                font_info,
+                &TextOptions {
+                    y_offset: text_options.y_offset + 24,
+                    text: text_options.text.clone(),
+                    color: color::RED,
+                    ..text_options
+                },
+            );
+
+            do_text(
+                info,
+                buffer,
+                font_cache,
+                text_cache,
+                font_info,
+                &TextOptions {
+                    y_offset: text_options.y_offset + 48,
+                    text: text_options.text.clone(),
+                    color: color::GREEN,
+                    ..text_options
+                },
+            );
 
             Ok(())
         },
