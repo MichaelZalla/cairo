@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{collections::HashSet, fmt};
 
 use sdl2::{
     controller::{Axis, Button},
@@ -29,8 +29,9 @@ impl Default for MouseEvent {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct MouseState {
+    pub buttons_down: HashSet<MouseButton>,
     pub button_event: Option<MouseEvent>,
     pub position: (i32, i32),
     pub relative_motion: (i32, i32),
@@ -42,6 +43,7 @@ pub struct MouseState {
 impl Default for MouseState {
     fn default() -> Self {
         Self {
+            buttons_down: Default::default(),
             button_event: None,
             position: (0, 0),
             relative_motion: (0, 0),

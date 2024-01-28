@@ -260,6 +260,8 @@ impl App {
             let mouse_buttons_down: HashSet<MouseButton> =
                 current_mouse_state.pressed_mouse_buttons().collect();
 
+            mouse_state.buttons_down = mouse_buttons_down.clone();
+
             // Get the difference between the old and new signals
 
             let old_mouse_clicks = &prev_mouse_buttons_down - &mouse_buttons_down;
