@@ -39,7 +39,7 @@ impl Graphics {
             text: op.text.clone(),
         };
 
-        cache_text(font_cache_rwl, text_cache_rwl, font_info, op);
+        cache_text(font_cache_rwl, text_cache_rwl, font_info, op.text);
 
         let text_cache = text_cache_rwl.read().unwrap();
 
@@ -47,53 +47,39 @@ impl Graphics {
 
         // Copy the rendered pixels to this buffer, at location (op.x, op.y).
 
-        Graphics::blit_u8_to_u32(
-            &cached_texture,
-            op.x,
-            op.y,
-            cached_texture.width,
-            cached_texture.height,
-            dest_buffer,
-        );
+        Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer);
 
         Ok(())
     }
 
-    pub fn blit_u8_to_u32(
-        src_buffer: &Buffer2D<u8>,
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
+    pub fn blit_text_from_mask(
+        texture: &Buffer2D<u8>,
+        op: &TextOperation,
         dest_buffer: &mut Buffer2D<u32>,
     ) {
-        if x >= dest_buffer.width {
+        if op.x >= dest_buffer.width {
             return;
         }
 
-        if y >= dest_buffer.height {
+        if op.y >= dest_buffer.height {
             return;
         }
 
-        for y_rel in 0..height.min(dest_buffer.height - y) {
-            for x_rel in 0..width.min(dest_buffer.width - x) {
-                let index = (x_rel as usize + y_rel as usize * width as usize) * 4;
+        let color_u32 = op.color.to_u32();
 
-                let a = src_buffer.data[index + 3];
+        for y_rel in 0..texture.height.min(dest_buffer.height - op.y) {
+            for x_rel in 0..texture.width.min(dest_buffer.width - op.x) {
+                let index = (x_rel as usize + y_rel as usize * texture.width as usize) * 4;
+
+                let a = texture.data[index + 3];
 
                 if a == 0 {
+                    // Skips unrendered pixels in our text texture (mask).
+
                     continue;
                 }
 
-                let value = Color {
-                    r: src_buffer.data[index],
-                    g: src_buffer.data[index + 1],
-                    b: src_buffer.data[index + 2],
-                    a,
-                }
-                .to_u32();
-
-                dest_buffer.set(x + x_rel, y + y_rel, value)
+                dest_buffer.set(op.x + x_rel, op.y + y_rel, color_u32)
             }
         }
     }
@@ -127,15 +113,15 @@ impl Graphics {
 
     pub fn make_text_texture(
         font: &Font,
-        op: &TextOperation,
+        text: &String,
     ) -> Result<(u32, u32, TextureBuffer), String> {
-        // Generate a new text rendering (surface)
+        // Generate a new text texture (mask).
+
+        let color = color::WHITE;
 
         let surface = font
-            .render(op.text)
-            .blended(SDLColor::RGBA(
-                op.color.r, op.color.g, op.color.b, op.color.a,
-            ))
+            .render(text)
+            .blended(SDLColor::RGBA(color.r, color.g, color.b, color.a))
             .map_err(|e| e.to_string())?;
 
         // Read the pixel data from the rendered surface

@@ -9,8 +9,6 @@ use crate::{
     graphics::Graphics,
 };
 
-use super::TextOperation;
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextCacheKey<'a> {
     pub font_info: &'a FontInfo,
@@ -25,11 +23,11 @@ pub fn cache_text<'a>(
     font_cache_rwl: &'a RwLock<FontCache>,
     text_cache_rwl: &'a RwLock<TextCache<'a>>,
     font_info: &'a FontInfo,
-    op: &TextOperation,
+    text: &String,
 ) {
     let text_cache_key = TextCacheKey {
         font_info,
-        text: op.text.clone(),
+        text: text.clone(),
     };
 
     let mut text_cache = text_cache_rwl.write().unwrap();
@@ -45,9 +43,9 @@ pub fn cache_text<'a>(
             let font = font_cache.load(font_info).unwrap();
 
             let (_label_width, _label_height, text_texture) =
-                Graphics::make_text_texture(font.as_ref(), &op).unwrap();
+                Graphics::make_text_texture(font.as_ref(), text).unwrap();
 
-            println!("Inserting texture for '{}' text into TextCache!", op.text);
+            println!("Inserting texture for '{}' text into TextCache!", text);
 
             v.insert(text_texture);
         }

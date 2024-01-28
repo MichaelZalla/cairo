@@ -42,18 +42,11 @@ pub fn do_button(
     font_info: &'static FontInfo,
     options: &ButtonOptions,
 ) -> DoButtonResult {
-    let op = TextOperation {
-        text: &options.label,
-        x: 0,
-        y: 0,
-        color: color::YELLOW,
-    };
-
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &op);
+    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
     let text_cache_key = TextCacheKey {
         font_info,
-        text: op.text.clone(),
+        text: options.label.clone(),
     };
 
     let text_cache = text_cache_rwl.read().unwrap();
@@ -134,24 +127,26 @@ fn draw_button(
     options: &ButtonOptions,
     result: &DoButtonResult,
 ) {
+    let color = if result.is_down {
+        color::GREEN
+    } else {
+        color::YELLOW
+    };
+
     // Draw the button's text label.
 
-    Graphics::blit_u8_to_u32(texture, x, y, texture.width, texture.height, panel_buffer);
+    let op = TextOperation {
+        x,
+        y,
+        color,
+        text: &options.label,
+    };
+
+    Graphics::blit_text_from_mask(texture, &op, panel_buffer);
 
     // Draw the button's border.
 
     if options.with_border {
-        Graphics::rectangle(
-            panel_buffer,
-            x,
-            y,
-            texture.width,
-            texture.height,
-            if result.is_down {
-                color::GREEN
-            } else {
-                color::YELLOW
-            },
-        )
+        Graphics::rectangle(panel_buffer, x, y, texture.width, texture.height, color)
     }
 }
