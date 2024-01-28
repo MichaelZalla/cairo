@@ -31,8 +31,16 @@ impl Graphics {
         let start_x = op.x;
         let start_y = op.y;
 
-        for y in 0..height {
-            for x in 0..width {
+        if start_x >= dest_buffer.width {
+            return Ok(());
+        }
+
+        if start_y >= dest_buffer.height {
+            return Ok(());
+        }
+
+        for y in 0..height.min(dest_buffer.height - op.y) {
+            for x in 0..width.min(dest_buffer.width - op.x) {
                 let index = (x as usize + y as usize * width as usize) * 4;
 
                 let a = src_buffer.data[index + 3];
