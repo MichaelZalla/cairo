@@ -4,7 +4,7 @@ use crate::{
     app::App,
     buffer::Buffer2D,
     color,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
     graphics::Graphics,
@@ -39,6 +39,7 @@ where
     left: Option<Box<Panel<'a, R>>>,
     right: Option<Box<Panel<'a, R>>>,
     alpha: f32,
+    is_resizing: bool,
 }
 
 impl<'a, R> Panel<'a, R>
@@ -61,6 +62,7 @@ where
             left: None,
             right: None,
             alpha: 1.0,
+            is_resizing: false,
         };
     }
 
@@ -76,6 +78,19 @@ where
         game_controller_state: &GameControllerState,
     ) -> Result<(), String> {
         let (x, y) = mouse_state.position;
+
+        match mouse_state.button_event {
+            Some(event) => match event.kind {
+                MouseEventKind::Up => {
+                    // Any mouse-up event would end our resizing, even if
+                    // the event occurs outside of this panel's boundaries.
+
+                    self.is_resizing = false;
+                }
+                _ => (),
+            },
+            None => (),
+        }
 
         if x < self.info.x as i32
             || x >= (self.info.x + self.info.width) as i32
@@ -97,6 +112,46 @@ where
         match self.right.as_mut() {
             Some(right) => {
                 right.update(app, keyboard_state, mouse_state, game_controller_state)?;
+            }
+            None => (),
+        }
+
+        static PANEL_DIVIDER_MOUSE_PADDING: u32 = 8;
+
+        match self.left.borrow_mut() {
+            Some(left) => {
+                // Check if the mouse is within a region that bounds the panels' divider.
+
+                let panel_divider_x = self.info.x + left.info.width;
+
+                if mouse_state.position.0 > (panel_divider_x - PANEL_DIVIDER_MOUSE_PADDING) as i32
+                    && mouse_state.position.0
+                        < (panel_divider_x + PANEL_DIVIDER_MOUSE_PADDING) as i32
+                {
+                    // Set the system cursor to a horizontal-sizing style.
+
+                    let cursor =
+                        sdl2::mouse::Cursor::from_system(sdl2::mouse::SystemCursor::SizeWE)?;
+
+                    cursor.set();
+
+                    // Check for a "start resize" or "end resize" event (i.e.,
+                    // start mouse drag or end mouse drag).
+
+                    match mouse_state.button_event {
+                        Some(event) => match event.kind {
+                            MouseEventKind::Down => {
+                                self.is_resizing = true;
+                            }
+                            _ => (),
+                        },
+                        None => (),
+                    }
+                }
+
+                if self.is_resizing {
+                    self.handle_drag_resize(mouse_state);
+                }
             }
             None => (),
         }
@@ -230,6 +285,41 @@ where
         self.buffer.clear(None);
 
         Ok(())
+    }
+
+    fn handle_drag_resize(&mut self, mouse_state: &MouseState) {
+        let left = self.left.as_mut().unwrap();
+        let right = self.right.as_mut().unwrap();
+
+        static MINIMUM_PANEL_WIDTH: u32 = 128;
+
+        let relative_motion_x = mouse_state.relative_motion.0;
+
+        // Update left child's width (and resize its buffer).
+
+        left.info.width = (left.info.width as i32 + relative_motion_x)
+            .max(MINIMUM_PANEL_WIDTH as i32)
+            .min(self.info.width as i32 - MINIMUM_PANEL_WIDTH as i32)
+            as u32;
+
+        left.buffer.resize(left.info.width, left.info.height);
+
+        // Update right child's x and width (and resize its buffer).
+
+        right.info.x = (right.info.x as i32 + relative_motion_x)
+            .max(MINIMUM_PANEL_WIDTH as i32)
+            .min(self.info.width as i32 - MINIMUM_PANEL_WIDTH as i32) as u32;
+
+        right.info.width = (right.info.width as i32 - relative_motion_x)
+            .max(MINIMUM_PANEL_WIDTH as i32)
+            .min(self.info.width as i32 - MINIMUM_PANEL_WIDTH as i32)
+            as u32;
+
+        right.buffer.resize(right.info.width, right.info.height);
+
+        // Update our parent's split alpha.
+
+        self.alpha = left.info.width as f32 / self.info.width as f32;
     }
 
     fn draw_panel_border(&mut self) {
