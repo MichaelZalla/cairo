@@ -25,7 +25,13 @@ pub struct PanelInfo {
 
 pub struct Panel<'a, R>
 where
-    R: FnMut(&PanelInfo, &mut Buffer2D) -> Result<(), String>,
+    R: FnMut(
+        &PanelInfo,
+        &mut Buffer2D,
+        &mut App,
+        &KeyboardState,
+        &MouseState,
+    ) -> Result<(), String>,
 {
     pub info: PanelInfo,
     pub buffer: Buffer2D,
@@ -37,7 +43,13 @@ where
 
 impl<'a, R> Panel<'a, R>
 where
-    R: FnMut(&PanelInfo, &mut Buffer2D) -> Result<(), String>,
+    R: FnMut(
+        &PanelInfo,
+        &mut Buffer2D,
+        &mut App,
+        &KeyboardState,
+        &MouseState,
+    ) -> Result<(), String>,
 {
     pub fn new(info: PanelInfo, render_rwl: Option<&'a RwLock<R>>) -> Self {
         let buffer = Buffer2D::new(info.width, info.height, None);
@@ -157,6 +169,9 @@ where
 
     pub fn render(
         &mut self,
+        app: &mut App,
+        keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &FontInfo,
     ) -> Result<(), String> {
@@ -165,11 +180,11 @@ where
                 // Split panel scenario
 
                 // 1. Render left panel to left panel pixel buffer
-                left.render(font_cache, font_info)?;
+                left.render(app, keyboard_state, mouse_state, font_cache, font_info)?;
 
                 // 2. Render right panel to right panel pixel buffer
                 let right = self.right.as_mut().unwrap();
-                right.render(font_cache, font_info)?;
+                right.render(app, keyboard_state, mouse_state, font_cache, font_info)?;
 
                 // 3. Blit left and right panel pixel buffers onto parent pixel buffer
                 self.buffer.blit_from(
@@ -198,7 +213,13 @@ where
                     Some(lock) => {
                         let mut callback = lock.write().unwrap();
 
-                        (*callback)(&self.info, &mut self.buffer)?;
+                        (*callback)(
+                            &self.info,
+                            &mut self.buffer,
+                            app,
+                            keyboard_state,
+                            mouse_state,
+                        )?;
                     }
                     _ => {}
                 }

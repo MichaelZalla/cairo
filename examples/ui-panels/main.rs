@@ -45,7 +45,12 @@ fn main() -> Result<(), String> {
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
     let render_rwl = RwLock::new(
-        |_info: &PanelInfo, _panel_framebuffer: &mut Buffer2D| -> Result<(), String> { Ok(()) },
+        |_info: &PanelInfo,
+         _panel_framebuffer: &mut Buffer2D,
+         _app: &mut App,
+         _keyboard_state: &KeyboardState,
+         _mouse_state: &MouseState|
+         -> Result<(), String> { Ok(()) },
     );
 
     let render_rwl_option = Some(&render_rwl);
@@ -71,9 +76,22 @@ fn main() -> Result<(), String> {
      -> () {
         // Delegrate update actions to the root panel?
 
-        root_panel_rc
-            .borrow_mut()
+        let mut root_panel = root_panel_rc.borrow_mut();
+
+        root_panel
             .update(app, keyboard_state, mouse_state, game_controller_state)
+            .unwrap();
+
+        // Delegate render call to the root panel
+
+        root_panel
+            .render(
+                app,
+                keyboard_state,
+                mouse_state,
+                font_cache_box_leaked,
+                &font_info,
+            )
             .unwrap();
 
         // Cache the mouse state (position) so that we can render a crosshair.
@@ -87,13 +105,9 @@ fn main() -> Result<(), String> {
         // Clears pixel buffer
         framebuffer.clear(Some(fill_value));
 
-        // Delegate render call to the root panel
-
-        let mut root = root_panel_rc.borrow_mut();
-
-        root.render(font_cache_box_leaked, &font_info)?;
-
         // Blit panel pixels (local space) onto global pixels
+
+        let root = root_panel_rc.borrow();
 
         framebuffer.blit_from(root.info.x, root.info.y, &root.buffer);
 
