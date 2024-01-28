@@ -178,7 +178,7 @@ impl App {
 
             let events = event_pump.poll_iter();
 
-            let mut mouse_state = MouseState::new();
+            let mut mouse_state: MouseState = Default::default();
 
             let mut keyboard_state = KeyboardState::new();
 

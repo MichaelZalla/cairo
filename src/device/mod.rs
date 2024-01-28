@@ -52,19 +52,6 @@ impl Default for MouseState {
     }
 }
 
-impl MouseState {
-    pub fn new() -> Self {
-        return MouseState {
-            button_event: None,
-            position: (0, 0),
-            relative_motion: (0, 0),
-            wheel_did_move: false,
-            wheel_y: 0,
-            wheel_direction: MouseWheelDirection::Unknown(0),
-        };
-    }
-}
-
 pub struct KeyboardState {
     pub keys_pressed: Vec<Keycode>,
 }
