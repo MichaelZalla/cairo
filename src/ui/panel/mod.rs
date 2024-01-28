@@ -249,10 +249,10 @@ where
             PanelInfo {
                 title: format!("Panel {}", left_id).to_string(),
                 id: left_id,
-                x: self.info.x,                                 /* + padding as u32*/
-                y: self.info.y,                                 /* + padding as u32*/
-                width: (self.info.width as f32 * alpha) as u32, /* - (1.5 * padding) as u32*/
-                height: self.info.height,                       /* - 2 * padding as u32*/
+                x: self.info.x, /* + padding as u32*/
+                y: self.info.y, /* + padding as u32*/
+                width: (self.info.width as f32 * self.alpha) as u32, /* - (1.5 * padding) as u32*/
+                height: self.info.height, /* - 2 * padding as u32*/
             },
             render_left,
         )));
@@ -261,10 +261,10 @@ where
             PanelInfo {
                 title: format!("Panel {}", right_id).to_string(),
                 id: right_id,
-                x: self.info.x + (self.info.width as f32 * alpha) as u32, /* + (0.5 * padding) as u32*/
-                y: self.info.y,                                           /* + padding as u32 */
-                width: (self.info.width as f32 * (1.0 - alpha)) as u32, /* - (1.5 * padding) as u32*/
-                height: self.info.height,                               /* - 2 * padding as u32 */
+                x: self.info.x + (self.info.width as f32 * self.alpha) as u32, /* + (0.5 * padding) as u32*/
+                y: self.info.y, /* + padding as u32 */
+                width: (self.info.width as f32 * (1.0 - self.alpha)) as u32, /* - (1.5 * padding) as u32*/
+                height: self.info.height, /* - 2 * padding as u32 */
             },
             render_left.clone(),
         )));
