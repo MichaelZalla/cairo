@@ -18,6 +18,7 @@ pub struct ButtonOptions {
     pub y_offset: u32,
     pub label: String,
     pub align_right: bool,
+    pub with_border: bool,
 }
 
 pub fn do_button(
@@ -100,6 +101,7 @@ pub fn do_button(
         label_width,
         label_height,
         &text_texture,
+        options,
         is_button_down,
         was_button_released,
     );
@@ -114,6 +116,7 @@ fn draw_button(
     width: u32,
     height: u32,
     text_texture: &Buffer2D<u8>,
+    options: &ButtonOptions,
     was_pressed: bool,
     _was_released: bool,
 ) {
@@ -123,16 +126,18 @@ fn draw_button(
 
     // Draw the button's border.
 
-    Graphics::rectangle(
-        panel_buffer,
-        x,
-        y,
-        width,
-        height,
-        if was_pressed {
-            color::GREEN
-        } else {
-            color::YELLOW
-        },
-    )
+    if options.with_border {
+        Graphics::rectangle(
+            panel_buffer,
+            x,
+            y,
+            width,
+            height,
+            if was_pressed {
+                color::GREEN
+            } else {
+                color::YELLOW
+            },
+        )
+    }
 }
