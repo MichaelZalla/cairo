@@ -71,7 +71,9 @@ fn main() -> Result<(), String> {
                 font_cache_box_leaked,
                 &font_info,
                 &button_options,
-            ) {
+            )
+            .was_released
+            {
                 println!("You clicked Button {}!", info.id);
             }
 

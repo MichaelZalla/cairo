@@ -21,6 +21,12 @@ pub struct ButtonOptions {
     pub with_border: bool,
 }
 
+#[derive(Default, Debug)]
+pub struct DoButtonResult {
+    pub is_down: bool,
+    pub was_released: bool,
+}
+
 pub fn do_button(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
@@ -28,7 +34,7 @@ pub fn do_button(
     font_cache: &'static RwLock<FontCache<'static>>,
     font_info: &FontInfo,
     options: &ButtonOptions,
-) -> bool {
+) -> DoButtonResult {
     let op = TextOperation {
         text: &options.label,
         x: 0,
@@ -43,8 +49,8 @@ pub fn do_button(
     let (label_width, label_height, text_texture) =
         Graphics::make_text_texture(font.as_ref(), &op).unwrap();
 
-    let mut is_button_down: bool = false;
-    let mut was_button_released: bool = false;
+    let mut is_down: bool = false;
+    let mut was_released: bool = false;
 
     // Check whether a mouse event occurred inside this button.
 
@@ -73,7 +79,7 @@ pub fn do_button(
 
             match mouse_state.buttons_down.get(&MouseButton::Left) {
                 Some(_) => {
-                    is_button_down = true;
+                    is_down = true;
                 }
                 None => (),
             }
@@ -82,7 +88,7 @@ pub fn do_button(
                 Some(event) => match event.button {
                     MouseButton::Left => match event.kind {
                         MouseEventKind::Up => {
-                            was_button_released = true;
+                            was_released = true;
                         }
                         _ => (),
                     },
@@ -93,6 +99,11 @@ pub fn do_button(
         }
     }
 
+    let result = DoButtonResult {
+        is_down,
+        was_released,
+    };
+
     // Render an unpressed or pressed button.
     draw_button(
         panel_buffer,
@@ -102,11 +113,13 @@ pub fn do_button(
         label_height,
         &text_texture,
         options,
-        is_button_down,
-        was_button_released,
+        &result,
     );
 
-    was_button_released
+    DoButtonResult {
+        is_down,
+        was_released,
+    }
 }
 
 fn draw_button(
@@ -117,8 +130,7 @@ fn draw_button(
     height: u32,
     text_texture: &Buffer2D<u8>,
     options: &ButtonOptions,
-    was_pressed: bool,
-    _was_released: bool,
+    result: &DoButtonResult,
 ) {
     // Draw the button's text label.
 
@@ -133,7 +145,7 @@ fn draw_button(
             y,
             width,
             height,
-            if was_pressed {
+            if result.is_down {
                 color::GREEN
             } else {
                 color::YELLOW

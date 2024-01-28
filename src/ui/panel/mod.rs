@@ -356,7 +356,9 @@ where
                 font_cache,
                 font_info,
                 &button_options,
-            ) {
+            )
+            .was_released
+            {
                 println!("Closing panel {}...", self.info.id);
             }
         }
