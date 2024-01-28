@@ -10,7 +10,7 @@ use crate::{
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
     graphics::Graphics,
-    ui::button::do_button,
+    ui::button::{do_button, ButtonOptions},
 };
 
 #[derive(Default, Debug)]
@@ -341,23 +341,14 @@ where
             static CLOSE_BUTTON_SIZE: u32 = 14;
             static CLOSE_BUTTON_OFFSET: u32 = (PANEL_TITLE_BAR_HEIGHT - CLOSE_BUTTON_SIZE) / 2;
 
-            let (x, y, width, height) = (
-                self.info.width - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_OFFSET - 1,
-                CLOSE_BUTTON_OFFSET,
-                CLOSE_BUTTON_SIZE,
-                CLOSE_BUTTON_SIZE,
-            );
+            let button_options = ButtonOptions {
+                x: CLOSE_BUTTON_OFFSET,
+                y: CLOSE_BUTTON_OFFSET,
+                ..Default::default()
+            };
 
-            if do_button(
-                &self.info,
-                &mut self.buffer,
-                mouse_state,
-                x,
-                y,
-                width,
-                height,
-            ) {
-                println!("Should merge panel {} with its sibling.", self.info.id);
+            if do_button(&self.info, &mut self.buffer, mouse_state, &button_options) {
+                println!("Closing panel {}...", self.info.id);
             }
         }
 

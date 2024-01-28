@@ -9,14 +9,19 @@ use crate::{
 
 use super::panel::PanelInfo;
 
+#[derive(Default, Debug)]
+pub struct ButtonOptions {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
 pub fn do_button(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
+    options: &ButtonOptions,
 ) -> bool {
     let mut is_button_down: bool = false;
     let mut was_button_released: bool = false;
@@ -25,11 +30,20 @@ pub fn do_button(
 
     let (mut mouse_x, mut mouse_y) = (mouse_state.position.0 as u32, mouse_state.position.1 as u32);
 
+    let x = options.x;
+    let y = options.y;
+
     if mouse_x >= panel_info.x && mouse_y >= panel_info.y {
+        // Maps mouse_x and mouse_y into panel's local coordinates.
+
         mouse_x -= panel_info.x;
         mouse_y -= panel_info.y;
 
-        if mouse_x as u32 >= x && mouse_x < x + width && mouse_y >= y && mouse_y < height {
+        if mouse_x as u32 >= x
+            && mouse_x < x + options.width
+            && mouse_y >= y
+            && mouse_y < y + options.height
+        {
             // Check whether LMB was pressed or released inside of this button.
 
             match mouse_state.buttons_down.get(&MouseButton::Left) {
@@ -55,34 +69,25 @@ pub fn do_button(
     }
 
     // Render an unpressed or pressed button.
-    draw_button(
-        panel_buffer,
-        x,
-        y,
-        width,
-        height,
-        is_button_down,
-        was_button_released,
-    );
+    draw_button(panel_buffer, options, is_button_down, was_button_released);
 
     was_button_released
 }
 
 fn draw_button(
     panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
+    options: &ButtonOptions,
     was_pressed: bool,
     _was_released: bool,
 ) {
+    // Draw the button's border.
+
     Graphics::rectangle(
         panel_buffer,
-        x,
-        y,
-        width,
-        height,
+        options.x,
+        options.y,
+        options.width,
+        options.height,
         if was_pressed {
             color::GREEN
         } else {
