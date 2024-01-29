@@ -71,13 +71,9 @@ pub fn do_textbox(
 
     // Check whether a mouse event occurred inside this textbox.
 
-    let x = if options.layout_options.align_right {
-        panel_info.width - TEXTBOX_WIDTH - options.layout_options.x_offset
-    } else {
-        options.layout_options.x_offset
-    };
-
-    let y = options.layout_options.y_offset;
+    let (x, y) = options
+        .layout_options
+        .get_top_left_within_parent(panel_info, TEXTBOX_WIDTH);
 
     let (_is_down, _was_released) = get_mouse_result(
         &mut ctx,

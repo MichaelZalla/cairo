@@ -11,7 +11,7 @@ use crate::{
     ui::{
         button::{do_button, ButtonOptions},
         context::UIID,
-        layout::ItemLayoutOptions,
+        layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions},
     },
 };
 
@@ -403,7 +403,7 @@ where
                 layout_options: ItemLayoutOptions {
                     x_offset: CLOSE_BUTTON_OFFSET,
                     y_offset: CLOSE_BUTTON_OFFSET,
-                    align_right: true,
+                    horizontal_alignment: ItemLayoutHorizontalAlignment::Right,
                     ..Default::default()
                 },
                 label: "Close".to_string(),

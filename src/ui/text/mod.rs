@@ -51,18 +51,6 @@ pub fn do_text(
     font_info: &'static FontInfo,
     options: &TextOptions,
 ) -> DoTextResult {
-    let get_x_y = |texture: &Buffer2D<u8>| {
-        let x = if options.layout_options.align_right {
-            panel_info.width - texture.width - options.layout_options.x_offset
-        } else {
-            options.layout_options.x_offset
-        };
-
-        let y = options.layout_options.y_offset;
-
-        (x, y)
-    };
-
     match options.cache {
         true => {
             cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.text);
@@ -76,7 +64,9 @@ pub fn do_text(
 
             let texture_ref = text_cache.get(&text_cache_key).unwrap();
 
-            let (x, y) = get_x_y(texture_ref);
+            let (x, y) = options
+                .layout_options
+                .get_top_left_within_parent(panel_info, texture_ref.width);
 
             draw_text(panel_buffer, x, y, texture_ref, options);
         }
@@ -88,7 +78,9 @@ pub fn do_text(
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_texture(font.as_ref(), &options.text).unwrap();
 
-            let (x, y) = get_x_y(&texture);
+            let (x, y) = options
+                .layout_options
+                .get_top_left_within_parent(panel_info, texture.width);
 
             draw_text(panel_buffer, x, y, &texture, options);
         }

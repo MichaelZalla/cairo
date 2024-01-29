@@ -58,13 +58,9 @@ pub fn do_button(
 
     let texture = text_cache.get(&text_cache_key).unwrap();
 
-    let x = if options.layout_options.align_right {
-        panel_info.width - texture.width - options.layout_options.x_offset
-    } else {
-        options.layout_options.x_offset
-    };
-
-    let y = options.layout_options.y_offset;
+    let (x, y) = options
+        .layout_options
+        .get_top_left_within_parent(panel_info, texture.width);
 
     // Check whether a mouse event occurred inside this button.
 
