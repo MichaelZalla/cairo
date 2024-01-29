@@ -39,7 +39,9 @@ pub struct TextboxOptions {
 }
 
 #[derive(Default, Debug)]
-pub struct DoTextboxResult {}
+pub struct DoTextboxResult {
+    pub did_edit: bool,
+}
 
 pub fn do_textbox(
     ui_context: &'static RwLock<UIContext>,
@@ -91,6 +93,8 @@ pub fn do_textbox(
 
     // Updates the state of our textbox model, if needed.
 
+    let mut did_edit = false;
+
     match ctx.get_focus_target() {
         Some(target_id) => {
             if target_id == id {
@@ -102,6 +106,8 @@ pub fn do_textbox(
                             match &mut model_entry {
                                 Entry::Occupied(o) => {
                                     (*o.get_mut()).pop();
+
+                                    did_edit = true;
                                 }
                                 Entry::Vacant(_v) => {
                                     // Ignore this keypress.
@@ -116,6 +122,8 @@ pub fn do_textbox(
                                     match &mut model_entry {
                                         Entry::Occupied(o) => {
                                             *o.get_mut() += char;
+
+                                            did_edit = true;
                                         }
                                         Entry::Vacant(_v) => {
                                             // No model value exists at this entry.
@@ -136,7 +144,7 @@ pub fn do_textbox(
         None => (),
     }
 
-    let result = DoTextboxResult {};
+    let result = DoTextboxResult { did_edit };
 
     // Render a textbox.
 
