@@ -8,6 +8,14 @@ pub enum ItemLayoutHorizontalAlignment {
     Right,
 }
 
+#[derive(Default, Copy, Clone, Debug)]
+pub enum ItemTextAlignment {
+    #[default]
+    Left,
+    Center,
+    Right,
+}
+
 #[derive(Default, Debug)]
 pub struct ItemLayoutOptions {
     pub x_offset: u32,

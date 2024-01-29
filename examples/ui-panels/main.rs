@@ -13,7 +13,7 @@ use cairo::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
-        layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions},
+        layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
         textbox::{do_textbox, TextboxOptions},
@@ -285,6 +285,7 @@ fn main() -> Result<(), String> {
                     ..text_options.layout_options
                 },
                 label: format!("Textbox {}", info.id).to_string(),
+                input_text_alignment: ItemTextAlignment::Left,
                 ..Default::default()
             };
 

@@ -22,7 +22,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::ItemLayoutOptions,
+    layout::{ItemLayoutOptions, ItemTextAlignment},
     panel::PanelInfo,
 };
 
@@ -35,6 +35,7 @@ static TEXTBOX_CURSOR_PADDING: u32 = 2;
 pub struct TextboxOptions {
     pub layout_options: ItemLayoutOptions,
     pub label: String,
+    pub input_text_alignment: ItemTextAlignment,
 }
 
 #[derive(Default, Debug)]
@@ -197,8 +198,6 @@ fn draw_textbox(
 
     let textbox_top_left = (x, y);
     let textbox_top_right = (x + TEXTBOX_WIDTH, y);
-    // let textbox_bottom_left = (x, y + textbox_height);
-    // let textbox_bottom_right = (x + TEXTBOX_WIDTH, y + textbox_height);
 
     // Draw the textbox model value (text).
 
@@ -218,13 +217,23 @@ fn draw_textbox(
 
                 let max_width = TEXTBOX_WIDTH - TEXTBOX_LABEL_PADDING;
 
+                let input_text_x = match options.input_text_alignment {
+                    ItemTextAlignment::Left => textbox_top_left.0 + TEXTBOX_TEXT_PADDING,
+                    ItemTextAlignment::Center => {
+                        (TEXTBOX_WIDTH as f32 / 2.0 - model_value_texture.width as f32 / 2.0) as u32
+                    }
+                    ItemTextAlignment::Right => {
+                        TEXTBOX_WIDTH - model_value_texture.width - TEXTBOX_LABEL_PADDING
+                    }
+                };
+
                 let with_cursor = (uptime_second as u32) % 2 == 0;
 
                 Graphics::blit_text_from_mask(
                     &model_value_texture,
                     &TextOperation {
                         text,
-                        x: textbox_top_left.0 + TEXTBOX_TEXT_PADDING,
+                        x: input_text_x,
                         y: textbox_top_left.1 + 1,
                         color,
                     },
