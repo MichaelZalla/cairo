@@ -1,8 +1,20 @@
+use std::fmt::{Display, Formatter};
+
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UIID {
     pub parent: u32,
     pub item: u32,
     pub index: u32,
+}
+
+impl Display for UIID {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "UIID {{ parent: {}, item: {}, index: {} }}",
+            self.parent, self.item, self.index
+        )
+    }
 }
 
 #[derive(Default, Debug)]
@@ -21,13 +33,13 @@ impl UIContext {
     }
 
     pub fn set_hover_target(&mut self, target: Option<UIID>) {
-        // println!("Setting self.hover_target to {:#?}.", target);
+        println!("Setting self.hover_target to {:?}.", target);
 
         self.hover_target = target;
     }
 
     pub fn set_focus_target(&mut self, target: Option<UIID>) {
-        // println!("Setting self.focus_target to {:#?}.", target);
+        println!("Setting self.focus_target to {:?}.", target);
 
         self.focus_target = target;
     }

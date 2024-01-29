@@ -89,13 +89,15 @@ fn main() -> Result<(), String> {
                 ..Default::default()
             };
 
+            let button_1_id = UIID {
+                parent: info.id,
+                item: 1,
+                index: 0,
+            };
+
             if do_button(
                 ui_context,
-                UIID {
-                    parent: info.id,
-                    item: 1,
-                    index: 0,
-                },
+                button_1_id,
                 info,
                 buffer,
                 mouse_state,
@@ -106,16 +108,18 @@ fn main() -> Result<(), String> {
             )
             .was_released
             {
-                println!("You clicked Button {}!", info.id);
+                println!("You clicked a Button ({}).", button_1_id);
             }
+
+            let button_2_id = UIID {
+                parent: info.id,
+                item: 2,
+                index: 0,
+            };
 
             if do_button(
                 ui_context,
-                UIID {
-                    parent: info.id,
-                    item: 2,
-                    index: 0,
-                },
+                button_2_id,
                 info,
                 buffer,
                 mouse_state,
@@ -131,7 +135,7 @@ fn main() -> Result<(), String> {
             )
             .was_released
             {
-                println!("You clicked Button {}!", info.id);
+                println!("You clicked a Button ({}).", button_2_id);
             }
 
             // Draw a checkbox in this panel.
@@ -151,13 +155,15 @@ fn main() -> Result<(), String> {
 
             let checkbox_model_entry = checkboxes_model.entry(checkbox_model_key.clone());
 
+            let checkbox_id = UIID {
+                parent: info.id,
+                item: 3,
+                index: 0,
+            };
+
             if do_checkbox(
                 ui_context,
-                UIID {
-                    parent: info.id,
-                    item: 3,
-                    index: 0,
-                },
+                checkbox_id,
                 info,
                 buffer,
                 mouse_state,
@@ -174,8 +180,8 @@ fn main() -> Result<(), String> {
                     .or_default();
 
                 println!(
-                    "Checkbox {} is now {}!",
-                    info.id,
+                    "The Checkbox ({}) is now {}!",
+                    checkbox_id,
                     if *is_checked { "checked" } else { "unchecked" }
                 );
             }
@@ -265,13 +271,15 @@ fn main() -> Result<(), String> {
 
             let textbox_model_entry = textboxes_model.entry(textbox_model_key.clone());
 
-            do_textbox(
+            let textbox_id = UIID {
+                parent: info.id,
+                item: 7,
+                index: 0,
+            };
+
+            if do_textbox(
                 ui_context,
-                UIID {
-                    parent: info.id,
-                    item: 7,
-                    index: 0,
-                },
+                textbox_id,
                 info,
                 buffer,
                 app.timing_info.uptime_seconds,
@@ -282,7 +290,11 @@ fn main() -> Result<(), String> {
                 font_info,
                 &textbox_options,
                 textbox_model_entry,
-            );
+            )
+            .did_edit
+            {
+                println!("You edited a Textbox ({})!", textbox_id);
+            }
 
             Ok(())
         },
