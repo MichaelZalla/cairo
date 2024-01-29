@@ -118,5 +118,5 @@ fn draw_text(
         text: &options.text,
     };
 
-    Graphics::blit_text_from_mask(texture, &op, panel_buffer);
+    Graphics::blit_text_from_mask(texture, &op, panel_buffer, None);
 }

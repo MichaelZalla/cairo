@@ -23,7 +23,7 @@ use super::{
     panel::PanelInfo,
 };
 
-static CHECKBOX_LABEL_PADDING: u32 = 4;
+static CHECKBOX_LABEL_PADDING: u32 = 8;
 
 #[derive(Default, Debug)]
 pub struct CheckboxOptions {
@@ -189,5 +189,5 @@ fn draw_checkbox(
         color,
     };
 
-    Graphics::blit_text_from_mask(texture, &op, panel_buffer)
+    Graphics::blit_text_from_mask(texture, &op, panel_buffer, None)
 }

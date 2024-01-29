@@ -47,7 +47,7 @@ impl Graphics {
 
         // Copy the rendered pixels to this buffer, at location (op.x, op.y).
 
-        Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer);
+        Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer, None);
 
         Ok(())
     }
@@ -56,6 +56,7 @@ impl Graphics {
         texture: &Buffer2D<u8>,
         op: &TextOperation,
         dest_buffer: &mut Buffer2D<u32>,
+        max_width: Option<u32>,
     ) {
         if op.x >= dest_buffer.width {
             return;
@@ -68,7 +69,16 @@ impl Graphics {
         let color_u32 = op.color.to_u32();
 
         for y_rel in 0..texture.height.min(dest_buffer.height - op.y) {
-            for x_rel in 0..texture.width.min(dest_buffer.width - op.x) {
+            for x_rel in
+                0..texture
+                    .width
+                    .min(dest_buffer.width - op.x)
+                    .min(if max_width.is_some() {
+                        max_width.unwrap()
+                    } else {
+                        u32::MAX
+                    })
+            {
                 let index = (x_rel as usize + y_rel as usize * texture.width as usize) * 4;
 
                 let a = texture.data[index + 3];

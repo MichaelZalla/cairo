@@ -14,6 +14,7 @@ pub mod checkbox;
 pub mod context;
 pub mod panel;
 pub mod text;
+pub mod textbox;
 
 pub fn get_mouse_result(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,

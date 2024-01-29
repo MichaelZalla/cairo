@@ -7,6 +7,8 @@ use sdl2::{
     mouse::{MouseButton, MouseWheelDirection},
 };
 
+pub mod keycode;
+
 #[derive(Default, Copy, Clone, Debug)]
 pub enum MouseEventKind {
     #[default]

@@ -15,6 +15,7 @@ use cairo::{
         context::{UIContext, UIID},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
+        textbox::{do_textbox, TextboxOptions},
     },
 };
 
@@ -60,13 +61,18 @@ fn main() -> Result<(), String> {
 
     let ui_context: &'static RwLock<UIContext> = Box::leak(Box::new(Default::default()));
 
+    let mut textboxes_model = HashMap::<String, String>::new();
+
+    textboxes_model.insert("1".to_string(), "ABC 123".to_string());
+    textboxes_model.insert("2".to_string(), "o-blah-dee-o-blah-dah".to_string());
+
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
     let render_rwl = RwLock::new(
         |info: &PanelInfo,
          buffer: &mut Buffer2D,
          app: &mut App,
-         _keyboard_state: &KeyboardState,
+         keyboard_state: &KeyboardState,
          mouse_state: &MouseState|
          -> Result<(), String> {
             // Clear the panel buffer for drawing.
@@ -137,11 +143,13 @@ fn main() -> Result<(), String> {
                 ..Default::default()
             };
 
-            let key = info.id.to_string();
+            let checkbox_model_key = info.id.to_string();
 
-            checkboxes_model.entry(key.clone()).or_default();
+            checkboxes_model
+                .entry(checkbox_model_key.clone())
+                .or_default();
 
-            let entry = checkboxes_model.entry(key.clone());
+            let checkbox_model_entry = checkboxes_model.entry(checkbox_model_key.clone());
 
             if do_checkbox(
                 ui_context,
@@ -157,11 +165,13 @@ fn main() -> Result<(), String> {
                 text_cache,
                 font_info,
                 &checkbox_options,
-                entry,
+                checkbox_model_entry,
             )
             .was_released
             {
-                let is_checked = checkboxes_model.entry(key.clone()).or_default();
+                let is_checked = checkboxes_model
+                    .entry(checkbox_model_key.clone())
+                    .or_default();
 
                 println!(
                     "Checkbox {} is now {}!",
@@ -170,7 +180,7 @@ fn main() -> Result<(), String> {
                 );
             }
 
-            // Draw a text label in this panel.
+            // Draw some text labels in this panel.
 
             let text_options = TextOptions {
                 x_offset: button_options.x_offset,
@@ -236,6 +246,42 @@ fn main() -> Result<(), String> {
                     color: color::GREEN,
                     ..text_options
                 },
+            );
+
+            // Draw a textbox in this panel.
+
+            let textbox_options = TextboxOptions {
+                label: format!("Textbox {}", info.id).to_string(),
+                x_offset: text_options.x_offset,
+                y_offset: text_options.y_offset + 72,
+                ..Default::default()
+            };
+
+            let textbox_model_key = info.id.to_string();
+
+            textboxes_model
+                .entry(textbox_model_key.clone())
+                .or_default();
+
+            let textbox_model_entry = textboxes_model.entry(textbox_model_key.clone());
+
+            do_textbox(
+                ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 7,
+                    index: 0,
+                },
+                info,
+                buffer,
+                app.timing_info.uptime_seconds,
+                keyboard_state,
+                mouse_state,
+                font_cache,
+                text_cache,
+                font_info,
+                &textbox_options,
+                textbox_model_entry,
             );
 
             Ok(())

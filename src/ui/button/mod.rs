@@ -126,7 +126,7 @@ fn draw_button(
         text: &options.label,
     };
 
-    Graphics::blit_text_from_mask(texture, &op, panel_buffer);
+    Graphics::blit_text_from_mask(texture, &op, panel_buffer, None);
 
     // Draw the button's border.
 
