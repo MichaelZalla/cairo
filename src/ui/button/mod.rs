@@ -1,11 +1,9 @@
 use std::sync::{RwLock, RwLockWriteGuard};
 
-use sdl2::mouse::MouseButton;
-
 use crate::{
     buffer::Buffer2D,
     color::{self},
-    device::{MouseEventKind, MouseState},
+    device::MouseState,
     font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
@@ -18,6 +16,7 @@ use crate::{
 
 use super::{
     context::{UIContext, UIID},
+    get_mouse_result,
     panel::PanelInfo,
 };
 
@@ -47,7 +46,7 @@ pub fn do_button(
     font_info: &'static FontInfo,
     options: &ButtonOptions,
 ) -> DoButtonResult {
-    let mut ctx = ui_context.write().unwrap();
+    let mut ctx: RwLockWriteGuard<'_, UIContext> = ui_context.write().unwrap();
 
     cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
@@ -60,15 +59,6 @@ pub fn do_button(
 
     let texture = text_cache.get(&text_cache_key).unwrap();
 
-    //
-
-    let mut is_down: bool = false;
-    let mut was_released: bool = false;
-
-    // Check whether a mouse event occurred inside this button.
-
-    let (mut mouse_x, mut mouse_y) = (mouse_state.position.0, mouse_state.position.1);
-
     let x = if options.align_right {
         panel_info.width - texture.width - options.x_offset
     } else {
@@ -77,84 +67,18 @@ pub fn do_button(
 
     let y = options.y_offset;
 
-    // Maps mouse_x and mouse_y into panel's local coordinates.
+    // Check whether a mouse event occurred inside this button.
 
-    mouse_x -= panel_info.x as i32;
-    mouse_y -= panel_info.y as i32;
-
-    let mouse_in_bounds = mouse_x >= x as i32
-        && mouse_x < (x + texture.width) as i32
-        && mouse_y >= y as i32
-        && mouse_y < (y + texture.height) as i32;
-
-    match (ctx.get_hover_target(), mouse_in_bounds) {
-        (Some(target_id), true) => {
-            if target_id != id {
-                // Mouse is positioned inside of this button (making it the
-                // current hover target).
-
-                ctx.set_hover_target(Some(id))
-            }
-        }
-        (None, true) => ctx.set_hover_target(Some(id)),
-        (Some(target_id), false) => {
-            // Yield the hover target to some other UI item.
-
-            if target_id == id {
-                ctx.set_hover_target(None)
-            }
-        }
-        (None, false) => (),
-    }
-
-    match mouse_state.button_event {
-        Some(event) => match event.button {
-            MouseButton::Left => match (event.kind, mouse_in_bounds) {
-                (MouseEventKind::Up, true) => {
-                    // Check whether LMB was just released inside of this
-                    // button.
-
-                    was_released = true;
-                }
-                (MouseEventKind::Down, true) => {
-                    // Check whether LMB was just pressed inside of this
-                    // button.
-
-                    match ctx.get_focus_target() {
-                        Some(target_id) => {
-                            if target_id != id {
-                                ctx.set_focus_target(Some(id))
-                            }
-                        }
-                        None => ctx.set_focus_target(Some(id)),
-                    }
-                }
-                (MouseEventKind::Up, false) => {}
-                (MouseEventKind::Down, false) => match ctx.get_focus_target() {
-                    Some(target_id) => {
-                        if target_id == id {
-                            ctx.set_focus_target(None)
-                        }
-                    }
-                    None => (),
-                },
-            },
-            _ => (),
-        },
-        None => (),
-    }
-
-    // Check whether LMB is down inside of this button.
-
-    match (
-        mouse_state.buttons_down.get(&MouseButton::Left),
-        mouse_in_bounds,
-    ) {
-        (Some(_), true) => {
-            is_down = true;
-        }
-        _ => (),
-    }
+    let (is_down, was_released) = get_mouse_result(
+        &mut ctx,
+        id,
+        panel_info,
+        mouse_state,
+        x,
+        y,
+        texture.width,
+        texture.height,
+    );
 
     let result = DoButtonResult {
         is_down,
@@ -162,7 +86,8 @@ pub fn do_button(
     };
 
     // Render an unpressed or pressed button.
-    draw_button(ctx, id, panel_buffer, x, y, texture, options, &result);
+
+    draw_button(&mut ctx, id, panel_buffer, x, y, texture, options, &result);
 
     DoButtonResult {
         is_down,
@@ -171,7 +96,7 @@ pub fn do_button(
 }
 
 fn draw_button(
-    ui_context: RwLockWriteGuard<'_, UIContext>,
+    ui_context: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_buffer: &mut Buffer2D,
     x: u32,
