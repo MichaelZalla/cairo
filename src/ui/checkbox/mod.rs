@@ -1,4 +1,7 @@
-use std::{collections::hash_map::Entry, sync::RwLock};
+use std::{
+    collections::hash_map::Entry,
+    sync::{RwLock, RwLockWriteGuard},
+};
 
 use sdl2::mouse::MouseButton;
 
@@ -16,7 +19,10 @@ use crate::{
     },
 };
 
-use super::{context::UIContext, panel::PanelInfo};
+use super::{
+    context::{UIContext, UIID},
+    panel::PanelInfo,
+};
 
 #[derive(Default, Debug)]
 pub struct CheckboxOptions {
@@ -34,7 +40,8 @@ pub struct DoCheckboxResult {
 }
 
 pub fn do_checkbox(
-    _ui_context: &'static UIContext,
+    ui_context: &'static RwLock<UIContext>,
+    id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
@@ -44,6 +51,8 @@ pub fn do_checkbox(
     options: &CheckboxOptions,
     model: Entry<'_, String, bool>,
 ) -> DoCheckboxResult {
+    let mut ctx = ui_context.write().unwrap();
+
     cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
     let text_cache_key = TextCacheKey {
@@ -60,7 +69,7 @@ pub fn do_checkbox(
 
     // Check whether a mouse event occurred inside this checkbox.
 
-    let (mut mouse_x, mut mouse_y) = (mouse_state.position.0 as u32, mouse_state.position.1 as u32);
+    let (mut mouse_x, mut mouse_y) = (mouse_state.position.0, mouse_state.position.1);
 
     let checkbox_size = texture.height;
 
@@ -72,39 +81,83 @@ pub fn do_checkbox(
 
     let y = options.y_offset;
 
-    if mouse_x >= panel_info.x && mouse_y >= panel_info.y {
-        // Maps mouse_x and mouse_y into panel's local coordinates.
+    // Maps mouse_x and mouse_y into panel's local coordinates.
 
-        mouse_x -= panel_info.x;
-        mouse_y -= panel_info.y;
+    mouse_x -= panel_info.x as i32;
+    mouse_y -= panel_info.y as i32;
 
-        if mouse_x as u32 >= x
-            && mouse_x < x + checkbox_size
-            && mouse_y >= y
-            && mouse_y < y + checkbox_size
-        {
-            // Check whether LMB was pressed or released inside of this checkbox.
+    let mouse_in_bounds = mouse_x >= x as i32
+        && mouse_x < (x + texture.width) as i32
+        && mouse_y >= y as i32
+        && mouse_y < (y + texture.height) as i32;
 
-            match mouse_state.buttons_down.get(&MouseButton::Left) {
-                Some(_) => {
-                    is_down = true;
-                }
-                None => (),
-            }
+    match (ctx.get_hover_target(), mouse_in_bounds) {
+        (Some(target_id), true) => {
+            if target_id != id {
+                // Mouse is positioned inside of this checkbox (making it the
+                // current hover target).
 
-            match mouse_state.button_event {
-                Some(event) => match event.button {
-                    MouseButton::Left => match event.kind {
-                        MouseEventKind::Up => {
-                            was_released = true;
-                        }
-                        _ => (),
-                    },
-                    _ => (),
-                },
-                None => (),
+                ctx.set_hover_target(Some(id))
             }
         }
+        (None, true) => ctx.set_hover_target(Some(id)),
+        (Some(target_id), false) => {
+            // Yield the hover target to some other UI item.
+
+            if target_id == id {
+                ctx.set_hover_target(None)
+            }
+        }
+        (None, false) => (),
+    }
+
+    match mouse_state.button_event {
+        Some(event) => match event.button {
+            MouseButton::Left => match (event.kind, mouse_in_bounds) {
+                (MouseEventKind::Up, true) => {
+                    // Check whether LMB was just released inside of this
+                    // checkbox.
+
+                    was_released = true;
+                }
+                (MouseEventKind::Down, true) => {
+                    // Check whether LMB was just pressed inside of this
+                    // checkbox.
+
+                    match ctx.get_focus_target() {
+                        Some(target_id) => {
+                            if target_id != id {
+                                ctx.set_focus_target(Some(id))
+                            }
+                        }
+                        None => ctx.set_focus_target(Some(id)),
+                    }
+                }
+                (MouseEventKind::Up, false) => {}
+                (MouseEventKind::Down, false) => match ctx.get_focus_target() {
+                    Some(target_id) => {
+                        if target_id == id {
+                            ctx.set_focus_target(None)
+                        }
+                    }
+                    None => (),
+                },
+            },
+            _ => (),
+        },
+        None => (),
+    }
+
+    // Check whether LMB is down inside of this checkbox.
+
+    match (
+        mouse_state.buttons_down.get(&MouseButton::Left),
+        mouse_in_bounds,
+    ) {
+        (Some(_), true) => {
+            is_down = true;
+        }
+        _ => (),
     }
 
     let mut is_checked = match &model {
@@ -129,12 +182,14 @@ pub fn do_checkbox(
     };
 
     // Render an unchecked or checked checkbox.
-    draw_checkbox(panel_buffer, x, y, options, texture, &result);
+    draw_checkbox(ctx, id, panel_buffer, x, y, options, texture, &result);
 
     result
 }
 
 fn draw_checkbox(
+    ui_context: RwLockWriteGuard<'_, UIContext>,
+    id: UIID,
     panel_buffer: &mut Buffer2D,
     x: u32,
     y: u32,
@@ -144,8 +199,20 @@ fn draw_checkbox(
 ) {
     let checkbox_size = texture.height;
 
-    let color = if result.is_down {
+    let is_focus_target = ui_context
+        .get_focus_target()
+        .is_some_and(|target_id| target_id == id);
+
+    let is_hover_target = ui_context
+        .get_hover_target()
+        .is_some_and(|target_id| target_id == id);
+
+    let color = if is_focus_target {
+        color::RED
+    } else if result.is_down {
         color::GREEN
+    } else if is_hover_target {
+        color::WHITE
     } else {
         color::YELLOW
     };

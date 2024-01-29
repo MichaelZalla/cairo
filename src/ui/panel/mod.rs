@@ -8,7 +8,10 @@ use crate::{
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
     graphics::{text::cache::TextCache, Graphics},
-    ui::button::{do_button, ButtonOptions},
+    ui::{
+        button::{do_button, ButtonOptions},
+        context::UIID,
+    },
 };
 
 use super::context::UIContext;
@@ -166,7 +169,7 @@ where
         app: &mut App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        ui_context: &'static UIContext,
+        ui_context: &'static RwLock<UIContext>,
         font_cache: &'static RwLock<FontCache<'static>>,
         text_cache: &'static RwLock<TextCache<'static>>,
         font_info: &'static FontInfo,
@@ -360,7 +363,7 @@ where
     fn draw_panel_title_bar(
         &mut self,
         mouse_state: &MouseState,
-        ui_context: &'static UIContext,
+        ui_context: &'static RwLock<UIContext>,
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &'static FontInfo,
         text_cache: &'static RwLock<TextCache<'static>>,
@@ -405,6 +408,11 @@ where
 
             if do_button(
                 ui_context,
+                UIID {
+                    parent: self.info.id,
+                    item: 0,
+                    index: 0,
+                },
                 &self.info,
                 &mut self.buffer,
                 mouse_state,

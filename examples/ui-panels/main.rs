@@ -12,7 +12,7 @@ use cairo::{
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
-        context::UIContext,
+        context::{UIContext, UIID},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
     },
@@ -58,7 +58,7 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
-    let ui_context: &'static mut UIContext = Box::leak(Box::new(Default::default()));
+    let ui_context: &'static RwLock<UIContext> = Box::leak(Box::new(Default::default()));
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
@@ -85,6 +85,11 @@ fn main() -> Result<(), String> {
 
             if do_button(
                 ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 1,
+                    index: 0,
+                },
                 info,
                 buffer,
                 mouse_state,
@@ -100,6 +105,11 @@ fn main() -> Result<(), String> {
 
             if do_button(
                 ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 2,
+                    index: 0,
+                },
                 info,
                 buffer,
                 mouse_state,
@@ -135,6 +145,11 @@ fn main() -> Result<(), String> {
 
             if do_checkbox(
                 ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 3,
+                    index: 0,
+                },
                 info,
                 buffer,
                 mouse_state,
@@ -167,6 +182,11 @@ fn main() -> Result<(), String> {
 
             do_text(
                 ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 4,
+                    index: 0,
+                },
                 info,
                 buffer,
                 font_cache,
@@ -177,6 +197,11 @@ fn main() -> Result<(), String> {
 
             do_text(
                 ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 5,
+                    index: 0,
+                },
                 info,
                 buffer,
                 font_cache,
@@ -194,6 +219,11 @@ fn main() -> Result<(), String> {
 
             do_text(
                 ui_context,
+                UIID {
+                    parent: info.id,
+                    item: 6,
+                    index: 0,
+                },
                 info,
                 buffer,
                 font_cache,
