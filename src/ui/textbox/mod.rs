@@ -1,5 +1,6 @@
 use std::{
     collections::hash_map::Entry,
+    f32::consts::PI,
     sync::{RwLock, RwLockWriteGuard},
 };
 
@@ -227,7 +228,7 @@ fn draw_textbox(
                     }
                 };
 
-                let with_cursor = (uptime_second as u32) % 2 == 0;
+                let with_cursor = (uptime_second * 2.0 * PI).sin() > 0.0;
 
                 Graphics::blit_text_from_mask(
                     &model_value_texture,
