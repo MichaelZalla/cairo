@@ -100,13 +100,9 @@ fn draw_button(
     options: &ButtonOptions,
     result: &DoButtonResult,
 ) {
-    let is_hover_target = ctx
-        .get_hover_target()
-        .is_some_and(|target_id| target_id == id);
-
     let color = if result.is_down {
         color::GREEN
-    } else if is_hover_target {
+    } else if ctx.is_hovered(id) {
         color::WHITE
     } else {
         color::YELLOW

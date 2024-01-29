@@ -89,11 +89,7 @@ pub fn do_number_slider(
 
     let mut did_edit = false;
 
-    let is_focus_target = ctx
-        .get_focus_target()
-        .is_some_and(|target_id| target_id == id);
-
-    if is_focus_target {
+    if ctx.is_focused(id) {
         match mouse_state.buttons_down.get(&MouseButton::Left) {
             Some(_) => {
                 match &mut model_entry {
@@ -172,17 +168,9 @@ fn draw_slider(
 ) {
     let slider_height = label_texture.height;
 
-    let is_focus_target = ctx
-        .get_focus_target()
-        .is_some_and(|target_id| target_id == id);
-
-    let is_hover_target = ctx
-        .get_hover_target()
-        .is_some_and(|target_id| target_id == id);
-
-    let color = if is_focus_target {
+    let color = if ctx.is_focused(id) {
         color::RED
-    } else if is_hover_target {
+    } else if ctx.is_hovered(id) {
         color::WHITE
     } else {
         color::YELLOW

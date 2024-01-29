@@ -127,19 +127,11 @@ fn draw_checkbox(
 ) {
     let checkbox_size = texture.height;
 
-    let is_focus_target = ctx
-        .get_focus_target()
-        .is_some_and(|target_id| target_id == id);
-
-    let is_hover_target = ctx
-        .get_hover_target()
-        .is_some_and(|target_id| target_id == id);
-
-    let color = if is_focus_target {
+    let color = if ctx.is_focused(id) {
         color::RED
     } else if result.is_down {
         color::GREEN
-    } else if is_hover_target {
+    } else if ctx.is_hovered(id) {
         color::WHITE
     } else {
         color::YELLOW

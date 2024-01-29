@@ -177,17 +177,9 @@ fn draw_textbox(
 ) {
     let textbox_height = label_texture.height;
 
-    let is_focus_target = ctx
-        .get_focus_target()
-        .is_some_and(|target_id| target_id == id);
-
-    let is_hover_target = ctx
-        .get_hover_target()
-        .is_some_and(|target_id| target_id == id);
-
-    let color = if is_focus_target {
+    let color = if ctx.is_focused(id) {
         color::RED
-    } else if is_hover_target {
+    } else if ctx.is_hovered(id) {
         color::WHITE
     } else {
         color::YELLOW
@@ -244,7 +236,7 @@ fn draw_textbox(
 
                 // Draw the text cursor.
 
-                if is_focus_target && with_cursor {
+                if ctx.is_focused(id) && with_cursor {
                     Graphics::rectangle(
                         panel_buffer,
                         textbox_top_left.0
