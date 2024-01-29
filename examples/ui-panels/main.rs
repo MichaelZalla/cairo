@@ -13,7 +13,7 @@ use cairo::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
-        layout::ItemLayoutOptions,
+        layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
         textbox::{do_textbox, TextboxOptions},
@@ -239,6 +239,7 @@ fn main() -> Result<(), String> {
                 &TextOptions {
                     layout_options: ItemLayoutOptions {
                         y_offset: text_options.layout_options.y_offset + 24,
+                        horizontal_alignment: ItemLayoutHorizontalAlignment::Center,
                         ..text_options.layout_options
                     },
                     text: text_options.text.clone(),
@@ -266,6 +267,7 @@ fn main() -> Result<(), String> {
                 &TextOptions {
                     layout_options: ItemLayoutOptions {
                         y_offset: text_options.layout_options.y_offset + 48,
+                        horizontal_alignment: ItemLayoutHorizontalAlignment::Right,
                         ..text_options.layout_options
                     },
                     text: format!("Uptime: {}", uptime.to_string()),

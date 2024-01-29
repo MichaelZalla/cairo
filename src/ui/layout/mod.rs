@@ -4,6 +4,7 @@ use super::panel::PanelInfo;
 pub enum ItemLayoutHorizontalAlignment {
     #[default]
     Left,
+    Center,
     Right,
 }
 
@@ -18,6 +19,10 @@ impl ItemLayoutOptions {
     pub fn get_top_left_within_parent(&self, parent: &PanelInfo, width: u32) -> (u32, u32) {
         let x = match self.horizontal_alignment {
             ItemLayoutHorizontalAlignment::Left => self.x_offset,
+            ItemLayoutHorizontalAlignment::Center => {
+                ((parent.width as f32 / 2.0 - width as f32 / 2.0) - (self.x_offset as f32 / 2.0))
+                    as u32
+            }
             ItemLayoutHorizontalAlignment::Right => parent.width - width - self.x_offset,
         };
 
