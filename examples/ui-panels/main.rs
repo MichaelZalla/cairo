@@ -73,15 +73,15 @@ fn main() -> Result<(), String> {
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
     let render_rwl = RwLock::new(
-        |info: &PanelInfo,
-         buffer: &mut Buffer2D,
+        |panel_info: &PanelInfo,
+         panel_buffer: &mut Buffer2D,
          app: &mut App,
          keyboard_state: &KeyboardState,
          mouse_state: &MouseState|
          -> Result<(), String> {
             // Clear the panel buffer for drawing.
 
-            buffer.clear(None);
+            panel_buffer.clear(None);
 
             // Draw a bordered button.
 
@@ -97,7 +97,7 @@ fn main() -> Result<(), String> {
             };
 
             let button_1_id = UIID {
-                parent: info.id,
+                parent: panel_info.id,
                 item: 1,
                 index: 0,
             };
@@ -105,8 +105,8 @@ fn main() -> Result<(), String> {
             if do_button(
                 ui_context,
                 button_1_id,
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 mouse_state,
                 font_cache,
                 text_cache,
@@ -121,7 +121,7 @@ fn main() -> Result<(), String> {
             // Draw a borderless button.
 
             let button_2_id = UIID {
-                parent: info.id,
+                parent: panel_info.id,
                 item: 2,
                 index: 0,
             };
@@ -129,8 +129,8 @@ fn main() -> Result<(), String> {
             if do_button(
                 ui_context,
                 button_2_id,
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 mouse_state,
                 font_cache,
                 text_cache,
@@ -157,11 +157,11 @@ fn main() -> Result<(), String> {
                     y_offset: button_options.layout_options.y_offset + 48,
                     ..button_options.layout_options
                 },
-                label: format!("Checkbox {}", info.id).to_string(),
+                label: format!("Checkbox {}", panel_info.id).to_string(),
                 ..Default::default()
             };
 
-            let checkbox_model_key = info.id.to_string() + "_checkbox";
+            let checkbox_model_key = panel_info.id.to_string() + "_checkbox";
 
             checkboxes_model
                 .entry(checkbox_model_key.clone())
@@ -170,7 +170,7 @@ fn main() -> Result<(), String> {
             let checkbox_model_entry = checkboxes_model.entry(checkbox_model_key.clone());
 
             let checkbox_id = UIID {
-                parent: info.id,
+                parent: panel_info.id,
                 item: 3,
                 index: 0,
             };
@@ -178,8 +178,8 @@ fn main() -> Result<(), String> {
             if do_checkbox(
                 ui_context,
                 checkbox_id,
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 mouse_state,
                 font_cache,
                 text_cache,
@@ -207,7 +207,7 @@ fn main() -> Result<(), String> {
                     y_offset: checkbox_options.layout_options.y_offset + 24,
                     ..button_options.layout_options
                 },
-                text: format!("Welcome to Panel {}!", info.id),
+                text: format!("Welcome to Panel {}!", panel_info.id),
                 color: color::WHITE,
                 ..Default::default()
             };
@@ -215,12 +215,12 @@ fn main() -> Result<(), String> {
             do_text(
                 ui_context,
                 UIID {
-                    parent: info.id,
+                    parent: panel_info.id,
                     item: 4,
                     index: 0,
                 },
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 font_cache,
                 text_cache,
                 font_info,
@@ -230,12 +230,12 @@ fn main() -> Result<(), String> {
             do_text(
                 ui_context,
                 UIID {
-                    parent: info.id,
+                    parent: panel_info.id,
                     item: 5,
                     index: 0,
                 },
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 font_cache,
                 text_cache,
                 font_info,
@@ -258,12 +258,12 @@ fn main() -> Result<(), String> {
             do_text(
                 ui_context,
                 UIID {
-                    parent: info.id,
+                    parent: panel_info.id,
                     item: 6,
                     index: 0,
                 },
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 font_cache,
                 text_cache,
                 font_info,
@@ -287,12 +287,12 @@ fn main() -> Result<(), String> {
                     y_offset: text_options.layout_options.y_offset + 72,
                     ..text_options.layout_options
                 },
-                label: format!("Textbox {}", info.id).to_string(),
+                label: format!("Textbox {}", panel_info.id).to_string(),
                 input_text_alignment: ItemTextAlignment::Left,
                 ..Default::default()
             };
 
-            let textbox_model_key = info.id.to_string() + "_textbox";
+            let textbox_model_key = panel_info.id.to_string() + "_textbox";
 
             textboxes_model
                 .entry(textbox_model_key.clone())
@@ -301,7 +301,7 @@ fn main() -> Result<(), String> {
             let textbox_model_entry = textboxes_model.entry(textbox_model_key.clone());
 
             let textbox_id = UIID {
-                parent: info.id,
+                parent: panel_info.id,
                 item: 7,
                 index: 0,
             };
@@ -309,8 +309,8 @@ fn main() -> Result<(), String> {
             if do_textbox(
                 ui_context,
                 textbox_id,
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 app.timing_info.uptime_seconds,
                 keyboard_state,
                 mouse_state,
@@ -332,20 +332,20 @@ fn main() -> Result<(), String> {
                     y_offset: textbox_options.layout_options.y_offset + 24,
                     ..textbox_options.layout_options
                 },
-                label: format!("Slider {}", info.id).to_string(),
-                min: Some(-1.0 * info.id as f32),
-                max: Some(1.0 * info.id as f32),
+                label: format!("Slider {}", panel_info.id).to_string(),
+                min: Some(-1.0 * panel_info.id as f32),
+                max: Some(1.0 * panel_info.id as f32),
                 ..Default::default()
             };
 
-            let slider_model_key = info.id.to_string() + "_slider";
+            let slider_model_key = panel_info.id.to_string() + "_slider";
 
             textboxes_model.entry(slider_model_key.clone()).or_default();
 
             let slider_model_entry = textboxes_model.entry(slider_model_key.clone());
 
             let slider_id = UIID {
-                parent: info.id,
+                parent: panel_info.id,
                 item: 8,
                 index: 0,
             };
@@ -353,8 +353,8 @@ fn main() -> Result<(), String> {
             if do_number_slider(
                 ui_context,
                 slider_id,
-                info,
-                buffer,
+                panel_info,
+                panel_buffer,
                 mouse_state,
                 font_cache,
                 text_cache,
