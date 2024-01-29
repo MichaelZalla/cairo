@@ -14,6 +14,7 @@ use cairo::{
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
         layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
+        number_slider::{do_number_slider, NumberSliderOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
         textbox::{do_textbox, TextboxOptions},
@@ -65,7 +66,9 @@ fn main() -> Result<(), String> {
     let mut textboxes_model = HashMap::<String, String>::new();
 
     textboxes_model.insert("1_textbox".to_string(), "ABC 123".to_string());
+    textboxes_model.insert("1_slider".to_string(), "0.00".to_string());
     textboxes_model.insert("2_textbox".to_string(), "o-blah-dee-o-blah-dah".to_string());
+    textboxes_model.insert("2_slider".to_string(), "0.50".to_string());
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
@@ -320,6 +323,48 @@ fn main() -> Result<(), String> {
             .did_edit
             {
                 println!("You edited a Textbox ({})!", textbox_id);
+            }
+
+            // Draw a number slider.
+
+            let slider_options = NumberSliderOptions {
+                layout_options: ItemLayoutOptions {
+                    y_offset: textbox_options.layout_options.y_offset + 24,
+                    ..textbox_options.layout_options
+                },
+                label: format!("Slider {}", info.id).to_string(),
+                min: Some(-1.0 * info.id as f32),
+                max: Some(1.0 * info.id as f32),
+                ..Default::default()
+            };
+
+            let slider_model_key = info.id.to_string() + "_slider";
+
+            textboxes_model.entry(slider_model_key.clone()).or_default();
+
+            let slider_model_entry = textboxes_model.entry(slider_model_key.clone());
+
+            let slider_id = UIID {
+                parent: info.id,
+                item: 8,
+                index: 0,
+            };
+
+            if do_number_slider(
+                ui_context,
+                slider_id,
+                info,
+                buffer,
+                mouse_state,
+                font_cache,
+                text_cache,
+                font_info,
+                &slider_options,
+                slider_model_entry,
+            )
+            .did_edit
+            {
+                println!("You edited a NumberSlider ({})!", slider_id);
             }
 
             Ok(())
