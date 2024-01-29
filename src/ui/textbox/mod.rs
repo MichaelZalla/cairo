@@ -22,6 +22,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
+    layout::ItemLayoutOptions,
     panel::PanelInfo,
 };
 
@@ -32,10 +33,8 @@ static TEXTBOX_CURSOR_PADDING: u32 = 2;
 
 #[derive(Default, Debug)]
 pub struct TextboxOptions {
-    pub x_offset: u32,
-    pub y_offset: u32,
+    pub layout_options: ItemLayoutOptions,
     pub label: String,
-    pub align_right: bool,
 }
 
 #[derive(Default, Debug)]
@@ -72,13 +71,13 @@ pub fn do_textbox(
 
     // Check whether a mouse event occurred inside this textbox.
 
-    let x = if options.align_right {
-        panel_info.width - TEXTBOX_WIDTH - options.x_offset
+    let x = if options.layout_options.align_right {
+        panel_info.width - TEXTBOX_WIDTH - options.layout_options.x_offset
     } else {
-        options.x_offset
+        options.layout_options.x_offset
     };
 
-    let y = options.y_offset;
+    let y = options.layout_options.y_offset;
 
     let (_is_down, _was_released) = get_mouse_result(
         &mut ctx,
@@ -202,6 +201,8 @@ fn draw_textbox(
 
     let textbox_top_left = (x, y);
     let textbox_top_right = (x + TEXTBOX_WIDTH, y);
+    // let textbox_bottom_left = (x, y + textbox_height);
+    // let textbox_bottom_right = (x + TEXTBOX_WIDTH, y + textbox_height);
 
     // Draw the textbox model value (text).
 

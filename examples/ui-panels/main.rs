@@ -13,6 +13,7 @@ use cairo::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
+        layout::ItemLayoutOptions,
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         text::{do_text, TextOptions},
         textbox::{do_textbox, TextboxOptions},
@@ -63,8 +64,8 @@ fn main() -> Result<(), String> {
 
     let mut textboxes_model = HashMap::<String, String>::new();
 
-    textboxes_model.insert("1".to_string(), "ABC 123".to_string());
-    textboxes_model.insert("2".to_string(), "o-blah-dee-o-blah-dah".to_string());
+    textboxes_model.insert("1_textbox".to_string(), "ABC 123".to_string());
+    textboxes_model.insert("2_textbox".to_string(), "o-blah-dee-o-blah-dah".to_string());
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
@@ -79,12 +80,15 @@ fn main() -> Result<(), String> {
 
             buffer.clear(None);
 
-            // Draw a button in this panel.
+            // Draw a bordered button.
 
             let button_options = ButtonOptions {
+                layout_options: ItemLayoutOptions {
+                    x_offset: 8,
+                    y_offset: PANEL_TITLE_BAR_HEIGHT + 8,
+                    ..Default::default()
+                },
                 label: format!("Bordered button").to_string(),
-                x_offset: 8,
-                y_offset: PANEL_TITLE_BAR_HEIGHT + 8,
                 with_border: true,
                 ..Default::default()
             };
@@ -111,6 +115,8 @@ fn main() -> Result<(), String> {
                 println!("You clicked a Button ({}).", button_1_id);
             }
 
+            // Draw a borderless button.
+
             let button_2_id = UIID {
                 parent: info.id,
                 item: 2,
@@ -127,9 +133,12 @@ fn main() -> Result<(), String> {
                 text_cache,
                 font_info,
                 &ButtonOptions {
+                    layout_options: ItemLayoutOptions {
+                        y_offset: button_options.layout_options.y_offset + 24,
+                        ..button_options.layout_options
+                    },
                     label: format!("Borderless button").to_string(),
                     with_border: false,
-                    y_offset: button_options.y_offset + 24,
                     ..button_options
                 },
             )
@@ -138,16 +147,18 @@ fn main() -> Result<(), String> {
                 println!("You clicked a Button ({}).", button_2_id);
             }
 
-            // Draw a checkbox in this panel.
+            // Draw a checkbox.
 
             let checkbox_options = CheckboxOptions {
+                layout_options: ItemLayoutOptions {
+                    y_offset: button_options.layout_options.y_offset + 48,
+                    ..button_options.layout_options
+                },
                 label: format!("Checkbox {}", info.id).to_string(),
-                x_offset: button_options.x_offset,
-                y_offset: button_options.y_offset + 48,
                 ..Default::default()
             };
 
-            let checkbox_model_key = info.id.to_string();
+            let checkbox_model_key = info.id.to_string() + "_checkbox";
 
             checkboxes_model
                 .entry(checkbox_model_key.clone())
@@ -186,11 +197,13 @@ fn main() -> Result<(), String> {
                 );
             }
 
-            // Draw some text labels in this panel.
+            // Draw some cached text labels.
 
             let text_options = TextOptions {
-                x_offset: button_options.x_offset,
-                y_offset: checkbox_options.y_offset + 24,
+                layout_options: ItemLayoutOptions {
+                    y_offset: checkbox_options.layout_options.y_offset + 24,
+                    ..button_options.layout_options
+                },
                 text: format!("Welcome to Panel {}!", info.id),
                 color: color::WHITE,
                 ..Default::default()
@@ -224,12 +237,17 @@ fn main() -> Result<(), String> {
                 text_cache,
                 font_info,
                 &TextOptions {
-                    y_offset: text_options.y_offset + 24,
+                    layout_options: ItemLayoutOptions {
+                        y_offset: text_options.layout_options.y_offset + 24,
+                        ..text_options.layout_options
+                    },
                     text: text_options.text.clone(),
                     color: color::RED,
                     ..text_options
                 },
             );
+
+            // Draw a non-cached text label.
 
             let uptime = app.timing_info.uptime_seconds;
 
@@ -246,7 +264,10 @@ fn main() -> Result<(), String> {
                 text_cache,
                 font_info,
                 &TextOptions {
-                    y_offset: text_options.y_offset + 48,
+                    layout_options: ItemLayoutOptions {
+                        y_offset: text_options.layout_options.y_offset + 48,
+                        ..text_options.layout_options
+                    },
                     text: format!("Uptime: {}", uptime.to_string()),
                     cache: false,
                     color: color::GREEN,
@@ -254,16 +275,18 @@ fn main() -> Result<(), String> {
                 },
             );
 
-            // Draw a textbox in this panel.
+            // Draw a textbox.
 
             let textbox_options = TextboxOptions {
+                layout_options: ItemLayoutOptions {
+                    y_offset: text_options.layout_options.y_offset + 72,
+                    ..text_options.layout_options
+                },
                 label: format!("Textbox {}", info.id).to_string(),
-                x_offset: text_options.x_offset,
-                y_offset: text_options.y_offset + 72,
                 ..Default::default()
             };
 
-            let textbox_model_key = info.id.to_string();
+            let textbox_model_key = info.id.to_string() + "_textbox";
 
             textboxes_model
                 .entry(textbox_model_key.clone())

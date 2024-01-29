@@ -12,6 +12,7 @@ use self::{
 pub mod button;
 pub mod checkbox;
 pub mod context;
+pub mod layout;
 pub mod panel;
 pub mod text;
 pub mod textbox;

@@ -15,28 +15,25 @@ use crate::{
 
 use super::{
     context::{UIContext, UIID},
+    layout::ItemLayoutOptions,
     panel::PanelInfo,
 };
 
 #[derive(Debug)]
 pub struct TextOptions {
-    pub x_offset: u32,
-    pub y_offset: u32,
+    pub layout_options: ItemLayoutOptions,
     pub text: String,
     pub cache: bool,
     pub color: Color,
-    pub align_right: bool,
 }
 
 impl Default for TextOptions {
     fn default() -> Self {
         Self {
-            x_offset: Default::default(),
-            y_offset: Default::default(),
+            layout_options: Default::default(),
             text: Default::default(),
             cache: true,
             color: Default::default(),
-            align_right: Default::default(),
         }
     }
 }
@@ -55,13 +52,13 @@ pub fn do_text(
     options: &TextOptions,
 ) -> DoTextResult {
     let get_x_y = |texture: &Buffer2D<u8>| {
-        let x = if options.align_right {
-            panel_info.width - texture.width - options.x_offset
+        let x = if options.layout_options.align_right {
+            panel_info.width - texture.width - options.layout_options.x_offset
         } else {
-            options.x_offset
+            options.layout_options.x_offset
         };
 
-        let y = options.y_offset;
+        let y = options.layout_options.y_offset;
 
         (x, y)
     };

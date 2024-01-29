@@ -17,15 +17,14 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
+    layout::ItemLayoutOptions,
     panel::PanelInfo,
 };
 
 #[derive(Default, Debug)]
 pub struct ButtonOptions {
-    pub x_offset: u32,
-    pub y_offset: u32,
+    pub layout_options: ItemLayoutOptions,
     pub label: String,
-    pub align_right: bool,
     pub with_border: bool,
 }
 
@@ -59,13 +58,13 @@ pub fn do_button(
 
     let texture = text_cache.get(&text_cache_key).unwrap();
 
-    let x = if options.align_right {
-        panel_info.width - texture.width - options.x_offset
+    let x = if options.layout_options.align_right {
+        panel_info.width - texture.width - options.layout_options.x_offset
     } else {
-        options.x_offset
+        options.layout_options.x_offset
     };
 
-    let y = options.y_offset;
+    let y = options.layout_options.y_offset;
 
     // Check whether a mouse event occurred inside this button.
 

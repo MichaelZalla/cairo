@@ -20,6 +20,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
+    layout::ItemLayoutOptions,
     panel::PanelInfo,
 };
 
@@ -27,10 +28,8 @@ static CHECKBOX_LABEL_PADDING: u32 = 8;
 
 #[derive(Default, Debug)]
 pub struct CheckboxOptions {
-    pub x_offset: u32,
-    pub y_offset: u32,
+    pub layout_options: ItemLayoutOptions,
     pub label: String,
-    pub align_right: bool,
 }
 
 #[derive(Default, Debug)]
@@ -69,13 +68,13 @@ pub fn do_checkbox(
 
     let checkbox_size = texture.height;
 
-    let x = if options.align_right {
-        panel_info.width - checkbox_size - options.x_offset
+    let x = if options.layout_options.align_right {
+        panel_info.width - checkbox_size - options.layout_options.x_offset
     } else {
-        options.x_offset
+        options.layout_options.x_offset
     };
 
-    let y = options.y_offset;
+    let y = options.layout_options.y_offset;
 
     let checkbox_size = texture.height;
 

@@ -11,6 +11,7 @@ use crate::{
     ui::{
         button::{do_button, ButtonOptions},
         context::UIID,
+        layout::ItemLayoutOptions,
     },
 };
 
@@ -399,10 +400,13 @@ where
             static CLOSE_BUTTON_OFFSET: u32 = (PANEL_TITLE_BAR_HEIGHT - CLOSE_BUTTON_SIZE) / 2;
 
             let button_options = ButtonOptions {
-                x_offset: CLOSE_BUTTON_OFFSET,
-                y_offset: CLOSE_BUTTON_OFFSET,
+                layout_options: ItemLayoutOptions {
+                    x_offset: CLOSE_BUTTON_OFFSET,
+                    y_offset: CLOSE_BUTTON_OFFSET,
+                    align_right: true,
+                    ..Default::default()
+                },
                 label: "Close".to_string(),
-                align_right: true,
                 ..Default::default()
             };
 
