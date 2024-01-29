@@ -116,7 +116,7 @@ pub fn do_checkbox(
 }
 
 fn draw_checkbox(
-    ui_context: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_buffer: &mut Buffer2D,
     x: u32,
@@ -127,11 +127,11 @@ fn draw_checkbox(
 ) {
     let checkbox_size = texture.height;
 
-    let is_focus_target = ui_context
+    let is_focus_target = ctx
         .get_focus_target()
         .is_some_and(|target_id| target_id == id);
 
-    let is_hover_target = ui_context
+    let is_hover_target = ctx
         .get_hover_target()
         .is_some_and(|target_id| target_id == id);
 

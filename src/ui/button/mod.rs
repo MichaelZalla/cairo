@@ -91,7 +91,7 @@ pub fn do_button(
 }
 
 fn draw_button(
-    ui_context: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_buffer: &mut Buffer2D,
     x: u32,
@@ -100,7 +100,7 @@ fn draw_button(
     options: &ButtonOptions,
     result: &DoButtonResult,
 ) {
-    let is_hover_target = ui_context
+    let is_hover_target = ctx
         .get_hover_target()
         .is_some_and(|target_id| target_id == id);
 

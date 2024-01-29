@@ -163,7 +163,7 @@ pub fn do_textbox(
 }
 
 fn draw_textbox(
-    ui_context: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     uptime_second: f32,
     panel_buffer: &mut Buffer2D,
@@ -177,11 +177,11 @@ fn draw_textbox(
 ) {
     let textbox_height = label_texture.height;
 
-    let is_focus_target = ui_context
+    let is_focus_target = ctx
         .get_focus_target()
         .is_some_and(|target_id| target_id == id);
 
-    let is_hover_target = ui_context
+    let is_hover_target = ctx
         .get_hover_target()
         .is_some_and(|target_id| target_id == id);
 
