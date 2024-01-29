@@ -50,7 +50,7 @@ pub fn do_checkbox(
     text_cache_rwl: &'static RwLock<TextCache<'static>>,
     font_info: &'static FontInfo,
     options: &CheckboxOptions,
-    model: Entry<'_, String, bool>,
+    model_entry: Entry<'_, String, bool>,
 ) -> DoCheckboxResult {
     let mut ctx = ui_context.write().unwrap();
 
@@ -92,7 +92,7 @@ pub fn do_checkbox(
 
     // Updates the state of our checkbox model, if needed.
 
-    let mut is_checked = match &model {
+    let mut is_checked = match &model_entry {
         Entry::Occupied(occupied_entry) => *(occupied_entry.get()),
         Entry::Vacant(_) => false,
     };
@@ -102,7 +102,7 @@ pub fn do_checkbox(
 
         is_checked = !is_checked;
 
-        model.and_modify(|value| {
+        model_entry.and_modify(|value| {
             *value = is_checked;
         });
     }
@@ -131,7 +131,7 @@ fn draw_checkbox(
     result: &DoCheckboxResult,
 ) {
     let checkbox_size = texture.height;
-    
+
     let is_focus_target = ui_context
         .get_focus_target()
         .is_some_and(|target_id| target_id == id);
