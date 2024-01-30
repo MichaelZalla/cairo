@@ -26,6 +26,7 @@ use super::{
 
 static DROPDOWN_WIDTH: u32 = 200;
 static DROPDOWN_LABEL_PADDING: u32 = 8;
+static DROPDOWN_ITEM_HORIZONTAL_PADDING: u32 = 4;
 static DROPDOWN_ITEM_VERTICAL_PADDING: u32 = 4;
 
 #[derive(Default, Debug)]
@@ -238,7 +239,10 @@ fn draw_dropdown(
 
     // Draw the dropdown model value (text), or the open menu items.
 
-    let (x, mut y) = (dropdown_top_left.0, dropdown_top_left.1);
+    let (x, mut y) = (
+        dropdown_top_left.0 + DROPDOWN_ITEM_HORIZONTAL_PADDING,
+        dropdown_top_left.1,
+    );
 
     for item in &options.items {
         // Ignore other items if the dropdown is closed.
