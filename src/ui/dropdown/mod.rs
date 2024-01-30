@@ -128,25 +128,37 @@ pub fn do_dropdown(
                     Some(event) => {
                         match event.kind {
                             MouseEventKind::Down => {
-                                let relative_mouse_y = mouse_state.position.1 as u32 - panel_info.y;
+                                let (mouse_x, mouse_y) = (
+                                    mouse_state.position.0 - panel_info.x as i32,
+                                    mouse_state.position.1 - panel_info.y as i32,
+                                );
 
-                                let mut target_item_index: i32 = -1;
+                                if mouse_x >= x as i32
+                                    && mouse_x < (x + DROPDOWN_WIDTH) as i32
+                                    && mouse_y > y as i32
+                                    && mouse_y < (y + dropdown_height) as i32
+                                {
+                                    let relative_mouse_y =
+                                        mouse_state.position.1 as u32 - panel_info.y;
 
-                                let mut current_y = y;
+                                    let mut target_item_index: i32 = -1;
 
-                                while current_y < relative_mouse_y {
-                                    target_item_index += 1;
+                                    let mut current_y = y;
 
-                                    current_y +=
-                                        label_texture.height + DROPDOWN_ITEM_VERTICAL_PADDING;
-                                }
+                                    while current_y < relative_mouse_y {
+                                        target_item_index += 1;
 
-                                let target_item = &options.items[target_item_index as usize];
+                                        current_y +=
+                                            label_texture.height + DROPDOWN_ITEM_VERTICAL_PADDING;
+                                    }
 
-                                if *target_item != current_item {
-                                    did_edit = true;
+                                    let target_item = &options.items[target_item_index as usize];
 
-                                    *o.get_mut() = (*target_item).clone();
+                                    if *target_item != current_item {
+                                        did_edit = true;
+
+                                        *o.get_mut() = (*target_item).clone();
+                                    }
                                 }
                             }
                             MouseEventKind::Up => {
