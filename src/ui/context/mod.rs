@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter};
 
+use super::theme::{UITheme, DEFAULT_UI_THEME};
+
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UIID {
     pub parent: u32,
@@ -22,9 +24,17 @@ pub struct UIContext {
     hover_target: Option<UIID>,
     focus_target: Option<UIID>,
     is_focus_target_open: bool,
+    theme: Option<UITheme>,
 }
 
 impl UIContext {
+    pub fn get_theme(&self) -> &UITheme {
+        match &self.theme {
+            Some(theme) => &theme,
+            None => &DEFAULT_UI_THEME,
+        }
+    }
+
     pub fn get_hover_target(&self) -> Option<UIID> {
         self.hover_target
     }

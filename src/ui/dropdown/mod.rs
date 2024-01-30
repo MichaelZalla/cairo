@@ -211,17 +211,27 @@ fn draw_dropdown(
     current_item: String,
     label_texture: &Buffer2D<u8>,
 ) {
-    let color = if ctx.is_focused(id) {
-        color::RED
+    let theme = ctx.get_theme();
+
+    let border_color = if ctx.is_focused(id) {
+        theme.border_focus
     } else if ctx.is_hovered(id) {
-        color::WHITE
+        theme.border_hover
     } else {
-        color::YELLOW
+        theme.border
+    };
+
+    let text_color = if ctx.is_focused(id) {
+        theme.text_focus
+    } else if ctx.is_hovered(id) {
+        theme.text_hover
+    } else {
+        theme.text
     };
 
     // Draw the dropdown borders.
 
-    Graphics::rectangle(panel_buffer, x, y, DROPDOWN_WIDTH, height, color);
+    Graphics::rectangle(panel_buffer, x, y, DROPDOWN_WIDTH, height, border_color);
 
     let dropdown_top_left = (x, y);
     let dropdown_top_right = (x + DROPDOWN_WIDTH, y);
@@ -257,7 +267,7 @@ fn draw_dropdown(
                 color: if is_open && *item == current_item {
                     color::WHITE
                 } else {
-                    color
+                    text_color
                 },
             },
             panel_buffer,
@@ -273,7 +283,7 @@ fn draw_dropdown(
         text: &options.label,
         x: dropdown_top_right.0 + DROPDOWN_LABEL_PADDING,
         y: dropdown_top_right.1,
-        color,
+        color: text_color,
     };
 
     Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)

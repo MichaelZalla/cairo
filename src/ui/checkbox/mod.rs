@@ -5,7 +5,6 @@ use std::{
 
 use crate::{
     buffer::Buffer2D,
-    color::{self},
     device::MouseState,
     font::{cache::FontCache, FontInfo},
     graphics::{
@@ -127,19 +126,38 @@ fn draw_checkbox(
 ) {
     let checkbox_size = texture.height;
 
-    let color = if ctx.is_focused(id) {
-        color::RED
+    let theme = ctx.get_theme();
+
+    let border_color = if ctx.is_focused(id) {
+        theme.border_focus
     } else if result.is_down {
-        color::GREEN
+        theme.border_pressed
     } else if ctx.is_hovered(id) {
-        color::WHITE
+        theme.border_hover
     } else {
-        color::YELLOW
+        theme.border
+    };
+
+    let text_color = if ctx.is_focused(id) {
+        theme.text_focus
+    } else if result.is_down {
+        theme.text_pressed
+    } else if ctx.is_hovered(id) {
+        theme.text_hover
+    } else {
+        theme.text
     };
 
     // Draw the checkbox borders.
 
-    Graphics::rectangle(panel_buffer, x, y, checkbox_size, checkbox_size, color);
+    Graphics::rectangle(
+        panel_buffer,
+        x,
+        y,
+        checkbox_size,
+        checkbox_size,
+        border_color,
+    );
 
     let checkbox_top_left = (x, y);
     let checkbox_top_right = (x + checkbox_size, y);
@@ -155,7 +173,7 @@ fn draw_checkbox(
             checkbox_top_left.1 as i32,
             checkbox_bottom_right.0 as i32,
             checkbox_bottom_right.1 as i32,
-            color,
+            border_color,
         );
         Graphics::line(
             panel_buffer,
@@ -163,7 +181,7 @@ fn draw_checkbox(
             checkbox_top_right.1 as i32,
             checkbox_bottom_left.0 as i32,
             checkbox_bottom_left.1 as i32,
-            color,
+            border_color,
         );
     }
 
@@ -173,7 +191,7 @@ fn draw_checkbox(
         text: &options.label,
         x: checkbox_top_right.0 + CHECKBOX_LABEL_PADDING,
         y: checkbox_top_right.1,
-        color,
+        color: text_color,
     };
 
     Graphics::blit_text_from_mask(texture, &op, panel_buffer, None)

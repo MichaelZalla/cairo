@@ -8,7 +8,6 @@ use sdl2::keyboard::Keycode;
 
 use crate::{
     buffer::Buffer2D,
-    color,
     device::{keycode::get_alpha_numeric, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::{
@@ -177,17 +176,34 @@ fn draw_textbox(
 ) {
     let textbox_height = label_texture.height;
 
-    let color = if ctx.is_focused(id) {
-        color::RED
+    let theme = ctx.get_theme();
+
+    let border_color = if ctx.is_focused(id) {
+        theme.border_focus
     } else if ctx.is_hovered(id) {
-        color::WHITE
+        theme.border_hover
     } else {
-        color::YELLOW
+        theme.border
+    };
+
+    let text_color = if ctx.is_focused(id) {
+        theme.text_focus
+    } else if ctx.is_hovered(id) {
+        theme.text_hover
+    } else {
+        theme.text
     };
 
     // Draw the textbox borders.
 
-    Graphics::rectangle(panel_buffer, x, y, TEXTBOX_WIDTH, textbox_height, color);
+    Graphics::rectangle(
+        panel_buffer,
+        x,
+        y,
+        TEXTBOX_WIDTH,
+        textbox_height,
+        border_color,
+    );
 
     let textbox_top_left = (x, y);
     let textbox_top_right = (x + TEXTBOX_WIDTH, y);
@@ -228,7 +244,7 @@ fn draw_textbox(
                         text,
                         x: input_text_x,
                         y: textbox_top_left.1 + 1,
-                        color,
+                        color: text_color,
                     },
                     panel_buffer,
                     Some(max_width),
@@ -248,7 +264,7 @@ fn draw_textbox(
                         textbox_top_right.1 + 2,
                         2,
                         textbox_height - 2 - 2,
-                        color,
+                        text_color,
                     );
                 }
             }
@@ -264,7 +280,7 @@ fn draw_textbox(
         text: &options.label,
         x: textbox_top_right.0 + TEXTBOX_LABEL_PADDING,
         y: textbox_top_right.1,
-        color,
+        color: text_color,
     };
 
     Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)

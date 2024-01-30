@@ -2,7 +2,6 @@ use std::sync::{RwLock, RwLockWriteGuard};
 
 use crate::{
     buffer::Buffer2D,
-    color::{self},
     device::MouseState,
     font::{cache::FontCache, FontInfo},
     graphics::{
@@ -100,12 +99,26 @@ fn draw_button(
     options: &ButtonOptions,
     result: &DoButtonResult,
 ) {
-    let color = if result.is_down {
-        color::GREEN
+    let theme = ctx.get_theme();
+
+    let border_color = if ctx.is_focused(id) {
+        theme.border_focus
+    } else if result.is_down {
+        theme.border_pressed
     } else if ctx.is_hovered(id) {
-        color::WHITE
+        theme.border_hover
     } else {
-        color::YELLOW
+        theme.border
+    };
+
+    let text_color = if ctx.is_focused(id) {
+        theme.text_focus
+    } else if result.is_down {
+        theme.text_pressed
+    } else if ctx.is_hovered(id) {
+        theme.text_hover
+    } else {
+        theme.text
     };
 
     // Draw the button's text label.
@@ -113,7 +126,7 @@ fn draw_button(
     let op = TextOperation {
         x,
         y,
-        color,
+        color: text_color,
         text: &options.label,
     };
 
@@ -122,6 +135,13 @@ fn draw_button(
     // Draw the button's border.
 
     if options.with_border {
-        Graphics::rectangle(panel_buffer, x, y, texture.width, texture.height, color)
+        Graphics::rectangle(
+            panel_buffer,
+            x,
+            y,
+            texture.width,
+            texture.height,
+            border_color,
+        )
     }
 }

@@ -7,7 +7,6 @@ use sdl2::mouse::MouseButton;
 
 use crate::{
     buffer::Buffer2D,
-    color,
     device::MouseState,
     font::{cache::FontCache, FontInfo},
     graphics::{
@@ -168,12 +167,22 @@ fn draw_slider(
 ) {
     let slider_height = label_texture.height;
 
-    let color = if ctx.is_focused(id) {
-        color::RED
+    let theme = ctx.get_theme();
+
+    let border_color = if ctx.is_focused(id) {
+        theme.border_focus
     } else if ctx.is_hovered(id) {
-        color::WHITE
+        theme.border_hover
     } else {
-        color::YELLOW
+        theme.border
+    };
+
+    let text_color = if ctx.is_focused(id) {
+        theme.text_focus
+    } else if ctx.is_hovered(id) {
+        theme.text_hover
+    } else {
+        theme.text
     };
 
     // Draw the slider borders.
@@ -184,7 +193,7 @@ fn draw_slider(
         y,
         NUMBER_SLIDER_WIDTH,
         slider_height,
-        color,
+        border_color,
     );
 
     let slider_top_left = (x, y);
@@ -218,7 +227,7 @@ fn draw_slider(
                         text,
                         x: input_text_x,
                         y: slider_top_left.1 + 1,
-                        color,
+                        color: text_color,
                     },
                     panel_buffer,
                     Some(max_width),
@@ -236,7 +245,7 @@ fn draw_slider(
         text: &options.label,
         x: slider_top_right.0 + NUMBER_SLIDER_LABEL_PADDING,
         y: slider_top_right.1,
-        color,
+        color: text_color,
     };
 
     Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)

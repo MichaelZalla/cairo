@@ -18,6 +18,7 @@ pub mod number_slider;
 pub mod panel;
 pub mod text;
 pub mod textbox;
+pub mod theme;
 
 pub fn get_mouse_result(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
