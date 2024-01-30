@@ -203,6 +203,7 @@ fn draw_textbox(
         TEXTBOX_WIDTH,
         textbox_height,
         border_color,
+        None,
     );
 
     let textbox_top_left = (x, y);
@@ -265,6 +266,7 @@ fn draw_textbox(
                         2,
                         textbox_height - 2 - 2,
                         text_color,
+                        None,
                     );
                 }
             }

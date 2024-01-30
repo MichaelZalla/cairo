@@ -8,7 +8,7 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::text::cache::TextCache,
+    graphics::{text::cache::TextCache, Graphics},
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
@@ -419,6 +419,18 @@ fn main() -> Result<(), String> {
             {
                 println!("You edited a Dropdown ({})!", slider_id);
             }
+
+            // Draw a filled rectangle.
+
+            Graphics::rectangle(
+                panel_buffer,
+                dropdown_options.layout_options.x_offset,
+                dropdown_options.layout_options.y_offset + 24,
+                64,
+                64,
+                color::WHITE,
+                Some(color::BLUE),
+            );
 
             Ok(())
         },

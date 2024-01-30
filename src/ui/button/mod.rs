@@ -142,6 +142,7 @@ fn draw_button(
             texture.width,
             texture.height,
             border_color,
+            None,
         )
     }
 }

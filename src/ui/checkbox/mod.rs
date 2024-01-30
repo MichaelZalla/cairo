@@ -157,6 +157,7 @@ fn draw_checkbox(
         checkbox_size,
         checkbox_size,
         border_color,
+        None,
     );
 
     let checkbox_top_left = (x, y);

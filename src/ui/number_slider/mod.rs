@@ -194,6 +194,7 @@ fn draw_slider(
         NUMBER_SLIDER_WIDTH,
         slider_height,
         border_color,
+        None,
     );
 
     let slider_top_left = (x, y);

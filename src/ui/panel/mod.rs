@@ -358,7 +358,7 @@ where
         let width = self.info.width - 1;
         let height = self.info.height - 1;
 
-        Graphics::rectangle(&mut self.buffer, x, y, width, height, color::YELLOW)
+        Graphics::rectangle(&mut self.buffer, x, y, width, height, color::YELLOW, None)
     }
 
     fn draw_panel_title_bar(

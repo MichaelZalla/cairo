@@ -232,7 +232,15 @@ fn draw_dropdown(
 
     // Draw the dropdown borders.
 
-    Graphics::rectangle(panel_buffer, x, y, DROPDOWN_WIDTH, height, border_color);
+    Graphics::rectangle(
+        panel_buffer,
+        x,
+        y,
+        DROPDOWN_WIDTH,
+        height,
+        border_color,
+        None,
+    );
 
     let dropdown_top_left = (x, y);
     let dropdown_top_right = (x + DROPDOWN_WIDTH, y);

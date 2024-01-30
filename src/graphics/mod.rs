@@ -135,8 +135,16 @@ impl Graphics {
         }
     }
 
-    pub fn rectangle(buffer: &mut Buffer2D, x: u32, y: u32, width: u32, height: u32, color: Color) {
-        // Draw borders.
+    pub fn rectangle(
+        buffer: &mut Buffer2D,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        color: Color,
+        fill: Option<Color>,
+    ) {
+        // Draw rectangle borders.
 
         Graphics::poly_line(
             buffer,
@@ -168,6 +176,24 @@ impl Graphics {
             ],
             color,
         );
+
+        // Add a fill if requested.
+
+        match fill {
+            Some(fill_color) => {
+                for current_y in y..y + height {
+                    Graphics::line(
+                        buffer,
+                        x as i32,
+                        current_y as i32,
+                        (x + width) as i32,
+                        current_y as i32,
+                        fill_color,
+                    )
+                }
+            }
+            None => (),
+        }
     }
 
     pub fn crosshair(
