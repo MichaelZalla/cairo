@@ -21,6 +21,7 @@ impl Display for UIID {
 pub struct UIContext {
     hover_target: Option<UIID>,
     focus_target: Option<UIID>,
+    is_focus_target_open: bool,
 }
 
 impl UIContext {
@@ -33,14 +34,10 @@ impl UIContext {
     }
 
     pub fn set_hover_target(&mut self, target: Option<UIID>) {
-        println!("Setting self.hover_target to {:?}.", target);
-
         self.hover_target = target;
     }
 
     pub fn set_focus_target(&mut self, target: Option<UIID>) {
-        println!("Setting self.focus_target to {:?}.", target);
-
         self.focus_target = target;
     }
 
@@ -50,5 +47,13 @@ impl UIContext {
 
     pub fn is_focused(&self, id: UIID) -> bool {
         self.focus_target.is_some() && self.focus_target.unwrap() == id
+    }
+
+    pub fn is_focus_target_open(&self) -> bool {
+        self.is_focus_target_open
+    }
+
+    pub fn set_focus_target_open(&mut self, is_open: bool) {
+        self.is_focus_target_open = is_open;
     }
 }

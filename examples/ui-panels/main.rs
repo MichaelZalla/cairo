@@ -13,6 +13,7 @@ use cairo::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
+        dropdown::{do_dropdown, DropdownOptions},
         layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
         number_slider::{do_number_slider, NumberSliderOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
@@ -67,8 +68,11 @@ fn main() -> Result<(), String> {
 
     textboxes_model.insert("1_textbox".to_string(), "ABC 123".to_string());
     textboxes_model.insert("1_slider".to_string(), "0.00".to_string());
+    textboxes_model.insert("1_dropdown".to_string(), "Item 1".to_string());
+
     textboxes_model.insert("2_textbox".to_string(), "o-blah-dee-o-blah-dah".to_string());
     textboxes_model.insert("2_slider".to_string(), "0.50".to_string());
+    textboxes_model.insert("2_dropdown".to_string(), "Item 4".to_string());
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
@@ -365,6 +369,55 @@ fn main() -> Result<(), String> {
             .did_edit
             {
                 println!("You edited a NumberSlider ({})!", slider_id);
+            }
+
+            // Draw a dropdown menu.
+
+            let dropdown_options = DropdownOptions {
+                layout_options: ItemLayoutOptions {
+                    y_offset: slider_options.layout_options.y_offset + 24,
+                    ..slider_options.layout_options
+                },
+                label: format!("Dropdown {}", panel_info.id).to_string(),
+                items: vec![
+                    "Item 1".to_string(),
+                    "Item 2".to_string(),
+                    "Item 3".to_string(),
+                    "Item 4".to_string(),
+                    "Item 5".to_string(),
+                ],
+                ..Default::default()
+            };
+
+            let dropdown_model_key = panel_info.id.to_string() + "_dropdown";
+
+            textboxes_model
+                .entry(dropdown_model_key.clone())
+                .or_default();
+
+            let dropdown_model_entry = textboxes_model.entry(dropdown_model_key.clone());
+
+            let dropdown_id = UIID {
+                parent: panel_info.id,
+                item: 9,
+                index: 0,
+            };
+
+            if do_dropdown(
+                ui_context,
+                dropdown_id,
+                panel_info,
+                panel_buffer,
+                mouse_state,
+                font_cache,
+                text_cache,
+                font_info,
+                &dropdown_options,
+                dropdown_model_entry,
+            )
+            .did_edit
+            {
+                println!("You edited a Dropdown ({})!", slider_id);
             }
 
             Ok(())
