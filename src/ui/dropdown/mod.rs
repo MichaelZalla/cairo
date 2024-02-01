@@ -15,6 +15,7 @@ use crate::{
         },
         Graphics,
     },
+    vec::vec2::Vec2,
 };
 
 use super::{
@@ -239,6 +240,33 @@ fn draw_dropdown(
         border_color,
         None,
     );
+
+    // Draw the dropdown carat if needed.
+
+    static CARAT_MARGIN_RIGHT: f32 = 5.0;
+    static CARAT_WIDTH: f32 = 10.0;
+    static CARAT_HEIGHT: f32 = CARAT_WIDTH / 2.0;
+
+    let carat_top_left = Vec2 {
+        x: (x + DROPDOWN_WIDTH - 1) as f32 - CARAT_MARGIN_RIGHT - CARAT_WIDTH,
+        y: (y + (height / 2)) as f32 - CARAT_HEIGHT / 2.0,
+        z: 0.0,
+    };
+
+    let carat_top_right = Vec2 {
+        x: (x + DROPDOWN_WIDTH - 1) as f32 - CARAT_MARGIN_RIGHT,
+        y: (y + (height / 2)) as f32 - CARAT_HEIGHT / 2.0,
+        z: 0.0,
+    };
+
+    let mut carat_bottom_mid = carat_top_left + (carat_top_right - carat_top_left) / 2.0;
+    carat_bottom_mid.y += CARAT_HEIGHT;
+
+    let carat_points = [carat_top_left, carat_bottom_mid, carat_top_right];
+
+    if !is_open {
+        Graphics::poly_line(panel_buffer, &carat_points, theme.text);
+    }
 
     let dropdown_top_left = (x, y);
     let dropdown_top_right = (x + DROPDOWN_WIDTH - 1, y);
