@@ -113,12 +113,16 @@ pub fn do_number_slider(
                             Ok(value) => {
                                 let adjusted = (value + delta * scaling_factor).clamp(min, max);
 
-                                *o.get_mut() = adjusted.to_string();
+                                let adjusted_str = adjusted.to_string();
+
+                                if *o.get() != adjusted_str {
+                                    did_edit = true;
+
+                                    *o.get_mut() = adjusted.to_string();
+                                }
                             }
                             Err(_) => {}
                         }
-
-                        did_edit = true;
                     }
                     Entry::Vacant(_v) => {
                         // Ignore this mouse-drag.
