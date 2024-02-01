@@ -42,7 +42,7 @@ pub struct DoDropdownResult {
 }
 
 pub fn do_dropdown(
-    ui_context: &'static RwLock<UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
@@ -53,8 +53,6 @@ pub fn do_dropdown(
     options: &DropdownOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoDropdownResult {
-    let mut ctx = ui_context.write().unwrap();
-
     cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
     let text_cache_key = TextCacheKey {
@@ -91,7 +89,7 @@ pub fn do_dropdown(
     };
 
     let (_is_down, was_released) = get_mouse_result(
-        &mut ctx,
+        ctx,
         id,
         panel_info,
         mouse_state,
@@ -181,7 +179,7 @@ pub fn do_dropdown(
     // Render a dropdown.
 
     draw_dropdown(
-        &mut ctx,
+        ctx,
         id,
         panel_buffer,
         font_cache_rwl,

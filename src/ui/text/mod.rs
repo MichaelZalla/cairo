@@ -1,4 +1,4 @@
-use std::sync::RwLock;
+use std::sync::{RwLock, RwLockWriteGuard};
 
 use crate::{
     buffer::Buffer2D,
@@ -42,7 +42,7 @@ impl Default for TextOptions {
 pub struct DoTextResult {}
 
 pub fn do_text(
-    _ui_context: &'static RwLock<UIContext>,
+    _ctx: &mut RwLockWriteGuard<'_, UIContext>,
     _id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,

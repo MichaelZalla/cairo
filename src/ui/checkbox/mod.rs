@@ -39,7 +39,7 @@ pub struct DoCheckboxResult {
 }
 
 pub fn do_checkbox(
-    ui_context: &'static RwLock<UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
@@ -50,8 +50,6 @@ pub fn do_checkbox(
     options: &CheckboxOptions,
     model_entry: Entry<'_, String, bool>,
 ) -> DoCheckboxResult {
-    let mut ctx = ui_context.write().unwrap();
-
     cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
     let text_cache_key = TextCacheKey {
@@ -74,7 +72,7 @@ pub fn do_checkbox(
     let checkbox_size = texture.height;
 
     let (is_down, was_released) = get_mouse_result(
-        &mut ctx,
+        ctx,
         id,
         panel_info,
         mouse_state,
@@ -109,7 +107,7 @@ pub fn do_checkbox(
 
     // Render an unchecked or checked checkbox.
 
-    draw_checkbox(&mut ctx, id, panel_buffer, x, y, options, texture, &result);
+    draw_checkbox(ctx, id, panel_buffer, x, y, options, texture, &result);
 
     result
 }

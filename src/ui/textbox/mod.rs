@@ -44,7 +44,7 @@ pub struct DoTextboxResult {
 }
 
 pub fn do_textbox(
-    ui_context: &'static RwLock<UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
@@ -57,8 +57,6 @@ pub fn do_textbox(
     options: &TextboxOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoTextboxResult {
-    let mut ctx = ui_context.write().unwrap();
-
     cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
     let text_cache_key = TextCacheKey {
@@ -77,7 +75,7 @@ pub fn do_textbox(
         .get_top_left_within_parent(panel_info, TEXTBOX_WIDTH);
 
     let (_is_down, _was_released) = get_mouse_result(
-        &mut ctx,
+        ctx,
         id,
         panel_info,
         mouse_state,
@@ -145,7 +143,7 @@ pub fn do_textbox(
     // Render a textbox.
 
     draw_textbox(
-        &mut ctx,
+        ctx,
         id,
         uptime_seconds,
         panel_buffer,

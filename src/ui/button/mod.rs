@@ -34,7 +34,7 @@ pub struct DoButtonResult {
 }
 
 pub fn do_button(
-    ui_context: &'static RwLock<UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
@@ -44,8 +44,6 @@ pub fn do_button(
     font_info: &'static FontInfo,
     options: &ButtonOptions,
 ) -> DoButtonResult {
-    let mut ctx: RwLockWriteGuard<'_, UIContext> = ui_context.write().unwrap();
-
     cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
 
     let text_cache_key = TextCacheKey {
@@ -64,7 +62,7 @@ pub fn do_button(
     // Check whether a mouse event occurred inside this button.
 
     let (is_down, was_released) = get_mouse_result(
-        &mut ctx,
+        ctx,
         id,
         panel_info,
         mouse_state,
@@ -81,7 +79,7 @@ pub fn do_button(
 
     // Render an unpressed or pressed button.
 
-    draw_button(&mut ctx, id, panel_buffer, x, y, texture, options, &result);
+    draw_button(ctx, id, panel_buffer, x, y, texture, options, &result);
 
     DoButtonResult {
         is_down,

@@ -1,4 +1,7 @@
-use std::{borrow::BorrowMut, sync::RwLock};
+use std::{
+    borrow::BorrowMut,
+    sync::{RwLock, RwLockWriteGuard},
+};
 
 use crate::{
     app::App,
@@ -237,14 +240,18 @@ where
                 // Renders a border around the panel's boundaries.
                 self.draw_panel_border();
 
-                // Renders a default title-bar for this panel.
-                self.draw_panel_title_bar(
-                    mouse_state,
-                    ui_context,
-                    font_cache,
-                    font_info,
-                    text_cache,
-                )?;
+                {
+                    let mut ctx = ui_context.write().unwrap();
+
+                    // Renders a default title-bar for this panel.
+                    self.draw_panel_title_bar(
+                        mouse_state,
+                        &mut ctx,
+                        font_cache,
+                        font_info,
+                        text_cache,
+                    )?;
+                }
             }
         }
 
@@ -364,7 +371,7 @@ where
     fn draw_panel_title_bar(
         &mut self,
         mouse_state: &MouseState,
-        ui_context: &'static RwLock<UIContext>,
+        ctx: &mut RwLockWriteGuard<'_, UIContext>,
         font_cache: &'static RwLock<FontCache<'static>>,
         font_info: &'static FontInfo,
         text_cache: &'static RwLock<TextCache<'static>>,
@@ -411,7 +418,7 @@ where
             };
 
             if do_button(
-                ui_context,
+                ctx,
                 UIID {
                     parent: self.info.id,
                     item: 0,

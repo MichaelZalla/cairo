@@ -1,6 +1,11 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, collections::HashMap, env, sync::RwLock};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    env,
+    sync::{RwLock, RwLockWriteGuard},
+};
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -83,6 +88,8 @@ fn main() -> Result<(), String> {
          keyboard_state: &KeyboardState,
          mouse_state: &MouseState|
          -> Result<(), String> {
+            let mut ctx: RwLockWriteGuard<'_, UIContext> = ui_context.write().unwrap();
+
             // Clear the panel buffer for drawing.
 
             panel_buffer.clear(None);
@@ -107,7 +114,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_button(
-                ui_context,
+                &mut ctx,
                 button_1_id,
                 panel_info,
                 panel_buffer,
@@ -131,7 +138,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_button(
-                ui_context,
+                &mut ctx,
                 button_2_id,
                 panel_info,
                 panel_buffer,
@@ -180,7 +187,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_checkbox(
-                ui_context,
+                &mut ctx,
                 checkbox_id,
                 panel_info,
                 panel_buffer,
@@ -217,7 +224,7 @@ fn main() -> Result<(), String> {
             };
 
             do_text(
-                ui_context,
+                &mut ctx,
                 UIID {
                     parent: panel_info.id,
                     item: 4,
@@ -232,7 +239,7 @@ fn main() -> Result<(), String> {
             );
 
             do_text(
-                ui_context,
+                &mut ctx,
                 UIID {
                     parent: panel_info.id,
                     item: 5,
@@ -260,7 +267,7 @@ fn main() -> Result<(), String> {
             let uptime = app.timing_info.uptime_seconds;
 
             do_text(
-                ui_context,
+                &mut ctx,
                 UIID {
                     parent: panel_info.id,
                     item: 6,
@@ -311,7 +318,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_textbox(
-                ui_context,
+                &mut ctx,
                 textbox_id,
                 panel_info,
                 panel_buffer,
@@ -355,7 +362,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_number_slider(
-                ui_context,
+                &mut ctx,
                 slider_id,
                 panel_info,
                 panel_buffer,
@@ -404,7 +411,7 @@ fn main() -> Result<(), String> {
             };
 
             if do_dropdown(
-                ui_context,
+                &mut ctx,
                 dropdown_id,
                 panel_info,
                 panel_buffer,
