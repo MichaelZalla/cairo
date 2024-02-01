@@ -391,7 +391,7 @@ where
             Graphics::text(
                 &mut self.buffer,
                 font_cache,
-                text_cache,
+                Some(text_cache),
                 font_info,
                 &TextOperation {
                     text: &format!("Panel {}", self.info.id),

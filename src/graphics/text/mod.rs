@@ -28,7 +28,7 @@ impl Graphics {
     pub fn text<'a>(
         dest_buffer: &mut Buffer2D,
         font_cache_rwl: &'a RwLock<FontCache>,
-        text_cache_rwl: &'a RwLock<TextCache<'a>>,
+        text_cache_rwl: Option<&'a RwLock<TextCache<'a>>>,
         font_info: &'a FontInfo,
         op: &TextOperation,
     ) -> Result<(), String> {
@@ -39,15 +39,27 @@ impl Graphics {
             text: op.text.clone(),
         };
 
-        cache_text(font_cache_rwl, text_cache_rwl, font_info, op.text);
+        match text_cache_rwl {
+            Some(lock) => {
+                cache_text(font_cache_rwl, lock, font_info, op.text);
 
-        let text_cache = text_cache_rwl.read().unwrap();
+                let text_cache = lock.write().unwrap();
 
-        let cached_texture = text_cache.get(&text_cache_key).unwrap();
+                let cached_texture = text_cache.get(&text_cache_key).unwrap();
 
-        // Copy the rendered pixels to this buffer, at location (op.x, op.y).
+                Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer, None);
+            }
+            None => {
+                let mut font_cache = font_cache_rwl.write().unwrap();
 
-        Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer, None);
+                let font = font_cache.load(font_info).unwrap();
+
+                let (_label_width, _label_height, texture) =
+                    Graphics::make_text_texture(font.as_ref(), &op.text).unwrap();
+
+                Graphics::blit_text_from_mask(&texture, &op, dest_buffer, None);
+            }
+        }
 
         Ok(())
     }
@@ -97,7 +109,7 @@ impl Graphics {
     pub fn render_debug_messages(
         dest_buffer: &mut Buffer2D,
         font_cache: &'static RwLock<FontCache>,
-        text_cache: &'static RwLock<TextCache<'static>>,
+        _text_cache: &'static RwLock<TextCache<'static>>,
         font_info: &'static FontInfo,
         position: (u32, u32),
         padding_ems: f32,
@@ -113,7 +125,7 @@ impl Graphics {
                 color: color::WHITE,
             };
 
-            Graphics::text(dest_buffer, font_cache, text_cache, &font_info, &op).unwrap();
+            Graphics::text(dest_buffer, font_cache, None, &font_info, &op).unwrap();
 
             y_offset += (font_info.point_size as f32 * padding_ems) as u32;
         }

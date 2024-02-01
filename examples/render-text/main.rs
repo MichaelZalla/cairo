@@ -38,7 +38,7 @@ fn main() -> Result<(), String> {
 
     let font_cache_rwl = RwLock::new(FontCache::new(app.context.ttf_context));
 
-    let text_cache_rwl = RwLock::new(TextCache::new());
+    let _text_cache_rwl = RwLock::new(TextCache::new());
 
     // Set up our app
 
@@ -71,7 +71,7 @@ fn main() -> Result<(), String> {
         Graphics::text(
             &mut framebuffer,
             &font_cache_rwl,
-            &text_cache_rwl,
+            None,
             &font_info,
             &TextOperation {
                 text: &(format!("Uptime: {}s", now_seconds.borrow())),
@@ -91,7 +91,7 @@ fn main() -> Result<(), String> {
         Graphics::text(
             &mut framebuffer,
             &font_cache_rwl,
-            &text_cache_rwl,
+            None,
             &font_info,
             &TextOperation {
                 text: &(format!(
