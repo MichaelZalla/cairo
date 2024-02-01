@@ -235,8 +235,6 @@ fn draw_textbox(
                     }
                 };
 
-                let with_cursor = (uptime_second * 2.0 * PI).sin() > 0.0;
-
                 Graphics::blit_text_from_mask(
                     &model_value_texture,
                     &TextOperation {
@@ -250,6 +248,8 @@ fn draw_textbox(
                 );
 
                 // Draw the text cursor.
+
+                let with_cursor = (uptime_second * 2.0 * PI).sin() > 0.0;
 
                 if ctx.is_focused(id) && with_cursor {
                     Graphics::rectangle(
