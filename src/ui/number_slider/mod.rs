@@ -200,7 +200,7 @@ fn draw_slider(
     );
 
     let slider_top_left = (x, y);
-    let slider_top_right = (x + NUMBER_SLIDER_WIDTH, y);
+    let slider_top_right = (x + NUMBER_SLIDER_WIDTH - 1, y);
 
     // Draw the slider model value.
 

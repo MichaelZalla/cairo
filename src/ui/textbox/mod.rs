@@ -205,7 +205,7 @@ fn draw_textbox(
     );
 
     let textbox_top_left = (x, y);
-    let textbox_top_right = (x + TEXTBOX_WIDTH, y);
+    let textbox_top_right = (x + TEXTBOX_WIDTH - 1, y);
 
     // Draw the textbox model value (text).
 

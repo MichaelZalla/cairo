@@ -241,7 +241,7 @@ fn draw_dropdown(
     );
 
     let dropdown_top_left = (x, y);
-    let dropdown_top_right = (x + DROPDOWN_WIDTH, y);
+    let dropdown_top_right = (x + DROPDOWN_WIDTH - 1, y);
 
     // Draw the dropdown model value (text), or the open menu items.
 

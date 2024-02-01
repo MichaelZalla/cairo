@@ -159,9 +159,9 @@ fn draw_checkbox(
     );
 
     let checkbox_top_left = (x, y);
-    let checkbox_top_right = (x + checkbox_size, y);
-    let checkbox_bottom_left = (x, y + checkbox_size);
-    let checkbox_bottom_right = (x + checkbox_size, y + checkbox_size);
+    let checkbox_top_right = (x + checkbox_size - 1, y);
+    let checkbox_bottom_left = (x, y + checkbox_size - 1);
+    let checkbox_bottom_right = (x + checkbox_size - 1, y + checkbox_size - 1);
 
     // Draw the checkbox check, if needed.
 
