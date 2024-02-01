@@ -3,6 +3,7 @@ use sdl2::keyboard::Keycode;
 pub fn get_alpha_numeric(code: &Keycode) -> Option<&'static str> {
     match code {
         Keycode::Space { .. } => Some(&" "),
+        Keycode::Period { .. } => Some(&"."),
         Keycode::A { .. } => Some(&"A"),
         Keycode::B { .. } => Some(&"B"),
         Keycode::C { .. } => Some(&"C"),

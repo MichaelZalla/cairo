@@ -209,14 +209,18 @@ fn draw_slider(
             let text = o.get();
 
             if text.len() > 0 {
-                // Draw the text.
+                // Draw the slider value text (formatted).
+
+                let text_parsed = text.parse::<f32>().unwrap();
+
+                let text_formatted = format!("{:.*}", 2, text_parsed);
 
                 let mut font_cache = font_cache_rwl.write().unwrap();
 
                 let font = font_cache.load(font_info).unwrap();
 
                 let (_label_width, _label_height, model_value_texture) =
-                    Graphics::make_text_texture(font.as_ref(), text).unwrap();
+                    Graphics::make_text_texture(font.as_ref(), &text_formatted).unwrap();
 
                 let max_width = NUMBER_SLIDER_WIDTH - NUMBER_SLIDER_LABEL_PADDING;
 
