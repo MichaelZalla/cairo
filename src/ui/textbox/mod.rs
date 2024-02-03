@@ -17,7 +17,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::{ItemLayoutOptions, ItemTextAlignment},
+    layout::item::{ItemLayoutOptions, ItemTextAlignment},
     panel::PanelInfo,
 };
 

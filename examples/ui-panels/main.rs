@@ -19,7 +19,7 @@ use cairo::{
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
         dropdown::{do_dropdown, DropdownOptions},
-        layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
+        layout::item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         slider::{do_slider, NumberSliderOptions},
         text::{do_text, TextOptions},
