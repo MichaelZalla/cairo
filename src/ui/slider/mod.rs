@@ -38,7 +38,7 @@ pub struct DoNumberSliderResult {
     pub did_edit: bool,
 }
 
-pub fn do_number_slider(
+pub fn do_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
@@ -140,6 +140,55 @@ pub fn do_number_slider(
             }
         }
     }
+
+    // match ctx.get_focus_target() {
+    //     Some(target_id) => {
+    //         if target_id == id {
+    //             for code in &keyboard_state.keys_pressed {
+    //                 match code {
+    //                     Keycode::Backspace | Keycode::Delete { .. } => {
+    //                         // Remove one character from the model value, if possible.
+
+    //                         match &mut model_entry {
+    //                             Entry::Occupied(o) => {
+    //                                 (*o.get_mut()).pop();
+
+    //                                 did_edit = true;
+    //                             }
+    //                             Entry::Vacant(v) => {
+    //                                 // Ignore this keypress.
+    //                             }
+    //                         }
+    //                     }
+    //                     _ => {
+    //                         match get_alpha_numeric(code) {
+    //                             Some(char) => {
+    //                                 // Add this character to the model value (string).
+
+    //                                 match &mut model_entry {
+    //                                     Entry::Occupied(o) => {
+    //                                         *o.get_mut() += char;
+
+    //                                         did_edit = true;
+    //                                     }
+    //                                     Entry::Vacant(_v) => {
+    //                                         // No model value exists at this entry.
+
+    //                                         // Ignore this keypress.
+    //                                     }
+    //                                 }
+    //                             }
+    //                             None => {
+    //                                 // Ignore this keypress.
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     None => (),
+    // }
 
     let result = DoNumberSliderResult { did_edit };
 

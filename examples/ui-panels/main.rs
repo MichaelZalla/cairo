@@ -20,8 +20,8 @@ use cairo::{
         context::{UIContext, UIID},
         dropdown::{do_dropdown, DropdownOptions},
         layout::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
-        number_slider::{do_number_slider, NumberSliderOptions},
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
+        slider::{do_slider, NumberSliderOptions},
         text::{do_text, TextOptions},
         textbox::{do_textbox, TextboxOptions},
     },
@@ -331,7 +331,7 @@ fn main() -> Result<(), String> {
                 index: 0,
             };
 
-            if do_number_slider(
+            if do_slider(
                 &mut ctx,
                 slider_id,
                 panel_info,
