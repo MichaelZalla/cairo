@@ -10,7 +10,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
-    graphics::{text::cache::TextCache, Graphics},
+    graphics::Graphics,
     material::cache::MaterialCache,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
@@ -38,7 +38,6 @@ pub struct GeneratePrimitivesScene<'a> {
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
     font_info: &'static FontInfo,
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -50,7 +49,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
         framebuffer_rwl: &'a RwLock<Buffer2D>,
         font_cache_rwl: &'static RwLock<FontCache<'static>>,
-        text_cache_rwl: &'static RwLock<TextCache<'static>>,
         font_info: &'static FontInfo,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
@@ -196,7 +194,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             pipeline,
             entities,
             font_cache_rwl,
-            text_cache_rwl,
             font_info,
             material_cache,
             shader_context,
@@ -421,7 +418,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
                 Graphics::render_debug_messages(
                     &mut framebuffer,
                     self.font_cache_rwl,
-                    self.text_cache_rwl,
                     self.font_info,
                     (12, 12),
                     1.0,

@@ -68,7 +68,7 @@ fn main() -> Result<(), String> {
 
     font_cache_rwl.write().unwrap().load(&font_info)?;
 
-    let text_cache_rwl = Box::leak(Box::new(RwLock::new(TextCache::new())));
+    let _text_cache_rwl = Box::leak(Box::new(RwLock::new(TextCache::new())));
 
     // Default framebuffer
 
@@ -182,7 +182,6 @@ fn main() -> Result<(), String> {
     let scene = RefCell::new(GeneratePrimitivesScene::new(
         &framebuffer_rwl,
         font_cache_rwl,
-        text_cache_rwl,
         font_info,
         &entities_rwl,
         &mut material_cache,

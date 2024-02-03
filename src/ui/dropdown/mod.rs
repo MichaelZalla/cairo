@@ -1,16 +1,12 @@
-use std::{
-    collections::hash_map::Entry,
-    sync::{RwLock, RwLockWriteGuard},
-};
+use std::{collections::hash_map::Entry, sync::RwLockWriteGuard};
 
 use crate::{
     buffer::Buffer2D,
     color,
     device::{MouseEventKind, MouseState},
-    font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
-            cache::{cache_text, TextCache, TextCacheKey},
+            cache::{cache_text, TextCacheKey},
             TextOperation,
         },
         Graphics,
@@ -48,22 +44,32 @@ pub fn do_dropdown(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
-    font_info: &'static FontInfo,
     options: &DropdownOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoDropdownResult {
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
+    cache_text(
+        ctx.font_cache,
+        ctx.text_cache,
+        ctx.font_info,
+        &options.label,
+    );
+
+    let width: u32;
+    let height: u32;
 
     let text_cache_key = TextCacheKey {
-        font_info,
+        font_info: ctx.font_info.clone(),
         text: options.label.clone(),
     };
 
-    let text_cache = text_cache_rwl.read().unwrap();
+    {
+        let text_cache = ctx.text_cache.read().unwrap();
 
-    let label_texture = text_cache.get(&text_cache_key).unwrap();
+        let label_texture = text_cache.get(&text_cache_key).unwrap();
+
+        width = label_texture.width;
+        height = label_texture.height;
+    }
 
     // Check whether a mouse event occurred inside this dropdown.
 
@@ -74,7 +80,7 @@ pub fn do_dropdown(
         .get_top_left_within_parent(panel_info, DROPDOWN_WIDTH);
 
     let dropdown_height = if is_open {
-        label_texture.height
+        height
             * if is_open {
                 options.items.len() as u32
             } else {
@@ -86,7 +92,7 @@ pub fn do_dropdown(
                 0
             }
     } else {
-        label_texture.height
+        height
     };
 
     let (_is_down, was_released) = get_mouse_result(
@@ -96,7 +102,7 @@ pub fn do_dropdown(
         mouse_state,
         x,
         y,
-        DROPDOWN_WIDTH + DROPDOWN_LABEL_PADDING + label_texture.width,
+        DROPDOWN_WIDTH + DROPDOWN_LABEL_PADDING + width,
         dropdown_height,
     );
 
@@ -148,8 +154,7 @@ pub fn do_dropdown(
                                     while current_y < relative_mouse_y {
                                         target_item_index += 1;
 
-                                        current_y +=
-                                            label_texture.height + DROPDOWN_ITEM_VERTICAL_PADDING;
+                                        current_y += height + DROPDOWN_ITEM_VERTICAL_PADDING;
                                     }
 
                                     let target_item = &options.items[target_item_index as usize];
@@ -183,15 +188,13 @@ pub fn do_dropdown(
         ctx,
         id,
         panel_buffer,
-        font_cache_rwl,
-        font_info,
         x,
         y,
+        &text_cache_key,
         is_open,
         dropdown_height,
         options,
         current_item,
-        label_texture,
     );
 
     result
@@ -201,17 +204,20 @@ fn draw_dropdown(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_buffer: &mut Buffer2D,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    font_info: &'static FontInfo,
     x: u32,
     y: u32,
+    text_cache_key: &TextCacheKey,
     is_open: bool,
     height: u32,
     options: &DropdownOptions,
     current_item: String,
-    label_texture: &Buffer2D<u8>,
+    // label_texture: &Buffer2D<u8>,
 ) {
     let theme = ctx.get_theme();
+
+    let text_cache = ctx.text_cache.read().unwrap();
+
+    let label_texture = text_cache.get(&text_cache_key).unwrap();
 
     let label_color = if ctx.is_focused(id) {
         theme.text_focus
@@ -279,9 +285,9 @@ fn draw_dropdown(
 
         // Draw the item text.
 
-        let mut font_cache = font_cache_rwl.write().unwrap();
+        let mut font_cache = ctx.font_cache.write().unwrap();
 
-        let font = font_cache.load(font_info).unwrap();
+        let font = font_cache.load(ctx.font_info).unwrap();
 
         let (_label_width, _label_height, model_value_texture) =
             Graphics::make_text_texture(font.as_ref(), &item).unwrap();

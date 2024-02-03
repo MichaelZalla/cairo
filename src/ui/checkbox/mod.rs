@@ -1,15 +1,11 @@
-use std::{
-    collections::hash_map::Entry,
-    sync::{RwLock, RwLockWriteGuard},
-};
+use std::{collections::hash_map::Entry, sync::RwLockWriteGuard};
 
 use crate::{
     buffer::Buffer2D,
     device::MouseState,
-    font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
-            cache::{cache_text, TextCache, TextCacheKey},
+            cache::{cache_text, TextCacheKey},
             TextOperation,
         },
         Graphics,
@@ -44,32 +40,42 @@ pub fn do_checkbox(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
-    font_info: &'static FontInfo,
     options: &CheckboxOptions,
     model_entry: Entry<'_, String, bool>,
 ) -> DoCheckboxResult {
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
+    cache_text(
+        ctx.font_cache,
+        ctx.text_cache,
+        ctx.font_info,
+        &options.label,
+    );
+
+    let width: u32;
+    let height: u32;
 
     let text_cache_key = TextCacheKey {
-        font_info,
+        font_info: ctx.font_info.clone(),
         text: options.label.clone(),
     };
 
-    let text_cache = text_cache_rwl.read().unwrap();
+    {
+        let text_cache = ctx.text_cache.read().unwrap();
 
-    let texture = text_cache.get(&text_cache_key).unwrap();
+        let texture = text_cache.get(&text_cache_key).unwrap();
+
+        width = texture.width;
+        height = texture.height;
+    }
 
     // Check whether a mouse event occurred inside this checkbox.
 
-    let checkbox_size = texture.height;
+    let checkbox_size = height;
 
     let (x, y) = options
         .layout_options
         .get_top_left_within_parent(panel_info, checkbox_size);
 
-    let checkbox_size = texture.height;
+    let checkbox_size = height;
 
     let (is_down, was_released) = get_mouse_result(
         ctx,
@@ -78,8 +84,8 @@ pub fn do_checkbox(
         mouse_state,
         x,
         y,
-        checkbox_size + CHECKBOX_LABEL_PADDING + texture.width,
-        texture.height,
+        checkbox_size + CHECKBOX_LABEL_PADDING + width,
+        height,
     );
 
     // Updates the state of our checkbox model, if needed.
@@ -107,7 +113,16 @@ pub fn do_checkbox(
 
     // Render an unchecked or checked checkbox.
 
-    draw_checkbox(ctx, id, panel_buffer, x, y, options, texture, &result);
+    draw_checkbox(
+        ctx,
+        id,
+        panel_buffer,
+        x,
+        y,
+        &text_cache_key,
+        options,
+        &result,
+    );
 
     result
 }
@@ -118,10 +133,15 @@ fn draw_checkbox(
     panel_buffer: &mut Buffer2D,
     x: u32,
     y: u32,
+    // texture: &Buffer2D<u8>,
+    text_cache_key: &TextCacheKey,
     options: &CheckboxOptions,
-    texture: &Buffer2D<u8>,
     result: &DoCheckboxResult,
 ) {
+    let text_cache = ctx.text_cache.read().unwrap();
+
+    let texture = text_cache.get(&text_cache_key).unwrap();
+
     let checkbox_size = texture.height;
 
     let theme = ctx.get_theme();

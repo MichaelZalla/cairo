@@ -35,7 +35,7 @@ impl Graphics {
         // Generate a texture for this text operation.
 
         let text_cache_key = TextCacheKey {
-            font_info,
+            font_info: font_info.clone(),
             text: op.text.clone(),
         };
 
@@ -106,11 +106,10 @@ impl Graphics {
         }
     }
 
-    pub fn render_debug_messages(
+    pub fn render_debug_messages<'a>(
         dest_buffer: &mut Buffer2D,
-        font_cache: &'static RwLock<FontCache>,
-        _text_cache: &'static RwLock<TextCache<'static>>,
-        font_info: &'static FontInfo,
+        font_cache: &'a RwLock<FontCache>,
+        font_info: &'a FontInfo,
         position: (u32, u32),
         padding_ems: f32,
         debug_messages: &mut DebugMessageBuffer,

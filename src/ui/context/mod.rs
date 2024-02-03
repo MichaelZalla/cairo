@@ -1,4 +1,12 @@
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    sync::RwLock,
+};
+
+use crate::{
+    font::{cache::FontCache, FontInfo},
+    graphics::text::cache::TextCache,
+};
 
 use super::theme::{UITheme, DEFAULT_UI_THEME};
 
@@ -19,15 +27,34 @@ impl Display for UIID {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct UIContext {
+#[derive(Debug)]
+pub struct UIContext<'a> {
+    pub font_cache: &'a mut RwLock<FontCache<'a>>,
+    pub font_info: &'a FontInfo,
+    pub text_cache: &'a mut RwLock<TextCache<'a>>,
     hover_target: Option<UIID>,
     focus_target: Option<UIID>,
     is_focus_target_open: bool,
-    theme: Option<UITheme>,
+    theme: Option<&'a UITheme>,
 }
 
-impl UIContext {
+impl<'a> UIContext<'a> {
+    pub fn new(
+        font_cache: &'a mut RwLock<FontCache<'a>>,
+        font_info: &'a FontInfo,
+        text_cache: &'a mut RwLock<TextCache<'a>>,
+    ) -> Self {
+        Self {
+            font_cache,
+            font_info,
+            text_cache,
+            hover_target: None,
+            focus_target: None,
+            is_focus_target_open: false,
+            theme: Some(&DEFAULT_UI_THEME),
+        }
+    }
+
     pub fn get_theme(&self) -> &UITheme {
         match &self.theme {
             Some(theme) => &theme,

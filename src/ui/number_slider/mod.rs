@@ -1,17 +1,13 @@
-use std::{
-    collections::hash_map::Entry,
-    sync::{RwLock, RwLockWriteGuard},
-};
+use std::{collections::hash_map::Entry, sync::RwLockWriteGuard};
 
 use sdl2::mouse::MouseButton;
 
 use crate::{
     buffer::Buffer2D,
     device::MouseState,
-    font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
-            cache::{cache_text, TextCache, TextCacheKey},
+            cache::{cache_text, TextCacheKey},
             TextOperation,
         },
         Graphics,
@@ -48,22 +44,32 @@ pub fn do_number_slider(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
-    font_info: &'static FontInfo,
     options: &NumberSliderOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoNumberSliderResult {
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
+    cache_text(
+        ctx.font_cache,
+        ctx.text_cache,
+        ctx.font_info,
+        &options.label,
+    );
+
+    let width: u32;
+    let height: u32;
 
     let text_cache_key = TextCacheKey {
-        font_info,
+        font_info: ctx.font_info.clone(),
         text: options.label.clone(),
     };
 
-    let text_cache = text_cache_rwl.read().unwrap();
+    {
+        let text_cache = ctx.text_cache.read().unwrap();
 
-    let label_texture = text_cache.get(&text_cache_key).unwrap();
+        let label_texture = text_cache.get(&text_cache_key).unwrap();
+
+        width = label_texture.width;
+        height = label_texture.height;
+    }
 
     // Check whether a mouse event occurred inside this slider.
 
@@ -78,8 +84,8 @@ pub fn do_number_slider(
         mouse_state,
         x,
         y,
-        NUMBER_SLIDER_WIDTH + NUMBER_SLIDER_LABEL_PADDING + label_texture.width,
-        label_texture.height,
+        NUMBER_SLIDER_WIDTH + NUMBER_SLIDER_LABEL_PADDING + width,
+        height,
     );
 
     // Updates the state of our slider model, if needed.
@@ -143,12 +149,10 @@ pub fn do_number_slider(
         ctx,
         id,
         panel_buffer,
-        font_cache_rwl,
-        font_info,
         x,
         y,
+        &text_cache_key,
         options,
-        label_texture,
         &mut model_entry,
     );
 
@@ -159,14 +163,16 @@ fn draw_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_buffer: &mut Buffer2D,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    font_info: &'static FontInfo,
     x: u32,
     y: u32,
+    text_cache_key: &TextCacheKey,
     options: &NumberSliderOptions,
-    label_texture: &Buffer2D<u8>,
     model: &mut Entry<'_, String, String>,
 ) {
+    let text_cache = ctx.text_cache.read().unwrap();
+
+    let label_texture = text_cache.get(&text_cache_key).unwrap();
+
     let slider_height = label_texture.height;
 
     let theme = ctx.get_theme();
@@ -207,9 +213,9 @@ fn draw_slider(
 
                 let text_formatted = format!("{:.*}", 2, text_parsed);
 
-                let mut font_cache = font_cache_rwl.write().unwrap();
+                let mut font_cache = ctx.font_cache.write().unwrap();
 
-                let font = font_cache.load(font_info).unwrap();
+                let font = font_cache.load(ctx.font_info).unwrap();
 
                 let (_label_width, _label_height, model_value_texture) =
                     Graphics::make_text_texture(font.as_ref(), &text_formatted).unwrap();

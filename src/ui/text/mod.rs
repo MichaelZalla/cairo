@@ -1,12 +1,11 @@
-use std::sync::{RwLock, RwLockWriteGuard};
+use std::sync::RwLockWriteGuard;
 
 use crate::{
     buffer::Buffer2D,
     color::Color,
-    font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
-            cache::{cache_text, TextCache, TextCacheKey},
+            cache::{cache_text, TextCacheKey},
             TextOperation,
         },
         Graphics,
@@ -42,25 +41,22 @@ impl Default for TextOptions {
 pub struct DoTextResult {}
 
 pub fn do_text(
-    _ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RwLockWriteGuard<'_, UIContext>,
     _id: UIID,
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
-    font_info: &'static FontInfo,
     options: &TextOptions,
 ) -> DoTextResult {
     match options.cache {
         true => {
-            cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.text);
+            cache_text(ctx.font_cache, ctx.text_cache, ctx.font_info, &options.text);
 
             let text_cache_key = TextCacheKey {
-                font_info,
+                font_info: ctx.font_info.clone(),
                 text: options.text.clone(),
             };
 
-            let text_cache = text_cache_rwl.read().unwrap();
+            let text_cache = ctx.text_cache.read().unwrap();
 
             let texture_ref = text_cache.get(&text_cache_key).unwrap();
 
@@ -71,9 +67,9 @@ pub fn do_text(
             draw_text(panel_buffer, x, y, texture_ref, options);
         }
         false => {
-            let mut font_cache = font_cache_rwl.write().unwrap();
+            let mut font_cache = ctx.font_cache.write().unwrap();
 
-            let font = font_cache.load(font_info).unwrap();
+            let font = font_cache.load(ctx.font_info).unwrap();
 
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_texture(font.as_ref(), &options.text).unwrap();

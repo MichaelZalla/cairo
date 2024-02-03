@@ -7,9 +7,8 @@ use crate::{
     app::App,
     buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
-    font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
-    graphics::{text::cache::TextCache, Graphics},
+    graphics::Graphics,
     ui::{
         button::{do_button, ButtonOptions},
         context::UIID,
@@ -172,37 +171,18 @@ where
         app: &mut App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        ui_context: &'static RwLock<UIContext>,
-        font_cache: &'static RwLock<FontCache<'static>>,
-        text_cache: &'static RwLock<TextCache<'static>>,
-        font_info: &'static FontInfo,
+        ui_context: &'a RwLock<UIContext>,
     ) -> Result<(), String> {
         match self.left.borrow_mut() {
             Some(left) => {
                 // Split panel scenario
 
                 // 1. Render left panel to left panel pixel buffer
-                left.render(
-                    app,
-                    keyboard_state,
-                    mouse_state,
-                    ui_context,
-                    font_cache,
-                    text_cache,
-                    font_info,
-                )?;
+                left.render(app, keyboard_state, mouse_state, ui_context)?;
 
                 // 2. Render right panel to right panel pixel buffer
                 let right = self.right.as_mut().unwrap();
-                right.render(
-                    app,
-                    keyboard_state,
-                    mouse_state,
-                    ui_context,
-                    font_cache,
-                    text_cache,
-                    font_info,
-                )?;
+                right.render(app, keyboard_state, mouse_state, ui_context)?;
 
                 // 3. Blit left and right panel pixel buffers onto parent pixel buffer
                 self.buffer.blit_from(
@@ -229,13 +209,7 @@ where
                     self.draw_panel_frame(&mut ctx);
 
                     // Renders a default title-bar for this panel.
-                    self.draw_panel_title_bar(
-                        mouse_state,
-                        &mut ctx,
-                        font_cache,
-                        font_info,
-                        text_cache,
-                    )?;
+                    self.draw_panel_title_bar(mouse_state, &mut ctx)?;
                 }
 
                 // Runs the custom render callback, if any.
@@ -383,9 +357,6 @@ where
         &mut self,
         mouse_state: &MouseState,
         ctx: &mut RwLockWriteGuard<'_, UIContext>,
-        font_cache: &'static RwLock<FontCache<'static>>,
-        font_info: &'static FontInfo,
-        text_cache: &'static RwLock<TextCache<'static>>,
     ) -> Result<(), String> {
         let theme = ctx.get_theme();
 
@@ -399,22 +370,20 @@ where
             Some(theme.panel_titlebar_background),
         );
 
-        {
-            let spacing = PANEL_TITLE_BAR_HEIGHT / 2 - font_info.point_size as u32 / 2;
+        let spacing = PANEL_TITLE_BAR_HEIGHT / 2 - ctx.font_info.point_size as u32 / 2;
 
-            Graphics::text(
-                &mut self.buffer,
-                font_cache,
-                Some(text_cache),
-                font_info,
-                &TextOperation {
-                    text: &format!("Panel {}", self.info.id),
-                    x: spacing,
-                    y: spacing,
-                    color: theme.text,
-                },
-            )?;
-        }
+        Graphics::text(
+            &mut self.buffer,
+            ctx.font_cache,
+            Some(ctx.text_cache),
+            ctx.font_info,
+            &TextOperation {
+                text: &format!("Panel {}", self.info.id),
+                x: spacing,
+                y: spacing,
+                color: theme.text,
+            },
+        )?;
 
         if !self.is_root() {
             static CLOSE_BUTTON_SIZE: u32 = 14;
@@ -441,9 +410,6 @@ where
                 &self.info,
                 &mut self.buffer,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &button_options,
             )
             .was_released

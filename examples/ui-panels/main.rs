@@ -45,29 +45,24 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
-    let font_info: &'static FontInfo = Box::leak(Box::new(FontInfo {
-        filepath: args[1].to_string(),
-        point_size: 16,
-    }));
-
-    // Create a static font cache.
-
-    let font_cache: &'static mut RwLock<FontCache<'static>> = Box::leak(Box::new(RwLock::new(
-        FontCache::new(app.context.ttf_context),
-    )));
-
     // Create a static text (texture) cache.
 
     let _text_cache: TextCache = Default::default();
-
-    let text_cache: &'static mut RwLock<TextCache<'static>> =
-        Box::leak(Box::new(RwLock::new(_text_cache)));
 
     // Set up our app
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
-    let ui_context: &'static RwLock<UIContext> = Box::leak(Box::new(Default::default()));
+    let ui_context: &'static RwLock<UIContext> = Box::leak(Box::new(RwLock::new(UIContext::new(
+        Box::leak(Box::new(RwLock::new(FontCache::new(
+            app.context.ttf_context,
+        )))),
+        Box::leak(Box::new(FontInfo {
+            filepath: args[1].to_string(),
+            point_size: 16,
+        })),
+        Box::leak(Box::new(RwLock::new(_text_cache))),
+    ))));
 
     let mut textboxes_model = HashMap::<String, String>::new();
 
@@ -115,9 +110,6 @@ fn main() -> Result<(), String> {
                 panel_info,
                 panel_buffer,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &button_options,
             )
             .was_released
@@ -139,9 +131,6 @@ fn main() -> Result<(), String> {
                 panel_info,
                 panel_buffer,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &ButtonOptions {
                     layout_options: ItemLayoutOptions {
                         y_offset: button_options.layout_options.y_offset + 24,
@@ -188,9 +177,6 @@ fn main() -> Result<(), String> {
                 panel_info,
                 panel_buffer,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &checkbox_options,
                 checkbox_model_entry,
             )
@@ -228,9 +214,6 @@ fn main() -> Result<(), String> {
                 },
                 panel_info,
                 panel_buffer,
-                font_cache,
-                text_cache,
-                font_info,
                 &text_options,
             );
 
@@ -243,9 +226,6 @@ fn main() -> Result<(), String> {
                 },
                 panel_info,
                 panel_buffer,
-                font_cache,
-                text_cache,
-                font_info,
                 &TextOptions {
                     layout_options: ItemLayoutOptions {
                         y_offset: text_options.layout_options.y_offset + 24,
@@ -271,9 +251,6 @@ fn main() -> Result<(), String> {
                 },
                 panel_info,
                 panel_buffer,
-                font_cache,
-                text_cache,
-                font_info,
                 &TextOptions {
                     layout_options: ItemLayoutOptions {
                         y_offset: text_options.layout_options.y_offset + 48,
@@ -321,9 +298,6 @@ fn main() -> Result<(), String> {
                 app.timing_info.uptime_seconds,
                 keyboard_state,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &textbox_options,
                 textbox_model_entry,
             )
@@ -363,9 +337,6 @@ fn main() -> Result<(), String> {
                 panel_info,
                 panel_buffer,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &slider_options,
                 slider_model_entry,
             )
@@ -412,9 +383,6 @@ fn main() -> Result<(), String> {
                 panel_info,
                 panel_buffer,
                 mouse_state,
-                font_cache,
-                text_cache,
-                font_info,
                 &dropdown_options,
                 dropdown_model_entry,
             )
@@ -473,15 +441,7 @@ fn main() -> Result<(), String> {
         // Delegate render call to the root panel
 
         root_panel
-            .render(
-                app,
-                keyboard_state,
-                mouse_state,
-                ui_context,
-                font_cache,
-                text_cache,
-                font_info,
-            )
+            .render(app, keyboard_state, mouse_state, ui_context)
             .unwrap();
 
         // Cache the mouse state (position) so that we can render a crosshair.

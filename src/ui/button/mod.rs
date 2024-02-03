@@ -1,12 +1,11 @@
-use std::sync::{RwLock, RwLockWriteGuard};
+use std::sync::RwLockWriteGuard;
 
 use crate::{
     buffer::Buffer2D,
     device::MouseState,
-    font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
-            cache::{cache_text, TextCache, TextCacheKey},
+            cache::{cache_text, TextCacheKey},
             TextOperation,
         },
         Graphics,
@@ -39,38 +38,40 @@ pub fn do_button(
     panel_info: &PanelInfo,
     panel_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
-    font_info: &'static FontInfo,
     options: &ButtonOptions,
 ) -> DoButtonResult {
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
+    cache_text(
+        ctx.font_cache,
+        ctx.text_cache,
+        ctx.font_info,
+        &options.label,
+    );
+
+    let width: u32;
+    let height: u32;
 
     let text_cache_key = TextCacheKey {
-        font_info,
+        font_info: ctx.font_info.clone(),
         text: options.label.clone(),
     };
 
-    let text_cache = text_cache_rwl.read().unwrap();
+    {
+        let text_cache = ctx.text_cache.read().unwrap();
 
-    let texture = text_cache.get(&text_cache_key).unwrap();
+        let texture = text_cache.get(&text_cache_key).unwrap();
+
+        width = texture.width;
+        height = texture.height;
+    }
 
     let (x, y) = options
         .layout_options
-        .get_top_left_within_parent(panel_info, texture.width);
+        .get_top_left_within_parent(panel_info, width);
 
     // Check whether a mouse event occurred inside this button.
 
-    let (is_down, was_released) = get_mouse_result(
-        ctx,
-        id,
-        panel_info,
-        mouse_state,
-        x,
-        y,
-        texture.width,
-        texture.height,
-    );
+    let (is_down, was_released) =
+        get_mouse_result(ctx, id, panel_info, mouse_state, x, y, width, height);
 
     let result = DoButtonResult {
         is_down,
@@ -79,7 +80,16 @@ pub fn do_button(
 
     // Render an unpressed or pressed button.
 
-    draw_button(ctx, id, panel_buffer, x, y, texture, options, &result);
+    draw_button(
+        ctx,
+        id,
+        panel_buffer,
+        x,
+        y,
+        &text_cache_key,
+        options,
+        &result,
+    );
 
     DoButtonResult {
         is_down,
@@ -93,11 +103,15 @@ fn draw_button(
     panel_buffer: &mut Buffer2D,
     x: u32,
     y: u32,
-    texture: &Buffer2D<u8>,
+    text_cache_key: &TextCacheKey,
     options: &ButtonOptions,
     result: &DoButtonResult,
 ) {
     let theme = ctx.get_theme();
+
+    let text_cache = ctx.text_cache.read().unwrap();
+
+    let texture = text_cache.get(&text_cache_key).unwrap();
 
     if options.with_border {
         Graphics::rectangle(

@@ -1,18 +1,13 @@
-use std::{
-    collections::hash_map::Entry,
-    f32::consts::PI,
-    sync::{RwLock, RwLockWriteGuard},
-};
+use std::{collections::hash_map::Entry, f32::consts::PI, sync::RwLockWriteGuard};
 
 use sdl2::keyboard::Keycode;
 
 use crate::{
     buffer::Buffer2D,
     device::{keycode::get_alpha_numeric, KeyboardState, MouseState},
-    font::{cache::FontCache, FontInfo},
     graphics::{
         text::{
-            cache::{cache_text, TextCache, TextCacheKey},
+            cache::{cache_text, TextCacheKey},
             TextOperation,
         },
         Graphics,
@@ -51,22 +46,32 @@ pub fn do_textbox(
     uptime_seconds: f32,
     keyboard_state: &KeyboardState,
     mouse_state: &MouseState,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    text_cache_rwl: &'static RwLock<TextCache<'static>>,
-    font_info: &'static FontInfo,
     options: &TextboxOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoTextboxResult {
-    cache_text(font_cache_rwl, text_cache_rwl, font_info, &options.label);
+    cache_text(
+        ctx.font_cache,
+        ctx.text_cache,
+        ctx.font_info,
+        &options.label,
+    );
+
+    let width: u32;
+    let height: u32;
 
     let text_cache_key = TextCacheKey {
-        font_info,
+        font_info: ctx.font_info.clone(),
         text: options.label.clone(),
     };
 
-    let text_cache = text_cache_rwl.read().unwrap();
+    {
+        let text_cache = ctx.text_cache.read().unwrap();
 
-    let label_texture = text_cache.get(&text_cache_key).unwrap();
+        let label_texture = text_cache.get(&text_cache_key).unwrap();
+
+        width = label_texture.width;
+        height = label_texture.height;
+    }
 
     // Check whether a mouse event occurred inside this textbox.
 
@@ -81,8 +86,8 @@ pub fn do_textbox(
         mouse_state,
         x,
         y,
-        TEXTBOX_WIDTH + TEXTBOX_LABEL_PADDING + label_texture.width,
-        label_texture.height,
+        TEXTBOX_WIDTH + TEXTBOX_LABEL_PADDING + width,
+        height,
     );
 
     // Updates the state of our textbox model, if needed.
@@ -147,12 +152,10 @@ pub fn do_textbox(
         id,
         uptime_seconds,
         panel_buffer,
-        font_cache_rwl,
-        font_info,
         x,
         y,
+        &text_cache_key,
         options,
-        label_texture,
         &mut model_entry,
     );
 
@@ -164,14 +167,16 @@ fn draw_textbox(
     id: UIID,
     uptime_second: f32,
     panel_buffer: &mut Buffer2D,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
-    font_info: &'static FontInfo,
     x: u32,
     y: u32,
+    text_cache_key: &TextCacheKey,
     options: &TextboxOptions,
-    label_texture: &Buffer2D<u8>,
     model: &mut Entry<'_, String, String>,
 ) {
+    let text_cache = ctx.text_cache.read().unwrap();
+
+    let label_texture = text_cache.get(&text_cache_key).unwrap();
+
     let textbox_height = label_texture.height;
 
     let theme = ctx.get_theme();
@@ -208,9 +213,9 @@ fn draw_textbox(
             if text.len() > 0 {
                 // Draw the text.
 
-                let mut font_cache = font_cache_rwl.write().unwrap();
+                let mut font_cache = ctx.font_cache.write().unwrap();
 
-                let font = font_cache.load(font_info).unwrap();
+                let font = font_cache.load(ctx.font_info).unwrap();
 
                 let (_label_width, _label_height, model_value_texture) =
                     Graphics::make_text_texture(font.as_ref(), text).unwrap();

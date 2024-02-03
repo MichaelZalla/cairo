@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path, rc::Rc};
+use std::{collections::HashMap, fmt::Debug, path::Path, rc::Rc};
 
 use sdl2::ttf::{Font as SDLFont, Sdl2TtfContext};
 
@@ -11,6 +11,18 @@ type FontHashMap<'l> = HashMap<FontHashMapKey, FontHashMapValue<'l>>;
 pub struct FontCache<'l> {
     context: &'l Sdl2TtfContext,
     cache: FontHashMap<'l>,
+}
+
+impl<'l> Debug for FontCache<'l> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FontCache")
+            .field("context", &"Sdl2TtfContext")
+            .field(
+                "cache",
+                &format!("FontHashMap({} entries)", self.cache.len()),
+            )
+            .finish()
+    }
 }
 
 impl<'l> FontCache<'l> {

@@ -10,14 +10,14 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TextCacheKey<'a> {
-    pub font_info: &'a FontInfo,
+pub struct TextCacheKey {
+    pub font_info: FontInfo,
     pub text: String,
 }
 
 type TextCacheValue = Buffer2D<u8>;
 
-pub type TextCache<'a> = HashMap<TextCacheKey<'a>, TextCacheValue>;
+pub type TextCache<'a> = HashMap<TextCacheKey, TextCacheValue>;
 
 pub fn cache_text<'a>(
     font_cache_rwl: &'a RwLock<FontCache>,
@@ -26,7 +26,7 @@ pub fn cache_text<'a>(
     text: &String,
 ) {
     let text_cache_key = TextCacheKey {
-        font_info,
+        font_info: font_info.clone(),
         text: text.clone(),
     };
 
