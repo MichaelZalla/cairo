@@ -18,6 +18,9 @@ use super::{
     layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
+static BORDERED_BUTTON_LABEL_PADDING_VERTICAL: u32 = 4;
+static BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL: u32 = 8;
+
 #[derive(Default, Debug)]
 pub struct ButtonOptions {
     pub layout_options: ItemLayoutOptions,
@@ -67,8 +70,18 @@ pub fn do_button(
         .layout_options
         .get_layout_offset(layout, label_texture_width);
 
-    let item_width = label_texture_width;
-    let item_height = label_texture_height;
+    let item_width = label_texture_width
+        + if options.with_border {
+            BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL * 2
+        } else {
+            0
+        };
+    let item_height = label_texture_height
+        + if options.with_border {
+            BORDERED_BUTTON_LABEL_PADDING_VERTICAL * 2
+        } else {
+            0
+        };
 
     // Check whether a mouse event occurred inside this button.
 
@@ -134,8 +147,8 @@ fn draw_button(
             parent_buffer,
             cursor.x + offset_x,
             cursor.y + offset_y,
-            texture.width,
-            texture.height,
+            texture.width + BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL * 2,
+            texture.height + BORDERED_BUTTON_LABEL_PADDING_VERTICAL * 2,
             theme.button_background,
             Some(theme.button_background),
         )
@@ -154,8 +167,20 @@ fn draw_button(
     };
 
     let op = TextOperation {
-        x: cursor.x + offset_x,
-        y: cursor.y + offset_y,
+        x: cursor.x
+            + offset_x
+            + if options.with_border {
+                BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL
+            } else {
+                0
+            },
+        y: cursor.y
+            + offset_y
+            + if options.with_border {
+                BORDERED_BUTTON_LABEL_PADDING_VERTICAL
+            } else {
+                0
+            },
         color: text_color,
         text: &options.label,
     };
