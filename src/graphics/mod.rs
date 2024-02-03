@@ -181,12 +181,12 @@ impl Graphics {
 
         match fill {
             Some(fill_color) => {
-                for current_y in y..y + height {
+                for current_y in y + 1..y + height {
                     Graphics::line(
                         buffer,
-                        x as i32,
+                        (x + 1) as i32,
                         current_y as i32,
-                        (x + width) as i32,
+                        (x + width - 2) as i32,
                         current_y as i32,
                         fill_color,
                     )
