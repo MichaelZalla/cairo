@@ -221,6 +221,22 @@ where
             _ => {
                 // Merged panel scenario
 
+                // Renders a border around the panel's boundaries.
+                self.draw_panel_frame();
+
+                {
+                    let mut ctx = ui_context.write().unwrap();
+
+                    // Renders a default title-bar for this panel.
+                    self.draw_panel_title_bar(
+                        mouse_state,
+                        &mut ctx,
+                        font_cache,
+                        font_info,
+                        text_cache,
+                    )?;
+                }
+
                 // Runs the custom render callback, if any.
                 match self.render_rwl {
                     Some(lock) => {
@@ -235,22 +251,6 @@ where
                         )?;
                     }
                     _ => {}
-                }
-
-                // Renders a border around the panel's boundaries.
-                self.draw_panel_border();
-
-                {
-                    let mut ctx = ui_context.write().unwrap();
-
-                    // Renders a default title-bar for this panel.
-                    self.draw_panel_title_bar(
-                        mouse_state,
-                        &mut ctx,
-                        font_cache,
-                        font_info,
-                        text_cache,
-                    )?;
                 }
             }
         }
@@ -359,7 +359,7 @@ where
         self.alpha = left.info.width as f32 / self.info.width as f32;
     }
 
-    fn draw_panel_border(&mut self) {
+    fn draw_panel_frame(&mut self) {
         let x: u32 = 0;
         let y = 0;
         let width = self.info.width - 1;
