@@ -70,7 +70,7 @@ pub fn do_checkbox(
 
     let checkbox_size = label_texture_height;
 
-    let (offset_x, offset_y) = options
+    let (layout_offset_x, layout_offset_y) = options
         .layout_options
         .get_layout_offset(layout, checkbox_size);
 
@@ -84,8 +84,8 @@ pub fn do_checkbox(
         id,
         layout,
         mouse_state,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         item_width,
         item_height,
     );
@@ -119,15 +119,15 @@ pub fn do_checkbox(
         ctx,
         id,
         layout,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         &text_cache_key,
         options,
         parent_buffer,
         &result,
     );
 
-    layout.advance_cursor(offset_x + item_width, offset_y + item_height);
+    layout.advance_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
     result
 }
@@ -136,8 +136,8 @@ fn draw_checkbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
-    offset_x: u32,
-    offset_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &CheckboxOptions,
     parent_buffer: &mut Buffer2D,
@@ -165,7 +165,7 @@ fn draw_checkbox(
 
     // Draw the checkbox borders.
 
-    let (checkbox_x, checkbox_y) = (cursor.x + offset_x, cursor.y + offset_y);
+    let (checkbox_x, checkbox_y) = (cursor.x + layout_offset_x, cursor.y + layout_offset_y);
 
     Graphics::rectangle(
         parent_buffer,

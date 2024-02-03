@@ -48,8 +48,8 @@ pub fn do_text(
 ) -> DoTextResult {
     let item_width: u32;
     let item_height: u32;
-    let offset_x: u32;
-    let offset_y: u32;
+    let layout_offset_x: u32;
+    let layout_offset_y: u32;
 
     match options.cache {
         true => {
@@ -64,7 +64,7 @@ pub fn do_text(
 
             let texture_ref = text_cache.get(&text_cache_key).unwrap();
 
-            (offset_x, offset_y) = options
+            (layout_offset_x, layout_offset_y) = options
                 .layout_options
                 .get_layout_offset(layout, texture_ref.width);
 
@@ -73,8 +73,8 @@ pub fn do_text(
 
             draw_text(
                 layout,
-                offset_x,
-                offset_y,
+                layout_offset_x,
+                layout_offset_y,
                 texture_ref,
                 options,
                 parent_buffer,
@@ -88,26 +88,33 @@ pub fn do_text(
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_texture(font.as_ref(), &options.text).unwrap();
 
-            (offset_x, offset_y) = options
+            (layout_offset_x, layout_offset_y) = options
                 .layout_options
                 .get_layout_offset(layout, texture.width);
 
             item_width = texture.width;
             item_height = texture.height;
 
-            draw_text(layout, offset_x, offset_y, &texture, options, parent_buffer);
+            draw_text(
+                layout,
+                layout_offset_x,
+                layout_offset_y,
+                &texture,
+                options,
+                parent_buffer,
+            );
         }
     }
 
-    layout.advance_cursor(offset_x + item_width, offset_y + item_height);
+    layout.advance_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
     DoTextResult {}
 }
 
 fn draw_text(
     layout: &UILayoutContext,
-    offset_x: u32,
-    offset_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     texture: &Buffer2D<u8>,
     options: &TextOptions,
     parent_buffer: &mut Buffer2D,
@@ -119,8 +126,8 @@ fn draw_text(
     // Draw the button's text label.
 
     let op = TextOperation {
-        x: cursor.x + offset_x,
-        y: cursor.y + offset_y,
+        x: cursor.x + layout_offset_x,
+        y: cursor.y + layout_offset_y,
         color,
         text: &options.text,
     };

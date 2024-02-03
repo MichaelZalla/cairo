@@ -66,7 +66,7 @@ pub fn do_button(
         label_texture_height = texture.height;
     }
 
-    let (offset_x, offset_y) = options
+    let (layout_offset_x, layout_offset_y) = options
         .layout_options
         .get_layout_offset(layout, label_texture_width);
 
@@ -90,8 +90,8 @@ pub fn do_button(
         id,
         layout,
         mouse_state,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         item_width,
         item_height,
     );
@@ -107,15 +107,15 @@ pub fn do_button(
         ctx,
         id,
         layout,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         &text_cache_key,
         options,
         parent_buffer,
         &result,
     );
 
-    layout.advance_cursor(offset_x + item_width, offset_y + item_height);
+    layout.advance_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
     DoButtonResult {
         is_down,
@@ -127,8 +127,8 @@ fn draw_button(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
-    offset_x: u32,
-    offset_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &ButtonOptions,
     parent_buffer: &mut Buffer2D,
@@ -145,8 +145,8 @@ fn draw_button(
     if options.with_border {
         Graphics::rectangle(
             parent_buffer,
-            cursor.x + offset_x,
-            cursor.y + offset_y,
+            cursor.x + layout_offset_x,
+            cursor.y + layout_offset_y,
             texture.width + BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL * 2,
             texture.height + BORDERED_BUTTON_LABEL_PADDING_VERTICAL * 2,
             theme.button_background,
@@ -168,14 +168,14 @@ fn draw_button(
 
     let op = TextOperation {
         x: cursor.x
-            + offset_x
+            + layout_offset_x
             + if options.with_border {
                 BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL
             } else {
                 0
             },
         y: cursor.y
-            + offset_y
+            + layout_offset_y
             + if options.with_border {
                 BORDERED_BUTTON_LABEL_PADDING_VERTICAL
             } else {

@@ -72,7 +72,7 @@ pub fn do_slider(
 
     // Check whether a mouse event occurred inside this slider.
 
-    let (offset_x, offset_y) = options
+    let (layout_offset_x, layout_offset_y) = options
         .layout_options
         .get_layout_offset(layout, NUMBER_SLIDER_WIDTH);
 
@@ -84,8 +84,8 @@ pub fn do_slider(
         id,
         layout,
         mouse_state,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         item_width,
         item_height,
     );
@@ -200,8 +200,8 @@ pub fn do_slider(
         ctx,
         id,
         layout,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         &text_cache_key,
         options,
         &mut model_entry,
@@ -217,8 +217,8 @@ fn draw_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
-    offset_x: u32,
-    offset_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &NumberSliderOptions,
     model: &mut Entry<'_, String, String>,
@@ -244,7 +244,7 @@ fn draw_slider(
 
     // Draw the slider borders.
 
-    let slider_top_left = (cursor.x + offset_x, cursor.y + offset_y);
+    let slider_top_left = (cursor.x + layout_offset_x, cursor.y + layout_offset_y);
     let slider_top_right = (
         slider_top_left.0 + NUMBER_SLIDER_WIDTH - 1,
         slider_top_left.1,

@@ -77,7 +77,7 @@ pub fn do_textbox(
 
     // Check whether a mouse event occurred inside this textbox.
 
-    let (offset_x, offset_y) = options
+    let (layout_offset_x, layout_offset_y) = options
         .layout_options
         .get_layout_offset(layout, TEXTBOX_WIDTH);
 
@@ -89,8 +89,8 @@ pub fn do_textbox(
         id,
         layout,
         mouse_state,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         item_width,
         item_height,
     );
@@ -156,8 +156,8 @@ pub fn do_textbox(
         ctx,
         id,
         layout,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         &text_cache_key,
         options,
         &mut model_entry,
@@ -174,8 +174,8 @@ fn draw_textbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
-    offset_x: u32,
-    offset_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &TextboxOptions,
     model: &mut Entry<'_, String, String>,
@@ -202,7 +202,7 @@ fn draw_textbox(
 
     // Draw the textbox borders.
 
-    let (textbox_x, textbox_y) = (cursor.x + offset_x, cursor.y + offset_y);
+    let (textbox_x, textbox_y) = (cursor.x + layout_offset_x, cursor.y + layout_offset_y);
 
     Graphics::rectangle(
         parent_buffer,

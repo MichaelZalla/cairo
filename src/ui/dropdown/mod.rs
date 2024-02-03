@@ -74,7 +74,7 @@ pub fn do_dropdown(
 
     let is_open = ctx.is_focused(id) && ctx.is_focus_target_open();
 
-    let (offset_x, offset_y) = options
+    let (layout_offset_x, layout_offset_y) = options
         .layout_options
         .get_layout_offset(layout, DROPDOWN_WIDTH);
 
@@ -101,8 +101,8 @@ pub fn do_dropdown(
         id,
         layout,
         mouse_state,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         item_width,
         item_height,
     );
@@ -142,16 +142,16 @@ pub fn do_dropdown(
                                     mouse_state.position.1 - cursor.y as i32,
                                 );
 
-                                if mouse_x >= offset_x as i32
-                                    && mouse_x < (offset_x + DROPDOWN_WIDTH) as i32
-                                    && mouse_y > offset_y as i32
-                                    && mouse_y < (offset_y + item_height) as i32
+                                if mouse_x >= layout_offset_x as i32
+                                    && mouse_x < (layout_offset_x + DROPDOWN_WIDTH) as i32
+                                    && mouse_y > layout_offset_y as i32
+                                    && mouse_y < (layout_offset_y + item_height) as i32
                                 {
                                     let relative_mouse_y = mouse_state.position.1 as u32 - cursor.y;
 
                                     let mut target_item_index: i32 = -1;
 
-                                    let mut current_y = offset_y;
+                                    let mut current_y = layout_offset_y;
 
                                     while current_y < relative_mouse_y {
                                         target_item_index += 1;
@@ -191,8 +191,8 @@ pub fn do_dropdown(
         ctx,
         id,
         layout,
-        offset_x,
-        offset_y,
+        layout_offset_x,
+        layout_offset_y,
         &text_cache_key,
         is_open,
         item_height,
@@ -210,8 +210,8 @@ fn draw_dropdown(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
-    offset_x: u32,
-    offset_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     text_cache_key: &TextCacheKey,
     is_open: bool,
     item_height: u32,
@@ -237,7 +237,7 @@ fn draw_dropdown(
 
     // Draw the dropdown borders.
 
-    let (dropdown_x, dropdown_y) = (cursor.x + offset_x, cursor.y + offset_y);
+    let (dropdown_x, dropdown_y) = (cursor.x + layout_offset_x, cursor.y + layout_offset_y);
 
     Graphics::rectangle(
         parent_buffer,
