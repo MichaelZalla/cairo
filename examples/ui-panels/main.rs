@@ -264,7 +264,7 @@ fn main() -> Result<(), String> {
                         horizontal_alignment: ItemLayoutHorizontalAlignment::Right,
                         ..Default::default()
                     },
-                    text: format!("Uptime: {}", uptime.to_string()),
+                    text: format!("Uptime: {:.*}", 2, uptime),
                     cache: false,
                     color: color::GREEN,
                     ..text_options
