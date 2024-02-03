@@ -7,6 +7,8 @@ use std::{
     sync::{RwLock, RwLockWriteGuard},
 };
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
@@ -85,6 +87,8 @@ fn main() -> Result<(), String> {
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
+    let layout_direction = RwLock::new(UILayoutDirection::TopToBottom);
+
     let render_rwl = RwLock::new(
         |panel_info: &PanelInfo,
          panel_buffer: &mut Buffer2D,
@@ -97,7 +101,7 @@ fn main() -> Result<(), String> {
             // @NOTE(mzalla) Layout cursor is currently local to panel's own UI
             // buffer.
             let mut layout = UILayoutContext::new(
-                UILayoutDirection::TopToBottom,
+                layout_direction.read().unwrap().clone(),
                 UILayoutExtent {
                     left: 0,
                     right: panel_info.width,
@@ -421,6 +425,24 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> () {
+        for keycode in &keyboard_state.keys_pressed {
+            match keycode {
+                Keycode::L { .. } => {
+                    let mut direction = layout_direction.write().unwrap();
+
+                    match *direction {
+                        UILayoutDirection::TopToBottom => {
+                            *direction = UILayoutDirection::LeftToRight;
+                        }
+                        UILayoutDirection::LeftToRight => {
+                            *direction = UILayoutDirection::TopToBottom;
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+
         // Delegrate update actions to the root panel?
 
         let mut root_panel = root_panel_rc.borrow_mut();
