@@ -451,7 +451,7 @@ fn main() -> Result<(), String> {
         render_rwl_option,
     );
 
-    root_panel.split(0.5)?;
+    root_panel.split()?;
 
     let root_panel_rc = RefCell::new(root_panel);
 

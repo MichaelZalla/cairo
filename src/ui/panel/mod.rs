@@ -260,7 +260,7 @@ where
         return Ok(());
     }
 
-    pub fn split(&mut self, alpha: f32) -> Result<(), String> {
+    pub fn split(&mut self) -> Result<(), String> {
         match self.left {
             Some(_) => {
                 return Err("Called Panel::split() on an already-split panel!".to_string());
@@ -268,7 +268,7 @@ where
             _ => {}
         }
 
-        self.alpha = alpha;
+        self.alpha = 0.5;
 
         // Generate 2 new sub-panels
 
