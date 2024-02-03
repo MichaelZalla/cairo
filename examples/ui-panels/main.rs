@@ -271,6 +271,22 @@ fn main() -> Result<(), String> {
                 },
             );
 
+            // Draw a filled rectangle.
+
+            layout.prepare_cursor(64, 64);
+
+            Graphics::rectangle(
+                panel_buffer,
+                layout.get_cursor().x,
+                layout.get_cursor().y,
+                64,
+                64,
+                color::WHITE,
+                Some(color::BLUE),
+            );
+
+            layout.advance_cursor(64, 64);
+
             // Draw a textbox.
 
             let textbox_options = TextboxOptions {
@@ -385,18 +401,6 @@ fn main() -> Result<(), String> {
             {
                 println!("You edited a Dropdown ({})!", slider_id);
             }
-
-            // Draw a filled rectangle.
-
-            Graphics::rectangle(
-                panel_buffer,
-                layout.get_cursor().x,
-                layout.get_cursor().y,
-                64,
-                64,
-                color::WHITE,
-                Some(color::BLUE),
-            );
 
             Ok(())
         },

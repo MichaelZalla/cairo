@@ -103,6 +103,8 @@ pub fn do_button(
 
     // Render an unpressed or pressed button.
 
+    layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
+
     draw_button(
         ctx,
         id,

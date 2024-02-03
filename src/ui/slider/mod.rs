@@ -196,6 +196,8 @@ pub fn do_slider(
 
     // Render a number slider.
 
+    layout.prepare_cursor(item_width, item_height);
+
     draw_slider(
         ctx,
         id,

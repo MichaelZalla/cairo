@@ -71,6 +71,8 @@ pub fn do_text(
             item_width = texture_ref.width;
             item_height = texture_ref.height;
 
+            layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
+
             draw_text(
                 layout,
                 layout_offset_x,
@@ -94,6 +96,8 @@ pub fn do_text(
 
             item_width = texture.width;
             item_height = texture.height;
+
+            layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
             draw_text(
                 layout,

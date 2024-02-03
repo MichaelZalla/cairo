@@ -32,6 +32,7 @@ pub struct UILayoutContext {
     pub direction: UILayoutDirection,
     pub extent: UILayoutExtent,
     cursor: UILayoutCursor,
+    current_row_height: u32,
     pub options: UILayoutOptions,
 }
 
@@ -53,6 +54,7 @@ impl UILayoutContext {
                 x: extent.left,
                 y: extent.top,
             },
+            current_row_height: 0,
             options,
         }
     }
@@ -69,6 +71,31 @@ impl UILayoutContext {
         &self.cursor
     }
 
+    pub fn get_current_row_height(&self) -> u32 {
+        self.current_row_height
+    }
+
+    pub fn prepare_cursor(&mut self, item_width: u32, _item_height: u32) {
+        match self.direction {
+            UILayoutDirection::LeftToRight => {
+                // Begin a new row, if the requested draw size won't fit on our
+                // current row.
+                let remaining_layout_width =
+                    (self.extent.left + self.width()) as i32 - self.get_cursor().x as i32;
+
+                if item_width as i32 > remaining_layout_width {
+                    self.cursor.x = self.options.padding;
+                    self.cursor.y += self.current_row_height;
+
+                    self.current_row_height = 0;
+                }
+            }
+            UILayoutDirection::TopToBottom => {
+                // Do nothing.
+            }
+        }
+    }
+
     pub fn advance_cursor(&mut self, item_width: u32, item_height: u32) {
         match self.direction {
             UILayoutDirection::LeftToRight => {
@@ -76,6 +103,10 @@ impl UILayoutContext {
                 // layout spacing.
 
                 self.cursor.x += item_width + self.options.gap;
+
+                self.current_row_height = self.current_row_height.max(item_height);
+
+                self.prepare_cursor(item_width, item_height);
             }
             UILayoutDirection::TopToBottom => {
                 // Advance the cursor vertically by the item's height, plus

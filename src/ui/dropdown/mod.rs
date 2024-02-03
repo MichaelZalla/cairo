@@ -187,6 +187,8 @@ pub fn do_dropdown(
 
     // Render a dropdown.
 
+    layout.prepare_cursor(item_width, item_height);
+
     draw_dropdown(
         ctx,
         id,

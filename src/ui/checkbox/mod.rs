@@ -115,6 +115,8 @@ pub fn do_checkbox(
 
     // Render an unchecked or checked checkbox.
 
+    layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
+
     draw_checkbox(
         ctx,
         id,

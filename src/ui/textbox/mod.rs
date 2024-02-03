@@ -152,6 +152,8 @@ pub fn do_textbox(
 
     // Render a textbox.
 
+    layout.prepare_cursor(item_width, item_height);
+
     draw_textbox(
         ctx,
         id,

@@ -325,7 +325,7 @@ where
         let left = self.left.as_mut().unwrap();
         let right = self.right.as_mut().unwrap();
 
-        static MINIMUM_PANEL_WIDTH: u32 = 128;
+        static MINIMUM_PANEL_WIDTH: u32 = 138;
 
         let relative_motion_x = mouse_state.relative_motion.0;
 
