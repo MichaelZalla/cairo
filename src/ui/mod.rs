@@ -13,6 +13,7 @@ pub mod button;
 pub mod checkbox;
 pub mod context;
 pub mod dropdown;
+pub mod image;
 pub mod layout;
 pub mod panel;
 pub mod separator;

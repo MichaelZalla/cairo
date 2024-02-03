@@ -12,15 +12,17 @@ use sdl2::keyboard::Keycode;
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
-    color,
+    color::{self, Color},
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::{text::cache::TextCache, Graphics},
+    graphics::text::cache::TextCache,
+    texture::TextureMap,
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
         dropdown::{do_dropdown, DropdownOptions},
+        image::{do_image, ImageOptions},
         layout::{
             item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
             UILayoutContext, UILayoutDirection, UILayoutExtent, UILayoutOptions,
@@ -46,6 +48,8 @@ fn main() -> Result<(), String> {
     };
 
     let app = App::new(&mut window_info);
+
+    let rendering_context = &app.context.rendering_context;
 
     // Load a system font
 
@@ -87,6 +91,10 @@ fn main() -> Result<(), String> {
     textboxes_model.insert("2_dropdown".to_string(), "Item 4".to_string());
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
+
+    let mut wojak_texture = TextureMap::new("./examples/ui-panels/assets/wojak.png");
+
+    wojak_texture.load(rendering_context).unwrap();
 
     let layout_direction = RwLock::new(UILayoutDirection::TopToBottom);
 
@@ -306,19 +314,22 @@ fn main() -> Result<(), String> {
 
             // Draw a filled rectangle.
 
-            layout.prepare_cursor(64, 64);
-
-            Graphics::rectangle(
+            do_image(
+                &mut ctx,
+                UIID {
+                    parent: panel_info.id,
+                    item: 9,
+                    index: 0,
+                },
+                &mut layout,
+                &mut wojak_texture,
+                &ImageOptions {
+                    width: 256,
+                    height: 256,
+                    border: Some(Color::rgb(45, 45, 45)),
+                },
                 panel_buffer,
-                layout.get_cursor().x,
-                layout.get_cursor().y,
-                64,
-                64,
-                color::WHITE,
-                Some(color::BLUE),
             );
-
-            layout.advance_cursor(64, 64);
 
             // Draw a separator.
 
@@ -326,7 +337,7 @@ fn main() -> Result<(), String> {
                 &mut ctx,
                 UIID {
                     parent: panel_info.id,
-                    item: 9,
+                    item: 10,
                     index: 0,
                 },
                 &mut layout,
@@ -354,7 +365,7 @@ fn main() -> Result<(), String> {
 
             let textbox_id = UIID {
                 parent: panel_info.id,
-                item: 10,
+                item: 11,
                 index: 0,
             };
 
@@ -391,7 +402,7 @@ fn main() -> Result<(), String> {
 
             let slider_id = UIID {
                 parent: panel_info.id,
-                item: 11,
+                item: 12,
                 index: 0,
             };
 
@@ -433,7 +444,7 @@ fn main() -> Result<(), String> {
 
             let dropdown_id = UIID {
                 parent: panel_info.id,
-                item: 12,
+                item: 13,
                 index: 0,
             };
 

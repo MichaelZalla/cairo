@@ -1,6 +1,6 @@
 use std::ops::Rem;
 
-use crate::vec::vec2::Vec2;
+use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::TextureMap;
 
@@ -222,6 +222,43 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
     }
 
     (r as u8, g as u8, b as u8)
+}
+
+pub fn sample_trilinear(
+    uv: Vec2,
+    map: &TextureMap,
+    near_level_index: usize,
+    far_level_index: usize,
+    alpha: f32,
+) -> (u8, u8, u8) {
+    // Sample a color from both mipmaps, using bilinear sampling.
+
+    if near_level_index == far_level_index {
+        return sample_bilinear(uv, map, Some(near_level_index));
+    } else if alpha == 0.0 {
+        return sample_bilinear(uv, map, Some(near_level_index));
+    } else if alpha >= 1.0 {
+        return sample_bilinear(uv, map, Some(far_level_index));
+    }
+
+    let near_color = sample_bilinear(uv, map, Some(near_level_index));
+    let far_color = sample_bilinear(uv, map, Some(far_level_index));
+
+    let near_color_vec3 = Vec3 {
+        x: near_color.0 as f32,
+        y: near_color.1 as f32,
+        z: near_color.2 as f32,
+    };
+
+    let far_color_vec3 = Vec3 {
+        x: far_color.0 as f32,
+        y: far_color.1 as f32,
+        z: far_color.2 as f32,
+    };
+
+    let color = Vec3::interpolate(near_color_vec3, far_color_vec3, alpha);
+
+    (color.x as u8, color.y as u8, color.z as u8)
 }
 
 fn sample_from_texel(
