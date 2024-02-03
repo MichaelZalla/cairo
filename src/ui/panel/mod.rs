@@ -6,7 +6,6 @@ use std::{
 use crate::{
     app::App,
     buffer::Buffer2D,
-    color,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::TextOperation,
@@ -223,11 +222,11 @@ where
 
                 self.buffer.clear(None);
 
-                // Renders a border around the panel's boundaries.
-                self.draw_panel_frame();
-
                 {
                     let mut ctx = ui_context.write().unwrap();
+
+                    // Renders a filled frame sized to the panel's boundaries.
+                    self.draw_panel_frame(&mut ctx);
 
                     // Renders a default title-bar for this panel.
                     self.draw_panel_title_bar(
@@ -361,13 +360,23 @@ where
         self.alpha = left.info.width as f32 / self.info.width as f32;
     }
 
-    fn draw_panel_frame(&mut self) {
+    fn draw_panel_frame(&mut self, ctx: &mut RwLockWriteGuard<'_, UIContext>) {
+        let theme = ctx.get_theme();
+
         let x: u32 = 0;
         let y = 0;
         let width = self.info.width - 1;
         let height = self.info.height - 1;
 
-        Graphics::rectangle(&mut self.buffer, x, y, width, height, color::YELLOW, None)
+        Graphics::rectangle(
+            &mut self.buffer,
+            x,
+            y,
+            width,
+            height,
+            theme.panel_border,
+            Some(theme.panel_background),
+        )
     }
 
     fn draw_panel_title_bar(
@@ -378,14 +387,17 @@ where
         font_info: &'static FontInfo,
         text_cache: &'static RwLock<TextCache<'static>>,
     ) -> Result<(), String> {
-        let (x1, y1, x2, y2) = (
-            0 as i32,
-            PANEL_TITLE_BAR_HEIGHT as i32,
-            self.info.width as i32,
-            PANEL_TITLE_BAR_HEIGHT as i32,
-        );
+        let theme = ctx.get_theme();
 
-        Graphics::line(&mut self.buffer, x1, y1, x2, y2, color::YELLOW);
+        Graphics::rectangle(
+            &mut self.buffer,
+            0,
+            0,
+            self.info.width,
+            PANEL_TITLE_BAR_HEIGHT,
+            theme.panel_titlebar_background,
+            Some(theme.panel_titlebar_background),
+        );
 
         {
             let spacing = PANEL_TITLE_BAR_HEIGHT / 2 - font_info.point_size as u32 / 2;
@@ -399,7 +411,7 @@ where
                     text: &format!("Panel {}", self.info.id),
                     x: spacing,
                     y: spacing,
-                    color: color::YELLOW,
+                    color: theme.text,
                 },
             )?;
         }

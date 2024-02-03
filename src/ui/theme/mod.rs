@@ -12,6 +12,9 @@ pub struct UITheme {
     pub input_cursor: Color,
     pub checkbox_background: Color,
     pub dropdown_background: Color,
+    pub panel_background: Color,
+    pub panel_titlebar_background: Color,
+    pub panel_border: Color,
 }
 
 pub static DEFAULT_UI_THEME: UITheme = UITheme {
@@ -25,4 +28,7 @@ pub static DEFAULT_UI_THEME: UITheme = UITheme {
     input_cursor: Color::rgb(124, 124, 124),
     checkbox_background: Color::rgb(45, 45, 45),
     dropdown_background: Color::rgb(45, 45, 45),
+    panel_background: Color::rgb(56, 56, 56),
+    panel_titlebar_background: Color::rgb(45, 45, 45),
+    panel_border: Color::rgb(35, 35, 35),
 };
