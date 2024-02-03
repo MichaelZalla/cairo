@@ -42,7 +42,7 @@ pub fn do_textbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
-    panel_buffer: &mut Buffer2D,
+    parent_buffer: &mut Buffer2D,
     uptime_seconds: f32,
     keyboard_state: &KeyboardState,
     mouse_state: &MouseState,
@@ -56,8 +56,8 @@ pub fn do_textbox(
         &options.label,
     );
 
-    let width: u32;
-    let height: u32;
+    let label_texture_width: u32;
+    let label_texture_height: u32;
 
     let text_cache_key = TextCacheKey {
         font_info: ctx.font_info.clone(),
@@ -69,25 +69,28 @@ pub fn do_textbox(
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
-        width = label_texture.width;
-        height = label_texture.height;
+        label_texture_width = label_texture.width;
+        label_texture_height = label_texture.height;
     }
 
     // Check whether a mouse event occurred inside this textbox.
 
-    let (x, y) = options
+    let (offset_x, offset_y) = options
         .layout_options
-        .get_top_left_within_parent(panel_info, TEXTBOX_WIDTH);
+        .get_layout_offset(panel_info, TEXTBOX_WIDTH);
+
+    let item_width = TEXTBOX_WIDTH + TEXTBOX_LABEL_PADDING + label_texture_width;
+    let item_height = label_texture_height;
 
     let (_is_down, _was_released) = get_mouse_result(
         ctx,
         id,
         panel_info,
         mouse_state,
-        x,
-        y,
-        TEXTBOX_WIDTH + TEXTBOX_LABEL_PADDING + width,
-        height,
+        offset_x,
+        offset_y,
+        item_width,
+        item_height,
     );
 
     // Updates the state of our textbox model, if needed.
@@ -150,13 +153,13 @@ pub fn do_textbox(
     draw_textbox(
         ctx,
         id,
-        uptime_seconds,
-        panel_buffer,
-        x,
-        y,
+        offset_x,
+        offset_y,
         &text_cache_key,
         options,
         &mut model_entry,
+        uptime_seconds,
+        parent_buffer,
     );
 
     result
@@ -165,13 +168,13 @@ pub fn do_textbox(
 fn draw_textbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    uptime_second: f32,
-    panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
+    offset_x: u32,
+    offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &TextboxOptions,
     model: &mut Entry<'_, String, String>,
+    uptime_second: f32,
+    parent_buffer: &mut Buffer2D,
 ) {
     let text_cache = ctx.text_cache.read().unwrap();
 
@@ -191,18 +194,20 @@ fn draw_textbox(
 
     // Draw the textbox borders.
 
+    let (textbox_x, textbox_y) = (offset_x, offset_y);
+
     Graphics::rectangle(
-        panel_buffer,
-        x,
-        y,
+        parent_buffer,
+        textbox_x,
+        textbox_y,
         TEXTBOX_WIDTH,
         textbox_height,
         theme.input_background,
         Some(theme.input_background),
     );
 
-    let textbox_top_left = (x, y);
-    let textbox_top_right = (x + TEXTBOX_WIDTH - 1, y);
+    let textbox_top_left = (textbox_x, textbox_y);
+    let textbox_top_right = (textbox_x + TEXTBOX_WIDTH - 1, textbox_y);
 
     // Draw the textbox model value (text).
 
@@ -211,7 +216,7 @@ fn draw_textbox(
             let text = o.get();
 
             if text.len() > 0 {
-                // Draw the text.
+                // Draw the input value text.
 
                 let mut font_cache = ctx.font_cache.write().unwrap();
 
@@ -222,25 +227,29 @@ fn draw_textbox(
 
                 let max_width = TEXTBOX_WIDTH - TEXTBOX_LABEL_PADDING;
 
-                let input_text_x = match options.input_text_alignment {
-                    ItemTextAlignment::Left => textbox_top_left.0 + TEXTBOX_TEXT_PADDING,
-                    ItemTextAlignment::Center => {
-                        (TEXTBOX_WIDTH as f32 / 2.0 - model_value_texture.width as f32 / 2.0) as u32
-                    }
-                    ItemTextAlignment::Right => {
-                        TEXTBOX_WIDTH - model_value_texture.width - TEXTBOX_LABEL_PADDING
-                    }
-                };
+                let input_text_x = textbox_top_left.0
+                    + match options.input_text_alignment {
+                        ItemTextAlignment::Left => TEXTBOX_TEXT_PADDING,
+                        ItemTextAlignment::Center => {
+                            (TEXTBOX_WIDTH as f32 / 2.0 - model_value_texture.width as f32 / 2.0)
+                                as u32
+                        }
+                        ItemTextAlignment::Right => {
+                            TEXTBOX_WIDTH - model_value_texture.width - TEXTBOX_LABEL_PADDING
+                        }
+                    };
+
+                let input_text_y = textbox_top_left.1 + 1;
 
                 Graphics::blit_text_from_mask(
                     &model_value_texture,
                     &TextOperation {
                         text,
                         x: input_text_x,
-                        y: textbox_top_left.1 + 1,
+                        y: input_text_y,
                         color: theme.input_text,
                     },
-                    panel_buffer,
+                    parent_buffer,
                     Some(max_width),
                 );
 
@@ -249,15 +258,19 @@ fn draw_textbox(
                 let with_cursor = (uptime_second * 2.0 * PI).sin() > 0.0;
 
                 if ctx.is_focused(id) && with_cursor {
+                    let blinking_text_cursor_x = textbox_top_left.0
+                        + TEXTBOX_TEXT_PADDING
+                        + model_value_texture
+                            .width
+                            .min(max_width - TEXTBOX_CURSOR_PADDING)
+                        + TEXTBOX_CURSOR_PADDING;
+
+                    let blinking_text_cursor_y = textbox_top_right.1 + 2;
+
                     Graphics::rectangle(
-                        panel_buffer,
-                        textbox_top_left.0
-                            + TEXTBOX_TEXT_PADDING
-                            + model_value_texture
-                                .width
-                                .min(max_width - TEXTBOX_CURSOR_PADDING)
-                            + TEXTBOX_CURSOR_PADDING,
-                        textbox_top_right.1 + 2,
+                        parent_buffer,
+                        blinking_text_cursor_x,
+                        blinking_text_cursor_y,
                         2,
                         textbox_height - 2 - 2,
                         theme.input_cursor,
@@ -273,12 +286,17 @@ fn draw_textbox(
 
     // Draw the textbox label.
 
+    let (label_x, label_y) = (
+        textbox_top_right.0 + TEXTBOX_LABEL_PADDING,
+        textbox_top_right.1,
+    );
+
     let op = TextOperation {
         text: &options.label,
-        x: textbox_top_right.0 + TEXTBOX_LABEL_PADDING,
-        y: textbox_top_right.1,
+        x: label_x,
+        y: label_y,
         color: label_color,
     };
 
-    Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)
+    Graphics::blit_text_from_mask(label_texture, &op, parent_buffer, None)
 }

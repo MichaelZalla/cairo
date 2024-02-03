@@ -44,9 +44,12 @@ pub fn do_text(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     _id: UIID,
     panel_info: &PanelInfo,
-    panel_buffer: &mut Buffer2D,
+    parent_buffer: &mut Buffer2D,
     options: &TextOptions,
 ) -> DoTextResult {
+    let offset_x: u32;
+    let offset_y: u32;
+
     match options.cache {
         true => {
             cache_text(ctx.font_cache, ctx.text_cache, ctx.font_info, &options.text);
@@ -60,11 +63,11 @@ pub fn do_text(
 
             let texture_ref = text_cache.get(&text_cache_key).unwrap();
 
-            let (x, y) = options
+            (offset_x, offset_y) = options
                 .layout_options
-                .get_top_left_within_parent(panel_info, texture_ref.width);
+                .get_layout_offset(panel_info, texture_ref.width);
 
-            draw_text(panel_buffer, x, y, texture_ref, options);
+            draw_text(offset_x, offset_y, texture_ref, options, parent_buffer);
         }
         false => {
             let mut font_cache = ctx.font_cache.write().unwrap();
@@ -74,11 +77,11 @@ pub fn do_text(
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_texture(font.as_ref(), &options.text).unwrap();
 
-            let (x, y) = options
+            (offset_x, offset_y) = options
                 .layout_options
-                .get_top_left_within_parent(panel_info, texture.width);
+                .get_layout_offset(panel_info, texture.width);
 
-            draw_text(panel_buffer, x, y, &texture, options);
+            draw_text(offset_x, offset_y, &texture, options, parent_buffer);
         }
     }
 
@@ -86,22 +89,22 @@ pub fn do_text(
 }
 
 fn draw_text(
-    panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
+    offset_x: u32,
+    offset_y: u32,
     texture: &Buffer2D<u8>,
     options: &TextOptions,
+    parent_buffer: &mut Buffer2D,
 ) {
     let color = options.color;
 
     // Draw the button's text label.
 
     let op = TextOperation {
-        x,
-        y,
+        x: offset_x,
+        y: offset_y,
         color,
         text: &options.text,
     };
 
-    Graphics::blit_text_from_mask(texture, &op, panel_buffer, None);
+    Graphics::blit_text_from_mask(texture, &op, parent_buffer, None);
 }

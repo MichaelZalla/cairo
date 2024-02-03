@@ -42,7 +42,7 @@ pub fn do_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
-    panel_buffer: &mut Buffer2D,
+    parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &NumberSliderOptions,
     mut model_entry: Entry<'_, String, String>,
@@ -54,8 +54,8 @@ pub fn do_slider(
         &options.label,
     );
 
-    let width: u32;
-    let height: u32;
+    let label_texture_width: u32;
+    let label_texture_height: u32;
 
     let text_cache_key = TextCacheKey {
         font_info: ctx.font_info.clone(),
@@ -67,25 +67,28 @@ pub fn do_slider(
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
-        width = label_texture.width;
-        height = label_texture.height;
+        label_texture_width = label_texture.width;
+        label_texture_height = label_texture.height;
     }
 
     // Check whether a mouse event occurred inside this slider.
 
-    let (x, y) = options
+    let (offset_x, offset_y) = options
         .layout_options
-        .get_top_left_within_parent(panel_info, NUMBER_SLIDER_WIDTH);
+        .get_layout_offset(panel_info, NUMBER_SLIDER_WIDTH);
+
+    let item_width = NUMBER_SLIDER_WIDTH + NUMBER_SLIDER_LABEL_PADDING + label_texture_width;
+    let item_height = label_texture_height;
 
     let (_is_down, _was_released) = get_mouse_result(
         ctx,
         id,
         panel_info,
         mouse_state,
-        x,
-        y,
-        NUMBER_SLIDER_WIDTH + NUMBER_SLIDER_LABEL_PADDING + width,
-        height,
+        offset_x,
+        offset_y,
+        item_width,
+        item_height,
     );
 
     // Updates the state of our slider model, if needed.
@@ -197,12 +200,12 @@ pub fn do_slider(
     draw_slider(
         ctx,
         id,
-        panel_buffer,
-        x,
-        y,
+        offset_x,
+        offset_y,
         &text_cache_key,
         options,
         &mut model_entry,
+        parent_buffer,
     );
 
     result
@@ -211,12 +214,12 @@ pub fn do_slider(
 fn draw_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
+    offset_x: u32,
+    offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &NumberSliderOptions,
     model: &mut Entry<'_, String, String>,
+    parent_buffer: &mut Buffer2D,
 ) {
     let text_cache = ctx.text_cache.read().unwrap();
 
@@ -236,18 +239,21 @@ fn draw_slider(
 
     // Draw the slider borders.
 
+    let slider_top_left = (offset_x, offset_y);
+    let slider_top_right = (
+        slider_top_left.0 + NUMBER_SLIDER_WIDTH - 1,
+        slider_top_left.1,
+    );
+
     Graphics::rectangle(
-        panel_buffer,
-        x,
-        y,
+        parent_buffer,
+        slider_top_left.0,
+        slider_top_left.1,
         NUMBER_SLIDER_WIDTH,
         slider_height,
         theme.input_background,
         Some(theme.input_background),
     );
-
-    let slider_top_left = (x, y);
-    let slider_top_right = (x + NUMBER_SLIDER_WIDTH - 1, y);
 
     // Draw the slider model value.
 
@@ -271,19 +277,21 @@ fn draw_slider(
 
                 let max_width = NUMBER_SLIDER_WIDTH - NUMBER_SLIDER_LABEL_PADDING;
 
-                let input_text_x = (NUMBER_SLIDER_WIDTH as f32 / 2.0
-                    - model_value_texture.width as f32 / 2.0)
-                    as u32;
+                let input_text_x = slider_top_left.0
+                    + (NUMBER_SLIDER_WIDTH as f32 / 2.0 - model_value_texture.width as f32 / 2.0)
+                        as u32;
+
+                let input_text_y = slider_top_left.1 + 1;
 
                 Graphics::blit_text_from_mask(
                     &model_value_texture,
                     &TextOperation {
                         text,
                         x: input_text_x,
-                        y: slider_top_left.1 + 1,
+                        y: input_text_y,
                         color: theme.input_text,
                     },
-                    panel_buffer,
+                    parent_buffer,
                     Some(max_width),
                 );
             }
@@ -295,12 +303,17 @@ fn draw_slider(
 
     // Draw the number slider label.
 
+    let (label_x, label_y) = (
+        slider_top_right.0 + NUMBER_SLIDER_LABEL_PADDING,
+        slider_top_right.1,
+    );
+
     let op = TextOperation {
         text: &options.label,
-        x: slider_top_right.0 + NUMBER_SLIDER_LABEL_PADDING,
-        y: slider_top_right.1,
+        x: label_x,
+        y: label_y,
         color: text_color,
     };
 
-    Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)
+    Graphics::blit_text_from_mask(label_texture, &op, parent_buffer, None)
 }

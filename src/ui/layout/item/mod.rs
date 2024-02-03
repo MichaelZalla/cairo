@@ -24,7 +24,7 @@ pub struct ItemLayoutOptions {
 }
 
 impl ItemLayoutOptions {
-    pub fn get_top_left_within_parent(&self, parent: &PanelInfo, width: u32) -> (u32, u32) {
+    pub fn get_layout_offset(&self, parent: &PanelInfo, width: u32) -> (u32, u32) {
         let x = match self.horizontal_alignment {
             ItemLayoutHorizontalAlignment::Left => self.x_offset,
             ItemLayoutHorizontalAlignment::Center => {

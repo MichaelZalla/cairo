@@ -36,7 +36,7 @@ pub fn do_button(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
-    panel_buffer: &mut Buffer2D,
+    parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &ButtonOptions,
 ) -> DoButtonResult {
@@ -47,8 +47,8 @@ pub fn do_button(
         &options.label,
     );
 
-    let width: u32;
-    let height: u32;
+    let label_texture_width: u32;
+    let label_texture_height: u32;
 
     let text_cache_key = TextCacheKey {
         font_info: ctx.font_info.clone(),
@@ -60,18 +60,29 @@ pub fn do_button(
 
         let texture = text_cache.get(&text_cache_key).unwrap();
 
-        width = texture.width;
-        height = texture.height;
+        label_texture_width = texture.width;
+        label_texture_height = texture.height;
     }
 
-    let (x, y) = options
+    let (offset_x, offset_y) = options
         .layout_options
-        .get_top_left_within_parent(panel_info, width);
+        .get_layout_offset(panel_info, label_texture_width);
+
+    let item_width = label_texture_width;
+    let item_height = label_texture_height;
 
     // Check whether a mouse event occurred inside this button.
 
-    let (is_down, was_released) =
-        get_mouse_result(ctx, id, panel_info, mouse_state, x, y, width, height);
+    let (is_down, was_released) = get_mouse_result(
+        ctx,
+        id,
+        panel_info,
+        mouse_state,
+        offset_x,
+        offset_y,
+        item_width,
+        item_height,
+    );
 
     let result = DoButtonResult {
         is_down,
@@ -83,11 +94,11 @@ pub fn do_button(
     draw_button(
         ctx,
         id,
-        panel_buffer,
-        x,
-        y,
+        offset_x,
+        offset_y,
         &text_cache_key,
         options,
+        parent_buffer,
         &result,
     );
 
@@ -100,11 +111,11 @@ pub fn do_button(
 fn draw_button(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
+    offset_x: u32,
+    offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &ButtonOptions,
+    parent_buffer: &mut Buffer2D,
     result: &DoButtonResult,
 ) {
     let theme = ctx.get_theme();
@@ -115,9 +126,9 @@ fn draw_button(
 
     if options.with_border {
         Graphics::rectangle(
-            panel_buffer,
-            x,
-            y,
+            parent_buffer,
+            offset_x,
+            offset_y,
             texture.width,
             texture.height,
             theme.button_background,
@@ -138,11 +149,11 @@ fn draw_button(
     };
 
     let op = TextOperation {
-        x,
-        y,
+        x: offset_x,
+        y: offset_y,
         color: text_color,
         text: &options.label,
     };
 
-    Graphics::blit_text_from_mask(texture, &op, panel_buffer, None);
+    Graphics::blit_text_from_mask(texture, &op, parent_buffer, None);
 }

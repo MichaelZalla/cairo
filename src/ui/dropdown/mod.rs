@@ -42,7 +42,7 @@ pub fn do_dropdown(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
-    panel_buffer: &mut Buffer2D,
+    parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &DropdownOptions,
     mut model_entry: Entry<'_, String, String>,
@@ -54,8 +54,8 @@ pub fn do_dropdown(
         &options.label,
     );
 
-    let width: u32;
-    let height: u32;
+    let label_texture_width: u32;
+    let label_texture_height: u32;
 
     let text_cache_key = TextCacheKey {
         font_info: ctx.font_info.clone(),
@@ -67,20 +67,22 @@ pub fn do_dropdown(
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
-        width = label_texture.width;
-        height = label_texture.height;
+        label_texture_width = label_texture.width;
+        label_texture_height = label_texture.height;
     }
 
     // Check whether a mouse event occurred inside this dropdown.
 
     let is_open = ctx.is_focused(id) && ctx.is_focus_target_open();
 
-    let (x, y) = options
+    let (offset_x, offset_y) = options
         .layout_options
-        .get_top_left_within_parent(panel_info, DROPDOWN_WIDTH);
+        .get_layout_offset(panel_info, DROPDOWN_WIDTH);
 
-    let dropdown_height = if is_open {
-        height
+    let item_width = DROPDOWN_WIDTH + DROPDOWN_LABEL_PADDING + label_texture_width;
+
+    let item_height = if is_open {
+        label_texture_height
             * if is_open {
                 options.items.len() as u32
             } else {
@@ -92,7 +94,7 @@ pub fn do_dropdown(
                 0
             }
     } else {
-        height
+        label_texture_height
     };
 
     let (_is_down, was_released) = get_mouse_result(
@@ -100,10 +102,10 @@ pub fn do_dropdown(
         id,
         panel_info,
         mouse_state,
-        x,
-        y,
-        DROPDOWN_WIDTH + DROPDOWN_LABEL_PADDING + width,
-        dropdown_height,
+        offset_x,
+        offset_y,
+        item_width,
+        item_height,
     );
 
     if was_released {
@@ -139,22 +141,23 @@ pub fn do_dropdown(
                                     mouse_state.position.1 - panel_info.y as i32,
                                 );
 
-                                if mouse_x >= x as i32
-                                    && mouse_x < (x + DROPDOWN_WIDTH) as i32
-                                    && mouse_y > y as i32
-                                    && mouse_y < (y + dropdown_height) as i32
+                                if mouse_x >= offset_x as i32
+                                    && mouse_x < (offset_x + DROPDOWN_WIDTH) as i32
+                                    && mouse_y > offset_y as i32
+                                    && mouse_y < (offset_y + item_height) as i32
                                 {
                                     let relative_mouse_y =
                                         mouse_state.position.1 as u32 - panel_info.y;
 
                                     let mut target_item_index: i32 = -1;
 
-                                    let mut current_y = y;
+                                    let mut current_y = offset_y;
 
                                     while current_y < relative_mouse_y {
                                         target_item_index += 1;
 
-                                        current_y += height + DROPDOWN_ITEM_VERTICAL_PADDING;
+                                        current_y +=
+                                            label_texture_height + DROPDOWN_ITEM_VERTICAL_PADDING;
                                     }
 
                                     let target_item = &options.items[target_item_index as usize];
@@ -187,14 +190,14 @@ pub fn do_dropdown(
     draw_dropdown(
         ctx,
         id,
-        panel_buffer,
-        x,
-        y,
+        offset_x,
+        offset_y,
         &text_cache_key,
         is_open,
-        dropdown_height,
+        item_height,
         options,
         current_item,
+        parent_buffer,
     );
 
     result
@@ -203,15 +206,14 @@ pub fn do_dropdown(
 fn draw_dropdown(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
+    offset_x: u32,
+    offset_y: u32,
     text_cache_key: &TextCacheKey,
     is_open: bool,
-    height: u32,
+    item_height: u32,
     options: &DropdownOptions,
     current_item: String,
-    // label_texture: &Buffer2D<u8>,
+    parent_buffer: &mut Buffer2D,
 ) {
     let theme = ctx.get_theme();
 
@@ -229,12 +231,14 @@ fn draw_dropdown(
 
     // Draw the dropdown borders.
 
+    let (dropdown_x, dropdown_y) = (offset_x, offset_y);
+
     Graphics::rectangle(
-        panel_buffer,
-        x,
-        y,
+        parent_buffer,
+        dropdown_x,
+        dropdown_y,
         DROPDOWN_WIDTH,
-        height,
+        item_height,
         theme.dropdown_background,
         Some(theme.dropdown_background),
     );
@@ -246,14 +250,14 @@ fn draw_dropdown(
     static CARAT_HEIGHT: f32 = CARAT_WIDTH / 2.0;
 
     let carat_top_left = Vec2 {
-        x: (x + DROPDOWN_WIDTH - 1) as f32 - CARAT_MARGIN_RIGHT - CARAT_WIDTH,
-        y: (y + (height / 2)) as f32 - CARAT_HEIGHT / 2.0,
+        x: (dropdown_x + DROPDOWN_WIDTH - 1) as f32 - CARAT_MARGIN_RIGHT - CARAT_WIDTH,
+        y: (dropdown_y + (item_height / 2)) as f32 - CARAT_HEIGHT / 2.0,
         z: 0.0,
     };
 
     let carat_top_right = Vec2 {
-        x: (x + DROPDOWN_WIDTH - 1) as f32 - CARAT_MARGIN_RIGHT,
-        y: (y + (height / 2)) as f32 - CARAT_HEIGHT / 2.0,
+        x: (dropdown_x + DROPDOWN_WIDTH - 1) as f32 - CARAT_MARGIN_RIGHT,
+        y: (dropdown_y + (item_height / 2)) as f32 - CARAT_HEIGHT / 2.0,
         z: 0.0,
     };
 
@@ -263,11 +267,11 @@ fn draw_dropdown(
     let carat_points = [carat_top_left, carat_bottom_mid, carat_top_right];
 
     if !is_open {
-        Graphics::poly_line(panel_buffer, &carat_points, theme.text);
+        Graphics::poly_line(parent_buffer, &carat_points, theme.text);
     }
 
-    let dropdown_top_left = (x, y);
-    let dropdown_top_right = (x + DROPDOWN_WIDTH - 1, y);
+    let dropdown_top_left = (dropdown_x, dropdown_y);
+    let dropdown_top_right = (dropdown_x + DROPDOWN_WIDTH - 1, dropdown_y);
 
     // Draw the dropdown model value (text), or the open menu items.
 
@@ -306,7 +310,7 @@ fn draw_dropdown(
                     label_color
                 },
             },
-            panel_buffer,
+            parent_buffer,
             Some(max_width),
         );
 
@@ -322,5 +326,5 @@ fn draw_dropdown(
         color: label_color,
     };
 
-    Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)
+    Graphics::blit_text_from_mask(label_texture, &op, parent_buffer, None)
 }

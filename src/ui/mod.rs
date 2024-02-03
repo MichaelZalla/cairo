@@ -25,10 +25,10 @@ pub fn get_mouse_result(
     id: UIID,
     panel_info: &PanelInfo,
     mouse_state: &MouseState,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
+    item_local_x: u32,
+    item_local_y: u32,
+    item_width: u32,
+    item_height: u32,
 ) -> (bool, bool) {
     let mut is_down: bool = false;
     let mut was_released: bool = false;
@@ -40,10 +40,10 @@ pub fn get_mouse_result(
     mouse_x -= panel_info.x as i32;
     mouse_y -= panel_info.y as i32;
 
-    let mouse_in_bounds = mouse_x >= x as i32
-        && mouse_x < (x + width) as i32
-        && mouse_y >= y as i32
-        && mouse_y < (y + height) as i32;
+    let mouse_in_bounds = mouse_x >= item_local_x as i32
+        && mouse_x < (item_local_x + item_width) as i32
+        && mouse_y >= item_local_y as i32
+        && mouse_y < (item_local_y + item_height) as i32;
 
     match (ctx.get_hover_target(), mouse_in_bounds) {
         (Some(target_id), true) => {

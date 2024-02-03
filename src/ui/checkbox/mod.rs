@@ -38,7 +38,7 @@ pub fn do_checkbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
     panel_info: &PanelInfo,
-    panel_buffer: &mut Buffer2D,
+    parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &CheckboxOptions,
     model_entry: Entry<'_, String, bool>,
@@ -50,8 +50,8 @@ pub fn do_checkbox(
         &options.label,
     );
 
-    let width: u32;
-    let height: u32;
+    let label_texture_width: u32;
+    let label_texture_height: u32;
 
     let text_cache_key = TextCacheKey {
         font_info: ctx.font_info.clone(),
@@ -63,29 +63,32 @@ pub fn do_checkbox(
 
         let texture = text_cache.get(&text_cache_key).unwrap();
 
-        width = texture.width;
-        height = texture.height;
+        label_texture_width = texture.width;
+        label_texture_height = texture.height;
     }
 
     // Check whether a mouse event occurred inside this checkbox.
 
-    let checkbox_size = height;
+    let checkbox_size = label_texture_height;
 
-    let (x, y) = options
+    let (offset_x, offset_y) = options
         .layout_options
-        .get_top_left_within_parent(panel_info, checkbox_size);
+        .get_layout_offset(panel_info, checkbox_size);
 
-    let checkbox_size = height;
+    let checkbox_size = label_texture_height;
+
+    let item_width = checkbox_size + CHECKBOX_LABEL_PADDING + label_texture_width;
+    let item_height = label_texture_height;
 
     let (is_down, was_released) = get_mouse_result(
         ctx,
         id,
         panel_info,
         mouse_state,
-        x,
-        y,
-        checkbox_size + CHECKBOX_LABEL_PADDING + width,
-        height,
+        offset_x,
+        offset_y,
+        item_width,
+        item_height,
     );
 
     // Updates the state of our checkbox model, if needed.
@@ -116,11 +119,11 @@ pub fn do_checkbox(
     draw_checkbox(
         ctx,
         id,
-        panel_buffer,
-        x,
-        y,
+        offset_x,
+        offset_y,
         &text_cache_key,
         options,
+        parent_buffer,
         &result,
     );
 
@@ -130,12 +133,11 @@ pub fn do_checkbox(
 fn draw_checkbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_buffer: &mut Buffer2D,
-    x: u32,
-    y: u32,
-    // texture: &Buffer2D<u8>,
+    offset_x: u32,
+    offset_y: u32,
     text_cache_key: &TextCacheKey,
     options: &CheckboxOptions,
+    parent_buffer: &mut Buffer2D,
     result: &DoCheckboxResult,
 ) {
     let text_cache = ctx.text_cache.read().unwrap();
@@ -158,26 +160,31 @@ fn draw_checkbox(
 
     // Draw the checkbox borders.
 
+    let (checkbox_x, checkbox_y) = (offset_x, offset_y);
+
     Graphics::rectangle(
-        panel_buffer,
-        x,
-        y,
+        parent_buffer,
+        checkbox_x,
+        checkbox_y,
         checkbox_size,
         checkbox_size,
         theme.checkbox_background,
         Some(theme.checkbox_background),
     );
 
-    let checkbox_top_left = (x, y);
-    let checkbox_top_right = (x + checkbox_size - 1, y);
-    let checkbox_bottom_left = (x, y + checkbox_size - 1);
-    let checkbox_bottom_right = (x + checkbox_size - 1, y + checkbox_size - 1);
+    let checkbox_top_left = (checkbox_x, checkbox_y);
+    let checkbox_top_right = (checkbox_x + checkbox_size - 1, checkbox_y);
+    let checkbox_bottom_left = (checkbox_x, checkbox_y + checkbox_size - 1);
+    let checkbox_bottom_right = (
+        checkbox_x + checkbox_size - 1,
+        checkbox_y + checkbox_size - 1,
+    );
 
     // Draw the checkbox check, if needed.
 
     if result.is_checked {
         Graphics::line(
-            panel_buffer,
+            parent_buffer,
             checkbox_top_left.0 as i32,
             checkbox_top_left.1 as i32,
             checkbox_bottom_right.0 as i32,
@@ -185,7 +192,7 @@ fn draw_checkbox(
             theme.text,
         );
         Graphics::line(
-            panel_buffer,
+            parent_buffer,
             checkbox_top_right.0 as i32,
             checkbox_top_right.1 as i32,
             checkbox_bottom_left.0 as i32,
@@ -203,5 +210,5 @@ fn draw_checkbox(
         color: label_color,
     };
 
-    Graphics::blit_text_from_mask(texture, &op, panel_buffer, None)
+    Graphics::blit_text_from_mask(texture, &op, parent_buffer, None)
 }
