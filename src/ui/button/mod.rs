@@ -99,27 +99,29 @@ fn draw_button(
 ) {
     let theme = ctx.get_theme();
 
-    let border_color = if ctx.is_focused(id) {
-        theme.border_focus
-    } else if result.is_down {
-        theme.border_pressed
-    } else if ctx.is_hovered(id) {
-        theme.border_hover
-    } else {
-        theme.border
-    };
+    if options.with_border {
+        Graphics::rectangle(
+            panel_buffer,
+            x,
+            y,
+            texture.width,
+            texture.height,
+            theme.button_background,
+            Some(theme.button_background),
+        )
+    }
 
-    let text_color = if ctx.is_focused(id) {
-        theme.text_focus
-    } else if result.is_down {
+    // Draw the button's text label.
+
+    let text_color = if result.is_down {
         theme.text_pressed
+    } else if ctx.is_focused(id) {
+        theme.text_focus
     } else if ctx.is_hovered(id) {
         theme.text_hover
     } else {
         theme.text
     };
-
-    // Draw the button's text label.
 
     let op = TextOperation {
         x,
@@ -129,18 +131,4 @@ fn draw_button(
     };
 
     Graphics::blit_text_from_mask(texture, &op, panel_buffer, None);
-
-    // Draw the button's border.
-
-    if options.with_border {
-        Graphics::rectangle(
-            panel_buffer,
-            x,
-            y,
-            texture.width,
-            texture.height,
-            border_color,
-            None,
-        )
-    }
 }

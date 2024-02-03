@@ -126,20 +126,10 @@ fn draw_checkbox(
 
     let theme = ctx.get_theme();
 
-    let border_color = if ctx.is_focused(id) {
-        theme.border_focus
-    } else if result.is_down {
-        theme.border_pressed
-    } else if ctx.is_hovered(id) {
-        theme.border_hover
-    } else {
-        theme.border
-    };
-
-    let text_color = if ctx.is_focused(id) {
-        theme.text_focus
-    } else if result.is_down {
+    let label_color = if result.is_down {
         theme.text_pressed
+    } else if ctx.is_focused(id) {
+        theme.text_focus
     } else if ctx.is_hovered(id) {
         theme.text_hover
     } else {
@@ -154,8 +144,8 @@ fn draw_checkbox(
         y,
         checkbox_size,
         checkbox_size,
-        border_color,
-        None,
+        theme.checkbox_background,
+        Some(theme.checkbox_background),
     );
 
     let checkbox_top_left = (x, y);
@@ -172,7 +162,7 @@ fn draw_checkbox(
             checkbox_top_left.1 as i32,
             checkbox_bottom_right.0 as i32,
             checkbox_bottom_right.1 as i32,
-            border_color,
+            theme.text,
         );
         Graphics::line(
             panel_buffer,
@@ -180,7 +170,7 @@ fn draw_checkbox(
             checkbox_top_right.1 as i32,
             checkbox_bottom_left.0 as i32,
             checkbox_bottom_left.1 as i32,
-            border_color,
+            theme.text,
         );
     }
 
@@ -190,7 +180,7 @@ fn draw_checkbox(
         text: &options.label,
         x: checkbox_top_right.0 + CHECKBOX_LABEL_PADDING,
         y: checkbox_top_right.1,
-        color: text_color,
+        color: label_color,
     };
 
     Graphics::blit_text_from_mask(texture, &op, panel_buffer, None)

@@ -176,15 +176,7 @@ fn draw_textbox(
 
     let theme = ctx.get_theme();
 
-    let border_color = if ctx.is_focused(id) {
-        theme.border_focus
-    } else if ctx.is_hovered(id) {
-        theme.border_hover
-    } else {
-        theme.border
-    };
-
-    let text_color = if ctx.is_focused(id) {
+    let label_color = if ctx.is_focused(id) {
         theme.text_focus
     } else if ctx.is_hovered(id) {
         theme.text_hover
@@ -200,8 +192,8 @@ fn draw_textbox(
         y,
         TEXTBOX_WIDTH,
         textbox_height,
-        border_color,
-        None,
+        theme.input_background,
+        Some(theme.input_background),
     );
 
     let textbox_top_left = (x, y);
@@ -241,7 +233,7 @@ fn draw_textbox(
                         text,
                         x: input_text_x,
                         y: textbox_top_left.1 + 1,
-                        color: text_color,
+                        color: theme.input_text,
                     },
                     panel_buffer,
                     Some(max_width),
@@ -263,7 +255,7 @@ fn draw_textbox(
                         textbox_top_right.1 + 2,
                         2,
                         textbox_height - 2 - 2,
-                        text_color,
+                        theme.input_cursor,
                         None,
                     );
                 }
@@ -280,7 +272,7 @@ fn draw_textbox(
         text: &options.label,
         x: textbox_top_right.0 + TEXTBOX_LABEL_PADDING,
         y: textbox_top_right.1,
-        color: text_color,
+        color: label_color,
     };
 
     Graphics::blit_text_from_mask(label_texture, &op, panel_buffer, None)

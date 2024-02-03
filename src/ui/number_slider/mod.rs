@@ -171,14 +171,6 @@ fn draw_slider(
 
     let theme = ctx.get_theme();
 
-    let border_color = if ctx.is_focused(id) {
-        theme.border_focus
-    } else if ctx.is_hovered(id) {
-        theme.border_hover
-    } else {
-        theme.border
-    };
-
     let text_color = if ctx.is_focused(id) {
         theme.text_focus
     } else if ctx.is_hovered(id) {
@@ -195,8 +187,8 @@ fn draw_slider(
         y,
         NUMBER_SLIDER_WIDTH,
         slider_height,
-        border_color,
-        None,
+        theme.input_background,
+        Some(theme.input_background),
     );
 
     let slider_top_left = (x, y);
@@ -234,7 +226,7 @@ fn draw_slider(
                         text,
                         x: input_text_x,
                         y: slider_top_left.1 + 1,
-                        color: text_color,
+                        color: theme.input_text,
                     },
                     panel_buffer,
                     Some(max_width),
