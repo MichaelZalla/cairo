@@ -7,19 +7,19 @@ use crate::{
     app::App,
     buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
-    graphics::text::TextOperation,
     graphics::Graphics,
     ui::{
         button::{do_button, ButtonOptions},
         context::UIID,
-        layout::{
-            item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions},
-            UILayoutContext, UILayoutDirection, UILayoutExtent,
-        },
+        layout::{item::ItemLayoutOptions, UILayoutContext, UILayoutDirection, UILayoutExtent},
     },
 };
 
-use super::context::UIContext;
+use super::{
+    context::UIContext,
+    layout::UILayoutOptions,
+    text::{do_text, TextOptions},
+};
 
 pub static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
 
@@ -392,58 +392,63 @@ where
             Some(theme.panel_titlebar_background),
         );
 
-        let spacing = PANEL_TITLE_BAR_HEIGHT / 2 - ctx.font_info.point_size as u32 / 2;
-
-        Graphics::text(
-            &mut self.buffer,
-            ctx.font_cache,
-            Some(ctx.text_cache),
-            ctx.font_info,
-            &TextOperation {
-                text: &format!("Panel {}", self.info.id),
-                x: spacing,
-                y: spacing,
-                color: theme.text,
+        let mut panel_titlebar_layout = UILayoutContext::new(
+            UILayoutDirection::LeftToRight,
+            UILayoutExtent {
+                left: 0,
+                right: self.info.width,
+                top: 0,
+                bottom: self.info.height,
             },
-        )?;
+            UILayoutOptions { padding: 8, gap: 8 },
+        );
+
+        let panel_titlebar_title_text_options = TextOptions {
+            layout_options: ItemLayoutOptions {
+                ..Default::default()
+            },
+            text: format!("Panel {}", self.info.id),
+            cache: true,
+            color: theme.text,
+        };
+
+        // Render the panel's title in its bar title.
+
+        do_text(
+            ctx,
+            UIID {
+                parent: self.info.id,
+                item: 0,
+                index: 0,
+            },
+            &mut panel_titlebar_layout,
+            &mut self.buffer,
+            &panel_titlebar_title_text_options,
+        );
 
         if !self.is_root() {
             static CLOSE_BUTTON_SIZE: u32 = 14;
-            static CLOSE_BUTTON_OFFSET: u32 = (PANEL_TITLE_BAR_HEIGHT - CLOSE_BUTTON_SIZE) / 2;
 
-            let button_options = ButtonOptions {
+            let panel_titlebar_close_button_options = ButtonOptions {
                 layout_options: ItemLayoutOptions {
-                    x_offset: CLOSE_BUTTON_OFFSET,
-                    y_offset: CLOSE_BUTTON_OFFSET,
-                    horizontal_alignment: ItemLayoutHorizontalAlignment::Right,
+                    x_offset: panel_titlebar_layout.width() - 100,
                     ..Default::default()
                 },
                 label: "Close".to_string(),
                 ..Default::default()
             };
 
-            let mut layout = UILayoutContext::new(
-                UILayoutDirection::LeftToRight,
-                UILayoutExtent {
-                    left: 0,
-                    right: self.info.width,
-                    top: 0,
-                    bottom: self.info.height,
-                },
-                Default::default(),
-            );
-
             if do_button(
                 ctx,
                 UIID {
                     parent: self.info.id,
-                    item: 0,
+                    item: 1,
                     index: 0,
                 },
-                &mut layout,
+                &mut panel_titlebar_layout,
                 &mut self.buffer,
                 mouse_state,
-                &button_options,
+                &panel_titlebar_close_button_options,
             )
             .was_released
             {
