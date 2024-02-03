@@ -61,7 +61,7 @@ impl Graphics {
             let min_y = min(y1, y2);
             let max_y = max(y1, y2);
 
-            for y in min_y..max_y {
+            for y in min_y..max_y + 1 {
                 buffer.set(x1 as u32, y as u32, color_u32);
             }
         } else if y2 == y1 {
@@ -72,7 +72,7 @@ impl Graphics {
             let min_x = min(x1, x2);
             let max_x = max(x1, x2);
 
-            for x in min_x..max_x {
+            for x in min_x..max_x + 1 {
                 buffer.set(x as u32, y1 as u32, color_u32);
             }
         } else {
@@ -93,7 +93,7 @@ impl Graphics {
                 }
 
                 // Vertical-ish line
-                for y in y1..y2 {
+                for y in y1..y2 + 1 {
                     buffer.set(((y as f32 - b) / m) as u32, y as u32, color_u32);
                 }
             } else {
@@ -104,7 +104,7 @@ impl Graphics {
                 }
 
                 // Horizontal-ish line
-                for x in x1..x2 {
+                for x in x1..x2 + 1 {
                     buffer.set(x as u32, (m * x as f32 + b) as u32, color_u32);
                 }
             }
