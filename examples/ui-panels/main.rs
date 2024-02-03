@@ -90,10 +90,6 @@ fn main() -> Result<(), String> {
          -> Result<(), String> {
             let mut ctx: RwLockWriteGuard<'_, UIContext> = ui_context.write().unwrap();
 
-            // Clear the panel buffer for drawing.
-
-            panel_buffer.clear(None);
-
             // Draw a bordered button.
 
             let button_options = ButtonOptions {

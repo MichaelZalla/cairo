@@ -221,6 +221,8 @@ where
             _ => {
                 // Merged panel scenario
 
+                self.buffer.clear(None);
+
                 // Renders a border around the panel's boundaries.
                 self.draw_panel_frame();
 
