@@ -17,8 +17,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::item::ItemLayoutOptions,
-    panel::PanelInfo,
+    layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
 static NUMBER_SLIDER_WIDTH: u32 = 200;
@@ -41,7 +40,7 @@ pub struct DoNumberSliderResult {
 pub fn do_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_info: &PanelInfo,
+    layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &NumberSliderOptions,
@@ -75,7 +74,7 @@ pub fn do_slider(
 
     let (offset_x, offset_y) = options
         .layout_options
-        .get_layout_offset(panel_info, NUMBER_SLIDER_WIDTH);
+        .get_layout_offset(layout, NUMBER_SLIDER_WIDTH);
 
     let item_width = NUMBER_SLIDER_WIDTH + NUMBER_SLIDER_LABEL_PADDING + label_texture_width;
     let item_height = label_texture_height;
@@ -83,7 +82,7 @@ pub fn do_slider(
     let (_is_down, _was_released) = get_mouse_result(
         ctx,
         id,
-        panel_info,
+        layout,
         mouse_state,
         offset_x,
         offset_y,
@@ -200,6 +199,7 @@ pub fn do_slider(
     draw_slider(
         ctx,
         id,
+        layout,
         offset_x,
         offset_y,
         &text_cache_key,
@@ -208,12 +208,15 @@ pub fn do_slider(
         parent_buffer,
     );
 
+    layout.advance_cursor(item_width, item_height);
+
     result
 }
 
 fn draw_slider(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
+    layout: &UILayoutContext,
     offset_x: u32,
     offset_y: u32,
     text_cache_key: &TextCacheKey,
@@ -221,6 +224,8 @@ fn draw_slider(
     model: &mut Entry<'_, String, String>,
     parent_buffer: &mut Buffer2D,
 ) {
+    let cursor = layout.get_cursor();
+
     let text_cache = ctx.text_cache.read().unwrap();
 
     let label_texture = text_cache.get(&text_cache_key).unwrap();
@@ -239,7 +244,7 @@ fn draw_slider(
 
     // Draw the slider borders.
 
-    let slider_top_left = (offset_x, offset_y);
+    let slider_top_left = (cursor.x + offset_x, cursor.y + offset_y);
     let slider_top_right = (
         slider_top_left.0 + NUMBER_SLIDER_WIDTH - 1,
         slider_top_left.1,

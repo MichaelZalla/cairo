@@ -6,7 +6,7 @@ use crate::device::{MouseEventKind, MouseState};
 
 use self::{
     context::{UIContext, UIID},
-    panel::PanelInfo,
+    layout::UILayoutContext,
 };
 
 pub mod button;
@@ -23,27 +23,33 @@ pub mod theme;
 pub fn get_mouse_result(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_info: &PanelInfo,
+    layout: &UILayoutContext,
     mouse_state: &MouseState,
-    item_local_x: u32,
-    item_local_y: u32,
+    layout_offset_x: u32,
+    layout_offset_y: u32,
     item_width: u32,
     item_height: u32,
 ) -> (bool, bool) {
     let mut is_down: bool = false;
     let mut was_released: bool = false;
 
-    let (mut mouse_x, mut mouse_y) = (mouse_state.position.0, mouse_state.position.1);
-
     // Maps mouse_x and mouse_y into panel's local coordinates.
 
-    mouse_x -= panel_info.x as i32;
-    mouse_y -= panel_info.y as i32;
+    let local_mouse_x = mouse_state.position.0;
+    let local_mouse_y = mouse_state.position.1;
 
-    let mouse_in_bounds = mouse_x >= item_local_x as i32
-        && mouse_x < (item_local_x + item_width) as i32
-        && mouse_y >= item_local_y as i32
-        && mouse_y < (item_local_y + item_height) as i32;
+    let cursor = layout.get_cursor();
+
+    let item_top_left = (cursor.x + layout_offset_x, cursor.y + layout_offset_y);
+    let item_bottom_right = (
+        item_top_left.0 + item_width - 1,
+        item_top_left.1 + item_height - 1,
+    );
+
+    let mouse_in_bounds = local_mouse_x >= item_top_left.0 as i32
+        && local_mouse_x <= item_bottom_right.0 as i32
+        && local_mouse_y >= item_top_left.1 as i32
+        && local_mouse_y <= item_bottom_right.1 as i32;
 
     match (ctx.get_hover_target(), mouse_in_bounds) {
         (Some(target_id), true) => {

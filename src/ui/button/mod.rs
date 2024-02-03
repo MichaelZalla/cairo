@@ -15,8 +15,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::item::ItemLayoutOptions,
-    panel::PanelInfo,
+    layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
 #[derive(Default, Debug)]
@@ -35,7 +34,7 @@ pub struct DoButtonResult {
 pub fn do_button(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_info: &PanelInfo,
+    layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &ButtonOptions,
@@ -66,7 +65,7 @@ pub fn do_button(
 
     let (offset_x, offset_y) = options
         .layout_options
-        .get_layout_offset(panel_info, label_texture_width);
+        .get_layout_offset(layout, label_texture_width);
 
     let item_width = label_texture_width;
     let item_height = label_texture_height;
@@ -76,7 +75,7 @@ pub fn do_button(
     let (is_down, was_released) = get_mouse_result(
         ctx,
         id,
-        panel_info,
+        layout,
         mouse_state,
         offset_x,
         offset_y,
@@ -94,6 +93,7 @@ pub fn do_button(
     draw_button(
         ctx,
         id,
+        layout,
         offset_x,
         offset_y,
         &text_cache_key,
@@ -101,6 +101,8 @@ pub fn do_button(
         parent_buffer,
         &result,
     );
+
+    layout.advance_cursor(offset_x + item_width, offset_y + item_height);
 
     DoButtonResult {
         is_down,
@@ -111,6 +113,7 @@ pub fn do_button(
 fn draw_button(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
+    layout: &UILayoutContext,
     offset_x: u32,
     offset_y: u32,
     text_cache_key: &TextCacheKey,
@@ -120,6 +123,8 @@ fn draw_button(
 ) {
     let theme = ctx.get_theme();
 
+    let cursor = layout.get_cursor();
+
     let text_cache = ctx.text_cache.read().unwrap();
 
     let texture = text_cache.get(&text_cache_key).unwrap();
@@ -127,8 +132,8 @@ fn draw_button(
     if options.with_border {
         Graphics::rectangle(
             parent_buffer,
-            offset_x,
-            offset_y,
+            cursor.x + offset_x,
+            cursor.y + offset_y,
             texture.width,
             texture.height,
             theme.button_background,
@@ -149,8 +154,8 @@ fn draw_button(
     };
 
     let op = TextOperation {
-        x: offset_x,
-        y: offset_y,
+        x: cursor.x + offset_x,
+        y: cursor.y + offset_y,
         color: text_color,
         text: &options.label,
     };

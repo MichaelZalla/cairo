@@ -1,4 +1,4 @@
-use crate::ui::panel::PanelInfo;
+use super::UILayoutContext;
 
 #[derive(Default, Copy, Clone, Debug)]
 pub enum ItemLayoutHorizontalAlignment {
@@ -24,14 +24,18 @@ pub struct ItemLayoutOptions {
 }
 
 impl ItemLayoutOptions {
-    pub fn get_layout_offset(&self, parent: &PanelInfo, width: u32) -> (u32, u32) {
+    pub fn get_layout_offset(&self, layout: &UILayoutContext, item_width: u32) -> (u32, u32) {
+        let remaining_layout_width = layout.width() - layout.get_cursor().x;
+
         let x = match self.horizontal_alignment {
             ItemLayoutHorizontalAlignment::Left => self.x_offset,
             ItemLayoutHorizontalAlignment::Center => {
-                ((parent.width as f32 / 2.0 - width as f32 / 2.0) - (self.x_offset as f32 / 2.0))
-                    as u32
+                ((remaining_layout_width as f32 / 2.0 - item_width as f32 / 2.0)
+                    - (self.x_offset as f32 / 2.0)) as u32
             }
-            ItemLayoutHorizontalAlignment::Right => parent.width - width - self.x_offset,
+            ItemLayoutHorizontalAlignment::Right => {
+                remaining_layout_width - item_width - self.x_offset
+            }
         };
 
         let y = self.y_offset;

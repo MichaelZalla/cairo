@@ -17,8 +17,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::item::ItemLayoutOptions,
-    panel::PanelInfo,
+    layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
 static DROPDOWN_WIDTH: u32 = 200;
@@ -41,7 +40,7 @@ pub struct DoDropdownResult {
 pub fn do_dropdown(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_info: &PanelInfo,
+    layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &DropdownOptions,
@@ -77,7 +76,7 @@ pub fn do_dropdown(
 
     let (offset_x, offset_y) = options
         .layout_options
-        .get_layout_offset(panel_info, DROPDOWN_WIDTH);
+        .get_layout_offset(layout, DROPDOWN_WIDTH);
 
     let item_width = DROPDOWN_WIDTH + DROPDOWN_LABEL_PADDING + label_texture_width;
 
@@ -100,7 +99,7 @@ pub fn do_dropdown(
     let (_is_down, was_released) = get_mouse_result(
         ctx,
         id,
-        panel_info,
+        layout,
         mouse_state,
         offset_x,
         offset_y,
@@ -136,9 +135,11 @@ pub fn do_dropdown(
                     Some(event) => {
                         match event.kind {
                             MouseEventKind::Down => {
+                                let cursor = layout.get_cursor();
+
                                 let (mouse_x, mouse_y) = (
-                                    mouse_state.position.0 - panel_info.x as i32,
-                                    mouse_state.position.1 - panel_info.y as i32,
+                                    mouse_state.position.0 - cursor.x as i32,
+                                    mouse_state.position.1 - cursor.y as i32,
                                 );
 
                                 if mouse_x >= offset_x as i32
@@ -146,8 +147,7 @@ pub fn do_dropdown(
                                     && mouse_y > offset_y as i32
                                     && mouse_y < (offset_y + item_height) as i32
                                 {
-                                    let relative_mouse_y =
-                                        mouse_state.position.1 as u32 - panel_info.y;
+                                    let relative_mouse_y = mouse_state.position.1 as u32 - cursor.y;
 
                                     let mut target_item_index: i32 = -1;
 
@@ -190,6 +190,7 @@ pub fn do_dropdown(
     draw_dropdown(
         ctx,
         id,
+        layout,
         offset_x,
         offset_y,
         &text_cache_key,
@@ -200,12 +201,15 @@ pub fn do_dropdown(
         parent_buffer,
     );
 
+    layout.advance_cursor(item_width, item_height);
+
     result
 }
 
 fn draw_dropdown(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
+    layout: &UILayoutContext,
     offset_x: u32,
     offset_y: u32,
     text_cache_key: &TextCacheKey,
@@ -216,6 +220,8 @@ fn draw_dropdown(
     parent_buffer: &mut Buffer2D,
 ) {
     let theme = ctx.get_theme();
+
+    let cursor = layout.get_cursor();
 
     let text_cache = ctx.text_cache.read().unwrap();
 
@@ -231,7 +237,7 @@ fn draw_dropdown(
 
     // Draw the dropdown borders.
 
-    let (dropdown_x, dropdown_y) = (offset_x, offset_y);
+    let (dropdown_x, dropdown_y) = (cursor.x + offset_x, cursor.y + offset_y);
 
     Graphics::rectangle(
         parent_buffer,

@@ -15,8 +15,7 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::item::ItemLayoutOptions,
-    panel::PanelInfo,
+    layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
 static CHECKBOX_LABEL_PADDING: u32 = 8;
@@ -37,7 +36,7 @@ pub struct DoCheckboxResult {
 pub fn do_checkbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_info: &PanelInfo,
+    layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &CheckboxOptions,
@@ -73,7 +72,7 @@ pub fn do_checkbox(
 
     let (offset_x, offset_y) = options
         .layout_options
-        .get_layout_offset(panel_info, checkbox_size);
+        .get_layout_offset(layout, checkbox_size);
 
     let checkbox_size = label_texture_height;
 
@@ -83,7 +82,7 @@ pub fn do_checkbox(
     let (is_down, was_released) = get_mouse_result(
         ctx,
         id,
-        panel_info,
+        layout,
         mouse_state,
         offset_x,
         offset_y,
@@ -119,6 +118,7 @@ pub fn do_checkbox(
     draw_checkbox(
         ctx,
         id,
+        layout,
         offset_x,
         offset_y,
         &text_cache_key,
@@ -127,12 +127,15 @@ pub fn do_checkbox(
         &result,
     );
 
+    layout.advance_cursor(offset_x + item_width, offset_y + item_height);
+
     result
 }
 
 fn draw_checkbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
+    layout: &UILayoutContext,
     offset_x: u32,
     offset_y: u32,
     text_cache_key: &TextCacheKey,
@@ -158,9 +161,11 @@ fn draw_checkbox(
         theme.text
     };
 
+    let cursor = layout.get_cursor();
+
     // Draw the checkbox borders.
 
-    let (checkbox_x, checkbox_y) = (offset_x, offset_y);
+    let (checkbox_x, checkbox_y) = (cursor.x + offset_x, cursor.y + offset_y);
 
     Graphics::rectangle(
         parent_buffer,

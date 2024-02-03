@@ -17,8 +17,10 @@ use crate::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::item::{ItemLayoutOptions, ItemTextAlignment},
-    panel::PanelInfo,
+    layout::{
+        item::{ItemLayoutOptions, ItemTextAlignment},
+        UILayoutContext,
+    },
 };
 
 static TEXTBOX_WIDTH: u32 = 200;
@@ -41,7 +43,7 @@ pub struct DoTextboxResult {
 pub fn do_textbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
-    panel_info: &PanelInfo,
+    layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     uptime_seconds: f32,
     keyboard_state: &KeyboardState,
@@ -77,7 +79,7 @@ pub fn do_textbox(
 
     let (offset_x, offset_y) = options
         .layout_options
-        .get_layout_offset(panel_info, TEXTBOX_WIDTH);
+        .get_layout_offset(layout, TEXTBOX_WIDTH);
 
     let item_width = TEXTBOX_WIDTH + TEXTBOX_LABEL_PADDING + label_texture_width;
     let item_height = label_texture_height;
@@ -85,7 +87,7 @@ pub fn do_textbox(
     let (_is_down, _was_released) = get_mouse_result(
         ctx,
         id,
-        panel_info,
+        layout,
         mouse_state,
         offset_x,
         offset_y,
@@ -153,6 +155,7 @@ pub fn do_textbox(
     draw_textbox(
         ctx,
         id,
+        layout,
         offset_x,
         offset_y,
         &text_cache_key,
@@ -162,12 +165,15 @@ pub fn do_textbox(
         parent_buffer,
     );
 
+    layout.advance_cursor(item_width, item_height);
+
     result
 }
 
 fn draw_textbox(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     id: UIID,
+    layout: &UILayoutContext,
     offset_x: u32,
     offset_y: u32,
     text_cache_key: &TextCacheKey,
@@ -176,6 +182,8 @@ fn draw_textbox(
     uptime_second: f32,
     parent_buffer: &mut Buffer2D,
 ) {
+    let cursor = layout.get_cursor();
+
     let text_cache = ctx.text_cache.read().unwrap();
 
     let label_texture = text_cache.get(&text_cache_key).unwrap();
@@ -194,7 +202,7 @@ fn draw_textbox(
 
     // Draw the textbox borders.
 
-    let (textbox_x, textbox_y) = (offset_x, offset_y);
+    let (textbox_x, textbox_y) = (cursor.x + offset_x, cursor.y + offset_y);
 
     Graphics::rectangle(
         parent_buffer,

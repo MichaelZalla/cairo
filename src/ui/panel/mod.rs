@@ -12,7 +12,10 @@ use crate::{
     ui::{
         button::{do_button, ButtonOptions},
         context::UIID,
-        layout::item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions},
+        layout::{
+            item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions},
+            UILayoutContext, UILayoutDirection, UILayoutExtent,
+        },
     },
 };
 
@@ -178,11 +181,30 @@ where
                 // Split panel scenario
 
                 // 1. Render left panel to left panel pixel buffer
-                left.render(app, keyboard_state, mouse_state, ui_context)?;
+                let left_mouse_state = MouseState {
+                    position: (
+                        mouse_state.position.0 - left.info.x as i32,
+                        mouse_state.position.1 - left.info.y as i32,
+                    ),
+                    buttons_down: mouse_state.buttons_down.clone(),
+                    ..*mouse_state
+                };
+
+                left.render(app, keyboard_state, &left_mouse_state, ui_context)?;
 
                 // 2. Render right panel to right panel pixel buffer
                 let right = self.right.as_mut().unwrap();
-                right.render(app, keyboard_state, mouse_state, ui_context)?;
+
+                let right_mouse_state = MouseState {
+                    position: (
+                        mouse_state.position.0 - right.info.x as i32,
+                        mouse_state.position.1 - right.info.y as i32,
+                    ),
+                    buttons_down: mouse_state.buttons_down.clone(),
+                    ..*mouse_state
+                };
+
+                right.render(app, keyboard_state, &right_mouse_state, ui_context)?;
 
                 // 3. Blit left and right panel pixel buffers onto parent pixel buffer
                 self.buffer.blit_from(
@@ -400,6 +422,17 @@ where
                 ..Default::default()
             };
 
+            let mut layout = UILayoutContext::new(
+                UILayoutDirection::LeftToRight,
+                UILayoutExtent {
+                    left: 0,
+                    right: self.info.width,
+                    top: 0,
+                    bottom: self.info.height,
+                },
+                Default::default(),
+            );
+
             if do_button(
                 ctx,
                 UIID {
@@ -407,7 +440,7 @@ where
                     item: 0,
                     index: 0,
                 },
-                &self.info,
+                &mut layout,
                 &mut self.buffer,
                 mouse_state,
                 &button_options,

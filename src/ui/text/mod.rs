@@ -14,8 +14,7 @@ use crate::{
 
 use super::{
     context::{UIContext, UIID},
-    layout::item::ItemLayoutOptions,
-    panel::PanelInfo,
+    layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
 #[derive(Debug)]
@@ -43,10 +42,12 @@ pub struct DoTextResult {}
 pub fn do_text(
     ctx: &mut RwLockWriteGuard<'_, UIContext>,
     _id: UIID,
-    panel_info: &PanelInfo,
+    layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     options: &TextOptions,
 ) -> DoTextResult {
+    let item_width: u32;
+    let item_height: u32;
     let offset_x: u32;
     let offset_y: u32;
 
@@ -65,9 +66,19 @@ pub fn do_text(
 
             (offset_x, offset_y) = options
                 .layout_options
-                .get_layout_offset(panel_info, texture_ref.width);
+                .get_layout_offset(layout, texture_ref.width);
 
-            draw_text(offset_x, offset_y, texture_ref, options, parent_buffer);
+            item_width = texture_ref.width;
+            item_height = texture_ref.height;
+
+            draw_text(
+                layout,
+                offset_x,
+                offset_y,
+                texture_ref,
+                options,
+                parent_buffer,
+            );
         }
         false => {
             let mut font_cache = ctx.font_cache.write().unwrap();
@@ -79,29 +90,37 @@ pub fn do_text(
 
             (offset_x, offset_y) = options
                 .layout_options
-                .get_layout_offset(panel_info, texture.width);
+                .get_layout_offset(layout, texture.width);
 
-            draw_text(offset_x, offset_y, &texture, options, parent_buffer);
+            item_width = texture.width;
+            item_height = texture.height;
+
+            draw_text(layout, offset_x, offset_y, &texture, options, parent_buffer);
         }
     }
+
+    layout.advance_cursor(offset_x + item_width, offset_y + item_height);
 
     DoTextResult {}
 }
 
 fn draw_text(
+    layout: &UILayoutContext,
     offset_x: u32,
     offset_y: u32,
     texture: &Buffer2D<u8>,
     options: &TextOptions,
     parent_buffer: &mut Buffer2D,
 ) {
+    let cursor = layout.get_cursor();
+
     let color = options.color;
 
     // Draw the button's text label.
 
     let op = TextOperation {
-        x: offset_x,
-        y: offset_y,
+        x: cursor.x + offset_x,
+        y: cursor.y + offset_y,
         color,
         text: &options.text,
     };

@@ -19,7 +19,10 @@ use cairo::{
         checkbox::{do_checkbox, CheckboxOptions},
         context::{UIContext, UIID},
         dropdown::{do_dropdown, DropdownOptions},
-        layout::item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
+        layout::{
+            item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
+            UILayoutContext, UILayoutDirection, UILayoutExtent, UILayoutOptions,
+        },
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
         slider::{do_slider, NumberSliderOptions},
         text::{do_text, TextOptions},
@@ -28,8 +31,14 @@ use cairo::{
 };
 
 fn main() -> Result<(), String> {
+    let resolution = (1920, 1080);
+
     let mut window_info = AppWindowInfo {
         title: "examples/ui-panels".to_string(),
+        window_width: resolution.0,
+        window_height: resolution.1,
+        canvas_width: resolution.0,
+        canvas_height: resolution.1,
         ..Default::default()
     };
 
@@ -85,14 +94,22 @@ fn main() -> Result<(), String> {
          -> Result<(), String> {
             let mut ctx: RwLockWriteGuard<'_, UIContext> = ui_context.write().unwrap();
 
+            // @NOTE(mzalla) Layout cursor is currently local to panel's own UI
+            // buffer.
+            let mut layout = UILayoutContext::new(
+                UILayoutDirection::TopToBottom,
+                UILayoutExtent {
+                    left: 0,
+                    right: panel_info.width,
+                    top: PANEL_TITLE_BAR_HEIGHT,
+                    bottom: panel_info.height,
+                },
+                UILayoutOptions { padding: 8, gap: 8 },
+            );
+
             // Draw a bordered button.
 
             let button_options = ButtonOptions {
-                layout_options: ItemLayoutOptions {
-                    x_offset: 8,
-                    y_offset: PANEL_TITLE_BAR_HEIGHT + 8,
-                    ..Default::default()
-                },
                 label: format!("Bordered button").to_string(),
                 with_border: true,
                 ..Default::default()
@@ -107,7 +124,7 @@ fn main() -> Result<(), String> {
             if do_button(
                 &mut ctx,
                 button_1_id,
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 mouse_state,
                 &button_options,
@@ -128,14 +145,10 @@ fn main() -> Result<(), String> {
             if do_button(
                 &mut ctx,
                 button_2_id,
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 mouse_state,
                 &ButtonOptions {
-                    layout_options: ItemLayoutOptions {
-                        y_offset: button_options.layout_options.y_offset + 24,
-                        ..button_options.layout_options
-                    },
                     label: format!("Borderless button").to_string(),
                     with_border: false,
                     ..button_options
@@ -149,10 +162,6 @@ fn main() -> Result<(), String> {
             // Draw a checkbox.
 
             let checkbox_options = CheckboxOptions {
-                layout_options: ItemLayoutOptions {
-                    y_offset: button_options.layout_options.y_offset + 48,
-                    ..button_options.layout_options
-                },
                 label: format!("Checkbox {}", panel_info.id).to_string(),
                 ..Default::default()
             };
@@ -174,7 +183,7 @@ fn main() -> Result<(), String> {
             if do_checkbox(
                 &mut ctx,
                 checkbox_id,
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 mouse_state,
                 &checkbox_options,
@@ -196,10 +205,6 @@ fn main() -> Result<(), String> {
             // Draw some cached text labels.
 
             let text_options = TextOptions {
-                layout_options: ItemLayoutOptions {
-                    y_offset: checkbox_options.layout_options.y_offset + 24,
-                    ..button_options.layout_options
-                },
                 text: format!("Welcome to Panel {}!", panel_info.id),
                 color: color::WHITE,
                 ..Default::default()
@@ -212,7 +217,7 @@ fn main() -> Result<(), String> {
                     item: 4,
                     index: 0,
                 },
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 &text_options,
             );
@@ -224,13 +229,12 @@ fn main() -> Result<(), String> {
                     item: 5,
                     index: 0,
                 },
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 &TextOptions {
                     layout_options: ItemLayoutOptions {
-                        y_offset: text_options.layout_options.y_offset + 24,
                         horizontal_alignment: ItemLayoutHorizontalAlignment::Center,
-                        ..text_options.layout_options
+                        ..Default::default()
                     },
                     text: text_options.text.clone(),
                     color: color::RED,
@@ -249,13 +253,12 @@ fn main() -> Result<(), String> {
                     item: 6,
                     index: 0,
                 },
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 &TextOptions {
                     layout_options: ItemLayoutOptions {
-                        y_offset: text_options.layout_options.y_offset + 48,
                         horizontal_alignment: ItemLayoutHorizontalAlignment::Right,
-                        ..text_options.layout_options
+                        ..Default::default()
                     },
                     text: format!("Uptime: {}", uptime.to_string()),
                     cache: false,
@@ -267,10 +270,6 @@ fn main() -> Result<(), String> {
             // Draw a textbox.
 
             let textbox_options = TextboxOptions {
-                layout_options: ItemLayoutOptions {
-                    y_offset: text_options.layout_options.y_offset + 72,
-                    ..text_options.layout_options
-                },
                 label: format!("Textbox {}", panel_info.id).to_string(),
                 input_text_alignment: ItemTextAlignment::Left,
                 ..Default::default()
@@ -293,7 +292,7 @@ fn main() -> Result<(), String> {
             if do_textbox(
                 &mut ctx,
                 textbox_id,
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 app.timing_info.uptime_seconds,
                 keyboard_state,
@@ -309,10 +308,6 @@ fn main() -> Result<(), String> {
             // Draw a number slider.
 
             let slider_options = NumberSliderOptions {
-                layout_options: ItemLayoutOptions {
-                    y_offset: textbox_options.layout_options.y_offset + 24,
-                    ..textbox_options.layout_options
-                },
                 label: format!("Slider {}", panel_info.id).to_string(),
                 min: Some(-1.0 * panel_info.id as f32),
                 max: Some(1.0 * panel_info.id as f32),
@@ -334,7 +329,7 @@ fn main() -> Result<(), String> {
             if do_slider(
                 &mut ctx,
                 slider_id,
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 mouse_state,
                 &slider_options,
@@ -348,10 +343,6 @@ fn main() -> Result<(), String> {
             // Draw a dropdown menu.
 
             let dropdown_options = DropdownOptions {
-                layout_options: ItemLayoutOptions {
-                    y_offset: slider_options.layout_options.y_offset + 24,
-                    ..slider_options.layout_options
-                },
                 label: format!("Dropdown {}", panel_info.id).to_string(),
                 items: vec![
                     "Item 1".to_string(),
@@ -380,7 +371,7 @@ fn main() -> Result<(), String> {
             if do_dropdown(
                 &mut ctx,
                 dropdown_id,
-                panel_info,
+                &mut layout,
                 panel_buffer,
                 mouse_state,
                 &dropdown_options,
@@ -395,8 +386,8 @@ fn main() -> Result<(), String> {
 
             Graphics::rectangle(
                 panel_buffer,
-                dropdown_options.layout_options.x_offset,
-                dropdown_options.layout_options.y_offset + 24,
+                layout.get_cursor().x,
+                layout.get_cursor().y,
                 64,
                 64,
                 color::WHITE,
