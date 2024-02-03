@@ -26,6 +26,7 @@ use cairo::{
             UILayoutContext, UILayoutDirection, UILayoutExtent, UILayoutOptions,
         },
         panel::{Panel, PanelInfo, PANEL_TITLE_BAR_HEIGHT},
+        separator::{do_separator, SeparatorOptions},
         slider::{do_slider, NumberSliderOptions},
         text::{do_text, TextOptions},
         textbox::{do_textbox, TextboxOptions},
@@ -206,6 +207,22 @@ fn main() -> Result<(), String> {
                 );
             }
 
+            // Draw a separator.
+
+            do_separator(
+                &mut ctx,
+                UIID {
+                    parent: panel_info.id,
+                    item: 4,
+                    index: 0,
+                },
+                &mut layout,
+                &SeparatorOptions {
+                    ..Default::default()
+                },
+                panel_buffer,
+            );
+
             // Draw some cached text labels.
 
             let text_options = TextOptions {
@@ -218,7 +235,7 @@ fn main() -> Result<(), String> {
                 &mut ctx,
                 UIID {
                     parent: panel_info.id,
-                    item: 4,
+                    item: 5,
                     index: 0,
                 },
                 &mut layout,
@@ -230,7 +247,7 @@ fn main() -> Result<(), String> {
                 &mut ctx,
                 UIID {
                     parent: panel_info.id,
-                    item: 5,
+                    item: 6,
                     index: 0,
                 },
                 &mut layout,
@@ -254,7 +271,7 @@ fn main() -> Result<(), String> {
                 &mut ctx,
                 UIID {
                     parent: panel_info.id,
-                    item: 6,
+                    item: 7,
                     index: 0,
                 },
                 &mut layout,
@@ -269,6 +286,22 @@ fn main() -> Result<(), String> {
                     color: color::GREEN,
                     ..text_options
                 },
+            );
+
+            // Draw a separator.
+
+            do_separator(
+                &mut ctx,
+                UIID {
+                    parent: panel_info.id,
+                    item: 8,
+                    index: 0,
+                },
+                &mut layout,
+                &SeparatorOptions {
+                    ..Default::default()
+                },
+                panel_buffer,
             );
 
             // Draw a filled rectangle.
@@ -286,6 +319,22 @@ fn main() -> Result<(), String> {
             );
 
             layout.advance_cursor(64, 64);
+
+            // Draw a separator.
+
+            do_separator(
+                &mut ctx,
+                UIID {
+                    parent: panel_info.id,
+                    item: 9,
+                    index: 0,
+                },
+                &mut layout,
+                &SeparatorOptions {
+                    ..Default::default()
+                },
+                panel_buffer,
+            );
 
             // Draw a textbox.
 
@@ -305,7 +354,7 @@ fn main() -> Result<(), String> {
 
             let textbox_id = UIID {
                 parent: panel_info.id,
-                item: 7,
+                item: 10,
                 index: 0,
             };
 
@@ -342,7 +391,7 @@ fn main() -> Result<(), String> {
 
             let slider_id = UIID {
                 parent: panel_info.id,
-                item: 8,
+                item: 11,
                 index: 0,
             };
 
@@ -384,7 +433,7 @@ fn main() -> Result<(), String> {
 
             let dropdown_id = UIID {
                 parent: panel_info.id,
-                item: 9,
+                item: 12,
                 index: 0,
             };
 

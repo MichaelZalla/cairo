@@ -15,6 +15,7 @@ pub mod context;
 pub mod dropdown;
 pub mod layout;
 pub mod panel;
+pub mod separator;
 pub mod slider;
 pub mod text;
 pub mod textbox;
