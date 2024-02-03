@@ -157,20 +157,20 @@ impl Graphics {
                 },
                 // Top right
                 Vec2 {
-                    x: (x + width) as f32,
+                    x: (x + width - 1) as f32,
                     y: y as f32,
                     z: 1.0,
                 },
                 // Bottom right
                 Vec2 {
-                    x: (x + width) as f32,
-                    y: (y + height) as f32,
+                    x: (x + width - 1) as f32,
+                    y: (y + height - 1) as f32,
                     z: 1.0,
                 },
                 // Bottom left
                 Vec2 {
                     x: x as f32,
-                    y: (y + height) as f32,
+                    y: (y + height - 1) as f32,
                     z: 1.0,
                 },
             ],
@@ -181,12 +181,12 @@ impl Graphics {
 
         match fill {
             Some(fill_color) => {
-                for current_y in y + 1..y + height {
+                for current_y in y + 1..y + height - 1 {
                     Graphics::line(
                         buffer,
                         (x + 1) as i32,
                         current_y as i32,
-                        (x + width - 2) as i32,
+                        (x + width - 1 - 1) as i32,
                         current_y as i32,
                         fill_color,
                     )
