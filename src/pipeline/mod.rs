@@ -35,11 +35,19 @@ mod zbuffer;
 static DEFAULT_PROJECTION_Z_NEAR: f32 = 0.3;
 static DEFAULT_PROJECTION_Z_FAR: f32 = 1000.0;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Default, Debug, Copy, Clone)]
 struct Triangle<T> {
     v0: T,
     v1: T,
     v2: T,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+struct PipelineViewport {
+    pub width: u32,
+    pub width_over_2: f32,
+    pub height: u32,
+    pub height_over_2: f32,
 }
 
 pub struct Pipeline<
@@ -58,13 +66,10 @@ pub struct Pipeline<
     forward_framebuffer: Option<Buffer2D>,
     deferred_framebuffer: Option<Buffer2D>,
     composite_framebuffer: Option<&'a RwLock<Buffer2D>>,
-    composite_framebuffer_width: u32,
-    composite_framebuffer_width_over_2: f32,
-    composite_framebuffer_height: u32,
-    composite_framebuffer_height_over_2: f32,
-    z_buffer: Option<ZBuffer>,
+    viewport: PipelineViewport,
     projection_z_near: f32,
     projection_z_far: f32,
+    z_buffer: Option<ZBuffer>,
     g_buffer: Option<GBuffer>,
     pub shader_context: &'a RwLock<ShaderContext>,
     vertex_shader: V,
@@ -95,6 +100,8 @@ where
 
         let composite_framebuffer = None;
 
+        let viewport: PipelineViewport = Default::default();
+
         let z_buffer = None;
 
         let g_buffer = None;
@@ -103,10 +110,7 @@ where
             forward_framebuffer,
             deferred_framebuffer,
             composite_framebuffer,
-            composite_framebuffer_width: 0,
-            composite_framebuffer_width_over_2: 0.0,
-            composite_framebuffer_height: 0,
-            composite_framebuffer_height_over_2: 0.0,
+            viewport,
             projection_z_near: DEFAULT_PROJECTION_Z_NEAR,
             projection_z_far: DEFAULT_PROJECTION_Z_FAR,
             z_buffer,
@@ -149,10 +153,7 @@ where
             Some(framebuffer_rwl) => {
                 let framebuffer = framebuffer_rwl.read().unwrap();
 
-                self.composite_framebuffer_width = framebuffer.width;
-                self.composite_framebuffer_width_over_2 = (framebuffer.width / 2) as f32;
-                self.composite_framebuffer_height = framebuffer.height;
-                self.composite_framebuffer_height_over_2 = (framebuffer.height / 2) as f32;
+                self.set_viewport(&framebuffer);
 
                 let black = color::BLACK.to_u32();
 
@@ -260,6 +261,13 @@ where
         }
     }
 
+    fn set_viewport(&mut self, framebuffer: &Buffer2D) {
+        self.viewport.width = framebuffer.width;
+        self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
+        self.viewport.height = framebuffer.height;
+        self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
+    }
+
     pub fn begin_frame(&mut self) {
         let fill_value = color::BLACK.to_u32();
 
@@ -295,8 +303,8 @@ where
 
             for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
                 if sample.stencil == true {
-                    let x = index as u32 % self.composite_framebuffer_width;
-                    let y = index as u32 / self.composite_framebuffer_width;
+                    let x = index as u32 % self.viewport.width;
+                    let y = index as u32 / self.viewport.width;
 
                     let color = if self.options.show_lighting {
                         self.fragment_shader.call(&sample)
@@ -702,8 +710,8 @@ where
 
         *v *= w_inverse;
 
-        v.p.x = (v.p.x + 1.0) * self.composite_framebuffer_width_over_2;
-        v.p.y = (-v.p.y + 1.0) * self.composite_framebuffer_height_over_2;
+        v.p.x = (v.p.x + 1.0) * self.viewport.width_over_2;
+        v.p.y = (-v.p.y + 1.0) * self.viewport.height_over_2;
 
         v.p.w = w_inverse;
     }
@@ -760,9 +768,9 @@ where
 
                 let screen_vertex_relative_normal = Vec2 {
                     x: (world_vertex_relative_normal.x * w_inverse + 1.0)
-                        * self.composite_framebuffer_width_over_2,
+                        * self.viewport.width_over_2,
                     y: (-world_vertex_relative_normal.y * w_inverse + 1.0)
-                        * self.composite_framebuffer_height_over_2,
+                        * self.viewport.height_over_2,
                     z: 0.0,
                 };
 
@@ -887,10 +895,7 @@ where
         // Calculate our start and end Y (end here is non-inclusive), such that
         // they are non-fractional screen coordinates.
         let y_start: u32 = u32::max((it0.p.y - 0.5).ceil() as u32, 0);
-        let y_end: u32 = u32::min(
-            (it2.p.y - 0.5).ceil() as u32,
-            self.composite_framebuffer_height - 1,
-        );
+        let y_end: u32 = u32::min((it2.p.y - 0.5).ceil() as u32, self.viewport.height - 1);
 
         // Adjust both interpolants to account for us snapping y-start and y-end
         // to their nearest whole pixel coordinates.
@@ -904,7 +909,7 @@ where
             let x_start = u32::max((left_edge_interpolant.p.x - 0.5).ceil() as u32, 0);
             let x_end = u32::min(
                 (right_edge_interpolant.p.x - 0.5).ceil() as u32,
-                self.composite_framebuffer_width - 1,
+                self.viewport.width - 1,
             );
 
             // Create an interpolant that we can move across our horizontal

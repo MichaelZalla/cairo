@@ -22,14 +22,14 @@ where
             if *z_non_linear == zbuffer::MAX_DEPTH {
                 // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
-                let screen_x: u32 = (index as f32 % self.composite_framebuffer_width as f32) as u32;
-                let screen_y: u32 = (index as f32 / self.composite_framebuffer_width as f32) as u32;
+                let screen_x: u32 = (index as f32 % self.viewport.width as f32) as u32;
+                let screen_y: u32 = (index as f32 / self.viewport.width as f32) as u32;
 
                 let pixel_coordinate_world_space = camera.get_pixel_world_space_position(
                     screen_x,
                     screen_y,
-                    self.composite_framebuffer_width,
-                    self.composite_framebuffer_height,
+                    self.viewport.width,
+                    self.viewport.height,
                 );
 
                 let normal = pixel_coordinate_world_space.as_normal();
