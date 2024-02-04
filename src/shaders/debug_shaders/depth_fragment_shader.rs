@@ -27,9 +27,9 @@ impl<'a> FragmentShader<'a> for DepthFragmentShader<'a> {
         static NEAR: f32 = 0.3;
         static FAR: f32 = 1000.0;
 
-        let ndc = non_linear_depth * 2.0 - 1.0;
+        let ndc_z = non_linear_depth * 2.0 - 1.0;
 
-        let linear_depth = (2.0 * NEAR * FAR) / (FAR + NEAR - ndc * (FAR - NEAR));
+        let linear_depth = (2.0 * NEAR * FAR) / (FAR + NEAR - ndc_z * (FAR - NEAR));
 
         // [0, 1] -> [10, 0]
         let adjusted_linear_depth = 10.0 - (linear_depth * 10.0);
