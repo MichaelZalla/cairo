@@ -35,6 +35,7 @@ impl Material {
     pub fn new(name: String) -> Self {
         let mut mat: Material = Default::default();
         mat.name = name;
+        mat.diffuse_color = color::WHITE.to_vec3() / 255.0;
         mat.specular_exponent = 8;
         mat
     }
