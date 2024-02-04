@@ -317,10 +317,10 @@ impl Camera {
                     self.set_position(self.position + self.get_right() * camera_movement_step);
                 }
                 Keycode::Q { .. } => {
-                    self.set_position(self.position - vec3::UP * camera_movement_step);
+                    self.set_position(self.position - self.get_up() * camera_movement_step);
                 }
                 Keycode::E { .. } => {
-                    self.set_position(self.position + vec3::UP * camera_movement_step);
+                    self.set_position(self.position + self.get_up() * camera_movement_step);
                 }
                 _ => {}
             }
