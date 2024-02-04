@@ -271,26 +271,43 @@ where
     pub fn begin_frame(&mut self) {
         let fill_value = color::BLACK.to_u32();
 
-        self.forward_framebuffer
-            .as_mut()
-            .unwrap()
-            .clear(Some(fill_value));
+        match self.forward_framebuffer.as_mut() {
+            Some(forward_framebuffer) => {
+                forward_framebuffer.clear(Some(fill_value));
+            }
+            None => (),
+        }
 
-        self.composite_framebuffer
-            .unwrap()
-            .write()
-            .unwrap()
-            .clear(Some(fill_value));
+        match self.composite_framebuffer {
+            Some(lock) => {
+                let mut composite_framebuffer = lock.write().unwrap();
+
+                composite_framebuffer.clear(Some(fill_value));
+            }
+            None => (),
+        }
 
         if self.options.do_rasterized_geometry {
-            self.deferred_framebuffer
-                .as_mut()
-                .unwrap()
-                .clear(Some(fill_value));
+            match self.deferred_framebuffer.as_mut() {
+                Some(deferred_framebuffer) => {
+                    deferred_framebuffer.clear(Some(fill_value));
+                }
+                None => (),
+            }
 
-            self.z_buffer.as_mut().unwrap().clear();
+            match self.z_buffer.as_mut() {
+                Some(z_buffer) => {
+                    z_buffer.clear();
+                }
+                None => (),
+            }
 
-            self.g_buffer.as_mut().unwrap().clear();
+            match self.g_buffer.as_mut() {
+                Some(g_buffer) => {
+                    g_buffer.clear();
+                }
+                None => (),
+            }
         }
     }
 
