@@ -182,30 +182,8 @@ impl Camera {
         unimplemented!()
     }
 
-    pub fn get_lookat_matrix(&self) -> Mat4 {
-        let (p, f, r, u) = (self.position, self.forward, self.right, self.up);
-
-        let rotation_transposed = Mat4::new_from_elements([
-            // Row-major ordering
-            [r.x, u.x, f.x, 0.0],
-            [r.y, u.y, f.y, 0.0],
-            [r.z, u.z, f.z, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ]);
-
-        let translation_negated = Mat4::new_from_elements([
-            // Row-major ordering
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [-p.x, -p.y, -p.z, 1.0],
-        ]);
-
-        translation_negated * rotation_transposed
-    }
-
     pub fn get_view_inverse_transform(&self) -> Mat4 {
-        self.get_lookat_matrix()
+        Mat4::look_at(self.position, self.forward, self.right, self.up)
     }
 
     pub fn get_view_rotation_transform(&self) -> Mat4 {

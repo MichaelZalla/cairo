@@ -271,6 +271,28 @@ impl Mat<f32, 4> {
         };
     }
 
+    pub fn look_at(position: Vec3, forward: Vec3, right: Vec3, up: Vec3) -> Mat4 {
+        let (p, f, r, u) = (position, forward, right, up);
+
+        let rotation_transposed = Mat4::new_from_elements([
+            // Row-major ordering
+            [r.x, u.x, f.x, 0.0],
+            [r.y, u.y, f.y, 0.0],
+            [r.z, u.z, f.z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+
+        let translation_negated = Mat4::new_from_elements([
+            // Row-major ordering
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [-p.x, -p.y, -p.z, 1.0],
+        ]);
+
+        translation_negated * rotation_transposed
+    }
+
     pub fn transposed(&self) -> Self {
         let mut result: Self = self.clone();
 
