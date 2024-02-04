@@ -2,12 +2,11 @@ use crate::{
     color::{self},
     pipeline::Pipeline,
     scene::camera::Camera,
-    shader::{alpha::AlphaShader, geometry::GeometryShader},
+    shader::geometry::GeometryShader,
 };
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn render_camera(&mut self, camera: &Camera) {

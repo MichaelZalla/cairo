@@ -9,13 +9,12 @@ use crate::{
         camera::Camera,
         light::{PointLight, SpotLight},
     },
-    shader::{alpha::AlphaShader, geometry::GeometryShader},
+    shader::geometry::GeometryShader,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     fn render_light(

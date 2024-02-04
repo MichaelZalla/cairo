@@ -8,7 +8,7 @@ use crate::{
     matrix::Mat4,
     mesh::Face,
     shader::{
-        alpha::AlphaShader, fragment::FragmentShaderFn, geometry::GeometryShader,
+        alpha::AlphaShaderFn, fragment::FragmentShaderFn, geometry::GeometryShader,
         vertex::VertexShaderFn, ShaderContext,
     },
     shaders::{
@@ -53,9 +53,8 @@ struct PipelineViewport {
     pub height_over_2: f32,
 }
 
-pub struct Pipeline<'a, A = DefaultAlphaShader<'a>, G = DefaultGeometryShader<'a>>
+pub struct Pipeline<'a, G = DefaultGeometryShader<'a>>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub options: PipelineOptions,
@@ -67,14 +66,13 @@ where
     g_buffer: Option<GBuffer>,
     pub shader_context: &'a RwLock<ShaderContext>,
     vertex_shader: VertexShaderFn,
-    alpha_shader: A,
+    alpha_shader: AlphaShaderFn,
     pub geometry_shader: G,
     fragment_shader: FragmentShaderFn,
 }
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn new(
@@ -84,7 +82,7 @@ where
         fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
     ) -> Self {
-        let alpha_shader = AlphaShader::new(shader_context);
+        let alpha_shader = DefaultAlphaShader;
 
         let forward_framebuffer = None;
 
@@ -843,7 +841,9 @@ where
             Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
 
-                if self.alpha_shader.call(&linear_space_interpolant) == false {
+                let context = self.shader_context.read().unwrap();
+
+                if (self.alpha_shader)(&context, &linear_space_interpolant) == false {
                     return;
                 }
 

@@ -1,18 +1,11 @@
 use crate::{
-    color::Color,
-    entity::Entity,
-    material::cache::MaterialCache,
-    mesh,
-    pipeline::Pipeline,
-    scene::camera::Camera,
-    shader::{alpha::AlphaShader, geometry::GeometryShader},
-    vec::vec3::Vec3,
+    color::Color, entity::Entity, material::cache::MaterialCache, mesh, pipeline::Pipeline,
+    scene::camera::Camera, shader::geometry::GeometryShader, vec::vec3::Vec3,
     vertex::default_vertex_in::DefaultVertexIn,
 };
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn render_point(

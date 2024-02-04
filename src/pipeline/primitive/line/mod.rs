@@ -2,14 +2,13 @@ use crate::{
     color::{self, Color},
     graphics::Graphics,
     pipeline::Pipeline,
-    shader::{alpha::AlphaShader, geometry::GeometryShader},
+    shader::geometry::GeometryShader,
     vec::vec3::Vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn render_line(&mut self, start: Vec3, end: Vec3, color: Color) {

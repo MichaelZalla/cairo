@@ -5,12 +5,11 @@ use crate::{
         options::{PipelineFaceCullingReject, PipelineFaceCullingStrategy, PipelineOptions},
         Pipeline,
     },
-    shader::{alpha::AlphaShader, geometry::GeometryShader},
+    shader::geometry::GeometryShader,
 };
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn render_entity_aabb(&mut self, entity: &Entity, color: Color) {

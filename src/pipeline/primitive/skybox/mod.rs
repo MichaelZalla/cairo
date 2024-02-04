@@ -1,13 +1,12 @@
 use crate::{
     pipeline::{zbuffer, Pipeline},
     scene::camera::Camera,
-    shader::{alpha::AlphaShader, geometry::GeometryShader},
+    shader::geometry::GeometryShader,
     texture::cubemap::CubeMap,
 };
 
-impl<'a, A, G> Pipeline<'a, A, G>
+impl<'a, G> Pipeline<'a, G>
 where
-    A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
