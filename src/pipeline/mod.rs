@@ -18,7 +18,11 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-use self::{gbuffer::GBuffer, options::PipelineOptions, zbuffer::ZBuffer};
+use self::{
+    gbuffer::GBuffer,
+    options::{PipelineFaceCullingReject, PipelineFaceCullingWindingOrder, PipelineOptions},
+    zbuffer::ZBuffer,
+};
 
 use super::{
     color::{self},
@@ -541,12 +545,37 @@ where
         for face_index in 0..faces.len() {
             // Cull backfaces
 
-            let v0 = world_vertices[face_index * 3];
-            let v1 = world_vertices[face_index * 3 + 1];
-            let v2 = world_vertices[face_index * 3 + 2];
+            let mut v0 = world_vertices[face_index * 3];
+            let mut v1 = world_vertices[face_index * 3 + 1];
+            let mut v2 = world_vertices[face_index * 3 + 2];
 
-            if self.options.cull_backfaces && self.is_backface(v0.p, v1.p, v2.p) {
-                continue;
+            match self.options.face_culling_strategy.window_order {
+                PipelineFaceCullingWindingOrder::Clockwise => {
+                    (v0, v1, v2) = (v2, v1, v0);
+                }
+                PipelineFaceCullingWindingOrder::CounterClockwise => {
+                    // Use default (counter-clockwise) ordering.
+                }
+            }
+
+            match self.options.face_culling_strategy.reject {
+                PipelineFaceCullingReject::None => {
+                    // Render all faces.
+                }
+                PipelineFaceCullingReject::Backfaces => {
+                    // Reject backfaces.
+
+                    if self.is_backface(v0.p, v1.p, v2.p) {
+                        continue;
+                    }
+                }
+                PipelineFaceCullingReject::Frontfaces => {
+                    // Reject frontfaces.
+
+                    if !self.is_backface(v0.p, v1.p, v2.p) {
+                        continue;
+                    }
+                }
             }
 
             triangles.push(Triangle { v0, v1, v2 });

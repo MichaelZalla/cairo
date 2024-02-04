@@ -5,14 +5,34 @@ use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
 };
 
-#[derive(Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
+pub enum PipelineFaceCullingWindingOrder {
+    Clockwise,
+    #[default]
+    CounterClockwise,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub enum PipelineFaceCullingReject {
+    None,
+    #[default]
+    Backfaces,
+    Frontfaces,
+}
+#[derive(Default, Debug, Copy, Clone)]
+pub struct PipelineFaceCullingStrategy {
+    pub reject: PipelineFaceCullingReject,
+    pub window_order: PipelineFaceCullingWindingOrder,
+}
+
+#[derive(Debug, Copy, Clone)]
 pub struct PipelineOptions {
     pub wireframe_color: Color,
     pub do_wireframe: bool,
     pub do_rasterized_geometry: bool,
     pub do_lighting: bool,
     pub do_visualize_normals: bool,
-    pub cull_backfaces: bool,
+    pub face_culling_strategy: PipelineFaceCullingStrategy,
 }
 
 impl Default for PipelineOptions {
@@ -23,7 +43,7 @@ impl Default for PipelineOptions {
             do_rasterized_geometry: true,
             do_lighting: true,
             do_visualize_normals: false,
-            cull_backfaces: true,
+            face_culling_strategy: Default::default(),
         }
     }
 }
@@ -50,7 +70,28 @@ impl PipelineOptions {
                     self.do_visualize_normals = !self.do_visualize_normals;
                 }
                 Keycode::Num5 { .. } => {
-                    self.cull_backfaces = !self.cull_backfaces;
+                    // Cycle culling reject settings.
+
+                    self.face_culling_strategy.reject = match self.face_culling_strategy.reject {
+                        PipelineFaceCullingReject::None => PipelineFaceCullingReject::Backfaces,
+                        PipelineFaceCullingReject::Backfaces => {
+                            PipelineFaceCullingReject::Frontfaces
+                        }
+                        PipelineFaceCullingReject::Frontfaces => PipelineFaceCullingReject::None,
+                    }
+                }
+                Keycode::Num6 { .. } => {
+                    // Cycle window orders.
+
+                    self.face_culling_strategy.window_order =
+                        match self.face_culling_strategy.window_order {
+                            PipelineFaceCullingWindingOrder::Clockwise => {
+                                PipelineFaceCullingWindingOrder::CounterClockwise
+                            }
+                            PipelineFaceCullingWindingOrder::CounterClockwise => {
+                                PipelineFaceCullingWindingOrder::Clockwise
+                            }
+                        }
                 }
                 _ => {}
             }

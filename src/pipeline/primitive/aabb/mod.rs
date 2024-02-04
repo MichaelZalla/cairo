@@ -1,7 +1,10 @@
 use crate::{
     color::Color,
     entity::Entity,
-    pipeline::{options::PipelineOptions, Pipeline},
+    pipeline::{
+        options::{PipelineFaceCullingReject, PipelineFaceCullingStrategy, PipelineOptions},
+        Pipeline,
+    },
     shader::{
         alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
         vertex::VertexShader,
@@ -24,7 +27,10 @@ where
             do_rasterized_geometry: false,
             do_lighting: false,
             do_visualize_normals: false,
-            cull_backfaces: false,
+            face_culling_strategy: PipelineFaceCullingStrategy {
+                reject: PipelineFaceCullingReject::None,
+                ..Default::default()
+            },
         };
 
         self.render_entity_mesh(entity, &entity.bounds_mesh, None);

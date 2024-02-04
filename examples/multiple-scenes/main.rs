@@ -76,10 +76,10 @@ fn main() -> Result<(), String> {
 
         for keycode in keyboard_state.keys_pressed.to_owned() {
             match keycode {
-                Keycode::Num5 { .. } => {
+                Keycode::Num7 { .. } => {
                     new_index = min(scenes_len - 1, 0);
                 }
-                Keycode::Num6 { .. } => {
+                Keycode::Num8 { .. } => {
                     new_index = min(scenes_len - 1, 1);
                 }
                 _ => {}
