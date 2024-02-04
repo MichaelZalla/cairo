@@ -24,7 +24,7 @@ impl Iterator for DebugMessageBuffer {
             return None;
         }
 
-        if self.current_line < self.lines.len() - 1 {
+        if self.current_line < self.lines.len() {
             let line = &self.lines[self.current_line];
 
             self.current_line += 1;
