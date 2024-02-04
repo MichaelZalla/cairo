@@ -789,12 +789,7 @@ where
         }
     }
 
-    fn test_z_buffer_and_set_g_buffer(
-        &mut self,
-        x: u32,
-        y: u32,
-        interpolant: &mut DefaultVertexOut,
-    ) {
+    fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
         match self.z_buffer.as_mut().unwrap().test(x, y, interpolant.p.z) {
             Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
@@ -805,13 +800,14 @@ where
 
                 self.z_buffer.as_mut().unwrap().set(x, y, non_linear_z);
 
-                linear_space_interpolant.depth = non_linear_z;
+                match self.g_buffer.as_mut() {
+                    Some(g_buffer) => {
+                        linear_space_interpolant.depth = non_linear_z;
 
-                self.g_buffer.as_mut().unwrap().set(
-                    x,
-                    y,
-                    self.geometry_shader.call(&linear_space_interpolant),
-                );
+                        g_buffer.set(x, y, self.geometry_shader.call(&linear_space_interpolant));
+                    }
+                    None => (),
+                }
             }
             None => {}
         }
@@ -929,7 +925,7 @@ where
                 line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.p.x);
 
             for x in x_start..x_end {
-                self.test_z_buffer_and_set_g_buffer(x, y, &mut line_interpolant);
+                self.test_and_set_z_buffer(x, y, &mut line_interpolant);
 
                 line_interpolant += line_interpolant_step;
             }
