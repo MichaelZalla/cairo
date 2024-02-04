@@ -12,12 +12,11 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::fragment::FragmentShader,
     shader::geometry::GeometryShader,
     shader::ShaderContext,
     shaders::{
         // debug_shaders::emissive_fragment_shader::EmissiveFragmentShader,
-        default_fragment_shader::DefaultFragmentShader,
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
@@ -26,7 +25,7 @@ use cairo::{
 
 pub struct EmissiveMapScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
-    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -52,7 +51,7 @@ impl<'a> EmissiveMapScene<'a> {
 
         geometry_shader.options.emissive_mapping_active = true;
 
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
+        let fragment_shader = DEFAULT_FRAGMENT_SHADER;
         // let fragment_shader = EmissiveFragmentShader::new(shader_context);
 
         let aspect_ratio = framebuffer.width_over_height;

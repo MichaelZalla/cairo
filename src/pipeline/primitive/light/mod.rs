@@ -9,13 +9,12 @@ use crate::{
         camera::Camera,
         light::{PointLight, SpotLight},
     },
-    shader::{alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader},
+    shader::{alpha::AlphaShader, geometry::GeometryShader},
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-impl<'a, F, A, G> Pipeline<'a, F, A, G>
+impl<'a, A, G> Pipeline<'a, A, G>
 where
-    F: FragmentShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {

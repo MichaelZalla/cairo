@@ -5,14 +5,13 @@ use crate::{
     mesh,
     pipeline::Pipeline,
     scene::camera::Camera,
-    shader::{alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader},
+    shader::{alpha::AlphaShader, geometry::GeometryShader},
     vec::vec3::Vec3,
     vertex::default_vertex_in::DefaultVertexIn,
 };
 
-impl<'a, F, A, G> Pipeline<'a, F, A, G>
+impl<'a, A, G> Pipeline<'a, A, G>
 where
-    F: FragmentShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {

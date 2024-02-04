@@ -1,8 +1,8 @@
-use std::sync::RwLock;
+use std::sync::{RwLock, RwLockReadGuard};
 
 use crate::{
     color::Color,
-    shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
+    shader::{fragment::FragmentShaderFn, geometry::sample::GeometrySample, ShaderContext},
     vec::vec4::Vec4,
 };
 
@@ -10,12 +10,8 @@ pub struct NormalFragmentShader<'a> {
     context: &'a RwLock<ShaderContext>,
 }
 
-impl<'a> FragmentShader<'a> for NormalFragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>) -> Self {
-        Self { context }
-    }
-
-    fn call(&self, sample: &GeometrySample) -> Color {
+pub const NormalFragmentShader: FragmentShaderFn =
+    |_context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
         // let context: std::sync::RwLockReadGuard<'_, ShaderContext> = self.context.read().unwrap();
 
         // Emit only the world-space normal (RBG space) for this fragment.
@@ -31,5 +27,4 @@ impl<'a> FragmentShader<'a> for NormalFragmentShader<'a> {
             b: ((1.0 - world_space_surface_normal.z) * 255.0) as u8,
             a: 255 as u8,
         };
-    }
-}
+    };

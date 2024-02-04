@@ -1,20 +1,12 @@
-use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 
 use crate::{
     color::Color,
-    shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
+    shader::{fragment::FragmentShaderFn, geometry::sample::GeometrySample, ShaderContext},
 };
 
-pub struct SpecularIntensityFragmentShader<'a> {
-    context: &'a RwLock<ShaderContext>,
-}
-
-impl<'a> FragmentShader<'a> for SpecularIntensityFragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>) -> Self {
-        Self { context }
-    }
-
-    fn call(&self, sample: &GeometrySample) -> Color {
+pub const SpecularIntensityFragmentShader: FragmentShaderFn =
+    |_context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
         // Emit only the specular intensity for this fragment.
 
         return Color {
@@ -23,5 +15,4 @@ impl<'a> FragmentShader<'a> for SpecularIntensityFragmentShader<'a> {
             b: (sample.specular_intensity * 255.0) as u8,
             a: 255 as u8,
         };
-    }
-}
+    };

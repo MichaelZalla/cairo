@@ -2,7 +2,7 @@ use crate::{
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
-    texture::cubemap::CubeMap,
+    texture::{cubemap::CubeMap, TextureMap},
     vec::vec4::Vec4,
 };
 
@@ -21,6 +21,7 @@ pub struct ShaderContext {
     pub world_view_projection_transform: Mat4,
     pub default_specular_exponent: i32,
     pub active_material: Option<*const Material>,
+    pub active_test_uv_texture_map: Option<*const TextureMap>,
     pub active_environment_map: Option<*const CubeMap>,
     pub ambient_light: AmbientLight,
     pub directional_light: DirectionalLight,
@@ -40,7 +41,8 @@ impl Default for ShaderContext {
             world_view_projection_transform: Default::default(),
             default_specular_exponent: 8,
             active_material: Default::default(),
-            active_environment_map: Default::default(),
+            active_test_uv_texture_map: None,
+            active_environment_map: None,
             ambient_light: Default::default(),
             directional_light: Default::default(),
             point_lights: Default::default(),
@@ -72,6 +74,7 @@ impl ShaderContext {
                 * projection_transform,
             default_specular_exponent: 8,
             active_material: None,
+            active_test_uv_texture_map: None,
             active_environment_map: None,
             ambient_light,
             directional_light,
@@ -150,6 +153,17 @@ impl ShaderContext {
             }
             None => {
                 self.active_material = None;
+            }
+        }
+    }
+
+    pub fn set_active_test_uv_texture_map(&mut self, map: Option<*const TextureMap>) {
+        match map {
+            Some(mat_raw_mut) => {
+                self.active_test_uv_texture_map = Some(mat_raw_mut);
+            }
+            None => {
+                self.active_test_uv_texture_map = None;
             }
         }
     }

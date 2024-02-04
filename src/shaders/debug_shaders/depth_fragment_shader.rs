@@ -1,20 +1,12 @@
-use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 
 use crate::{
     color::Color,
-    shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
+    shader::{fragment::FragmentShaderFn, geometry::sample::GeometrySample, ShaderContext},
 };
 
-pub struct DepthFragmentShader<'a> {
-    context: &'a RwLock<ShaderContext>,
-}
-
-impl<'a> FragmentShader<'a> for DepthFragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>) -> Self {
-        Self { context }
-    }
-
-    fn call(&self, sample: &GeometrySample) -> Color {
+pub const DepthFragmentShader: FragmentShaderFn =
+    |_context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
 
         let non_linear_depth: f32 = sample.depth;
@@ -41,5 +33,4 @@ impl<'a> FragmentShader<'a> for DepthFragmentShader<'a> {
             b: (adjusted_linear_depth * 255.0) as u8,
             a: 255 as u8,
         };
-    }
-}
+    };

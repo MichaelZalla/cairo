@@ -12,7 +12,6 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::fragment::FragmentShader,
     shader::geometry::GeometryShader,
     shader::ShaderContext,
     shaders::{
@@ -20,7 +19,7 @@ use cairo::{
         //     specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
         //     specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
         // },
-        default_fragment_shader::DefaultFragmentShader,
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
@@ -29,7 +28,7 @@ use cairo::{
 
 pub struct SpecularMapScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
-    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -55,7 +54,7 @@ impl<'a> SpecularMapScene<'a> {
 
         geometry_shader.options.specular_mapping_active = true;
 
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
+        let fragment_shader = DEFAULT_FRAGMENT_SHADER;
         // let fragment_shader = SpecularIntensityFragmentShader::new(shader_context);
         // let fragment_shader = SpecularRoughnessFragmentShader::new(shader_context);
 

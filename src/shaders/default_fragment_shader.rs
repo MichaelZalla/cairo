@@ -1,23 +1,13 @@
-use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 
 use crate::{
     color::Color,
-    shader::{fragment::FragmentShader, geometry::sample::GeometrySample, ShaderContext},
+    shader::{fragment::FragmentShaderFn, geometry::sample::GeometrySample, ShaderContext},
     vec::vec3::Vec3,
 };
 
-pub struct DefaultFragmentShader<'a> {
-    context: &'a RwLock<ShaderContext>,
-}
-
-impl<'a> FragmentShader<'a> for DefaultFragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>) -> Self {
-        Self { context }
-    }
-
-    fn call(&self, sample: &GeometrySample) -> Color {
-        let context: std::sync::RwLockReadGuard<'_, ShaderContext> = self.context.read().unwrap();
-
+pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
+    |context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
         // Calculate ambient light contribution
 
         let ambient_contribution = context.ambient_light.contribute(sample.ambient_factor);
@@ -82,11 +72,10 @@ impl<'a> FragmentShader<'a> for DefaultFragmentShader<'a> {
             z: color.z.sqrt(),
         };
 
-        return Color {
+        Color {
             r: (color.x * 255.0) as u8,
             g: (color.y * 255.0) as u8,
             b: (color.z * 255.0) as u8,
             a: 255 as u8,
-        };
-    }
-}
+        }
+    };

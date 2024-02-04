@@ -13,11 +13,10 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::fragment::FragmentShader,
     shader::geometry::GeometryShader,
     shader::ShaderContext,
     shaders::{
-        default_fragment_shader::DefaultFragmentShader,
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
@@ -27,7 +26,7 @@ use cairo::{
 
 pub struct SkyboxScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
-    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     point_lights: Vec<PointLight>,
@@ -52,7 +51,7 @@ impl<'a> SkyboxScene<'a> {
 
         let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
+        let fragment_shader = DEFAULT_FRAGMENT_SHADER;
 
         let aspect_ratio = framebuffer.width_over_height;
 

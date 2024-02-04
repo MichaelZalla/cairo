@@ -1,11 +1,7 @@
-use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 
 use crate::color::Color;
 
 use super::{geometry::sample::GeometrySample, ShaderContext};
 
-pub trait FragmentShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>) -> Self;
-
-    fn call(&self, sample: &GeometrySample) -> Color;
-}
+pub type FragmentShaderFn = fn(&RwLockReadGuard<ShaderContext>, &GeometrySample) -> Color;

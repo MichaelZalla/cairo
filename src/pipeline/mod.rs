@@ -8,12 +8,11 @@ use crate::{
     matrix::Mat4,
     mesh::Face,
     shader::{
-        alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
+        alpha::AlphaShader, fragment::FragmentShaderFn, geometry::GeometryShader,
         vertex::VertexShaderFn, ShaderContext,
     },
     shaders::{
-        default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
-        default_geometry_shader::DefaultGeometryShader,
+        default_alpha_shader::DefaultAlphaShader, default_geometry_shader::DefaultGeometryShader,
     },
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -54,13 +53,8 @@ struct PipelineViewport {
     pub height_over_2: f32,
 }
 
-pub struct Pipeline<
-    'a,
-    F = DefaultFragmentShader<'a>,
-    A = DefaultAlphaShader<'a>,
-    G = DefaultGeometryShader<'a>,
-> where
-    F: FragmentShader<'a>,
+pub struct Pipeline<'a, A = DefaultAlphaShader<'a>, G = DefaultGeometryShader<'a>>
+where
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
@@ -75,12 +69,11 @@ pub struct Pipeline<
     vertex_shader: VertexShaderFn,
     alpha_shader: A,
     pub geometry_shader: G,
-    fragment_shader: F,
+    fragment_shader: FragmentShaderFn,
 }
 
-impl<'a, F, A, G> Pipeline<'a, F, A, G>
+impl<'a, A, G> Pipeline<'a, A, G>
 where
-    F: FragmentShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
@@ -88,7 +81,7 @@ where
         shader_context: &'a RwLock<ShaderContext>,
         vertex_shader: VertexShaderFn,
         geometry_shader: G,
-        fragment_shader: F,
+        fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
     ) -> Self {
         let alpha_shader = AlphaShader::new(shader_context);
@@ -149,6 +142,10 @@ where
 
     pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
         self.vertex_shader = shader;
+    }
+
+    pub fn set_fragment_shader(&mut self, shader: FragmentShaderFn) {
+        self.fragment_shader = shader;
     }
 
     pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RwLock<Buffer2D>>) {
@@ -320,6 +317,8 @@ where
         if self.options.do_rasterized_geometry {
             // Perform deferred lighting pass.
 
+            let shader_context = self.shader_context.read().unwrap();
+
             // Call the active fragment shader on every G-buffer sample that was
             // written to by the rasterizer.
 
@@ -329,7 +328,7 @@ where
                     let y = index as u32 / self.viewport.width;
 
                     let color = if self.options.do_lighting {
-                        self.fragment_shader.call(&sample)
+                        (self.fragment_shader)(&shader_context, &sample)
                     } else {
                         Color::from_vec3(sample.diffuse * 255.0)
                     };

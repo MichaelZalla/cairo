@@ -18,9 +18,9 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{fragment::FragmentShader, geometry::GeometryShader, ShaderContext},
+    shader::{geometry::GeometryShader, ShaderContext},
     shaders::{
-        default_fragment_shader::DefaultFragmentShader,
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
@@ -31,7 +31,7 @@ use cairo::{
 pub struct GeneratePrimitivesScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
     debug_message_buffer: DebugMessageBuffer,
-    pipeline: Pipeline<'a, DefaultFragmentShader<'a>>,
+    pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -61,7 +61,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
-        let fragment_shader = DefaultFragmentShader::new(shader_context);
+        let fragment_shader = DEFAULT_FRAGMENT_SHADER;
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
