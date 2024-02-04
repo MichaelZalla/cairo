@@ -67,8 +67,6 @@ pub struct Pipeline<
     deferred_framebuffer: Option<Buffer2D>,
     composite_framebuffer: Option<&'a RwLock<Buffer2D>>,
     viewport: PipelineViewport,
-    projection_z_near: f32,
-    projection_z_far: f32,
     z_buffer: Option<ZBuffer>,
     g_buffer: Option<GBuffer>,
     pub shader_context: &'a RwLock<ShaderContext>,
@@ -111,8 +109,6 @@ where
             deferred_framebuffer,
             composite_framebuffer,
             viewport,
-            projection_z_near: DEFAULT_PROJECTION_Z_NEAR,
-            projection_z_far: DEFAULT_PROJECTION_Z_FAR,
             z_buffer,
             g_buffer,
             shader_context,
@@ -125,24 +121,28 @@ where
     }
 
     pub fn set_projection_z_near(&mut self, depth: f32) {
-        self.projection_z_near = depth;
-
         match self.z_buffer.as_mut() {
             Some(z_buffer) => {
                 z_buffer.set_projection_z_near(depth);
             }
-            None => (),
+            None => {
+                panic!(
+                    "Called Pipeline::set_projection_z_near() on pipeline with no bound Z-buffer!"
+                );
+            }
         }
     }
 
     pub fn set_projection_z_far(&mut self, depth: f32) {
-        self.projection_z_far = depth;
-
         match self.z_buffer.as_mut() {
             Some(z_buffer) => {
                 z_buffer.set_projection_z_far(depth);
             }
-            None => (),
+            None => {
+                panic!(
+                    "Called Pipeline::set_projection_z_far() on pipeline with no bound Z-buffer!"
+                );
+            }
         }
     }
 
@@ -206,17 +206,17 @@ where
                 }
 
                 match &self.z_buffer {
-                    Some(zbuffer) => {
-                        if zbuffer.buffer.width != framebuffer.width
-                            || zbuffer.buffer.height != framebuffer.height
+                    Some(z_buffer) => {
+                        if z_buffer.buffer.width != framebuffer.width
+                            || z_buffer.buffer.height != framebuffer.height
                         {
                             // Re-allocate a Z-buffer.
 
                             self.z_buffer = Some(ZBuffer::new(
                                 framebuffer.width,
                                 framebuffer.height,
-                                self.projection_z_near,
-                                self.projection_z_far,
+                                z_buffer.get_projection_z_near(),
+                                z_buffer.get_projection_z_far(),
                             ));
                         }
                     }
@@ -226,16 +226,16 @@ where
                         self.z_buffer = Some(ZBuffer::new(
                             framebuffer.width,
                             framebuffer.height,
-                            self.projection_z_near,
-                            self.projection_z_far,
+                            DEFAULT_PROJECTION_Z_NEAR,
+                            DEFAULT_PROJECTION_Z_FAR,
                         ));
                     }
                 }
 
                 match &self.g_buffer {
-                    Some(gbuffer) => {
-                        if gbuffer.buffer.width != framebuffer.width
-                            || gbuffer.buffer.height != framebuffer.height
+                    Some(g_buffer) => {
+                        if g_buffer.buffer.width != framebuffer.width
+                            || g_buffer.buffer.height != framebuffer.height
                         {
                             // Re-allocate a G-buffer.
 

@@ -23,9 +23,17 @@ impl ZBuffer {
         }
     }
 
+    pub fn get_projection_z_near(&self) -> f32 {
+        self.projection_z_near
+    }
+
     pub fn set_projection_z_near(&mut self, depth: f32) {
         self.projection_z_near = depth;
         self.projection_z_near_reciprocal = 1.0 / depth;
+    }
+
+    pub fn get_projection_z_far(&self) -> f32 {
+        self.projection_z_far
     }
 
     pub fn set_projection_z_far(&mut self, depth: f32) {

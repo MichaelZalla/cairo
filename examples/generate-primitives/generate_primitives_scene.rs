@@ -177,16 +177,13 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         context.set_spot_light(0, spot_lights[0]);
 
-        let mut pipeline = Pipeline::new(
+        let pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
             geometry_shader,
             fragment_shader,
             pipeline_options,
         );
-
-        pipeline.set_projection_z_near(camera.get_projection_z_near());
-        pipeline.set_projection_z_far(camera.get_projection_z_far());
 
         return GeneratePrimitivesScene {
             framebuffer_rwl,
@@ -363,6 +360,13 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+
+        let camera = self.cameras[self.active_camera_index];
+
+        self.pipeline
+            .set_projection_z_near(camera.get_projection_z_near());
+        self.pipeline
+            .set_projection_z_far(camera.get_projection_z_far());
 
         self.pipeline.begin_frame();
 
