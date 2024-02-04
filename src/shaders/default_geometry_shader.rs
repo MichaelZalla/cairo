@@ -3,6 +3,7 @@ use std::sync::RwLock;
 use crate::{
     color::{self, Color},
     device::{GameControllerState, KeyboardState, MouseState},
+    scene::light::PointLight,
     shader::{
         geometry::{sample::GeometrySample, GeometryShader, GeometryShaderOptions},
         ShaderContext,
@@ -133,6 +134,12 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
 
         // Specular lighting
 
+        let default_point_light: Option<PointLight> = if context.point_lights.len() > 0 {
+            Some(context.point_lights[0])
+        } else {
+            None
+        };
+
         match context.active_material {
             Some(mat_raw_mut) => unsafe {
                 out.specular_exponent = (*mat_raw_mut).specular_exponent;
@@ -149,14 +156,22 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                         out.specular_intensity = (r_f + g_f + b_f) / 255.0;
                     }
                     _ => {
-                        out.specular_intensity = context.point_lights[0].specular_intensity;
+                        out.specular_intensity = if default_point_light.is_some() {
+                            default_point_light.unwrap().specular_intensity
+                        } else {
+                            0.0
+                        };
                     }
                 }
             },
             None => {
-                // specular_exponent = context.default_specular_exponent;
                 out.specular_exponent = 8;
-                out.specular_intensity = context.point_lights[0].specular_intensity;
+
+                out.specular_intensity = if default_point_light.is_some() {
+                    default_point_light.unwrap().specular_intensity
+                } else {
+                    0.0
+                };
             }
         }
 
