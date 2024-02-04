@@ -282,7 +282,7 @@ where
             .unwrap()
             .clear(Some(fill_value));
 
-        if self.options.show_rasterized_geometry {
+        if self.options.do_rasterized_geometry {
             self.deferred_framebuffer
                 .as_mut()
                 .unwrap()
@@ -295,7 +295,7 @@ where
     }
 
     pub fn end_frame(&mut self) {
-        if self.options.show_rasterized_geometry {
+        if self.options.do_rasterized_geometry {
             // Perform deferred lighting pass.
 
             // Call the active fragment shader on every G-buffer sample that was
@@ -306,7 +306,7 @@ where
                     let x = index as u32 % self.viewport.width;
                     let y = index as u32 / self.viewport.width;
 
-                    let color = if self.options.show_lighting {
+                    let color = if self.options.do_lighting {
                         self.fragment_shader.call(&sample)
                     } else {
                         Color::from_vec3(sample.diffuse * 255.0)
@@ -329,7 +329,7 @@ where
             }
         };
 
-        if self.options.show_rasterized_geometry {
+        if self.options.do_rasterized_geometry {
             composite_framebuffer.blit_from(0, 0, self.deferred_framebuffer.as_ref().unwrap());
         }
 
@@ -736,11 +736,11 @@ where
         // Interpolate entire vertex (all attributes) when drawing (scanline
         // interpolant)
 
-        if self.options.show_rasterized_geometry {
+        if self.options.do_rasterized_geometry {
             self.triangle_fill(screen_vertices[0], screen_vertices[1], screen_vertices[2]);
         }
 
-        if self.options.show_wireframe {
+        if self.options.do_wireframe {
             let mut points: Vec<Vec2> = vec![];
 
             for v in screen_vertices {
@@ -760,7 +760,7 @@ where
             );
         }
 
-        if self.options.show_normals {
+        if self.options.do_visualize_normals {
             for (index, v) in screen_vertices.iter().enumerate() {
                 let world_vertex_relative_normal = world_vertex_relative_normals[index];
 

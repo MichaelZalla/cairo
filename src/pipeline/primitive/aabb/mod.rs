@@ -20,10 +20,10 @@ where
 
         self.options = PipelineOptions {
             wireframe_color: color,
-            show_wireframe: true,
-            show_rasterized_geometry: false,
-            show_lighting: false,
-            show_normals: false,
+            do_wireframe: true,
+            do_rasterized_geometry: false,
+            do_lighting: false,
+            do_visualize_normals: false,
             cull_backfaces: false,
         };
 
