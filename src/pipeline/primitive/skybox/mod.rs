@@ -1,17 +1,13 @@
 use crate::{
     pipeline::{zbuffer, Pipeline},
     scene::camera::Camera,
-    shader::{
-        alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
-        vertex::VertexShader,
-    },
+    shader::{alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader},
     texture::cubemap::CubeMap,
 };
 
-impl<'a, F, V, A, G> Pipeline<'a, F, V, A, G>
+impl<'a, F, A, G> Pipeline<'a, F, A, G>
 where
     F: FragmentShader<'a>,
-    V: VertexShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {

@@ -2,18 +2,14 @@ use crate::{
     color::{self, Color},
     graphics::Graphics,
     pipeline::Pipeline,
-    shader::{
-        alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
-        vertex::VertexShader,
-    },
+    shader::{alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader},
     vec::vec3::Vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-impl<'a, F, V, A, G> Pipeline<'a, F, V, A, G>
+impl<'a, F, A, G> Pipeline<'a, F, A, G>
 where
     F: FragmentShader<'a>,
-    V: VertexShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
@@ -30,8 +26,10 @@ where
             ..Default::default()
         };
 
-        let mut start_vertex_out = self.vertex_shader.call(&start_vertex_in);
-        let mut end_vertex_out = self.vertex_shader.call(&end_vertex_in);
+        let shader_context = self.shader_context.read().unwrap();
+
+        let mut start_vertex_out = (self.vertex_shader)(&shader_context, &start_vertex_in);
+        let mut end_vertex_out = (self.vertex_shader)(&shader_context, &end_vertex_in);
 
         self.render_line_from_out_vertices(&mut start_vertex_out, &mut end_vertex_out, color);
     }

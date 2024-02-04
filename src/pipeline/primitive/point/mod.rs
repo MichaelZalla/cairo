@@ -5,18 +5,14 @@ use crate::{
     mesh,
     pipeline::Pipeline,
     scene::camera::Camera,
-    shader::{
-        alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
-        vertex::VertexShader,
-    },
+    shader::{alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader},
     vec::vec3::Vec3,
     vertex::default_vertex_in::DefaultVertexIn,
 };
 
-impl<'a, F, V, A, G> Pipeline<'a, F, V, A, G>
+impl<'a, F, A, G> Pipeline<'a, F, A, G>
 where
     F: FragmentShader<'a>,
-    V: VertexShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
@@ -35,7 +31,9 @@ where
             ..Default::default()
         };
 
-        let mut vertex_out = self.vertex_shader.call(&vertex_in);
+        let shader_context = self.shader_context.read().unwrap();
+
+        let mut vertex_out = (self.vertex_shader)(&shader_context, &vertex_in);
 
         self.transform_to_ndc_space(&mut vertex_out);
 

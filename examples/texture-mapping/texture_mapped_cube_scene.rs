@@ -14,11 +14,11 @@ use cairo::{
     },
     shader::fragment::FragmentShader,
     shader::geometry::GeometryShader,
-    shader::vertex::VertexShader,
     shader::ShaderContext,
     shaders::{
         default_fragment_shader::DefaultFragmentShader,
-        default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
+        default_geometry_shader::DefaultGeometryShader,
+        default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     vec::{vec3::Vec3, vec4::Vec4},
 };
@@ -42,7 +42,7 @@ impl<'a> TextureMappedCubeScene<'a> {
     ) -> Self {
         let framebuffer = framebuffer_rwl.read().unwrap();
 
-        let vertex_shader = DefaultVertexShader::new(shader_context);
+        let vertex_shader = DEFAULT_VERTEX_SHADER;
 
         let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 

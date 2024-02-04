@@ -9,11 +9,11 @@ use crate::{
     mesh::Face,
     shader::{
         alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
-        vertex::VertexShader, ShaderContext,
+        vertex::VertexShaderFn, ShaderContext,
     },
     shaders::{
         default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
-        default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
+        default_geometry_shader::DefaultGeometryShader,
     },
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -57,12 +57,10 @@ struct PipelineViewport {
 pub struct Pipeline<
     'a,
     F = DefaultFragmentShader<'a>,
-    V = DefaultVertexShader<'a>,
     A = DefaultAlphaShader<'a>,
     G = DefaultGeometryShader<'a>,
 > where
     F: FragmentShader<'a>,
-    V: VertexShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
@@ -74,22 +72,21 @@ pub struct Pipeline<
     z_buffer: Option<ZBuffer>,
     g_buffer: Option<GBuffer>,
     pub shader_context: &'a RwLock<ShaderContext>,
-    vertex_shader: V,
+    vertex_shader: VertexShaderFn,
     alpha_shader: A,
     pub geometry_shader: G,
     fragment_shader: F,
 }
 
-impl<'a, F, V, A, G> Pipeline<'a, F, V, A, G>
+impl<'a, F, A, G> Pipeline<'a, F, A, G>
 where
     F: FragmentShader<'a>,
-    V: VertexShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {
     pub fn new(
         shader_context: &'a RwLock<ShaderContext>,
-        vertex_shader: V,
+        vertex_shader: VertexShaderFn,
         geometry_shader: G,
         fragment_shader: F,
         options: PipelineOptions,
@@ -148,6 +145,10 @@ where
                 );
             }
         }
+    }
+
+    pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
+        self.vertex_shader = shader;
     }
 
     pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RwLock<Buffer2D>>) {
@@ -384,9 +385,11 @@ where
             for face in entity.bounds_mesh.faces.iter() {
                 let object_vertices_in = self.get_vertices_in(&entity.bounds_mesh, &face);
 
+                let shader_context = self.shader_context.read().unwrap();
+
                 let world_vertices: Vec<DefaultVertexOut> = object_vertices_in
                     .into_iter()
-                    .map(|v_in| return self.vertex_shader.call(&v_in))
+                    .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
                     .collect();
 
                 let mut tri: Triangle<DefaultVertexOut> = Triangle {
@@ -530,10 +533,11 @@ where
         }
 
         // Process mesh vertices from object-space to world-space.
+        let shader_context = self.shader_context.read().unwrap();
 
         let world_vertices = vertices_in
             .into_iter()
-            .map(|v_in| return self.vertex_shader.call(&v_in))
+            .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
             .collect();
 
         self.process_triangles(&mesh.faces, world_vertices);

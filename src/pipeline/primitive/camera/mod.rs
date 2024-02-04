@@ -2,16 +2,12 @@ use crate::{
     color::{self},
     pipeline::Pipeline,
     scene::camera::Camera,
-    shader::{
-        alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader,
-        vertex::VertexShader,
-    },
+    shader::{alpha::AlphaShader, fragment::FragmentShader, geometry::GeometryShader},
 };
 
-impl<'a, F, V, A, G> Pipeline<'a, F, V, A, G>
+impl<'a, F, A, G> Pipeline<'a, F, A, G>
 where
     F: FragmentShader<'a>,
-    V: VertexShader<'a>,
     A: AlphaShader<'a>,
     G: GeometryShader<'a>,
 {

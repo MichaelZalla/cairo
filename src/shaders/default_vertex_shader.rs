@@ -1,23 +1,13 @@
-use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 
 use crate::{
-    shader::{vertex::VertexShader, ShaderContext},
+    shader::{vertex::VertexShaderFn, ShaderContext},
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-pub struct DefaultVertexShader<'a> {
-    pub context: &'a RwLock<ShaderContext>,
-}
-
-impl<'a> VertexShader<'a> for DefaultVertexShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>) -> Self {
-        Self { context }
-    }
-
-    fn call(&self, v: &DefaultVertexIn) -> DefaultVertexOut {
-        let context = self.context.read().unwrap();
-
+pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
+    |context: &RwLockReadGuard<'_, ShaderContext>, v: &DefaultVertexIn| -> DefaultVertexOut {
         // Object-to-world-space vertex transform
 
         let mut out = DefaultVertexOut::new();
@@ -41,6 +31,5 @@ impl<'a> VertexShader<'a> for DefaultVertexShader<'a> {
 
         out.uv = v.uv.clone();
 
-        return out;
-    }
-}
+        out
+    };
