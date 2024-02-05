@@ -863,7 +863,7 @@ where
 
                 match self.g_buffer.as_mut() {
                     Some(g_buffer) => {
-                        linear_space_interpolant.depth = non_linear_z;
+                        linear_space_interpolant.depth = linear_space_interpolant.p.z;
 
                         g_buffer.set(x, y, self.geometry_shader.call(&linear_space_interpolant));
                     }
