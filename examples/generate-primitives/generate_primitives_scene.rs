@@ -367,7 +367,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         self.pipeline
             .set_projection_z_far(camera.get_projection_z_far());
 
-        self.pipeline.begin_frame();
+        self.pipeline.begin_frame(None);
 
         {
             for entity in self.entities.read().unwrap().as_slice() {

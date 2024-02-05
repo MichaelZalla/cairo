@@ -216,7 +216,7 @@ impl<'a> Scene for SponzaScene<'a> {
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
 
-        self.pipeline.begin_frame();
+        self.pipeline.begin_frame(None);
 
         let camera = self.cameras[self.active_camera_index];
 

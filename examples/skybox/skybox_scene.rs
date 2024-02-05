@@ -218,7 +218,7 @@ impl<'a> Scene for SkyboxScene<'a> {
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
 
-        self.pipeline.begin_frame();
+        self.pipeline.begin_frame(None);
 
         {
             let mut context = self.shader_context.write().unwrap();

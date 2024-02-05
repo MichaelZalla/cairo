@@ -198,7 +198,7 @@ impl<'a> Scene for MultipleScenesScene<'a> {
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
 
-        self.pipeline.begin_frame();
+        self.pipeline.begin_frame(None);
 
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, None);

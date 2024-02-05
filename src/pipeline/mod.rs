@@ -61,6 +61,7 @@ where
     forward_framebuffer: Option<Buffer2D>,
     deferred_framebuffer: Option<Buffer2D>,
     composite_framebuffer: Option<&'a RwLock<Buffer2D>>,
+    keying_color: u32,
     viewport: PipelineViewport,
     z_buffer: Option<ZBuffer>,
     g_buffer: Option<GBuffer>,
@@ -90,6 +91,8 @@ where
 
         let composite_framebuffer = None;
 
+        let keying_color = color::BLACK.to_u32();
+
         let viewport: PipelineViewport = Default::default();
 
         let z_buffer = None;
@@ -100,6 +103,7 @@ where
             forward_framebuffer,
             deferred_framebuffer,
             composite_framebuffer,
+            keying_color,
             viewport,
             z_buffer,
             g_buffer,
@@ -268,8 +272,13 @@ where
         self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
     }
 
-    pub fn begin_frame(&mut self) {
-        let fill_value = color::BLACK.to_u32();
+    pub fn begin_frame(&mut self, fill_value_option: Option<Color>) {
+        let fill_value = match fill_value_option {
+            Some(color) => color.to_u32(),
+            None => color::BLACK.to_u32(),
+        };
+
+        self.set_keying_color(fill_value);
 
         match self.forward_framebuffer.as_mut() {
             Some(forward_framebuffer) => {
@@ -355,13 +364,15 @@ where
         let forward_frame = self.forward_framebuffer.as_ref().unwrap().get_all();
 
         // Skips pixels in our forward buffer if they weren't written to.
-        let keying_color = color::BLACK.to_u32();
-
         for (index, value) in forward_frame.iter().enumerate() {
-            if *value != keying_color {
+            if *value != self.keying_color {
                 composite_framebuffer.set_raw(index, *value);
             }
         }
+    }
+
+    pub fn set_keying_color(&mut self, color: u32) {
+        self.keying_color = color;
     }
 
     pub fn render_entity(&mut self, entity: &Entity, material_cache: Option<&MaterialCache>) {
