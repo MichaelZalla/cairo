@@ -13,7 +13,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::TextureMap,
+    texture::{TextureMap, TextureMapWrapping},
 };
 use sdl2::keyboard::Keycode;
 
@@ -92,7 +92,7 @@ fn main() -> Result<(), String> {
 
     // Checkerboard material
 
-    checkerboard_diffuse_map.is_tileable = true;
+    checkerboard_diffuse_map.options.wrapping = TextureMapWrapping::Repeat;
 
     checkerboard_diffuse_map.load(rendering_context)?;
 
@@ -190,12 +190,9 @@ fn main() -> Result<(), String> {
 
     // Set up our app
     let mut update = |app: &mut App,
-                      //   timing_info: &TimingInfo,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState| {
-        //
-
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::R { .. } => {

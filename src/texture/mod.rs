@@ -18,31 +18,43 @@ pub struct TextureMapInfo {
     pub filepath: String,
 }
 
+#[derive(Default, Debug, Copy, Clone)]
+pub enum TextureMapWrapping {
+    #[default]
+    Repeat,
+    ClampToEdge,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TextureMapOptions {
+    pub wrapping: TextureMapWrapping,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct TextureMap {
     pub info: TextureMapInfo,
     pub is_loaded: bool,
-    pub is_tileable: bool,
     pub is_mipmapped: bool,
     pub width: u32,
     pub height: u32,
     pub levels: Vec<TextureBuffer>,
+    pub options: TextureMapOptions,
 }
 
 impl TextureMap {
     const BYTES_PER_PIXEL: usize = 3;
 
     pub fn new(filepath: &str) -> Self {
-        TextureMap {
+        Self {
             info: TextureMapInfo {
                 filepath: filepath.to_string(),
             },
             is_loaded: false,
-            is_tileable: false,
             is_mipmapped: false,
             width: 0,
             height: 0,
             levels: vec![],
+            options: Default::default(),
         }
     }
 

@@ -1,26 +1,39 @@
 use std::ops::Rem;
 
-use crate::vec::{vec2::Vec2, vec3::Vec3};
+use crate::{
+    texture::TextureMapWrapping,
+    vec::{vec2::Vec2, vec3::Vec3},
+};
 
 use super::TextureMap;
+
+fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
+    match map.options.wrapping {
+        TextureMapWrapping::Repeat => Vec2 {
+            x: if uv.x < 0.0 || uv.x >= 1.0 {
+                uv.x.rem_euclid(1.0)
+            } else {
+                uv.x
+            },
+            y: if uv.y < 0.0 || uv.y >= 1.0 {
+                uv.y.rem_euclid(1.0)
+            } else {
+                uv.y
+            },
+            z: 1.0,
+        },
+        TextureMapWrapping::ClampToEdge => Vec2 {
+            x: uv.x.max(0.0).min(1.0),
+            y: uv.y.max(0.0).min(1.0),
+            z: 1.0,
+        },
+    }
+}
 
 pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
-    // Wraps UV coordinates into the range [0.0, 1.0).
-    let wrapped_uv = Vec2 {
-        x: if uv.x < 0.0 || uv.x >= 1.0 {
-            uv.x.rem_euclid(1.0)
-        } else {
-            uv.x
-        },
-        y: if uv.y < 0.0 || uv.y >= 1.0 {
-            uv.y.rem_euclid(1.0)
-        } else {
-            uv.y
-        },
-        z: 1.0,
-    };
+    let safe_uv = apply_wrapping_options(uv, map);
 
     debug_assert!(
         map.levels[0].data.len()
@@ -44,8 +57,8 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 
     // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
 
-    let texel_x = wrapped_uv.x * (level_width - 1) as f32;
-    let texel_y = (1.0 - wrapped_uv.y) * (level_height - 1) as f32;
+    let texel_x = safe_uv.x * (level_width - 1) as f32;
+    let texel_y = (1.0 - safe_uv.y) * (level_height - 1) as f32;
 
     return sample_from_texel((texel_x, texel_y), map, level_index);
 }
@@ -53,20 +66,7 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
-    // Wraps UV coordinates into the range [0.0, 1.0).
-    let uv_safe = Vec2 {
-        x: if uv.x < 0.0 || uv.x >= 1.0 {
-            uv.x.rem_euclid(1.0)
-        } else {
-            uv.x
-        },
-        y: if uv.y < 0.0 || uv.y >= 1.0 {
-            uv.y.rem_euclid(1.0)
-        } else {
-            uv.y
-        },
-        z: 1.0,
-    };
+    let safe_uv = apply_wrapping_options(uv, map);
 
     // Determine our map dimensions, based on the level index.
     let level_width = match level_index {
@@ -97,8 +97,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
 
     // Maps the wrapped UV coordinate to a fractional texel coordinate.
     let wrapped_uv_as_fractional_texel = Vec2 {
-        x: (uv_safe.x * (level_width - 1) as f32),
-        y: ((1.0 - uv_safe.y) * (level_height - 1) as f32),
+        x: (safe_uv.x * (level_width - 1) as f32),
+        y: ((1.0 - safe_uv.y) * (level_height - 1) as f32),
         z: 1.0,
     };
 
@@ -365,41 +365,42 @@ pub fn get_neighbors(
         None => map.height as f32,
     };
 
-    if map.is_tileable || level_width == 1.0 {
-        return (
-            Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
-            Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),
-            Some((
-                bottom_left.0.rem(level_width),
-                bottom_left.1.rem(level_height),
-            )),
-            Some((
-                bottom_right.0.rem(level_width),
-                bottom_right.1.rem(level_height),
-            )),
-        );
+    match (map.options.wrapping, level_width == 1.0) {
+        (TextureMapWrapping::Repeat, _) | (_, true) => {
+            return (
+                Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
+                Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),
+                Some((
+                    bottom_left.0.rem(level_width),
+                    bottom_left.1.rem(level_height),
+                )),
+                Some((
+                    bottom_right.0.rem(level_width),
+                    bottom_right.1.rem(level_height),
+                )),
+            );
+        }
+        (_, false) => (
+            if top_left.0 >= 0.0 && top_left.1 >= 0.0 {
+                Some((top_left.0, top_left.1))
+            } else {
+                None
+            },
+            if top_right.0 < (level_width - 1.0) && top_right.1 >= 0.0 {
+                Some((top_right.0, top_right.1))
+            } else {
+                None
+            },
+            if bottom_left.0 >= 0.0 && bottom_left.1 < (level_height - 1.0) {
+                Some((bottom_left.0, bottom_left.1))
+            } else {
+                None
+            },
+            if bottom_right.0 < (level_width - 1.0) && bottom_right.1 < (level_height - 1.0) {
+                Some((bottom_right.0, bottom_right.1))
+            } else {
+                None
+            },
+        ),
     }
-
-    (
-        if top_left.0 >= 0.0 && top_left.1 >= 0.0 {
-            Some((top_left.0, top_left.1))
-        } else {
-            None
-        },
-        if top_right.0 < (level_width - 1.0) && top_right.1 >= 0.0 {
-            Some((top_right.0, top_right.1))
-        } else {
-            None
-        },
-        if bottom_left.0 >= 0.0 && bottom_left.1 < (level_height - 1.0) {
-            Some((bottom_left.0, bottom_left.1))
-        } else {
-            None
-        },
-        if bottom_right.0 < (level_width - 1.0) && bottom_right.1 < (level_height - 1.0) {
-            Some((bottom_right.0, bottom_right.1))
-        } else {
-            None
-        },
-    )
 }
