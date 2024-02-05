@@ -12,7 +12,6 @@ pub mod geometry;
 pub mod vertex;
 
 pub struct ShaderContext {
-    pub flags: u32,
     pub world_transform: Mat4,
     pub view_position: Vec4,
     pub view_inverse_transform: Mat4,
@@ -32,7 +31,6 @@ pub struct ShaderContext {
 impl Default for ShaderContext {
     fn default() -> Self {
         Self {
-            flags: Default::default(),
             world_transform: Mat4::identity(),
             view_position: Default::default(),
             view_inverse_transform: Mat4::identity(),
@@ -63,7 +61,6 @@ impl ShaderContext {
         spot_lights: Vec<SpotLight>,
     ) -> Self {
         Self {
-            flags: 0,
             world_transform,
             view_position,
             view_inverse_transform,
