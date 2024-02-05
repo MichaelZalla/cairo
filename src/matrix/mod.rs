@@ -50,7 +50,7 @@ impl<T: std::clone::Clone + std::ops::MulAssign<f32>, const N: usize> ops::Mul<f
     fn mul(self, rhs: f32) -> Mat<T, N> {
         let mut result = self.clone();
         result *= rhs;
-        return result;
+        result
     }
 }
 
@@ -97,7 +97,7 @@ impl<
             }
         }
 
-        return result;
+        result
     }
 }
 
@@ -125,7 +125,7 @@ impl<const N: usize> Mat<f32, N> {
             result.elements[i][i] = factor;
         }
 
-        return result;
+        result
     }
 }
 
@@ -134,39 +134,39 @@ impl Mat<f32, 3> {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
-        return Mat {
+        Self {
             elements: [
                 [cos_theta, sin_theta, 0.0],
                 [-sin_theta, cos_theta, 0.0],
                 [0.0, 0.0, 1.0],
             ],
-        };
+        }
     }
 
     pub fn rotation_y(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
-        return Mat {
+        Self {
             elements: [
                 [cos_theta, 0.0, -sin_theta],
                 [0.0, 1.0, 0.0],
                 [sin_theta, 0.0, cos_theta],
             ],
-        };
+        }
     }
 
     pub fn rotation_x(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
-        return Mat {
+        Self {
             elements: [
                 [1.0, 0.0, 0.0],
                 [0.0, cos_theta, sin_theta],
                 [0.0, -sin_theta, cos_theta],
             ],
-        };
+        }
     }
 }
 
@@ -175,66 +175,66 @@ impl Mat<f32, 4> {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
-        return Mat {
+        Self {
             elements: [
                 [cos_theta, sin_theta, 0.0, 0.0],
                 [-sin_theta, cos_theta, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
-        };
+        }
     }
 
     pub fn rotation_y(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
-        return Mat {
+        Self {
             elements: [
                 [cos_theta, 0.0, -sin_theta, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
                 [sin_theta, 0.0, cos_theta, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
-        };
+        }
     }
 
     pub fn rotation_x(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
-        return Mat {
+        Self {
             elements: [
                 [1.0, 0.0, 0.0, 0.0],
                 [0.0, cos_theta, sin_theta, 0.0],
                 [0.0, -sin_theta, cos_theta, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
-        };
+        }
     }
 
     pub fn translation(v: Vec3) -> Self {
-        return Mat {
+        Self {
             elements: [
                 [1.0, 0.0, 0.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
                 [v.x, v.y, v.z, 1.0],
             ],
-        };
+        }
     }
 
     pub fn projection(width: f32, height: f32, near: f32, far: f32) -> Self {
         let (w, h, n, f) = (width, height, near, far);
 
-        return Self {
+        Self {
             elements: [
                 [2.0 * n / w as f32, 0.0, 0.0, 0.0],
                 [0.0, 2.0 * n / h as f32, 0.0, 0.0],
                 [0.0, 0.0, f / (f - n), 1.0],
                 [0.0, 0.0, (-n * f) / (f - n), 0.0],
             ],
-        };
+        }
     }
 
     pub fn projection_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
@@ -244,14 +244,14 @@ impl Mat<f32, 4> {
 
         let (w, h, n, f) = (width, height, near, far);
 
-        return Self {
+        Self {
             elements: [
                 [w, 0.0, 0.0, 0.0],
                 [0.0, h, 0.0, 0.0],
                 [0.0, 0.0, f / (f - n), 1.0],
                 [0.0, 0.0, (-n * f) / (f - n), 0.0],
             ],
-        };
+        }
     }
 
     pub fn projection_inverse_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
@@ -261,14 +261,14 @@ impl Mat<f32, 4> {
 
         let (w, h, n, f) = (width, height, near, far);
 
-        return Self {
+        Self {
             elements: [
                 [1.0 / w, 0.0, 0.0, 0.0],
                 [0.0, 1.0 / h, 0.0, 0.0],
                 [0.0, 0.0, 1.0 / (f / (f - n)), 1.0],
                 [0.0, 0.0, -((-n * f) / (f - n)), 0.0],
             ],
-        };
+        }
     }
 
     pub fn look_at(position: Vec3, forward: Vec3, right: Vec3, up: Vec3) -> Mat4 {
@@ -302,7 +302,7 @@ impl Mat<f32, 4> {
             }
         }
 
-        return result;
+        result
     }
 }
 
