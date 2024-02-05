@@ -91,8 +91,7 @@ impl ShaderContext {
         self.projection_transform = projection_transform;
     }
 
-    // @TODO Rename to set_view_position()
-    pub fn set_camera_position(&mut self, position: Vec4) {
+    pub fn set_view_position(&mut self, position: Vec4) {
         self.view_position = position;
     }
 

@@ -111,7 +111,7 @@ impl<'a> SkyboxScene<'a> {
 
         let mut context = shader_context.write().unwrap();
 
-        context.set_camera_position(view_position);
+        context.set_view_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
         context.set_projection(projection_transform);
 
@@ -191,7 +191,7 @@ impl<'a> Scene for SkyboxScene<'a> {
             .geometry_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        context.set_camera_position(Vec4::new(camera.get_position(), 1.0));
+        context.set_view_position(Vec4::new(camera.get_position(), 1.0));
 
         context.set_projection(camera.get_projection());
 
