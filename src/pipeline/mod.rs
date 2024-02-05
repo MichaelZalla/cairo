@@ -454,10 +454,11 @@ where
                         Some(cache) => {
                             // Set the pipeline effect's active material to this
                             // mesh's material.
-                            let mat = cache.get(name).unwrap();
-                            let mat_raw_mut = &*mat as *const Material;
 
-                            context.set_active_material(Some(mat_raw_mut));
+                            let material = cache.get(name).unwrap();
+                            let material_raw_mut = &*material as *const Material;
+
+                            context.set_active_material(Some(material_raw_mut));
                         }
                         None => (),
                     }

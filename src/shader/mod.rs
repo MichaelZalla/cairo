@@ -144,8 +144,8 @@ impl ShaderContext {
 
     pub fn set_active_material(&mut self, material_option: Option<*const Material>) {
         match material_option {
-            Some(mat_raw_mut) => {
-                self.active_material = Some(mat_raw_mut);
+            Some(material_raw_mut) => {
+                self.active_material = Some(material_raw_mut);
             }
             None => {
                 self.active_material = None;
@@ -155,8 +155,8 @@ impl ShaderContext {
 
     pub fn set_active_test_uv_texture_map(&mut self, map: Option<*const TextureMap>) {
         match map {
-            Some(mat_raw_mut) => {
-                self.active_test_uv_texture_map = Some(mat_raw_mut);
+            Some(texture_raw_mut) => {
+                self.active_test_uv_texture_map = Some(texture_raw_mut);
             }
             None => {
                 self.active_test_uv_texture_map = None;
@@ -166,8 +166,8 @@ impl ShaderContext {
 
     pub fn set_active_environment_map(&mut self, skybox: Option<*const CubeMap>) {
         match skybox {
-            Some(mat_raw_mut) => {
-                self.active_environment_map = Some(mat_raw_mut);
+            Some(cubemap_raw_mut) => {
+                self.active_environment_map = Some(cubemap_raw_mut);
             }
             None => {
                 self.active_environment_map = None;

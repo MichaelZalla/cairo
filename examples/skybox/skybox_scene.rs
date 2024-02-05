@@ -223,9 +223,9 @@ impl<'a> Scene for SkyboxScene<'a> {
         {
             let mut context = self.shader_context.write().unwrap();
 
-            let mat_raw_mut = &self.skybox as *const CubeMap;
+            let cubemap_raw_mut = &self.skybox as *const CubeMap;
 
-            context.set_active_environment_map(Some(mat_raw_mut));
+            context.set_active_environment_map(Some(cubemap_raw_mut));
         }
 
         for entity in self.entities.read().unwrap().as_slice() {

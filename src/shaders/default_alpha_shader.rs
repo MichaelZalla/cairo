@@ -13,8 +13,8 @@ pub const DefaultAlphaShader: AlphaShaderFn =
         // Check if this fragment can be discarded.
 
         match context.active_material {
-            Some(mat_raw_mut) => unsafe {
-                match &(*mat_raw_mut).alpha_map {
+            Some(material_raw_mut) => unsafe {
+                match &(*material_raw_mut).alpha_map {
                     Some(texture) => {
                         // Read in a per-fragment normal, with components in the
                         // range [0, 255].

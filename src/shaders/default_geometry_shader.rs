@@ -58,9 +58,9 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
         out.normal.z = surface_normal.z;
 
         match (self.options.normal_mapping_active, context.active_material) {
-            (true, Some(mat_raw_mut)) => {
+            (true, Some(material_raw_mut)) => {
                 unsafe {
-                    match &(*mat_raw_mut).normal_map {
+                    match &(*material_raw_mut).normal_map {
                         Some(texture) => {
                             let (r, g, b) = sample_nearest(interpolant.uv, texture, None);
 
@@ -89,8 +89,8 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             self.options.ambient_occlusion_mapping_active,
             context.active_material,
         ) {
-            (true, Some(mat_raw_mut)) => unsafe {
-                match &(*mat_raw_mut).ambient_occlusion_map {
+            (true, Some(material_raw_mut)) => unsafe {
+                match &(*material_raw_mut).ambient_occlusion_map {
                     Some(map) => {
                         let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
                         out.ambient_factor = r as f32 / 255.0;
@@ -108,10 +108,10 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
         // Diffuse lighting
 
         match context.active_material {
-            Some(mat_raw_mut) => unsafe {
+            Some(material_raw_mut) => unsafe {
                 match (
                     self.options.diffuse_mapping_active,
-                    &(*mat_raw_mut).diffuse_map,
+                    &(*material_raw_mut).diffuse_map,
                 ) {
                     (true, Some(texture)) => {
                         let (r, g, b) = if self.options.bilinear_active {
@@ -123,7 +123,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                         out.diffuse = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                     }
                     _ => {
-                        out.diffuse = (*mat_raw_mut).diffuse_color;
+                        out.diffuse = (*material_raw_mut).diffuse_color;
                     }
                 }
             },
@@ -141,12 +141,12 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
         };
 
         match context.active_material {
-            Some(mat_raw_mut) => unsafe {
-                out.specular_exponent = (*mat_raw_mut).specular_exponent;
+            Some(material_raw_mut) => unsafe {
+                out.specular_exponent = (*material_raw_mut).specular_exponent;
 
                 match (
                     self.options.specular_mapping_active,
-                    &(*mat_raw_mut).specular_map,
+                    &(*material_raw_mut).specular_map,
                 ) {
                     (true, Some(map)) => {
                         let (r, g, b) = sample_nearest(interpolant.uv, map, None);
@@ -181,14 +181,14 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             self.options.emissive_mapping_active,
             context.active_material,
         ) {
-            (true, Some(mat_raw_mut)) => unsafe {
-                match &(*mat_raw_mut).emissive_map {
+            (true, Some(material_raw_mut)) => unsafe {
+                match &(*material_raw_mut).emissive_map {
                     Some(texture) => {
                         let (r, g, b) = sample_nearest(interpolant.uv, texture, None);
 
                         out.emissive = Color::rgb(r, g, b).to_vec3() / 255.0;
                     }
-                    None => out.emissive = (*mat_raw_mut).emissive_color,
+                    None => out.emissive = (*material_raw_mut).emissive_color,
                 }
             },
             _ => {
