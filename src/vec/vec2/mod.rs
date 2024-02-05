@@ -10,7 +10,7 @@ pub struct Vec2 {
 
 impl fmt::Display for Vec2 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(v, "({}, {})", self.x, self.y)
+        write!(v, "({}, {}, {})", self.x, self.y, self.z)
     }
 }
 
