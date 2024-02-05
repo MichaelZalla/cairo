@@ -86,6 +86,9 @@ impl ShaderContext {
 
     pub fn set_projection(&mut self, projection_transform: Mat4) {
         self.projection_transform = projection_transform;
+
+        self.world_view_projection_transform =
+            self.world_view_transform * self.projection_transform;
     }
 
     pub fn set_view_position(&mut self, position: Vec4) {
