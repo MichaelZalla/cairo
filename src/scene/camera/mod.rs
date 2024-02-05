@@ -6,11 +6,31 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
+#[derive(Default, Debug, Copy, Clone)]
+pub enum CameraProjectionKind {
+    #[default]
+    Perspective,
+    Orthographic,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub struct CameraOrthographicExtent {
+    pub left: f32,
+    pub right: f32,
+    pub top: f32,
+    pub bottom: f32,
+}
+
+static DEFAULT_CAMERA_FIELD_OF_VIEW: f32 = 75.0;
+static DEFAULT_CAMERA_ASPECT_RATIO: f32 = 16.0 / 9.0;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
+    kind: CameraProjectionKind,
+    field_of_view: Option<f32>,
+    aspect_ratio: Option<f32>,
+    extent: Option<CameraOrthographicExtent>,
     pub movement_speed: f32,
-    field_of_view: f32,
-    aspect_ratio: f32,
     projection_z_near: f32,
     projection_z_far: f32,
     projection_transform: Mat4,
@@ -19,41 +39,79 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32, position: Vec3, target: Vec3) -> Self {
-        let field_of_view = 75.0;
-
+    pub fn new(
+        kind: CameraProjectionKind,
+        position: Vec3,
+        target: Vec3,
+        field_of_view: Option<f32>,
+        aspect_ratio: Option<f32>,
+        extent: Option<CameraOrthographicExtent>,
+    ) -> Self {
         let projection_z_near = 0.3;
         let projection_z_far = 1000.0;
 
-        let projection_transform = Mat4::perspective_for_fov(
+        let mut camera = Camera {
+            kind,
             field_of_view,
             aspect_ratio,
-            projection_z_near,
-            projection_z_far,
-        );
-
-        let projection_inverse_transform = Mat4::perspective_inverse_for_fov(
-            field_of_view,
-            aspect_ratio,
-            projection_z_near,
-            projection_z_far,
-        );
-
-        let camera = Camera {
-            field_of_view,
-            aspect_ratio,
+            extent,
             projection_z_near,
             projection_z_far,
             movement_speed: 50.0,
-            projection_transform,
-            projection_inverse_transform,
+            projection_transform: Default::default(),
+            projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position, target),
         };
+
+        camera.recompute_projections();
 
         return camera;
     }
 
-    pub fn get_aspect_ratio(&self) -> f32 {
+    pub fn from_orthographic(
+        position: Vec3,
+        target: Vec3,
+        extent: CameraOrthographicExtent,
+    ) -> Self {
+        Camera::new(
+            CameraProjectionKind::Orthographic,
+            position,
+            target,
+            None,
+            None,
+            Some(extent),
+        )
+    }
+
+    pub fn from_perspective(
+        position: Vec3,
+        target: Vec3,
+        field_of_view: f32,
+        aspect_ratio: f32,
+    ) -> Self {
+        Camera::new(
+            CameraProjectionKind::Perspective,
+            position,
+            target,
+            Some(field_of_view),
+            Some(aspect_ratio),
+            None,
+        )
+    }
+
+    pub fn get_kind(&self) -> CameraProjectionKind {
+        self.kind
+    }
+
+    pub fn set_kind(&mut self, kind: CameraProjectionKind) {
+        self.kind = kind;
+
+        // Recompute projections.
+
+        self.recompute_projections();
+    }
+
+    pub fn get_aspect_ratio(&self) -> Option<f32> {
         self.aspect_ratio
     }
 
@@ -65,22 +123,67 @@ impl Camera {
         self.projection_z_far
     }
 
+    fn recompute_projections(&mut self) {
+        match self.kind {
+            CameraProjectionKind::Perspective => {
+                let field_of_view = match self.field_of_view {
+                    Some(fov) => fov,
+                    None => DEFAULT_CAMERA_FIELD_OF_VIEW,
+                };
+
+                let aspect_ratio = match self.aspect_ratio {
+                    Some(aspect_ratio) => aspect_ratio,
+                    None => DEFAULT_CAMERA_ASPECT_RATIO,
+                };
+
+                self.projection_transform = Mat4::perspective_for_fov(
+                    field_of_view,
+                    aspect_ratio,
+                    self.projection_z_near,
+                    self.projection_z_far,
+                );
+
+                self.projection_inverse_transform = Mat4::perspective_inverse_for_fov(
+                    field_of_view,
+                    aspect_ratio,
+                    self.projection_z_near,
+                    self.projection_z_far,
+                );
+            }
+            CameraProjectionKind::Orthographic => {
+                let extent = self.extent.unwrap();
+
+                let (left, right, bottom, top, near, far) = (
+                    extent.left,
+                    extent.right,
+                    extent.bottom,
+                    extent.top,
+                    self.projection_z_near,
+                    self.projection_z_far,
+                );
+
+                self.projection_transform = Mat4::orthographic(left, right, bottom, top, near, far);
+
+                self.projection_inverse_transform =
+                    Mat4::orthographic_inverse(left, right, bottom, top, near, far);
+            }
+        }
+    }
+
+    pub fn set_projection_z_near(&mut self, near: f32) {
+        self.projection_z_near = near;
+
+        // Recompute projections.
+
+        self.recompute_projections();
+    }
+
     pub fn set_projection_z_far(&mut self, far: f32) {
         self.projection_z_far = far;
 
-        self.projection_transform = Mat4::perspective_for_fov(
-            self.field_of_view,
-            self.aspect_ratio,
-            self.projection_z_near,
-            self.projection_z_far,
-        );
+        // Recompute projections.
 
-        self.projection_inverse_transform = Mat4::perspective_inverse_for_fov(
-            self.field_of_view,
-            self.aspect_ratio,
-            self.projection_z_near,
-            self.projection_z_far,
-        );
+        self.recompute_projections();
     }
 
     pub fn get_view_inverse_transform(&self) -> Mat4 {
@@ -172,7 +275,10 @@ impl Camera {
         self.look_vector.update(
             timing_info,
             keyboard_state,
-            mouse_state,
+            match self.kind {
+                CameraProjectionKind::Perspective => Some(mouse_state),
+                CameraProjectionKind::Orthographic => None,
+            },
             game_controller_state,
             self.movement_speed,
         );
@@ -180,23 +286,26 @@ impl Camera {
         // Apply field-of-view zoom based on mousewheel input.
 
         if mouse_state.wheel_did_move {
-            self.field_of_view -= mouse_state.wheel_y as f32;
+            match self.kind {
+                CameraProjectionKind::Perspective => {
+                    let mut current_field_of_view = match self.field_of_view {
+                        Some(field_of_view) => field_of_view,
+                        None => {
+                            self.field_of_view = Some(DEFAULT_CAMERA_FIELD_OF_VIEW);
+                            self.field_of_view.unwrap()
+                        }
+                    };
 
-            self.field_of_view = self.field_of_view.max(1.0).min(120.0);
+                    current_field_of_view -= mouse_state.wheel_y as f32;
 
-            self.projection_transform = Mat4::perspective_for_fov(
-                self.field_of_view,
-                self.aspect_ratio,
-                self.projection_z_near,
-                self.projection_z_far,
-            );
+                    current_field_of_view = current_field_of_view.max(1.0).min(120.0);
 
-            self.projection_inverse_transform = Mat4::perspective_inverse_for_fov(
-                self.field_of_view,
-                self.aspect_ratio,
-                self.projection_z_near,
-                self.projection_z_far,
-            );
+                    self.field_of_view = Some(current_field_of_view);
+
+                    self.recompute_projections();
+                }
+                CameraProjectionKind::Orthographic => (),
+            }
         }
     }
 }

@@ -86,11 +86,9 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
-        let aspect_ratio = framebuffer.width_over_height;
+        // Set up cameras for viewing our scene.
 
-        // Set up a camera for rendering our scene
-        let mut camera: Camera = Camera::new(
-            aspect_ratio,
+        let mut camera: Camera = Camera::from_perspective(
             Vec3 {
                 x: 15.0,
                 y: 8.0,
@@ -102,14 +100,15 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 z: -7.5,
             }
             .as_normal(),
+            75.0,
+            framebuffer.width_over_height,
         );
 
         camera.set_projection_z_far(100.0);
 
         camera.movement_speed = 10.0;
 
-        let camera2: Camera = Camera::new(
-            aspect_ratio,
+        let camera2: Camera = Camera::from_perspective(
             Vec3 {
                 x: 4.0,
                 y: 8.0,
@@ -121,6 +120,8 @@ impl<'a> GeneratePrimitivesScene<'a> {
                 z: -7.5,
             }
             .as_normal(),
+            75.0,
+            framebuffer.width_over_height,
         );
 
         // Define lights for our scene

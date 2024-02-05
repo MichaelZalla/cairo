@@ -101,8 +101,13 @@ impl<'a> SponzaScene<'a> {
             z: 0.0,
         };
 
-        let mut camera: Camera =
-            Camera::new(aspect_ratio, camera_position, camera_position + vec3::LEFT);
+        // Set up a camera for rendering our scene
+        let mut camera: Camera = Camera::from_perspective(
+            camera_position,
+            camera_position + vec3::LEFT,
+            75.0,
+            aspect_ratio,
+        );
 
         camera.movement_speed = 300.0;
 

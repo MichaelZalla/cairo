@@ -52,14 +52,15 @@ impl<'a> EmissiveMapScene<'a> {
         let aspect_ratio = framebuffer.width_over_height;
 
         // Set up a camera for rendering our scene
-        let mut camera: Camera = Camera::new(
-            aspect_ratio,
+        let mut camera: Camera = Camera::from_perspective(
             Vec3 {
                 x: 0.0,
                 y: 2.0,
                 z: -8.0,
             },
             Default::default(),
+            75.0,
+            aspect_ratio,
         );
 
         camera.movement_speed = 10.0;

@@ -121,25 +121,31 @@ impl LookVector {
         &mut self,
         timing_info: &TimingInfo,
         keyboard_state: &KeyboardState,
-        mouse_state: &MouseState,
+        mouse_state: Option<&MouseState>,
         game_controller_state: &GameControllerState,
         movement_speed: f32,
     ) {
         // Apply camera movement based on mouse input.
 
-        // Translate relative mouse movements to NDC values (in the range [0, 1]).
+        match mouse_state {
+            Some(mouse_state) => {
+                // Translate relative mouse movements to NDC values (in the
+                // range [0, 1]).
 
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 400.0;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 400.0;
+                let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 400.0;
+                let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 400.0;
 
-        // Update camera pitch and yaw, based on mouse position deltas.
+                // Update camera pitch and yaw, based on mouse position deltas.
 
-        if mouse_x_delta != 0.0 {
-            self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
-        }
+                if mouse_x_delta != 0.0 {
+                    self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
+                }
 
-        if mouse_y_delta != 0.0 {
-            self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
+                if mouse_y_delta != 0.0 {
+                    self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
+                }
+            }
+            None => (),
         }
 
         // Apply camera movement based on keyboard input.
