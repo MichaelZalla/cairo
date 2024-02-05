@@ -224,7 +224,7 @@ impl Mat<f32, 4> {
         }
     }
 
-    pub fn projection(width: f32, height: f32, near: f32, far: f32) -> Self {
+    pub fn perspective(width: f32, height: f32, near: f32, far: f32) -> Self {
         let (w, h, n, f) = (width, height, near, far);
 
         Self {
@@ -237,7 +237,7 @@ impl Mat<f32, 4> {
         }
     }
 
-    pub fn projection_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
+    pub fn perspective_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
         let fov_rad = fov * PI / 180.0;
         let width = 1.0 / (fov_rad / 2.0).tan();
         let height = width * aspect_ratio;
@@ -254,7 +254,7 @@ impl Mat<f32, 4> {
         }
     }
 
-    pub fn projection_inverse_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
+    pub fn perspective_inverse_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
         let fov_rad = fov * PI / 180.0;
         let width = 1.0 / (fov_rad / 2.0).tan();
         let height = width * aspect_ratio;

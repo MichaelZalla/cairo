@@ -39,14 +39,14 @@ impl Camera {
         let projection_z_near = 0.3;
         let projection_z_far = 1000.0;
 
-        let projection_transform = Mat4::projection_for_fov(
+        let projection_transform = Mat4::perspective_for_fov(
             field_of_view,
             aspect_ratio,
             projection_z_near,
             projection_z_far,
         );
 
-        let projection_inverse_transform = Mat4::projection_inverse_for_fov(
+        let projection_inverse_transform = Mat4::perspective_inverse_for_fov(
             field_of_view,
             aspect_ratio,
             projection_z_near,
@@ -91,14 +91,14 @@ impl Camera {
     pub fn set_projection_z_far(&mut self, far: f32) {
         self.projection_z_far = far;
 
-        self.projection_transform = Mat4::projection_for_fov(
+        self.projection_transform = Mat4::perspective_for_fov(
             self.field_of_view,
             self.aspect_ratio,
             self.projection_z_near,
             self.projection_z_far,
         );
 
-        self.projection_inverse_transform = Mat4::projection_inverse_for_fov(
+        self.projection_inverse_transform = Mat4::perspective_inverse_for_fov(
             self.field_of_view,
             self.aspect_ratio,
             self.projection_z_near,
@@ -283,14 +283,14 @@ impl Camera {
 
             self.field_of_view = self.field_of_view.max(1.0).min(120.0);
 
-            self.projection_transform = Mat4::projection_for_fov(
+            self.projection_transform = Mat4::perspective_for_fov(
                 self.field_of_view,
                 self.aspect_ratio,
                 self.projection_z_near,
                 self.projection_z_far,
             );
 
-            self.projection_inverse_transform = Mat4::projection_inverse_for_fov(
+            self.projection_inverse_transform = Mat4::perspective_inverse_for_fov(
                 self.field_of_view,
                 self.aspect_ratio,
                 self.projection_z_near,
