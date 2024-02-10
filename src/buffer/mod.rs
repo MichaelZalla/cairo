@@ -109,11 +109,11 @@ where
     pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) {
         debug_assert!(data.len() as u32 == width * height);
 
-        let right = (left + width).min(self.width);
-        let bottom = (top + height).min(self.height);
+        let right = (left + width - 1).min(self.width - 1);
+        let bottom = (top + height - 1).min(self.height - 1);
 
-        for x in left..right {
-            for y in top..bottom {
+        for x in left..right + 1 {
+            for y in top..bottom + 1 {
                 let src_pixel_index = ((y - top) * width + (x - left)) as usize;
 
                 let src_pixel_value = data[src_pixel_index];
