@@ -3,12 +3,16 @@ use std::{
     ops::{Add, AddAssign, Div, Mul, MulAssign, Sub},
 };
 
-use crate::vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4};
+use crate::{
+    matrix::Mat4,
+    vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
+};
 
 #[derive(Copy, Clone, Default)]
 pub struct DefaultVertexOut {
     pub position: Vec4,
     pub normal: Vec4,
+    pub tbn: Mat4,
     pub color: Vec3,
     pub uv: Vec2,
     pub world_pos: Vec3,
@@ -31,6 +35,7 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position + rhs.position,
             normal: self.normal + rhs.normal,
+            tbn: self.tbn + rhs.tbn,
             color: self.color + rhs.color,
             uv: self.uv + rhs.uv,
             world_pos: self.world_pos + rhs.world_pos,
@@ -43,6 +48,7 @@ impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
     fn add_assign(&mut self, rhs: DefaultVertexOut) {
         self.position += rhs.position;
         self.normal += rhs.normal;
+        self.tbn += rhs.tbn;
         self.color += rhs.color;
         self.uv += rhs.uv;
         self.world_pos += rhs.world_pos;
@@ -56,6 +62,7 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position - rhs.position,
             normal: self.normal - rhs.normal,
+            tbn: self.tbn - rhs.tbn,
             color: self.color - rhs.color,
             uv: self.uv - rhs.uv,
             world_pos: self.world_pos - rhs.world_pos,
@@ -70,6 +77,7 @@ impl Mul<f32> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position * scalar,
             normal: self.normal * scalar,
+            tbn: self.tbn * scalar,
             color: self.color * scalar,
             uv: self.uv * scalar,
             world_pos: self.world_pos * scalar,
@@ -82,6 +90,7 @@ impl MulAssign<f32> for DefaultVertexOut {
     fn mul_assign(&mut self, scalar: f32) {
         self.position *= scalar;
         self.normal *= scalar;
+        self.tbn *= scalar;
         self.color *= scalar;
         self.uv *= scalar;
         self.world_pos *= scalar;
@@ -95,6 +104,7 @@ impl Div<f32> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position / scalar,
             normal: self.normal / scalar,
+            tbn: self.tbn / scalar,
             color: self.color / scalar,
             uv: self.uv / scalar,
             world_pos: self.world_pos / scalar,

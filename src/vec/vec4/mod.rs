@@ -159,6 +159,15 @@ impl Vec4 {
         return self.x * rhs.x + self.y * rhs.y + self.z * rhs.z;
     }
 
+    pub fn cross(self, rhs: Vec4) -> Vec4 {
+        return Vec4 {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+            w: self.w,
+        };
+    }
+
     pub fn as_normal(self) -> Vec4 {
         let mag = self.mag();
         Vec4 {

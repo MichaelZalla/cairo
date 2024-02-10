@@ -16,6 +16,7 @@ use crate::{
     shaders::{
         default_alpha_shader::DefaultAlphaShader, default_geometry_shader::DefaultGeometryShader,
     },
+    vec::vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -944,6 +945,24 @@ where
                     projection_space_vertices[i].world_pos
                         + projection_space_vertices[i].normal.to_vec3(),
                     color::BLUE,
+                );
+
+                let tangent_world_space =
+                    Vec4::new(vec3::LEFT * -1.0, 1.0) * projection_space_vertices[i].tbn;
+
+                self.render_line(
+                    projection_space_vertices[i].world_pos,
+                    projection_space_vertices[i].world_pos + tangent_world_space.to_vec3(),
+                    color::RED,
+                );
+
+                let bitangent_world_space =
+                    Vec4::new(vec3::UP * -1.0, 1.0) * projection_space_vertices[i].tbn;
+
+                self.render_line(
+                    projection_space_vertices[i].world_pos,
+                    projection_space_vertices[i].world_pos + bitangent_world_space.to_vec3(),
+                    color::GREEN,
                 );
             }
         }

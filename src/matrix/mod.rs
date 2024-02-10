@@ -54,6 +54,25 @@ impl<T: std::clone::Clone + std::ops::MulAssign<f32>, const N: usize> ops::Mul<f
     }
 }
 
+impl<T: std::ops::DivAssign<f32>, const N: usize> ops::DivAssign<f32> for Mat<T, N> {
+    fn div_assign(&mut self, rhs: f32) {
+        for i in 0..N {
+            for j in 0..N {
+                self.elements[i][j] /= rhs;
+            }
+        }
+    }
+}
+
+impl<T: std::clone::Clone + std::ops::DivAssign<f32>, const N: usize> ops::Div<f32> for Mat<T, N> {
+    type Output = Mat<T, N>;
+    fn div(self, rhs: f32) -> Mat<T, N> {
+        let mut result = self.clone();
+        result /= rhs;
+        result
+    }
+}
+
 impl<
         T: std::default::Default
             + std::marker::Copy
@@ -94,6 +113,69 @@ impl<
                 }
 
                 result.elements[i][j] = sum;
+            }
+        }
+
+        result
+    }
+}
+
+impl<
+        T: std::default::Default
+            + std::marker::Copy
+            + std::ops::Add<Output = T>
+            + std::ops::AddAssign<T>,
+        const N: usize,
+    > ops::AddAssign<Self> for Mat<T, N>
+{
+    fn add_assign(&mut self, rhs: Self) {
+        for i in 0..N {
+            for j in 0..N {
+                self.elements[i][j] += rhs.elements[i][j];
+            }
+        }
+    }
+}
+
+impl<
+        T: std::default::Default
+            + std::marker::Copy
+            + std::ops::Add<Output = T>
+            + std::ops::AddAssign<T>,
+        const N: usize,
+    > ops::Add<Self> for Mat<T, N>
+{
+    type Output = Mat<T, N>;
+
+    fn add(self, rhs: Self) -> Mat<T, N> {
+        let mut result = Mat::<T, N>::new();
+
+        for i in 0..N {
+            for j in 0..N {
+                result.elements[i][j] = self.elements[i][j] + rhs.elements[i][j];
+            }
+        }
+
+        result
+    }
+}
+
+impl<
+        T: std::default::Default
+            + std::marker::Copy
+            + std::ops::Sub<Output = T>
+            + std::ops::SubAssign<T>,
+        const N: usize,
+    > ops::Sub<Self> for Mat<T, N>
+{
+    type Output = Mat<T, N>;
+
+    fn sub(self, rhs: Self) -> Mat<T, N> {
+        let mut result = Mat::<T, N>::new();
+
+        for i in 0..N {
+            for j in 0..N {
+                result.elements[i][j] = self.elements[i][j] - rhs.elements[i][j];
             }
         }
 
