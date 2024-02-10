@@ -4,32 +4,19 @@ use crate::{
     pipeline::Pipeline,
     shader::geometry::GeometryShader,
     vec::vec3::Vec3,
-    vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
 impl<'a, G> Pipeline<'a, G>
 where
     G: GeometryShader<'a>,
 {
-    pub fn render_line(&mut self, start: Vec3, end: Vec3, color: Color) {
-        let start_vertex_in = DefaultVertexIn {
-            position: start,
-            color: color.to_vec3() / 255.0,
-            ..Default::default()
-        };
-
-        let end_vertex_in = DefaultVertexIn {
-            position: end,
-            color: color.to_vec3() / 255.0,
-            ..Default::default()
-        };
-
+    pub fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
         let shader_context = self.shader_context.read().unwrap();
 
-        let mut start_vertex_out = (self.vertex_shader)(&shader_context, &start_vertex_in);
-        let mut end_vertex_out = (self.vertex_shader)(&shader_context, &end_vertex_in);
+        let start_ndc_space = shader_context.to_ndc_space(start_world_space);
+        let end_ndc_space = shader_context.to_ndc_space(end_world_space);
 
-        self.render_line_from_out_vertices(&mut start_vertex_out, &mut end_vertex_out, color);
+        self.render_line_from_ndc_space_vertices(&start_ndc_space, &end_ndc_space, color);
     }
 
     pub fn render_point_indicator(&mut self, position: Vec3, scale: f32) {
@@ -136,26 +123,20 @@ where
         }
     }
 
-    fn render_line_from_out_vertices(
-        &mut self,
-        start: &mut DefaultVertexOut,
-        end: &mut DefaultVertexOut,
-        color: Color,
-    ) {
-        self.transform_to_ndc_space(start);
-        self.transform_to_ndc_space(end);
+    fn render_line_from_ndc_space_vertices(&mut self, start: &Vec3, end: &Vec3, color: Color) {
+        // Cull lines that are completely in front of our near plane
+        // (z1 <= 0 and z2 <= 0).
 
-        // Cull lines that are completely in front of our near plane (z1 <= 0 and z2 <= 0).
-        if start.position.z <= 0.0 && end.position.z <= 0.0 {
+        if start.z <= 0.0 && end.z <= 0.0 {
             return;
         }
 
         Graphics::line(
             &mut self.forward_framebuffer.as_mut().unwrap(),
-            start.position.x as i32,
-            start.position.y as i32,
-            end.position.x as i32,
-            end.position.y as i32,
+            (start.x * self.viewport.width as f32) as i32,
+            (start.y * self.viewport.height as f32) as i32,
+            (end.x * self.viewport.width as f32) as i32,
+            (end.y * self.viewport.height as f32) as i32,
             color,
         );
     }

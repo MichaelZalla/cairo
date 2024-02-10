@@ -1,7 +1,6 @@
 use crate::{
     color::Color, entity::Entity, material::cache::MaterialCache, mesh, pipeline::Pipeline,
     scene::camera::Camera, shader::geometry::GeometryShader, vec::vec3::Vec3,
-    vertex::default_vertex_in::DefaultVertexIn,
 };
 
 impl<'a, G> Pipeline<'a, G>
@@ -10,28 +9,20 @@ where
 {
     pub fn render_point(
         &mut self,
-        position: Vec3,
+        point_world_space: Vec3,
         color: Color,
         camera: Option<&Camera>,
         material_cache: Option<&mut MaterialCache>,
         material_name: Option<String>,
         scale: Option<f32>,
     ) {
-        let vertex_in = DefaultVertexIn {
-            position,
-            color: color.to_vec3() / 255.0,
-            ..Default::default()
-        };
-
         let shader_context = self.shader_context.read().unwrap();
 
-        let mut vertex_out = (self.vertex_shader)(&shader_context, &vertex_in);
+        let point_ndc_space = shader_context.to_ndc_space(point_world_space);
 
-        self.transform_to_ndc_space(&mut vertex_out);
-
-        let x = vertex_out.position.x as u32;
-        let y = vertex_out.position.y as u32;
-        let z = vertex_out.position.z;
+        let x = (point_ndc_space.x * self.viewport.width as f32) as u32;
+        let y = (point_ndc_space.y * self.viewport.height as f32) as u32;
+        let z = point_ndc_space.z;
 
         // Cull points that are in front of our near plane (z <= 0).
         if z <= 0.0 {
@@ -61,7 +52,7 @@ where
 
                         let mut light_quad_entity = Entity::new(&quad);
 
-                        light_quad_entity.position = position;
+                        light_quad_entity.position = point_world_space;
 
                         self.render_entity(&light_quad_entity, Some(materials));
                     }

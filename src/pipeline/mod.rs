@@ -25,9 +25,8 @@ use self::{
 
 use super::{
     color::{self},
-    graphics::Graphics,
     mesh::Mesh,
-    vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 mod gbuffer;
@@ -789,12 +788,6 @@ where
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
 
-        let world_vertex_relative_normals = [
-            projection_space_vertices[0].position + projection_space_vertices[0].normal * 0.05,
-            projection_space_vertices[1].position + projection_space_vertices[1].normal * 0.05,
-            projection_space_vertices[2].position + projection_space_vertices[2].normal * 0.05,
-        ];
-
         let mut ndc_space_vertices = projection_space_vertices.clone();
 
         self.transform_to_ndc_space(&mut ndc_space_vertices[0]);
@@ -813,49 +806,22 @@ where
         }
 
         if self.options.do_wireframe {
-            let mut points: Vec<Vec2> = vec![];
-
-            for v in ndc_space_vertices {
-                points.push(Vec2 {
-                    x: v.position.x,
-                    y: v.position.y,
-                    z: v.position.z,
-                });
+            for i in 0..3 {
+                self.render_line(
+                    projection_space_vertices[i].world_pos,
+                    projection_space_vertices[if i == 2 { 0 } else { i + 1 }].world_pos,
+                    color::WHITE,
+                );
             }
-
-            let wireframe_color = self.options.wireframe_color;
-
-            Graphics::poly_line(
-                &mut self.forward_framebuffer.as_mut().unwrap(),
-                points.as_slice(),
-                wireframe_color,
-            );
         }
 
         if self.options.do_visualize_normals {
-            for (index, v) in ndc_space_vertices.iter().enumerate() {
-                let world_vertex_relative_normal = world_vertex_relative_normals[index];
-
-                let w_inverse = 1.0 / projection_space_vertices[index].position.w;
-
-                let screen_vertex_relative_normal = Vec2 {
-                    x: (world_vertex_relative_normal.x * w_inverse + 1.0)
-                        * self.viewport.width_over_2,
-                    y: (-world_vertex_relative_normal.y * w_inverse + 1.0)
-                        * self.viewport.height_over_2,
-                    z: 0.0,
-                };
-
-                let from = v.position;
-                let to = screen_vertex_relative_normal;
-
-                Graphics::line(
-                    &mut self.forward_framebuffer.as_mut().unwrap(),
-                    from.x as i32,
-                    from.y as i32,
-                    to.x as i32,
-                    to.y as i32,
-                    color::RED,
+            for i in 0..3 {
+                self.render_line(
+                    projection_space_vertices[i].world_pos,
+                    projection_space_vertices[i].world_pos
+                        + projection_space_vertices[i].normal.to_vec3(),
+                    color::BLUE,
                 );
             }
         }

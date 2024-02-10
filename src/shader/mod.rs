@@ -3,7 +3,7 @@ use crate::{
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
     texture::{cubemap::CubeMap, TextureMap},
-    vec::vec4::Vec4,
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 pub mod alpha;
@@ -115,6 +115,25 @@ impl ShaderContext {
 
         self.world_view_projection_transform =
             self.world_view_transform * self.projection_transform;
+    }
+
+    pub fn to_ndc_space(&self, world_space_position: Vec3) -> Vec3 {
+        let ndc_space_position = {
+            let mut view_projection_space_position = Vec4::new(world_space_position, 1.0)
+                * self.view_inverse_transform
+                * self.projection_transform;
+
+            let w_inverse = 1.0 / view_projection_space_position.w;
+
+            view_projection_space_position *= w_inverse;
+
+            view_projection_space_position.x = (view_projection_space_position.x + 1.0) / 2.0;
+            view_projection_space_position.y = (-view_projection_space_position.y + 1.0) / 2.0;
+
+            view_projection_space_position
+        };
+
+        ndc_space_position.to_vec3()
     }
 
     pub fn set_ambient_light(&mut self, light: AmbientLight) {
