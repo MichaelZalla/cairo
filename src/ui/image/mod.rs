@@ -86,7 +86,7 @@ fn draw_image(
         for sample_x in 0..options.width {
             let uv = Vec2 {
                 x: sample_x as f32 / options.width as f32,
-                y: 1.0 - (sample_y as f32 / options.height as f32),
+                y: sample_y as f32 / options.height as f32,
                 z: 0.0,
             };
 

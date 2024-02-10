@@ -220,11 +220,11 @@ impl CubeMap {
             uv_scaling_factor = 0.5 / absolute.y;
 
             uv = Vec2 {
-                x: -direction.x,
+                x: direction.x,
                 y: if direction.y < 0.0 {
-                    direction.z
-                } else {
                     -direction.z
+                } else {
+                    direction.z
                 },
                 z: 0.0,
             };
