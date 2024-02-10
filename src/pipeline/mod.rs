@@ -795,23 +795,27 @@ where
             projection_space_vertices[2].position + projection_space_vertices[2].normal * 0.05,
         ];
 
-        let mut screen_vertices = projection_space_vertices.clone();
+        let mut ndc_space_vertices = projection_space_vertices.clone();
 
-        self.transform_to_ndc_space(&mut screen_vertices[0]);
-        self.transform_to_ndc_space(&mut screen_vertices[1]);
-        self.transform_to_ndc_space(&mut screen_vertices[2]);
+        self.transform_to_ndc_space(&mut ndc_space_vertices[0]);
+        self.transform_to_ndc_space(&mut ndc_space_vertices[1]);
+        self.transform_to_ndc_space(&mut ndc_space_vertices[2]);
 
         // Interpolate entire vertex (all attributes) when drawing (scanline
         // interpolant)
 
         if self.options.do_rasterized_geometry {
-            self.triangle_fill(screen_vertices[0], screen_vertices[1], screen_vertices[2]);
+            self.triangle_fill(
+                ndc_space_vertices[0],
+                ndc_space_vertices[1],
+                ndc_space_vertices[2],
+            );
         }
 
         if self.options.do_wireframe {
             let mut points: Vec<Vec2> = vec![];
 
-            for v in screen_vertices {
+            for v in ndc_space_vertices {
                 points.push(Vec2 {
                     x: v.position.x,
                     y: v.position.y,
@@ -829,7 +833,7 @@ where
         }
 
         if self.options.do_visualize_normals {
-            for (index, v) in screen_vertices.iter().enumerate() {
+            for (index, v) in ndc_space_vertices.iter().enumerate() {
                 let world_vertex_relative_normal = world_vertex_relative_normals[index];
 
                 let w_inverse = 1.0 / projection_space_vertices[index].position.w;
