@@ -18,8 +18,8 @@ where
         scale: Option<f32>,
     ) {
         let vertex_in = DefaultVertexIn {
-            p: position,
-            c: color.to_vec3() / 255.0,
+            position,
+            color: color.to_vec3() / 255.0,
             ..Default::default()
         };
 

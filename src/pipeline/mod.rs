@@ -477,8 +477,8 @@ where
 
     fn get_vertices_in(&self, mesh: &Mesh, face: &Face) -> [DefaultVertexIn; 3] {
         let v0_in = DefaultVertexIn {
-            p: mesh.vertices[face.vertices.0].clone(),
-            n: if face.normals.is_some() {
+            position: mesh.vertices[face.vertices.0].clone(),
+            normal: if face.normals.is_some() {
                 mesh.normals[face.normals.unwrap().0].clone()
             } else {
                 Default::default()
@@ -488,12 +488,12 @@ where
             } else {
                 Default::default()
             },
-            c: color::WHITE.to_vec3() / 255.0,
+            color: color::WHITE.to_vec3() / 255.0,
         };
 
         let v1_in = DefaultVertexIn {
-            p: mesh.vertices[face.vertices.1].clone(),
-            n: if face.normals.is_some() {
+            position: mesh.vertices[face.vertices.1].clone(),
+            normal: if face.normals.is_some() {
                 mesh.normals[face.normals.unwrap().1].clone()
             } else {
                 Default::default()
@@ -503,12 +503,12 @@ where
             } else {
                 Default::default()
             },
-            c: color::WHITE.to_vec3() / 255.0,
+            color: color::WHITE.to_vec3() / 255.0,
         };
 
         let v2_in = DefaultVertexIn {
-            p: mesh.vertices[face.vertices.2].clone(),
-            n: if face.normals.is_some() {
+            position: mesh.vertices[face.vertices.2].clone(),
+            normal: if face.normals.is_some() {
                 mesh.normals[face.normals.unwrap().2].clone()
             } else {
                 Default::default()
@@ -518,7 +518,7 @@ where
             } else {
                 Default::default()
             },
-            c: color::WHITE.to_vec3() / 255.0,
+            color: color::WHITE.to_vec3() / 255.0,
         };
 
         [v0_in, v1_in, v2_in]

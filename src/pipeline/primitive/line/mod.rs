@@ -13,14 +13,14 @@ where
 {
     pub fn render_line(&mut self, start: Vec3, end: Vec3, color: Color) {
         let start_vertex_in = DefaultVertexIn {
-            p: start,
-            c: color.to_vec3() / 255.0,
+            position: start,
+            color: color.to_vec3() / 255.0,
             ..Default::default()
         };
 
         let end_vertex_in = DefaultVertexIn {
-            p: end,
-            c: color.to_vec3() / 255.0,
+            position: end,
+            color: color.to_vec3() / 255.0,
             ..Default::default()
         };
 
