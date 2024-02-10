@@ -49,6 +49,10 @@ impl Color {
         };
     }
 
+    pub fn to_u8(&self) -> (u8, u8, u8) {
+        (self.r as u8, self.g as u8, self.b as u8)
+    }
+
     pub const fn from_u32(bytes: u32) -> Self {
         Self {
             r: ((bytes) as u8) as f32,

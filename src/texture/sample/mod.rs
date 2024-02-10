@@ -27,6 +27,11 @@ fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
             y: uv.y.max(0.0).min(1.0),
             z: 1.0,
         },
+        TextureMapWrapping::ClampToBorder => {
+            // Out-of-bounds UVs will remain out-of-bounds.
+
+            uv
+        }
     }
 }
 
@@ -56,6 +61,17 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
         Some(index) => map.height / (2 as u32).pow(index as u32),
         None => map.height,
     };
+
+    // Perform any out-of-bounds handling.
+
+    match map.options.wrapping {
+        TextureMapWrapping::ClampToBorder => {
+            if safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0 {
+                return map.options.border_color.unwrap();
+            }
+        }
+        _ => (),
+    }
 
     // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
 
@@ -268,7 +284,8 @@ fn sample_from_texel(
     map: &TextureMap,
     level_index: Option<usize>,
 ) -> (u8, u8, u8) {
-    // Determine our map width based on the level index
+    // Determine our map width based on the level index.
+
     let level_width = match level_index {
         Some(index) => map.width / (2 as u32).pow(index as u32),
         None => map.width,
