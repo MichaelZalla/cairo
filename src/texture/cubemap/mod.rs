@@ -231,9 +231,9 @@ impl CubeMap {
         } else {
             // Z has the greatest magnitude
             side = if direction.z >= 0.0 {
-                Side::FRONT
-            } else {
                 Side::BACK
+            } else {
+                Side::FRONT
             };
 
             uv_scaling_factor = 0.5 / absolute.z;
