@@ -576,14 +576,14 @@ where
                 PipelineFaceCullingReject::Backfaces => {
                     // Reject backfaces.
 
-                    if self.is_backface(v0.p, v1.p, v2.p) {
+                    if self.is_backface(v0.position, v1.position, v2.position) {
                         continue;
                     }
                 }
                 PipelineFaceCullingReject::Frontfaces => {
                     // Reject frontfaces.
 
-                    if !self.is_backface(v0.p, v1.p, v2.p) {
+                    if !self.is_backface(v0.position, v1.position, v2.position) {
                         continue;
                     }
                 }
@@ -645,42 +645,45 @@ where
         &mut self,
         triangle: &mut Triangle<DefaultVertexOut>,
     ) -> bool {
-        if triangle.v0.p.x > triangle.v0.p.w
-            && triangle.v1.p.x > triangle.v1.p.w
-            && triangle.v2.p.x > triangle.v2.p.w
+        if triangle.v0.position.x > triangle.v0.position.w
+            && triangle.v1.position.x > triangle.v1.position.w
+            && triangle.v2.position.x > triangle.v2.position.w
         {
             return true;
         }
 
-        if triangle.v0.p.x < -triangle.v0.p.w
-            && triangle.v1.p.x < -triangle.v1.p.w
-            && triangle.v2.p.x < -triangle.v2.p.w
+        if triangle.v0.position.x < -triangle.v0.position.w
+            && triangle.v1.position.x < -triangle.v1.position.w
+            && triangle.v2.position.x < -triangle.v2.position.w
         {
             return true;
         }
 
-        if triangle.v0.p.y > triangle.v0.p.w
-            && triangle.v1.p.y > triangle.v1.p.w
-            && triangle.v2.p.y > triangle.v2.p.w
+        if triangle.v0.position.y > triangle.v0.position.w
+            && triangle.v1.position.y > triangle.v1.position.w
+            && triangle.v2.position.y > triangle.v2.position.w
         {
             return true;
         }
 
-        if triangle.v0.p.y < -triangle.v0.p.w
-            && triangle.v1.p.y < -triangle.v1.p.w
-            && triangle.v2.p.y < -triangle.v2.p.w
+        if triangle.v0.position.y < -triangle.v0.position.w
+            && triangle.v1.position.y < -triangle.v1.position.w
+            && triangle.v2.position.y < -triangle.v2.position.w
         {
             return true;
         }
 
-        if triangle.v0.p.z > triangle.v0.p.w
-            && triangle.v1.p.z > triangle.v1.p.w
-            && triangle.v2.p.z > triangle.v2.p.w
+        if triangle.v0.position.z > triangle.v0.position.w
+            && triangle.v1.position.z > triangle.v1.position.w
+            && triangle.v2.position.z > triangle.v2.position.w
         {
             return true;
         }
 
-        if triangle.v0.p.z < 0.0 && triangle.v1.p.z < 0.0 && triangle.v2.p.z < 0.0 {
+        if triangle.v0.position.z < 0.0
+            && triangle.v1.position.z < 0.0
+            && triangle.v2.position.z < 0.0
+        {
             return true;
         }
 
@@ -688,8 +691,8 @@ where
     }
 
     fn clip1(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
-        let a_alpha = -(v0.p.z) / (v1.p.z - v0.p.z);
-        let b_alpha = -(v0.p.z) / (v2.p.z - v0.p.z);
+        let a_alpha = -(v0.position.z) / (v1.position.z - v0.position.z);
+        let b_alpha = -(v0.position.z) / (v2.position.z - v0.position.z);
 
         let a_prime = DefaultVertexOut::interpolate(v0, v1, a_alpha);
         let b_prime = DefaultVertexOut::interpolate(v0, v2, b_alpha);
@@ -711,8 +714,8 @@ where
     }
 
     fn clip2(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
-        let a_alpha = -(v0.p.z) / (v2.p.z - v0.p.z);
-        let b_alpha = -(v1.p.z) / (v2.p.z - v1.p.z);
+        let a_alpha = -(v0.position.z) / (v2.position.z - v0.position.z);
+        let b_alpha = -(v1.position.z) / (v2.position.z - v1.position.z);
 
         let a_prime = DefaultVertexOut::interpolate(v0, v2, a_alpha);
         let b_prime = DefaultVertexOut::interpolate(v1, v2, b_alpha);
@@ -735,26 +738,26 @@ where
 
         // Clip triangles that intersect the front of our view frustum
 
-        if triangle.v0.p.z < 0.0 {
-            if triangle.v1.p.z < 0.0 {
+        if triangle.v0.position.z < 0.0 {
+            if triangle.v1.position.z < 0.0 {
                 // Clip 2 (0 and 1)
                 self.clip2(triangle.v0, triangle.v1, triangle.v2);
-            } else if triangle.v2.p.z < 0.0 {
+            } else if triangle.v2.position.z < 0.0 {
                 // Clip 2 (0 and 2)
                 self.clip1(triangle.v0, triangle.v2, triangle.v1);
             } else {
                 // Clip 1 (0)
                 self.clip1(triangle.v0, triangle.v1, triangle.v2);
             }
-        } else if triangle.v1.p.z < 0.0 {
-            if triangle.v2.p.z < 0.0 {
+        } else if triangle.v1.position.z < 0.0 {
+            if triangle.v2.position.z < 0.0 {
                 // Clip 2
                 self.clip2(triangle.v1, triangle.v2, triangle.v0);
             } else {
                 // Clip 1
                 self.clip1(triangle.v1, triangle.v0, triangle.v2);
             }
-        } else if triangle.v2.p.z < 0.0 {
+        } else if triangle.v2.position.z < 0.0 {
             // Clip 1
             self.clip1(triangle.v2, triangle.v0, triangle.v1);
         } else {
@@ -763,14 +766,14 @@ where
     }
 
     fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {
-        let w_inverse = 1.0 / v.p.w;
+        let w_inverse = 1.0 / v.position.w;
 
         *v *= w_inverse;
 
-        v.p.x = (v.p.x + 1.0) * self.viewport.width_over_2;
-        v.p.y = (-v.p.y + 1.0) * self.viewport.height_over_2;
+        v.position.x = (v.position.x + 1.0) * self.viewport.width_over_2;
+        v.position.y = (-v.position.y + 1.0) * self.viewport.height_over_2;
 
-        v.p.w = w_inverse;
+        v.position.w = w_inverse;
     }
 
     fn post_process_triangle_vertices(&mut self, triangle: &mut Triangle<DefaultVertexOut>) {
@@ -779,9 +782,9 @@ where
         let world_vertices = [triangle.v0, triangle.v1, triangle.v2];
 
         let world_vertex_relative_normals = [
-            world_vertices[0].p + world_vertices[0].n * 0.05,
-            world_vertices[1].p + world_vertices[1].n * 0.05,
-            world_vertices[2].p + world_vertices[2].n * 0.05,
+            world_vertices[0].position + world_vertices[0].normal * 0.05,
+            world_vertices[1].position + world_vertices[1].normal * 0.05,
+            world_vertices[2].position + world_vertices[2].normal * 0.05,
         ];
 
         let mut screen_vertices = world_vertices.clone();
@@ -802,9 +805,9 @@ where
 
             for v in screen_vertices {
                 points.push(Vec2 {
-                    x: v.p.x,
-                    y: v.p.y,
-                    z: v.p.z,
+                    x: v.position.x,
+                    y: v.position.y,
+                    z: v.position.z,
                 });
             }
 
@@ -821,7 +824,7 @@ where
             for (index, v) in screen_vertices.iter().enumerate() {
                 let world_vertex_relative_normal = world_vertex_relative_normals[index];
 
-                let w_inverse = 1.0 / world_vertices[index].p.w;
+                let w_inverse = 1.0 / world_vertices[index].position.w;
 
                 let screen_vertex_relative_normal = Vec2 {
                     x: (world_vertex_relative_normal.x * w_inverse + 1.0)
@@ -831,7 +834,7 @@ where
                     z: 0.0,
                 };
 
-                let from = v.p;
+                let from = v.position;
                 let to = screen_vertex_relative_normal;
 
                 Graphics::line(
@@ -849,9 +852,9 @@ where
     fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
         let z_buffer = self.z_buffer.as_mut().unwrap();
 
-        match z_buffer.test(x, y, interpolant.p.z) {
+        match z_buffer.test(x, y, interpolant.position.z) {
             Some(((x, y), non_linear_z)) => {
-                let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.p.w);
+                let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.position.w);
 
                 let context = self.shader_context.read().unwrap();
 
@@ -863,7 +866,7 @@ where
 
                 match self.g_buffer.as_mut() {
                     Some(g_buffer) => {
-                        let z = linear_space_interpolant.p.z;
+                        let z = linear_space_interpolant.position.z;
                         let near = z_buffer.get_projection_z_near();
                         let far = z_buffer.get_projection_z_far();
 
@@ -885,7 +888,7 @@ where
         top_right: DefaultVertexOut,
         bottom: DefaultVertexOut,
     ) {
-        let delta_y = bottom.p.y - top_left.p.y;
+        let delta_y = bottom.position.y - top_left.position.y;
 
         // Calculate the change (step) for left and right sides, as we
         // rasterize downwards with each scanline.
@@ -911,7 +914,7 @@ where
         bottom_left: DefaultVertexOut,
         bottom_right: DefaultVertexOut,
     ) {
-        let delta_y = bottom_right.p.y - top.p.y;
+        let delta_y = bottom_right.position.y - top.position.y;
 
         // Calculate the change (step) for both left and right sides, as we
         // rasterize downwards with each scanline.
@@ -956,21 +959,24 @@ where
 
         // Calculate our start and end Y (end here is non-inclusive), such that
         // they are non-fractional screen coordinates.
-        let y_start: u32 = u32::max((it0.p.y - 0.5).ceil() as u32, 0);
-        let y_end: u32 = u32::min((it2.p.y - 0.5).ceil() as u32, self.viewport.height - 1);
+        let y_start: u32 = u32::max((it0.position.y - 0.5).ceil() as u32, 0);
+        let y_end: u32 = u32::min(
+            (it2.position.y - 0.5).ceil() as u32,
+            self.viewport.height - 1,
+        );
 
         // Adjust both interpolants to account for us snapping y-start and y-end
         // to their nearest whole pixel coordinates.
-        left_edge_interpolant += *left_step * (y_start as f32 + 0.5 - it0.p.y);
-        *right_edge_interpolant += *right_step * (y_start as f32 + 0.5 - it0.p.y);
+        left_edge_interpolant += *left_step * (y_start as f32 + 0.5 - it0.position.y);
+        *right_edge_interpolant += *right_step * (y_start as f32 + 0.5 - it0.position.y);
 
         // Rasterization loop
         for y in y_start..y_end {
             // Calculate our start and end X (end here is non-inclusive), such
             // that they are non-fractional screen coordinates.
-            let x_start = u32::max((left_edge_interpolant.p.x - 0.5).ceil() as u32, 0);
+            let x_start = u32::max((left_edge_interpolant.position.x - 0.5).ceil() as u32, 0);
             let x_end = u32::min(
-                (right_edge_interpolant.p.x - 0.5).ceil() as u32,
+                (right_edge_interpolant.position.x - 0.5).ceil() as u32,
                 self.viewport.width - 1,
             );
 
@@ -979,7 +985,7 @@ where
             let mut line_interpolant = left_edge_interpolant.clone();
 
             // Calculate the width of our scanline, for this Y position.
-            let dx = right_edge_interpolant.p.x - left_edge_interpolant.p.x;
+            let dx = right_edge_interpolant.position.x - left_edge_interpolant.position.x;
 
             // Calculate the change (step) for our horizontal interpolant, based
             // on the width of our scanline.
@@ -988,7 +994,7 @@ where
             // Prestep our scanline interpolant to account for us snapping
             // x-start and x-end to their nearest whole pixel coordinates.
             line_interpolant +=
-                line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.p.x);
+                line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.position.x);
 
             for x in x_start..x_end {
                 self.test_and_set_z_buffer(x, y, &mut line_interpolant);
@@ -1006,34 +1012,34 @@ where
 
         // Sorts points by y-value (highest-to-lowest)
 
-        if tri[1].p.y < tri[0].p.y {
+        if tri[1].position.y < tri[0].position.y {
             tri.swap(0, 1);
         }
-        if tri[2].p.y < tri[1].p.y {
+        if tri[2].position.y < tri[1].position.y {
             tri.swap(1, 2);
         }
-        if tri[1].p.y < tri[0].p.y {
+        if tri[1].position.y < tri[0].position.y {
             tri.swap(0, 1);
         }
 
-        if tri[0].p.y == tri[1].p.y {
+        if tri[0].position.y == tri[1].position.y {
             // Flat-top (horizontal line is tri[0]-to-tri[1]);
 
             // tri[2] must sit below tri[0] and tri[1]; tri[0] and tri[1] cannot
             // have the same x-value; therefore, sort tri[0] and tri[1] by x-value;
 
-            if tri[1].p.x < tri[0].p.x {
+            if tri[1].position.x < tri[0].position.x {
                 tri.swap(0, 1);
             }
 
             self.flat_top_triangle_fill(tri[0], tri[1], tri[2]);
-        } else if tri[1].p.y == tri[2].p.y {
+        } else if tri[1].position.y == tri[2].position.y {
             // Flat-bottom (horizontal line is tri[1]-to-tri[2]);
 
             // tri[0] must sit above tri[1] and tri[2]; tri[1] and tri[2] cannot
             // have the same x-value; therefore, sort tri[1] and tri[2] by x-value;
 
-            if tri[2].p.x < tri[1].p.x {
+            if tri[2].position.x < tri[1].position.x {
                 tri.swap(1, 2);
             }
 
@@ -1041,11 +1047,12 @@ where
         } else {
             // Find splitting vertex
 
-            let alpha_split = (tri[1].p.y - tri[0].p.y) / (tri[2].p.y - tri[0].p.y);
+            let alpha_split =
+                (tri[1].position.y - tri[0].position.y) / (tri[2].position.y - tri[0].position.y);
 
             let split_vertex = DefaultVertexOut::interpolate(tri[0], tri[2], alpha_split);
 
-            if tri[1].p.x < split_vertex.p.x {
+            if tri[1].position.x < split_vertex.position.x {
                 // Major right
 
                 // tri[0] must sit above tri[1] and split_point; tri[1] and

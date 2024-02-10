@@ -7,9 +7,9 @@ use crate::vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4};
 
 #[derive(Copy, Clone, Default)]
 pub struct DefaultVertexOut {
-    pub p: Vec4,
-    pub n: Vec4,
-    pub c: Vec3,
+    pub position: Vec4,
+    pub normal: Vec4,
+    pub color: Vec3,
     pub uv: Vec2,
     pub world_pos: Vec3,
     pub depth: f32,
@@ -29,9 +29,9 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn add(self, rhs: Self) -> DefaultVertexOut {
         DefaultVertexOut {
-            p: self.p + rhs.p,
-            n: self.n + rhs.n,
-            c: self.c + rhs.c,
+            position: self.position + rhs.position,
+            normal: self.normal + rhs.normal,
+            color: self.color + rhs.color,
             uv: self.uv + rhs.uv,
             world_pos: self.world_pos + rhs.world_pos,
             depth: 1.0,
@@ -41,9 +41,9 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
 
 impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
     fn add_assign(&mut self, rhs: DefaultVertexOut) {
-        self.p += rhs.p;
-        self.n += rhs.n;
-        self.c += rhs.c;
+        self.position += rhs.position;
+        self.normal += rhs.normal;
+        self.color += rhs.color;
         self.uv += rhs.uv;
         self.world_pos += rhs.world_pos;
         self.depth += rhs.depth;
@@ -54,9 +54,9 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn sub(self, rhs: Self) -> DefaultVertexOut {
         DefaultVertexOut {
-            p: self.p - rhs.p,
-            n: self.n - rhs.n,
-            c: self.c - rhs.c,
+            position: self.position - rhs.position,
+            normal: self.normal - rhs.normal,
+            color: self.color - rhs.color,
             uv: self.uv - rhs.uv,
             world_pos: self.world_pos - rhs.world_pos,
             depth: self.depth - rhs.depth,
@@ -68,9 +68,9 @@ impl Mul<f32> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn mul(self, scalar: f32) -> DefaultVertexOut {
         DefaultVertexOut {
-            p: self.p * scalar,
-            n: self.n * scalar,
-            c: self.c * scalar,
+            position: self.position * scalar,
+            normal: self.normal * scalar,
+            color: self.color * scalar,
             uv: self.uv * scalar,
             world_pos: self.world_pos * scalar,
             depth: self.depth * scalar,
@@ -80,9 +80,9 @@ impl Mul<f32> for DefaultVertexOut {
 
 impl MulAssign<f32> for DefaultVertexOut {
     fn mul_assign(&mut self, scalar: f32) {
-        self.p *= scalar;
-        self.n *= scalar;
-        self.c *= scalar;
+        self.position *= scalar;
+        self.normal *= scalar;
+        self.color *= scalar;
         self.uv *= scalar;
         self.world_pos *= scalar;
         self.depth *= scalar;
@@ -93,9 +93,9 @@ impl Div<f32> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn div(self, scalar: f32) -> DefaultVertexOut {
         DefaultVertexOut {
-            p: self.p / scalar,
-            n: self.n / scalar,
-            c: self.c / scalar,
+            position: self.position / scalar,
+            normal: self.normal / scalar,
+            color: self.color / scalar,
             uv: self.uv / scalar,
             world_pos: self.world_pos / scalar,
             depth: self.depth / scalar,
@@ -105,6 +105,6 @@ impl Div<f32> for DefaultVertexOut {
 
 impl Display for DefaultVertexOut {
     fn fmt(&self, v: &mut Formatter<'_>) -> Result {
-        write!(v, "{}", self.p)
+        write!(v, "{}", self.position)
     }
 }

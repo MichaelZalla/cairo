@@ -146,16 +146,16 @@ where
         self.transform_to_ndc_space(end);
 
         // Cull lines that are completely in front of our near plane (z1 <= 0 and z2 <= 0).
-        if start.p.z <= 0.0 && end.p.z <= 0.0 {
+        if start.position.z <= 0.0 && end.position.z <= 0.0 {
             return;
         }
 
         Graphics::line(
             &mut self.forward_framebuffer.as_mut().unwrap(),
-            start.p.x as i32,
-            start.p.y as i32,
-            end.p.x as i32,
-            end.p.y as i32,
+            start.position.x as i32,
+            start.position.y as i32,
+            end.position.x as i32,
+            end.position.y as i32,
             color,
         );
     }

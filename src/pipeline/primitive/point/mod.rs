@@ -29,9 +29,9 @@ where
 
         self.transform_to_ndc_space(&mut vertex_out);
 
-        let x = vertex_out.p.x as u32;
-        let y = vertex_out.p.y as u32;
-        let z = vertex_out.p.z;
+        let x = vertex_out.position.x as u32;
+        let y = vertex_out.position.y as u32;
+        let z = vertex_out.position.z;
 
         // Cull points that are in front of our near plane (z <= 0).
         if z <= 0.0 {

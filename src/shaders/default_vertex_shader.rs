@@ -12,9 +12,9 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
 
         let mut out = DefaultVertexOut::new();
 
-        out.p = Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
+        out.position = Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
 
-        debug_assert!(out.p.w != 0.0);
+        debug_assert!(out.position.w != 0.0);
 
         let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
 
@@ -24,10 +24,10 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
             z: world_pos.z,
         };
 
-        out.n = Vec4::new(v.normal, 0.0) * context.world_transform;
-        out.n = out.n.as_normal();
+        out.normal = Vec4::new(v.normal, 0.0) * context.world_transform;
+        out.normal = out.normal.as_normal();
 
-        out.c = v.color.clone();
+        out.color = v.color.clone();
 
         out.uv = v.uv.clone();
 

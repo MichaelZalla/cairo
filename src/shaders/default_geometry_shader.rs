@@ -51,7 +51,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
 
         // World-space surface normal
 
-        let surface_normal = interpolant.n.as_normal();
+        let surface_normal = interpolant.normal.as_normal();
 
         out.normal.x = surface_normal.x;
         out.normal.y = surface_normal.y;
