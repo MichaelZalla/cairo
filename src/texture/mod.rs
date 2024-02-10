@@ -58,6 +58,20 @@ impl TextureMap {
         }
     }
 
+    pub fn from_buffer(width: u32, height: u32, buffer: &Buffer2D<u8>) -> Self {
+        Self {
+            info: TextureMapInfo {
+                filepath: "Buffer".to_string(),
+            },
+            is_loaded: true,
+            is_mipmapped: false,
+            width,
+            height,
+            levels: vec![buffer.clone()],
+            options: Default::default(),
+        }
+    }
+
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
         // Load the map's native-sized pixel data on-demand.
 
