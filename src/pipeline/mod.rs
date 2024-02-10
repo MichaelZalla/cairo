@@ -393,15 +393,15 @@ where
 
                 let shader_context = self.shader_context.read().unwrap();
 
-                let world_vertices: Vec<DefaultVertexOut> = object_vertices_in
+                let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
                     .into_iter()
                     .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
                     .collect();
 
                 let mut tri: Triangle<DefaultVertexOut> = Triangle {
-                    v0: world_vertices[0],
-                    v1: world_vertices[1],
-                    v2: world_vertices[2],
+                    v0: projection_space_vertices[0],
+                    v1: projection_space_vertices[1],
+                    v2: projection_space_vertices[2],
                 };
 
                 if !self.should_cull_from_homogeneous_space(&mut tri) {
@@ -540,25 +540,33 @@ where
         }
 
         // Process mesh vertices from object-space to world-space.
-        let shader_context = self.shader_context.read().unwrap();
+        let projection_space_vertices: Vec<DefaultVertexOut>;
 
-        let world_vertices = vertices_in
-            .into_iter()
-            .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
-            .collect();
+        {
+            let shader_context = self.shader_context.read().unwrap();
 
-        self.process_triangles(&mesh.faces, world_vertices);
+            projection_space_vertices = vertices_in
+                .into_iter()
+                .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
+                .collect();
+        }
+
+        self.process_triangles(&mesh.faces, projection_space_vertices);
     }
 
-    fn process_triangles(&mut self, faces: &Vec<Face>, world_vertices: Vec<DefaultVertexOut>) {
+    fn process_triangles(
+        &mut self,
+        faces: &Vec<Face>,
+        projection_space_vertices: Vec<DefaultVertexOut>,
+    ) {
         let mut triangles: Vec<Triangle<DefaultVertexOut>> = vec![];
 
         for face_index in 0..faces.len() {
             // Cull backfaces
 
-            let mut v0 = world_vertices[face_index * 3];
-            let mut v1 = world_vertices[face_index * 3 + 1];
-            let mut v2 = world_vertices[face_index * 3 + 2];
+            let mut v0 = projection_space_vertices[face_index * 3];
+            let mut v1 = projection_space_vertices[face_index * 3 + 1];
+            let mut v2 = projection_space_vertices[face_index * 3 + 2];
 
             match self.options.face_culling_strategy.window_order {
                 PipelineFaceCullingWindingOrder::Clockwise => {
@@ -779,15 +787,15 @@ where
     fn post_process_triangle_vertices(&mut self, triangle: &mut Triangle<DefaultVertexOut>) {
         // World-space to screen-space (NDC) transform
 
-        let world_vertices = [triangle.v0, triangle.v1, triangle.v2];
+        let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
 
         let world_vertex_relative_normals = [
-            world_vertices[0].position + world_vertices[0].normal * 0.05,
-            world_vertices[1].position + world_vertices[1].normal * 0.05,
-            world_vertices[2].position + world_vertices[2].normal * 0.05,
+            projection_space_vertices[0].position + projection_space_vertices[0].normal * 0.05,
+            projection_space_vertices[1].position + projection_space_vertices[1].normal * 0.05,
+            projection_space_vertices[2].position + projection_space_vertices[2].normal * 0.05,
         ];
 
-        let mut screen_vertices = world_vertices.clone();
+        let mut screen_vertices = projection_space_vertices.clone();
 
         self.transform_to_ndc_space(&mut screen_vertices[0]);
         self.transform_to_ndc_space(&mut screen_vertices[1]);
@@ -824,7 +832,7 @@ where
             for (index, v) in screen_vertices.iter().enumerate() {
                 let world_vertex_relative_normal = world_vertex_relative_normals[index];
 
-                let w_inverse = 1.0 / world_vertices[index].position.w;
+                let w_inverse = 1.0 / projection_space_vertices[index].position.w;
 
                 let screen_vertex_relative_normal = Vec2 {
                     x: (world_vertex_relative_normal.x * w_inverse + 1.0)
