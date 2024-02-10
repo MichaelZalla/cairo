@@ -595,9 +595,31 @@ where
             Default::default()
         };
 
+        let edge0 = v1 - v0;
+        let edge1 = v2 - v0;
+
+        let delta_uv0 = uv1 - uv0;
+        let delta_uv1 = uv2 - uv0;
+
+        let f = 1.0 / (delta_uv0.x * delta_uv1.y - delta_uv1.x * delta_uv0.y);
+
+        let tangent = Vec3 {
+            x: f * (delta_uv1.y * edge0.x - delta_uv0.y * edge1.x),
+            y: f * (delta_uv1.y * edge0.y - delta_uv0.y * edge1.y),
+            z: f * (delta_uv1.y * edge0.z - delta_uv0.y * edge1.z),
+        };
+
+        let bitangent = Vec3 {
+            x: f * (-delta_uv1.x * edge0.x + delta_uv0.x * edge1.x),
+            y: f * (-delta_uv1.x * edge0.y + delta_uv0.x * edge1.y),
+            z: f * (-delta_uv1.x * edge0.z + delta_uv0.x * edge1.z),
+        };
+
         let v0_in = DefaultVertexIn {
             position: v0,
             normal: normal0,
+            tangent,
+            bitangent,
             uv: uv0,
             color: color::WHITE.to_vec3() / 255.0,
         };
@@ -605,6 +627,8 @@ where
         let v1_in = DefaultVertexIn {
             position: v1,
             normal: normal1,
+            tangent,
+            bitangent,
             uv: uv1,
             color: color::WHITE.to_vec3() / 255.0,
         };
@@ -612,6 +636,8 @@ where
         let v2_in = DefaultVertexIn {
             position: v2,
             normal: normal2,
+            tangent,
+            bitangent,
             uv: uv2,
             color: color::WHITE.to_vec3() / 255.0,
         };
