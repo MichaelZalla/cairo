@@ -475,48 +475,64 @@ where
     }
 
     fn get_vertices_in(&self, mesh: &Mesh, face: &Face) -> [DefaultVertexIn; 3] {
+        let v0 = mesh.vertices[face.vertices.0].clone();
+        let v1 = mesh.vertices[face.vertices.1].clone();
+        let v2 = mesh.vertices[face.vertices.2].clone();
+
+        let normal0 = if face.normals.is_some() {
+            mesh.normals[face.normals.unwrap().0].clone()
+        } else {
+            Default::default()
+        };
+
+        let normal1 = if face.normals.is_some() {
+            mesh.normals[face.normals.unwrap().1].clone()
+        } else {
+            Default::default()
+        };
+
+        let normal2 = if face.normals.is_some() {
+            mesh.normals[face.normals.unwrap().2].clone()
+        } else {
+            Default::default()
+        };
+
+        let uv0 = if face.uvs.is_some() {
+            mesh.uvs[face.uvs.unwrap().0].clone()
+        } else {
+            Default::default()
+        };
+
+        let uv1 = if face.uvs.is_some() {
+            mesh.uvs[face.uvs.unwrap().1].clone()
+        } else {
+            Default::default()
+        };
+
+        let uv2 = if face.uvs.is_some() {
+            mesh.uvs[face.uvs.unwrap().2].clone()
+        } else {
+            Default::default()
+        };
+
         let v0_in = DefaultVertexIn {
-            position: mesh.vertices[face.vertices.0].clone(),
-            normal: if face.normals.is_some() {
-                mesh.normals[face.normals.unwrap().0].clone()
-            } else {
-                Default::default()
-            },
-            uv: if face.uvs.is_some() {
-                mesh.uvs[face.uvs.unwrap().0].clone()
-            } else {
-                Default::default()
-            },
+            position: v0,
+            normal: normal0,
+            uv: uv0,
             color: color::WHITE.to_vec3() / 255.0,
         };
 
         let v1_in = DefaultVertexIn {
-            position: mesh.vertices[face.vertices.1].clone(),
-            normal: if face.normals.is_some() {
-                mesh.normals[face.normals.unwrap().1].clone()
-            } else {
-                Default::default()
-            },
-            uv: if face.uvs.is_some() {
-                mesh.uvs[face.uvs.unwrap().1].clone()
-            } else {
-                Default::default()
-            },
+            position: v1,
+            normal: normal1,
+            uv: uv1,
             color: color::WHITE.to_vec3() / 255.0,
         };
 
         let v2_in = DefaultVertexIn {
-            position: mesh.vertices[face.vertices.2].clone(),
-            normal: if face.normals.is_some() {
-                mesh.normals[face.normals.unwrap().2].clone()
-            } else {
-                Default::default()
-            },
-            uv: if face.uvs.is_some() {
-                mesh.uvs[face.uvs.unwrap().2].clone()
-            } else {
-                Default::default()
-            },
+            position: v2,
+            normal: normal2,
+            uv: uv2,
             color: color::WHITE.to_vec3() / 255.0,
         };
 
