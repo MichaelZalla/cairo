@@ -51,11 +51,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
 
         // World-space surface normal
 
-        let surface_normal = interpolant.normal.as_normal();
-
-        out.normal.x = surface_normal.x;
-        out.normal.y = surface_normal.y;
-        out.normal.z = surface_normal.z;
+        out.normal = interpolant.normal.to_vec3();
 
         match (self.options.normal_mapping_active, context.active_material) {
             (true, Some(material_raw_mut)) => {
