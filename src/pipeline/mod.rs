@@ -465,7 +465,7 @@ where
             }
         }
 
-        self.process_world_vertices(&mesh);
+        self.process_object_space_vertices(&mesh);
 
         // Reset the shader context's original active material.
         {
@@ -524,7 +524,7 @@ where
         [v0_in, v1_in, v2_in]
     }
 
-    fn process_world_vertices(&mut self, mesh: &Mesh) {
+    fn process_object_space_vertices(&mut self, mesh: &Mesh) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
         let mut vertices_in: Vec<DefaultVertexIn> = vec![];
