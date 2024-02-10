@@ -19,12 +19,13 @@ where
                 let screen_x: u32 = (index as f32 % self.viewport.width as f32) as u32;
                 let screen_y: u32 = (index as f32 / self.viewport.width as f32) as u32;
 
-                let pixel_coordinate_world_space = camera.get_pixel_world_space_position(
-                    screen_x,
-                    screen_y,
-                    self.viewport.width,
-                    self.viewport.height,
-                );
+                let pixel_coordinate_world_space = camera
+                    .get_near_plane_pixel_world_space_position(
+                        screen_x,
+                        screen_y,
+                        self.viewport.width,
+                        self.viewport.height,
+                    );
 
                 let normal = pixel_coordinate_world_space.as_normal();
 

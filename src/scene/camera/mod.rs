@@ -206,7 +206,7 @@ impl Camera {
         self.projection_inverse_transform
     }
 
-    pub fn get_pixel_world_space_position(
+    pub fn get_near_plane_pixel_world_space_position(
         &self,
         screen_x: u32,
         screen_y: u32,
