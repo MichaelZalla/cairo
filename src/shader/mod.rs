@@ -80,21 +80,6 @@ impl ShaderContext {
         }
     }
 
-    pub fn get_projection(&self) -> Mat4 {
-        return self.projection_transform;
-    }
-
-    pub fn set_projection(&mut self, projection_transform: Mat4) {
-        self.projection_transform = projection_transform;
-
-        self.world_view_projection_transform =
-            self.world_view_transform * self.projection_transform;
-    }
-
-    pub fn set_view_position(&mut self, position: Vec4) {
-        self.view_position = position;
-    }
-
     pub fn get_world_transform(&mut self) -> Mat4 {
         self.world_transform
     }
@@ -108,10 +93,25 @@ impl ShaderContext {
             self.world_view_transform * self.projection_transform;
     }
 
+    pub fn set_view_position(&mut self, position: Vec4) {
+        self.view_position = position;
+    }
+
     pub fn set_view_inverse_transform(&mut self, mat: Mat4) {
         self.view_inverse_transform = mat;
 
         self.world_view_transform = self.world_transform * self.view_inverse_transform;
+
+        self.world_view_projection_transform =
+            self.world_view_transform * self.projection_transform;
+    }
+
+    pub fn get_projection(&self) -> Mat4 {
+        return self.projection_transform;
+    }
+
+    pub fn set_projection(&mut self, projection_transform: Mat4) {
+        self.projection_transform = projection_transform;
 
         self.world_view_projection_transform =
             self.world_view_transform * self.projection_transform;
