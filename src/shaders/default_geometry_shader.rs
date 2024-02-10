@@ -64,17 +64,21 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                         Some(texture) => {
                             let (r, g, b) = sample_nearest(interpolant.uv, texture, None);
 
-                            let _map_normal = Vec4 {
+                            // Map the normal's components into the range [-1, 1].
+
+                            let tangent_space_normal = Vec4 {
                                 x: (r as f32 / 255.0) * 2.0 - 1.0,
                                 y: (g as f32 / 255.0) * 2.0 - 1.0,
                                 z: (b as f32 / 255.0) * 2.0 - 1.0,
                                 w: 1.0,
                             };
 
-                            // @TODO Perturb the surface normal using the local
-                            // tangent-space information read from `map`
-                            //
-                            // surface_normal = (surface_normal * out.TBN).as_normal();
+                            // Perturb the surface normal using the local
+                            // tangent-space information read from `map`.
+
+                            out.normal = (tangent_space_normal * interpolant.tbn)
+                                .to_vec3()
+                                .as_normal();
                         }
                         None => (),
                     }
