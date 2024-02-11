@@ -3,6 +3,7 @@ use std::{borrow::BorrowMut, sync::RwLock};
 use cairo::{
     app::App,
     buffer::Buffer2D,
+    color,
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -37,6 +38,7 @@ pub struct SponzaScene<'a> {
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
+    directional_light: DirectionalLight,
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<Entity<'a>>>,
@@ -79,56 +81,31 @@ impl<'a> SponzaScene<'a> {
 
         // Define lights for our scene
         let ambient_light = AmbientLight {
-            intensities: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
-            },
+            intensities: Vec3::ones() * 0.05,
         };
 
         let directional_light = DirectionalLight {
-            intensities: Vec3 {
-                x: 0.2,
-                y: 0.2,
-                z: 0.2,
-            },
-            direction: Vec4 {
-                x: 0.0,
-                y: -1.0,
-                z: 1.00,
-                w: 1.0,
-            }
-            .as_normal(),
+            intensities: Vec3::ones() * 0.05,
+            direction: Vec4::new(vec3::UP * -1.0, 1.0).as_normal(),
         };
 
         let mut point_light = PointLight::new();
 
-        // point_light.position = atrium_aabb.center;
-
-        point_light.intensities = Vec3 {
-            x: 1.0,
-            y: 1.0,
-            z: 1.0,
-        };
+        point_light.intensities = color::BLUE.to_vec3() / 255.0 * 15.0;
 
         point_light.specular_intensity = 1.0;
 
         point_light.constant_attenuation = 1.0;
-        point_light.linear_attenuation = 0.0014;
-        point_light.quadratic_attenuation = 0.000007;
+        point_light.linear_attenuation = 0.007;
+        point_light.quadratic_attenuation = 0.0002;
 
         let mut spot_light = SpotLight::new();
 
-        spot_light.position = SPONZA_CENTER
-            + Vec3 {
-                x: 0.0,
-                y: 300.0,
-                z: 0.0,
-            };
+        spot_light.intensities = color::RED.to_vec3() / 255.0 * 15.0;
 
         spot_light.constant_attenuation = 1.0;
-        spot_light.linear_attenuation = 0.0014;
-        spot_light.quadratic_attenuation = 0.000007;
+        spot_light.linear_attenuation = 0.007;
+        spot_light.quadratic_attenuation = 0.0002;
 
         let mut skybox = CubeMap::from_cross("examples/skybox/assets/grass_sky.jpg");
 
@@ -170,6 +147,7 @@ impl<'a> SponzaScene<'a> {
             shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
+            directional_light,
             point_lights: vec![point_light],
             spot_lights: vec![spot_light],
         };
@@ -207,7 +185,37 @@ impl<'a> Scene for SponzaScene<'a> {
 
         context.set_projection(camera.get_projection());
 
+        let uptime = app.timing_info.uptime_seconds;
+
+        self.directional_light.direction = Vec4::new(
+            Vec3 {
+                x: uptime.sin(),
+                y: -1.0,
+                z: uptime.cos(),
+            },
+            1.0,
+        )
+        .as_normal();
+
+        context.set_directional_light(self.directional_light);
+
+        self.point_lights[0].position = SPONZA_CENTER
+            + Vec3 {
+                x: 1000.0 * (uptime).sin(),
+                y: 300.0,
+                z: 0.0,
+            };
+
         context.set_point_light(0, self.point_lights[0]);
+
+        self.spot_lights[0].position = SPONZA_CENTER
+            + Vec3 {
+                x: -1000.0 * (uptime).sin(),
+                y: 500.0,
+                z: 0.0,
+            };
+
+        context.set_spot_light(0, self.spot_lights[0]);
 
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
