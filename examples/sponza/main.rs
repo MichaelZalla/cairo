@@ -7,6 +7,7 @@ use cairo::{
     buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
+    font::{cache::FontCache, FontInfo},
     mesh,
     scene::Scene,
     shader::ShaderContext,
@@ -30,6 +31,19 @@ fn main() -> Result<(), String> {
     let app = App::new(&mut window_info);
 
     let rendering_context = &app.context.rendering_context;
+
+    // Fonts
+
+    let font_info = Box::leak(Box::new(FontInfo {
+        filepath: "C:/Windows/Fonts/vgasys.fon".to_string(),
+        point_size: 16,
+    }));
+
+    let font_cache_rwl = Box::leak(Box::new(RwLock::new(FontCache::new(
+        app.context.ttf_context,
+    ))));
+
+    font_cache_rwl.write().unwrap().load(&font_info)?;
 
     // Default framebuffer
 
@@ -71,6 +85,8 @@ fn main() -> Result<(), String> {
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SponzaScene::new(
         &framebuffer_rwl,
+        font_cache_rwl,
+        font_info,
         rendering_context,
         &entities_rwl,
         &mut materials,

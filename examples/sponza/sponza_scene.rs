@@ -5,8 +5,11 @@ use cairo::{
     buffer::Buffer2D,
     color,
     context::ApplicationRenderingContext,
+    debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
+    font::{cache::FontCache, FontInfo},
+    graphics::Graphics,
     material::cache::MaterialCache,
     pipeline::{options::PipelineOptions, Pipeline},
     scene::{
@@ -35,6 +38,9 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 
 pub struct SponzaScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
+    font_cache_rwl: &'static RwLock<FontCache<'static>>,
+    font_info: &'static FontInfo,
+    debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -50,6 +56,8 @@ pub struct SponzaScene<'a> {
 impl<'a> SponzaScene<'a> {
     pub fn new(
         framebuffer_rwl: &'a RwLock<Buffer2D>,
+        font_cache_rwl: &'static RwLock<FontCache<'static>>,
+        font_info: &'static FontInfo,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<Entity<'a>>>,
         materials: &'a mut MaterialCache,
@@ -63,9 +71,12 @@ impl<'a> SponzaScene<'a> {
 
         let fragment_shader = DEFAULT_FRAGMENT_SHADER;
 
-        let aspect_ratio = framebuffer.width_over_height;
+        let debug_message_buffer: DebugMessageBuffer = Default::default();
 
         // Set up a camera for rendering our scene
+
+        let aspect_ratio = framebuffer.width_over_height;
+
         let camera_position = Vec3 {
             x: 1000.0,
             y: 300.0,
@@ -140,6 +151,9 @@ impl<'a> SponzaScene<'a> {
 
         return SponzaScene {
             framebuffer_rwl,
+            font_cache_rwl,
+            font_info,
+            debug_message_buffer,
             pipeline,
             entities,
             skybox,
@@ -222,6 +236,65 @@ impl<'a> Scene for SponzaScene<'a> {
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
+
+        // Write to debug log
+
+        self.debug_message_buffer.write(format!(
+            "Resolution: {}x{}",
+            app.window_info.canvas_width, app.window_info.canvas_height
+        ));
+
+        self.debug_message_buffer
+            .write(format!("FPS: {:.*}", 0, app.timing_info.frames_per_second));
+
+        self.debug_message_buffer
+            .write(format!("Seconds ellapsed: {:.*}", 2, uptime));
+
+        self.debug_message_buffer.write(format!(
+            "Camera position: {:?}",
+            self.cameras[self.active_camera_index]
+                .look_vector
+                .get_position()
+        ));
+
+        self.debug_message_buffer.write(format!(
+            "Wireframe: {}",
+            if self.pipeline.options.do_wireframe {
+                "On"
+            } else {
+                "Off"
+            }
+        ));
+
+        self.debug_message_buffer.write(format!(
+            "Rasterized geometry: {}",
+            if self.pipeline.options.do_rasterized_geometry {
+                "On"
+            } else {
+                "Off"
+            }
+        ));
+
+        if self.pipeline.options.do_rasterized_geometry {
+            self.debug_message_buffer.write(format!(
+                "Culling reject mask: {:?}",
+                self.pipeline.options.face_culling_strategy.reject
+            ));
+
+            self.debug_message_buffer.write(format!(
+                "Culling window order: {:?}",
+                self.pipeline.options.face_culling_strategy.window_order
+            ));
+
+            self.debug_message_buffer.write(format!(
+                "Lighting: {}",
+                if self.pipeline.options.do_lighting {
+                    "On"
+                } else {
+                    "Off"
+                }
+            ));
+        }
     }
 
     fn render(&mut self) {
@@ -234,8 +307,6 @@ impl<'a> Scene for SponzaScene<'a> {
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
-
-        self.pipeline.render_ground_plane(25.0);
 
         self.pipeline.render_point_light(
             &self.point_lights[0],
@@ -252,5 +323,24 @@ impl<'a> Scene for SponzaScene<'a> {
         self.pipeline.render_skybox(&self.skybox, &camera);
 
         self.pipeline.end_frame();
+
+        // Render debug messages
+
+        {
+            let mut framebuffer = self.framebuffer_rwl.write().unwrap();
+
+            let debug_messages = self.debug_message_buffer.borrow_mut();
+
+            {
+                Graphics::render_debug_messages(
+                    &mut framebuffer,
+                    self.font_cache_rwl,
+                    self.font_info,
+                    (12, 12),
+                    1.0,
+                    debug_messages,
+                );
+            }
+        }
     }
 }
