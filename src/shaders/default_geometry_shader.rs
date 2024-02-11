@@ -57,6 +57,8 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
 
         out.normal = interpolant.normal.to_vec3();
 
+        out.tangent_space_info = interpolant.tangent_space_info;
+
         match (self.options.normal_mapping_active, context.active_material) {
             (true, Some(material_raw_mut)) => {
                 unsafe {
@@ -76,9 +78,13 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                             // Perturb the surface normal using the local
                             // tangent-space information read from `map`.
 
-                            out.normal = (tangent_space_normal * interpolant.tbn)
+                            out.normal = (tangent_space_normal
+                                * interpolant.tangent_space_info.tbn)
                                 .to_vec3()
                                 .as_normal();
+
+                            out.tangent_space_info.normal =
+                                tangent_space_normal.to_vec3().as_normal();
                         }
                         None => (),
                     }

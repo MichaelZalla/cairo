@@ -81,7 +81,11 @@ impl<'a> SponzaScene<'a> {
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
 
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
+        let mut geometry_shader = DefaultGeometryShader::new(shader_context, None);
+
+        geometry_shader.options.diffuse_mapping_active = false;
+        geometry_shader.options.specular_mapping_active = true;
+        geometry_shader.options.normal_mapping_active = false;
 
         let fragment_shaders = vec![
             DEFAULT_FRAGMENT_SHADER,

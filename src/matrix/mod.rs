@@ -2,7 +2,7 @@ use std::{f32::consts::PI, fmt, ops};
 
 use super::vec::{vec3::Vec3, vec4::Vec4};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Mat<T, const N: usize> {
     elements: [[T; N]; N],
 }

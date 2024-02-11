@@ -1,6 +1,9 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::vec::{vec2::Vec2, vec3::Vec3};
+use crate::{
+    vec::{vec2::Vec2, vec3::Vec3},
+    vertex::default_vertex_out::TangentSpaceInfo,
+};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct GeometrySample {
@@ -14,6 +17,7 @@ pub struct GeometrySample {
     // @TODO reconstruct z component:
     //          normal.z = (1.0 - normal.x^2 - normal.y^2).sqrt()
     pub normal: Vec3, // 12 bytes
+    pub tangent_space_info: TangentSpaceInfo,
     // @TODO reconstruct from depth sample + pixel coordinate (index)
     pub world_pos: Vec3, // 12 bytes
     // Non-linear Z in world-view-projection space
@@ -36,6 +40,7 @@ impl Add<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor + rhs.ambient_factor,
             diffuse: self.diffuse + rhs.diffuse,
             normal: self.normal + rhs.normal,
+            tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos + rhs.world_pos,
             depth: self.depth + rhs.depth,
             specular_exponent: self.specular_exponent + rhs.specular_exponent,
@@ -56,6 +61,7 @@ impl Sub<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor - rhs.ambient_factor,
             diffuse: self.diffuse - rhs.diffuse,
             normal: self.normal - rhs.normal,
+            tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos - rhs.world_pos,
             depth: self.depth - rhs.depth,
             specular_exponent: self.specular_exponent - rhs.specular_exponent,
@@ -76,6 +82,7 @@ impl Mul<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor * rhs.ambient_factor,
             diffuse: self.diffuse * rhs.diffuse,
             normal: self.normal * rhs.normal,
+            tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos * rhs.world_pos,
             depth: self.depth * rhs.depth,
             specular_exponent: self.specular_exponent * rhs.specular_exponent,
@@ -96,6 +103,7 @@ impl Div<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor / rhs.ambient_factor,
             diffuse: self.diffuse / rhs.diffuse,
             normal: self.normal / rhs.normal,
+            tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos / rhs.world_pos,
             depth: self.depth / rhs.depth,
             specular_exponent: self.specular_exponent / rhs.specular_exponent,

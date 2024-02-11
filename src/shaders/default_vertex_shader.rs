@@ -4,7 +4,10 @@ use crate::{
     matrix::Mat4,
     shader::{vertex::VertexShaderFn, ShaderContext},
     vec::{vec3::Vec3, vec4::Vec4},
-    vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
+    vertex::{
+        default_vertex_in::DefaultVertexIn,
+        default_vertex_out::{DefaultVertexOut, TangentSpaceInfo},
+    },
 };
 
 pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
@@ -37,12 +40,24 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
 
         // @NOTE(mzalla) Reversed Z-axis for our renderer's coordinate system.
 
-        out.tbn = Mat4::new_from_elements([
+        let tbn = Mat4::new_from_elements([
             [t.x, t.y, t.z, 0.0],
             [b.x, b.y, b.z, 0.0],
             [n.x, n.y, n.z, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ]);
+
+        let tbn_inverse = tbn.transposed();
+
+        out.tangent_space_info = TangentSpaceInfo {
+            tbn,
+            tbn_inverse,
+            normal: (normal * tbn_inverse).to_vec3(),
+            point_light_position: (Vec4::new(context.point_lights[0].position, 1.0) * tbn_inverse)
+                .to_vec3(),
+            view_position: (context.view_position * tbn_inverse).to_vec3(),
+            fragment_position: (world_pos * tbn_inverse).to_vec3(),
+        };
 
         out.color = v.color.clone();
 

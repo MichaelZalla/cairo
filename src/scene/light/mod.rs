@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 use crate::color;
+use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
 use crate::vec::vec3::{self, Vec3};
 use crate::vec::vec4::Vec4;
@@ -69,43 +70,45 @@ impl PointLight {
         light
     }
 
-    pub fn contribute(
-        self,
-        world_pos: Vec3,
-        surface_normal: Vec3,
-        view_position: Vec4,
-        specular_intensity: f32,
-        specular_exponent: i32,
-    ) -> Vec3 {
+    pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
         let mut point_contribution: Vec3 = Vec3::new();
         let mut specular_contribution: Vec3 = Vec3::new();
 
-        let vertex_to_point_light = self.position - world_pos;
+        let tangent_space_info = sample.tangent_space_info;
 
-        let distance_to_point_light = vertex_to_point_light.mag();
+        let fragment_to_point_light_tangent_space =
+            tangent_space_info.point_light_position - tangent_space_info.fragment_position;
 
-        let direction_to_point_light = vertex_to_point_light / distance_to_point_light;
+        let distance_to_point_light_tangent_space = fragment_to_point_light_tangent_space.mag();
 
-        let likeness = (0.0 as f32).max(surface_normal.dot(direction_to_point_light));
+        let direction_to_point_light_tangent_space =
+            fragment_to_point_light_tangent_space / distance_to_point_light_tangent_space;
+
+        let likeness = (0.0 as f32).max(
+            sample
+                .tangent_space_info
+                .normal
+                .dot(direction_to_point_light_tangent_space),
+        );
 
         if likeness > 0.0 {
             let attentuation = 1.0
-                / (self.quadratic_attenuation * distance_to_point_light.powi(2)
-                    + self.linear_attenuation * distance_to_point_light
+                / (self.quadratic_attenuation * distance_to_point_light_tangent_space.powi(2)
+                    + self.linear_attenuation * distance_to_point_light_tangent_space
                     + self.constant_attenuation);
 
             point_contribution = self.intensities * attentuation * (0.0 as f32).max(likeness);
 
             // Calculate specular light intensity
 
-            let incoming_ray = vertex_to_point_light * -1.0;
+            let incoming_ray = fragment_to_point_light_tangent_space * -1.0;
 
             // Project the incoming ray forward through the fragment/surface
-            let absorbed_ray = world_pos + incoming_ray;
+            let absorbed_ray = tangent_space_info.fragment_position + incoming_ray;
 
             // Project the incoming light ray onto the surface normal (i.e.,
             // scaling the normal up or down)
-            let w = surface_normal * incoming_ray.dot(surface_normal);
+            let w = tangent_space_info.normal * incoming_ray.dot(tangent_space_info.normal);
 
             // Combine the absorbed ray with the scaled normal to find the
             // reflected ray vector.
@@ -117,11 +120,8 @@ impl PointLight {
 
             // Compute the similarity between the reflected ray's direction and
             // the direction from our fragment to the viewer.
-            let view_direction_normal = (Vec3 {
-                x: view_position.x,
-                y: view_position.y,
-                z: view_position.z,
-            } - world_pos)
+            let view_direction_normal = (tangent_space_info.view_position
+                - tangent_space_info.fragment_position)
                 .as_normal();
 
             let cosine_theta =
@@ -129,8 +129,9 @@ impl PointLight {
 
             let similarity = (0.0 as f32).max(cosine_theta);
 
-            specular_contribution =
-                point_contribution * specular_intensity * similarity.powi(specular_exponent);
+            specular_contribution = point_contribution
+                * sample.specular_intensity
+                * similarity.powi(sample.specular_exponent);
         }
 
         return point_contribution + specular_contribution;
@@ -227,7 +228,8 @@ fn get_approximate_influence_distance(
             + linear_attenuation * distance
             + constant_attenuation);
 
-    while attenuation > 0.2 {
+    while attenuation > 0.1 {
+        // while attenuation > 0.0001 {
         distance += 0.01;
         attenuation = 1.0
             / (quadratic_attenuation * distance * distance

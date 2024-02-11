@@ -947,8 +947,8 @@ where
                     color::BLUE,
                 );
 
-                let tangent_world_space =
-                    Vec4::new(vec3::LEFT * -1.0, 1.0) * projection_space_vertices[i].tbn;
+                let tangent_world_space = Vec4::new(vec3::LEFT * -1.0, 1.0)
+                    * projection_space_vertices[i].tangent_space_info.tbn;
 
                 self.render_line(
                     projection_space_vertices[i].world_pos,
@@ -956,8 +956,8 @@ where
                     color::RED,
                 );
 
-                let bitangent_world_space =
-                    Vec4::new(vec3::UP * -1.0, 1.0) * projection_space_vertices[i].tbn;
+                let bitangent_world_space = Vec4::new(vec3::UP * -1.0, 1.0)
+                    * projection_space_vertices[i].tangent_space_info.tbn;
 
                 self.render_line(
                     projection_space_vertices[i].world_pos,

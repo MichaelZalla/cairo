@@ -21,13 +21,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
         let mut point_light_contribution: Vec3 = Default::default();
 
         for point_light in &context.point_lights {
-            point_light_contribution += point_light.contribute(
-                sample.world_pos,
-                sample.normal,
-                context.view_position,
-                sample.specular_intensity,
-                sample.specular_exponent,
-            );
+            point_light_contribution += point_light.contribute(sample);
         }
 
         // Calculate spot light contributions (including specular).
