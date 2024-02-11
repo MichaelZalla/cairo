@@ -390,16 +390,20 @@ where
                 for x in 0..composite_framebuffer.width {
                     let color_hdr = *deferred_frame.get(x, y);
 
-                    // Exposure tone mapping
+                    let mut color_tone_mapped = color_hdr;
 
-                    static EXPOSURE: f32 = 1.0;
+                    if self.options.do_lighting {
+                        // Exposure tone mapping
 
-                    let mut color_tone_mapped = Vec3::ones()
-                        - Vec3 {
-                            x: (-color_hdr.x * EXPOSURE).exp(),
-                            y: (-color_hdr.y * EXPOSURE).exp(),
-                            z: (-color_hdr.z * EXPOSURE).exp(),
-                        };
+                        static EXPOSURE: f32 = 1.0;
+
+                        color_tone_mapped = Vec3::ones()
+                            - Vec3 {
+                                x: (-color_hdr.x * EXPOSURE).exp(),
+                                y: (-color_hdr.y * EXPOSURE).exp(),
+                                z: (-color_hdr.z * EXPOSURE).exp(),
+                            };
+                    }
 
                     // (Gamma) Transform linear space to sRGB space.
 
