@@ -214,8 +214,15 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                             }
 
                             // Specular color map
-                            "map_ks" => {
-                                println!("@TODO Implementation for \"{}\".", "map_Ks");
+                            "map_ks" | "map_ns" => {
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .specular_map =
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
                             // Emissive color map
@@ -258,7 +265,7 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
 
                             // Unrecognized prefix
                             other => {
-                                println!("{}", other)
+                                println!("Unrecognized MTL token: {}", other)
                             }
                         }
                     }
