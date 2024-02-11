@@ -88,8 +88,10 @@ where
         camera: Option<&Camera>,
         material_cache: Option<&mut MaterialCache>,
     ) {
+        let light_position = light.look_vector.get_position();
+
         self.render_light(
-            light.position,
+            light_position,
             light.intensities,
             light.influence_distance,
             camera,
@@ -97,8 +99,9 @@ where
             true,
         );
 
-        let start = light.position;
-        let end = light.position + light.direction.as_normal() * light.influence_distance;
+        let start = light_position;
+        let end =
+            light_position + light.look_vector.get_forward().as_normal() * light.influence_distance;
 
         self.render_line(start, end, color::WHITE);
 

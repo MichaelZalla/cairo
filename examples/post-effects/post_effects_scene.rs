@@ -110,7 +110,10 @@ impl<'a> PostEffectsScene<'a> {
             z: 0.1,
         };
 
-        spot_light.position.y = 30.0;
+        spot_light.look_vector.set_position(Vec3 {
+            y: 30.0,
+            ..spot_light.look_vector.get_position()
+        });
 
         let pipeline_options: PipelineOptions = Default::default();
 

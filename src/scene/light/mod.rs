@@ -1,7 +1,8 @@
 use std::f32::consts::PI;
 
 use crate::color;
-use crate::vec::vec3::Vec3;
+use crate::transform::look_vector::LookVector;
+use crate::vec::vec3::{self, Vec3};
 use crate::vec::vec4::Vec4;
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -139,8 +140,7 @@ impl PointLight {
 #[derive(Default, Debug, Copy, Clone)]
 pub struct SpotLight {
     pub intensities: Vec3,
-    pub position: Vec3,
-    pub direction: Vec3,
+    pub look_vector: LookVector,
     pub inner_cutoff_angle: f32,
     pub inner_cutoff_angle_cos: f32,
     pub outer_cutoff_angle: f32,
@@ -153,22 +153,22 @@ pub struct SpotLight {
 
 impl SpotLight {
     pub fn new() -> Self {
+        let default_light_position = Vec3 {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        };
+
         let mut light = SpotLight {
             intensities: Vec3 {
                 x: 0.5,
                 y: 0.5,
                 z: 0.5,
             },
-            position: Vec3 {
-                x: 0.0,
-                y: 10.0,
-                z: 0.0,
-            },
-            direction: Vec3 {
-                x: 0.0,
-                y: -1.0,
-                z: 0.0,
-            },
+            look_vector: LookVector::new(
+                default_light_position,
+                default_light_position + vec3::UP * -1.0,
+            ),
             inner_cutoff_angle: (PI / 12.0),
             outer_cutoff_angle: (PI / 8.0),
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
@@ -191,13 +191,14 @@ impl SpotLight {
     pub fn contribute(self, world_pos: Vec3) -> Vec3 {
         let mut spot_light_contribution: Vec3 = Vec3::new();
 
-        let vertex_to_spot_light = self.position - world_pos;
+        let vertex_to_spot_light = self.look_vector.get_position() - world_pos;
 
         let distance_to_spot_light = vertex_to_spot_light.mag();
 
         let direction_to_spot_light = vertex_to_spot_light / distance_to_spot_light;
 
-        let theta_angle = (0.0 as f32).max((self.direction).dot(direction_to_spot_light * -1.0));
+        let theta_angle =
+            (0.0 as f32).max((self.look_vector.get_forward()).dot(direction_to_spot_light * -1.0));
 
         let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
 

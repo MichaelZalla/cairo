@@ -172,11 +172,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let mut spot_lights: Vec<SpotLight> = vec![SpotLight::new()];
 
-        spot_lights[0].position = Vec3 {
+        spot_lights[0].look_vector.set_position(Vec3 {
             x: -6.0,
             y: 15.0,
             z: -6.0,
-        };
+        });
 
         let pipeline_options: PipelineOptions = Default::default();
 

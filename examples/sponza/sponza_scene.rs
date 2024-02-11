@@ -208,12 +208,14 @@ impl<'a> Scene for SponzaScene<'a> {
 
         context.set_point_light(0, self.point_lights[0]);
 
-        self.spot_lights[0].position = SPONZA_CENTER
-            + Vec3 {
-                x: -1000.0 * (uptime).sin(),
-                y: 500.0,
-                z: 0.0,
-            };
+        self.spot_lights[0].look_vector.set_position(
+            SPONZA_CENTER
+                + Vec3 {
+                    x: -1000.0 * (uptime).sin(),
+                    y: 500.0,
+                    z: 0.0,
+                },
+        );
 
         context.set_spot_light(0, self.spot_lights[0]);
 

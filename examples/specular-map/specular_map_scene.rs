@@ -98,7 +98,10 @@ impl<'a> SpecularMapScene<'a> {
 
         let mut spot_light = SpotLight::new();
 
-        spot_light.position.y = 10.0;
+        spot_light.look_vector.set_position(Vec3 {
+            y: 10.0,
+            ..spot_light.look_vector.get_position()
+        });
 
         let pipeline_options: PipelineOptions = Default::default();
 
