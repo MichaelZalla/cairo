@@ -94,18 +94,14 @@ where
 
         let viewport: PipelineViewport = Default::default();
 
-        let z_buffer = None;
-
-        let g_buffer = None;
-
         return Pipeline {
             forward_framebuffer,
             deferred_framebuffer,
             composite_framebuffer,
             keying_color,
             viewport,
-            z_buffer,
-            g_buffer,
+            z_buffer: None,
+            g_buffer: None,
             shader_context,
             vertex_shader,
             alpha_shader,
