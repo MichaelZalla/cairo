@@ -13,15 +13,17 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::geometry::GeometryShader,
-    shader::ShaderContext,
+    shader::{geometry::GeometryShader, ShaderContext},
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     texture::cubemap::CubeMap,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 static SPONZA_CENTER: Vec3 = Vec3 {
@@ -62,15 +64,14 @@ impl<'a> SponzaScene<'a> {
         let aspect_ratio = framebuffer.width_over_height;
 
         // Set up a camera for rendering our scene
-        let mut camera: Camera = Camera::new(
-            aspect_ratio,
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -5.0,
-            },
-            Vec3::new(),
-        );
+        let camera_position = Vec3 {
+            x: 1000.0,
+            y: 300.0,
+            z: 0.0,
+        };
+
+        let mut camera: Camera =
+            Camera::new(aspect_ratio, camera_position, camera_position + vec3::LEFT);
 
         camera.movement_speed = 300.0;
 
