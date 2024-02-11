@@ -59,15 +59,40 @@ impl PipelineOptions {
             match keycode {
                 Keycode::Num1 { .. } => {
                     self.do_wireframe = !self.do_wireframe;
+
+                    println!(
+                        "Wireframe: {}",
+                        if self.do_wireframe { "On" } else { "Off" }
+                    );
                 }
                 Keycode::Num2 { .. } => {
                     self.do_rasterized_geometry = !self.do_rasterized_geometry;
+
+                    println!(
+                        "Rasterized geometry: {}",
+                        if self.do_rasterized_geometry {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    );
                 }
                 Keycode::Num3 { .. } => {
                     self.do_lighting = !self.do_lighting;
+
+                    println!("Lighting: {}", if self.do_lighting { "On" } else { "Off" });
                 }
                 Keycode::Num4 { .. } => {
                     self.do_visualize_normals = !self.do_visualize_normals;
+
+                    println!(
+                        "Visualize normals: {}",
+                        if self.do_visualize_normals {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    );
                 }
                 Keycode::Num5 { .. } => {
                     // Cycle culling reject settings.
@@ -78,7 +103,12 @@ impl PipelineOptions {
                             PipelineFaceCullingReject::Frontfaces
                         }
                         PipelineFaceCullingReject::Frontfaces => PipelineFaceCullingReject::None,
-                    }
+                    };
+
+                    println!(
+                        "Face culling reject: {:?}",
+                        self.face_culling_strategy.reject
+                    );
                 }
                 Keycode::Num6 { .. } => {
                     // Cycle window orders.
@@ -91,7 +121,12 @@ impl PipelineOptions {
                             PipelineFaceCullingWindingOrder::CounterClockwise => {
                                 PipelineFaceCullingWindingOrder::Clockwise
                             }
-                        }
+                        };
+
+                    println!(
+                        "Face culling window order: {:?}",
+                        self.face_culling_strategy.window_order
+                    );
                 }
                 _ => {}
             }

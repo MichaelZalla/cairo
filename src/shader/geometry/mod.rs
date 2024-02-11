@@ -49,24 +49,69 @@ impl GeometryShaderOptions {
             match keycode {
                 Keycode::B { .. } => {
                     self.bilinear_active = !self.bilinear_active;
+
+                    println!("Bilinear filtering: {}", self.bilinear_active)
                 }
                 Keycode::T { .. } => {
                     self.trilinear_active = !self.trilinear_active;
+
+                    println!("Trilinear filtering: {}", self.trilinear_active)
                 }
                 Keycode::O { .. } => {
                     self.ambient_occlusion_mapping_active = !self.ambient_occlusion_mapping_active;
+
+                    println!(
+                        "ambient_occlusion_mapping_active: {}",
+                        self.ambient_occlusion_mapping_active
+                    )
                 }
                 Keycode::P { .. } => {
                     self.diffuse_mapping_active = !self.diffuse_mapping_active;
+
+                    println!(
+                        "Diffuse mapping: {}",
+                        if self.diffuse_mapping_active {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    )
                 }
                 Keycode::N { .. } => {
                     self.normal_mapping_active = !self.normal_mapping_active;
+
+                    println!(
+                        "Normal mapping: {}",
+                        if self.normal_mapping_active {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    )
                 }
                 Keycode::M { .. } => {
                     self.specular_mapping_active = !self.specular_mapping_active;
+
+                    println!(
+                        "Specular mapping: {}",
+                        if self.specular_mapping_active {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    )
                 }
                 Keycode::K { .. } => {
                     self.emissive_mapping_active = !self.emissive_mapping_active;
+
+                    println!(
+                        "Emissive mapping: {}",
+                        if self.emissive_mapping_active {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    )
                 }
                 _ => {}
             }
