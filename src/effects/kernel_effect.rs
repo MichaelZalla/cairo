@@ -61,7 +61,7 @@ impl Effect for KernelEffect {
                 }
             }
 
-            buffer.blit(0, 0, buffer.width, buffer.height, out.get_all());
+            buffer.blit(0, 0, buffer.width, buffer.height, out.get_all(), None);
         }
     }
 }

@@ -1,4 +1,6 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Add};
+
+use crate::color::blend::{self, BlendMode};
 
 #[derive(Clone, Debug)]
 pub struct Buffer2D<T = u32>
@@ -14,7 +16,7 @@ where
 
 impl<T> Buffer2D<T>
 where
-    T: Default + PartialEq + Copy + Clone + Debug,
+    T: Default + PartialEq + Copy + Clone + Debug + Add<Output = T>,
 {
     pub fn new(width: u32, height: u32, fill_value: Option<T>) -> Self {
         let width_over_height = width as f32 / height as f32;
@@ -112,7 +114,15 @@ where
         self
     }
 
-    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) {
+    pub fn blit(
+        &mut self,
+        left: u32,
+        top: u32,
+        width: u32,
+        height: u32,
+        data: &Vec<T>,
+        blend_mode: Option<BlendMode>,
+    ) {
         debug_assert!(data.len() as u32 == width * height);
 
         let right = (left + width - 1).min(self.width - 1);
@@ -120,18 +130,36 @@ where
 
         for x in left..right + 1 {
             for y in top..bottom + 1 {
+                let dest_pixel_index = (y * self.width + x) as usize;
                 let src_pixel_index = ((y - top) * width + (x - left)) as usize;
 
-                let src_pixel_value = data[src_pixel_index];
+                let lhs = self.data[dest_pixel_index];
+                let rhs = data[src_pixel_index];
 
-                let dest_pixel_index = (y * self.width + x) as usize;
+                let result = match &blend_mode {
+                    Some(mode) => blend::blend::<T>(mode, &lhs, &rhs),
+                    None => rhs,
+                };
 
-                self.data[dest_pixel_index] = src_pixel_value;
+                self.data[dest_pixel_index] = result;
             }
         }
     }
 
-    pub fn blit_from(&mut self, left: u32, top: u32, other: &Buffer2D<T>) {
-        self.blit(left, top, other.width, other.height, other.get_all())
+    pub fn blit_from(
+        &mut self,
+        left: u32,
+        top: u32,
+        other: &Buffer2D<T>,
+        blend_mode: Option<BlendMode>,
+    ) {
+        self.blit(
+            left,
+            top,
+            other.width,
+            other.height,
+            other.get_all(),
+            blend_mode,
+        )
     }
 }

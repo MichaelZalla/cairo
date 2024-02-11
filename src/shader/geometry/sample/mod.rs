@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
@@ -21,4 +23,23 @@ pub struct GeometrySample {
     // @TODO could be an i8 (0 -> 255, 0.0 -> 1.0)
     pub specular_intensity: f32, //  4 bytes
     pub emissive: Vec3,          // 12 bytes
+}
+
+impl Add<GeometrySample> for GeometrySample {
+    type Output = GeometrySample;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        GeometrySample {
+            stencil: self.stencil | self.stencil,
+            uv: self.uv + rhs.uv,
+            ambient_factor: self.ambient_factor + rhs.ambient_factor,
+            diffuse: self.diffuse + rhs.diffuse,
+            normal: self.normal + rhs.normal,
+            world_pos: self.world_pos + rhs.world_pos,
+            depth: self.depth + rhs.depth,
+            specular_exponent: self.specular_exponent + rhs.specular_exponent,
+            specular_intensity: self.specular_intensity + rhs.specular_intensity,
+            emissive: self.emissive + rhs.emissive,
+        }
+    }
 }

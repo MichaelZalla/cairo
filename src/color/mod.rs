@@ -2,6 +2,8 @@ use std::fmt;
 
 use super::vec::vec3::Vec3;
 
+pub mod blend;
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Color {
     pub r: f32,
