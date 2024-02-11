@@ -224,7 +224,7 @@ impl<'a> Scene for SponzaScene<'a> {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
 
-        self.pipeline.render_world_axes(300.0);
+        self.pipeline.render_ground_plane(25.0);
 
         self.pipeline.render_point_light(
             &self.point_lights[0],

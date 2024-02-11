@@ -243,7 +243,7 @@ impl<'a> Scene for SkyboxScene<'a> {
 
         self.pipeline.render_skybox(&self.skybox, &camera);
 
-        // self.pipeline.render_world_axes(10.0);
+        // self.pipeline.render_ground_plane(10.0);
 
         self.pipeline.render_point_light(
             &self.point_lights[0],
