@@ -77,6 +77,8 @@ impl GeometryShaderOptions {
 pub trait GeometryShader<'a> {
     fn new(context: &'a RwLock<ShaderContext>, options: Option<GeometryShaderOptions>) -> Self;
 
+    fn get_options(&self) -> &GeometryShaderOptions;
+
     fn update(
         &mut self,
         keyboard_state: &KeyboardState,

@@ -29,6 +29,10 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
         }
     }
 
+    fn get_options(&self) -> &GeometryShaderOptions {
+        &self.options
+    }
+
     fn update(
         &mut self,
         keyboard_state: &KeyboardState,
