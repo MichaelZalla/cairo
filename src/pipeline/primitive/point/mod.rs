@@ -37,7 +37,8 @@ where
                 let billboard_scale = scale.unwrap();
 
                 let mut quad = mesh::primitive::billboard::generate(
-                    camera.unwrap(),
+                    point_world_space,
+                    &camera.unwrap().get_position(),
                     billboard_scale,
                     billboard_scale,
                 );
@@ -50,9 +51,7 @@ where
 
                         quad.material_name = Some(mat_name.clone());
 
-                        let mut light_quad_entity = Entity::new(&quad);
-
-                        light_quad_entity.position = point_world_space;
+                        let light_quad_entity = Entity::new(&quad);
 
                         self.render_entity(&light_quad_entity, Some(materials));
                     }

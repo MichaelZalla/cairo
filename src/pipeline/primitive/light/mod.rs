@@ -37,7 +37,8 @@ where
                 let billboard_scale: f32 = if is_spot_light { 1.25 } else { 0.75 };
 
                 let mut light_quad = mesh::primitive::billboard::generate(
-                    camera.unwrap(),
+                    light_position,
+                    &camera.unwrap().get_position(),
                     billboard_scale,
                     billboard_scale,
                 );
@@ -50,9 +51,7 @@ where
 
                         light_quad.material_name = Some(light_material_name.to_string());
 
-                        let mut light_quad_entity = Entity::new(&light_quad);
-
-                        light_quad_entity.position = light_position;
+                        let light_quad_entity = Entity::new(&light_quad);
 
                         self.render_entity(&light_quad_entity, Some(&materials));
                     }
