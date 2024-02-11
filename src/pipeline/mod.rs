@@ -2,7 +2,9 @@ use std::sync::RwLock;
 
 use crate::{
     buffer::Buffer2D,
-    color::Color,
+    color::{blend::BlendMode, Color},
+    effect::Effect,
+    effects::guassian_blur::GaussianBlurEffect,
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
@@ -64,6 +66,7 @@ where
     viewport: PipelineViewport,
     z_buffer: Option<ZBuffer>,
     g_buffer: Option<GBuffer>,
+    bloom_buffer: Option<Buffer2D<Vec3>>,
     pub shader_context: &'a RwLock<ShaderContext>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
@@ -102,6 +105,7 @@ where
             viewport,
             z_buffer: None,
             g_buffer: None,
+            bloom_buffer: None,
             shader_context,
             vertex_shader,
             alpha_shader,
@@ -234,12 +238,38 @@ where
                         self.g_buffer = Some(GBuffer::new(framebuffer.width, framebuffer.height));
                     }
                 }
+
+                match &self.bloom_buffer {
+                    Some(bloom_buffer) => {
+                        if bloom_buffer.width != framebuffer.width
+                            || bloom_buffer.height != framebuffer.height
+                        {
+                            // Re-allocate a bloom buffer.
+
+                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
+                                framebuffer.width,
+                                framebuffer.height,
+                                None,
+                            ));
+                        }
+                    }
+                    None => {
+                        // Re-allocate a bloom buffer.
+
+                        self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
+                            framebuffer.width,
+                            framebuffer.height,
+                            None,
+                        ));
+                    }
+                }
             }
             None => {
                 self.forward_framebuffer = None;
                 self.deferred_framebuffer = None;
                 self.z_buffer = None;
                 self.g_buffer = None;
+                self.bloom_buffer = None;
 
                 return;
             }
@@ -300,6 +330,13 @@ where
                 }
                 None => (),
             }
+
+            match self.bloom_buffer.as_mut() {
+                Some(bloom_buffer) => {
+                    bloom_buffer.clear(None);
+                }
+                None => (),
+            }
         }
     }
 
@@ -330,6 +367,10 @@ where
                 }
             }
         }
+
+        // Bloom pass over the deferred (HDR) buffer.
+
+        self.do_bloom_pass();
 
         // Compose deferred and forward rendering frames together.
 
@@ -382,6 +423,41 @@ where
                 composite_framebuffer.set_raw(index, *value);
             }
         }
+    }
+
+    fn do_bloom_pass(&mut self) {
+        let deferred_frame = self.deferred_framebuffer.as_mut().unwrap();
+
+        let mut bloom_frame = self.bloom_buffer.as_mut().unwrap();
+
+        for y in 0..deferred_frame.height {
+            for x in 0..deferred_frame.width {
+                let color_hdr = *deferred_frame.get(x, y);
+
+                let perceived_brightness =
+                    if color_hdr.x >= 0.95 || color_hdr.y >= 0.95 || color_hdr.z >= 0.95 {
+                        1.0
+                    } else {
+                        0.0
+                    };
+
+                if perceived_brightness >= 1.0 {
+                    // Write this bright pixel to the initial bloom buffer.\
+
+                    bloom_frame.set(x, y, color_hdr);
+                }
+            }
+        }
+
+        // Blur the bloom buffer.
+
+        let bloom_effect = GaussianBlurEffect::new(6);
+
+        bloom_effect.apply(&mut bloom_frame);
+
+        // Blit the bloom buffer to our composite framebuffer.
+
+        deferred_frame.blit_from(0, 0, &bloom_frame, Some(BlendMode::Add));
     }
 
     pub fn set_keying_color(&mut self, color: u32) {
