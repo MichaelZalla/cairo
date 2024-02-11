@@ -1,5 +1,7 @@
 use std::{borrow::BorrowMut, sync::RwLock};
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::App,
     buffer::Buffer2D,
@@ -17,8 +19,18 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{geometry::GeometryShader, ShaderContext},
+    shader::{fragment::FragmentShaderFn, geometry::GeometryShader, ShaderContext},
     shaders::{
+        debug_shaders::{
+            albedo_fragment_shader::AlbedoFragmentShader,
+            depth_fragment_shader::DepthFragmentShader,
+            emissive_fragment_shader::EmissiveFragmentShader,
+            normal_fragment_shader::NormalFragmentShader,
+            specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
+            specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
+            stencil_fragment_shader::StencilFragmentShader,
+            uv_test_fragment_shader::UvTestFragmentShader,
+        },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DefaultGeometryShader,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -42,6 +54,8 @@ pub struct SponzaScene<'a> {
     font_info: &'static FontInfo,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
+    fragment_shaders: Vec<FragmentShaderFn>,
+    active_fragment_shader_index: usize,
     cameras: Vec<Camera>,
     active_camera_index: usize,
     directional_light: DirectionalLight,
@@ -69,7 +83,19 @@ impl<'a> SponzaScene<'a> {
 
         let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
-        let fragment_shader = DEFAULT_FRAGMENT_SHADER;
+        let fragment_shaders = vec![
+            DEFAULT_FRAGMENT_SHADER,
+            AlbedoFragmentShader,
+            DepthFragmentShader,
+            EmissiveFragmentShader,
+            NormalFragmentShader,
+            SpecularIntensityFragmentShader,
+            SpecularRoughnessFragmentShader,
+            StencilFragmentShader,
+            UvTestFragmentShader,
+        ];
+
+        let active_fragment_shader_index: usize = 0;
 
         let debug_message_buffer: DebugMessageBuffer = Default::default();
 
@@ -145,7 +171,7 @@ impl<'a> SponzaScene<'a> {
             shader_context,
             vertex_shader,
             geometry_shader,
-            fragment_shader,
+            fragment_shaders[active_fragment_shader_index],
             pipeline_options,
         );
 
@@ -155,6 +181,8 @@ impl<'a> SponzaScene<'a> {
             font_info,
             debug_message_buffer,
             pipeline,
+            fragment_shaders,
+            active_fragment_shader_index,
             entities,
             skybox,
             materials,
@@ -186,6 +214,23 @@ impl<'a> Scene for SponzaScene<'a> {
             mouse_state,
             game_controller_state,
         );
+
+        for keycode in &keyboard_state.keys_pressed {
+            match keycode {
+                Keycode::H { .. } => {
+                    self.active_fragment_shader_index += 1;
+
+                    if self.active_fragment_shader_index == self.fragment_shaders.len() {
+                        self.active_fragment_shader_index = 0;
+                    }
+
+                    self.pipeline.set_fragment_shader(
+                        self.fragment_shaders[self.active_fragment_shader_index],
+                    );
+                }
+                _ => {}
+            }
+        }
 
         self.pipeline
             .options
@@ -293,6 +338,21 @@ impl<'a> Scene for SponzaScene<'a> {
                 } else {
                     "Off"
                 }
+            ));
+
+            self.debug_message_buffer.write(format!(
+                "Fragment shader: {}",
+                [
+                    "DEFAULT_FRAGMENT_SHADER",
+                    "AlbedoFragmentShader",
+                    "DepthFragmentShader",
+                    "EmissiveFragmentShader",
+                    "NormalFragmentShader",
+                    "SpecularIntensityFragmentShader",
+                    "SpecularRoughnessFragmentShader",
+                    "StencilFragmentShader",
+                    "UvTestFragmentShader",
+                ][self.active_fragment_shader_index]
             ));
         }
     }
