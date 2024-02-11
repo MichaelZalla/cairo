@@ -101,7 +101,9 @@ impl<'a> EmissiveMapScene<'a> {
             ..spot_light.look_vector.get_position()
         });
 
-        let pipeline_options: PipelineOptions = Default::default();
+        let mut pipeline_options: PipelineOptions = Default::default();
+
+        pipeline_options.do_bloom = true;
 
         let view_position = Vec4::new(camera.look_vector.get_position(), 1.0);
 

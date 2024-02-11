@@ -20,6 +20,7 @@ where
             do_wireframe: true,
             do_rasterized_geometry: false,
             do_lighting: false,
+            do_bloom: false,
             do_visualize_normals: false,
             face_culling_strategy: PipelineFaceCullingStrategy {
                 reject: PipelineFaceCullingReject::None,

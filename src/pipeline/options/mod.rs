@@ -31,6 +31,7 @@ pub struct PipelineOptions {
     pub do_wireframe: bool,
     pub do_rasterized_geometry: bool,
     pub do_lighting: bool,
+    pub do_bloom: bool,
     pub do_visualize_normals: bool,
     pub face_culling_strategy: PipelineFaceCullingStrategy,
 }
@@ -42,6 +43,7 @@ impl Default for PipelineOptions {
             do_wireframe: false,
             do_rasterized_geometry: true,
             do_lighting: true,
+            do_bloom: false,
             do_visualize_normals: false,
             face_culling_strategy: Default::default(),
         }
@@ -82,17 +84,22 @@ impl PipelineOptions {
 
                     println!("Lighting: {}", if self.do_lighting { "On" } else { "Off" });
                 }
-                Keycode::Num4 { .. } => {
-                    self.do_visualize_normals = !self.do_visualize_normals;
+                // Keycode::Num4 { .. } => {
+                //     self.do_visualize_normals = !self.do_visualize_normals;
 
-                    println!(
-                        "Visualize normals: {}",
-                        if self.do_visualize_normals {
-                            "On"
-                        } else {
-                            "Off"
-                        }
-                    );
+                //     println!(
+                //         "Visualize normals: {}",
+                //         if self.do_visualize_normals {
+                //             "On"
+                //         } else {
+                //             "Off"
+                //         }
+                //     );
+                // }
+                Keycode::Num4 { .. } => {
+                    self.do_bloom = !self.do_bloom;
+
+                    println!("Bloom pass: {}", if self.do_bloom { "On" } else { "Off" });
                 }
                 Keycode::Num5 { .. } => {
                     // Cycle culling reject settings.

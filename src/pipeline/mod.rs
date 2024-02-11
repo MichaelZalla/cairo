@@ -370,7 +370,9 @@ where
 
         // Bloom pass over the deferred (HDR) buffer.
 
-        self.do_bloom_pass();
+        if self.options.do_bloom {
+            self.do_bloom_pass();
+        }
 
         // Compose deferred and forward rendering frames together.
 
