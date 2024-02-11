@@ -57,7 +57,7 @@ impl<'a> EmissiveMapScene<'a> {
         let aspect_ratio = framebuffer.width_over_height;
 
         // Set up a camera for rendering our scene
-        let camera: Camera = Camera::new(
+        let mut camera: Camera = Camera::new(
             aspect_ratio,
             Vec3 {
                 x: 0.0,
@@ -66,6 +66,8 @@ impl<'a> EmissiveMapScene<'a> {
             },
             Default::default(),
         );
+
+        camera.movement_speed = 10.0;
 
         // Define lights for our scene
         let ambient_light = AmbientLight {
