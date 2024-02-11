@@ -180,7 +180,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let pipeline_options: PipelineOptions = Default::default();
 
-        let view_position = Vec4::new(camera.get_position(), 1.0);
+        let view_position = Vec4::new(camera.look_vector.get_position(), 1.0);
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
@@ -270,7 +270,9 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         }
 
         if self.looking_at_point_light {
-            camera.set_target_position(self.point_lights[0].position);
+            camera
+                .look_vector
+                .set_target_position(self.point_lights[0].position);
         } else {
             camera.update(
                 &app.timing_info,
@@ -300,7 +302,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             .geometry_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        context.set_view_position(Vec4::new(camera.get_position(), 1.0));
+        context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
 
         let color_channel_phase_shift = 2.0 * PI / 3.0;
 
@@ -336,7 +338,9 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         let camera2 = (self.cameras[1]).borrow_mut();
 
-        camera2.set_target_position(self.point_lights[0].position);
+        camera2
+            .look_vector
+            .set_target_position(self.point_lights[0].position);
 
         let max_spot_light_intensity: f32 = 25.0;
 

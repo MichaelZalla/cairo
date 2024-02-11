@@ -1,16 +1,9 @@
-use std::f32::consts::PI;
-
-use sdl2::keyboard::Keycode;
-
 use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     time::TimingInfo,
-    vec::{
-        vec2::Vec2,
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    transform::look_vector::LookVector,
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -22,14 +15,7 @@ pub struct Camera {
     projection_z_far: f32,
     projection_transform: Mat4,
     projection_inverse_transform: Mat4,
-    position: Vec3,
-    target: Vec3,
-    forward: Vec3,
-    up: Vec3,
-    right: Vec3,
-    pitch: f32,
-    yaw: f32,
-    roll: f32,
+    pub look_vector: LookVector,
 }
 
 impl Camera {
@@ -53,7 +39,7 @@ impl Camera {
             projection_z_far,
         );
 
-        let mut camera = Camera {
+        let camera = Camera {
             field_of_view,
             aspect_ratio,
             projection_z_near,
@@ -61,17 +47,8 @@ impl Camera {
             movement_speed: 50.0,
             projection_transform,
             projection_inverse_transform,
-            position,
-            target: vec3::FORWARD,
-            forward: vec3::FORWARD,
-            up: vec3::UP,
-            right: vec3::LEFT * -1.0,
-            pitch: 0.0,
-            yaw: PI / 2.0,
-            roll: 0.0,
+            look_vector: LookVector::new(position, target),
         };
-
-        camera.set_target_position(target);
 
         return camera;
     }
@@ -106,88 +83,21 @@ impl Camera {
         );
     }
 
-    pub fn get_position(&self) -> Vec3 {
-        self.position
-    }
-
-    pub fn set_position(&mut self, position: Vec3) {
-        self.position = position;
-    }
-
-    pub fn get_target(&self) -> Vec3 {
-        self.target
-    }
-
-    pub fn set_target_position(&mut self, target: Vec3) {
-        let world_up = vec3::UP;
-
-        self.forward = (target - self.position).as_normal();
-
-        self.right = world_up.cross(self.forward).as_normal();
-
-        self.up = self.forward.cross(self.right).as_normal();
-
-        self.target = target;
-    }
-
-    pub fn get_direction(&self) -> Vec3 {
-        Vec3 {
-            x: self.yaw.cos() * self.pitch.cos(),
-            y: self.pitch.sin(),
-            z: self.yaw.sin() * self.pitch.cos(),
-        }
-    }
-
-    fn look_in_direction(&mut self) {
-        self.set_target_position(self.position + self.get_direction())
-    }
-
-    pub fn get_forward(&self) -> Vec3 {
-        self.forward
-    }
-
-    pub fn get_up(&self) -> Vec3 {
-        self.up
-    }
-
-    pub fn get_right(&self) -> Vec3 {
-        self.right
-    }
-
-    pub fn get_pitch(&self) -> f32 {
-        self.pitch
-    }
-
-    pub fn set_pitch(&mut self, pitch: f32) {
-        self.pitch = pitch.max(-PI / 2.0 * 0.999).min(PI / 2.0 * 0.999);
-
-        self.look_in_direction();
-    }
-
-    pub fn get_yaw(&self) -> f32 {
-        self.yaw
-    }
-
-    pub fn set_yaw(&mut self, yaw: f32) {
-        self.yaw = yaw;
-
-        self.look_in_direction();
-    }
-
-    pub fn get_roll(&self) -> f32 {
-        self.roll
-    }
-
-    pub fn set_roll(&mut self, _roll: f32) {
-        unimplemented!()
-    }
-
     pub fn get_view_inverse_transform(&self) -> Mat4 {
-        Mat4::look_at(self.position, self.forward, self.right, self.up)
+        Mat4::look_at(
+            self.look_vector.get_position(),
+            self.look_vector.get_forward(),
+            self.look_vector.get_right(),
+            self.look_vector.get_up(),
+        )
     }
 
     pub fn get_view_rotation_transform(&self) -> Mat4 {
-        let (f, r, u) = (self.forward, self.right, self.up);
+        let (f, r, u) = (
+            self.look_vector.get_forward(),
+            self.look_vector.get_right(),
+            self.look_vector.get_up(),
+        );
 
         Mat4::new_from_elements([
             // Row-major ordering
@@ -259,22 +169,13 @@ impl Camera {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        // Apply camera movement based on mouse input.
-
-        // Translate relative mouse movements to NDC values (in the range [0, 1]).
-
-        let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 400.0;
-        let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 400.0;
-
-        // Update camera pitch and yaw, based on mouse position deltas.
-
-        if mouse_x_delta != 0.0 {
-            self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
-        }
-
-        if mouse_y_delta != 0.0 {
-            self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
-        }
+        self.look_vector.update(
+            timing_info,
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+            self.movement_speed,
+        );
 
         // Apply field-of-view zoom based on mousewheel input.
 
@@ -296,78 +197,6 @@ impl Camera {
                 self.projection_z_near,
                 self.projection_z_far,
             );
-        }
-
-        // Apply camera movement based on keyboard input.
-
-        let camera_movement_step = self.movement_speed * timing_info.seconds_since_last_update;
-
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                Keycode::Up | Keycode::W { .. } => {
-                    self.set_position(self.position + self.get_forward() * camera_movement_step);
-                }
-                Keycode::Down | Keycode::S { .. } => {
-                    self.set_position(self.position - self.get_forward() * camera_movement_step);
-                }
-                Keycode::Left | Keycode::A { .. } => {
-                    self.set_position(self.position - self.get_right() * camera_movement_step);
-                }
-                Keycode::Right | Keycode::D { .. } => {
-                    self.set_position(self.position + self.get_right() * camera_movement_step);
-                }
-                Keycode::Q { .. } => {
-                    self.set_position(self.position - self.get_up() * camera_movement_step);
-                }
-                Keycode::E { .. } => {
-                    self.set_position(self.position + self.get_up() * camera_movement_step);
-                }
-                _ => {}
-            }
-        }
-
-        // Apply camera movement based on gamepad input.
-
-        if game_controller_state.buttons.dpad_up {
-            self.set_position(self.position + self.get_forward() * camera_movement_step);
-        } else if game_controller_state.buttons.dpad_down {
-            self.set_position(self.position - self.get_forward() * camera_movement_step);
-        }
-
-        let left_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.left.position.x as f32 / std::i16::MAX as f32,
-            y: game_controller_state.joysticks.left.position.y as f32 / std::i16::MAX as f32,
-            z: 1.0,
-        };
-
-        if left_joystick_position_normalized.x > 0.5 {
-            self.set_position(self.position + self.get_right() * camera_movement_step);
-        } else if left_joystick_position_normalized.x < -0.5 {
-            self.set_position(self.position - self.get_right() * camera_movement_step);
-        }
-
-        if left_joystick_position_normalized.y > 0.5 {
-            self.set_position(self.position - self.get_forward() * camera_movement_step);
-        } else if left_joystick_position_normalized.y < -0.5 {
-            self.set_position(self.position + self.get_forward() * camera_movement_step);
-        }
-
-        let right_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,
-            y: game_controller_state.joysticks.right.position.y as f32 / std::i16::MAX as f32,
-            z: 1.0,
-        };
-
-        let yaw_delta = right_joystick_position_normalized.x * (PI / 64.0);
-        let pitch_delta = right_joystick_position_normalized.y * (PI / 64.0);
-        let _roll_delta = -yaw_delta * 0.5;
-
-        if pitch_delta != 0.0 {
-            self.set_pitch(self.pitch - pitch_delta * 2.0 * PI);
-        }
-
-        if yaw_delta != 0.0 {
-            self.set_yaw(self.yaw - yaw_delta * 2.0 * PI);
         }
     }
 }

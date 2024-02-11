@@ -25,6 +25,7 @@ pub mod shader;
 pub mod shaders;
 pub mod texture;
 pub mod time;
+pub mod transform;
 pub mod ui;
 pub mod vec;
 pub mod vertex;

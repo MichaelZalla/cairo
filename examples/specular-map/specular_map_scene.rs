@@ -102,7 +102,7 @@ impl<'a> SpecularMapScene<'a> {
 
         let pipeline_options: PipelineOptions = Default::default();
 
-        let view_position = Vec4::new(camera.get_position(), 1.0);
+        let view_position = Vec4::new(camera.look_vector.get_position(), 1.0);
 
         let view_inverse_transform = camera.get_view_inverse_transform();
 
@@ -181,7 +181,7 @@ impl<'a> Scene for SpecularMapScene<'a> {
             .geometry_shader
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        context.set_view_position(Vec4::new(camera.get_position(), 1.0));
+        context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
 
         context.set_projection(camera.get_projection());
 

@@ -38,7 +38,7 @@ where
 
                 let mut light_quad = mesh::primitive::billboard::generate(
                     light_position,
-                    &camera.unwrap().get_position(),
+                    &camera.unwrap().look_vector.get_position(),
                     billboard_scale,
                     billboard_scale,
                 );
