@@ -351,9 +351,29 @@ where
                 for x in 0..composite_framebuffer.width {
                     let color_hdr = *deferred_frame.get(x, y);
 
-                    let color = Color::from_vec3(color_hdr * 255.0).to_u32();
+                    // Exposure tone mapping
 
-                    composite_framebuffer.set(x, y, color);
+                    static EXPOSURE: f32 = 1.0;
+
+                    let mut color_tone_mapped = Vec3::ones()
+                        - Vec3 {
+                            x: (-color_hdr.x * EXPOSURE).exp(),
+                            y: (-color_hdr.y * EXPOSURE).exp(),
+                            z: (-color_hdr.z * EXPOSURE).exp(),
+                        };
+
+                    // (Gamma) Transform linear space to sRGB space.
+
+                    color_tone_mapped = Vec3 {
+                        x: color_tone_mapped.x.sqrt(),
+                        y: color_tone_mapped.y.sqrt(),
+                        z: color_tone_mapped.z.sqrt(),
+                    };
+
+                    let color_tone_mapped_u32 =
+                        Color::from_vec3(color_tone_mapped * 255.0).to_u32();
+
+                    composite_framebuffer.set(x, y, color_tone_mapped_u32);
                 }
             }
         }

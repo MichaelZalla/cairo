@@ -66,28 +66,5 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         color *= total_contribution;
 
-        // Reinhard tone mapping
-
-        // color /= color + Vec3::ones();
-
-        // Exposure tone mapping
-
-        static EXPOSURE: f32 = 1.0;
-
-        color = Vec3::ones()
-            - Vec3 {
-                x: (-color.x * EXPOSURE).exp(),
-                y: (-color.y * EXPOSURE).exp(),
-                z: (-color.z * EXPOSURE).exp(),
-            };
-
-        // Transform linear space to sRGB space.
-
-        color = Vec3 {
-            x: color.x.sqrt(),
-            y: color.y.sqrt(),
-            z: color.z.sqrt(),
-        };
-
         Color::from_vec3(color)
     };
