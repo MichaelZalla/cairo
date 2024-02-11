@@ -345,11 +345,11 @@ where
         };
 
         if self.options.do_rasterized_geometry {
-            let src = self.deferred_framebuffer.as_ref().unwrap();
+            let deferred_frame = self.deferred_framebuffer.as_ref().unwrap();
 
             for y in 0..composite_framebuffer.height {
                 for x in 0..composite_framebuffer.width {
-                    let color_hdr = *src.get(x, y);
+                    let color_hdr = *deferred_frame.get(x, y);
 
                     let color = Color::from_vec3(color_hdr * 255.0).to_u32();
 
