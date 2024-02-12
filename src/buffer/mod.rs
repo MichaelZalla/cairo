@@ -114,7 +114,11 @@ where
         self
     }
 
-    pub fn blit(
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) {
+        self.blit_blended(left, top, width, height, data, None)
+    }
+
+    pub fn blit_blended(
         &mut self,
         left: u32,
         top: u32,
@@ -138,7 +142,7 @@ where
 
                 let result = match &blend_mode {
                     Some(mode) => blend::blend::<T>(mode, &lhs, &rhs),
-                    None => rhs,
+                    None => blend::blend::<T>(&BlendMode::Normal, &lhs, &rhs),
                 };
 
                 self.data[dest_pixel_index] = result;
@@ -146,14 +150,18 @@ where
         }
     }
 
-    pub fn blit_from(
+    pub fn blit_from(&mut self, left: u32, top: u32, other: &Buffer2D<T>) {
+        self.blit_blended_from(left, top, other, None)
+    }
+
+    pub fn blit_blended_from(
         &mut self,
         left: u32,
         top: u32,
         other: &Buffer2D<T>,
         blend_mode: Option<BlendMode>,
     ) {
-        self.blit(
+        self.blit_blended(
             left,
             top,
             other.width,

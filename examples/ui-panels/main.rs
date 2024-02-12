@@ -536,7 +536,7 @@ fn main() -> Result<(), String> {
 
         let root = root_panel_rc.borrow();
 
-        framebuffer.blit_from(root.info.x, root.info.y, &root.buffer, None);
+        framebuffer.blit_from(root.info.x, root.info.y, &root.buffer);
 
         return Ok(framebuffer.get_all().clone());
     };

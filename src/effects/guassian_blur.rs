@@ -97,7 +97,7 @@ impl Effect<Vec3> for GaussianBlurEffect {
         }
 
         if self.passes != 1 {
-            buffer.blit(0, 0, buffer.width, buffer.height, &dest_ref.data, None);
+            buffer.blit(0, 0, buffer.width, buffer.height, &dest_ref.data);
         }
     }
 }

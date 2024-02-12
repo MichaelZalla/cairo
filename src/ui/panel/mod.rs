@@ -211,14 +211,12 @@ where
                     left.info.x - self.info.x,
                     left.info.y - self.info.y,
                     &left.buffer,
-                    None,
                 );
 
                 self.buffer.blit_from(
                     right.info.x - self.info.x,
                     right.info.y - self.info.y,
                     &right.buffer,
-                    None,
                 );
             }
             _ => {

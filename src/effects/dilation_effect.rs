@@ -89,7 +89,7 @@ impl Effect for DilationEffect {
             if self.rounds == 1 {
                 // No swapping needed.
 
-                buffer.blit(0, 0, buffer.width, buffer.height, &dest_ref.data, None);
+                buffer.blit(0, 0, buffer.width, buffer.height, &dest_ref.data);
 
                 return;
             }
@@ -99,6 +99,6 @@ impl Effect for DilationEffect {
             std::mem::swap(src_ref, dest_ref);
         }
 
-        buffer.blit(0, 0, buffer.width, buffer.height, &src_ref.data, None);
+        buffer.blit(0, 0, buffer.width, buffer.height, &src_ref.data);
     }
 }

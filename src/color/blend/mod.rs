@@ -33,7 +33,7 @@ pub fn blend<T: Copy + Add<Output = T>>(blend_mode: &BlendMode, lhs: &T, rhs: &T
         // Edits or paints each pixel to make it the result color. This is the
         // default mode. (Normal mode is called Threshold when you’re working with a
         // bitmapped or indexed-color image.)
-        BlendMode::Normal => todo!(),
+        BlendMode::Normal => *rhs,
 
         // Edits or paints each pixel to make it the result color. However, the
         // result color is a random replacement of the pixels with the base color or
