@@ -58,7 +58,7 @@ fn main() -> Result<(), String> {
         None,
     ));
 
-    // Brick wall mesh (plane)
+    // Brick wall mesh
 
     let (brick_wall_meshes, _) = mesh::obj::load_obj("./data/obj/sphere.obj");
     let mut brick_wall_mesh = brick_wall_meshes[0].to_owned();
@@ -98,16 +98,16 @@ fn main() -> Result<(), String> {
 
     let mut brick_wall_entity: Entity<'_> = Entity::new(&brick_wall_mesh);
 
-    // Orbiting point light
-
     // Wrap the entity collection in a memory-safe container
+
     let entities: Vec<&mut Entity> = vec![&mut brick_wall_entity];
 
     let entities_rwl = RwLock::new(entities);
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
-    // Instantiate our textured cube scene
+    // Instantiate our scene
+
     let scene = RefCell::new(NormalMapScene::new(
         &framebuffer_rwl,
         &entities_rwl,
@@ -116,6 +116,7 @@ fn main() -> Result<(), String> {
     ));
 
     // Set up our app
+
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,

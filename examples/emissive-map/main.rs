@@ -37,12 +37,10 @@ fn main() -> Result<(), String> {
         None,
     ));
 
-    // Generate primitive meshes
+    // Meshes
 
     let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
     let mut cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
-
-    // Initialize materials
 
     // Checkerboard material
 
@@ -87,21 +85,22 @@ fn main() -> Result<(), String> {
     material_cache.insert(lava_material);
 
     // Assign the meshes to entities
+
     let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
 
     let mut cube_entity = Entity::new(&cube_mesh);
     cube_entity.position.y = 3.0;
 
-    // Orbiting point light
-
     // Wrap the entity collection in a memory-safe container
+
     let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity];
 
     let entities_rwl = RwLock::new(entities);
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
-    // Instantiate our textured cube scene
+    // Instantiate our scene
+
     let scene = RefCell::new(EmissiveMapScene::new(
         &framebuffer_rwl,
         &entities_rwl,
@@ -110,6 +109,7 @@ fn main() -> Result<(), String> {
     ));
 
     // Set up our app
+
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,

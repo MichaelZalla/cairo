@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
-    // Instantiate our textured cube scene
+    // Instantiate our scene
     let scene: RefCell<TextureMappedCubeScene<'_>> = RefCell::new(TextureMappedCubeScene::new(
         &framebuffer_rwl,
         &entities_rwl,
