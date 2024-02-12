@@ -390,30 +390,7 @@ where
                 for x in 0..composite_framebuffer.width {
                     let color_hdr_vec3 = *deferred_frame.get(x, y);
 
-                    let mut color_tone_mapped_vec3 = color_hdr_vec3;
-
-                    if self.options.do_lighting {
-                        // Exposure tone mapping
-
-                        static EXPOSURE: f32 = 1.0;
-
-                        color_tone_mapped_vec3 = Vec3::ones()
-                            - Vec3 {
-                                x: (-color_hdr_vec3.x * EXPOSURE).exp(),
-                                y: (-color_hdr_vec3.y * EXPOSURE).exp(),
-                                z: (-color_hdr_vec3.z * EXPOSURE).exp(),
-                            };
-                    }
-
-                    // (Gamma) Transform linear space to sRGB space.
-
-                    color_tone_mapped_vec3 = Vec3 {
-                        x: color_tone_mapped_vec3.x.sqrt(),
-                        y: color_tone_mapped_vec3.y.sqrt(),
-                        z: color_tone_mapped_vec3.z.sqrt(),
-                    };
-
-                    let color_tone_mapped = Color::from_vec3(color_tone_mapped_vec3 * 255.0);
+                    let color_tone_mapped = self.get_tone_mapped_color_from_hdr(color_hdr_vec3);
 
                     composite_framebuffer.set(x, y, color_tone_mapped.to_u32());
                 }
@@ -977,6 +954,33 @@ where
             }
             None => {}
         }
+    }
+
+    fn get_tone_mapped_color_from_hdr(&self, hdr_color: Vec3) -> Color {
+        let mut color_tone_mapped_vec3 = hdr_color;
+
+        if self.options.do_lighting {
+            // Exposure tone mapping
+
+            static EXPOSURE: f32 = 1.0;
+
+            color_tone_mapped_vec3 = Vec3::ones()
+                - Vec3 {
+                    x: (-hdr_color.x * EXPOSURE).exp(),
+                    y: (-hdr_color.y * EXPOSURE).exp(),
+                    z: (-hdr_color.z * EXPOSURE).exp(),
+                };
+        }
+
+        // (Gamma) Transform linear space to sRGB space.
+
+        color_tone_mapped_vec3 = Vec3 {
+            x: color_tone_mapped_vec3.x.sqrt(),
+            y: color_tone_mapped_vec3.y.sqrt(),
+            z: color_tone_mapped_vec3.z.sqrt(),
+        };
+
+        Color::from_vec3(color_tone_mapped_vec3 * 255.0)
     }
 
     fn flat_top_triangle_fill(
