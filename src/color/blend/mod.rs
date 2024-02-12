@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Sub};
 
 // See: https://photoblogstop.com/photoshop/photoshop-blend-modes-explained/#BlendModeMath
 
@@ -28,7 +28,12 @@ pub enum BlendMode {
     Luminosity,
 }
 
-pub fn blend<T: Copy + Add<Output = T>>(blend_mode: &BlendMode, lhs: &T, rhs: &T) -> T {
+pub fn blend<T: Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>>(
+    blend_mode: &BlendMode,
+    blend_mode_max_value: Option<T>,
+    lhs: &T,
+    rhs: &T,
+) -> T {
     match blend_mode {
         // Edits or paints each pixel to make it the result color. This is the
         // default mode. (Normal mode is called Threshold when you’re working with a
@@ -45,7 +50,11 @@ pub fn blend<T: Copy + Add<Output = T>>(blend_mode: &BlendMode, lhs: &T, rhs: &T
         // Screening with black leaves the color unchanged. Screening with white
         // produces white. The effect is similar to projecting multiple photographic
         // slides on top of each other.
-        BlendMode::Screen => todo!(),
+        BlendMode::Screen => {
+            let max = blend_mode_max_value.unwrap();
+
+            max - (max - *lhs) * (max - *rhs)
+        }
 
         // Multiplies or screens the colors, depending on the base color. Patterns
         // or colors overlay the existing pixels while preserving the highlights and
@@ -75,17 +84,29 @@ pub fn blend<T: Copy + Add<Output = T>>(blend_mode: &BlendMode, lhs: &T, rhs: &T
         // Looks at the color information in each channel and darkens the base color
         // to reflect the blend color by increasing the contrast between the two.
         // Blending with white produces no change.
-        BlendMode::ColorBurn => todo!(),
+        BlendMode::ColorBurn => {
+            let max = blend_mode_max_value.unwrap();
+
+            max - (max - *rhs) / *lhs
+        }
 
         // Looks at the color information in each channel and darkens the base color
         // to reflect the blend color by decreasing the brightness. Blending with
         // white produces no change.
-        BlendMode::LinearBurn => todo!(),
+        BlendMode::LinearBurn => {
+            let max = blend_mode_max_value.unwrap();
+
+            *lhs + *rhs - max
+        }
 
         // Looks at the color information in each channel and brightens the base
         // color to reflect the blend color by decreasing contrast between the two.
         // Blending with black produces no change.
-        BlendMode::ColorDodge => todo!(),
+        BlendMode::ColorDodge => {
+            let max = blend_mode_max_value.unwrap();
+
+            *rhs / (max - *lhs)
+        }
 
         // Looks at the color information in each channel and brightens the base
         // color to reflect the blend color by increasing the brightness. Blending
@@ -95,7 +116,7 @@ pub fn blend<T: Copy + Add<Output = T>>(blend_mode: &BlendMode, lhs: &T, rhs: &T
         // Looks at the color information in each channel and subtracts the blend
         // color from the base color. In 8- and 16-bit images, any resulting
         // negative values are clipped to zero.
-        BlendMode::Subtract => todo!(),
+        BlendMode::Subtract => *rhs - *lhs,
 
         // Looks at the color information in each channel and multiplies the base
         // color by the blend color. The result color is always a darker color.
@@ -104,11 +125,11 @@ pub fn blend<T: Copy + Add<Output = T>>(blend_mode: &BlendMode, lhs: &T, rhs: &T
         // other than black or white, successive strokes with a painting tool
         // produce progressively darker colors. The effect is similar to drawing on
         // the image with multiple marking pens.
-        BlendMode::Multiply => todo!(),
+        BlendMode::Multiply => (*lhs) * (*rhs),
 
         // Looks at the color information in each channel and divides the blend
         // color from the base color.
-        BlendMode::Divide => todo!(),
+        BlendMode::Divide => (*rhs) / (*lhs),
 
         // Burns or dodges the colors by increasing or decreasing the contrast,
         // depending on the blend color. If the blend color (light source) is

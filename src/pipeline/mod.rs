@@ -463,7 +463,13 @@ where
 
         // Blit the bloom buffer to our composite framebuffer.
 
-        deferred_frame.blit_blended_from(0, 0, &bloom_frame, Some(BlendMode::Add));
+        deferred_frame.blit_blended_from(
+            0,
+            0,
+            &bloom_frame,
+            Some(BlendMode::Screen),
+            Some(Vec3::ones()),
+        );
     }
 
     pub fn set_keying_color(&mut self, color: u32) {

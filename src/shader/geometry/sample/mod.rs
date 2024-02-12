@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
@@ -30,7 +30,7 @@ impl Add<GeometrySample> for GeometrySample {
 
     fn add(self, rhs: Self) -> Self::Output {
         GeometrySample {
-            stencil: self.stencil | self.stencil,
+            stencil: self.stencil,
             uv: self.uv + rhs.uv,
             ambient_factor: self.ambient_factor + rhs.ambient_factor,
             diffuse: self.diffuse + rhs.diffuse,
@@ -40,6 +40,63 @@ impl Add<GeometrySample> for GeometrySample {
             specular_exponent: self.specular_exponent + rhs.specular_exponent,
             specular_intensity: self.specular_intensity + rhs.specular_intensity,
             emissive: self.emissive + rhs.emissive,
+        }
+    }
+}
+
+impl Sub<GeometrySample> for GeometrySample {
+    type Output = GeometrySample;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        GeometrySample {
+            stencil: self.stencil,
+            uv: self.uv - rhs.uv,
+            ambient_factor: self.ambient_factor - rhs.ambient_factor,
+            diffuse: self.diffuse - rhs.diffuse,
+            normal: self.normal - rhs.normal,
+            world_pos: self.world_pos - rhs.world_pos,
+            depth: self.depth - rhs.depth,
+            specular_exponent: self.specular_exponent - rhs.specular_exponent,
+            specular_intensity: self.specular_intensity - rhs.specular_intensity,
+            emissive: self.emissive - rhs.emissive,
+        }
+    }
+}
+
+impl Mul<GeometrySample> for GeometrySample {
+    type Output = GeometrySample;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        GeometrySample {
+            stencil: self.stencil,
+            uv: self.uv * rhs.uv,
+            ambient_factor: self.ambient_factor * rhs.ambient_factor,
+            diffuse: self.diffuse * rhs.diffuse,
+            normal: self.normal * rhs.normal,
+            world_pos: self.world_pos * rhs.world_pos,
+            depth: self.depth * rhs.depth,
+            specular_exponent: self.specular_exponent * rhs.specular_exponent,
+            specular_intensity: self.specular_intensity * rhs.specular_intensity,
+            emissive: self.emissive * rhs.emissive,
+        }
+    }
+}
+
+impl Div<GeometrySample> for GeometrySample {
+    type Output = GeometrySample;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        GeometrySample {
+            stencil: self.stencil,
+            uv: self.uv / rhs.uv,
+            ambient_factor: self.ambient_factor / rhs.ambient_factor,
+            diffuse: self.diffuse / rhs.diffuse,
+            normal: self.normal / rhs.normal,
+            world_pos: self.world_pos / rhs.world_pos,
+            depth: self.depth / rhs.depth,
+            specular_exponent: self.specular_exponent / rhs.specular_exponent,
+            specular_intensity: self.specular_intensity / rhs.specular_intensity,
+            emissive: self.emissive / rhs.emissive,
         }
     }
 }

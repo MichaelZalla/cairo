@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Add, AddAssign, Mul},
+    ops::{Add, AddAssign, Div, Mul, Sub},
 };
 
 use crate::{buffer::Buffer2D, effect::Effect, vec::vec3::Vec3};
@@ -26,6 +26,9 @@ impl GaussianBlurEffect {
             + Debug
             + Add<Output = T>
             + AddAssign
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>
             + Mul<f32, Output = T>,
     >(
         &self,

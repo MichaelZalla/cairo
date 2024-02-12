@@ -1,4 +1,7 @@
-use std::{fmt::Debug, ops::Add};
+use std::{
+    fmt::Debug,
+    ops::{Add, Div, Mul, Sub},
+};
 
 use crate::color::blend::{self, BlendMode};
 
@@ -16,7 +19,15 @@ where
 
 impl<T> Buffer2D<T>
 where
-    T: Default + PartialEq + Copy + Clone + Debug + Add<Output = T>,
+    T: Default
+        + PartialEq
+        + Copy
+        + Clone
+        + Debug
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
 {
     pub fn new(width: u32, height: u32, fill_value: Option<T>) -> Self {
         let width_over_height = width as f32 / height as f32;
@@ -115,7 +126,7 @@ where
     }
 
     pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) {
-        self.blit_blended(left, top, width, height, data, None)
+        self.blit_blended(left, top, width, height, data, None, None)
     }
 
     pub fn blit_blended(
@@ -126,6 +137,7 @@ where
         height: u32,
         data: &Vec<T>,
         blend_mode: Option<BlendMode>,
+        blend_mode_max_value: Option<T>,
     ) {
         debug_assert!(data.len() as u32 == width * height);
 
@@ -141,8 +153,8 @@ where
                 let rhs = data[src_pixel_index];
 
                 let result = match &blend_mode {
-                    Some(mode) => blend::blend::<T>(mode, &lhs, &rhs),
-                    None => blend::blend::<T>(&BlendMode::Normal, &lhs, &rhs),
+                    Some(mode) => blend::blend::<T>(mode, blend_mode_max_value, &lhs, &rhs),
+                    None => blend::blend::<T>(&BlendMode::Normal, None, &lhs, &rhs),
                 };
 
                 self.data[dest_pixel_index] = result;
@@ -151,7 +163,7 @@ where
     }
 
     pub fn blit_from(&mut self, left: u32, top: u32, other: &Buffer2D<T>) {
-        self.blit_blended_from(left, top, other, None)
+        self.blit_blended_from(left, top, other, None, None)
     }
 
     pub fn blit_blended_from(
@@ -160,6 +172,7 @@ where
         top: u32,
         other: &Buffer2D<T>,
         blend_mode: Option<BlendMode>,
+        blend_mode_max_value: Option<T>,
     ) {
         self.blit_blended(
             left,
@@ -168,6 +181,7 @@ where
             other.height,
             other.get_all(),
             blend_mode,
+            blend_mode_max_value,
         )
     }
 }
