@@ -73,19 +73,11 @@ impl<'a> PostEffectsScene<'a> {
 
         // Define lights for our scene
         let ambient_light = AmbientLight {
-            intensities: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            intensities: Default::default(),
         };
 
         let directional_light = DirectionalLight {
-            intensities: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            intensities: Default::default(),
             direction: Vec4 {
                 x: -1.0,
                 y: 0.0,
