@@ -196,6 +196,28 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             }
         }
 
+        // Alpha (transparency)
+
+        match context.active_material {
+            Some(material_raw_mut) => unsafe {
+                let material = &(*material_raw_mut);
+
+                match &material.alpha_map {
+                    Some(map) => {
+                        let (r, _g, _b) = sample_nearest(out.uv, &map, None);
+
+                        out.alpha = r as f32 / 255.0;
+                    }
+                    None => {
+                        out.alpha = 1.0 - material.transparency;
+                    }
+                }
+            },
+            _ => {
+                out.alpha = 1.0;
+            }
+        }
+
         out
     }
 }

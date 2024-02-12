@@ -23,6 +23,7 @@ pub struct GeometrySample {
     // @TODO could be an i8 (0 -> 255, 0.0 -> 1.0)
     pub specular_intensity: f32, //  4 bytes
     pub emissive: Vec3,          // 12 bytes
+    pub alpha: f32,              // 4 bytes
 }
 
 impl Add<GeometrySample> for GeometrySample {
@@ -40,6 +41,7 @@ impl Add<GeometrySample> for GeometrySample {
             specular_exponent: self.specular_exponent + rhs.specular_exponent,
             specular_intensity: self.specular_intensity + rhs.specular_intensity,
             emissive: self.emissive + rhs.emissive,
+            alpha: self.alpha + rhs.alpha,
         }
     }
 }
@@ -59,6 +61,7 @@ impl Sub<GeometrySample> for GeometrySample {
             specular_exponent: self.specular_exponent - rhs.specular_exponent,
             specular_intensity: self.specular_intensity - rhs.specular_intensity,
             emissive: self.emissive - rhs.emissive,
+            alpha: self.alpha - rhs.alpha,
         }
     }
 }
@@ -78,6 +81,7 @@ impl Mul<GeometrySample> for GeometrySample {
             specular_exponent: self.specular_exponent * rhs.specular_exponent,
             specular_intensity: self.specular_intensity * rhs.specular_intensity,
             emissive: self.emissive * rhs.emissive,
+            alpha: self.alpha * rhs.alpha,
         }
     }
 }
@@ -97,6 +101,7 @@ impl Div<GeometrySample> for GeometrySample {
             specular_exponent: self.specular_exponent / rhs.specular_exponent,
             specular_intensity: self.specular_intensity / rhs.specular_intensity,
             emissive: self.emissive / rhs.emissive,
+            alpha: self.alpha / rhs.alpha,
         }
     }
 }
