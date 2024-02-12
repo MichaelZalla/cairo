@@ -388,35 +388,34 @@ where
 
             for y in 0..composite_framebuffer.height {
                 for x in 0..composite_framebuffer.width {
-                    let color_hdr = *deferred_frame.get(x, y);
+                    let color_hdr_vec3 = *deferred_frame.get(x, y);
 
-                    let mut color_tone_mapped = color_hdr;
+                    let mut color_tone_mapped_vec3 = color_hdr_vec3;
 
                     if self.options.do_lighting {
                         // Exposure tone mapping
 
                         static EXPOSURE: f32 = 1.0;
 
-                        color_tone_mapped = Vec3::ones()
+                        color_tone_mapped_vec3 = Vec3::ones()
                             - Vec3 {
-                                x: (-color_hdr.x * EXPOSURE).exp(),
-                                y: (-color_hdr.y * EXPOSURE).exp(),
-                                z: (-color_hdr.z * EXPOSURE).exp(),
+                                x: (-color_hdr_vec3.x * EXPOSURE).exp(),
+                                y: (-color_hdr_vec3.y * EXPOSURE).exp(),
+                                z: (-color_hdr_vec3.z * EXPOSURE).exp(),
                             };
                     }
 
                     // (Gamma) Transform linear space to sRGB space.
 
-                    color_tone_mapped = Vec3 {
-                        x: color_tone_mapped.x.sqrt(),
-                        y: color_tone_mapped.y.sqrt(),
-                        z: color_tone_mapped.z.sqrt(),
+                    color_tone_mapped_vec3 = Vec3 {
+                        x: color_tone_mapped_vec3.x.sqrt(),
+                        y: color_tone_mapped_vec3.y.sqrt(),
+                        z: color_tone_mapped_vec3.z.sqrt(),
                     };
 
-                    let color_tone_mapped_u32 =
-                        Color::from_vec3(color_tone_mapped * 255.0).to_u32();
+                    let color_tone_mapped = Color::from_vec3(color_tone_mapped_vec3 * 255.0);
 
-                    composite_framebuffer.set(x, y, color_tone_mapped_u32);
+                    composite_framebuffer.set(x, y, color_tone_mapped.to_u32());
                 }
             }
         }
