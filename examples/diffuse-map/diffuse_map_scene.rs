@@ -22,7 +22,7 @@ use cairo::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-pub struct TextureMappedCubeScene<'a> {
+pub struct DiffuseMapScene<'a> {
     framebuffer_rwl: &'a RwLock<Buffer2D>,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
@@ -32,7 +32,7 @@ pub struct TextureMappedCubeScene<'a> {
     shader_context: &'a RwLock<ShaderContext>,
 }
 
-impl<'a> TextureMappedCubeScene<'a> {
+impl<'a> DiffuseMapScene<'a> {
     pub fn new(
         framebuffer_rwl: &'a RwLock<Buffer2D>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
@@ -126,7 +126,7 @@ impl<'a> TextureMappedCubeScene<'a> {
             pipeline_options,
         );
 
-        return TextureMappedCubeScene {
+        return DiffuseMapScene {
             framebuffer_rwl,
             pipeline,
             entities,
@@ -138,7 +138,7 @@ impl<'a> TextureMappedCubeScene<'a> {
     }
 }
 
-impl<'a> Scene for TextureMappedCubeScene<'a> {
+impl<'a> Scene for DiffuseMapScene<'a> {
     fn update(
         &mut self,
         app: &App,

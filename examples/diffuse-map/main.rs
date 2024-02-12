@@ -12,13 +12,13 @@ use cairo::{
     shader::ShaderContext,
 };
 
-mod texture_mapped_cube_scene;
+mod diffuse_map_scene;
 
-use self::texture_mapped_cube_scene::TextureMappedCubeScene;
+use self::diffuse_map_scene::DiffuseMapScene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/texture-mapping".to_string(),
+        title: "examples/diffuse-map".to_string(),
         relative_mouse_mode: true,
         ..Default::default()
     };
@@ -63,7 +63,7 @@ fn main() -> Result<(), String> {
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
     // Instantiate our scene
-    let scene: RefCell<TextureMappedCubeScene<'_>> = RefCell::new(TextureMappedCubeScene::new(
+    let scene: RefCell<DiffuseMapScene<'_>> = RefCell::new(DiffuseMapScene::new(
         &framebuffer_rwl,
         &entities_rwl,
         &cache,

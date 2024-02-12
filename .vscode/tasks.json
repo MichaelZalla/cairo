@@ -99,6 +99,23 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example diffuse-map",
+      "windows": {
+        "command": "cargo run --example diffuse-map"
+      },
+      "osx": {
+        "command": "cargo run --example diffuse-map"
+      },
+      "linux": {
+        "command": "cargo run --example diffuse-map"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example normal-map",
       "windows": {
         "command": "cargo run --example normal-map"
@@ -147,23 +164,6 @@
       },
       "linux": {
         "command": "cargo run --example sponza"
-      }
-    },
-    {
-      "type": "shell",
-      "problemMatcher": ["$rustc"],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example texture-mapping",
-      "windows": {
-        "command": "cargo run --example texture-mapping"
-      },
-      "osx": {
-        "command": "cargo run --example texture-mapping"
-      },
-      "linux": {
-        "command": "cargo run --example texture-mapping"
       }
     },
     {
