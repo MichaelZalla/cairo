@@ -217,22 +217,5 @@
         "command": "cargo run --example sponza"
       }
     },
-    {
-      "type": "shell",
-      "problemMatcher": ["$rustc"],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example multiple-scenes",
-      "windows": {
-        "command": "cargo run --example multiple-scenes"
-      },
-      "osx": {
-        "command": "cargo run --example multiple-scenes"
-      },
-      "linux": {
-        "command": "cargo run --example multiple-scenes"
-      }
-    },
   ]
 }
