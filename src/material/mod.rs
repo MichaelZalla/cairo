@@ -46,43 +46,78 @@ impl Material {
     ) -> Result<(), String> {
         // Ambient map
         match &mut self.ambient_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
         // Ambient occlusion map
         match &mut self.ambient_occlusion_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
         // Diffuse map
         match &mut self.diffuse_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
         // Specular map
         match &mut self.specular_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
         // Emissive map
         match &mut self.emissive_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
         // Normal map
         match &mut self.normal_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
         // Alpha map
         match &mut self.alpha_map {
-            Some(map) => map.load(rendering_context)?,
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
             None => (),
         }
 
