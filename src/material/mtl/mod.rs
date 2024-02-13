@@ -231,7 +231,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
 
                             // Emissive color map
                             "map_ke" => {
-                                println!("@TODO Implementation for \"{}\".", "map_Ke");
+                                // [filepath]
+                                // Example:
+                                // map_Ke cube_emissive.png
+
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .emissive_map =
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
                             // Alpha map
