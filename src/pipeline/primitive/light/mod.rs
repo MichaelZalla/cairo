@@ -2,7 +2,6 @@ use crate::{
     color::{self, Color},
     entity::Entity,
     material::cache::MaterialCache,
-    matrix::Mat4,
     mesh,
     pipeline::Pipeline,
     scene::{
@@ -10,7 +9,7 @@ use crate::{
         light::{PointLight, SpotLight},
     },
     shader::geometry::GeometryShader,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::vec3::Vec3,
 };
 
 impl<'a, G> Pipeline<'a, G>
@@ -99,49 +98,47 @@ where
             true,
         );
 
-        let start = light_position;
-        let end =
+        let target_position =
             light_position + light.look_vector.get_forward().as_normal() * light.influence_distance;
 
-        self.render_line(start, end, color::WHITE);
+        self.render_line(light_position, target_position, color::WHITE);
 
         // Draw sides for cutoff angles.
 
-        let down_normal = Vec4::new((end - start).as_normal(), 1.0);
+        let mut draw_spotlight_frustum = |cutoff_angle: f32, color: Color| {
+            let opposite_over_adjacent = cutoff_angle.tan();
 
-        let mut draw_sides = |cutoff_angle: f32, cutoff_angle_cos: f32, color: Color| {
-            let hypotenuse_ratio = 1.0 / cutoff_angle_cos;
+            let box_points = [
+                target_position
+                    + light.look_vector.get_right()
+                        * opposite_over_adjacent
+                        * light.influence_distance,
+                target_position
+                    + light.look_vector.get_up()
+                        * -1.0
+                        * opposite_over_adjacent
+                        * light.influence_distance,
+                target_position
+                    + light.look_vector.get_right()
+                        * -1.0
+                        * opposite_over_adjacent
+                        * light.influence_distance,
+                target_position
+                    + light.look_vector.get_up()
+                        * opposite_over_adjacent
+                        * light.influence_distance,
+            ];
 
-            let normal_rotated_x = (down_normal * Mat4::rotation_x(cutoff_angle)).as_normal();
-            let normal_rotated_neg_x = (down_normal * Mat4::rotation_x(-cutoff_angle)).as_normal();
-
-            let x = normal_rotated_x.to_vec3() * hypotenuse_ratio * light.influence_distance;
-            let neg_x =
-                normal_rotated_neg_x.to_vec3() * hypotenuse_ratio * light.influence_distance;
-
-            let normal_rotated_z = (down_normal * Mat4::rotation_z(cutoff_angle)).as_normal();
-            let normal_rotated_neg_z = (down_normal * Mat4::rotation_z(-cutoff_angle)).as_normal();
-
-            let z = normal_rotated_z.to_vec3() * hypotenuse_ratio * light.influence_distance;
-            let neg_z =
-                normal_rotated_neg_z.to_vec3() * hypotenuse_ratio * light.influence_distance;
-
-            self.render_line(start, start + x, color);
-            self.render_line(start, start + neg_x, color);
-
-            self.render_line(start, start + z, color);
-            self.render_line(start, start + neg_z, color);
-
-            self.render_line(start + x, start + z, color);
-            self.render_line(start + z, start + neg_x, color);
-            self.render_line(start + neg_x, start + neg_z, color);
-            self.render_line(start + neg_z, start + x, color);
+            for (index, point) in box_points.as_slice().iter().enumerate() {
+                self.render_line(light_position, *point, color);
+                self.render_line(
+                    box_points[index],
+                    box_points[if index == 3 { 0 } else { index + 1 }],
+                    color,
+                );
+            }
         };
 
-        draw_sides(
-            light.outer_cutoff_angle,
-            light.outer_cutoff_angle_cos,
-            color::YELLOW,
-        );
+        draw_spotlight_frustum(light.outer_cutoff_angle, color::YELLOW);
     }
 }
