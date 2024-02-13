@@ -52,13 +52,8 @@ impl<'a> NormalMapScene<'a> {
         let geometry_shader = DefaultGeometryShader::new(
             shader_context,
             Some(GeometryShaderOptions {
-                bilinear_active: true,
-                trilinear_active: true,
-                ambient_occlusion_mapping_active: false,
-                diffuse_mapping_active: true,
                 normal_mapping_active: true,
-                specular_mapping_active: true,
-                emissive_mapping_active: false,
+                ..Default::default()
             }),
         );
 
