@@ -50,14 +50,12 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
 
         out.stencil = true;
         out.uv = interpolant.uv;
+        out.normal = interpolant.normal.to_vec3();
+        out.tangent_space_info = interpolant.tangent_space_info;
         out.world_pos = interpolant.world_pos;
         out.depth = interpolant.depth;
 
         // World-space surface normal
-
-        out.normal = interpolant.normal.to_vec3();
-
-        out.tangent_space_info = interpolant.tangent_space_info;
 
         match (self.options.normal_mapping_active, context.active_material) {
             (true, Some(material_raw_mut)) => {
