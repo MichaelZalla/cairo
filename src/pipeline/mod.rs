@@ -992,7 +992,12 @@ where
                         linear_space_interpolant.depth =
                             ((z - near) / (far - near)).max(0.0).min(1.0);
 
-                        g_buffer.set(x, y, self.geometry_shader.call(&linear_space_interpolant));
+                        match self.geometry_shader.call(&linear_space_interpolant) {
+                            Some(sample) => {
+                                g_buffer.set(x, y, sample);
+                            }
+                            None => (),
+                        }
                     }
                     None => (),
                 }

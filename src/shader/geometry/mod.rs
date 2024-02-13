@@ -145,5 +145,5 @@ pub trait GeometryShader<'a> {
         game_controller_state: &GameControllerState,
     );
 
-    fn call(&self, out: &DefaultVertexOut) -> GeometrySample;
+    fn call(&self, out: &DefaultVertexOut) -> Option<GeometrySample>;
 }

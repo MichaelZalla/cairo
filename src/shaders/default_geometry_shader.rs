@@ -43,7 +43,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             .update(keyboard_state, mouse_state, game_controller_state);
     }
 
-    fn call(&self, interpolant: &DefaultVertexOut) -> GeometrySample {
+    fn call(&self, interpolant: &DefaultVertexOut) -> Option<GeometrySample> {
         let context: std::sync::RwLockReadGuard<'_, ShaderContext> = self.context.read().unwrap();
 
         let mut out: GeometrySample = Default::default();
@@ -248,6 +248,6 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             }
         }
 
-        out
+        Some(out)
     }
 }
