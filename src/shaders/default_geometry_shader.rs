@@ -127,7 +127,23 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                                         current_layer_depth += layer_depth;
                                     }
 
-                                    current_uv
+                                    // Interpolate between the sampled
+                                    // displacements at the previous layer and
+                                    // the current layer.
+
+                                    let previous_uv = current_uv + uv_step;
+
+                                    let after_depth =
+                                        current_sampled_displacement - current_layer_depth;
+
+                                    let before_depth =
+                                        (sample_nearest(previous_uv, map, None).0 as f32 / 255.0)
+                                            - current_layer_depth
+                                            + layer_depth;
+
+                                    let alpha = after_depth / (after_depth - before_depth);
+
+                                    previous_uv * alpha + current_uv * (1.0 - alpha)
                                 };
 
                             let fragment_to_view_direction_tangent_space =
