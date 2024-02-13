@@ -1019,11 +1019,7 @@ where
 
         // (Gamma) Transform linear space to sRGB space.
 
-        color_tone_mapped_vec3 = Vec3 {
-            x: color_tone_mapped_vec3.x.sqrt(),
-            y: color_tone_mapped_vec3.y.sqrt(),
-            z: color_tone_mapped_vec3.z.sqrt(),
-        };
+        color_tone_mapped_vec3.linear_to_srgb();
 
         Color::from_vec3(color_tone_mapped_vec3 * 255.0)
     }

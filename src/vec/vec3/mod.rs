@@ -199,6 +199,18 @@ impl Vec3 {
     pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
         return start + (end - start) * alpha;
     }
+
+    pub fn srgb_to_linear(&mut self) {
+        self.x = self.x * self.x;
+        self.y = self.y * self.y;
+        self.z = self.z * self.z;
+    }
+
+    pub fn linear_to_srgb(&mut self) {
+        self.x = self.x.sqrt();
+        self.y = self.y.sqrt();
+        self.z = self.z.sqrt();
+    }
 }
 
 pub const UP: Vec3 = Vec3 {

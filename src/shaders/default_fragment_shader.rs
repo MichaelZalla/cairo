@@ -50,11 +50,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // Transform sRGB space to linear space.
 
-        color = Vec3 {
-            x: color.x * color.x,
-            y: color.y * color.y,
-            z: color.z * color.z,
-        };
+        color.srgb_to_linear();
 
         // Multiply by total lighting contribution and saturate.
 
