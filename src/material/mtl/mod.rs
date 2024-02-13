@@ -215,6 +215,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
 
                             // Specular color map
                             "map_ks" | "map_ns" => {
+                                // [filepath]
+                                // Example:
+                                // map_Ks cube_specular.png
+
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
@@ -243,10 +247,15 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                             }
 
                             // Bump map
-                            "map_bump" | "bump" | "map_disp" | "disp" => {
+                            "map_bump" | "bump" => {
+                                println!("@TODO Implementation for \"{}\".", "decal");
+                            }
+
+                            // Normal map
+                            "map_kn" | "map_normal" | "norm" => {
                                 // [filepath]
                                 // Example:
-                                // bump cube_normal.png
+                                // map_Kn cube_normal.png
 
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
