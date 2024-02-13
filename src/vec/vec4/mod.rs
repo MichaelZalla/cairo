@@ -178,18 +178,6 @@ impl Vec4 {
         }
     }
 
-    pub fn hadamard(&mut self, rhs: Vec4) {
-        *self *= rhs;
-    }
-
-    pub fn get_hadamard(&self, v: Vec4) -> Vec4 {
-        let mut result = self.clone();
-
-        result.hadamard(v);
-
-        return result;
-    }
-
     pub fn saturate(&mut self) -> &Self {
         self.x = self.x.max(0.0).min(1.0);
         self.y = self.y.max(0.0).min(1.0);
