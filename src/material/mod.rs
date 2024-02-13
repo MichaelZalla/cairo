@@ -29,6 +29,7 @@ pub struct Material {
     pub transmission_filter_color: Vec3,
     pub index_of_refraction: f32,
     pub normal_map: Option<TextureMap>,
+    pub displacement_map: Option<TextureMap>,
 }
 
 impl Material {
@@ -101,6 +102,17 @@ impl Material {
 
         // Normal map
         match &mut self.normal_map {
+            Some(map) => {
+                if !map.is_loaded {
+                    map.load(rendering_context)?
+                } else {
+                }
+            }
+            None => (),
+        }
+
+        // Displacement map
+        match &mut self.displacement_map {
             Some(map) => {
                 if !map.is_loaded {
                     map.load(rendering_context)?
@@ -220,6 +232,11 @@ impl fmt::Display for Material {
 
         match &self.normal_map {
             Some(map) => writeln!(v, "  > Normal map: {}", map.info.filepath),
+            _ => Ok(()),
+        }?;
+
+        match &self.displacement_map {
+            Some(map) => writeln!(v, "  > Displacement map: {}", map.info.filepath),
             _ => Ok(()),
         }
     }

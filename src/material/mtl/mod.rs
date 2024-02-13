@@ -278,6 +278,22 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                     Some(TextureMap::new(&mtl_relative_filepath.as_str()));
                             }
 
+                            // Displacement (height) map
+                            "map_disp" | "disp" => {
+                                // [filepath]
+                                // Example:
+                                // disp cube_displacement.png
+
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .displacement_map =
+                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                            }
+
                             // Stencil (decal) map
                             "decal" => {
                                 println!("@TODO Implementation for \"{}\".", "decal");
