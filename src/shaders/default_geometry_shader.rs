@@ -55,6 +55,28 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
         out.world_pos = interpolant.world_pos;
         out.depth = interpolant.depth;
 
+        // Displacement (height)
+
+        match (
+            self.options.displacement_mapping_active,
+            context.active_material,
+        ) {
+            (true, Some(material_raw_mut)) => unsafe {
+                match &(*material_raw_mut).displacement_map {
+                    Some(map) => {
+                        let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
+                        out.displacement = r as f32 / 255.0;
+                    }
+                    _ => {
+                        out.displacement = 0.0;
+                    }
+                }
+            },
+            _ => {
+                out.displacement = 0.0;
+            }
+        }
+
         // World-space surface normal
 
         match (self.options.normal_mapping_active, context.active_material) {

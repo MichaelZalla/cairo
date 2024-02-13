@@ -22,6 +22,7 @@ pub struct GeometrySample {
     pub world_pos: Vec3, // 12 bytes
     // Non-linear Z in world-view-projection space
     pub depth: f32,
+    pub displacement: f32,
     // @TODO could be an i8
     pub specular_exponent: i32, //  4 bytes
     // @TODO could be an i8 (0 -> 255, 0.0 -> 1.0)
@@ -43,6 +44,7 @@ impl Add<GeometrySample> for GeometrySample {
             tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos + rhs.world_pos,
             depth: self.depth + rhs.depth,
+            displacement: self.displacement + rhs.displacement,
             specular_exponent: self.specular_exponent + rhs.specular_exponent,
             specular_intensity: self.specular_intensity + rhs.specular_intensity,
             emissive: self.emissive + rhs.emissive,
@@ -64,6 +66,7 @@ impl Sub<GeometrySample> for GeometrySample {
             tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos - rhs.world_pos,
             depth: self.depth - rhs.depth,
+            displacement: self.displacement - rhs.displacement,
             specular_exponent: self.specular_exponent - rhs.specular_exponent,
             specular_intensity: self.specular_intensity - rhs.specular_intensity,
             emissive: self.emissive - rhs.emissive,
@@ -85,6 +88,7 @@ impl Mul<GeometrySample> for GeometrySample {
             tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos * rhs.world_pos,
             depth: self.depth * rhs.depth,
+            displacement: self.displacement * rhs.displacement,
             specular_exponent: self.specular_exponent * rhs.specular_exponent,
             specular_intensity: self.specular_intensity * rhs.specular_intensity,
             emissive: self.emissive * rhs.emissive,
@@ -106,6 +110,7 @@ impl Div<GeometrySample> for GeometrySample {
             tangent_space_info: self.tangent_space_info,
             world_pos: self.world_pos / rhs.world_pos,
             depth: self.depth / rhs.depth,
+            displacement: self.displacement / rhs.displacement,
             specular_exponent: self.specular_exponent / rhs.specular_exponent,
             specular_intensity: self.specular_intensity / rhs.specular_intensity,
             emissive: self.emissive / rhs.emissive,

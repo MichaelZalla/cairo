@@ -20,6 +20,7 @@ pub struct GeometryShaderOptions {
     pub ambient_occlusion_mapping_active: bool,
     pub diffuse_mapping_active: bool,
     pub normal_mapping_active: bool,
+    pub displacement_mapping_active: bool,
     pub specular_mapping_active: bool,
     pub emissive_mapping_active: bool,
 }
@@ -32,6 +33,7 @@ impl Default for GeometryShaderOptions {
             ambient_occlusion_mapping_active: false,
             diffuse_mapping_active: true,
             normal_mapping_active: false,
+            displacement_mapping_active: false,
             specular_mapping_active: false,
             emissive_mapping_active: false,
         }
@@ -83,6 +85,18 @@ impl GeometryShaderOptions {
                     println!(
                         "Normal mapping: {}",
                         if self.normal_mapping_active {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    )
+                }
+                Keycode::Comma { .. } => {
+                    self.displacement_mapping_active = !self.displacement_mapping_active;
+
+                    println!(
+                        "Displacement mapping: {}",
+                        if self.displacement_mapping_active {
                             "On"
                         } else {
                             "Off"
