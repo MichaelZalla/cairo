@@ -147,6 +147,20 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example displacement-map",
+      "windows": {
+        "command": "cargo run --example displacement-map"
+      },
+      "linux": {
+        "command": "cargo run --example displacement-map"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example specular-map",
       "windows": {
         "command": "cargo run --example specular-map"

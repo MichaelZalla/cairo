@@ -120,9 +120,10 @@ impl PointLight {
 
             // Compute the similarity between the reflected ray's direction and
             // the direction from our fragment to the viewer.
-            let view_direction_normal = (tangent_space_info.view_position
-                - tangent_space_info.fragment_position)
-                .as_normal();
+            let fragment_to_view_tangent_space =
+                tangent_space_info.view_position - tangent_space_info.fragment_position;
+
+            let view_direction_normal = fragment_to_view_tangent_space.as_normal();
 
             let cosine_theta =
                 (1.0 as f32).min(reflected_ray_normal.dot(view_direction_normal * -1.0));

@@ -9,7 +9,7 @@ use crate::{
         ShaderContext,
     },
     texture::sample::{sample_bilinear, sample_nearest},
-    vec::vec4::Vec4,
+    vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
@@ -65,16 +65,57 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                 match &(*material_raw_mut).displacement_map {
                     Some(map) => {
                         let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
-                        out.displacement = r as f32 / 255.0;
+
+                        let displacement = r as f32 / 255.0;
+
+                        if displacement != 0.0 {
+                            // Modify sample UV based on height map, if
+                            // necessary, before proceeding.
+
+                            static DISPLACEMENT_SCALE: f32 = 0.035;
+
+                            fn get_parallax_mapped_uv(
+                                uv: Vec2,
+                                fragment_to_view_direction_tangent_space: Vec3,
+                                displacement: f32,
+                            ) -> Vec2 {
+                                // Scale the view-direction vector (in tangent
+                                // space) by the sampled displacement, modulated
+                                // by a scaling factor.
+
+                                let p = Vec2 {
+                                    x: fragment_to_view_direction_tangent_space.x
+                                        / fragment_to_view_direction_tangent_space.z,
+                                    y: fragment_to_view_direction_tangent_space.y
+                                        / fragment_to_view_direction_tangent_space.z,
+                                    z: 1.0,
+                                } * displacement
+                                    * DISPLACEMENT_SCALE;
+
+                                uv - p
+                            }
+
+                            let fragment_to_view_direction_tangent_space =
+                                (out.tangent_space_info.view_position
+                                    - out.tangent_space_info.fragment_position)
+                                    .as_normal();
+
+                            out.uv = get_parallax_mapped_uv(
+                                out.uv,
+                                fragment_to_view_direction_tangent_space,
+                                displacement,
+                            );
+
+                            if out.uv.x < 0.0 || out.uv.x > 1.0 || out.uv.y < 0.0 || out.uv.y > 1.0
+                            {
+                                return None;
+                            }
+                        }
                     }
-                    _ => {
-                        out.displacement = 0.0;
-                    }
+                    _ => (),
                 }
             },
-            _ => {
-                out.displacement = 0.0;
-            }
+            _ => (),
         }
 
         // World-space surface normal
@@ -84,7 +125,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                 unsafe {
                     match &(*material_raw_mut).normal_map {
                         Some(texture) => {
-                            let (r, g, b) = sample_nearest(interpolant.uv, texture, None);
+                            let (r, g, b) = sample_nearest(out.uv, texture, None);
 
                             // Map the normal's components into the range [-1, 1].
 
@@ -122,7 +163,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             (true, Some(material_raw_mut)) => unsafe {
                 match &(*material_raw_mut).ambient_occlusion_map {
                     Some(map) => {
-                        let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
+                        let (r, _g, _b) = sample_nearest(out.uv, map, None);
                         out.ambient_factor = r as f32 / 255.0;
                     }
                     _ => {
@@ -145,9 +186,9 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                 ) {
                     (true, Some(texture)) => {
                         let (r, g, b) = if self.options.bilinear_active {
-                            sample_bilinear(interpolant.uv, texture, None)
+                            sample_bilinear(out.uv, texture, None)
                         } else {
-                            sample_nearest(interpolant.uv, texture, None)
+                            sample_nearest(out.uv, texture, None)
                         };
 
                         out.diffuse = color::Color::rgb(r, g, b).to_vec3() / 255.0;
@@ -179,7 +220,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
                     &(*material_raw_mut).specular_map,
                 ) {
                     (true, Some(map)) => {
-                        let (r, g, b) = sample_nearest(interpolant.uv, map, None);
+                        let (r, g, b) = sample_nearest(out.uv, map, None);
                         let r_f = r as f32;
                         let g_f = g as f32;
                         let b_f = b as f32;
@@ -214,7 +255,7 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
             (true, Some(material_raw_mut)) => unsafe {
                 match &(*material_raw_mut).emissive_map {
                     Some(texture) => {
-                        let (r, g, b) = sample_nearest(interpolant.uv, texture, None);
+                        let (r, g, b) = sample_nearest(out.uv, texture, None);
 
                         out.emissive = Color::rgb(r, g, b).to_vec3() / 255.0;
                     }
