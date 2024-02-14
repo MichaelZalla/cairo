@@ -1,5 +1,3 @@
-#![allow(non_upper_case_globals)]
-
 use std::sync::RwLockReadGuard;
 
 use crate::{
@@ -8,7 +6,7 @@ use crate::{
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
-pub const DefaultAlphaShader: AlphaShaderFn =
+pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
     |context: &RwLockReadGuard<'_, ShaderContext>, out: &DefaultVertexOut| -> bool {
         // Check if this fragment can be discarded.
 

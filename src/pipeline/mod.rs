@@ -14,7 +14,7 @@ use crate::{
         vertex::VertexShaderFn, ShaderContext,
     },
     shaders::{
-        default_alpha_shader::DefaultAlphaShader, default_geometry_shader::DefaultGeometryShader,
+        default_alpha_shader::DEFAULT_ALPHA_SHADER, default_geometry_shader::DefaultGeometryShader,
     },
     vec::vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
@@ -86,7 +86,7 @@ where
         fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
     ) -> Self {
-        let alpha_shader = DefaultAlphaShader;
+        let alpha_shader = DEFAULT_ALPHA_SHADER;
 
         let forward_framebuffer = None;
 
