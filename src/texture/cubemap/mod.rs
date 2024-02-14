@@ -8,7 +8,7 @@ use crate::{
     vec::{vec2::Vec2, vec4::Vec4},
 };
 
-use super::TextureMap;
+use super::map::TextureMap;
 
 static SIDES: usize = 6;
 

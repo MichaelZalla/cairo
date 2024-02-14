@@ -2,7 +2,7 @@ use crate::{
     material::Material,
     matrix::Mat4,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
-    texture::{cubemap::CubeMap, TextureMap},
+    texture::{cubemap::CubeMap, map::TextureMap},
     vec::{vec3::Vec3, vec4::Vec4},
 };
 

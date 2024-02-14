@@ -1,6 +1,6 @@
 use std::{path::Path, str::SplitWhitespace};
 
-use crate::{fs::read_lines, mesh::MaterialSource, texture::TextureMap, vec::vec3::Vec3};
+use crate::{fs::read_lines, mesh::MaterialSource, texture::map::TextureMap, vec::vec3::Vec3};
 
 use super::cache::MaterialCache;
 

@@ -4,7 +4,7 @@ use crate::{
     buffer::Buffer2D,
     color::Color,
     graphics::Graphics,
-    texture::{sample::sample_trilinear, TextureMap},
+    texture::{map::TextureMap, sample::sample_trilinear},
     vec::vec2::Vec2,
 };
 

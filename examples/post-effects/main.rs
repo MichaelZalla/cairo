@@ -17,7 +17,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::TextureMap,
+    texture::map::TextureMap,
 };
 
 mod post_effects_scene;

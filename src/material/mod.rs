@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::{
-    color, context::ApplicationRenderingContext, mesh::MaterialSource, texture::TextureMap,
+    color, context::ApplicationRenderingContext, mesh::MaterialSource, texture::map::TextureMap,
     vec::vec3::Vec3,
 };
 

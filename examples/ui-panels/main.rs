@@ -16,7 +16,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
-    texture::TextureMap,
+    texture::map::TextureMap,
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},

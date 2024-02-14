@@ -1,11 +1,11 @@
 use std::ops::Rem;
 
 use crate::{
-    texture::TextureMapWrapping,
+    texture::map::TextureMapWrapping,
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
-use super::TextureMap;
+use super::map::TextureMap;
 
 fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
     match map.options.wrapping {

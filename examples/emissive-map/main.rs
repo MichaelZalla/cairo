@@ -11,7 +11,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::TextureMap,
+    texture::map::TextureMap,
 };
 
 mod emissive_map_scene;
