@@ -24,11 +24,8 @@ use cairo::{
         debug_shaders::{
             albedo_fragment_shader::AlbedoFragmentShader,
             depth_fragment_shader::DepthFragmentShader,
-            emissive_fragment_shader::EmissiveFragmentShader,
             normal_fragment_shader::NormalFragmentShader,
             specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
-            specular_roughness_fragment_shader::SpecularRoughnessFragmentShader,
-            stencil_fragment_shader::StencilFragmentShader,
             uv_test_fragment_shader::UvTestFragmentShader,
         },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
@@ -91,11 +88,8 @@ impl<'a> SponzaScene<'a> {
             DEFAULT_FRAGMENT_SHADER,
             AlbedoFragmentShader,
             DepthFragmentShader,
-            EmissiveFragmentShader,
             NormalFragmentShader,
             SpecularIntensityFragmentShader,
-            SpecularRoughnessFragmentShader,
-            StencilFragmentShader,
             UvTestFragmentShader,
         ];
 
@@ -350,11 +344,8 @@ impl<'a> Scene for SponzaScene<'a> {
                     "DEFAULT_FRAGMENT_SHADER",
                     "AlbedoFragmentShader",
                     "DepthFragmentShader",
-                    "EmissiveFragmentShader",
                     "NormalFragmentShader",
                     "SpecularIntensityFragmentShader",
-                    "SpecularRoughnessFragmentShader",
-                    "StencilFragmentShader",
                     "UvTestFragmentShader",
                 ][self.active_fragment_shader_index]
             ));
