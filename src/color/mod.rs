@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::vec::vec3::Vec3;
+use crate::vec::{vec3::Vec3, vec4::Vec4};
 
 pub mod blend;
 
@@ -14,13 +14,10 @@ pub struct Color {
 
 pub static BLACK: Color = Color::rgb(0, 0, 0);
 pub static WHITE: Color = Color::rgb(255, 255, 255);
-
 pub static RED: Color = Color::rgb(255, 0, 0);
 pub static GREEN: Color = Color::rgb(0, 255, 0);
 pub static BLUE: Color = Color::rgb(0, 0, 255);
-
 pub static YELLOW: Color = Color::rgb(255, 255, 0);
-
 pub static SKY_BOX: Color = Color::rgb(102, 153, 255);
 
 impl fmt::Display for Color {
@@ -68,7 +65,7 @@ impl Color {
             | (self.a as u32) << 24;
     }
 
-    pub fn from_vec3(color: Vec3) -> Self {
+    pub const fn from_vec3(color: Vec3) -> Self {
         Self {
             r: color.x,
             g: color.y,
@@ -77,11 +74,29 @@ impl Color {
         }
     }
 
-    pub fn to_vec3(&self) -> Vec3 {
+    pub const fn to_vec3(&self) -> Vec3 {
         return Vec3 {
             x: self.r,
             y: self.g,
             z: self.b,
+        };
+    }
+
+    pub const fn from_vec4(color: Vec4) -> Self {
+        Self {
+            r: color.x,
+            g: color.y,
+            b: color.z,
+            a: color.w,
+        }
+    }
+
+    pub const fn to_vec4(&self) -> Vec4 {
+        return Vec4 {
+            x: self.r,
+            y: self.g,
+            z: self.b,
+            w: self.a,
         };
     }
 }
