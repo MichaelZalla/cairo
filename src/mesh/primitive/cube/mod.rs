@@ -13,25 +13,25 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     let front_top_left = Vec3 {
         x: -width / 2.0,
-        y: -height / 2.0,
+        y: height / 2.0,
         z: -depth / 2.0,
     };
 
     let front_top_right = Vec3 {
         x: width / 2.0,
-        y: -height / 2.0,
+        y: height / 2.0,
         z: -depth / 2.0,
     };
 
     let front_bottom_left = Vec3 {
         x: -width / 2.0,
-        y: height / 2.0,
+        y: -height / 2.0,
         z: -depth / 2.0,
     };
 
     let front_bottom_right = Vec3 {
         x: width / 2.0,
-        y: height / 2.0,
+        y: -height / 2.0,
         z: -depth / 2.0,
     };
 
