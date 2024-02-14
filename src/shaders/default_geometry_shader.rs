@@ -72,80 +72,84 @@ impl<'a> GeometryShader<'a> for DefaultGeometryShader<'a> {
 
                         let displacement = r as f32 / 255.0;
 
+                        // Modify sample UV based on height map, if
+                        // necessary, before proceeding.
+
+                        static DISPLACEMENT_SCALE: f32 = 0.05;
+
+                        static LAYER_COUNT_MIN: f32 = 8.0;
+                        static LAYER_COUNT_MAX: f32 = 32.0;
+
+                        static Z_FORWARD_TANGENT_SPACE: Vec3 = vec3::FORWARD;
+
+                        let get_parallax_mapped_uv =
+                            |uv: Vec2,
+                             fragment_to_view_direction_tangent_space: Vec3,
+                             displacement: f32|
+                             -> Vec2 {
+                                // Scale the view-direction vector (in tangent
+                                // space) by the sampled displacement, modulated
+                                // by a scaling factor.
+
+                                let alpha = Z_FORWARD_TANGENT_SPACE
+                                    .dot(fragment_to_view_direction_tangent_space)
+                                    .max(0.0);
+
+                                let layer_count = (LAYER_COUNT_MAX
+                                    - (LAYER_COUNT_MAX - LAYER_COUNT_MIN) * alpha)
+                                    .floor();
+
+                                // let layer_count = LAYER_COUNT_MAX;
+
+                                let layer_depth: f32 = 1.0 / layer_count;
+
+                                let p = Vec2 {
+                                    x: fragment_to_view_direction_tangent_space.x
+                                        / fragment_to_view_direction_tangent_space.z,
+                                    y: fragment_to_view_direction_tangent_space.y
+                                        / fragment_to_view_direction_tangent_space.z,
+                                    z: 1.0,
+                                } * displacement
+                                    * DISPLACEMENT_SCALE;
+
+                                let uv_step = p / layer_count;
+
+                                let mut current_layer_depth = 0.0;
+                                let mut current_uv = uv;
+                                let mut current_sampled_displacement = displacement;
+
+                                while current_layer_depth < current_sampled_displacement {
+                                    // Take a step along P.
+                                    current_uv -= uv_step;
+
+                                    // Re-sample the displacement map at this new UV coordinate.
+                                    current_sampled_displacement =
+                                        sample_nearest(current_uv, map, None).0 as f32 / 255.0;
+
+                                    // Update "current" layer depth for our next loop iteration.
+                                    current_layer_depth += layer_depth;
+                                }
+
+                                // Interpolate between the sampled
+                                // displacements at the previous layer and
+                                // the current layer.
+
+                                let previous_uv = current_uv + uv_step;
+
+                                let after_depth =
+                                    current_sampled_displacement - current_layer_depth;
+
+                                let before_depth =
+                                    (sample_nearest(previous_uv, map, None).0 as f32 / 255.0)
+                                        - current_layer_depth
+                                        + layer_depth;
+
+                                let alpha = after_depth / (after_depth - before_depth);
+
+                                previous_uv * alpha + current_uv * (1.0 - alpha)
+                            };
+
                         if displacement != 0.0 {
-                            // Modify sample UV based on height map, if
-                            // necessary, before proceeding.
-
-                            static DISPLACEMENT_SCALE: f32 = 0.1;
-                            static LAYER_COUNT_MIN: f32 = 8.0;
-                            static LAYER_COUNT_MAX: f32 = 32.0;
-                            static Z_FORWARD_TANGENT_SPACE: Vec3 = vec3::FORWARD;
-
-                            let get_parallax_mapped_uv =
-                                |uv: Vec2,
-                                 fragment_to_view_direction_tangent_space: Vec3,
-                                 displacement: f32|
-                                 -> Vec2 {
-                                    // Scale the view-direction vector (in tangent
-                                    // space) by the sampled displacement, modulated
-                                    // by a scaling factor.
-
-                                    let alpha = Z_FORWARD_TANGENT_SPACE
-                                        .dot(fragment_to_view_direction_tangent_space)
-                                        .max(0.0);
-
-                                    let layer_count = (LAYER_COUNT_MAX
-                                        - (LAYER_COUNT_MAX - LAYER_COUNT_MIN) * alpha)
-                                        .floor();
-
-                                    let layer_depth: f32 = 1.0 / layer_count;
-
-                                    let p = Vec2 {
-                                        x: fragment_to_view_direction_tangent_space.x
-                                            / fragment_to_view_direction_tangent_space.z,
-                                        y: fragment_to_view_direction_tangent_space.y
-                                            / fragment_to_view_direction_tangent_space.z,
-                                        z: 1.0,
-                                    } * displacement
-                                        * DISPLACEMENT_SCALE;
-
-                                    let uv_step = p / layer_count;
-
-                                    let mut current_layer_depth = 0.0;
-                                    let mut current_uv = uv;
-                                    let mut current_sampled_displacement = displacement;
-
-                                    while current_layer_depth < current_sampled_displacement {
-                                        // Take a step along P.
-                                        current_uv -= uv_step;
-
-                                        // Re-sample the displacement map at this new UV coordinate.
-                                        current_sampled_displacement =
-                                            sample_nearest(current_uv, map, None).0 as f32 / 255.0;
-
-                                        // Update "current" layer depth for our next loop iteration.
-                                        current_layer_depth += layer_depth;
-                                    }
-
-                                    // Interpolate between the sampled
-                                    // displacements at the previous layer and
-                                    // the current layer.
-
-                                    let previous_uv = current_uv + uv_step;
-
-                                    let after_depth =
-                                        current_sampled_displacement - current_layer_depth;
-
-                                    let before_depth =
-                                        (sample_nearest(previous_uv, map, None).0 as f32 / 255.0)
-                                            - current_layer_depth
-                                            + layer_depth;
-
-                                    let alpha = after_depth / (after_depth - before_depth);
-
-                                    previous_uv * alpha + current_uv * (1.0 - alpha)
-                                };
-
                             let fragment_to_view_direction_tangent_space =
                                 (out.tangent_space_info.view_position
                                     - out.tangent_space_info.fragment_position)
