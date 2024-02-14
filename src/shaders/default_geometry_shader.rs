@@ -5,7 +5,7 @@ use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
     scene::light::PointLight,
     shader::{
-        geometry::{sample::GeometrySample, GeometryShader, GeometryShaderOptions},
+        geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShader},
         ShaderContext,
     },
     texture::sample::{sample_bilinear, sample_nearest},

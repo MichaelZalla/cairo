@@ -16,7 +16,7 @@ use cairo::{
         Scene,
     },
     shader::{
-        geometry::{GeometryShader, GeometryShaderOptions},
+        geometry::{options::GeometryShaderOptions, GeometryShader},
         ShaderContext,
     },
     shaders::{
