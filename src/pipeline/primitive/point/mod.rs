@@ -1,12 +1,9 @@
 use crate::{
     color::Color, entity::Entity, material::cache::MaterialCache, mesh, pipeline::Pipeline,
-    scene::camera::Camera, shader::geometry::GeometryShader, vec::vec3::Vec3,
+    scene::camera::Camera, vec::vec3::Vec3,
 };
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     pub fn render_point(
         &mut self,
         point_world_space: Vec3,

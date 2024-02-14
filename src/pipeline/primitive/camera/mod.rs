@@ -2,13 +2,9 @@ use crate::{
     color::{self},
     pipeline::Pipeline,
     scene::camera::Camera,
-    shader::geometry::GeometryShader,
 };
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     pub fn render_camera(&mut self, camera: &Camera) {
         let origin = camera.look_vector.get_position();
 

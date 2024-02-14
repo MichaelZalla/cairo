@@ -1,14 +1,10 @@
 use crate::{
     pipeline::{zbuffer, Pipeline},
     scene::camera::Camera,
-    shader::geometry::GeometryShader,
     texture::cubemap::CubeMap,
 };
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
         for (index, z_non_linear) in self.z_buffer.as_mut().unwrap().iter().enumerate() {
             // If this pixel was not shaded by our fragment shader

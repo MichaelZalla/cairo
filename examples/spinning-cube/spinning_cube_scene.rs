@@ -11,11 +11,10 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::geometry::GeometryShader,
     shader::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_geometry_shader::DefaultGeometryShader,
+        // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     vec::{vec3::Vec3, vec4::Vec4},
@@ -39,8 +38,6 @@ impl<'a> SpinningCubeScene<'a> {
         let framebuffer = framebuffer_rwl.read().unwrap();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
         let fragment_shader = DEFAULT_FRAGMENT_SHADER;
 
@@ -112,7 +109,6 @@ impl<'a> SpinningCubeScene<'a> {
         let pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
-            geometry_shader,
             fragment_shader,
             pipeline_options,
         );
@@ -153,9 +149,11 @@ impl<'a> Scene for SpinningCubeScene<'a> {
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        self.pipeline
-            .geometry_shader
-            .update(keyboard_state, mouse_state, game_controller_state);
+        self.pipeline.geometry_shader_options.update(
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+        );
 
         context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
 

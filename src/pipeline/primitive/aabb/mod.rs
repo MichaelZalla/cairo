@@ -5,13 +5,9 @@ use crate::{
         options::{PipelineFaceCullingReject, PipelineFaceCullingStrategy, PipelineOptions},
         Pipeline,
     },
-    shader::geometry::GeometryShader,
 };
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     pub fn render_entity_aabb(&mut self, entity: &Entity, color: Color) {
         let original_options = self.options.clone();
 

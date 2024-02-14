@@ -1,28 +1,16 @@
-use std::sync::RwLock;
-
-use crate::{
-    device::{GameControllerState, KeyboardState, MouseState},
-    vertex::default_vertex_out::DefaultVertexOut,
-};
+use crate::vertex::default_vertex_out::DefaultVertexOut;
 
 use self::{options::GeometryShaderOptions, sample::GeometrySample};
-
-use super::ShaderContext;
 
 pub mod options;
 pub mod sample;
 
-pub trait GeometryShader<'a> {
-    fn new(context: &'a RwLock<ShaderContext>, options: Option<GeometryShaderOptions>) -> Self;
+use std::sync::RwLockReadGuard;
 
-    fn get_options(&self) -> &GeometryShaderOptions;
+use super::ShaderContext;
 
-    fn update(
-        &mut self,
-        keyboard_state: &KeyboardState,
-        _mouse_state: &MouseState,
-        game_controller_state: &GameControllerState,
-    );
-
-    fn call(&self, out: &DefaultVertexOut) -> Option<GeometrySample>;
-}
+pub type GeometryShaderFn = fn(
+    &RwLockReadGuard<ShaderContext>,
+    &GeometryShaderOptions,
+    &DefaultVertexOut,
+) -> Option<GeometrySample>;

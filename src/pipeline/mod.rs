@@ -10,11 +10,15 @@ use crate::{
     matrix::Mat4,
     mesh::Face,
     shader::{
-        alpha::AlphaShaderFn, fragment::FragmentShaderFn, geometry::GeometryShader,
-        vertex::VertexShaderFn, ShaderContext,
+        alpha::AlphaShaderFn,
+        fragment::FragmentShaderFn,
+        geometry::{options::GeometryShaderOptions, GeometryShaderFn},
+        vertex::VertexShaderFn,
+        ShaderContext,
     },
     shaders::{
-        default_alpha_shader::DEFAULT_ALPHA_SHADER, default_geometry_shader::DefaultGeometryShader,
+        default_alpha_shader::DEFAULT_ALPHA_SHADER,
+        default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
     },
     vec::vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
@@ -55,10 +59,7 @@ struct PipelineViewport {
     pub height_over_2: f32,
 }
 
-pub struct Pipeline<'a, G = DefaultGeometryShader<'a>>
-where
-    G: GeometryShader<'a>,
-{
+pub struct Pipeline<'a> {
     pub options: PipelineOptions,
     forward_framebuffer: Option<Buffer2D>,
     deferred_framebuffer: Option<Buffer2D<Vec3>>,
@@ -71,22 +72,24 @@ where
     pub shader_context: &'a RwLock<ShaderContext>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
-    pub geometry_shader: G,
+    pub geometry_shader_options: GeometryShaderOptions,
+    geometry_shader: GeometryShaderFn,
     fragment_shader: FragmentShaderFn,
 }
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     pub fn new(
         shader_context: &'a RwLock<ShaderContext>,
         vertex_shader: VertexShaderFn,
-        geometry_shader: G,
+        // geometry_shader: GeometryShaderFn,
         fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
     ) -> Self {
         let alpha_shader = DEFAULT_ALPHA_SHADER;
+
+        let geometry_shader = DEFAULT_GEOMETRY_SHADER;
+
+        let geometry_shader_options: GeometryShaderOptions = Default::default();
 
         let forward_framebuffer = None;
 
@@ -111,6 +114,7 @@ where
             vertex_shader,
             alpha_shader,
             geometry_shader,
+            geometry_shader_options,
             fragment_shader,
             options,
         };
@@ -144,6 +148,10 @@ where
 
     pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
         self.vertex_shader = shader;
+    }
+
+    pub fn set_geometry_shader(&mut self, shader: GeometryShaderFn) {
+        self.geometry_shader = shader;
     }
 
     pub fn set_fragment_shader(&mut self, shader: FragmentShaderFn) {
@@ -975,9 +983,9 @@ where
             Some(((x, y), non_linear_z)) => {
                 let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.position.w);
 
-                let context = self.shader_context.read().unwrap();
+                let shader_context = self.shader_context.read().unwrap();
 
-                if (self.alpha_shader)(&context, &linear_space_interpolant) == false {
+                if (self.alpha_shader)(&shader_context, &linear_space_interpolant) == false {
                     return;
                 }
 
@@ -992,7 +1000,11 @@ where
                         linear_space_interpolant.depth =
                             ((z - near) / (far - near)).max(0.0).min(1.0);
 
-                        match self.geometry_shader.call(&linear_space_interpolant) {
+                        match (self.geometry_shader)(
+                            &shader_context,
+                            &self.geometry_shader_options,
+                            &linear_space_interpolant,
+                        ) {
                             Some(sample) => {
                                 g_buffer.set(x, y, sample);
                             }

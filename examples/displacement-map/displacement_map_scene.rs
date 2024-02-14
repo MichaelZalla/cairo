@@ -15,13 +15,10 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{
-        geometry::{options::GeometryShaderOptions, GeometryShader},
-        ShaderContext,
-    },
+    shader::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_geometry_shader::DefaultGeometryShader,
+        // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     vec::{vec3::Vec3, vec4::Vec4},
@@ -51,15 +48,6 @@ impl<'a> DisplacementMapScene<'a> {
         let framebuffer = framebuffer_rwl.read().unwrap();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
-
-        let geometry_shader = DefaultGeometryShader::new(
-            shader_context,
-            Some(GeometryShaderOptions {
-                normal_mapping_active: true,
-                displacement_mapping_active: true,
-                ..Default::default()
-            }),
-        );
 
         let fragment_shader = DEFAULT_FRAGMENT_SHADER;
 
@@ -123,13 +111,15 @@ impl<'a> DisplacementMapScene<'a> {
 
         let pipeline_options: PipelineOptions = Default::default();
 
-        let pipeline = Pipeline::new(
+        let mut pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
-            geometry_shader,
             fragment_shader,
             pipeline_options,
         );
+
+        pipeline.geometry_shader_options.normal_mapping_active = true;
+        pipeline.geometry_shader_options.displacement_mapping_active = true;
 
         return DisplacementMapScene {
             framebuffer_rwl,
@@ -178,7 +168,7 @@ impl<'a> Scene for DisplacementMapScene<'a> {
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        self.pipeline.geometry_shader.options.update(
+        self.pipeline.geometry_shader_options.update(
             keyboard_state,
             mouse_state,
             game_controller_state,

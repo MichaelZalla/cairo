@@ -17,7 +17,7 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{fragment::FragmentShaderFn, geometry::GeometryShader, ShaderContext},
+    shader::{fragment::FragmentShaderFn, ShaderContext},
     shaders::{
         debug_shaders::{
             albedo_fragment_shader::AlbedoFragmentShader,
@@ -30,7 +30,7 @@ use cairo::{
             uv_test_fragment_shader::UvTestFragmentShader,
         },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_geometry_shader::DefaultGeometryShader,
+        // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     time::TimingInfo,
@@ -69,8 +69,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let framebuffer = framebuffer_rwl.read().unwrap();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
-
-        let geometry_shader = DefaultGeometryShader::new(shader_context, None);
 
         let fragment_shaders = vec![
             DEFAULT_FRAGMENT_SHADER,
@@ -204,7 +202,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
         let pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
-            geometry_shader,
             fragment_shaders[active_fragment_shader_index],
             pipeline_options,
         );
@@ -298,9 +295,11 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        self.pipeline
-            .geometry_shader
-            .update(keyboard_state, mouse_state, game_controller_state);
+        self.pipeline.geometry_shader_options.update(
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+        );
 
         context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
 

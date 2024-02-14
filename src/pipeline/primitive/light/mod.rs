@@ -8,14 +8,10 @@ use crate::{
         camera::Camera,
         light::{PointLight, SpotLight},
     },
-    shader::geometry::GeometryShader,
     vec::vec3::Vec3,
 };
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     fn render_light(
         &mut self,
         light_position: Vec3,

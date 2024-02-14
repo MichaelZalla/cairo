@@ -2,14 +2,10 @@ use crate::{
     color::{self, Color},
     graphics::Graphics,
     pipeline::Pipeline,
-    shader::geometry::GeometryShader,
     vec::vec3::Vec3,
 };
 
-impl<'a, G> Pipeline<'a, G>
-where
-    G: GeometryShader<'a>,
-{
+impl<'a> Pipeline<'a> {
     pub fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
         let shader_context = self.shader_context.read().unwrap();
 

@@ -12,12 +12,11 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::geometry::GeometryShader,
     shader::ShaderContext,
     shaders::{
         // debug_shaders::emissive_fragment_shader::EmissiveFragmentShader,
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_geometry_shader::DefaultGeometryShader,
+        // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     vec::{vec3::Vec3, vec4::Vec4},
@@ -46,10 +45,6 @@ impl<'a> EmissiveMapScene<'a> {
         let framebuffer = framebuffer_rwl.read().unwrap();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
-
-        let mut geometry_shader = DefaultGeometryShader::new(shader_context, None);
-
-        geometry_shader.options.emissive_mapping_active = true;
 
         let fragment_shader = DEFAULT_FRAGMENT_SHADER;
         // let fragment_shader = EmissiveFragmentShader::new(shader_context);
@@ -114,13 +109,14 @@ impl<'a> EmissiveMapScene<'a> {
         context.set_point_light(0, point_light);
         // context.set_spot_light(0, spot_light);
 
-        let pipeline = Pipeline::new(
+        let mut pipeline = Pipeline::new(
             shader_context,
             vertex_shader,
-            geometry_shader,
             fragment_shader,
             pipeline_options,
         );
+
+        pipeline.geometry_shader_options.emissive_mapping_active = true;
 
         return EmissiveMapScene {
             framebuffer_rwl,
@@ -172,9 +168,11 @@ impl<'a> Scene for EmissiveMapScene<'a> {
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        self.pipeline
-            .geometry_shader
-            .update(keyboard_state, mouse_state, game_controller_state);
+        self.pipeline.geometry_shader_options.update(
+            keyboard_state,
+            mouse_state,
+            game_controller_state,
+        );
 
         context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
 
