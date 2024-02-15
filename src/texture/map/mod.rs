@@ -30,10 +30,11 @@ impl TextureMapStorageFormat {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Default, Debug, Clone)]
 pub struct TextureMapInfo {
     pub filepath: String,
     pub storage_format: TextureMapStorageFormat,
+    pub target_channel: usize,
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -43,12 +44,12 @@ pub enum TextureMapWrapping {
     ClampToEdge,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Default, Debug, Clone)]
 pub struct TextureMapOptions {
     pub wrapping: TextureMapWrapping,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Default, Debug, Clone)]
 pub struct TextureMap {
     pub info: TextureMapInfo,
     pub is_loaded: bool,
@@ -65,6 +66,7 @@ impl TextureMap {
             info: TextureMapInfo {
                 filepath: filepath.to_string(),
                 storage_format,
+                target_channel: 0,
             },
             is_loaded: false,
             is_mipmapped: false,
@@ -93,6 +95,7 @@ impl TextureMap {
                         height
                     )
                 },
+                target_channel: 0,
             },
             is_loaded: true,
             is_mipmapped: false,
@@ -101,6 +104,14 @@ impl TextureMap {
             levels: vec![buffer.clone()],
             options: Default::default(),
         };
+    }
+
+    pub fn from_alpha_channel(filepath: &str) -> Self {
+        let mut map = Self::new(filepath, TextureMapStorageFormat::Index8);
+
+        map.info.target_channel = PixelFormatEnum::RGBA32.byte_size_per_pixel() - 1;
+
+        map
     }
 
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
@@ -150,7 +161,7 @@ impl TextureMap {
                         PixelFormatEnum::RGB24
                     }
                     // Err: "Indexed pixel formats not supported"
-                    TextureMapStorageFormat::Index8 => PixelFormatEnum::RGB24,
+                    TextureMapStorageFormat::Index8 => PixelFormatEnum::RGBA32,
                 };
 
                 let bytes_per_src_pixel = sdl_read_pixel_format.byte_size_per_pixel();
@@ -182,8 +193,12 @@ impl TextureMap {
                     TextureMapStorageFormat::Index8 => {
                         original_size_bytes.resize(pixels_bytes / bytes_per_src_pixel, 0);
 
+                        if self.info.target_channel >= bytes_per_src_pixel {
+                            panic!("Invalid channel offset ({}) for texture map with Index8 storage format!", self.info.target_channel);
+                        }
+
                         for i in 0..pixels_bytes / bytes_per_src_pixel {
-                            original_size_bytes[i] = pixels[i * bytes_per_src_pixel];
+                            original_size_bytes[i] = pixels[i * bytes_per_src_pixel + self.info.target_channel];
                         }
                     }
                 }
