@@ -11,7 +11,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::map::TextureMap,
+    texture::map::{TextureMap, TextureMapStorageFormat},
 };
 
 mod specular_map_scene;
@@ -48,7 +48,10 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_material = Material::new("checkerboard".to_string());
 
-    let mut checkerboard_diffuse_map = TextureMap::new(&"./assets/textures/checkerboard.jpg");
+    let mut checkerboard_diffuse_map = TextureMap::new(
+        &"./assets/textures/checkerboard.jpg",
+        TextureMapStorageFormat::Index8,
+    );
 
     checkerboard_diffuse_map.load(rendering_context)?;
 
@@ -62,10 +65,15 @@ fn main() -> Result<(), String> {
 
     let mut container_material = Material::new("container".to_string());
 
-    let container_diffuse_map = TextureMap::new(&"./examples/specular-map/assets/container2.png");
+    let container_diffuse_map = TextureMap::new(
+        &"./examples/specular-map/assets/container2.png",
+        TextureMapStorageFormat::RGB24,
+    );
 
-    let container_specular_map =
-        TextureMap::new(&"./examples/specular-map/assets/container2_specular.png");
+    let container_specular_map = TextureMap::new(
+        &"./examples/specular-map/assets/container2_specular.png",
+        TextureMapStorageFormat::Index8,
+    );
 
     container_material.diffuse_map = Some(container_diffuse_map);
 

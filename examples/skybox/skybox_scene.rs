@@ -19,7 +19,7 @@ use cairo::{
         // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::cubemap::CubeMap,
+    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -129,14 +129,17 @@ impl<'a> SkyboxScene<'a> {
 
         // Option 1. Skybox as a set of 6 separate textures.
 
-        let mut skybox = CubeMap::new([
-            "examples/skybox/assets/front.jpg",
-            "examples/skybox/assets/back.jpg",
-            "examples/skybox/assets/top.jpg",
-            "examples/skybox/assets/bottom.jpg",
-            "examples/skybox/assets/left.jpg",
-            "examples/skybox/assets/right.jpg",
-        ]);
+        let mut skybox = CubeMap::new(
+            [
+                "examples/skybox/assets/front.jpg",
+                "examples/skybox/assets/back.jpg",
+                "examples/skybox/assets/top.jpg",
+                "examples/skybox/assets/bottom.jpg",
+                "examples/skybox/assets/left.jpg",
+                "examples/skybox/assets/right.jpg",
+            ],
+            TextureMapStorageFormat::RGB24,
+        );
 
         // Option 2. Skybox as one horizontal cross texture.
 

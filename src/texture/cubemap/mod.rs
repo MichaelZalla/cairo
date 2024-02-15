@@ -8,7 +8,7 @@ use crate::{
     vec::{vec2::Vec2, vec4::Vec4},
 };
 
-use super::map::TextureMap;
+use super::map::{TextureMap, TextureMapStorageFormat};
 
 static SIDES: usize = 6;
 
@@ -43,30 +43,30 @@ pub struct CubeMap {
 }
 
 impl CubeMap {
-    pub fn new(texture_paths: [&str; 6]) -> Self {
+    pub fn new(texture_paths: [&str; 6], storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: false,
             sides: [
-                TextureMap::new(texture_paths[Side::FRONT as usize]),
-                TextureMap::new(texture_paths[Side::BACK as usize]),
-                TextureMap::new(texture_paths[Side::TOP as usize]),
-                TextureMap::new(texture_paths[Side::BOTTOM as usize]),
-                TextureMap::new(texture_paths[Side::LEFT as usize]),
-                TextureMap::new(texture_paths[Side::RIGHT as usize]),
+                TextureMap::new(texture_paths[Side::FRONT as usize], storage_format),
+                TextureMap::new(texture_paths[Side::BACK as usize], storage_format),
+                TextureMap::new(texture_paths[Side::TOP as usize], storage_format),
+                TextureMap::new(texture_paths[Side::BOTTOM as usize], storage_format),
+                TextureMap::new(texture_paths[Side::LEFT as usize], storage_format),
+                TextureMap::new(texture_paths[Side::RIGHT as usize], storage_format),
             ],
         }
     }
 
-    pub fn from_cross(texture_path: &str) -> Self {
+    pub fn from_cross(texture_path: &str, storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: true,
             sides: [
-                TextureMap::new(texture_path),
-                TextureMap::new(texture_path),
-                TextureMap::new(texture_path),
-                TextureMap::new(texture_path),
-                TextureMap::new(texture_path),
-                TextureMap::new(texture_path),
+                TextureMap::new(texture_path, storage_format),
+                TextureMap::new(texture_path, storage_format),
+                TextureMap::new(texture_path, storage_format),
+                TextureMap::new(texture_path, storage_format),
+                TextureMap::new(texture_path, storage_format),
+                TextureMap::new(texture_path, storage_format),
             ],
         }
     }
@@ -75,7 +75,10 @@ impl CubeMap {
         if self.is_cross {
             // Read in the horizontal or vertical cross texture
 
-            let mut map = TextureMap::new(&self.sides[0].info.filepath);
+            let mut map = TextureMap::new(
+                &self.sides[0].info.filepath,
+                self.sides[0].info.storage_format,
+            );
 
             map.load(rendering_context).unwrap();
 
@@ -134,7 +137,9 @@ impl CubeMap {
 
                 let mut bytes: Vec<u8> = vec![];
 
-                let new_len = dimension as usize * dimension as usize * TextureMap::BYTES_PER_PIXEL;
+                let bytes_per_pixel = side_map.get_bytes_per_pixel();
+
+                let new_len = dimension as usize * dimension as usize * bytes_per_pixel;
 
                 bytes.resize(new_len, 0);
 
@@ -144,8 +149,8 @@ impl CubeMap {
                     for global_x in block_pixel_coordinate.0..(block_pixel_coordinate.0 + dimension)
                     {
                         let global_pixel_index = ((global_y * map.width) as usize
-                            * TextureMap::BYTES_PER_PIXEL)
-                            + global_x as usize * TextureMap::BYTES_PER_PIXEL;
+                            * bytes_per_pixel)
+                            + global_x as usize * bytes_per_pixel;
 
                         let mut local_x = global_x - block_pixel_coordinate.0;
                         let mut local_y = global_y - block_pixel_coordinate.1;
@@ -156,13 +161,20 @@ impl CubeMap {
                             local_y = dimension - local_y - 1;
                         }
 
-                        let local_pixel_index = ((local_y * dimension) as usize
-                            * TextureMap::BYTES_PER_PIXEL)
-                            + local_x as usize * TextureMap::BYTES_PER_PIXEL;
+                        let local_pixel_index = ((local_y * dimension) as usize * bytes_per_pixel)
+                            + local_x as usize * bytes_per_pixel;
 
                         bytes[local_pixel_index] = cross_buffer.data[global_pixel_index];
-                        bytes[local_pixel_index + 1] = cross_buffer.data[global_pixel_index + 1];
-                        bytes[local_pixel_index + 2] = cross_buffer.data[global_pixel_index + 2];
+
+                        match side_map.info.storage_format {
+                            TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
+                                bytes[local_pixel_index + 1] =
+                                    cross_buffer.data[global_pixel_index + 1];
+                                bytes[local_pixel_index + 2] =
+                                    cross_buffer.data[global_pixel_index + 2];
+                            }
+                            TextureMapStorageFormat::Index8 => (),
+                        }
                     }
                 }
 

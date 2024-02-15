@@ -32,7 +32,7 @@ use cairo::{
         // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::cubemap::CubeMap,
+    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -136,7 +136,10 @@ impl<'a> SponzaScene<'a> {
         spot_light.linear_attenuation = 0.007;
         spot_light.quadratic_attenuation = 0.0002;
 
-        let mut skybox = CubeMap::from_cross("examples/skybox/assets/grass_sky.jpg");
+        let mut skybox = CubeMap::from_cross(
+            "examples/skybox/assets/grass_sky.jpg",
+            TextureMapStorageFormat::RGB24,
+        );
 
         skybox.load(rendering_context).unwrap();
 

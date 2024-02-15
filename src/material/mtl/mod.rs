@@ -1,5 +1,6 @@
 use std::{path::Path, str::SplitWhitespace};
 
+use crate::texture::map::TextureMapStorageFormat;
 use crate::{fs::read_lines, mesh::MaterialSource, texture::map::TextureMap, vec::vec3::Vec3};
 
 use super::cache::MaterialCache;
@@ -193,8 +194,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .ambient_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .ambient_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
                             }
 
                             // Diffuse texture map (typically identical to map_Ka)
@@ -209,8 +212,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .diffuse_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .diffuse_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
                             }
 
                             // Specular color map
@@ -225,8 +230,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .specular_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .specular_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
                             }
 
                             // Emissive color map
@@ -241,8 +248,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .emissive_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .emissive_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
                             }
 
                             // Alpha map
@@ -253,8 +262,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .alpha_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .alpha_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8,
+                                ));
                             }
 
                             // Bump map
@@ -274,8 +285,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .normal_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .normal_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
                             }
 
                             // Displacement (height) map
@@ -290,8 +303,10 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .displacement_map =
-                                    Some(TextureMap::new(&mtl_relative_filepath.as_str()));
+                                    .displacement_map = Some(TextureMap::new(
+                                    &mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8,
+                                ));
                             }
 
                             // Stencil (decal) map

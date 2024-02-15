@@ -16,7 +16,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
-    texture::map::TextureMap,
+    texture::map::{TextureMap, TextureMapStorageFormat},
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
@@ -92,7 +92,10 @@ fn main() -> Result<(), String> {
 
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
-    let mut wojak_texture = TextureMap::new("./examples/ui-panels/assets/wojak.png");
+    let mut wojak_texture = TextureMap::new(
+        "./examples/ui-panels/assets/wojak.png",
+        TextureMapStorageFormat::Index8,
+    );
 
     wojak_texture.load(rendering_context).unwrap();
 

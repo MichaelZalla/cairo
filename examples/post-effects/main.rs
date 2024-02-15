@@ -17,7 +17,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::map::TextureMap,
+    texture::map::{TextureMap, TextureMapStorageFormat},
 };
 
 mod post_effects_scene;
@@ -53,7 +53,10 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_material = Material::new("checkerboard".to_string());
 
-    let mut checkerboard_diffuse_map = TextureMap::new(&"./assets/textures/checkerboard.jpg");
+    let mut checkerboard_diffuse_map = TextureMap::new(
+        &"./assets/textures/checkerboard.jpg",
+        TextureMapStorageFormat::Index8,
+    );
 
     checkerboard_diffuse_map.load(rendering_context)?;
 
@@ -67,9 +70,15 @@ fn main() -> Result<(), String> {
 
     let mut lava_material = Material::new("container".to_string());
 
-    let lava_diffuse_map = TextureMap::new(&"./examples/emissive-map/assets/lava.png");
+    let lava_diffuse_map = TextureMap::new(
+        &"./examples/emissive-map/assets/lava.png",
+        TextureMapStorageFormat::RGB24,
+    );
 
-    let lava_emissive_map = TextureMap::new(&"./examples/emissive-map/assets/lava_emissive.png");
+    let lava_emissive_map = TextureMap::new(
+        &"./examples/emissive-map/assets/lava_emissive.png",
+        TextureMapStorageFormat::Index8,
+    );
 
     lava_material.diffuse_map = Some(lava_diffuse_map);
 

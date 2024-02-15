@@ -11,7 +11,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::map::TextureMap,
+    texture::map::{TextureMap, TextureMapStorageFormat},
     vec::vec3::Vec3,
 };
 
@@ -71,12 +71,15 @@ fn main() -> Result<(), String> {
 
     brick_material.diffuse_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/bricks2.jpg",
+        TextureMapStorageFormat::RGB24,
     ));
     brick_material.normal_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/bricks2_normal.jpg",
+        TextureMapStorageFormat::RGB24,
     ));
     brick_material.displacement_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/bricks2_disp.jpg",
+        TextureMapStorageFormat::Index8,
     ));
 
     brick_material.load_all_maps(rendering_context)?;
@@ -87,12 +90,15 @@ fn main() -> Result<(), String> {
 
     box_material.diffuse_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/wood.png",
+        TextureMapStorageFormat::RGB24,
     ));
     box_material.normal_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/toy_box_normal.png",
+        TextureMapStorageFormat::RGB24,
     ));
     box_material.displacement_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/toy_box_disp.png",
+        TextureMapStorageFormat::Index8,
     ));
 
     box_material.load_all_maps(rendering_context)?;

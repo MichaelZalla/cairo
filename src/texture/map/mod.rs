@@ -12,9 +12,18 @@ use super::get_half_scaled;
 
 pub type TextureBuffer = Buffer2D<u8>;
 
+#[derive(Default, Debug, Copy, Clone)]
+pub enum TextureMapStorageFormat {
+    #[default]
+    RGBA32,
+    RGB24,
+    Index8,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct TextureMapInfo {
     pub filepath: String,
+    pub storage_format: TextureMapStorageFormat,
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -41,12 +50,11 @@ pub struct TextureMap {
 }
 
 impl TextureMap {
-    pub const BYTES_PER_PIXEL: usize = 3;
-
-    pub fn new(filepath: &str) -> Self {
+    pub fn new(filepath: &str, storage_format: TextureMapStorageFormat) -> Self {
         Self {
             info: TextureMapInfo {
                 filepath: filepath.to_string(),
+                storage_format,
             },
             is_loaded: false,
             is_mipmapped: false,
@@ -58,9 +66,23 @@ impl TextureMap {
     }
 
     pub fn from_buffer(width: u32, height: u32, buffer: &Buffer2D<u8>) -> Self {
-        Self {
+        let bytes_per_pixel = buffer.data.len() as u32 / width / height;
+
+        return Self {
             info: TextureMapInfo {
                 filepath: "Buffer".to_string(),
+                storage_format: if bytes_per_pixel == 4 {
+                    TextureMapStorageFormat::RGBA32
+                } else if bytes_per_pixel == 3 {
+                    TextureMapStorageFormat::RGB24
+                } else {
+                    panic!(
+                        "Invalid buffer data length {} for buffer size {}x{}!",
+                        buffer.data.len(),
+                        width,
+                        height
+                    )
+                },
             },
             is_loaded: true,
             is_mipmapped: false,
@@ -68,7 +90,7 @@ impl TextureMap {
             height,
             levels: vec![buffer.clone()],
             options: Default::default(),
-        }
+        };
     }
 
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
@@ -102,15 +124,37 @@ impl TextureMap {
             .with_texture_canvas(&mut target_texture, |texture_canvas| {
                 texture_canvas.copy(&static_texture, None, None).unwrap();
 
+                let sdl_read_pixel_format = match self.info.storage_format {
+                    TextureMapStorageFormat::RGBA32 => PixelFormatEnum::RGBA32,
+                    TextureMapStorageFormat::RGB24 => PixelFormatEnum::RGB24,
+                    // Err: "Indexed pixel formats not supported"
+                    TextureMapStorageFormat::Index8 => PixelFormatEnum::RGB24,
+                };
+
                 let pixels = texture_canvas
-                    .read_pixels(None, PixelFormatEnum::RGB24)
+                    .read_pixels(None, sdl_read_pixel_format)
                     .unwrap();
+
+                let pixels_bytes = pixels.len();
 
                 let mut original_size_bytes: Vec<u8> = vec![];
 
-                original_size_bytes.resize(pixels.len(), 0);
+                match self.info.storage_format {
+                    TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
+                        original_size_bytes.resize(pixels_bytes, 0);
 
-                original_size_bytes.copy_from_slice(pixels.as_slice());
+                        original_size_bytes.copy_from_slice(pixels.as_slice());
+                    }
+                    TextureMapStorageFormat::Index8 => {
+                        original_size_bytes.resize(pixels_bytes / 3, 0);
+
+                        let bytes_per_src_pixel = 3;
+
+                        for i in 0..pixels_bytes / bytes_per_src_pixel {
+                            original_size_bytes[i] = pixels[i * bytes_per_src_pixel];
+                        }
+                    }
+                }
 
                 let buffer = Buffer2D::from_data(self.width, self.height, original_size_bytes);
 
@@ -125,6 +169,14 @@ impl TextureMap {
         }
 
         Ok(())
+    }
+
+    pub fn get_bytes_per_pixel(&self) -> usize {
+        match self.info.storage_format {
+            TextureMapStorageFormat::RGBA32 => 4,
+            TextureMapStorageFormat::RGB24 => 3,
+            TextureMapStorageFormat::Index8 => 1,
+        }
     }
 
     pub fn enable_mipmapping(&mut self) -> Result<(), String> {
@@ -159,7 +211,7 @@ impl TextureMap {
         for level_index in 1..levels as usize {
             let dimension = self.width as u32 / (2 as u32).pow(level_index as u32);
 
-            let bytes = get_half_scaled(dimension, &self.levels.last().unwrap().data);
+            let bytes = get_half_scaled(dimension, &self.levels.last().unwrap());
 
             self.levels
                 .push(Buffer2D::from_data(dimension, dimension, bytes));
@@ -176,18 +228,37 @@ impl TextureMap {
             return Err("Called TextureMap::map() on an unloaded texture!".to_string());
         }
 
+        let bytes_per_pixel = self.get_bytes_per_pixel();
+
         let original_size_buffer = &mut self.levels[0];
 
         for i in 0..(self.width * self.height) as usize {
-            let r = original_size_buffer.data[i * 3];
-            let g = original_size_buffer.data[i * 3 + 1];
-            let b = original_size_buffer.data[i * 3 + 2];
+            let r = original_size_buffer.data[i * bytes_per_pixel];
+            let g;
+            let b;
+
+            match self.info.storage_format {
+                TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
+                    g = original_size_buffer.data[i * bytes_per_pixel + 1];
+                    b = original_size_buffer.data[i * bytes_per_pixel + 2];
+                }
+                TextureMapStorageFormat::Index8 => {
+                    g = r;
+                    b = r;
+                }
+            }
 
             let (r_new, g_new, b_new) = callback(r, g, b);
 
-            original_size_buffer.data[i * 3] = r_new;
-            original_size_buffer.data[i * 3 + 1] = g_new;
-            original_size_buffer.data[i * 3 + 2] = b_new;
+            original_size_buffer.data[i * bytes_per_pixel] = r_new;
+
+            match self.info.storage_format {
+                TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
+                    original_size_buffer.data[i * bytes_per_pixel + 1] = g_new;
+                    original_size_buffer.data[i * bytes_per_pixel + 2] = b_new;
+                }
+                TextureMapStorageFormat::Index8 => (),
+            }
         }
 
         Ok(())

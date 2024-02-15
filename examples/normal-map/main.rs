@@ -11,7 +11,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::map::TextureMap,
+    texture::map::{TextureMap, TextureMapStorageFormat},
 };
 
 mod normal_map_scene;
@@ -69,14 +69,20 @@ fn main() -> Result<(), String> {
 
     brick_material.specular_exponent = 32;
 
-    let brick_diffuse_map =
-        TextureMap::new(&"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga");
+    let brick_diffuse_map = TextureMap::new(
+        &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
+        TextureMapStorageFormat::RGB24,
+    );
 
-    let brick_specular_map =
-        TextureMap::new(&"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga");
+    let brick_specular_map = TextureMap::new(
+        &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
+        TextureMapStorageFormat::Index8,
+    );
 
-    let brick_normal_map =
-        TextureMap::new(&"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga");
+    let brick_normal_map = TextureMap::new(
+        &"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
+        TextureMapStorageFormat::RGB24,
+    );
 
     brick_material.diffuse_map = Some(brick_diffuse_map);
     brick_material.specular_map = Some(brick_specular_map);

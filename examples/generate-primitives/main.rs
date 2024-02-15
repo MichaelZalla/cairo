@@ -13,7 +13,7 @@ use cairo::{
     mesh,
     scene::Scene,
     shader::ShaderContext,
-    texture::{map::TextureMap, map::TextureMapWrapping},
+    texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
 };
 use sdl2::keyboard::Keycode;
 
@@ -89,7 +89,10 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_mat = Material::new("checkerboard".to_string());
 
-    let mut checkerboard_diffuse_map = TextureMap::new(&"./assets/textures/checkerboard.jpg");
+    let mut checkerboard_diffuse_map = TextureMap::new(
+        &"./assets/textures/checkerboard.jpg",
+        TextureMapStorageFormat::Index8,
+    );
 
     // Checkerboard material
 
@@ -118,8 +121,10 @@ fn main() -> Result<(), String> {
 
     let mut point_light_decal_mat = Material::new("point_light_decal".to_string());
 
-    point_light_decal_mat.alpha_map =
-        Some(TextureMap::new(&"./assets/decals/point_light_small.png"));
+    point_light_decal_mat.alpha_map = Some(TextureMap::new(
+        &"./assets/decals/point_light_small.png",
+        TextureMapStorageFormat::Index8,
+    ));
 
     point_light_decal_mat.emissive_map = point_light_decal_mat.alpha_map.clone();
 
@@ -129,7 +134,10 @@ fn main() -> Result<(), String> {
 
     let mut spot_light_decal_mat = Material::new("spot_light_decal".to_string());
 
-    spot_light_decal_mat.alpha_map = Some(TextureMap::new(&"./assets/decals/spot_light_small.png"));
+    spot_light_decal_mat.alpha_map = Some(TextureMap::new(
+        &"./assets/decals/spot_light_small.png",
+        TextureMapStorageFormat::Index8,
+    ));
 
     spot_light_decal_mat.emissive_map = spot_light_decal_mat.alpha_map.clone();
 

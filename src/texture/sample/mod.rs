@@ -1,7 +1,7 @@
 use std::ops::Rem;
 
 use crate::{
-    texture::map::TextureMapWrapping,
+    texture::map::{TextureMapStorageFormat, TextureMapWrapping},
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
@@ -37,11 +37,13 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 
     debug_assert!(
         map.levels[0].data.len()
-            == (map.width * map.height * TextureMap::BYTES_PER_PIXEL as u32) as usize,
-        "levels.len = {}, map.width={}, map.height={}",
-        map.levels.len(),
+            == (map.width * map.height * map.get_bytes_per_pixel() as u32) as usize,
+        "filepath={}, levels[0].data.len() = {}, map.width={}, map.height={}, map.bytes_per_pixel={}",
+        map.info.filepath,
+        map.levels[0].data.len(),
         map.width,
-        map.height
+        map.height,
+        map.get_bytes_per_pixel(),
     );
 
     // Determine our map dimensions, based on the level index.
@@ -273,7 +275,7 @@ fn sample_from_texel(
     };
 
     let texel_color_index =
-        TextureMap::BYTES_PER_PIXEL * (texel.1 as u32 * level_width + texel.0 as u32) as usize;
+        map.get_bytes_per_pixel() * (texel.1 as u32 * level_width + texel.0 as u32) as usize;
 
     let buffer = match level_index {
         Some(index) => {
@@ -287,11 +289,22 @@ fn sample_from_texel(
 
     debug_assert!(texel_color_index < buffer.data.len());
 
-    return (
-        buffer.data[texel_color_index],
-        buffer.data[texel_color_index + 1],
-        buffer.data[texel_color_index + 2],
-    );
+    let r = buffer.data[texel_color_index];
+    let g;
+    let b;
+
+    match map.info.storage_format {
+        TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
+            g = buffer.data[texel_color_index + 1];
+            b = buffer.data[texel_color_index + 2];
+        }
+        TextureMapStorageFormat::Index8 => {
+            g = r;
+            b = r;
+        }
+    }
+
+    (r, g, b)
 }
 
 pub fn get_neighbors(
