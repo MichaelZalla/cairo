@@ -20,6 +20,16 @@ pub enum TextureMapStorageFormat {
     Index8,
 }
 
+impl TextureMapStorageFormat {
+    pub fn get_bytes_per_pixel(&self) -> usize {
+        match self {
+            TextureMapStorageFormat::RGBA32 => 4,
+            TextureMapStorageFormat::RGB24 => 3,
+            TextureMapStorageFormat::Index8 => 1,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct TextureMapInfo {
     pub filepath: String,
@@ -125,17 +135,41 @@ impl TextureMap {
                 texture_canvas.copy(&static_texture, None, None).unwrap();
 
                 let sdl_read_pixel_format = match self.info.storage_format {
-                    TextureMapStorageFormat::RGBA32 => PixelFormatEnum::RGBA32,
-                    TextureMapStorageFormat::RGB24 => PixelFormatEnum::RGB24,
+                    TextureMapStorageFormat::RGBA32 => {
+                        debug_assert!(
+                            TextureMapStorageFormat::RGBA32.get_bytes_per_pixel()
+                                == PixelFormatEnum::RGBA32.byte_size_per_pixel()
+                        );
+                        PixelFormatEnum::RGBA32
+                    }
+                    TextureMapStorageFormat::RGB24 => {
+                        debug_assert!(
+                            TextureMapStorageFormat::RGB24.get_bytes_per_pixel()
+                                == PixelFormatEnum::RGB24.byte_size_per_pixel()
+                        );
+                        PixelFormatEnum::RGB24
+                    }
                     // Err: "Indexed pixel formats not supported"
                     TextureMapStorageFormat::Index8 => PixelFormatEnum::RGB24,
                 };
+
+                let bytes_per_src_pixel = sdl_read_pixel_format.byte_size_per_pixel();
+                let bytes_per_dest_pixel = self.info.storage_format.get_bytes_per_pixel();
 
                 let pixels = texture_canvas
                     .read_pixels(None, sdl_read_pixel_format)
                     .unwrap();
 
                 let pixels_bytes = pixels.len();
+
+                debug_assert!(
+                    pixels_bytes as u32 == self.width * self.height * bytes_per_src_pixel as u32,
+                    "Invalid `pixels` length {} for width {}, height {}, and bpp {}!",
+                    pixels_bytes,
+                    self.width,
+                    self.height,
+                    bytes_per_src_pixel
+                );
 
                 let mut original_size_bytes: Vec<u8> = vec![];
 
@@ -146,9 +180,7 @@ impl TextureMap {
                         original_size_bytes.copy_from_slice(pixels.as_slice());
                     }
                     TextureMapStorageFormat::Index8 => {
-                        original_size_bytes.resize(pixels_bytes / 3, 0);
-
-                        let bytes_per_src_pixel = 3;
+                        original_size_bytes.resize(pixels_bytes / bytes_per_src_pixel, 0);
 
                         for i in 0..pixels_bytes / bytes_per_src_pixel {
                             original_size_bytes[i] = pixels[i * bytes_per_src_pixel];
@@ -157,6 +189,16 @@ impl TextureMap {
                 }
 
                 let buffer = Buffer2D::from_data(self.width, self.height, original_size_bytes);
+
+                debug_assert!(
+                    buffer.data.len()
+                        == (buffer.width * buffer.height) as usize * bytes_per_dest_pixel,
+                    "Invalid buffer data length {} for width {}, height {}, and bpp {}!",
+                    buffer.data.len(),
+                    buffer.width,
+                    buffer.height,
+                    bytes_per_dest_pixel
+                );
 
                 self.levels.push(buffer);
             })
@@ -172,11 +214,7 @@ impl TextureMap {
     }
 
     pub fn get_bytes_per_pixel(&self) -> usize {
-        match self.info.storage_format {
-            TextureMapStorageFormat::RGBA32 => 4,
-            TextureMapStorageFormat::RGB24 => 3,
-            TextureMapStorageFormat::Index8 => 1,
-        }
+        self.info.storage_format.get_bytes_per_pixel()
     }
 
     pub fn enable_mipmapping(&mut self) -> Result<(), String> {
