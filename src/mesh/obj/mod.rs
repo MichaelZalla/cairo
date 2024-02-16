@@ -49,6 +49,7 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
     let mut vertex_counter: usize = 0;
     let mut uv_counter: usize = 0;
     let mut normal_counter: usize = 0;
+    let mut face_counter: usize = 0;
     let mut object_counter: usize = 0;
     let mut group_counter: usize = 0;
 
@@ -380,6 +381,8 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
                             }
                             // Named object polygon group
                             "g" => {
+                                face_counter += object_faces.len();
+
                                 object_faces = vec![];
 
                                 let name = line_tokens.next().unwrap();
@@ -411,8 +414,8 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
     );
 
     println!(
-        "Counted {} objects, {} groups, {} vertices, {} UVs, {} normals.",
-        object_counter, group_counter, vertex_counter, uv_counter, normal_counter
+        "Counted {} objects, {} groups, {} vertices, {} faces, {} UVs, {} normals.",
+        object_counter, group_counter, vertex_counter, face_counter, uv_counter, normal_counter
     );
 
     println!();
