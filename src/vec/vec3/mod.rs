@@ -11,7 +11,7 @@ pub struct Vec3 {
 
 impl fmt::Display for Vec3 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(v, "({}, {}, {})", self.x, self.y, self.z)
+        write!(v, "({:.*}, {:.*}, {:.*})", 2, self.x, 2, self.y, 2, self.z)
     }
 }
 
