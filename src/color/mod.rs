@@ -12,6 +12,8 @@ pub struct Color {
     pub a: f32,
 }
 
+pub static TRANSPARENT: Color = Color::rgba(0, 0, 0, 0);
+
 pub static BLACK: Color = Color::rgb(0, 0, 0);
 pub static WHITE: Color = Color::rgb(255, 255, 255);
 pub static RED: Color = Color::rgb(255, 0, 0);
