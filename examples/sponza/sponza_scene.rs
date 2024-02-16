@@ -13,7 +13,7 @@ use cairo::{
     font::{cache::FontCache, FontInfo},
     graphics::Graphics,
     material::cache::MaterialCache,
-    pipeline::{options::PipelineOptions, Pipeline},
+    pipeline::{options::PipelineOptions, zbuffer::DepthTestMethod, Pipeline},
     scene::{
         camera::Camera,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
@@ -220,6 +220,33 @@ impl<'a> Scene for SponzaScene<'a> {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
+                Keycode::I { .. } => {
+                    let methods = vec![
+                        DepthTestMethod::Always,
+                        DepthTestMethod::Never,
+                        DepthTestMethod::Less,
+                        DepthTestMethod::Equal,
+                        DepthTestMethod::LessThanOrEqual,
+                        DepthTestMethod::Greater,
+                        DepthTestMethod::NotEqual,
+                        DepthTestMethod::GreaterThanOrEqual,
+                    ];
+
+                    let mut index = methods
+                        .iter()
+                        .position(|&method| {
+                            method == *(self.pipeline.get_depth_test_method().unwrap())
+                        })
+                        .unwrap();
+
+                    index = if index == (methods.len() - 1) {
+                        0
+                    } else {
+                        index + 1
+                    };
+
+                    self.pipeline.set_depth_test_method(methods[index])
+                }
                 Keycode::H { .. } => {
                     self.active_fragment_shader_index += 1;
 
@@ -335,6 +362,14 @@ impl<'a> Scene for SponzaScene<'a> {
                 "Culling window order: {:?}",
                 self.pipeline.options.face_culling_strategy.window_order
             ));
+
+            match self.pipeline.get_depth_test_method() {
+                Some(method) => {
+                    self.debug_message_buffer
+                        .write(format!("Depth test method: {:?}", method));
+                }
+                None => (),
+            }
 
             self.debug_message_buffer.write(format!(
                 "Lighting: {}",

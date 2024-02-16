@@ -24,7 +24,10 @@ use crate::{
 };
 
 use self::{
-    gbuffer::GBuffer, options::PipelineOptions, primitive::triangle::Triangle, zbuffer::ZBuffer,
+    gbuffer::GBuffer,
+    options::PipelineOptions,
+    primitive::triangle::Triangle,
+    zbuffer::{DepthTestMethod, ZBuffer},
 };
 
 use super::{
@@ -36,7 +39,7 @@ use super::{
 mod gbuffer;
 pub mod options;
 mod primitive;
-mod zbuffer;
+pub mod zbuffer;
 
 static DEFAULT_PROJECTION_Z_NEAR: f32 = 0.3;
 static DEFAULT_PROJECTION_Z_FAR: f32 = 1000.0;
@@ -131,6 +134,26 @@ impl<'a> Pipeline<'a> {
             None => {
                 panic!(
                     "Called Pipeline::set_projection_z_far() on pipeline with no bound Z-buffer!"
+                );
+            }
+        }
+    }
+
+    pub fn get_depth_test_method(&self) -> Option<&DepthTestMethod> {
+        match self.z_buffer.as_ref() {
+            Some(z_buffer) => Some(z_buffer.get_depth_test_method()),
+            None => None,
+        }
+    }
+
+    pub fn set_depth_test_method(&mut self, method: DepthTestMethod) {
+        match self.z_buffer.as_mut() {
+            Some(z_buffer) => {
+                z_buffer.set_depth_test_method(method);
+            }
+            None => {
+                panic!(
+                    "Called Pipeline::set_depth_test_method() on Pipeline with no bound Z-buffer!"
                 );
             }
         }

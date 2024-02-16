@@ -2,12 +2,26 @@ use crate::buffer::Buffer2D;
 
 pub static MAX_DEPTH: f32 = 1.0;
 
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
+pub enum DepthTestMethod {
+    Always, // Always passes.
+    Never,  // Never passes.
+    #[default]
+    Less, // Passes if the fragment's depth is less than the stored depth.
+    Equal,  // Passes if the fragment's depth is equal to the stored depth.
+    LessThanOrEqual, // Passes if the fragment's depth is less than or equal to the stored depth.
+    Greater, // Passes if the fragment's depth is greater than the stored depth.
+    NotEqual, // Passes if the fragment's depth is not equal to the stored depth.
+    GreaterThanOrEqual, // Passes if the fragment's depth is greater than or equal to the stored depth.
+}
+
 pub struct ZBuffer {
     pub buffer: Buffer2D<f32>,
     projection_z_near: f32,
     projection_z_far: f32,
     projection_z_near_reciprocal: f32,
     projection_z_far_reciprocal: f32,
+    depth_test_method: DepthTestMethod,
 }
 
 impl ZBuffer {
@@ -20,6 +34,7 @@ impl ZBuffer {
             projection_z_near_reciprocal: 1.0 / projection_z_near,
             projection_z_far,
             projection_z_far_reciprocal: 1.0 / projection_z_far,
+            depth_test_method: Default::default(),
         }
     }
 
@@ -41,6 +56,14 @@ impl ZBuffer {
         self.projection_z_far_reciprocal = 1.0 / depth;
     }
 
+    pub fn get_depth_test_method(&self) -> &DepthTestMethod {
+        &self.depth_test_method
+    }
+
+    pub fn set_depth_test_method(&mut self, method: DepthTestMethod) {
+        self.depth_test_method = method;
+    }
+
     pub fn clear(&mut self) {
         self.buffer.clear(Some(MAX_DEPTH));
     }
@@ -51,11 +74,33 @@ impl ZBuffer {
 
         // (1/z - 1/n) / (1/f - 1/n)
 
-        let non_linear_z = (1.0 / z - self.projection_z_near_reciprocal)
+        let new_z_non_linear = (1.0 / z - self.projection_z_near_reciprocal)
             / (self.projection_z_far_reciprocal - self.projection_z_near_reciprocal);
 
-        if non_linear_z < *self.buffer.get(x, y) {
-            Some(((x, y), non_linear_z))
+        // Check if we can return early.
+
+        match self.depth_test_method {
+            DepthTestMethod::Always => return Some(((x, y), new_z_non_linear)),
+            DepthTestMethod::Never => return None,
+            _ => (),
+        }
+
+        // Compare to the current recorded depth, using the appropriate operator.
+
+        let current_z_non_linear = *self.buffer.get(x, y);
+
+        let operator = match self.depth_test_method {
+            DepthTestMethod::Less => f32::lt,
+            DepthTestMethod::Equal => f32::eq,
+            DepthTestMethod::LessThanOrEqual => f32::le,
+            DepthTestMethod::Greater => f32::gt,
+            DepthTestMethod::NotEqual => f32::ne,
+            DepthTestMethod::GreaterThanOrEqual => f32::ge,
+            _ => panic!(),
+        };
+
+        if operator(&new_z_non_linear, &current_z_non_linear) {
+            Some(((x, y), new_z_non_linear))
         } else {
             None
         }
