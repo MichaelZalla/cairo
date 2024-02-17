@@ -54,15 +54,10 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Generate normals
 
     let forward = vec3::FORWARD;
-
     let backward = forward * -1.0;
-
     let up = vec3::UP;
-
     let down = up * -1.0;
-
     let left = vec3::LEFT;
-
     let right = left * -1.0;
 
     let vertices: Vec<Vec3> = vec![
