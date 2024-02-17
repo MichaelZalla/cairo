@@ -1,4 +1,4 @@
-use std::sync::RwLock;
+use std::sync::{RwLock, RwLockReadGuard};
 
 use crate::{
     buffer::Buffer2D,
@@ -12,7 +12,7 @@ use crate::{
     shader::{
         alpha::AlphaShaderFn,
         fragment::FragmentShaderFn,
-        geometry::{options::GeometryShaderOptions, GeometryShaderFn},
+        geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
         vertex::VertexShaderFn,
         ShaderContext,
     },
@@ -376,16 +376,9 @@ impl<'a> Pipeline<'a> {
                     let x = index as u32 % self.viewport.width;
                     let y = index as u32 / self.viewport.width;
 
-                    let color = if self.options.do_lighting {
-                        (self.fragment_shader)(&shader_context, &sample)
-                    } else {
-                        Color::from_vec3(sample.diffuse)
-                    };
+                    let color = self.get_hdr_color_for_sample(&shader_context, &sample);
 
-                    self.deferred_framebuffer
-                        .as_mut()
-                        .unwrap()
-                        .set(x, y, color.to_vec3());
+                    self.deferred_framebuffer.as_mut().unwrap().set(x, y, color);
                 }
             }
         }
@@ -747,6 +740,18 @@ impl<'a> Pipeline<'a> {
                 }
             }
             None => {}
+        }
+    }
+
+    fn get_hdr_color_for_sample(
+        &self,
+        shader_context: &RwLockReadGuard<'_, ShaderContext>,
+        sample: &GeometrySample,
+    ) -> Vec3 {
+        if self.options.do_lighting {
+            (self.fragment_shader)(&shader_context, &sample).to_vec3()
+        } else {
+            sample.diffuse
         }
     }
 
