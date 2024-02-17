@@ -1,5 +1,5 @@
 use crate::{
-    color::{self},
+    color::{self, Color},
     entity::Entity,
     material::cache::MaterialCache,
     mesh,
@@ -127,6 +127,25 @@ impl<'a> Pipeline<'a> {
                 + light.look_vector.get_up() * opposite_over_adjacent * light.influence_distance,
         ];
 
-        self.render_frustum(near_plane_points_world_space, far_plane_points_world_space);
+        let mut color = {
+            // Exposure tone mapping
+
+            static EXPOSURE: f32 = 1.0;
+
+            Vec3::ones()
+                - Vec3 {
+                    x: (-light.intensities.x * EXPOSURE).exp(),
+                    y: (-light.intensities.y * EXPOSURE).exp(),
+                    z: (-light.intensities.z * EXPOSURE).exp(),
+                }
+        };
+
+        color.linear_to_srgb();
+
+        self.render_frustum(
+            near_plane_points_world_space,
+            far_plane_points_world_space,
+            Some(Color::from_vec3(color * 255.0)),
+        );
     }
 }

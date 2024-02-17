@@ -105,7 +105,11 @@ impl<'a> Pipeline<'a> {
 
         // View volume
 
-        self.render_frustum(near_plane_points_world_space, far_plane_points_world_space);
+        self.render_frustum(
+            near_plane_points_world_space,
+            far_plane_points_world_space,
+            None,
+        );
 
         // Target
 

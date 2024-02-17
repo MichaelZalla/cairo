@@ -1,10 +1,15 @@
-use crate::{color, pipeline::Pipeline, vec::vec3::Vec3};
+use crate::{
+    color::{self, Color},
+    pipeline::Pipeline,
+    vec::vec3::Vec3,
+};
 
 impl<'a> Pipeline<'a> {
     pub fn render_frustum(
         &mut self,
         near_plane_points_world_space: [Vec3; 4],
         far_plane_points_world_space: [Vec3; 4],
+        color: Option<Color>,
     ) {
         // Draw near plane.
 
@@ -12,7 +17,10 @@ impl<'a> Pipeline<'a> {
             self.render_line(
                 near_plane_points_world_space[index],
                 near_plane_points_world_space[if index == 3 { 0 } else { index + 1 }],
-                color::RED,
+                match color {
+                    Some(color) => color,
+                    None => color::RED,
+                },
             );
         }
 
@@ -22,7 +30,10 @@ impl<'a> Pipeline<'a> {
             self.render_line(
                 far_plane_points_world_space[index],
                 far_plane_points_world_space[if index == 3 { 0 } else { index + 1 }],
-                color::BLUE,
+                match color {
+                    Some(color) => color,
+                    None => color::BLUE,
+                },
             );
         }
 
@@ -32,7 +43,10 @@ impl<'a> Pipeline<'a> {
             self.render_line(
                 near_plane_points_world_space[i],
                 far_plane_points_world_space[i],
-                color::YELLOW,
+                match color {
+                    Some(color) => color,
+                    None => color::YELLOW,
+                },
             );
         }
     }
