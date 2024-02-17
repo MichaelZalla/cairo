@@ -328,7 +328,7 @@ impl<'a> Scene for SponzaScene<'a> {
             .write(format!("Seconds ellapsed: {:.*}", 2, uptime));
 
         self.debug_message_buffer.write(format!(
-            "Camera position: {:?}",
+            "Camera position: {}",
             self.cameras[self.active_camera_index]
                 .look_vector
                 .get_position()
