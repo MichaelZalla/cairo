@@ -364,12 +364,14 @@ impl<'a> Pipeline<'a> {
 
     pub fn end_frame(&mut self) {
         if self.options.do_rasterized_geometry {
-            self.do_deferred_lighting_pass();
+            if self.options.do_deferred_lighting {
+                self.do_deferred_lighting_pass();
 
-            // Bloom pass over the deferred (HDR) buffer.
+                // Bloom pass over the deferred (HDR) buffer.
 
-            if self.options.do_bloom {
-                self.do_bloom_pass();
+                if self.options.do_bloom {
+                    self.do_bloom_pass();
+                }
             }
         }
 
@@ -382,7 +384,7 @@ impl<'a> Pipeline<'a> {
             }
         };
 
-        if self.options.do_rasterized_geometry {
+        if self.options.do_rasterized_geometry && self.options.do_deferred_lighting {
             let deferred_frame = self.deferred_framebuffer.as_ref().unwrap();
 
             for y in 0..composite_framebuffer.height {
@@ -735,7 +737,22 @@ impl<'a> Pipeline<'a> {
                             &linear_space_interpolant,
                         ) {
                             Some(sample) => {
-                                g_buffer.set(x, y, sample);
+                                if self.options.do_deferred_lighting == false {
+                                    let forward_fragment_color = self
+                                        .get_tone_mapped_color_from_hdr(
+                                            self.get_hdr_color_for_sample(&shader_context, &sample),
+                                        );
+
+                                    {
+                                        self.forward_framebuffer.as_mut().unwrap().set(
+                                            x,
+                                            y,
+                                            forward_fragment_color.to_u32(),
+                                        )
+                                    }
+                                } else {
+                                    g_buffer.set(x, y, sample);
+                                }
                             }
                             None => (),
                         }
