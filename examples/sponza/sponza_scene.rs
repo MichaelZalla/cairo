@@ -114,12 +114,13 @@ impl<'a> SponzaScene<'a> {
         camera.set_projection_z_far(10000.0);
 
         // Define lights for our scene
+
         let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.05,
+            intensities: Vec3::ones() * 0.1,
         };
 
         let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.05,
+            intensities: Vec3::ones() * 0.1,
             direction: Vec4::new(vec3::UP * -1.0, 1.0).as_normal(),
         };
 

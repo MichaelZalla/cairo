@@ -59,10 +59,14 @@ impl<'a> SpecularMapScene<'a> {
         let camera: Camera = Camera::from_perspective(
             Vec3 {
                 x: 0.0,
-                y: 0.0,
-                z: -5.0,
+                y: 3.0,
+                z: -6.0,
             },
-            Default::default(),
+            Vec3 {
+                x: 0.0,
+                y: 1.5,
+                z: 0.0,
+            },
             75.0,
             aspect_ratio,
         );
@@ -70,17 +74,17 @@ impl<'a> SpecularMapScene<'a> {
         // Define lights for our scene
         let ambient_light = AmbientLight {
             intensities: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
+                x: 0.05,
+                y: 0.05,
+                z: 0.05,
             },
         };
 
         let directional_light = DirectionalLight {
             intensities: Vec3 {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
+                x: 0.05,
+                y: 0.05,
+                z: 0.05,
             },
             direction: Vec4 {
                 x: -1.0,
@@ -116,7 +120,7 @@ impl<'a> SpecularMapScene<'a> {
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
         context.set_point_light(0, point_light);
-        context.set_spot_light(0, spot_light);
+        // context.set_spot_light(0, spot_light);
 
         let mut pipeline = Pipeline::new(
             shader_context,
@@ -195,6 +199,8 @@ impl<'a> Scene for SpecularMapScene<'a> {
             y: (uptime + phase_shift * 1.0).sin() / 2.0 + 0.5,
             z: (uptime + phase_shift * 2.0).sin() / 2.0 + 0.5,
         } * max_intensity;
+
+        self.point_light.intensities *= 3.0;
 
         let orbital_radius: f32 = 3.0;
 
