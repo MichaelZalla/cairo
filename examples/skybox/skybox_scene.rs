@@ -142,6 +142,12 @@ impl<'a> SkyboxScene<'a> {
             TextureMapStorageFormat::RGB24,
         );
 
+        // let mut skybox = CubeMap::cross(
+        //     "examples/skybox/assets/cross/horizontal_cross.png",
+        //     // "examples/skybox/assets/cross/vertical_cross.png",
+        //     TextureMapStorageFormat::RGB24,
+        // );
+
         // Option 2. Skybox as one horizontal cross texture.
 
         // let mut skybox = CubeMap::from_cross("examples/skybox/assets/temple.png");

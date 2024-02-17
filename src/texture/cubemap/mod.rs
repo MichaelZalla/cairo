@@ -57,7 +57,7 @@ impl CubeMap {
         }
     }
 
-    pub fn from_cross(texture_path: &str, storage_format: TextureMapStorageFormat) -> Self {
+    pub fn cross(texture_path: &str, storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: true,
             sides: [

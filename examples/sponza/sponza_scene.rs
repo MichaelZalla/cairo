@@ -141,8 +141,8 @@ impl<'a> SponzaScene<'a> {
         spot_light.linear_attenuation = 0.007;
         spot_light.quadratic_attenuation = 0.0002;
 
-        let mut skybox = CubeMap::from_cross(
-            "examples/skybox/assets/grass_sky.jpg",
+        let mut skybox = CubeMap::cross(
+            "examples/skybox/assets/cross/horizontal_cross.png",
             TextureMapStorageFormat::RGB24,
         );
 
