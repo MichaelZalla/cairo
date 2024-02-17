@@ -15,7 +15,6 @@ where
     pub width: u32,
     pub height: u32,
     pub width_over_height: f32,
-    pub height_over_width: f32,
     pub data: Vec<T>,
 }
 
@@ -33,7 +32,6 @@ where
 {
     pub fn new(width: u32, height: u32, fill_value: Option<T>) -> Self {
         let width_over_height = width as f32 / height as f32;
-        let height_over_width = height as f32 / width as f32;
 
         let value: T = match fill_value {
             Some(fill_value) => fill_value,
@@ -46,7 +44,6 @@ where
             width,
             height,
             width_over_height,
-            height_over_width,
             data,
         }
     }
@@ -56,7 +53,6 @@ where
             width,
             height,
             width_over_height: width as f32 / height as f32,
-            height_over_width: height as f32 / width as f32,
             data,
         }
     }
