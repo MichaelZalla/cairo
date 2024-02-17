@@ -4,7 +4,7 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
-    buffer::Buffer2D,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     effect::Effect,
@@ -36,11 +36,11 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let framebuffer_rwl = RwLock::new(Buffer2D::new(
-        window_info.canvas_width,
-        window_info.canvas_height,
-        None,
-    ));
+    let mut framebuffer = Framebuffer::new(window_info.canvas_width, window_info.canvas_height);
+
+    framebuffer.complete(0.3, 100.0);
+
+    let framebuffer_rwl = RwLock::new(framebuffer);
 
     // Generate primitive meshes
 
@@ -150,29 +150,41 @@ fn main() -> Result<(), String> {
 
         scene_mut.render();
 
-        let prepost = framebuffer_rwl.read().unwrap().get_all().clone();
+        let framebuffer = framebuffer_rwl.read().unwrap();
 
-        // Perform a post-processing pass by applying the dilation effect.
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let color_buffer = color_buffer_lock.read().unwrap();
 
-        let mut buffer =
-            Buffer2D::from_data(window_info.canvas_width, window_info.canvas_height, prepost);
+                let prepost_u32 = color_buffer.get_all().clone();
 
-        let effects: Vec<&dyn Effect> = vec![
-            // &outline_effect,
-            // &invert_effect,
-            // &grayscale_effect,
-            // &sharpen_effect,
-            // &blur_effect,
-            &edge_detection_effect,
-        ];
+                // Perform a post-processing pass by applying the dilation effect.
 
-        for effect in effects {
-            effect.apply(&mut buffer);
+                let mut buffer = Buffer2D::from_data(
+                    window_info.canvas_width,
+                    window_info.canvas_height,
+                    prepost_u32,
+                );
+
+                let effects: Vec<&dyn Effect> = vec![
+                    // &outline_effect,
+                    // &invert_effect,
+                    // &grayscale_effect,
+                    // &sharpen_effect,
+                    // &blur_effect,
+                    &edge_detection_effect,
+                ];
+
+                for effect in effects {
+                    effect.apply(&mut buffer);
+                }
+
+                // Return the post-processed pixels.
+
+                Ok(buffer.get_all().clone())
+            }
+            None => panic!(),
         }
-
-        // Return the post-processed pixels.
-
-        Ok(buffer.get_all().clone())
     };
 
     app.run(&mut update, &mut render)?;

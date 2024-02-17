@@ -4,7 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::App,
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -38,7 +38,7 @@ use cairo::{
 };
 
 pub struct GeneratePrimitivesScene<'a> {
-    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    framebuffer_rwl: &'a RwLock<Framebuffer>,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
     fragment_shaders: Vec<FragmentShaderFn>,
@@ -59,7 +59,7 @@ pub struct GeneratePrimitivesScene<'a> {
 
 impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Buffer2D>,
+        framebuffer_rwl: &'a RwLock<Framebuffer>,
         font_cache_rwl: &'static RwLock<FontCache<'static>>,
         font_info: &'static FontInfo,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
@@ -461,12 +461,21 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         let camera = self.cameras[self.active_camera_index];
 
-        self.pipeline
-            .set_projection_z_near(camera.get_projection_z_near());
-        self.pipeline
-            .set_projection_z_far(camera.get_projection_z_far());
+        {
+            let framebuffer = self.framebuffer_rwl.write().unwrap();
 
-        self.pipeline.begin_frame(None);
+            match framebuffer.attachments.depth.as_ref() {
+                Some(lock) => {
+                    let mut depth_buffer = lock.write().unwrap();
+
+                    depth_buffer.set_projection_z_near(camera.get_projection_z_near());
+                    depth_buffer.set_projection_z_far(camera.get_projection_z_far());
+                }
+                None => (),
+            }
+        }
+
+        self.pipeline.begin_frame();
 
         {
             for entity in self.entities.read().unwrap().as_slice() {
@@ -512,19 +521,26 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         // Render debug messages
 
         {
-            let mut framebuffer = self.framebuffer_rwl.write().unwrap();
-
             let debug_messages = self.debug_message_buffer.borrow_mut();
 
             {
-                Graphics::render_debug_messages(
-                    &mut framebuffer,
-                    self.font_cache_rwl,
-                    self.font_info,
-                    (12, 12),
-                    1.0,
-                    debug_messages,
-                );
+                let framebuffer = self.framebuffer_rwl.write().unwrap();
+
+                match framebuffer.attachments.color.as_ref() {
+                    Some(lock) => {
+                        let mut color_buffer = lock.write().unwrap();
+
+                        Graphics::render_debug_messages(
+                            &mut *color_buffer,
+                            self.font_cache_rwl,
+                            self.font_info,
+                            (12, 12),
+                            1.0,
+                            debug_messages,
+                        );
+                    }
+                    None => (),
+                }
             }
         }
     }

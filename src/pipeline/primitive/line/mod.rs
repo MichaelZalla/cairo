@@ -127,13 +127,29 @@ impl<'a> Pipeline<'a> {
             return;
         }
 
-        Graphics::line(
-            &mut self.forward_framebuffer.as_mut().unwrap(),
-            (start.x * self.viewport.width as f32) as i32,
-            (start.y * self.viewport.height as f32) as i32,
-            (end.x * self.viewport.width as f32) as i32,
-            (end.y * self.viewport.height as f32) as i32,
-            color,
-        );
+        match self.framebuffer {
+            Some(lock) => {
+                let framebuffer = lock.write().unwrap();
+
+                match &framebuffer.attachments.forward_ldr {
+                    Some(forward_buffer_lock) => {
+                        let mut forward_buffer = forward_buffer_lock.write().unwrap();
+
+                        Graphics::line(
+                            &mut *forward_buffer,
+                            (start.x * self.viewport.width as f32) as i32,
+                            (start.y * self.viewport.height as f32) as i32,
+                            (end.x * self.viewport.width as f32) as i32,
+                            (end.y * self.viewport.height as f32) as i32,
+                            color,
+                        );
+                    },
+                    None => panic!("Called Graphics::render_line_from_ndc_space_vertices() with no forward (LDR) framebuffer attachment!"),
+                }
+            }
+            None => panic!(
+                "Called Graphics::render_line_from_ndc_space_vertices() with no bound framebuffer!"
+            ),
+        }
     }
 }

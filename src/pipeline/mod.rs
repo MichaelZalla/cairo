@@ -1,7 +1,7 @@
 use std::sync::{RwLock, RwLockReadGuard};
 
 use crate::{
-    buffer::Buffer2D,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     color::{blend::BlendMode, Color},
     effect::Effect,
     effects::guassian_blur::GaussianBlurEffect,
@@ -23,12 +23,7 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-use self::{
-    gbuffer::GBuffer,
-    options::PipelineOptions,
-    primitive::triangle::Triangle,
-    zbuffer::{DepthTestMethod, ZBuffer},
-};
+use self::{gbuffer::GBuffer, options::PipelineOptions, primitive::triangle::Triangle};
 
 use super::{
     color::{self},
@@ -54,12 +49,8 @@ struct PipelineViewport {
 
 pub struct Pipeline<'a> {
     pub options: PipelineOptions,
-    forward_framebuffer: Option<Buffer2D>,
-    deferred_framebuffer: Option<Buffer2D<Vec3>>,
-    composite_framebuffer: Option<&'a RwLock<Buffer2D>>,
-    keying_color: u32,
+    framebuffer: Option<&'a RwLock<Framebuffer>>,
     viewport: PipelineViewport,
-    z_buffer: Option<ZBuffer>,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
     pub shader_context: &'a RwLock<ShaderContext>,
@@ -74,7 +65,6 @@ impl<'a> Pipeline<'a> {
     pub fn new(
         shader_context: &'a RwLock<ShaderContext>,
         vertex_shader: VertexShaderFn,
-        // geometry_shader: GeometryShaderFn,
         fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
     ) -> Self {
@@ -84,23 +74,13 @@ impl<'a> Pipeline<'a> {
 
         let geometry_shader_options: GeometryShaderOptions = Default::default();
 
-        let forward_framebuffer = None;
-
-        let deferred_framebuffer = None;
-
-        let composite_framebuffer = None;
-
-        let keying_color = color::BLACK.to_u32();
+        let framebuffer = None;
 
         let viewport: PipelineViewport = Default::default();
 
         return Pipeline {
-            forward_framebuffer,
-            deferred_framebuffer,
-            composite_framebuffer,
-            keying_color,
+            framebuffer,
             viewport,
-            z_buffer: None,
             g_buffer: None,
             bloom_buffer: None,
             shader_context,
@@ -111,52 +91,6 @@ impl<'a> Pipeline<'a> {
             fragment_shader,
             options,
         };
-    }
-
-    pub fn set_projection_z_near(&mut self, depth: f32) {
-        match self.z_buffer.as_mut() {
-            Some(z_buffer) => {
-                z_buffer.set_projection_z_near(depth);
-            }
-            None => {
-                panic!(
-                    "Called Pipeline::set_projection_z_near() on pipeline with no bound Z-buffer!"
-                );
-            }
-        }
-    }
-
-    pub fn set_projection_z_far(&mut self, depth: f32) {
-        match self.z_buffer.as_mut() {
-            Some(z_buffer) => {
-                z_buffer.set_projection_z_far(depth);
-            }
-            None => {
-                panic!(
-                    "Called Pipeline::set_projection_z_far() on pipeline with no bound Z-buffer!"
-                );
-            }
-        }
-    }
-
-    pub fn get_depth_test_method(&self) -> Option<&DepthTestMethod> {
-        match self.z_buffer.as_ref() {
-            Some(z_buffer) => Some(z_buffer.get_depth_test_method()),
-            None => None,
-        }
-    }
-
-    pub fn set_depth_test_method(&mut self, method: DepthTestMethod) {
-        match self.z_buffer.as_mut() {
-            Some(z_buffer) => {
-                z_buffer.set_depth_test_method(method);
-            }
-            None => {
-                panic!(
-                    "Called Pipeline::set_depth_test_method() on Pipeline with no bound Z-buffer!"
-                );
-            }
-        }
     }
 
     pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
@@ -171,125 +105,68 @@ impl<'a> Pipeline<'a> {
         self.fragment_shader = shader;
     }
 
-    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RwLock<Buffer2D>>) {
-        self.composite_framebuffer = framebuffer_option;
-
+    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RwLock<Framebuffer>>) {
         match framebuffer_option {
             Some(framebuffer_rwl) => {
                 let framebuffer = framebuffer_rwl.read().unwrap();
 
-                self.set_viewport(&framebuffer);
+                match framebuffer.validate() {
+                    Ok(()) => {
+                        self.framebuffer = framebuffer_option;
 
-                match &self.forward_framebuffer {
-                    Some(buffer) => {
-                        if buffer.width != framebuffer.width || buffer.height != framebuffer.height
-                        {
-                            // Re-allocate a forward framebuffer.
+                        self.set_viewport(&framebuffer);
 
-                            self.forward_framebuffer =
-                                Some(Buffer2D::new(framebuffer.width, framebuffer.height, None))
+                        match &self.g_buffer {
+                            Some(g_buffer) => {
+                                if g_buffer.buffer.width != framebuffer.width
+                                    || g_buffer.buffer.height != framebuffer.height
+                                {
+                                    // Re-allocate a G-buffer.
+
+                                    self.g_buffer =
+                                        Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                                }
+                            }
+                            None => {
+                                // Re-allocate a G-buffer.
+
+                                self.g_buffer =
+                                    Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                            }
+                        }
+
+                        match &self.bloom_buffer {
+                            Some(bloom_buffer) => {
+                                if bloom_buffer.width != framebuffer.width
+                                    || bloom_buffer.height != framebuffer.height
+                                {
+                                    // Re-allocate a bloom buffer.
+
+                                    self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
+                                        framebuffer.width,
+                                        framebuffer.height,
+                                        None,
+                                    ));
+                                }
+                            }
+                            None => {
+                                // Re-allocate a bloom buffer.
+
+                                self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
+                                    framebuffer.width,
+                                    framebuffer.height,
+                                    None,
+                                ));
+                            }
                         }
                     }
-                    None => {
-                        // Re-allocate a forward framebuffer.
-
-                        self.forward_framebuffer =
-                            Some(Buffer2D::new(framebuffer.width, framebuffer.height, None))
-                    }
-                }
-
-                match &self.deferred_framebuffer {
-                    Some(buffer) => {
-                        if buffer.width != framebuffer.width || buffer.height != framebuffer.height
-                        {
-                            // Re-allocate a deferred framebuffer.
-
-                            self.deferred_framebuffer =
-                                Some(Buffer2D::new(framebuffer.width, framebuffer.height, None));
-                        }
-                    }
-                    None => {
-                        // Re-allocate a deferred framebuffer.
-
-                        self.deferred_framebuffer =
-                            Some(Buffer2D::new(framebuffer.width, framebuffer.height, None));
-                    }
-                }
-
-                match &self.z_buffer {
-                    Some(z_buffer) => {
-                        if z_buffer.buffer.width != framebuffer.width
-                            || z_buffer.buffer.height != framebuffer.height
-                        {
-                            // Re-allocate a Z-buffer.
-
-                            self.z_buffer = Some(ZBuffer::new(
-                                framebuffer.width,
-                                framebuffer.height,
-                                z_buffer.get_projection_z_near(),
-                                z_buffer.get_projection_z_far(),
-                            ));
-                        }
-                    }
-                    None => {
-                        // Re-allocate a Z-buffer.
-
-                        self.z_buffer = Some(ZBuffer::new(
-                            framebuffer.width,
-                            framebuffer.height,
-                            DEFAULT_PROJECTION_Z_NEAR,
-                            DEFAULT_PROJECTION_Z_FAR,
-                        ));
-                    }
-                }
-
-                match &self.g_buffer {
-                    Some(g_buffer) => {
-                        if g_buffer.buffer.width != framebuffer.width
-                            || g_buffer.buffer.height != framebuffer.height
-                        {
-                            // Re-allocate a G-buffer.
-
-                            self.g_buffer =
-                                Some(GBuffer::new(framebuffer.width, framebuffer.height));
-                        }
-                    }
-                    None => {
-                        // Re-allocate a G-buffer.
-
-                        self.g_buffer = Some(GBuffer::new(framebuffer.width, framebuffer.height));
-                    }
-                }
-
-                match &self.bloom_buffer {
-                    Some(bloom_buffer) => {
-                        if bloom_buffer.width != framebuffer.width
-                            || bloom_buffer.height != framebuffer.height
-                        {
-                            // Re-allocate a bloom buffer.
-
-                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
-                                framebuffer.width,
-                                framebuffer.height,
-                                None,
-                            ));
-                        }
-                    }
-                    None => {
-                        // Re-allocate a bloom buffer.
-
-                        self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
-                            framebuffer.width,
-                            framebuffer.height,
-                            None,
-                        ));
+                    Err(err) => {
+                        panic!("Called Pipeline::bind_framebuffer() with an invalid Framebuffer! (Err: {})", err);
                     }
                 }
             }
             None => {
-                self.forward_framebuffer = None;
-                self.deferred_framebuffer = None;
-                self.z_buffer = None;
+                self.framebuffer = None;
                 self.g_buffer = None;
                 self.bloom_buffer = None;
 
@@ -298,54 +175,24 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    fn set_viewport(&mut self, framebuffer: &Buffer2D) {
+    fn set_viewport(&mut self, framebuffer: &Framebuffer) {
         self.viewport.width = framebuffer.width;
         self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
         self.viewport.height = framebuffer.height;
         self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
     }
 
-    pub fn begin_frame(&mut self, fill_value_option: Option<Color>) {
-        let fill_value = match fill_value_option {
-            Some(color) => color.to_u32(),
-            None => color::BLACK.to_u32(),
-        };
-
-        self.set_keying_color(fill_value);
-
-        match self.forward_framebuffer.as_mut() {
-            Some(forward_framebuffer) => {
-                forward_framebuffer.clear(Some(fill_value));
-            }
-            None => (),
-        }
-
-        match self.composite_framebuffer {
+    pub fn begin_frame(&mut self) {
+        match self.framebuffer {
             Some(lock) => {
                 let mut composite_framebuffer = lock.write().unwrap();
 
-                composite_framebuffer.clear(Some(fill_value));
+                composite_framebuffer.clear();
             }
             None => (),
         }
 
         if self.options.do_rasterized_geometry {
-            match self.deferred_framebuffer.as_mut() {
-                Some(deferred_framebuffer) => {
-                    let fill_value_vec3 = Color::from_u32(fill_value).to_vec3();
-
-                    deferred_framebuffer.clear(Some(fill_value_vec3));
-                }
-                None => (),
-            }
-
-            match self.z_buffer.as_mut() {
-                Some(z_buffer) => {
-                    z_buffer.clear();
-                }
-                None => (),
-            }
-
             match self.g_buffer.as_mut() {
                 Some(g_buffer) => {
                     g_buffer.clear();
@@ -375,102 +222,147 @@ impl<'a> Pipeline<'a> {
             }
         }
 
-        // Blit deferred framebuffer onto composite framebuffer.
+        // Blit deferred (HDR) framebuffer to the (final) color framebuffer.
 
-        let mut composite_framebuffer = match self.composite_framebuffer {
-            Some(composite_framebuffer) => composite_framebuffer.write().unwrap(),
-            None => {
-                panic!("Called Pipeline::end_frame() with no bound composite framebuffer!");
-            }
-        };
+        match self.framebuffer {
+            Some(lock) => {
+                let framebuffer = lock.write().unwrap();
 
-        if self.options.do_rasterized_geometry && self.options.do_deferred_lighting {
-            let deferred_frame = self.deferred_framebuffer.as_ref().unwrap();
+                match (
+                    framebuffer.attachments.color.as_ref(),
+                    framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
+                ) {
+                    (Some(color_buffer_lock), Some(deferred_buffer_lock)) => {
+                        let (mut color_buffer, deferred_buffer) = (
+                            color_buffer_lock.write().unwrap(),
+                            deferred_buffer_lock.read().unwrap(),
+                        );
 
-            for y in 0..composite_framebuffer.height {
-                for x in 0..composite_framebuffer.width {
-                    let color_hdr_vec3 = *deferred_frame.get(x, y);
+                        for y in 0..framebuffer.height {
+                            for x in 0..framebuffer.width {
+                                let lit_geometry_fragment_color_tone =
+                                    self.get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
 
-                    let color_tone_mapped = self.get_tone_mapped_color_from_hdr(color_hdr_vec3);
+                                color_buffer.set(x, y, lit_geometry_fragment_color_tone.to_u32());
+                            }
+                        }
+                    }
+                    _ => (),
+                }
 
-                    composite_framebuffer.set(x, y, color_tone_mapped.to_u32());
+                match (
+                    framebuffer.attachments.color.as_ref(),
+                    framebuffer.attachments.forward_ldr.as_ref(),
+                ) {
+                    (Some(color_buffer_lock), Some(forward_buffer_lock)) => {
+                        let (mut color_buffer, forward_buffer) = (
+                            color_buffer_lock.write().unwrap(),
+                            forward_buffer_lock.read().unwrap(),
+                        );
+
+                        let forward_fragments = forward_buffer.get_all();
+
+                        // Skips pixels in our forward buffer if they weren't written to.
+                        for (index, value) in forward_fragments.iter().enumerate() {
+                            if Color::from_u32(*value).a > 0.0 {
+                                color_buffer.set_raw(index, *value);
+                            }
+                        }
+                    }
+                    _ => (),
                 }
             }
-        }
-
-        let forward_frame = self.forward_framebuffer.as_ref().unwrap().get_all();
-
-        // Skips pixels in our forward buffer if they weren't written to.
-        for (index, value) in forward_frame.iter().enumerate() {
-            if *value != self.keying_color {
-                composite_framebuffer.set_raw(index, *value);
-            }
+            None => (),
         }
     }
 
     fn do_deferred_lighting_pass(&mut self) {
-        // Perform deferred lighting pass.
+        match self.framebuffer {
+            Some(lock) => {
+                let mut framebuffer = lock.write().unwrap();
 
-        let shader_context = self.shader_context.read().unwrap();
+                match framebuffer.attachments.forward_or_deferred_hdr.as_mut() {
+                    Some(deferred_buffer_lock) => {
+                        let mut deferred_buffer = deferred_buffer_lock.write().unwrap();
 
-        // Call the active fragment shader on every G-buffer sample that was
-        // written to by the rasterizer.
+                        // Perform deferred lighting pass.
 
-        for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
-            if sample.stencil == true {
-                let x = index as u32 % self.viewport.width;
-                let y = index as u32 / self.viewport.width;
+                        let shader_context = self.shader_context.read().unwrap();
 
-                let color = self.get_hdr_color_for_sample(&shader_context, &sample);
+                        // Call the active fragment shader on every G-buffer sample that was
+                        // written to by the rasterizer.
 
-                self.deferred_framebuffer.as_mut().unwrap().set(x, y, color);
+                        for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
+                            if sample.stencil == true {
+                                let x = index as u32 % self.viewport.width;
+                                let y = index as u32 / self.viewport.width;
+
+                                let color = self.get_hdr_color_for_sample(&shader_context, &sample);
+
+                                deferred_buffer.set(x, y, color);
+                            }
+                        }
+                    }
+                    None => (),
+                }
             }
+            None => (),
         }
     }
 
     fn do_bloom_pass(&mut self) {
-        let deferred_frame = self.deferred_framebuffer.as_mut().unwrap();
+        match self.framebuffer {
+            Some(lock) => {
+                let mut framebuffer = lock.write().unwrap();
 
-        let mut bloom_frame = self.bloom_buffer.as_mut().unwrap();
+                match framebuffer.attachments.forward_or_deferred_hdr.as_mut() {
+                    Some(deferred_buffer_lock) => {
+                        let mut deferred_buffer = deferred_buffer_lock.write().unwrap();
 
-        for y in 0..deferred_frame.height {
-            for x in 0..deferred_frame.width {
-                let color_hdr = *deferred_frame.get(x, y);
+                        let mut bloom_frame = self.bloom_buffer.as_mut().unwrap();
 
-                let perceived_brightness =
-                    if color_hdr.x >= 0.95 || color_hdr.y >= 0.95 || color_hdr.z >= 0.95 {
-                        1.0
-                    } else {
-                        0.0
-                    };
+                        for y in 0..deferred_buffer.height {
+                            for x in 0..deferred_buffer.width {
+                                let color_hdr = *deferred_buffer.get(x, y);
 
-                if perceived_brightness >= 1.0 {
-                    // Write this bright pixel to the initial bloom buffer.\
+                                let perceived_brightness = if color_hdr.x >= 0.95
+                                    || color_hdr.y >= 0.95
+                                    || color_hdr.z >= 0.95
+                                {
+                                    1.0
+                                } else {
+                                    0.0
+                                };
 
-                    bloom_frame.set(x, y, color_hdr);
+                                if perceived_brightness >= 1.0 {
+                                    // Write this bright pixel to the initial bloom buffer.\
+
+                                    bloom_frame.set(x, y, color_hdr);
+                                }
+                            }
+                        }
+
+                        // Blur the bloom buffer.
+
+                        let bloom_effect = GaussianBlurEffect::new(6);
+
+                        bloom_effect.apply(&mut bloom_frame);
+
+                        // Blit the bloom buffer to our composite framebuffer.
+
+                        deferred_buffer.blit_blended_from(
+                            0,
+                            0,
+                            &bloom_frame,
+                            Some(BlendMode::Screen),
+                            Some(Vec3::ones()),
+                        );
+                    }
+                    None => (),
                 }
             }
+            None => panic!(),
         }
-
-        // Blur the bloom buffer.
-
-        let bloom_effect = GaussianBlurEffect::new(6);
-
-        bloom_effect.apply(&mut bloom_frame);
-
-        // Blit the bloom buffer to our composite framebuffer.
-
-        deferred_frame.blit_blended_from(
-            0,
-            0,
-            &bloom_frame,
-            Some(BlendMode::Screen),
-            Some(Vec3::ones()),
-        );
-    }
-
-    pub fn set_keying_color(&mut self, color: u32) {
-        self.keying_color = color;
     }
 
     pub fn render_entity(&mut self, entity: &Entity, material_cache: Option<&MaterialCache>) {
@@ -708,59 +600,91 @@ impl<'a> Pipeline<'a> {
     }
 
     fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
-        let z_buffer = self.z_buffer.as_mut().unwrap();
+        match self.framebuffer {
+            Some(lock) => {
+                let framebuffer = lock.write().unwrap();
 
-        match z_buffer.test(x, y, interpolant.position.z) {
-            Some(((x, y), non_linear_z)) => {
-                let mut linear_space_interpolant = *interpolant * (1.0 / interpolant.position.w);
+                match (
+                    framebuffer.attachments.stencil.as_ref(),
+                    framebuffer.attachments.depth.as_ref(),
+                    framebuffer.attachments.forward_ldr.as_ref(),
+                ) {
+                    (
+                        Some(stencil_buffer_lock),
+                        Some(depth_buffer_lock),
+                        Some(forward_buffer_lock),
+                    ) => {
+                        let mut stencil_buffer = stencil_buffer_lock.write().unwrap();
+                        let mut depth_buffer = depth_buffer_lock.write().unwrap();
 
-                let shader_context = self.shader_context.read().unwrap();
+                        match depth_buffer.test(x, y, interpolant.position.z) {
+                            Some(((x, y), non_linear_z)) => {
+                                let mut linear_space_interpolant =
+                                    *interpolant * (1.0 / interpolant.position.w);
 
-                if (self.alpha_shader)(&shader_context, &linear_space_interpolant) == false {
-                    return;
-                }
+                                let shader_context = self.shader_context.read().unwrap();
 
-                z_buffer.set(x, y, non_linear_z);
+                                if (self.alpha_shader)(&shader_context, &linear_space_interpolant)
+                                    == false
+                                {
+                                    return;
+                                }
 
-                match self.g_buffer.as_mut() {
-                    Some(g_buffer) => {
-                        let z = linear_space_interpolant.position.z;
-                        let near = z_buffer.get_projection_z_near();
-                        let far = z_buffer.get_projection_z_far();
+                                stencil_buffer.set(x, y, 1);
 
-                        linear_space_interpolant.depth =
-                            ((z - near) / (far - near)).max(0.0).min(1.0);
+                                depth_buffer.set(x, y, non_linear_z);
 
-                        match (self.geometry_shader)(
-                            &shader_context,
-                            &self.geometry_shader_options,
-                            &linear_space_interpolant,
-                        ) {
-                            Some(sample) => {
-                                if self.options.do_deferred_lighting == false {
-                                    let forward_fragment_color = self
-                                        .get_tone_mapped_color_from_hdr(
-                                            self.get_hdr_color_for_sample(&shader_context, &sample),
-                                        );
+                                match self.g_buffer.as_mut() {
+                                    Some(g_buffer) => {
+                                        let z = linear_space_interpolant.position.z;
+                                        let near = depth_buffer.get_projection_z_near();
+                                        let far = depth_buffer.get_projection_z_far();
 
-                                    {
-                                        self.forward_framebuffer.as_mut().unwrap().set(
-                                            x,
-                                            y,
-                                            forward_fragment_color.to_u32(),
-                                        )
+                                        linear_space_interpolant.depth =
+                                            ((z - near) / (far - near)).max(0.0).min(1.0);
+
+                                        match (self.geometry_shader)(
+                                            &shader_context,
+                                            &self.geometry_shader_options,
+                                            &linear_space_interpolant,
+                                        ) {
+                                            Some(sample) => {
+                                                if self.options.do_deferred_lighting == false {
+                                                    let forward_fragment_color = self
+                                                        .get_tone_mapped_color_from_hdr(
+                                                            self.get_hdr_color_for_sample(
+                                                                &shader_context,
+                                                                &sample,
+                                                            ),
+                                                        );
+
+                                                    let mut forward_buffer =
+                                                        forward_buffer_lock.write().unwrap();
+
+                                                    forward_buffer.set(
+                                                        x,
+                                                        y,
+                                                        forward_fragment_color.to_u32(),
+                                                    );
+                                                } else {
+                                                    g_buffer.set(x, y, sample);
+                                                }
+                                            }
+                                            None => (),
+                                        }
                                     }
-                                } else {
-                                    g_buffer.set(x, y, sample);
+                                    None => (),
                                 }
                             }
-                            None => (),
+                            None => {}
                         }
                     }
-                    None => (),
+                    _ => {
+                        todo!("Support framebuffers with no bound depth attachment or no bound forward (LDR) attachment!");
+                    }
                 }
             }
-            None => {}
+            None => panic!(),
         }
     }
 

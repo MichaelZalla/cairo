@@ -2,7 +2,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
     app::App,
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     context::ApplicationRenderingContext,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -24,7 +24,7 @@ use cairo::{
 };
 
 pub struct SkyboxScene<'a> {
-    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    framebuffer_rwl: &'a RwLock<Framebuffer>,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -38,7 +38,7 @@ pub struct SkyboxScene<'a> {
 
 impl<'a> SkyboxScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Buffer2D>,
+        framebuffer_rwl: &'a RwLock<Framebuffer>,
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
@@ -229,7 +229,7 @@ impl<'a> Scene for SkyboxScene<'a> {
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
 
-        self.pipeline.begin_frame(None);
+        self.pipeline.begin_frame();
 
         {
             let mut context = self.shader_context.write().unwrap();

@@ -51,21 +51,29 @@ impl<'a> Pipeline<'a> {
                         let light_quad_entity = Entity::new(&quad);
 
                         self.render_entity(&light_quad_entity, Some(materials));
+
+                        return;
                     }
-                    None => {
-                        self.forward_framebuffer
-                            .as_mut()
-                            .unwrap()
-                            .set(x, y, color_u32);
-                    }
+                    None => (),
                 }
             }
-            None => {
-                self.forward_framebuffer
-                    .as_mut()
-                    .unwrap()
-                    .set(x, y, color_u32);
+            None => (),
+        }
+
+        match self.framebuffer {
+            Some(lock) => {
+                let framebuffer = lock.write().unwrap();
+
+                match &framebuffer.attachments.forward_ldr {
+                    Some(forward_buffer_lock) => {
+                        let mut forward_buffer = forward_buffer_lock.write().unwrap();
+
+                        forward_buffer.set(x, y, color_u32);
+                    }
+                    None => (),
+                }
             }
+            None => (),
         }
     }
 }

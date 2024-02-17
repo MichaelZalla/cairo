@@ -2,7 +2,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
     app::App,
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::cache::MaterialCache,
@@ -22,7 +22,7 @@ use cairo::{
 };
 
 pub struct NormalMapScene<'a> {
-    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    framebuffer_rwl: &'a RwLock<Framebuffer>,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -37,7 +37,7 @@ pub struct NormalMapScene<'a> {
 
 impl<'a> NormalMapScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Buffer2D>,
+        framebuffer_rwl: &'a RwLock<Framebuffer>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
@@ -195,13 +195,21 @@ impl<'a> Scene for NormalMapScene<'a> {
 
         let camera = self.cameras[self.active_camera_index];
 
-        self.pipeline
-            .set_projection_z_near(camera.get_projection_z_near());
+        {
+            let framebuffer = self.framebuffer_rwl.write().unwrap();
 
-        self.pipeline
-            .set_projection_z_far(camera.get_projection_z_far());
+            match framebuffer.attachments.depth.as_ref() {
+                Some(lock) => {
+                    let mut depth_buffer = lock.write().unwrap();
 
-        self.pipeline.begin_frame(None);
+                    depth_buffer.set_projection_z_near(camera.get_projection_z_near());
+                    depth_buffer.set_projection_z_far(camera.get_projection_z_far());
+                }
+                None => (),
+            }
+        }
+
+        self.pipeline.begin_frame();
 
         {
             for entity in self.entities.read().unwrap().as_slice() {

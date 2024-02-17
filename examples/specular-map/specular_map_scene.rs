@@ -2,7 +2,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
     app::App,
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::cache::MaterialCache,
@@ -26,7 +26,7 @@ use cairo::{
 };
 
 pub struct SpecularMapScene<'a> {
-    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    framebuffer_rwl: &'a RwLock<Framebuffer>,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -40,7 +40,7 @@ pub struct SpecularMapScene<'a> {
 
 impl<'a> SpecularMapScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Buffer2D>,
+        framebuffer_rwl: &'a RwLock<Framebuffer>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
@@ -236,12 +236,21 @@ impl<'a> Scene for SpecularMapScene<'a> {
 
         let camera = self.cameras[self.active_camera_index];
 
-        self.pipeline
-            .set_projection_z_near(camera.get_projection_z_near());
-        self.pipeline
-            .set_projection_z_far(camera.get_projection_z_far());
+        {
+            let framebuffer = self.framebuffer_rwl.write().unwrap();
 
-        self.pipeline.begin_frame(None);
+            match framebuffer.attachments.depth.as_ref() {
+                Some(lock) => {
+                    let mut depth_buffer = lock.write().unwrap();
+
+                    depth_buffer.set_projection_z_near(camera.get_projection_z_near());
+                    depth_buffer.set_projection_z_far(camera.get_projection_z_far());
+                }
+                None => (),
+            }
+        }
+
+        self.pipeline.begin_frame();
 
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));

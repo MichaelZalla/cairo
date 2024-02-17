@@ -4,7 +4,7 @@ use std::{cell::RefCell, sync::RwLock};
 
 use cairo::{
     app::{App, AppWindowInfo},
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
@@ -47,16 +47,18 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let framebuffer_rwl = RwLock::new(Buffer2D::new(
-        window_info.canvas_width,
-        window_info.canvas_height,
-        None,
-    ));
+    let mut framebuffer = Framebuffer::new(window_info.canvas_width, window_info.canvas_height);
+
+    framebuffer.complete(0.3, 10000.0);
+
+    let framebuffer_rwl = RwLock::new(framebuffer);
+
+    // Sponza meshes
 
     let (atrium_meshes, mut atrium_materials) =
         mesh::obj::load_obj("./examples/sponza/assets/sponza.obj");
 
-    // Load material maps
+    // Sponza materials
 
     match &mut atrium_materials {
         Some(cache) => {
@@ -112,7 +114,14 @@ fn main() -> Result<(), String> {
 
         let framebuffer = framebuffer_rwl.read().unwrap();
 
-        return Ok(framebuffer.get_all().clone());
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let color_buffer = color_buffer_lock.read().unwrap();
+
+                return Ok(color_buffer.get_all().clone());
+            }
+            None => panic!(),
+        }
     };
 
     app.run(&mut update, &mut render)?;

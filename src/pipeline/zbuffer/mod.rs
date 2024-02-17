@@ -15,6 +15,7 @@ pub enum DepthTestMethod {
     GreaterThanOrEqual, // Passes if the fragment's depth is greater than or equal to the stored depth.
 }
 
+#[derive(Default, Debug, Clone)]
 pub struct ZBuffer {
     pub buffer: Buffer2D<f32>,
     projection_z_near: f32,

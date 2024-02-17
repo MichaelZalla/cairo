@@ -4,7 +4,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::App,
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     color,
     context::ApplicationRenderingContext,
     debug::message::DebugMessageBuffer,
@@ -46,7 +46,7 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 };
 
 pub struct SponzaScene<'a> {
-    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    framebuffer_rwl: &'a RwLock<Framebuffer>,
     font_cache_rwl: &'static RwLock<FontCache<'static>>,
     font_info: &'static FontInfo,
     debug_message_buffer: DebugMessageBuffer,
@@ -66,7 +66,7 @@ pub struct SponzaScene<'a> {
 
 impl<'a> SponzaScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Buffer2D>,
+        framebuffer_rwl: &'a RwLock<Framebuffer>,
         font_cache_rwl: &'static RwLock<FontCache<'static>>,
         font_info: &'static FontInfo,
         rendering_context: &ApplicationRenderingContext,
@@ -221,6 +221,16 @@ impl<'a> Scene for SponzaScene<'a> {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::I { .. } => {
+                    let framebuffer = self.framebuffer_rwl.write().unwrap();
+
+                    let mut depth_buffer = framebuffer
+                        .attachments
+                        .depth
+                        .as_ref()
+                        .unwrap()
+                        .write()
+                        .unwrap();
+
                     let methods = vec![
                         DepthTestMethod::Always,
                         DepthTestMethod::Never,
@@ -234,9 +244,7 @@ impl<'a> Scene for SponzaScene<'a> {
 
                     let mut index = methods
                         .iter()
-                        .position(|&method| {
-                            method == *(self.pipeline.get_depth_test_method().unwrap())
-                        })
+                        .position(|&method| method == *(depth_buffer.get_depth_test_method()))
                         .unwrap();
 
                     index = if index == (methods.len() - 1) {
@@ -245,7 +253,7 @@ impl<'a> Scene for SponzaScene<'a> {
                         index + 1
                     };
 
-                    self.pipeline.set_depth_test_method(methods[index])
+                    depth_buffer.set_depth_test_method(methods[index])
                 }
                 Keycode::H { .. } => {
                     self.active_fragment_shader_index += 1;
@@ -363,12 +371,21 @@ impl<'a> Scene for SponzaScene<'a> {
                 self.pipeline.options.face_culling_strategy.winding_order
             ));
 
-            match self.pipeline.get_depth_test_method() {
-                Some(method) => {
-                    self.debug_message_buffer
-                        .write(format!("Depth test method: {:?}", method));
-                }
-                None => (),
+            {
+                let framebuffer = self.framebuffer_rwl.read().unwrap();
+
+                let depth_buffer = framebuffer
+                    .attachments
+                    .depth
+                    .as_ref()
+                    .unwrap()
+                    .read()
+                    .unwrap();
+
+                self.debug_message_buffer.write(format!(
+                    "Depth test method: {:?}",
+                    depth_buffer.get_depth_test_method()
+                ));
             }
 
             self.debug_message_buffer.write(format!(
@@ -397,7 +414,7 @@ impl<'a> Scene for SponzaScene<'a> {
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
 
-        self.pipeline.begin_frame(None);
+        self.pipeline.begin_frame();
 
         let camera = self.cameras[self.active_camera_index];
 
@@ -424,13 +441,21 @@ impl<'a> Scene for SponzaScene<'a> {
         // Render debug messages
 
         {
-            let mut framebuffer = self.framebuffer_rwl.write().unwrap();
+            let framebuffer = self.framebuffer_rwl.write().unwrap();
+
+            let mut color_buffer = framebuffer
+                .attachments
+                .color
+                .as_ref()
+                .unwrap()
+                .write()
+                .unwrap();
 
             let debug_messages = self.debug_message_buffer.borrow_mut();
 
             {
                 Graphics::render_debug_messages(
-                    &mut framebuffer,
+                    &mut *color_buffer,
                     self.font_cache_rwl,
                     self.font_info,
                     (12, 12),

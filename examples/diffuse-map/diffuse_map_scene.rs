@@ -2,7 +2,7 @@ use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
 
 use cairo::{
     app::App,
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     material::cache::MaterialCache,
@@ -22,7 +22,7 @@ use cairo::{
 };
 
 pub struct DiffuseMapScene<'a> {
-    framebuffer_rwl: &'a RwLock<Buffer2D>,
+    framebuffer_rwl: &'a RwLock<Framebuffer>,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
@@ -33,7 +33,7 @@ pub struct DiffuseMapScene<'a> {
 
 impl<'a> DiffuseMapScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Buffer2D>,
+        framebuffer_rwl: &'a RwLock<Framebuffer>,
         entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
@@ -195,7 +195,7 @@ impl<'a> Scene for DiffuseMapScene<'a> {
     fn render(&mut self) {
         self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
 
-        self.pipeline.begin_frame(None);
+        self.pipeline.begin_frame();
 
         for entity in self.entities.read().unwrap().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
