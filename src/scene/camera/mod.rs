@@ -111,6 +111,10 @@ impl Camera {
         self.recompute_projections();
     }
 
+    pub fn get_field_of_view(&self) -> Option<f32> {
+        self.field_of_view
+    }
+
     pub fn get_aspect_ratio(&self) -> Option<f32> {
         self.aspect_ratio
     }
@@ -184,6 +188,15 @@ impl Camera {
                     Mat4::orthographic_inverse(left, right, bottom, top, near, far);
             }
         }
+    }
+
+    pub fn get_view_transform(&self) -> Mat4 {
+        Mat4::look_at_inverse(
+            self.look_vector.get_position(),
+            self.look_vector.get_forward(),
+            self.look_vector.get_right(),
+            self.look_vector.get_up(),
+        )
     }
 
     pub fn get_view_inverse_transform(&self) -> Mat4 {

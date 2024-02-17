@@ -1,5 +1,5 @@
 use crate::{
-    color::{self, Color},
+    color::{self},
     entity::Entity,
     material::cache::MaterialCache,
     mesh,
@@ -101,40 +101,32 @@ impl<'a> Pipeline<'a> {
 
         // Draw sides for cutoff angles.
 
-        let mut draw_spotlight_frustum = |cutoff_angle: f32, color: Color| {
-            let opposite_over_adjacent = cutoff_angle.tan();
+        let opposite_over_adjacent = light.outer_cutoff_angle.tan();
 
-            let box_points = [
-                target_position
-                    + light.look_vector.get_right()
-                        * opposite_over_adjacent
-                        * light.influence_distance,
-                target_position
-                    + light.look_vector.get_up()
-                        * -1.0
-                        * opposite_over_adjacent
-                        * light.influence_distance,
-                target_position
-                    + light.look_vector.get_right()
-                        * -1.0
-                        * opposite_over_adjacent
-                        * light.influence_distance,
-                target_position
-                    + light.look_vector.get_up()
-                        * opposite_over_adjacent
-                        * light.influence_distance,
-            ];
+        let near_plane_points_world_space = [
+            light_position,
+            light_position,
+            light_position,
+            light_position,
+        ];
 
-            for (index, point) in box_points.as_slice().iter().enumerate() {
-                self.render_line(light_position, *point, color);
-                self.render_line(
-                    box_points[index],
-                    box_points[if index == 3 { 0 } else { index + 1 }],
-                    color,
-                );
-            }
-        };
+        let far_plane_points_world_space = [
+            target_position
+                + light.look_vector.get_right() * opposite_over_adjacent * light.influence_distance,
+            target_position
+                + light.look_vector.get_up()
+                    * -1.0
+                    * opposite_over_adjacent
+                    * light.influence_distance,
+            target_position
+                + light.look_vector.get_right()
+                    * -1.0
+                    * opposite_over_adjacent
+                    * light.influence_distance,
+            target_position
+                + light.look_vector.get_up() * opposite_over_adjacent * light.influence_distance,
+        ];
 
-        draw_spotlight_frustum(light.outer_cutoff_angle, color::YELLOW);
+        self.render_frustum(near_plane_points_world_space, far_plane_points_world_space);
     }
 }
