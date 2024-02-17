@@ -364,32 +364,16 @@ impl<'a> Pipeline<'a> {
 
     pub fn end_frame(&mut self) {
         if self.options.do_rasterized_geometry {
-            // Perform deferred lighting pass.
+            self.do_deferred_lighting_pass();
 
-            let shader_context = self.shader_context.read().unwrap();
+            // Bloom pass over the deferred (HDR) buffer.
 
-            // Call the active fragment shader on every G-buffer sample that was
-            // written to by the rasterizer.
-
-            for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
-                if sample.stencil == true {
-                    let x = index as u32 % self.viewport.width;
-                    let y = index as u32 / self.viewport.width;
-
-                    let color = self.get_hdr_color_for_sample(&shader_context, &sample);
-
-                    self.deferred_framebuffer.as_mut().unwrap().set(x, y, color);
-                }
+            if self.options.do_bloom {
+                self.do_bloom_pass();
             }
         }
 
-        // Bloom pass over the deferred (HDR) buffer.
-
-        if self.options.do_bloom {
-            self.do_bloom_pass();
-        }
-
-        // Compose deferred and forward rendering frames together.
+        // Blit deferred framebuffer onto composite framebuffer.
 
         let mut composite_framebuffer = match self.composite_framebuffer {
             Some(composite_framebuffer) => composite_framebuffer.write().unwrap(),
@@ -418,6 +402,26 @@ impl<'a> Pipeline<'a> {
         for (index, value) in forward_frame.iter().enumerate() {
             if *value != self.keying_color {
                 composite_framebuffer.set_raw(index, *value);
+            }
+        }
+    }
+
+    fn do_deferred_lighting_pass(&mut self) {
+        // Perform deferred lighting pass.
+
+        let shader_context = self.shader_context.read().unwrap();
+
+        // Call the active fragment shader on every G-buffer sample that was
+        // written to by the rasterizer.
+
+        for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
+            if sample.stencil == true {
+                let x = index as u32 % self.viewport.width;
+                let y = index as u32 / self.viewport.width;
+
+                let color = self.get_hdr_color_for_sample(&shader_context, &sample);
+
+                self.deferred_framebuffer.as_mut().unwrap().set(x, y, color);
             }
         }
     }
