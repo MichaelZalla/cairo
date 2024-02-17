@@ -99,19 +99,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Front face
 
     let front_face_1 = Face {
-        // (front_top_left, front_bottom_left, front_top_right)
-        vertices: (0, 2, 1),
-        // (top_left, bottom_left, top_right)
-        uvs: Some((0, 2, 1)),
+        // (front_top_right, front_bottom_left, front_top_left)
+        vertices: (1, 2, 0),
+        // (top_right, bottom_left, top_left)
+        uvs: Some((1, 2, 0)),
         // (backward, backward, backward)
         normals: Some((1, 1, 1)),
     };
 
     let front_face_2 = Face {
-        // (front_bottom_left, front_bottom_right, front_top_right)
-        vertices: (2, 3, 1),
-        // (bottom_left, bottom_right, top_right)
-        uvs: Some((2, 3, 1)),
+        // (front_top_right, front_bottom_right, front_bottom_left)
+        vertices: (1, 3, 2),
+        // (top_right, bottom_right, bottom_left)
+        uvs: Some((1, 3, 2)),
         // (backward, backward, backward)
         normals: Some((1, 1, 1)),
     };
@@ -122,19 +122,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Back face
 
     let back_face_1 = Face {
-        // (back_top_left, back_top_right, back_bottom_left)
-        vertices: (4, 5, 6),
-        // (top_right, top_left, bottom_right)
-        uvs: Some((1, 0, 3)),
+        // (back_bottom_left, back_top_right, back_top_left)
+        vertices: (6, 5, 4),
+        // (bottom_right, top_left, top_right)
+        uvs: Some((3, 0, 1)),
         // (forward, forward, forward)
         normals: Some((0, 0, 0)),
     };
 
     let back_face_2 = Face {
-        // (back_top_right, back_bottom_right, back_bottom_left)
-        vertices: (5, 7, 6),
-        // (top_left, bottom_left, bottom_right)
-        uvs: Some((0, 2, 3)),
+        // (back_bottom_left, back_bottom_right, back_top_right)
+        vertices: (6, 7, 5),
+        // (bottom_right, bottom_left, top_left)
+        uvs: Some((3, 2, 0)),
         // (forward, forward, forward)
         normals: Some((0, 0, 0)),
     };
@@ -145,19 +145,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Top face
 
     let top_face_1 = Face {
-        // (back_top_left, front_top_left, back_top_right)
-        vertices: (4, 0, 5),
-        // (top_left, bottom_left, top_right)
-        uvs: Some((0, 2, 1)),
+        // (back_top_right, front_top_left, back_top_left)
+        vertices: (5, 0, 4),
+        // (top_right, bottom_left, top_left)
+        uvs: Some((1, 2, 0)),
         // (up, up, up)
         normals: Some((2, 2, 2)),
     };
 
     let top_face_2 = Face {
-        // (front_top_left, front_top_right, back_top_right)
-        vertices: (0, 1, 5),
-        // (bottom_left, bottom_right, top_right)
-        uvs: Some((2, 3, 1)),
+        // (back_top_right, front_top_right, front_top_left)
+        vertices: (5, 1, 0),
+        // (top_right, bottom_right, bottom_left)
+        uvs: Some((1, 3, 2)),
         // (up, up, up)
         normals: Some((2, 2, 2)),
     };
@@ -168,19 +168,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Bottom face
 
     let bottom_face_1 = Face {
-        // (back_bottom_left, back_bottom_right, front_bottom_left)
-        vertices: (6, 7, 2),
-        // (bottom_left, bottom_right, top_left)
-        uvs: Some((2, 3, 0)),
+        // (front_bottom_left, back_bottom_right, back_bottom_left)
+        vertices: (2, 7, 6),
+        // (top_left, bottom_right, bottom_left)
+        uvs: Some((0, 3, 2)),
         // (down, down, down)
         normals: Some((3, 3, 3)),
     };
 
     let bottom_face_2 = Face {
-        // (back_bottom_right, front_bottom_right, front_bottom_left)
-        vertices: (7, 3, 2),
-        // (bottom_right, top_right, top_left)
-        uvs: Some((3, 1, 0)),
+        // (front_bottom_left, front_bottom_right, back_bottom_right)
+        vertices: (2, 3, 7),
+        // (top_left, top_right, bottom_right)
+        uvs: Some((0, 1, 3)),
         // (down, down, down)
         normals: Some((3, 3, 3)),
     };
@@ -191,19 +191,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Left face
 
     let left_face_1 = Face {
-        // (back_top_left, back_bottom_left, front_top_left)
-        vertices: (4, 6, 0),
-        // (top_left, bottom_left, top_right)
-        uvs: Some((0, 2, 1)),
+        // (front_top_left, back_bottom_left, back_top_left)
+        vertices: (0, 6, 4),
+        // (top_right, bottom_left, top_left)
+        uvs: Some((1, 2, 0)),
         // (left, left, left)
         normals: Some((4, 4, 4)),
     };
 
     let left_face_2 = Face {
-        // (back_bottom_left, front_bottom_left, front_top_left)
-        vertices: (6, 2, 0),
-        // (bottom_left, bottom_right, top_right)
-        uvs: Some((2, 3, 1)),
+        // (front_top_left, front_bottom_left, back_bottom_left)
+        vertices: (0, 2, 6),
+        // (top_right, bottom_right, bottom_left)
+        uvs: Some((1, 3, 2)),
         // (left, left, left)
         normals: Some((4, 4, 4)),
     };
@@ -214,19 +214,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Right face
 
     let right_face_1 = Face {
-        // (front_top_right, front_bottom_right, back_bottom_right)
-        vertices: (1, 3, 7),
-        // (top_left, bottom_left, bottom_right)
-        uvs: Some((0, 2, 3)),
+        // (back_bottom_right, front_bottom_right, front_top_right)
+        vertices: (7, 3, 1),
+        // (bottom_right, bottom_left, top_left)
+        uvs: Some((3, 2, 0)),
         // (right, right, right)
         normals: Some((5, 5, 5)),
     };
 
     let right_face_2 = Face {
-        // (back_bottom_right back_top_right, front_top_right)
-        vertices: (7, 5, 1),
-        // (bottom_right, top_right, top_left)
-        uvs: Some((3, 1, 0)),
+        // (front_top_right back_top_right, back_bottom_right)
+        vertices: (1, 5, 7),
+        // (top_left, top_right, bottom_right)
+        uvs: Some((0, 1, 3)),
         // (right, right, right)
         normals: Some((5, 5, 5)),
     };
