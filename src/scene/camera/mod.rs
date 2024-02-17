@@ -119,8 +119,24 @@ impl Camera {
         self.projection_z_near
     }
 
+    pub fn set_projection_z_near(&mut self, near: f32) {
+        self.projection_z_near = near;
+
+        // Recompute projections.
+
+        self.recompute_projections();
+    }
+
     pub fn get_projection_z_far(&self) -> f32 {
         self.projection_z_far
+    }
+
+    pub fn set_projection_z_far(&mut self, far: f32) {
+        self.projection_z_far = far;
+
+        // Recompute projections.
+
+        self.recompute_projections();
     }
 
     fn recompute_projections(&mut self) {
@@ -168,22 +184,6 @@ impl Camera {
                     Mat4::orthographic_inverse(left, right, bottom, top, near, far);
             }
         }
-    }
-
-    pub fn set_projection_z_near(&mut self, near: f32) {
-        self.projection_z_near = near;
-
-        // Recompute projections.
-
-        self.recompute_projections();
-    }
-
-    pub fn set_projection_z_far(&mut self, far: f32) {
-        self.projection_z_far = far;
-
-        // Recompute projections.
-
-        self.recompute_projections();
     }
 
     pub fn get_view_inverse_transform(&self) -> Mat4 {
