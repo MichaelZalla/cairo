@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fmt::Debug, path::Path, rc::Rc};
+use std::{
+    collections::{hash_map::Iter, HashMap},
+    fmt::Debug,
+    path::Path,
+    rc::Rc,
+};
 
 use sdl2::ttf::{Font as SDLFont, Sdl2TtfContext};
 
@@ -54,5 +59,9 @@ impl<'l> FontCache<'l> {
                 }
             }
         }
+    }
+
+    pub fn iter(&self) -> Iter<'_, FontHashMapKey, FontHashMapValue<'l>> {
+        self.cache.iter()
     }
 }

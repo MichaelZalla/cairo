@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{hash_map::Iter, HashMap};
 
 use super::Material;
 
@@ -31,5 +31,9 @@ impl MaterialCache {
     pub fn insert(&mut self, new_entry: Material) {
         let key = new_entry.name.clone();
         let _old_entry = self.map.insert(key, new_entry);
+    }
+
+    pub fn iter(&self) -> Iter<'_, String, Material> {
+        self.map.iter()
     }
 }
