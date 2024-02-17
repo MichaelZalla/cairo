@@ -22,7 +22,7 @@ pub enum PipelineFaceCullingReject {
 #[derive(Default, Debug, Copy, Clone)]
 pub struct PipelineFaceCullingStrategy {
     pub reject: PipelineFaceCullingReject,
-    pub window_order: PipelineFaceCullingWindingOrder,
+    pub winding_order: PipelineFaceCullingWindingOrder,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -134,8 +134,8 @@ impl PipelineOptions {
                 Keycode::Num8 { .. } => {
                     // Cycle window orders.
 
-                    self.face_culling_strategy.window_order =
-                        match self.face_culling_strategy.window_order {
+                    self.face_culling_strategy.winding_order =
+                        match self.face_culling_strategy.winding_order {
                             PipelineFaceCullingWindingOrder::Clockwise => {
                                 PipelineFaceCullingWindingOrder::CounterClockwise
                             }
@@ -146,7 +146,7 @@ impl PipelineOptions {
 
                     println!(
                         "Face culling window order: {:?}",
-                        self.face_culling_strategy.window_order
+                        self.face_culling_strategy.winding_order
                     );
                 }
                 _ => {}

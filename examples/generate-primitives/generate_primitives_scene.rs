@@ -413,7 +413,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
             self.debug_message_buffer.write(format!(
                 "Culling window order: {:?}",
-                self.pipeline.options.face_culling_strategy.window_order
+                self.pipeline.options.face_culling_strategy.winding_order
             ));
 
             self.debug_message_buffer.write(format!(

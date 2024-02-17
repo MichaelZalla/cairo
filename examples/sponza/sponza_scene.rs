@@ -360,7 +360,7 @@ impl<'a> Scene for SponzaScene<'a> {
 
             self.debug_message_buffer.write(format!(
                 "Culling window order: {:?}",
-                self.pipeline.options.face_culling_strategy.window_order
+                self.pipeline.options.face_culling_strategy.winding_order
             ));
 
             match self.pipeline.get_depth_test_method() {
