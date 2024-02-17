@@ -317,7 +317,13 @@ impl Camera {
 
                     self.recompute_projections();
                 }
-                CameraProjectionKind::Orthographic => (),
+                CameraProjectionKind::Orthographic => {
+                    let current_z_far = self.get_projection_z_far();
+
+                    self.set_projection_z_far(current_z_far + mouse_state.wheel_y as f32);
+
+                    self.recompute_projections();
+                }
             }
         }
     }
