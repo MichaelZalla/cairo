@@ -132,12 +132,12 @@ impl<'a> SkyboxScene<'a> {
 
         let mut skybox = CubeMap::new(
             [
-                "examples/skybox/assets/front.jpg",
-                "examples/skybox/assets/back.jpg",
-                "examples/skybox/assets/top.jpg",
-                "examples/skybox/assets/bottom.jpg",
-                "examples/skybox/assets/left.jpg",
-                "examples/skybox/assets/right.jpg",
+                "examples/skybox/assets/sides/front.jpg",
+                "examples/skybox/assets/sides/back.jpg",
+                "examples/skybox/assets/sides/top.jpg",
+                "examples/skybox/assets/sides/bottom.jpg",
+                "examples/skybox/assets/sides/left.jpg",
+                "examples/skybox/assets/sides/right.jpg",
             ],
             TextureMapStorageFormat::RGB24,
         );
