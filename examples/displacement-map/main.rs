@@ -73,14 +73,18 @@ fn main() -> Result<(), String> {
         &"./examples/displacement-map/assets/bricks2.jpg",
         TextureMapStorageFormat::RGB24,
     ));
+
     brick_material.normal_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/bricks2_normal.jpg",
         TextureMapStorageFormat::RGB24,
     ));
+
     brick_material.displacement_map = Some(TextureMap::new(
         &"./examples/displacement-map/assets/bricks2_disp.jpg",
         TextureMapStorageFormat::Index8,
     ));
+
+    brick_material.displacement_scale = 0.05;
 
     brick_material.load_all_maps(rendering_context)?;
 

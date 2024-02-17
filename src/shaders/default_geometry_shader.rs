@@ -36,16 +36,16 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &RwLockReadGuar
 
     match (options.displacement_mapping_active, context.active_material) {
         (true, Some(material_raw_mut)) => unsafe {
-            match &(*material_raw_mut).displacement_map {
+            let material = &(*material_raw_mut);
+
+            match &material.displacement_map {
                 Some(map) => {
-                    let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
+                    let (r, _g, _b) = sample_nearest(interpolant.uv, &map, None);
 
                     let displacement = r as f32 / 255.0;
 
                     // Modify sample UV based on height map, if
                     // necessary, before proceeding.
-
-                    static DISPLACEMENT_SCALE: f32 = 0.05;
 
                     static LAYER_COUNT_MIN: f32 = 8.0;
                     static LAYER_COUNT_MAX: f32 = 32.0;
@@ -80,7 +80,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &RwLockReadGuar
                                     / fragment_to_view_direction_tangent_space.z,
                                 z: 1.0,
                             } * displacement
-                                * DISPLACEMENT_SCALE;
+                                * *(&material.displacement_scale);
 
                             let uv_step = p / layer_count;
 
@@ -94,7 +94,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &RwLockReadGuar
 
                                 // Re-sample the displacement map at this new UV coordinate.
                                 current_sampled_displacement =
-                                    sample_nearest(current_uv, map, None).0 as f32 / 255.0;
+                                    sample_nearest(current_uv, &map, None).0 as f32 / 255.0;
 
                                 // Update "current" layer depth for our next loop iteration.
                                 current_layer_depth += layer_depth;
@@ -108,7 +108,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &RwLockReadGuar
 
                             let after_depth = current_sampled_displacement - current_layer_depth;
 
-                            let before_depth = (sample_nearest(previous_uv, map, None).0 as f32
+                            let before_depth = (sample_nearest(previous_uv, &map, None).0 as f32
                                 / 255.0)
                                 - current_layer_depth
                                 + layer_depth;

@@ -30,6 +30,7 @@ pub struct Material {
     pub index_of_refraction: f32,
     pub normal_map: Option<TextureMap>,
     pub displacement_map: Option<TextureMap>,
+    pub displacement_scale: f32,
 }
 
 impl Material {
@@ -234,6 +235,8 @@ impl fmt::Display for Material {
             Some(map) => writeln!(v, "  > Normal map: {}", map.info.filepath),
             _ => Ok(()),
         }?;
+
+        writeln!(v, "  > Displacement scale: {}", self.displacement_scale)?;
 
         match &self.displacement_map {
             Some(map) => writeln!(v, "  > Displacement map: {}", map.info.filepath),
