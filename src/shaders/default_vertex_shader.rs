@@ -40,12 +40,7 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
 
         // @NOTE(mzalla) Reversed Z-axis for our renderer's coordinate system.
 
-        let tbn = Mat4::new_from_elements([
-            [t.x, t.y, t.z, 0.0],
-            [b.x, b.y, b.z, 0.0],
-            [n.x, n.y, n.z, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ]);
+        let tbn = Mat4::tbn(t.to_vec3(), b.to_vec3(), n.to_vec3());
 
         let tbn_inverse = tbn.transposed();
 

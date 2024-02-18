@@ -253,6 +253,17 @@ impl Mat<f32, 3> {
 }
 
 impl Mat<f32, 4> {
+    pub fn tbn(t: Vec3, b: Vec3, n: Vec3) -> Self {
+        Self {
+            elements: [
+                [t.x, t.y, t.z, 0.0],
+                [b.x, b.y, b.z, 0.0],
+                [n.x, n.y, n.z, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        }
+    }
+
     pub fn rotation_z(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();

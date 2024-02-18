@@ -209,19 +209,11 @@ impl Camera {
     }
 
     pub fn get_view_rotation_transform(&self) -> Mat4 {
-        let (f, r, u) = (
-            self.look_vector.get_forward(),
+        Mat4::tbn(
             self.look_vector.get_right(),
             self.look_vector.get_up(),
-        );
-
-        Mat4::new_from_elements([
-            // Row-major ordering
-            [r.x, r.y, r.z, 0.0],
-            [u.x, u.y, u.z, 0.0],
-            [f.x, f.y, f.z, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ])
+            self.look_vector.get_forward(),
+        )
     }
 
     pub fn get_projection(&self) -> Mat4 {
