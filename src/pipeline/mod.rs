@@ -185,9 +185,9 @@ impl<'a> Pipeline<'a> {
     pub fn begin_frame(&mut self) {
         match self.framebuffer {
             Some(lock) => {
-                let mut composite_framebuffer = lock.write().unwrap();
+                let mut framebuffer = lock.write().unwrap();
 
-                composite_framebuffer.clear();
+                framebuffer.clear();
             }
             None => (),
         }
