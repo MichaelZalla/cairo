@@ -1,6 +1,8 @@
 use std::fmt;
 use std::ops;
 
+use crate::animation::lerp;
+
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct Vec2 {
     pub x: f32,
@@ -114,6 +116,6 @@ impl ops::Div<f32> for Vec2 {
 
 impl Vec2 {
     pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        return start + (end - start) * alpha;
+        lerp(start, end, alpha)
     }
 }

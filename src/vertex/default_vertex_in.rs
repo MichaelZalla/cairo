@@ -3,7 +3,10 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::vec::{vec2::Vec2, vec3::Vec3};
+use crate::{
+    animation::lerp,
+    vec::{vec2::Vec2, vec3::Vec3},
+};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct DefaultVertexIn {
@@ -21,7 +24,7 @@ impl DefaultVertexIn {
     }
 
     pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        return start + (end - start) * alpha;
+        lerp(start, end, alpha)
     }
 }
 

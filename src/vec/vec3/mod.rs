@@ -2,6 +2,8 @@ use std::cmp;
 use std::fmt;
 use std::ops;
 
+use crate::animation::lerp;
+
 #[derive(Debug, Copy, Clone, Default)]
 pub struct Vec3 {
     pub x: f32,
@@ -177,7 +179,7 @@ impl Vec3 {
     }
 
     pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        return start + (end - start) * alpha;
+        lerp(start, end, alpha)
     }
 
     pub fn srgb_to_linear(&mut self) {

@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    animation::lerp,
     matrix::Mat4,
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
@@ -117,7 +118,7 @@ impl DefaultVertexOut {
     }
 
     pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        return start + (end - start) * alpha;
+        lerp(start, end, alpha)
     }
 }
 
