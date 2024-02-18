@@ -17,7 +17,7 @@ pub const UvTestFragmentShader: FragmentShaderFn =
         let g: u8;
         let b: u8;
 
-        match context.active_test_uv_texture_map {
+        match context.active_uv_test_texture_map {
             Some(map_raw_mut) => unsafe {
                 let map = &(*map_raw_mut);
                 (r, g, b) = sample_bilinear(sample.uv, map, None);
