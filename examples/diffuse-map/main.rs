@@ -76,7 +76,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> () {
-        // Delegate the update to our textured cube scene
+        // Delegate the update to our scene.
 
         scene
             .borrow_mut()
@@ -84,7 +84,7 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our textured cube scene
+        // Delegate the rendering to our scene.
 
         scene.borrow_mut().render();
 
