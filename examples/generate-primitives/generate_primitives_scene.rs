@@ -520,27 +520,25 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         // Render debug messages
 
+        let debug_messages = self.debug_message_buffer.borrow_mut();
+
         {
-            let debug_messages = self.debug_message_buffer.borrow_mut();
+            let framebuffer = self.framebuffer_rwl.write().unwrap();
 
-            {
-                let framebuffer = self.framebuffer_rwl.write().unwrap();
+            match framebuffer.attachments.color.as_ref() {
+                Some(lock) => {
+                    let mut color_buffer = lock.write().unwrap();
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(lock) => {
-                        let mut color_buffer = lock.write().unwrap();
-
-                        Graphics::render_debug_messages(
-                            &mut *color_buffer,
-                            self.font_cache_rwl,
-                            self.font_info,
-                            (12, 12),
-                            1.0,
-                            debug_messages,
-                        );
-                    }
-                    None => (),
+                    Graphics::render_debug_messages(
+                        &mut *color_buffer,
+                        self.font_cache_rwl,
+                        self.font_info,
+                        (12, 12),
+                        1.0,
+                        debug_messages,
+                    );
                 }
+                None => (),
             }
         }
     }
