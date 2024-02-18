@@ -604,23 +604,18 @@ impl<'a> Pipeline<'a> {
             Some(lock) => {
                 let framebuffer = lock.write().unwrap();
 
-                match (
-                    framebuffer.attachments.stencil.as_ref(),
-                    framebuffer.attachments.depth.as_ref(),
-                    framebuffer.attachments.forward_ldr.as_ref(),
-                ) {
-                    (
-                        Some(stencil_buffer_lock),
-                        Some(depth_buffer_lock),
-                        Some(forward_buffer_lock),
-                    ) => {
-                        let mut stencil_buffer = stencil_buffer_lock.write().unwrap();
+                match framebuffer.attachments.depth.as_ref() {
+                    Some(depth_buffer_lock) => {
                         let mut depth_buffer = depth_buffer_lock.write().unwrap();
 
-                        match depth_buffer.test(x, y, interpolant.position.z) {
+                        // Restore linear space interpolant.
+
+                        let mut linear_space_interpolant =
+                            *interpolant * (1.0 / interpolant.position.w);
+
+                        match depth_buffer.test(x, y, linear_space_interpolant.position.z) {
                             Some(((x, y), non_linear_z)) => {
-                                let mut linear_space_interpolant =
-                                    *interpolant * (1.0 / interpolant.position.w);
+                                // Alpha shader test.
 
                                 let shader_context = self.shader_context.read().unwrap();
 
@@ -630,9 +625,23 @@ impl<'a> Pipeline<'a> {
                                     return;
                                 }
 
-                                stencil_buffer.set(x, y, 1);
+                                // Write to the depth attachment.
 
                                 depth_buffer.set(x, y, non_linear_z);
+
+                                match framebuffer.attachments.stencil.as_ref() {
+                                    Some(stencil_buffer_lock) => {
+                                        // Write to the depth attachment.
+
+                                        let mut stencil_buffer =
+                                            stencil_buffer_lock.write().unwrap();
+
+                                        stencil_buffer.set(x, y, 1);
+                                    }
+                                    None => (),
+                                }
+
+                                // Geometry shader.
 
                                 match self.g_buffer.as_mut() {
                                     Some(g_buffer) => {
@@ -650,22 +659,33 @@ impl<'a> Pipeline<'a> {
                                         ) {
                                             Some(sample) => {
                                                 if self.options.do_deferred_lighting == false {
-                                                    let forward_fragment_color = self
-                                                        .get_tone_mapped_color_from_hdr(
-                                                            self.get_hdr_color_for_sample(
-                                                                &shader_context,
-                                                                &sample,
-                                                            ),
-                                                        );
+                                                    match framebuffer
+                                                        .attachments
+                                                        .forward_ldr
+                                                        .as_ref()
+                                                    {
+                                                        Some(forward_buffer_lock) => {
+                                                            let mut forward_buffer =
+                                                                forward_buffer_lock
+                                                                    .write()
+                                                                    .unwrap();
 
-                                                    let mut forward_buffer =
-                                                        forward_buffer_lock.write().unwrap();
+                                                            let forward_fragment_color = self
+                                                                .get_tone_mapped_color_from_hdr(
+                                                                    self.get_hdr_color_for_sample(
+                                                                        &shader_context,
+                                                                        &sample,
+                                                                    ),
+                                                                );
 
-                                                    forward_buffer.set(
-                                                        x,
-                                                        y,
-                                                        forward_fragment_color.to_u32(),
-                                                    );
+                                                            forward_buffer.set(
+                                                                x,
+                                                                y,
+                                                                forward_fragment_color.to_u32(),
+                                                            );
+                                                        }
+                                                        None => (),
+                                                    }
                                                 } else {
                                                     g_buffer.set(x, y, sample);
                                                 }
@@ -676,11 +696,11 @@ impl<'a> Pipeline<'a> {
                                     None => (),
                                 }
                             }
-                            None => {}
+                            None => (),
                         }
                     }
                     _ => {
-                        todo!("Support framebuffers with no bound depth attachment or no bound forward (LDR) attachment!");
+                        todo!("Support framebuffers with no bound depth attachment! (i.e., always passes depth test)");
                     }
                 }
             }
