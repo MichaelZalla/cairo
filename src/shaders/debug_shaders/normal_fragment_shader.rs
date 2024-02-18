@@ -4,7 +4,9 @@ use std::sync::{RwLock, RwLockReadGuard};
 
 use crate::{
     color::Color,
-    shader::{fragment::FragmentShaderFn, geometry::sample::GeometrySample, ShaderContext},
+    shader::{
+        context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
+    },
     vec::vec4::Vec4,
 };
 

@@ -10,7 +10,7 @@ use cairo::{
     font::{cache::FontCache, FontInfo},
     mesh,
     scene::Scene,
-    shader::ShaderContext,
+    shader::context::ShaderContext,
 };
 
 mod sponza_scene;

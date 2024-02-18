@@ -16,7 +16,7 @@ use cairo::{
     material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
-    shader::ShaderContext,
+    shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat},
 };
 

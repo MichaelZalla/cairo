@@ -9,7 +9,7 @@ use cairo::{
     entity::Entity,
     mesh,
     scene::Scene,
-    shader::ShaderContext,
+    shader::context::ShaderContext,
 };
 
 mod spinning_cube_scene;

@@ -19,7 +19,7 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::{fragment::FragmentShaderFn, ShaderContext},
+    shader::{context::ShaderContext, fragment::FragmentShaderFn},
     shaders::{
         debug_shaders::{
             albedo_fragment_shader::AlbedoFragmentShader,

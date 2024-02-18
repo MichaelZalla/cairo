@@ -12,7 +12,7 @@ use cairo::{
     material::{cache::MaterialCache, Material},
     mesh,
     scene::Scene,
-    shader::ShaderContext,
+    shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
 };
 use sdl2::keyboard::Keycode;

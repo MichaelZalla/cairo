@@ -10,7 +10,7 @@ use cairo::{
     material::cache::MaterialCache,
     mesh,
     scene::Scene,
-    shader::ShaderContext,
+    shader::context::ShaderContext,
 };
 
 mod skybox_scene;

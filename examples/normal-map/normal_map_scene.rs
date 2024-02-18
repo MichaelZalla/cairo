@@ -12,7 +12,7 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::ShaderContext,
+    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         // default_geometry_shader::DEFAULT_GEOMETRY_SHADER,

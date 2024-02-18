@@ -1,7 +1,7 @@
 use std::sync::RwLockReadGuard;
 
 use crate::{
-    shader::{alpha::AlphaShaderFn, ShaderContext},
+    shader::{alpha::AlphaShaderFn, context::ShaderContext},
     texture::sample::sample_nearest,
     vertex::default_vertex_out::DefaultVertexOut,
 };

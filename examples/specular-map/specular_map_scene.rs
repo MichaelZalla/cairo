@@ -12,7 +12,7 @@ use cairo::{
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         Scene,
     },
-    shader::ShaderContext,
+    shader::context::ShaderContext,
     shaders::{
         // debug_shaders::{
         //     specular_intensity_fragment_shader::SpecularIntensityFragmentShader,

@@ -11,10 +11,10 @@ use crate::{
     mesh::Face,
     shader::{
         alpha::AlphaShaderFn,
+        context::ShaderContext,
         fragment::FragmentShaderFn,
         geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
         vertex::VertexShaderFn,
-        ShaderContext,
     },
     shaders::{
         default_alpha_shader::DEFAULT_ALPHA_SHADER,

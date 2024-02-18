@@ -7,7 +7,7 @@ pub mod sample;
 
 use std::sync::RwLockReadGuard;
 
-use super::ShaderContext;
+use super::context::ShaderContext;
 
 pub type GeometryShaderFn = fn(
     &RwLockReadGuard<ShaderContext>,

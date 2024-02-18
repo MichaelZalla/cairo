@@ -2,7 +2,7 @@ use std::sync::RwLockReadGuard;
 
 use crate::{
     matrix::Mat4,
-    shader::{vertex::VertexShaderFn, ShaderContext},
+    shader::{context::ShaderContext, vertex::VertexShaderFn},
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::{
         default_vertex_in::DefaultVertexIn,

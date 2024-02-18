@@ -4,8 +4,8 @@ use crate::{
     color::{self, Color},
     scene::light::PointLight,
     shader::{
+        context::ShaderContext,
         geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
-        ShaderContext,
     },
     texture::sample::{sample_bilinear, sample_nearest},
     vec::{
