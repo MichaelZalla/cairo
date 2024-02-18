@@ -89,6 +89,8 @@ impl TextureMap {
                     TextureMapStorageFormat::RGBA32
                 } else if bytes_per_pixel == 3 {
                     TextureMapStorageFormat::RGB24
+                } else if bytes_per_pixel == 1 {
+                    TextureMapStorageFormat::Index8
                 } else {
                     panic!(
                         "Invalid buffer data length {} for buffer size {}x{}!",
