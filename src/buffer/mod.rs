@@ -84,6 +84,18 @@ where
         &mut self.data[(y * self.width + x) as usize]
     }
 
+    pub fn get_raw(&self, index: usize) -> &T {
+        debug_assert!(index < self.data.len());
+
+        &self.data[index]
+    }
+
+    pub fn get_raw_mut(&mut self, index: usize) -> &mut T {
+        debug_assert!(index < self.data.len());
+
+        &mut self.data[index]
+    }
+
     pub fn set(&mut self, x: u32, y: u32, value: T) {
         debug_assert!(x < self.width && y < self.height);
 
