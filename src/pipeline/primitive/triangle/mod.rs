@@ -12,6 +12,10 @@ use crate::{
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
+pub(in crate::pipeline) mod clip;
+
+use clip::clip;
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Triangle<T> {
     pub v0: T,
@@ -226,45 +230,6 @@ impl<'a> Pipeline<'a> {
         return false;
     }
 
-    fn clip1(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
-        let a_alpha = -(v0.position.z) / (v1.position.z - v0.position.z);
-        let b_alpha = -(v0.position.z) / (v2.position.z - v0.position.z);
-
-        let a_prime = DefaultVertexOut::interpolate(v0, v1, a_alpha);
-        let b_prime = DefaultVertexOut::interpolate(v0, v2, b_alpha);
-
-        let mut triangle1 = Triangle {
-            v0: a_prime,
-            v1,
-            v2,
-        };
-
-        let mut triangle2 = Triangle {
-            v0: b_prime,
-            v1: a_prime,
-            v2,
-        };
-
-        self.post_process_triangle_vertices(&mut triangle1);
-        self.post_process_triangle_vertices(&mut triangle2);
-    }
-
-    fn clip2(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
-        let a_alpha = -(v0.position.z) / (v2.position.z - v0.position.z);
-        let b_alpha = -(v1.position.z) / (v2.position.z - v1.position.z);
-
-        let a_prime = DefaultVertexOut::interpolate(v0, v2, a_alpha);
-        let b_prime = DefaultVertexOut::interpolate(v1, v2, b_alpha);
-
-        let mut triangle = Triangle {
-            v0: a_prime,
-            v1: b_prime,
-            v2,
-        };
-
-        self.post_process_triangle_vertices(&mut triangle);
-    }
-
     fn process_triangle(&mut self, triangle: &Triangle<DefaultVertexOut>) {
         // @TODO(mzalla) Geometry shader?
 
@@ -272,32 +237,10 @@ impl<'a> Pipeline<'a> {
             return;
         }
 
-        // Clip triangles that intersect the front of our view frustum
+        let clipped_triangles = clip(triangle);
 
-        if triangle.v0.position.z < 0.0 {
-            if triangle.v1.position.z < 0.0 {
-                // Clip 2 (0 and 1)
-                self.clip2(triangle.v0, triangle.v1, triangle.v2);
-            } else if triangle.v2.position.z < 0.0 {
-                // Clip 2 (0 and 2)
-                self.clip1(triangle.v0, triangle.v2, triangle.v1);
-            } else {
-                // Clip 1 (0)
-                self.clip1(triangle.v0, triangle.v1, triangle.v2);
-            }
-        } else if triangle.v1.position.z < 0.0 {
-            if triangle.v2.position.z < 0.0 {
-                // Clip 2
-                self.clip2(triangle.v1, triangle.v2, triangle.v0);
-            } else {
-                // Clip 1
-                self.clip1(triangle.v1, triangle.v0, triangle.v2);
-            }
-        } else if triangle.v2.position.z < 0.0 {
-            // Clip 1
-            self.clip1(triangle.v2, triangle.v0, triangle.v1);
-        } else {
-            self.post_process_triangle_vertices(triangle);
+        for clipped in &clipped_triangles {
+            self.post_process_triangle_vertices(clipped);
         }
     }
 
