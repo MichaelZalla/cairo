@@ -157,11 +157,13 @@ impl<'a> Pipeline<'a> {
         }
 
         if self.options.do_visualize_normals {
+            static NORMALS_SCALE: f32 = 0.05;
+
             for i in 0..3 {
                 self.render_line(
                     projection_space_vertices[i].world_pos,
                     projection_space_vertices[i].world_pos
-                        + projection_space_vertices[i].normal.to_vec3(),
+                        + projection_space_vertices[i].normal.to_vec3() * NORMALS_SCALE,
                     color::BLUE,
                 );
 
@@ -170,7 +172,8 @@ impl<'a> Pipeline<'a> {
 
                 self.render_line(
                     projection_space_vertices[i].world_pos,
-                    projection_space_vertices[i].world_pos + tangent_world_space.to_vec3(),
+                    projection_space_vertices[i].world_pos
+                        + tangent_world_space.to_vec3() * NORMALS_SCALE,
                     color::RED,
                 );
 
@@ -179,7 +182,8 @@ impl<'a> Pipeline<'a> {
 
                 self.render_line(
                     projection_space_vertices[i].world_pos,
-                    projection_space_vertices[i].world_pos + bitangent_world_space.to_vec3(),
+                    projection_space_vertices[i].world_pos
+                        + bitangent_world_space.to_vec3() * NORMALS_SCALE,
                     color::GREEN,
                 );
             }
