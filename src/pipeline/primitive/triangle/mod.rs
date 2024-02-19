@@ -66,14 +66,14 @@ impl<'a> Pipeline<'a> {
             triangles.push(Triangle { v0, v1, v2 });
         }
 
-        for triangle in triangles.as_mut_slice() {
+        for triangle in triangles.as_slice() {
             self.process_triangle(triangle);
         }
     }
 
     pub(in crate::pipeline) fn should_cull_from_homogeneous_space(
         &mut self,
-        triangle: &mut Triangle<DefaultVertexOut>,
+        triangle: &Triangle<DefaultVertexOut>,
     ) -> bool {
         if triangle.v0.position.x > triangle.v0.position.w
             && triangle.v1.position.x > triangle.v1.position.w
@@ -120,7 +120,7 @@ impl<'a> Pipeline<'a> {
         return false;
     }
 
-    fn post_process_triangle_vertices(&mut self, triangle: &mut Triangle<DefaultVertexOut>) {
+    fn post_process_triangle_vertices(&mut self, triangle: &Triangle<DefaultVertexOut>) {
         // World-space to screen-space (NDC) transform
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
@@ -265,7 +265,7 @@ impl<'a> Pipeline<'a> {
         self.post_process_triangle_vertices(&mut triangle);
     }
 
-    fn process_triangle(&mut self, triangle: &mut Triangle<DefaultVertexOut>) {
+    fn process_triangle(&mut self, triangle: &Triangle<DefaultVertexOut>) {
         // @TODO(mzalla) Geometry shader?
 
         if self.should_cull_from_homogeneous_space(triangle) {
