@@ -153,25 +153,25 @@ impl ops::MulAssign<Vec3> for Vec3 {
 
 impl Vec3 {
     pub fn mag(self) -> f32 {
-        return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
 
     pub fn dot(self, rhs: Vec3) -> f32 {
-        // return self.mag() * rhs.mag() * theta.cos();
-        return self.x * rhs.x + self.y * rhs.y + self.z * rhs.z;
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     pub fn cross(self, rhs: Vec3) -> Vec3 {
-        return Vec3 {
+        Self {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
-        };
+        }
     }
 
     pub fn as_normal(self) -> Vec3 {
         let mag = self.mag();
-        Vec3 {
+
+        Self {
             x: self.x / mag,
             y: self.y / mag,
             z: self.z / mag,
