@@ -115,48 +115,47 @@ impl<'a> Pipeline<'a> {
 
                         self.set_viewport(&framebuffer);
 
-                        match &self.g_buffer {
+                        let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {
                                 if g_buffer.buffer.width != framebuffer.width
                                     || g_buffer.buffer.height != framebuffer.height
                                 {
-                                    // Re-allocate a G-buffer.
-
-                                    self.g_buffer =
-                                        Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                                    true
+                                } else {
+                                    false
                                 }
                             }
-                            None => {
-                                // Re-allocate a G-buffer.
+                            None => true,
+                        };
 
-                                self.g_buffer =
-                                    Some(GBuffer::new(framebuffer.width, framebuffer.height));
-                            }
-                        }
-
-                        match &self.bloom_buffer {
+                        let should_reallocate_bloom_buffer = match &self.bloom_buffer {
                             Some(bloom_buffer) => {
                                 if bloom_buffer.width != framebuffer.width
                                     || bloom_buffer.height != framebuffer.height
                                 {
-                                    // Re-allocate a bloom buffer.
-
-                                    self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
-                                        framebuffer.width,
-                                        framebuffer.height,
-                                        None,
-                                    ));
+                                    true
+                                } else {
+                                    false
                                 }
                             }
-                            None => {
-                                // Re-allocate a bloom buffer.
+                            None => true,
+                        };
 
-                                self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
-                                    framebuffer.width,
-                                    framebuffer.height,
-                                    None,
-                                ));
-                            }
+                        if should_reallocate_g_buffer {
+                            // Re-allocate a G-buffer.
+
+                            self.g_buffer =
+                                Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                        }
+
+                        if should_reallocate_bloom_buffer {
+                            // Re-allocate a bloom buffer.
+
+                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
+                                framebuffer.width,
+                                framebuffer.height,
+                                None,
+                            ));
                         }
                     }
                     Err(err) => {
