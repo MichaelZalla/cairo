@@ -439,9 +439,7 @@ pub type Mat3 = Mat<f32, 3>;
 
 impl Default for Mat3 {
     fn default() -> Self {
-        Self {
-            elements: [[f32::default(); 3]; 3],
-        }
+        Self::identity()
     }
 }
 
@@ -476,9 +474,7 @@ pub type Mat4 = Mat<f32, 4>;
 
 impl Default for Mat4 {
     fn default() -> Self {
-        Self {
-            elements: [[f32::default(); 4]; 4],
-        }
+        Self::identity()
     }
 }
 
