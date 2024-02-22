@@ -1,4 +1,8 @@
-use std::{f32::consts::PI, fmt, ops};
+use std::{
+    f32::consts::PI,
+    fmt::{self, Display},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+};
 
 use super::vec::{vec3::Vec3, vec4::Vec4};
 
@@ -7,7 +11,7 @@ pub struct Mat<T, const N: usize> {
     elements: [[T; N]; N],
 }
 
-impl<T: std::marker::Copy + std::fmt::Display, const N: usize> fmt::Display for Mat<T, N> {
+impl<T: Copy + Display, const N: usize> Display for Mat<T, N> {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut result: Vec<String> = vec![String::from("(\n"); 1];
 
@@ -35,7 +39,7 @@ impl<T: std::marker::Copy + std::fmt::Display, const N: usize> fmt::Display for 
     }
 }
 
-impl<T: std::ops::MulAssign<f32>, const N: usize> ops::MulAssign<f32> for Mat<T, N> {
+impl<T: MulAssign<f32>, const N: usize> MulAssign<f32> for Mat<T, N> {
     fn mul_assign(&mut self, rhs: f32) {
         for i in 0..N {
             for j in 0..N {
@@ -45,7 +49,7 @@ impl<T: std::ops::MulAssign<f32>, const N: usize> ops::MulAssign<f32> for Mat<T,
     }
 }
 
-impl<T: std::clone::Clone + std::ops::MulAssign<f32>, const N: usize> ops::Mul<f32> for Mat<T, N> {
+impl<T: Clone + MulAssign<f32>, const N: usize> Mul<f32> for Mat<T, N> {
     type Output = Mat<T, N>;
     fn mul(self, rhs: f32) -> Mat<T, N> {
         let mut result = self.clone();
@@ -54,7 +58,7 @@ impl<T: std::clone::Clone + std::ops::MulAssign<f32>, const N: usize> ops::Mul<f
     }
 }
 
-impl<T: std::ops::DivAssign<f32>, const N: usize> ops::DivAssign<f32> for Mat<T, N> {
+impl<T: DivAssign<f32>, const N: usize> DivAssign<f32> for Mat<T, N> {
     fn div_assign(&mut self, rhs: f32) {
         for i in 0..N {
             for j in 0..N {
@@ -64,7 +68,7 @@ impl<T: std::ops::DivAssign<f32>, const N: usize> ops::DivAssign<f32> for Mat<T,
     }
 }
 
-impl<T: std::clone::Clone + std::ops::DivAssign<f32>, const N: usize> ops::Div<f32> for Mat<T, N> {
+impl<T: Clone + DivAssign<f32>, const N: usize> Div<f32> for Mat<T, N> {
     type Output = Mat<T, N>;
     fn div(self, rhs: f32) -> Mat<T, N> {
         let mut result = self.clone();
@@ -73,13 +77,8 @@ impl<T: std::clone::Clone + std::ops::DivAssign<f32>, const N: usize> ops::Div<f
     }
 }
 
-impl<
-        T: std::default::Default
-            + std::marker::Copy
-            + std::ops::Mul<Output = T>
-            + std::ops::AddAssign<T>,
-        const N: usize,
-    > ops::MulAssign<Self> for Mat<T, N>
+impl<T: Default + Copy + Mul<Output = T> + AddAssign<T>, const N: usize> MulAssign<Self>
+    for Mat<T, N>
 {
     fn mul_assign(&mut self, rhs: Self) {
         let result = (*self) * rhs;
@@ -91,14 +90,7 @@ impl<
     }
 }
 
-impl<
-        T: std::default::Default
-            + std::marker::Copy
-            + std::ops::Mul<Output = T>
-            + std::ops::AddAssign<T>,
-        const N: usize,
-    > ops::Mul<Self> for Mat<T, N>
-{
+impl<T: Default + Copy + Mul<Output = T> + AddAssign<T>, const N: usize> Mul<Self> for Mat<T, N> {
     type Output = Mat<T, N>;
 
     fn mul(self, rhs: Self) -> Mat<T, N> {
@@ -120,13 +112,8 @@ impl<
     }
 }
 
-impl<
-        T: std::default::Default
-            + std::marker::Copy
-            + std::ops::Add<Output = T>
-            + std::ops::AddAssign<T>,
-        const N: usize,
-    > ops::AddAssign<Self> for Mat<T, N>
+impl<T: Default + Copy + Add<Output = T> + AddAssign<T>, const N: usize> AddAssign<Self>
+    for Mat<T, N>
 {
     fn add_assign(&mut self, rhs: Self) {
         for i in 0..N {
@@ -137,14 +124,7 @@ impl<
     }
 }
 
-impl<
-        T: std::default::Default
-            + std::marker::Copy
-            + std::ops::Add<Output = T>
-            + std::ops::AddAssign<T>,
-        const N: usize,
-    > ops::Add<Self> for Mat<T, N>
-{
+impl<T: Default + Copy + Add<Output = T> + AddAssign<T>, const N: usize> Add<Self> for Mat<T, N> {
     type Output = Mat<T, N>;
 
     fn add(self, rhs: Self) -> Mat<T, N> {
@@ -160,14 +140,7 @@ impl<
     }
 }
 
-impl<
-        T: std::default::Default
-            + std::marker::Copy
-            + std::ops::Sub<Output = T>
-            + std::ops::SubAssign<T>,
-        const N: usize,
-    > ops::Sub<Self> for Mat<T, N>
-{
+impl<T: Default + Copy + Sub<Output = T> + SubAssign<T>, const N: usize> Sub<Self> for Mat<T, N> {
     type Output = Mat<T, N>;
 
     fn sub(self, rhs: Self) -> Mat<T, N> {
@@ -183,7 +156,7 @@ impl<
     }
 }
 
-impl<T: std::default::Default + std::marker::Copy, const N: usize> Mat<T, N> {
+impl<T: Default + Copy, const N: usize> Mat<T, N> {
     pub fn new() -> Self {
         Mat {
             elements: [[T::default(); N]; N],
@@ -472,7 +445,7 @@ impl Default for Mat3 {
     }
 }
 
-impl ops::MulAssign<Mat3> for Vec3 {
+impl MulAssign<Mat3> for Vec3 {
     fn mul_assign(&mut self, rhs: Mat3) {
         let result = self.clone() * rhs;
 
@@ -482,7 +455,7 @@ impl ops::MulAssign<Mat3> for Vec3 {
     }
 }
 
-impl ops::Mul<Mat3> for Vec3 {
+impl Mul<Mat3> for Vec3 {
     type Output = Vec3;
     fn mul(self, rhs: Mat3) -> Self {
         Vec3 {
@@ -509,7 +482,7 @@ impl Default for Mat4 {
     }
 }
 
-impl ops::MulAssign<Mat4> for Vec4 {
+impl MulAssign<Mat4> for Vec4 {
     fn mul_assign(&mut self, rhs: Mat4) {
         let result = self.clone() * rhs;
 
@@ -520,7 +493,7 @@ impl ops::MulAssign<Mat4> for Vec4 {
     }
 }
 
-impl ops::Mul<Mat4> for Vec4 {
+impl Mul<Mat4> for Vec4 {
     type Output = Vec4;
     fn mul(self, rhs: Mat4) -> Self {
         Vec4 {
