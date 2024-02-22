@@ -4,13 +4,13 @@
 			"type": "lldb",
 			"request": "attach",
 			"name": "Attach",
-			"program": "${workspaceFolder}/target/debug/cairo"
+			"program": "${workspaceFolder}/target/debug/examples/scenegraph"
 		},
 		{
 			"type": "lldb",
 			"request": "launch",
 			"name": "Launch",
-			"program": "${workspaceFolder}/target/debug/cairo",
+			"program": "${workspaceFolder}/target/debug/examples/scenegraph",
 			"args": [],
 			"cwd": "${workspaceFolder}",
 			"sourceMap": {},

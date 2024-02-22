@@ -82,6 +82,23 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example scenegraph",
+      "windows": {
+        "command": "cargo run --example scenegraph"
+      },
+      "osx": {
+        "command": "cargo run --example scenegraph"
+      },
+      "linux": {
+        "command": "cargo run --example scenegraph"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example spinning-cube",
       "windows": {
         "command": "cargo run --example spinning-cube"
