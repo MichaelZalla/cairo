@@ -195,7 +195,7 @@ impl<'a> Scene for EmissiveMapScene<'a> {
         for entity in entities.as_mut_slice() {
             // Mesh rotation via our time delta
 
-            if entity.mesh.object_name == "plane" || entity.mesh.object_name == "point_light" {
+            if entity.mesh.object_name == "plane" {
                 continue;
             }
 
