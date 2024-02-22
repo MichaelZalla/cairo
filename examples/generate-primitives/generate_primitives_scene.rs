@@ -45,7 +45,6 @@ pub struct GeneratePrimitivesScene<'a> {
     active_fragment_shader_index: usize,
     cameras: Vec<Camera>,
     active_camera_index: usize,
-    directional_light: DirectionalLight,
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
@@ -220,7 +219,6 @@ impl<'a> GeneratePrimitivesScene<'a> {
             active_fragment_shader_index,
             cameras: vec![camera, camera2],
             active_camera_index: 0,
-            directional_light,
             point_lights,
             spot_lights,
             looking_at_point_light: false,
@@ -285,12 +283,6 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
-
-        context.set_directional_light(DirectionalLight {
-            intensities: self.directional_light.intensities,
-            direction: (self.directional_light.direction * camera_view_inverse_transform)
-                .as_normal(),
-        });
 
         self.pipeline
             .options

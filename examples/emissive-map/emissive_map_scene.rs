@@ -27,9 +27,7 @@ pub struct EmissiveMapScene<'a> {
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
-    directional_light: DirectionalLight,
     point_light: PointLight,
-    _spot_light: SpotLight,
     entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -127,9 +125,7 @@ impl<'a> EmissiveMapScene<'a> {
             shader_context,
             cameras: vec![camera],
             active_camera_index: 0,
-            directional_light,
             point_light,
-            _spot_light: spot_light,
         };
     }
 }
@@ -158,12 +154,6 @@ impl<'a> Scene for EmissiveMapScene<'a> {
         let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
         context.set_view_inverse_transform(camera_view_inverse_transform);
-
-        context.set_directional_light(DirectionalLight {
-            intensities: self.directional_light.intensities,
-            direction: (self.directional_light.direction * camera_view_inverse_transform)
-                .as_normal(),
-        });
 
         self.pipeline
             .options
