@@ -16,7 +16,10 @@ use cairo::{
     scene::{
         camera::Camera,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
-        scenegraph::{SceneGraph, SceneNode, SceneNodeType},
+        scenegraph::{
+            SceneGraph, SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod,
+            SceneNodeType,
+        },
     },
     shader::context::ShaderContext,
     shaders::{
@@ -215,19 +218,17 @@ fn main() -> Result<(), String> {
         None,
     ));
 
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::Entity,
-        None,
-        Some(plane_entity_handle),
-        None,
-    ));
+    let mut plane_entity_node =
+        SceneNode::new(SceneNodeType::Entity, None, Some(plane_entity_handle), None);
 
-    scenegraph.root.add_child(SceneNode::new(
+    plane_entity_node.add_child(SceneNode::new(
         SceneNodeType::Entity,
         None,
         Some(cube_entity_handle),
         None,
     ));
+
+    scenegraph.root.add_child(plane_entity_node);
 
     let scenegraph_rwl = RwLock::new(scenegraph);
 
@@ -242,160 +243,159 @@ fn main() -> Result<(), String> {
 
         let uptime = app.timing_info.uptime_seconds;
 
-        // @TODO Visit all nodes in the graph.
+        // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rwl.write().unwrap();
 
-        match scenegraph.root.children_mut() {
-            Some(children) => {
-                for child in children {
-                    let (node_type, handle) = (child.get_type(), child.get_handle());
+        let mut update_scene_graph_node = |_current_depth: usize,
+                                           node: &mut SceneNode|
+         -> Result<(), String> {
+            let (node_type, handle) = (node.get_type(), node.get_handle());
 
-                    // println!("Encountered an `{:?}` node!", node_type);
+            match node_type {
+                SceneNodeType::Empty => Ok(()),
+                SceneNodeType::Entity => {
+                    //
 
-                    match node_type {
-                        SceneNodeType::Empty => (),
-                        SceneNodeType::Entity => 'visit_entity_node: {
-                            //
+                    match handle {
+                        Some(handle) => {
+                            let mut entity_arena = entity_arena_rwl.write().unwrap();
 
-                            match handle {
-                                Some(handle) => {
-                                    let mut entity_arena = entity_arena_rwl.write().unwrap();
+                            match entity_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let entity = &mut entry.item;
 
-                                    match entity_arena.get_mut(handle) {
-                                        Ok(entry) => {
-                                            let entity = &mut entry.item;
-
-                                            if entity.mesh.object_name == "plane" {
-                                                break 'visit_entity_node;
-                                            }
-
-                                            static ENTITY_ROTATION_SPEED: f32 = 0.3;
-
-                                            entity.rotation.z += 1.0
-                                                * ENTITY_ROTATION_SPEED
-                                                * PI
-                                                * app.timing_info.seconds_since_last_update;
-
-                                            entity.rotation.z %= 2.0 * PI;
-
-                                            entity.rotation.x += 1.0
-                                                * ENTITY_ROTATION_SPEED
-                                                * PI
-                                                * app.timing_info.seconds_since_last_update;
-
-                                            entity.rotation.x %= 2.0 * PI;
-
-                                            entity.rotation.y += 1.0
-                                                * ENTITY_ROTATION_SPEED
-                                                * PI
-                                                * app.timing_info.seconds_since_last_update;
-
-                                            entity.rotation.y %= 2.0 * PI;
-                                        }
-                                        Err(err) => panic!(
-                                            "Failed to get Entity from Arena with Handle {:?}: {}",
-                                            handle, err
-                                        ),
+                                    if entity.mesh.object_name == "plane" {
+                                        return Ok(());
                                     }
+
+                                    static ENTITY_ROTATION_SPEED: f32 = 0.3;
+
+                                    entity.rotation.z += 1.0
+                                        * ENTITY_ROTATION_SPEED
+                                        * PI
+                                        * app.timing_info.seconds_since_last_update;
+
+                                    entity.rotation.z %= 2.0 * PI;
+
+                                    entity.rotation.x += 1.0
+                                        * ENTITY_ROTATION_SPEED
+                                        * PI
+                                        * app.timing_info.seconds_since_last_update;
+
+                                    entity.rotation.x %= 2.0 * PI;
+
+                                    entity.rotation.y += 1.0
+                                        * ENTITY_ROTATION_SPEED
+                                        * PI
+                                        * app.timing_info.seconds_since_last_update;
+
+                                    entity.rotation.y %= 2.0 * PI;
+
+                                    Ok(())
                                 }
-                                None => {
-                                    panic!("Encountered a `Entity` node with no resource handle!")
-                                }
+                                Err(err) => panic!(
+                                    "Failed to get Entity from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
                             }
                         }
-                        SceneNodeType::Camera => match handle {
-                            Some(handle) => {
-                                let mut camera_arena = camera_arena_rwl.write().unwrap();
-
-                                match camera_arena.get_mut(handle) {
-                                    Ok(entry) => {
-                                        let camera = &mut entry.item;
-
-                                        camera.update(
-                                            &app.timing_info,
-                                            keyboard_state,
-                                            mouse_state,
-                                            game_controller_state,
-                                        );
-
-                                        let camera_view_inverse_transform =
-                                            camera.get_view_inverse_transform();
-
-                                        context.set_view_position(Vec4::new(
-                                            camera.look_vector.get_position(),
-                                            1.0,
-                                        ));
-
-                                        context.set_view_inverse_transform(
-                                            camera_view_inverse_transform,
-                                        );
-
-                                        context.set_projection(camera.get_projection());
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
-                                }
-                            }
-                            None => {
-                                panic!("Encountered a `Camera` node with no resource handle!")
-                            }
-                        },
-                        SceneNodeType::DirectionalLight => (),
-                        SceneNodeType::PointLight => match handle {
-                            Some(handle) => {
-                                let mut point_light_arena = point_light_arena_rwl.write().unwrap();
-
-                                match point_light_arena.get_mut(handle) {
-                                    Ok(entry) => {
-                                        let point_light = &mut entry.item;
-
-                                        static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 =
-                                            2.0 * PI / 3.0;
-                                        static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
-
-                                        point_light.intensities = Vec3 {
-                                            x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin()
-                                                / 2.0
-                                                + 0.5,
-                                            y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin()
-                                                / 2.0
-                                                + 0.5,
-                                            z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin()
-                                                / 2.0
-                                                + 0.5,
-                                        } * MAX_POINT_LIGHT_INTENSITY;
-
-                                        let orbital_radius: f32 = 3.0;
-
-                                        point_light.position = Vec3 {
-                                            x: orbital_radius * uptime.sin(),
-                                            y: 3.0,
-                                            z: orbital_radius * uptime.cos(),
-                                        };
-
-                                        context.set_point_light(0, point_light.clone());
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
-                                }
-                            }
-                            None => {
-                                panic!("Encountered a `PointLight` node with no resource handle!")
-                            }
-                        },
-                        SceneNodeType::SpotLight => (),
+                        None => {
+                            panic!("Encountered a `Entity` node with no resource handle!")
+                        }
                     }
                 }
+                SceneNodeType::Camera => match handle {
+                    Some(handle) => {
+                        let mut camera_arena = camera_arena_rwl.write().unwrap();
+
+                        match camera_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let camera = &mut entry.item;
+
+                                camera.update(
+                                    &app.timing_info,
+                                    keyboard_state,
+                                    mouse_state,
+                                    game_controller_state,
+                                );
+
+                                let camera_view_inverse_transform =
+                                    camera.get_view_inverse_transform();
+
+                                context.set_view_position(Vec4::new(
+                                    camera.look_vector.get_position(),
+                                    1.0,
+                                ));
+
+                                context.set_view_inverse_transform(camera_view_inverse_transform);
+
+                                context.set_projection(camera.get_projection());
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Camera from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Camera` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::DirectionalLight => Ok(()),
+                SceneNodeType::PointLight => match handle {
+                    Some(handle) => {
+                        let mut point_light_arena = point_light_arena_rwl.write().unwrap();
+
+                        match point_light_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let point_light = &mut entry.item;
+
+                                static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+                                static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
+
+                                point_light.intensities = Vec3 {
+                                    x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                        + 0.5,
+                                    y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                        + 0.5,
+                                    z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                        + 0.5,
+                                } * MAX_POINT_LIGHT_INTENSITY;
+
+                                let orbital_radius: f32 = 3.0;
+
+                                point_light.position = Vec3 {
+                                    x: orbital_radius * uptime.sin(),
+                                    y: 3.0,
+                                    z: orbital_radius * uptime.cos(),
+                                };
+
+                                context.set_point_light(0, point_light.clone());
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `PointLight` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::SpotLight => Ok(()),
             }
-            None => {
-                panic!("Scenegraph root node has zero children!");
-            }
-        }
+        };
+
+        scenegraph.root.visit_mut(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut update_scene_graph_node,
+        )?;
 
         let mut pipeline = pipeline_rwl.write().unwrap();
 
@@ -423,86 +423,92 @@ fn main() -> Result<(), String> {
 
         // Render entities.
 
-        let mut scenegraph = scenegraph_rwl.write().unwrap();
+        let scenegraph = scenegraph_rwl.write().unwrap();
 
-        match scenegraph.root.children_mut() {
-            Some(children) => {
-                for child in children {
-                    let (node_type, handle) = (child.get_type(), child.get_handle());
+        let mut render_scene_graph_node =
+            |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
+                let (node_type, handle) = (node.get_type(), node.get_handle());
 
-                    // println!("Encountered an `{:?}` node!", node_type);
+                match node_type {
+                    SceneNodeType::Empty => Ok(()),
+                    SceneNodeType::Entity => match handle {
+                        Some(handle) => {
+                            let mut entity_arena = entity_arena_rwl.write().unwrap();
 
-                    match node_type {
-                        SceneNodeType::Empty => (),
-                        SceneNodeType::Entity => match handle {
-                            Some(handle) => {
-                                let mut entity_arena = entity_arena_rwl.write().unwrap();
+                            match entity_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let entity = &mut entry.item;
 
-                                match entity_arena.get_mut(handle) {
-                                    Ok(entry) => {
-                                        let entity = &mut entry.item;
+                                    pipeline.render_entity(entity, Some(&material_cache));
 
-                                        pipeline.render_entity(entity, Some(&material_cache));
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get Entity from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
+                                    Ok(())
                                 }
+                                Err(err) => panic!(
+                                    "Failed to get Entity from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
                             }
-                            None => {
-                                panic!("Encountered a `Entity` node with no resource handle!")
-                            }
-                        },
-                        SceneNodeType::Camera => (),
-                        SceneNodeType::DirectionalLight => (),
-                        SceneNodeType::PointLight => match handle {
-                            Some(handle) => {
-                                let mut point_light_arena = point_light_arena_rwl.write().unwrap();
+                        }
+                        None => {
+                            panic!("Encountered a `Entity` node with no resource handle!")
+                        }
+                    },
+                    SceneNodeType::Camera => Ok(()),
+                    SceneNodeType::DirectionalLight => Ok(()),
+                    SceneNodeType::PointLight => match handle {
+                        Some(handle) => {
+                            let mut point_light_arena = point_light_arena_rwl.write().unwrap();
 
-                                match point_light_arena.get_mut(handle) {
-                                    Ok(entry) => {
-                                        let point_light = &mut entry.item;
+                            match point_light_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let point_light = &mut entry.item;
 
-                                        pipeline.render_point_light(point_light, None, None);
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
+                                    pipeline.render_point_light(point_light, None, None);
+
+                                    Ok(())
                                 }
+                                Err(err) => panic!(
+                                    "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
                             }
-                            None => {
-                                panic!("Encountered a `PointLight` node with no resource handle!")
-                            }
-                        },
-                        SceneNodeType::SpotLight => match handle {
-                            Some(handle) => {
-                                let mut spot_light_arena = spot_light_arena_rwl.write().unwrap();
+                        }
+                        None => {
+                            panic!("Encountered a `PointLight` node with no resource handle!")
+                        }
+                    },
+                    SceneNodeType::SpotLight => match handle {
+                        Some(handle) => {
+                            let mut spot_light_arena = spot_light_arena_rwl.write().unwrap();
 
-                                match spot_light_arena.get_mut(handle) {
-                                    Ok(entry) => {
-                                        let spot_light = &mut entry.item;
+                            match spot_light_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let spot_light = &mut entry.item;
 
-                                        pipeline.render_spot_light(spot_light, None, None);
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
+                                    pipeline.render_spot_light(spot_light, None, None);
+
+                                    Ok(())
                                 }
+                                Err(err) => panic!(
+                                    "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
                             }
-                            None => {
-                                panic!("Encountered a `PointLight` node with no resource handle!")
-                            }
-                        },
-                    }
+                        }
+                        None => {
+                            panic!("Encountered a `PointLight` node with no resource handle!")
+                        }
+                    },
                 }
-            }
-            None => {
-                panic!("Scenegraph root node has zero children!");
-            }
-        }
+            };
+
+        // Traverse the scene graph and render its nodes.
+
+        scenegraph.root.visit(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut render_scene_graph_node,
+        )?;
 
         // End frame
 

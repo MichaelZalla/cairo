@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::VecDeque, fmt::Display};
 
 use crate::{matrix::Mat4, resource::handle::Handle};
 
@@ -17,6 +17,20 @@ impl Display for SceneNodeType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub enum SceneNodeGlobalTraversalMethod {
+    #[default]
+    DepthFirst,
+    BreadthFirst,
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub enum SceneNodeLocalTraversalMethod {
+    #[default]
+    PreOrder,
+    PostOrder,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -89,6 +103,178 @@ impl<'a> SceneNode<'a> {
                 self.children = Some(vec![node]);
             }
         }
+    }
+
+    pub fn visit<C>(
+        &self,
+        global_method: SceneNodeGlobalTraversalMethod,
+        local_method: Option<SceneNodeLocalTraversalMethod>,
+        visit_action: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(usize, &Self) -> Result<(), String>,
+    {
+        let local = match local_method {
+            Some(method) => method,
+            None => Default::default(),
+        };
+
+        match global_method {
+            SceneNodeGlobalTraversalMethod::DepthFirst => self.visit_dfs(&local, 0, visit_action),
+            SceneNodeGlobalTraversalMethod::BreadthFirst => self.visit_bfs(visit_action),
+        }
+    }
+
+    pub fn visit_mut<C>(
+        &mut self,
+        global_method: SceneNodeGlobalTraversalMethod,
+        local_method: Option<SceneNodeLocalTraversalMethod>,
+        visit_action: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(usize, &mut Self) -> Result<(), String>,
+    {
+        let local = match local_method {
+            Some(method) => method,
+            None => Default::default(),
+        };
+
+        match global_method {
+            SceneNodeGlobalTraversalMethod::DepthFirst => {
+                self.visit_dfs_mut(&local, 0, visit_action)
+            }
+            SceneNodeGlobalTraversalMethod::BreadthFirst => self.visit_bfs_mut(visit_action),
+        }
+    }
+
+    fn visit_dfs<C>(
+        &self,
+        local_method: &SceneNodeLocalTraversalMethod,
+        current_depth: usize,
+        visit_action: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(usize, &Self) -> Result<(), String>,
+    {
+        match local_method {
+            SceneNodeLocalTraversalMethod::PreOrder => {
+                visit_action(current_depth, self)?;
+
+                match &self.children {
+                    Some(children) => {
+                        for child in children {
+                            child.visit_dfs(local_method, current_depth + 1, visit_action)?;
+                        }
+                    }
+                    None => (),
+                }
+
+                Ok(())
+            }
+            SceneNodeLocalTraversalMethod::PostOrder => {
+                match &self.children {
+                    Some(children) => {
+                        for child in children {
+                            child.visit_dfs(local_method, current_depth + 1, visit_action)?;
+                        }
+                    }
+                    None => (),
+                }
+
+                visit_action(current_depth, self)
+            }
+        }
+    }
+
+    fn visit_dfs_mut<C>(
+        &mut self,
+        local_method: &SceneNodeLocalTraversalMethod,
+        current_depth: usize,
+        visit_action: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(usize, &mut Self) -> Result<(), String>,
+    {
+        match local_method {
+            SceneNodeLocalTraversalMethod::PreOrder => {
+                visit_action(current_depth, self)?;
+
+                match self.children.as_mut() {
+                    Some(children) => {
+                        for child in children {
+                            child.visit_dfs_mut(local_method, current_depth + 1, visit_action)?;
+                        }
+                    }
+                    None => (),
+                }
+
+                Ok(())
+            }
+            SceneNodeLocalTraversalMethod::PostOrder => {
+                match self.children.as_mut() {
+                    Some(children) => {
+                        for child in children {
+                            child.visit_dfs_mut(local_method, current_depth + 1, visit_action)?;
+                        }
+                    }
+                    None => (),
+                }
+
+                visit_action(current_depth, self)
+            }
+        }
+    }
+
+    fn visit_bfs<C>(&self, visit_action: &mut C) -> Result<(), String>
+    where
+        C: FnMut(usize, &Self) -> Result<(), String>,
+    {
+        let mut frontier: VecDeque<(usize, &Self)> = VecDeque::new();
+
+        frontier.push_front((0, self));
+
+        while frontier.len() > 0 {
+            let (current_depth, current_node) = frontier.pop_front().unwrap();
+
+            visit_action(current_depth, current_node)?;
+
+            match &current_node.children {
+                Some(children) => {
+                    for child in children {
+                        frontier.push_back((current_depth + 1, child));
+                    }
+                }
+                None => (),
+            }
+        }
+
+        Ok(())
+    }
+
+    fn visit_bfs_mut<C>(&mut self, visit_action: &mut C) -> Result<(), String>
+    where
+        C: FnMut(usize, &mut Self) -> Result<(), String>,
+    {
+        let mut frontier: VecDeque<(usize, &mut Self)> = VecDeque::new();
+
+        frontier.push_front((0, self));
+
+        while frontier.len() > 0 {
+            let (current_depth, current_node) = frontier.pop_front().unwrap();
+
+            visit_action(current_depth, current_node)?;
+
+            match current_node.children.as_mut() {
+                Some(children) => {
+                    for child in children {
+                        frontier.push_back((current_depth + 1, child));
+                    }
+                }
+                None => (),
+            }
+        }
+
+        Ok(())
     }
 }
 
