@@ -491,7 +491,7 @@ fn main() -> Result<(), String> {
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
-     -> () {
+     -> Result<(), String> {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::L { .. } => {
@@ -527,6 +527,8 @@ fn main() -> Result<(), String> {
         // Cache the mouse state (position) so that we can render a crosshair.
 
         current_mouse_state.write().unwrap().position = mouse_state.position;
+
+        Ok(())
     };
 
     let mut render = || -> Result<Vec<u32>, String> {

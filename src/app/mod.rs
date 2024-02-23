@@ -131,7 +131,12 @@ impl App {
 
     pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
     where
-        U: FnMut(&mut Self, &KeyboardState, &MouseState, &GameControllerState),
+        U: FnMut(
+            &mut Self,
+            &KeyboardState,
+            &MouseState,
+            &GameControllerState,
+        ) -> Result<(), String>,
         R: FnMut() -> Result<Vec<u32>, String>,
     {
         let timer_subsystem = self.context.sdl_context.timer()?;
@@ -335,7 +340,7 @@ impl App {
                 &keyboard_state,
                 &mouse_state,
                 &game_controller.state,
-            );
+            )?;
 
             last_update_tick = timer_subsystem.performance_counter();
 

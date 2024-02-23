@@ -53,11 +53,13 @@ fn main() -> Result<(), String> {
                       _keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       _game_controller_state: &GameControllerState|
-     -> () {
+     -> Result<(), String> {
         *now_seconds.borrow_mut() += app.timing_info.seconds_since_last_update;
 
         *mouse_x.borrow_mut() = mouse_state.position.0;
         *mouse_y.borrow_mut() = mouse_state.position.1;
+
+        Ok(())
     };
 
     let mut render = || -> Result<Vec<u32>, String> {

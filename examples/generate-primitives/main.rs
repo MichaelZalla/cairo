@@ -233,6 +233,8 @@ fn main() -> Result<(), String> {
         scene
             .borrow_mut()
             .update(&app, &keyboard_state, &mouse_state, &game_controller_state);
+
+        Ok(())
     };
 
     let mut render = || -> Result<Vec<u32>, String> {

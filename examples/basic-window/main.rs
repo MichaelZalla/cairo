@@ -23,9 +23,7 @@ fn main() -> Result<(), String> {
                       _keyboard_state: &KeyboardState,
                       _mouse_state: &MouseState,
                       _game_controller_state: &GameControllerState|
-     -> () {
-        // @TODO Update any borrowed state here.
-    };
+     -> Result<(), String> { Ok(()) };
 
     let mut render = || -> Result<Vec<u32>, String> {
         let fill_value = color::BLACK.to_u32();

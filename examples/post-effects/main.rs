@@ -135,12 +135,14 @@ fn main() -> Result<(), String> {
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
-     -> () {
+     -> Result<(), String> {
         // Delegate the update to our spinning cube scene
 
         scene
             .borrow_mut()
             .update(app, &keyboard_state, &mouse_state, &game_controller_state);
+
+        Ok(())
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
