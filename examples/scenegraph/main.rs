@@ -230,6 +230,10 @@ fn main() -> Result<(), String> {
 
     scenegraph.root.add_child(plane_entity_node);
 
+    // Prints the scenegraph to stdout.
+
+    println!("{}", scenegraph);
+
     let scenegraph_rwl = RwLock::new(scenegraph);
 
     // App update and render callbacks
