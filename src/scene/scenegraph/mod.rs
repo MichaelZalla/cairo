@@ -278,6 +278,24 @@ impl<'a> SceneNode<'a> {
     }
 }
 
+impl<'a> Display for SceneNode<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let uuid_suffix: String = match &self.handle {
+            Some(handle) => format!(" (UUID {})", handle.uuid),
+            None => "".to_string(),
+        };
+
+        let children_suffix: String = match &self.children {
+            Some(children) => format!(" ({} children)", children.len()),
+            None => "".to_string(),
+        };
+
+        write!(f, "{}{}{}", self.node_type, uuid_suffix, children_suffix)?;
+
+        Ok(())
+    }
+}
+
 pub struct SceneGraph<'a> {
     pub root: SceneNode<'a>,
 }
