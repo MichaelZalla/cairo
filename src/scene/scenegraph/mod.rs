@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{matrix::Mat4, resource::handle::Handle};
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -9,6 +11,12 @@ pub enum SceneNodeType {
     DirectionalLight,
     PointLight,
     SpotLight,
+}
+
+impl Display for SceneNodeType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Default, Debug, Clone)]
