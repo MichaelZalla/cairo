@@ -4,7 +4,7 @@ use super::{
     vec::vec3::Vec3,
 };
 
-fn make_bounding_box(mesh: &Mesh) -> AABB {
+fn make_object_space_bounding_box(mesh: &Mesh) -> AABB {
     let mut x_min: f32 = f32::MAX;
     let mut x_max: f32 = f32::MIN;
 
@@ -67,8 +67,8 @@ pub struct Entity<'a> {
 
 impl<'a> Entity<'a> {
     pub fn new(mesh: &'a Mesh) -> Self {
-        let bounds = make_bounding_box(&mesh);
-        let bounds_mesh = Entity::make_bounding_box_mesh(&bounds);
+        let bounds = make_object_space_bounding_box(&mesh);
+        let bounds_mesh = Entity::make_object_space_bounding_box_mesh(&bounds);
 
         Entity {
             position: Vec3::new(),
@@ -79,7 +79,7 @@ impl<'a> Entity<'a> {
         }
     }
 
-    pub fn make_bounding_box_mesh(bounds: &AABB) -> Mesh {
+    pub fn make_object_space_bounding_box_mesh(bounds: &AABB) -> Mesh {
         let width = bounds.right - bounds.left;
         let height = bounds.top - bounds.bottom;
         let depth = bounds.near - bounds.far;
