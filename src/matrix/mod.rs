@@ -170,14 +170,14 @@ impl<T: Default + Copy, const N: usize> Mat<T, N> {
 
 impl<const N: usize> Mat<f32, N> {
     pub fn identity() -> Self {
-        Self::scaling(1.0)
+        Self::scale([1.0; N])
     }
 
-    pub fn scaling(factor: f32) -> Self {
+    pub fn scale(scale: [f32; N]) -> Self {
         let mut result = Mat::<f32, N>::new();
 
         for i in 0..N {
-            result.elements[i][i] = factor;
+            result.elements[i][i] = scale[i];
         }
 
         result

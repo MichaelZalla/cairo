@@ -315,7 +315,7 @@ impl<'a> Pipeline<'a> {
 
         // Otherwise, cull individual triangles.
 
-        let world_transform = Mat4::scaling(1.0)
+        let world_transform = Mat4::identity()
             * Mat4::rotation_x(entity.rotation.x)
             * Mat4::rotation_y(entity.rotation.y)
             * Mat4::rotation_z(entity.rotation.z)
