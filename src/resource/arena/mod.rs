@@ -70,6 +70,22 @@ impl<T> Arena<T> {
         }
     }
 
+    pub fn remove(&mut self, handle: &Handle) -> Result<ArenaEntry<T>, String> {
+        match self.validate_handle(handle) {
+            Ok(index) => {
+                if self.entries[index].is_none() {
+                    Err(
+                        (format!("Called Arena::remove() on empty slot at index {}!", index))
+                            .to_string(),
+                    )
+                } else {
+                    Ok(self.entries[index].take().unwrap())
+                }
+            }
+            Err(err) => Err(err),
+        }
+    }
+
     fn validate_handle(&self, handle: &Handle) -> Result<usize, String> {
         if handle.index >= self.entries.len() {
             return Err(format!(
