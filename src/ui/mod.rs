@@ -24,7 +24,7 @@ pub mod theme;
 
 pub fn get_mouse_result(
     ctx: &mut RefMut<'_, UIContext>,
-    id: UIID,
+    id: &UIID,
     layout: &UILayoutContext,
     mouse_state: &MouseState,
     layout_offset_x: u32,
@@ -55,18 +55,18 @@ pub fn get_mouse_result(
 
     match (ctx.get_hover_target(), mouse_in_bounds) {
         (Some(target_id), true) => {
-            if target_id != id {
+            if target_id != *id {
                 // Mouse is positioned inside of this button (making it the
                 // current hover target).
 
-                ctx.set_hover_target(Some(id))
+                ctx.set_hover_target(Some(*id))
             }
         }
-        (None, true) => ctx.set_hover_target(Some(id)),
+        (None, true) => ctx.set_hover_target(Some(*id)),
         (Some(target_id), false) => {
             // Yield the hover target to some other UI item.
 
-            if target_id == id {
+            if target_id == *id {
                 ctx.set_hover_target(None)
             }
         }
@@ -88,17 +88,17 @@ pub fn get_mouse_result(
 
                     match ctx.get_focus_target() {
                         Some(target_id) => {
-                            if target_id != id {
-                                ctx.set_focus_target(Some(id))
+                            if target_id != *id {
+                                ctx.set_focus_target(Some(*id))
                             }
                         }
-                        None => ctx.set_focus_target(Some(id)),
+                        None => ctx.set_focus_target(Some(*id)),
                     }
                 }
                 (MouseEventKind::Up, false) => {}
                 (MouseEventKind::Down, false) => match ctx.get_focus_target() {
                     Some(target_id) => {
-                        if target_id == id {
+                        if target_id == *id {
                             ctx.set_focus_target(None)
                         }
                     }

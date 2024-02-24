@@ -78,12 +78,12 @@ impl<'a> UIContext<'a> {
         self.focus_target = target;
     }
 
-    pub fn is_hovered(&self, id: UIID) -> bool {
-        self.hover_target.is_some() && self.hover_target.unwrap() == id
+    pub fn is_hovered(&self, id: &UIID) -> bool {
+        self.hover_target.is_some() && self.hover_target.unwrap() == *id
     }
 
-    pub fn is_focused(&self, id: UIID) -> bool {
-        self.focus_target.is_some() && self.focus_target.unwrap() == id
+    pub fn is_focused(&self, id: &UIID) -> bool {
+        self.focus_target.is_some() && self.focus_target.unwrap() == *id
     }
 
     pub fn is_focus_target_open(&self) -> bool {

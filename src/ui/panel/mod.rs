@@ -416,7 +416,7 @@ where
 
         do_text(
             ctx,
-            UIID {
+            &UIID {
                 parent: self.info.id,
                 item: 0,
                 index: 0,
@@ -440,7 +440,7 @@ where
 
             if do_button(
                 ctx,
-                UIID {
+                &UIID {
                     parent: self.info.id,
                     item: 1,
                     index: 0,

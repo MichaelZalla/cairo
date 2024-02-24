@@ -137,7 +137,7 @@ fn main() -> Result<(), String> {
 
             if do_button(
                 &mut ctx,
-                button_1_id,
+                &button_1_id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -158,7 +158,7 @@ fn main() -> Result<(), String> {
 
             if do_button(
                 &mut ctx,
-                button_2_id,
+                &button_2_id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -196,7 +196,7 @@ fn main() -> Result<(), String> {
 
             if do_checkbox(
                 &mut ctx,
-                checkbox_id,
+                &checkbox_id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -220,7 +220,7 @@ fn main() -> Result<(), String> {
 
             do_separator(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 4,
                     index: 0,
@@ -242,7 +242,7 @@ fn main() -> Result<(), String> {
 
             do_text(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 5,
                     index: 0,
@@ -254,7 +254,7 @@ fn main() -> Result<(), String> {
 
             do_text(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 6,
                     index: 0,
@@ -278,7 +278,7 @@ fn main() -> Result<(), String> {
 
             do_text(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 7,
                     index: 0,
@@ -301,7 +301,7 @@ fn main() -> Result<(), String> {
 
             do_separator(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 8,
                     index: 0,
@@ -317,7 +317,7 @@ fn main() -> Result<(), String> {
 
             do_image(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 9,
                     index: 0,
@@ -336,7 +336,7 @@ fn main() -> Result<(), String> {
 
             do_separator(
                 &mut ctx,
-                UIID {
+                &UIID {
                     parent: panel_info.id,
                     item: 10,
                     index: 0,
@@ -372,7 +372,7 @@ fn main() -> Result<(), String> {
 
             if do_textbox(
                 &mut ctx,
-                textbox_id,
+                &textbox_id,
                 &mut layout,
                 panel_buffer,
                 app.timing_info.uptime_seconds,
@@ -409,7 +409,7 @@ fn main() -> Result<(), String> {
 
             if do_slider(
                 &mut ctx,
-                slider_id,
+                &slider_id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -451,7 +451,7 @@ fn main() -> Result<(), String> {
 
             if do_dropdown(
                 &mut ctx,
-                dropdown_id,
+                &dropdown_id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,

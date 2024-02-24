@@ -24,7 +24,7 @@ pub struct DoImageResult {}
 
 pub fn do_image<'a>(
     ctx: &mut RefMut<'_, UIContext>,
-    id: UIID,
+    id: &UIID,
     layout: &mut UILayoutContext,
     map: &'a mut TextureMap,
     options: &ImageOptions,
@@ -47,7 +47,7 @@ pub fn do_image<'a>(
 
 fn draw_image(
     _ctx: &mut RefMut<'_, UIContext>,
-    _id: UIID,
+    _id: &UIID,
     layout: &UILayoutContext,
     map: &TextureMap,
     options: &ImageOptions,

@@ -39,7 +39,7 @@ pub struct DoNumberSliderResult {
 
 pub fn do_slider(
     ctx: &mut RefMut<'_, UIContext>,
-    id: UIID,
+    id: &UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
@@ -217,7 +217,7 @@ pub fn do_slider(
 
 fn draw_slider(
     ctx: &mut RefMut<'_, UIContext>,
-    id: UIID,
+    id: &UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
     layout_offset_y: u32,

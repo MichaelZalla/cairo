@@ -39,7 +39,7 @@ pub struct DoDropdownResult {
 
 pub fn do_dropdown(
     ctx: &mut RefMut<'_, UIContext>,
-    id: UIID,
+    id: &UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
@@ -210,7 +210,7 @@ pub fn do_dropdown(
 
 fn draw_dropdown(
     ctx: &mut RefMut<'_, UIContext>,
-    id: UIID,
+    id: &UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
     layout_offset_y: u32,
