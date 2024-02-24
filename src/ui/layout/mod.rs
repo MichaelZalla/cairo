@@ -1,3 +1,5 @@
+use crate::{buffer::Buffer2D, color, graphics::Graphics};
+
 pub mod item;
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -115,5 +117,31 @@ impl UILayoutContext {
                 self.cursor.y += item_height + self.options.gap;
             }
         }
+    }
+
+    pub fn draw_debug_bounds(&self, parent_buffer: &mut Buffer2D) {
+        // Outer bounds (outside padding)
+
+        Graphics::rectangle(
+            parent_buffer,
+            self.extent.left - self.options.padding,
+            self.extent.top - self.options.padding,
+            self.width() + self.options.padding * 2,
+            self.height() + self.options.padding * 2,
+            None,
+            Some(color::GREEN),
+        );
+
+        // Inner bounds (inside padding)
+
+        Graphics::rectangle(
+            parent_buffer,
+            self.extent.left,
+            self.extent.top,
+            self.width(),
+            self.height(),
+            None,
+            Some(color::YELLOW),
+        );
     }
 }
