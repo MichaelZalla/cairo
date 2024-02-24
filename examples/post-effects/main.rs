@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, sync::RwLock};
+use std::cell::RefCell;
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -112,14 +112,14 @@ fn main() -> Result<(), String> {
 
     let entities_rc = RefCell::new(entities);
 
-    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(PostEffectsScene::new(
         &framebuffer_rc,
         &entities_rc,
         &material_cache,
-        &shader_context_rwl,
+        &shader_context_rc,
     ));
 
     // Create several screen-space post-processing effects.

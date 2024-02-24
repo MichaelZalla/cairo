@@ -13,7 +13,7 @@ impl<'a> Pipeline<'a> {
         material_name: Option<String>,
         scale: Option<f32>,
     ) {
-        let shader_context = self.shader_context.read().unwrap();
+        let shader_context = self.shader_context.borrow();
 
         let point_ndc_space = shader_context.to_ndc_space(point_world_space);
 

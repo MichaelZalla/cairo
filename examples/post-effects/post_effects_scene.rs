@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI};
 
 use cairo::{
     app::App,
@@ -30,7 +30,7 @@ pub struct PostEffectsScene<'a> {
     spot_light: SpotLight,
     entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
-    shader_context: &'a RwLock<ShaderContext>,
+    shader_context: &'a RefCell<ShaderContext>,
 }
 
 impl<'a> PostEffectsScene<'a> {
@@ -38,7 +38,7 @@ impl<'a> PostEffectsScene<'a> {
         framebuffer_rc: &'a RefCell<Framebuffer>,
         entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
-        shader_context: &'a RwLock<ShaderContext>,
+        shader_context: &'a RefCell<ShaderContext>,
     ) -> Self {
         let framebuffer = framebuffer_rc.borrow();
 
@@ -104,7 +104,7 @@ impl<'a> PostEffectsScene<'a> {
 
         let projection_transform = camera.get_projection();
 
-        let mut context = shader_context.write().unwrap();
+        let mut context = shader_context.borrow_mut();
 
         context.set_view_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
@@ -146,7 +146,7 @@ impl<'a> Scene for PostEffectsScene<'a> {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        let mut context = self.shader_context.write().unwrap();
+        let mut context = self.shader_context.borrow_mut();
 
         let uptime = app.timing_info.uptime_seconds;
 

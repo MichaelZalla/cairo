@@ -1,5 +1,3 @@
-use std::sync::RwLockReadGuard;
-
 use crate::{
     shader::{alpha::AlphaShaderFn, context::ShaderContext},
     texture::sample::sample_nearest,
@@ -7,7 +5,7 @@ use crate::{
 };
 
 pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
-    |context: &RwLockReadGuard<'_, ShaderContext>, out: &DefaultVertexOut| -> bool {
+    |context: &ShaderContext, out: &DefaultVertexOut| -> bool {
         // Check if this fragment can be discarded.
 
         match context.active_material {

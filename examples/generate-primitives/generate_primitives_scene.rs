@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI};
 
 use sdl2::keyboard::Keycode;
 
@@ -51,7 +51,7 @@ pub struct GeneratePrimitivesScene<'a> {
     font_cache_rc: &'static RefCell<FontCache<'static>>,
     font_info: &'static FontInfo,
     material_cache: &'a mut MaterialCache,
-    shader_context: &'a RwLock<ShaderContext>,
+    shader_context: &'a RefCell<ShaderContext>,
     looking_at_point_light: bool,
     timing_info: TimingInfo,
 }
@@ -63,7 +63,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
         font_info: &'static FontInfo,
         entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
-        shader_context: &'a RwLock<ShaderContext>,
+        shader_context: &'a RefCell<ShaderContext>,
     ) -> Self {
         let framebuffer = framebuffer_rc.borrow();
 
@@ -184,7 +184,7 @@ impl<'a> GeneratePrimitivesScene<'a> {
 
         let projection_transform = camera.get_projection();
 
-        let mut context = shader_context.write().unwrap();
+        let mut context = shader_context.borrow_mut();
 
         context.set_view_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
@@ -235,7 +235,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        let mut context = self.shader_context.write().unwrap();
+        let mut context = self.shader_context.borrow_mut();
 
         self.timing_info = app.timing_info.clone();
 

@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell};
 
 use sdl2::keyboard::Keycode;
 
@@ -61,7 +61,7 @@ pub struct SponzaScene<'a> {
     entities: &'a RefCell<Vec<Entity<'a>>>,
     skybox: CubeMap,
     materials: &'a mut MaterialCache,
-    shader_context: &'a RwLock<ShaderContext>,
+    shader_context: &'a RefCell<ShaderContext>,
 }
 
 impl<'a> SponzaScene<'a> {
@@ -72,7 +72,7 @@ impl<'a> SponzaScene<'a> {
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RefCell<Vec<Entity<'a>>>,
         materials: &'a mut MaterialCache,
-        shader_context: &'a RwLock<ShaderContext>,
+        shader_context: &'a RefCell<ShaderContext>,
     ) -> Self {
         let framebuffer = framebuffer_rc.borrow();
 
@@ -157,7 +157,7 @@ impl<'a> SponzaScene<'a> {
 
         let projection_transform = camera.get_projection();
 
-        let mut context = shader_context.write().unwrap();
+        let mut context = shader_context.borrow_mut();
 
         context.set_view_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
@@ -208,7 +208,7 @@ impl<'a> Scene for SponzaScene<'a> {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        let mut context = self.shader_context.write().unwrap();
+        let mut context = self.shader_context.borrow_mut();
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 

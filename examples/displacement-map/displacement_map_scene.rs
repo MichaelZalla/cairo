@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell};
 
 use cairo::{
     app::App,
@@ -34,7 +34,7 @@ pub struct DisplacementMapScene<'a> {
     _spot_light: SpotLight,
     entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
     materials: &'a mut MaterialCache,
-    shader_context: &'a RwLock<ShaderContext>,
+    shader_context: &'a RefCell<ShaderContext>,
     seconds_ellapsed: f32,
 }
 
@@ -43,7 +43,7 @@ impl<'a> DisplacementMapScene<'a> {
         framebuffer_rc: &'a RefCell<Framebuffer>,
         entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
         materials: &'a mut MaterialCache,
-        shader_context: &'a RwLock<ShaderContext>,
+        shader_context: &'a RefCell<ShaderContext>,
     ) -> Self {
         let framebuffer = framebuffer_rc.borrow();
 
@@ -51,7 +51,7 @@ impl<'a> DisplacementMapScene<'a> {
 
         let fragment_shader = DEFAULT_FRAGMENT_SHADER;
 
-        let mut context = shader_context.write().unwrap();
+        let mut context = shader_context.borrow_mut();
 
         let aspect_ratio = framebuffer.width_over_height;
 
@@ -146,7 +146,7 @@ impl<'a> Scene for DisplacementMapScene<'a> {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        let mut context = self.shader_context.write().unwrap();
+        let mut context = self.shader_context.borrow_mut();
 
         self.seconds_ellapsed += app.timing_info.seconds_since_last_update;
 

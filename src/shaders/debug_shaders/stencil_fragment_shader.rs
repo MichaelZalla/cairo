@@ -1,7 +1,5 @@
 #![allow(non_upper_case_globals)]
 
-use std::sync::RwLockReadGuard;
-
 use crate::{
     color::Color,
     shader::{
@@ -10,7 +8,7 @@ use crate::{
 };
 
 pub const StencilFragmentShader: FragmentShaderFn =
-    |_context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
+    |_context: &ShaderContext, sample: &GeometrySample| -> Color {
         // Emit only the stencil value for this fragment (black or white).
 
         let value = if sample.stencil {

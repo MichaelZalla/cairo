@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, sync::RwLock};
+use std::cell::RefCell;
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -82,7 +82,7 @@ fn main() -> Result<(), String> {
 
     let mut materials = atrium_materials.unwrap();
 
-    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SponzaScene::new(
@@ -92,7 +92,7 @@ fn main() -> Result<(), String> {
         rendering_context,
         &entities_rc,
         &mut materials,
-        &shader_context_rwl,
+        &shader_context_rc,
     ));
 
     // Set up our app

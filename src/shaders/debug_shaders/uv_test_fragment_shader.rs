@@ -1,7 +1,5 @@
 #![allow(non_upper_case_globals)]
 
-use std::sync::RwLockReadGuard;
-
 use crate::{
     color::Color,
     shader::{
@@ -12,7 +10,7 @@ use crate::{
 };
 
 pub const UvTestFragmentShader: FragmentShaderFn =
-    |context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
+    |context: &ShaderContext, sample: &GeometrySample| -> Color {
         // Emit an RGB representation of this fragment's interpolated UV.
 
         let r: u8;

@@ -17,7 +17,7 @@ impl<'a> Pipeline<'a> {
 
                         // Perform deferred lighting pass.
 
-                        let shader_context = self.shader_context.read().unwrap();
+                        let shader_context = self.shader_context.borrow();
 
                         // Call the active fragment shader on every G-buffer sample that was
                         // written to by the rasterizer.

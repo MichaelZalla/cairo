@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, sync::RwLock};
+use std::cell::RefCell;
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -60,14 +60,14 @@ fn main() -> Result<(), String> {
 
     let cache = cube_material_cache.unwrap();
 
-    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
     // Instantiate our scene
     let scene: RefCell<DiffuseMapScene<'_>> = RefCell::new(DiffuseMapScene::new(
         &framebuffer_rc,
         &entities_rc,
         &cache,
-        &shader_context_rwl,
+        &shader_context_rc,
     ));
 
     // Set up our app

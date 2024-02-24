@@ -7,7 +7,7 @@ use crate::{
 
 impl<'a> Pipeline<'a> {
     pub fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
-        let shader_context = self.shader_context.read().unwrap();
+        let shader_context = self.shader_context.borrow();
 
         let start_ndc_space = shader_context.to_ndc_space(start_world_space);
         let end_ndc_space = shader_context.to_ndc_space(end_world_space);

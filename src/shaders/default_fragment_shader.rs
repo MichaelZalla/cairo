@@ -1,5 +1,3 @@
-use std::sync::RwLockReadGuard;
-
 use crate::{
     color::Color,
     shader::{
@@ -9,7 +7,7 @@ use crate::{
 };
 
 pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
-    |context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
+    |context: &ShaderContext, sample: &GeometrySample| -> Color {
         // Calculate ambient light contribution
 
         let ambient_contribution = context.ambient_light.contribute(sample.ambient_factor);

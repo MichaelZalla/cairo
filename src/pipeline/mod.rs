@@ -1,7 +1,4 @@
-use std::{
-    cell::RefCell,
-    sync::{RwLock, RwLockReadGuard},
-};
+use std::cell::RefCell;
 
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -55,7 +52,7 @@ pub struct Pipeline<'a> {
     viewport: PipelineViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
-    pub shader_context: &'a RwLock<ShaderContext>,
+    pub shader_context: &'a RefCell<ShaderContext>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
     pub geometry_shader_options: GeometryShaderOptions,
@@ -65,7 +62,7 @@ pub struct Pipeline<'a> {
 
 impl<'a> Pipeline<'a> {
     pub fn new(
-        shader_context: &'a RwLock<ShaderContext>,
+        shader_context: &'a RefCell<ShaderContext>,
         vertex_shader: VertexShaderFn,
         fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
@@ -293,7 +290,7 @@ impl<'a> Pipeline<'a> {
             for face in entity.bounds_mesh.faces.iter() {
                 let object_vertices_in = self.get_vertices_in(&entity.bounds_mesh, &face);
 
-                let shader_context = self.shader_context.read().unwrap();
+                let shader_context = self.shader_context.borrow();
 
                 let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
                     .into_iter()
@@ -327,7 +324,7 @@ impl<'a> Pipeline<'a> {
         let original_world_transform: Mat4;
 
         {
-            let mut context = self.shader_context.write().unwrap();
+            let mut context = self.shader_context.borrow_mut();
 
             original_world_transform = context.get_world_transform();
 
@@ -338,7 +335,7 @@ impl<'a> Pipeline<'a> {
 
         // Reset the shader context's original world transform.
         {
-            let mut context = self.shader_context.write().unwrap();
+            let mut context = self.shader_context.borrow_mut();
 
             context.set_world_transform(original_world_transform);
         }
@@ -346,7 +343,7 @@ impl<'a> Pipeline<'a> {
 
     fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
         {
-            let mut context = self.shader_context.write().unwrap();
+            let mut context = self.shader_context.borrow_mut();
 
             match &mesh.material_name {
                 Some(name) => {
@@ -371,7 +368,7 @@ impl<'a> Pipeline<'a> {
 
         // Reset the shader context's original active material.
         {
-            let mut context = self.shader_context.write().unwrap();
+            let mut context = self.shader_context.borrow_mut();
 
             context.set_active_material(None);
         }
@@ -487,7 +484,7 @@ impl<'a> Pipeline<'a> {
         let projection_space_vertices: Vec<DefaultVertexOut>;
 
         {
-            let shader_context = self.shader_context.read().unwrap();
+            let shader_context = self.shader_context.borrow();
 
             projection_space_vertices = vertices_in
                 .into_iter()
@@ -527,7 +524,7 @@ impl<'a> Pipeline<'a> {
                             Some(((x, y), non_linear_z)) => {
                                 // Alpha shader test.
 
-                                let shader_context = self.shader_context.read().unwrap();
+                                let shader_context = self.shader_context.borrow();
 
                                 if (self.alpha_shader)(&shader_context, &linear_space_interpolant)
                                     == false
@@ -617,11 +614,11 @@ impl<'a> Pipeline<'a> {
 
     fn get_hdr_color_for_sample(
         &self,
-        shader_context: &RwLockReadGuard<'_, ShaderContext>,
+        shader_context: &ShaderContext,
         sample: &GeometrySample,
     ) -> Vec3 {
         if self.options.do_lighting {
-            (self.fragment_shader)(&shader_context, &sample).to_vec3()
+            (self.fragment_shader)(shader_context, &sample).to_vec3()
         } else {
             sample.diffuse
         }

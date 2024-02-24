@@ -215,8 +215,8 @@ impl<'a> Pipeline<'a> {
             .cross(vertices[2] - vertices[0])
             .as_normal();
 
-        let projected_origin = Vec4::new(Default::default(), 1.0)
-            * self.shader_context.read().unwrap().get_projection();
+        let projected_origin =
+            Vec4::new(Default::default(), 1.0) * self.shader_context.borrow().get_projection();
 
         let dot_product = vertex_normal.dot(
             vertices[0].as_normal()

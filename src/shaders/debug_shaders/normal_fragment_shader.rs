@@ -1,7 +1,5 @@
 #![allow(non_upper_case_globals)]
 
-use std::sync::{RwLock, RwLockReadGuard};
-
 use crate::{
     color::Color,
     shader::{
@@ -10,13 +8,9 @@ use crate::{
     vec::vec4::Vec4,
 };
 
-pub struct NormalFragmentShader<'a> {
-    context: &'a RwLock<ShaderContext>,
-}
-
 pub const NormalFragmentShader: FragmentShaderFn =
-    |_context: &RwLockReadGuard<ShaderContext>, sample: &GeometrySample| -> Color {
-        // let context: std::sync::RwLockReadGuard<'_, ShaderContext> = self.context.read().unwrap();
+    |_context: &ShaderContext, sample: &GeometrySample| -> Color {
+        // let context: std::sync::RefCell<ShaderContext> = self.context.read().unwrap();
 
         // Emit only the world-space normal (RBG space) for this fragment.
 

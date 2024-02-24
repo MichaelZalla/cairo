@@ -1,5 +1,3 @@
-use std::sync::RwLockReadGuard;
-
 use crate::{
     color::{self, Color},
     scene::light::PointLight,
@@ -16,10 +14,7 @@ use crate::{
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
-pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &RwLockReadGuard<
-    '_,
-    ShaderContext,
->,
+pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                                         options: &GeometryShaderOptions,
                                                         interpolant: &DefaultVertexOut|
  -> Option<GeometrySample> {

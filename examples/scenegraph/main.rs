@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, sync::RwLock};
+use std::{cell::RefCell, f32::consts::PI};
 
 use uuid::Uuid;
 
@@ -150,10 +150,10 @@ fn main() -> Result<(), String> {
 
     // Bind initial state to our shader context.
 
-    let shader_context_rwl: RwLock<ShaderContext> = Default::default();
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
     {
-        let mut context = shader_context_rwl.write().unwrap();
+        let mut context = shader_context_rc.borrow_mut();
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
@@ -163,7 +163,7 @@ fn main() -> Result<(), String> {
     // Pipeline
 
     let mut pipeline = Pipeline::new(
-        &shader_context_rwl,
+        &shader_context_rc,
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -243,7 +243,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let mut context = shader_context_rwl.write().unwrap();
+        let mut context = shader_context_rc.borrow_mut();
 
         let uptime = app.timing_info.uptime_seconds;
 

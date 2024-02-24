@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI};
 
 use cairo::{
     app::App,
@@ -32,7 +32,7 @@ pub struct SkyboxScene<'a> {
     _spot_lights: Vec<SpotLight>,
     entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
     material_cache: &'a mut MaterialCache,
-    shader_context: &'a RwLock<ShaderContext>,
+    shader_context: &'a RefCell<ShaderContext>,
     skybox: CubeMap,
 }
 
@@ -42,7 +42,7 @@ impl<'a> SkyboxScene<'a> {
         rendering_context: &ApplicationRenderingContext,
         entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
-        shader_context: &'a RwLock<ShaderContext>,
+        shader_context: &'a RefCell<ShaderContext>,
     ) -> Self {
         let framebuffer = framebuffer_rc.borrow();
 
@@ -110,7 +110,7 @@ impl<'a> SkyboxScene<'a> {
 
         let projection_transform = camera.get_projection();
 
-        let mut context = shader_context.write().unwrap();
+        let mut context = shader_context.borrow_mut();
 
         context.set_view_position(view_position);
         context.set_view_inverse_transform(view_inverse_transform);
@@ -181,7 +181,7 @@ impl<'a> Scene for SkyboxScene<'a> {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        let mut context = self.shader_context.write().unwrap();
+        let mut context = self.shader_context.borrow_mut();
 
         let camera = (self.cameras[self.active_camera_index]).borrow_mut();
 
@@ -232,7 +232,7 @@ impl<'a> Scene for SkyboxScene<'a> {
         self.pipeline.begin_frame();
 
         {
-            let mut context = self.shader_context.write().unwrap();
+            let mut context = self.shader_context.borrow_mut();
 
             let cubemap_raw_mut = &self.skybox as *const CubeMap;
 
@@ -245,7 +245,7 @@ impl<'a> Scene for SkyboxScene<'a> {
         }
 
         {
-            let mut context = self.shader_context.write().unwrap();
+            let mut context = self.shader_context.borrow_mut();
 
             context.set_active_environment_map(None);
         }

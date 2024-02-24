@@ -1,5 +1,3 @@
-use std::sync::RwLockReadGuard;
-
 use crate::{
     matrix::Mat4,
     shader::{context::ShaderContext, vertex::VertexShaderFn},
@@ -11,7 +9,7 @@ use crate::{
 };
 
 pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
-    |context: &RwLockReadGuard<'_, ShaderContext>, v: &DefaultVertexIn| -> DefaultVertexOut {
+    |context: &ShaderContext, v: &DefaultVertexIn| -> DefaultVertexOut {
         // Object-to-world-space vertex transform
 
         let mut out = DefaultVertexOut::new();

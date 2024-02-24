@@ -5,12 +5,7 @@ use self::{options::GeometryShaderOptions, sample::GeometrySample};
 pub mod options;
 pub mod sample;
 
-use std::sync::RwLockReadGuard;
-
 use super::context::ShaderContext;
 
-pub type GeometryShaderFn = fn(
-    &RwLockReadGuard<ShaderContext>,
-    &GeometryShaderOptions,
-    &DefaultVertexOut,
-) -> Option<GeometrySample>;
+pub type GeometryShaderFn =
+    fn(&ShaderContext, &GeometryShaderOptions, &DefaultVertexOut) -> Option<GeometrySample>;
