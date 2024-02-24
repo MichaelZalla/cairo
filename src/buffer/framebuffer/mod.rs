@@ -7,6 +7,14 @@ use crate::{
 
 use super::Buffer2D;
 
+pub enum FramebufferAttachmentKind {
+    Stencil,
+    Depth,
+    Color,
+    ForwardLdr,
+    ForwardOrDeferredHdr,
+}
+
 #[derive(Default, Debug)]
 pub struct FramebufferAttachments {
     pub stencil: Option<RefCell<Buffer2D<u8>>>,
@@ -34,25 +42,50 @@ impl Framebuffer {
         }
     }
 
+    pub fn create_attachment(
+        &mut self,
+        kind: FramebufferAttachmentKind,
+        projection_z_near: Option<f32>,
+        projection_z_far: Option<f32>,
+    ) {
+        match kind {
+            FramebufferAttachmentKind::Stencil => {
+                self.attachments.stencil =
+                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+            }
+            FramebufferAttachmentKind::Depth => {
+                self.attachments.depth = Some(RefCell::new(ZBuffer::new(
+                    self.width,
+                    self.height,
+                    projection_z_near.unwrap(),
+                    projection_z_far.unwrap(),
+                )));
+            }
+            FramebufferAttachmentKind::Color => {
+                self.attachments.color =
+                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+            }
+            FramebufferAttachmentKind::ForwardLdr => {
+                self.attachments.forward_ldr =
+                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+            }
+            FramebufferAttachmentKind::ForwardOrDeferredHdr => {
+                self.attachments.forward_or_deferred_hdr =
+                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+            }
+        }
+    }
+
     pub fn complete(&mut self, projection_z_near: f32, projection_z_far: f32) {
-        // Bind framebuffer attachments.
-
-        self.attachments.stencil = Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
-
-        self.attachments.color = Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
-
-        self.attachments.forward_ldr =
-            Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
-
-        self.attachments.forward_or_deferred_hdr =
-            Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
-
-        self.attachments.depth = Some(RefCell::new(ZBuffer::new(
-            self.width,
-            self.height,
-            projection_z_near,
-            projection_z_far,
-        )));
+        self.create_attachment(FramebufferAttachmentKind::Stencil, None, None);
+        self.create_attachment(
+            FramebufferAttachmentKind::Depth,
+            Some(projection_z_near),
+            Some(projection_z_far),
+        );
+        self.create_attachment(FramebufferAttachmentKind::Color, None, None);
+        self.create_attachment(FramebufferAttachmentKind::ForwardLdr, None, None);
+        self.create_attachment(FramebufferAttachmentKind::ForwardOrDeferredHdr, None, None);
     }
 
     pub fn validate(&self) -> Result<(), String> {
