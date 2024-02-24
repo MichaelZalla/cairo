@@ -8,6 +8,7 @@ use crate::{
         camera::Camera,
         light::{PointLight, SpotLight},
     },
+    transform::Transform3D,
     vec::vec3::Vec3,
 };
 
@@ -48,7 +49,9 @@ impl<'a> Pipeline<'a> {
 
                         let light_quad_entity = Entity::new(&light_quad);
 
-                        self.render_entity(&light_quad_entity, Some(&materials));
+                        let transform: Transform3D = Default::default();
+
+                        self.render_entity(&light_quad_entity, &transform.mat(), Some(&materials));
                     }
                     None => {
                         self.render_point_indicator(light_position, light_influence_distance * 0.2);

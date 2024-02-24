@@ -66,13 +66,13 @@ fn main() -> Result<(), String> {
 
     let aspect_ratio = framebuffer_rc.borrow().width_over_height;
 
-    let camera: Camera = Camera::from_perspective(
+    let mut camera: Camera = Camera::from_perspective(
         Vec3 {
             x: 0.0,
             y: 0.0,
             z: -5.0,
         },
-        *(cube_entity.transform.translation()),
+        Default::default(),
         75.0,
         aspect_ratio,
     );
@@ -143,33 +143,47 @@ fn main() -> Result<(), String> {
 
     let mut scenegraph = SceneGraph::new();
 
-    // Add nodes to our scene graph's root.
+    // Add geometry nodes to our scene graph's root.
 
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::Camera,
+    let cube_entity_node = SceneNode::new(
+        SceneNodeType::Entity,
+        Default::default(),
+        Some(cube_entity_handle),
         None,
+    );
+
+    let cube_entity_translation = *(cube_entity_node.get_transform().translation());
+
+    scenegraph.root.add_child(cube_entity_node);
+
+    // Add camera and light nodes to our scene graph's root.
+
+    camera
+        .look_vector
+        .set_target_position(cube_entity_translation);
+
+    let camera_node = SceneNode::new(
+        SceneNodeType::Camera,
+        Default::default(),
         Some(camera_handle),
         None,
-    ));
+    );
+
+    scenegraph.root.add_child(camera_node);
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::PointLight,
-        None,
+        Default::default(),
         Some(point_light_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::SpotLight,
-        None,
+        Default::default(),
         Some(spot_light_handle),
         None,
     ));
-
-    let cube_entity_node =
-        SceneNode::new(SceneNodeType::Entity, None, Some(cube_entity_handle), None);
-
-    scenegraph.root.add_child(cube_entity_node);
 
     // Prints the scenegraph to stdout.
 
@@ -197,53 +211,36 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Empty => Ok(()),
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mut entity_arena = entity_arena_rc.borrow_mut();
+                SceneNodeType::Entity => {
+                    static ENTITY_ROTATION_SPEED: f32 = 0.2;
 
-                        match entity_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let entity = &mut entry.item;
+                    let mut rotation = *node.get_transform().rotation();
 
-                                static ENTITY_ROTATION_SPEED: f32 = 0.2;
+                    rotation.z += 1.0
+                        * ENTITY_ROTATION_SPEED
+                        * PI
+                        * app.timing_info.seconds_since_last_update;
 
-                                let mut rotation = *entity.transform.rotation();
+                    rotation.z %= 2.0 * PI;
 
-                                rotation.z += 1.0
-                                    * ENTITY_ROTATION_SPEED
-                                    * PI
-                                    * app.timing_info.seconds_since_last_update;
+                    rotation.x += 1.0
+                        * ENTITY_ROTATION_SPEED
+                        * PI
+                        * app.timing_info.seconds_since_last_update;
 
-                                rotation.z %= 2.0 * PI;
+                    rotation.x %= 2.0 * PI;
 
-                                rotation.x += 1.0
-                                    * ENTITY_ROTATION_SPEED
-                                    * PI
-                                    * app.timing_info.seconds_since_last_update;
+                    rotation.y += 1.0
+                        * ENTITY_ROTATION_SPEED
+                        * PI
+                        * app.timing_info.seconds_since_last_update;
 
-                                rotation.x %= 2.0 * PI;
+                    rotation.y %= 2.0 * PI;
 
-                                rotation.y += 1.0
-                                    * ENTITY_ROTATION_SPEED
-                                    * PI
-                                    * app.timing_info.seconds_since_last_update;
+                    node.get_transform_mut().set_rotation(rotation);
 
-                                rotation.y %= 2.0 * PI;
-
-                                entity.transform.set_rotation(rotation);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
+                    Ok(())
+                }
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
                         let mut camera_arena = camera_arena_rc.borrow_mut();
@@ -336,7 +333,9 @@ fn main() -> Result<(), String> {
                                 Ok(entry) => {
                                     let entity = &mut entry.item;
 
-                                    pipeline.render_entity(entity, None);
+                                    let world_transform = node.get_transform().mat();
+
+                                    pipeline.render_entity(entity, &world_transform, None);
 
                                     Ok(())
                                 }

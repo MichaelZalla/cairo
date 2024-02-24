@@ -3,7 +3,7 @@ use std::{
     fmt::{Display, Error},
 };
 
-use crate::{matrix::Mat4, resource::handle::Handle};
+use crate::{resource::handle::Handle, transform::Transform3D};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum SceneNodeType {
@@ -39,7 +39,7 @@ pub enum SceneNodeLocalTraversalMethod {
 #[derive(Default, Debug, Clone)]
 pub struct SceneNode<'a> {
     node_type: SceneNodeType,
-    transform: Mat4,
+    transform: Transform3D,
     handle: Option<Handle>,
     parent: Option<&'a SceneNode<'a>>,
     children: Option<Vec<SceneNode<'a>>>,
@@ -48,17 +48,13 @@ pub struct SceneNode<'a> {
 impl<'a> SceneNode<'a> {
     pub fn new(
         node_type: SceneNodeType,
-        transform: Option<Mat4>,
+        transform: Transform3D,
         handle: Option<Handle>,
         parent: Option<&'a SceneNode<'a>>,
     ) -> Self {
         Self {
             node_type,
-            transform: if transform.is_some() {
-                transform.unwrap()
-            } else {
-                Mat4::identity()
-            },
+            transform,
             handle,
             parent,
             children: None,
@@ -69,8 +65,12 @@ impl<'a> SceneNode<'a> {
         &self.node_type
     }
 
-    pub fn get_transform(&self) -> &Mat4 {
+    pub fn get_transform(&self) -> &Transform3D {
         &self.transform
+    }
+
+    pub fn get_transform_mut(&mut self) -> &mut Transform3D {
+        &mut self.transform
     }
 
     pub fn get_handle(&self) -> &Option<Handle> {
@@ -308,7 +308,7 @@ impl<'a> SceneGraph<'a> {
         Self {
             root: SceneNode {
                 node_type: SceneNodeType::Empty,
-                transform: Mat4::identity(),
+                transform: Default::default(),
                 handle: None,
                 parent: None,
                 children: Some(vec![]),

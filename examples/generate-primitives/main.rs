@@ -183,7 +183,7 @@ fn main() -> Result<(), String> {
 
     // Set up resource arenas for the various node types in our scene.
 
-    let entity_arena: Arena<Entity> = Arena::<Entity>::new();
+    let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
     let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
     // let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
     let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
@@ -192,37 +192,10 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let mut plane_entity = Entity::new(&plane_mesh);
-
-    plane_entity.transform.set_translation(Vec3 {
-        x: -5.0,
-        z: -5.0,
-        ..*plane_entity.transform.translation()
-    });
-
-    let mut cube_entity = Entity::new(&cube_mesh);
-
-    cube_entity.transform.set_translation(Vec3 {
-        x: -4.0,
-        y: 1.0,
-        ..*cube_entity.transform.translation()
-    });
-
-    let mut cone_entity = Entity::new(&cone_mesh);
-
-    cone_entity.transform.set_translation(Vec3 {
-        x: 0.0,
-        y: 1.0,
-        ..*cone_entity.transform.translation()
-    });
-
-    let mut cylinder_entity = Entity::new(&cylinder_mesh);
-
-    cylinder_entity.transform.set_translation(Vec3 {
-        x: 4.0,
-        y: 1.0,
-        ..*cylinder_entity.transform.translation()
-    });
+    let plane_entity = Entity::new(&plane_mesh);
+    let cube_entity = Entity::new(&cube_mesh);
+    let cone_entity = Entity::new(&cone_mesh);
+    let cylinder_entity = Entity::new(&cylinder_mesh);
 
     // Set up some cameras.
 
@@ -349,6 +322,11 @@ fn main() -> Result<(), String> {
 
     // Create resource handles from our arenas.
 
+    let plane_entity_handle = entity_arena.insert(Uuid::new_v4(), plane_entity);
+    let cube_entity_handle = entity_arena.insert(Uuid::new_v4(), cube_entity);
+    let cone_entity_handle = entity_arena.insert(Uuid::new_v4(), cone_entity);
+    let cylinder_entity_handle = entity_arena.insert(Uuid::new_v4(), cylinder_entity);
+
     let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
     let camera2_handle = camera_arena.insert(Uuid::new_v4(), camera2);
 
@@ -369,23 +347,89 @@ fn main() -> Result<(), String> {
 
     let mut scenegraph = SceneGraph::new();
 
+    // Add geometry nodes to our scene graph's root.
+
+    let mut plane_entity_node = SceneNode::new(
+        SceneNodeType::Entity,
+        Default::default(),
+        Some(plane_entity_handle),
+        None,
+    );
+
+    plane_entity_node.get_transform_mut().set_translation(Vec3 {
+        x: -5.0,
+        z: -5.0,
+        ..Default::default()
+    });
+
+    scenegraph.root.add_child(plane_entity_node);
+
+    let mut cube_entity_node = SceneNode::new(
+        SceneNodeType::Entity,
+        Default::default(),
+        Some(cube_entity_handle),
+        None,
+    );
+
+    cube_entity_node.get_transform_mut().set_translation(Vec3 {
+        x: -4.0,
+        y: 1.0,
+        ..Default::default()
+    });
+
+    scenegraph.root.add_child(cube_entity_node);
+
+    let mut cone_entity_node = SceneNode::new(
+        SceneNodeType::Entity,
+        Default::default(),
+        Some(cone_entity_handle),
+        None,
+    );
+
+    cone_entity_node.get_transform_mut().set_translation(Vec3 {
+        x: 0.0,
+        y: 1.0,
+        ..Default::default()
+    });
+
+    scenegraph.root.add_child(cone_entity_node);
+
+    let mut cylinder_entity_node = SceneNode::new(
+        SceneNodeType::Entity,
+        Default::default(),
+        Some(cylinder_entity_handle),
+        None,
+    );
+
+    cylinder_entity_node
+        .get_transform_mut()
+        .set_translation(Vec3 {
+            x: 4.0,
+            y: 1.0,
+            ..Default::default()
+        });
+
+    scenegraph.root.add_child(cylinder_entity_node);
+
+    // Add camera and light nodes to our scene graph's root.
+
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::Camera,
-        None,
+        Default::default(),
         Some(camera_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::Camera,
-        None,
+        Default::default(),
         Some(camera2_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
-        None,
+        Default::default(),
         Some(directional_light_handle),
         None,
     ));
@@ -400,7 +444,7 @@ fn main() -> Result<(), String> {
 
             scenegraph.root.add_child(SceneNode::new(
                 SceneNodeType::PointLight,
-                None,
+                Default::default(),
                 Some(point_light_handle),
                 None,
             ));
@@ -409,25 +453,10 @@ fn main() -> Result<(), String> {
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::SpotLight,
-        None,
+        Default::default(),
         Some(spot_light_handle),
         None,
     ));
-
-    {
-        let mut arena = entity_arena_rc.borrow_mut();
-
-        for entity in vec![plane_entity, cube_entity, cone_entity, cylinder_entity] {
-            let handle = arena.insert(Uuid::new_v4(), entity);
-
-            scenegraph.root.add_child(SceneNode::new(
-                SceneNodeType::Entity,
-                None,
-                Some(handle),
-                None,
-            ));
-        }
-    }
 
     // Prints the scenegraph to stdout.
 
@@ -532,7 +561,7 @@ fn main() -> Result<(), String> {
 
                                 static ENTITY_ROTATION_SPEED: f32 = 0.3;
 
-                                let mut rotation = *entity.transform.rotation();
+                                let mut rotation = *node.get_transform().rotation();
 
                                 rotation.z += 1.0
                                     * ENTITY_ROTATION_SPEED
@@ -555,7 +584,7 @@ fn main() -> Result<(), String> {
 
                                 rotation.y %= 2.0 * PI;
 
-                                entity.transform.set_rotation(rotation);
+                                node.get_transform_mut().set_rotation(rotation);
 
                                 Ok(())
                             }
@@ -883,26 +912,9 @@ fn main() -> Result<(), String> {
 
         pipeline.begin_frame();
 
-        // Traverse the scene graph and locate the active camera.
+        // Render entities.
 
         let scenegraph = scenegraph_rc.borrow_mut();
-
-        // let active_camera
-
-        // scenegraph.root.visit(
-        //     SceneNodeGlobalTraversalMethod::DepthFirst,
-        //     Some(SceneNodeLocalTraversalMethod::PostOrder),
-        //     &mut |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
-        //         match node.get_type() {
-        //             SceneNodeType::Camera => {
-        //                 Ok(())
-        //             }
-        //             _ => Ok(())
-        //         }
-        //     },
-        // )?;
-
-        // Render entities.
 
         let mut render_scene_graph_node =
             |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
@@ -918,7 +930,13 @@ fn main() -> Result<(), String> {
                                 Ok(entry) => {
                                     let entity = &mut entry.item;
 
-                                    pipeline.render_entity(entity, Some(&materials_cache));
+                                    let world_transform = node.get_transform().mat();
+
+                                    pipeline.render_entity(
+                                        entity,
+                                        &world_transform,
+                                        Some(&materials_cache),
+                                    );
 
                                     Ok(())
                                 }

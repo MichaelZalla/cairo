@@ -240,28 +240,28 @@ fn main() -> Result<(), String> {
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::Camera,
-        None,
+        Default::default(),
         Some(camera_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
-        None,
+        Default::default(),
         Some(directional_light_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::PointLight,
-        None,
+        Default::default(),
         Some(point_light_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::SpotLight,
-        None,
+        Default::default(),
         Some(spot_light_handle),
         None,
     ));
@@ -276,7 +276,7 @@ fn main() -> Result<(), String> {
 
                 scenegraph.root.add_child(SceneNode::new(
                     SceneNodeType::Entity,
-                    None,
+                    Default::default(),
                     Some(handle),
                     None,
                 ));
@@ -638,7 +638,13 @@ fn main() -> Result<(), String> {
                                 Ok(entry) => {
                                     let entity = &mut entry.item;
 
-                                    pipeline.render_entity(entity, atrium_materials_cache.as_ref());
+                                    let world_transform = node.get_transform().mat();
+
+                                    pipeline.render_entity(
+                                        entity,
+                                        &world_transform,
+                                        atrium_materials_cache.as_ref(),
+                                    );
 
                                     Ok(())
                                 }

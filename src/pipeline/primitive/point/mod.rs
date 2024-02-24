@@ -1,6 +1,6 @@
 use crate::{
     color::Color, entity::Entity, material::cache::MaterialCache, mesh, pipeline::Pipeline,
-    scene::camera::Camera, vec::vec3::Vec3,
+    scene::camera::Camera, transform::Transform3D, vec::vec3::Vec3,
 };
 
 impl<'a> Pipeline<'a> {
@@ -50,7 +50,9 @@ impl<'a> Pipeline<'a> {
 
                         let light_quad_entity = Entity::new(&quad);
 
-                        self.render_entity(&light_quad_entity, Some(materials));
+                        let transform: Transform3D = Default::default();
+
+                        self.render_entity(&light_quad_entity, &transform.mat(), Some(materials));
 
                         return;
                     }

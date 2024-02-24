@@ -272,13 +272,19 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    pub fn render_entity(&mut self, entity: &Entity, material_cache: Option<&MaterialCache>) {
-        self.render_entity_mesh(entity, entity.mesh, material_cache);
+    pub fn render_entity(
+        &mut self,
+        entity: &Entity,
+        world_transform: &Mat4,
+        material_cache: Option<&MaterialCache>,
+    ) {
+        self.render_entity_mesh(entity, world_transform, entity.mesh, material_cache);
     }
 
     fn render_entity_mesh(
         &mut self,
         entity: &Entity,
+        world_transform: &Mat4,
         mesh: &Mesh,
         material_cache: Option<&MaterialCache>,
     ) {
@@ -314,8 +320,6 @@ impl<'a> Pipeline<'a> {
         }
 
         // Otherwise, cull individual triangles.
-
-        let world_transform = entity.transform.mat();
 
         let original_world_transform: Mat4;
 

@@ -1,6 +1,7 @@
 use crate::{
     color::Color,
     entity::Entity,
+    matrix::Mat4,
     pipeline::{
         options::{PipelineFaceCullingReject, PipelineFaceCullingStrategy, PipelineOptions},
         Pipeline,
@@ -8,7 +9,7 @@ use crate::{
 };
 
 impl<'a> Pipeline<'a> {
-    pub fn render_entity_aabb(&mut self, entity: &Entity, color: Color) {
+    pub fn render_entity_aabb(&mut self, entity: &Entity, world_transform: &Mat4, color: Color) {
         let original_options = self.options.clone();
 
         self.options = PipelineOptions {
@@ -25,7 +26,7 @@ impl<'a> Pipeline<'a> {
             },
         };
 
-        self.render_entity_mesh(entity, &entity.bounds_mesh, None);
+        self.render_entity_mesh(entity, world_transform, &entity.bounds_mesh, None);
 
         self.options = original_options;
     }

@@ -193,6 +193,7 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
+    pipeline.geometry_shader_options.diffuse_mapping_active = false;
     pipeline.geometry_shader_options.normal_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);
@@ -220,35 +221,35 @@ fn main() -> Result<(), String> {
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::Camera,
-        None,
+        Default::default(),
         Some(camera_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
-        None,
+        Default::default(),
         Some(directional_light_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::PointLight,
-        None,
+        Default::default(),
         Some(point_light_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::SpotLight,
-        None,
+        Default::default(),
         Some(spot_light_handle),
         None,
     ));
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::Entity,
-        None,
+        Default::default(),
         Some(brick_wall_entity_handle),
         None,
     ));
@@ -279,53 +280,36 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Empty => Ok(()),
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mut entity_arena = entity_arena_rc.borrow_mut();
+                SceneNodeType::Entity => {
+                    static ENTITY_ROTATION_SPEED: f32 = 0.1;
 
-                        match entity_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let entity = &mut entry.item;
+                    let mut rotation = *node.get_transform().rotation();
 
-                                static ENTITY_ROTATION_SPEED: f32 = 0.1;
+                    rotation.z += 1.0
+                        * ENTITY_ROTATION_SPEED
+                        * PI
+                        * app.timing_info.seconds_since_last_update;
 
-                                let mut rotation = *entity.transform.rotation();
+                    rotation.z %= 2.0 * PI;
 
-                                rotation.z += 1.0
-                                    * ENTITY_ROTATION_SPEED
-                                    * PI
-                                    * app.timing_info.seconds_since_last_update;
+                    rotation.x += 1.0
+                        * ENTITY_ROTATION_SPEED
+                        * PI
+                        * app.timing_info.seconds_since_last_update;
 
-                                rotation.z %= 2.0 * PI;
+                    rotation.x %= 2.0 * PI;
 
-                                rotation.x += 1.0
-                                    * ENTITY_ROTATION_SPEED
-                                    * PI
-                                    * app.timing_info.seconds_since_last_update;
+                    rotation.y += 1.0
+                        * ENTITY_ROTATION_SPEED
+                        * PI
+                        * app.timing_info.seconds_since_last_update;
 
-                                rotation.x %= 2.0 * PI;
+                    rotation.y %= 2.0 * PI;
 
-                                rotation.y += 1.0
-                                    * ENTITY_ROTATION_SPEED
-                                    * PI
-                                    * app.timing_info.seconds_since_last_update;
+                    node.get_transform_mut().set_rotation(rotation);
 
-                                rotation.y %= 2.0 * PI;
-
-                                entity.transform.set_rotation(rotation);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
+                    Ok(())
+                }
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
                         let mut camera_arena = camera_arena_rc.borrow_mut();
@@ -494,7 +478,13 @@ fn main() -> Result<(), String> {
                                 Ok(entry) => {
                                     let entity = &mut entry.item;
 
-                                    pipeline.render_entity(entity, Some(&material_cache));
+                                    let world_transform = node.get_transform().mat();
+
+                                    pipeline.render_entity(
+                                        entity,
+                                        &world_transform,
+                                        Some(&material_cache),
+                                    );
 
                                     Ok(())
                                 }
