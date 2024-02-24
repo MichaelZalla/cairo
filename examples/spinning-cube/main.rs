@@ -9,6 +9,7 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
+    matrix::Mat4,
     mesh,
     pipeline::Pipeline,
     resource::arena::Arena,
@@ -205,6 +206,7 @@ fn main() -> Result<(), String> {
         let mut scenegraph = scenegraph_rc.borrow_mut();
 
         let mut update_scene_graph_node = |_current_depth: usize,
+                                           _current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
@@ -320,38 +322,38 @@ fn main() -> Result<(), String> {
 
         let scenegraph = scenegraph_rc.borrow_mut();
 
-        let mut render_scene_graph_node =
-            |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
-                let (node_type, handle) = (node.get_type(), node.get_handle());
+        let mut render_scene_graph_node = |_current_depth: usize,
+                                           current_world_transform: Mat4,
+                                           node: &SceneNode|
+         -> Result<(), String> {
+            let (node_type, handle) = (node.get_type(), node.get_handle());
 
-                match node_type {
-                    SceneNodeType::Entity => match handle {
-                        Some(handle) => {
-                            let mut entity_arena = entity_arena_rc.borrow_mut();
+            match node_type {
+                SceneNodeType::Entity => match handle {
+                    Some(handle) => {
+                        let mut entity_arena = entity_arena_rc.borrow_mut();
 
-                            match entity_arena.get_mut(handle) {
-                                Ok(entry) => {
-                                    let entity = &mut entry.item;
+                        match entity_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let entity = &mut entry.item;
 
-                                    let world_transform = node.get_transform().mat();
+                                pipeline.render_entity(entity, &current_world_transform, None);
 
-                                    pipeline.render_entity(entity, &world_transform, None);
-
-                                    Ok(())
-                                }
-                                Err(err) => panic!(
-                                    "Failed to get Entity from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
+                                Ok(())
                             }
+                            Err(err) => panic!(
+                                "Failed to get Entity from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
                         }
-                        None => {
-                            panic!("Encountered a `Entity` node with no resource handle!")
-                        }
-                    },
-                    _ => Ok(()),
-                }
-            };
+                    }
+                    None => {
+                        panic!("Encountered a `Entity` node with no resource handle!")
+                    }
+                },
+                _ => Ok(()),
+            }
+        };
 
         // Traverse the scene graph and render its nodes.
 

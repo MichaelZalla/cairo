@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use crate::{resource::handle::Handle, transform::Transform3D};
+use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum SceneNodeType {
@@ -112,15 +112,20 @@ impl<'a> SceneNode<'a> {
         visit_action: &mut C,
     ) -> Result<(), String>
     where
-        C: FnMut(usize, &Self) -> Result<(), String>,
+        C: FnMut(usize, Mat4, &SceneNode) -> Result<(), String>,
     {
         let local = match local_method {
             Some(method) => method,
             None => Default::default(),
         };
 
+        let current_depth: usize = 0;
+        let parent_world_transform = Mat4::identity();
+
         match global_method {
-            SceneNodeGlobalTraversalMethod::DepthFirst => self.visit_dfs(&local, 0, visit_action),
+            SceneNodeGlobalTraversalMethod::DepthFirst => {
+                self.visit_dfs(&local, current_depth, parent_world_transform, visit_action)
+            }
             SceneNodeGlobalTraversalMethod::BreadthFirst => self.visit_bfs(visit_action),
         }
     }
@@ -132,16 +137,19 @@ impl<'a> SceneNode<'a> {
         visit_action: &mut C,
     ) -> Result<(), String>
     where
-        C: FnMut(usize, &mut Self) -> Result<(), String>,
+        C: FnMut(usize, Mat4, &mut SceneNode) -> Result<(), String>,
     {
         let local = match local_method {
             Some(method) => method,
             None => Default::default(),
         };
 
+        let current_depth: usize = 0;
+        let parent_world_transform = Mat4::identity();
+
         match global_method {
             SceneNodeGlobalTraversalMethod::DepthFirst => {
-                self.visit_dfs_mut(&local, 0, visit_action)
+                self.visit_dfs_mut(&local, current_depth, parent_world_transform, visit_action)
             }
             SceneNodeGlobalTraversalMethod::BreadthFirst => self.visit_bfs_mut(visit_action),
         }
@@ -151,19 +159,27 @@ impl<'a> SceneNode<'a> {
         &self,
         local_method: &SceneNodeLocalTraversalMethod,
         current_depth: usize,
+        parent_world_transform: Mat4,
         visit_action: &mut C,
     ) -> Result<(), String>
     where
-        C: FnMut(usize, &Self) -> Result<(), String>,
+        C: FnMut(usize, Mat4, &SceneNode) -> Result<(), String>,
     {
+        let current_world_transform = *(self.transform.mat()) * parent_world_transform;
+
         match local_method {
             SceneNodeLocalTraversalMethod::PreOrder => {
-                visit_action(current_depth, self)?;
+                visit_action(current_depth, current_world_transform, self)?;
 
                 match &self.children {
                     Some(children) => {
                         for child in children {
-                            child.visit_dfs(local_method, current_depth + 1, visit_action)?;
+                            child.visit_dfs(
+                                local_method,
+                                current_depth + 1,
+                                current_world_transform,
+                                visit_action,
+                            )?;
                         }
                     }
                     None => (),
@@ -175,13 +191,18 @@ impl<'a> SceneNode<'a> {
                 match &self.children {
                     Some(children) => {
                         for child in children {
-                            child.visit_dfs(local_method, current_depth + 1, visit_action)?;
+                            child.visit_dfs(
+                                local_method,
+                                current_depth + 1,
+                                current_world_transform,
+                                visit_action,
+                            )?;
                         }
                     }
                     None => (),
                 }
 
-                visit_action(current_depth, self)
+                visit_action(current_depth, current_world_transform, self)
             }
         }
     }
@@ -190,19 +211,27 @@ impl<'a> SceneNode<'a> {
         &mut self,
         local_method: &SceneNodeLocalTraversalMethod,
         current_depth: usize,
+        parent_world_transform: Mat4,
         visit_action: &mut C,
     ) -> Result<(), String>
     where
-        C: FnMut(usize, &mut Self) -> Result<(), String>,
+        C: FnMut(usize, Mat4, &mut Self) -> Result<(), String>,
     {
+        let current_world_transform = *(self.transform.mat()) * parent_world_transform;
+
         match local_method {
             SceneNodeLocalTraversalMethod::PreOrder => {
-                visit_action(current_depth, self)?;
+                visit_action(current_depth, current_world_transform, self)?;
 
                 match self.children.as_mut() {
                     Some(children) => {
                         for child in children {
-                            child.visit_dfs_mut(local_method, current_depth + 1, visit_action)?;
+                            child.visit_dfs_mut(
+                                local_method,
+                                current_depth + 1,
+                                current_world_transform,
+                                visit_action,
+                            )?;
                         }
                     }
                     None => (),
@@ -214,34 +243,45 @@ impl<'a> SceneNode<'a> {
                 match self.children.as_mut() {
                     Some(children) => {
                         for child in children {
-                            child.visit_dfs_mut(local_method, current_depth + 1, visit_action)?;
+                            child.visit_dfs_mut(
+                                local_method,
+                                current_depth + 1,
+                                current_world_transform,
+                                visit_action,
+                            )?;
                         }
                     }
                     None => (),
                 }
 
-                visit_action(current_depth, self)
+                visit_action(current_depth, current_world_transform, self)
             }
         }
     }
 
     fn visit_bfs<C>(&self, visit_action: &mut C) -> Result<(), String>
     where
-        C: FnMut(usize, &Self) -> Result<(), String>,
+        C: FnMut(usize, Mat4, &SceneNode) -> Result<(), String>,
     {
-        let mut frontier: VecDeque<(usize, &Self)> = VecDeque::new();
+        let mut frontier: VecDeque<(usize, Mat4, &SceneNode)> = VecDeque::new();
 
-        frontier.push_front((0, self));
+        let current_depth: usize = 0;
+        let parent_world_transform = *self.transform.mat();
+
+        frontier.push_front((current_depth, parent_world_transform, self));
 
         while frontier.len() > 0 {
-            let (current_depth, current_node) = frontier.pop_front().unwrap();
+            let (current_depth, parent_world_transform, current_node) =
+                frontier.pop_front().unwrap();
 
-            visit_action(current_depth, current_node)?;
+            let current_world_transform = *(current_node.transform.mat()) * parent_world_transform;
+
+            visit_action(current_depth, current_world_transform, current_node)?;
 
             match &current_node.children {
                 Some(children) => {
                     for child in children {
-                        frontier.push_back((current_depth + 1, child));
+                        frontier.push_back((current_depth + 1, current_world_transform, child));
                     }
                 }
                 None => (),
@@ -253,21 +293,27 @@ impl<'a> SceneNode<'a> {
 
     fn visit_bfs_mut<C>(&mut self, visit_action: &mut C) -> Result<(), String>
     where
-        C: FnMut(usize, &mut Self) -> Result<(), String>,
+        C: FnMut(usize, Mat4, &mut Self) -> Result<(), String>,
     {
-        let mut frontier: VecDeque<(usize, &mut Self)> = VecDeque::new();
+        let mut frontier: VecDeque<(usize, Mat4, &mut Self)> = VecDeque::new();
 
-        frontier.push_front((0, self));
+        let current_depth: usize = 0;
+        let parent_world_transform = *self.transform.mat();
+
+        frontier.push_front((current_depth, parent_world_transform, self));
 
         while frontier.len() > 0 {
-            let (current_depth, current_node) = frontier.pop_front().unwrap();
+            let (current_depth, parent_world_transform, current_node) =
+                frontier.pop_front().unwrap();
 
-            visit_action(current_depth, current_node)?;
+            let current_world_transform = *(current_node.transform.mat()) * parent_world_transform;
+
+            visit_action(current_depth, current_world_transform, current_node)?;
 
             match current_node.children.as_mut() {
                 Some(children) => {
                     for child in children {
-                        frontier.push_back((current_depth + 1, child));
+                        frontier.push_back((current_depth + 1, current_world_transform, child));
                     }
                 }
                 None => (),
@@ -280,13 +326,19 @@ impl<'a> SceneNode<'a> {
 
 impl<'a> Display for SceneNode<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let uuid_suffix: String = match &self.handle {
-            Some(handle) => format!(" (UUID {})", handle.uuid),
+        let uuid_suffix = match &self.handle {
+            Some(handle) => format!(" | {}", handle.uuid),
             None => "".to_string(),
         };
 
-        let children_suffix: String = match &self.children {
-            Some(children) => format!(" ({} children)", children.len()),
+        let children_suffix = match &self.children {
+            Some(children) => {
+                if children.len() > 1 {
+                    format!(" ({} children)", children.len())
+                } else {
+                    " (1 child)".to_string()
+                }
+            }
             None => "".to_string(),
         };
 
