@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{f32::consts::PI, sync::RwLock};
+use std::{cell::RefCell, f32::consts::PI, sync::RwLock};
 
 use uuid::Uuid;
 
@@ -47,7 +47,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rwl = RwLock::new(framebuffer);
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     // Meshes
 
@@ -102,7 +102,7 @@ fn main() -> Result<(), String> {
 
     // Set up a camera for our scene.
 
-    let aspect_ratio = framebuffer_rwl.read().unwrap().width_over_height;
+    let aspect_ratio = framebuffer_rc.borrow().width_over_height;
 
     let mut camera: Camera = Camera::from_perspective(
         Vec3 {
@@ -171,7 +171,7 @@ fn main() -> Result<(), String> {
 
     pipeline.geometry_shader_options.emissive_mapping_active = true;
 
-    let pipeline_rwl = RwLock::new(pipeline);
+    let pipeline_rc = RefCell::new(pipeline);
 
     // Create resource handles from our arenas.
 
@@ -184,12 +184,12 @@ fn main() -> Result<(), String> {
     let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
     let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
 
-    let entity_arena_rwl = RwLock::new(entity_arena);
-    let camera_arena_rwl = RwLock::new(camera_arena);
-    // let ambient_light_arena_rwl = RwLock::new(ambient_light_arena);
-    // let directional_light_arena_rwl = RwLock::new(directional_light_arena);
-    let point_light_arena_rwl = RwLock::new(point_light_arena);
-    let spot_light_arena_rwl = RwLock::new(spot_light_arena);
+    let entity_arena_rc = RefCell::new(entity_arena);
+    let camera_arena_rc = RefCell::new(camera_arena);
+    // let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
+    // let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let point_light_arena_rc = RefCell::new(point_light_arena);
+    let spot_light_arena_rc = RefCell::new(spot_light_arena);
 
     // Create a scene graph.
 
@@ -234,7 +234,7 @@ fn main() -> Result<(), String> {
 
     println!("{}", scenegraph);
 
-    let scenegraph_rwl = RwLock::new(scenegraph);
+    let scenegraph_rc = RefCell::new(scenegraph);
 
     // App update and render callbacks
 
@@ -249,7 +249,7 @@ fn main() -> Result<(), String> {
 
         // Traverse the scene graph and update its nodes.
 
-        let mut scenegraph = scenegraph_rwl.write().unwrap();
+        let mut scenegraph = scenegraph_rc.borrow_mut();
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            node: &mut SceneNode|
@@ -263,7 +263,7 @@ fn main() -> Result<(), String> {
 
                     match handle {
                         Some(handle) => {
-                            let mut entity_arena = entity_arena_rwl.write().unwrap();
+                            let mut entity_arena = entity_arena_rc.borrow_mut();
 
                             match entity_arena.get_mut(handle) {
                                 Ok(entry) => {
@@ -311,7 +311,7 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
-                        let mut camera_arena = camera_arena_rwl.write().unwrap();
+                        let mut camera_arena = camera_arena_rc.borrow_mut();
 
                         match camera_arena.get_mut(handle) {
                             Ok(entry) => {
@@ -351,7 +351,7 @@ fn main() -> Result<(), String> {
                 SceneNodeType::DirectionalLight => Ok(()),
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {
-                        let mut point_light_arena = point_light_arena_rwl.write().unwrap();
+                        let mut point_light_arena = point_light_arena_rc.borrow_mut();
 
                         match point_light_arena.get_mut(handle) {
                             Ok(entry) => {
@@ -401,7 +401,7 @@ fn main() -> Result<(), String> {
             &mut update_scene_graph_node,
         )?;
 
-        let mut pipeline = pipeline_rwl.write().unwrap();
+        let mut pipeline = pipeline_rc.borrow_mut();
 
         pipeline
             .options
@@ -417,9 +417,9 @@ fn main() -> Result<(), String> {
     let mut render = || -> Result<Vec<u32>, String> {
         // Delegate the rendering to our scene.
 
-        let mut pipeline = pipeline_rwl.write().unwrap();
+        let mut pipeline = pipeline_rc.borrow_mut();
 
-        pipeline.bind_framebuffer(Some(&framebuffer_rwl));
+        pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
         // Begin frame
 
@@ -427,7 +427,7 @@ fn main() -> Result<(), String> {
 
         // Render entities.
 
-        let scenegraph = scenegraph_rwl.write().unwrap();
+        let scenegraph = scenegraph_rc.borrow_mut();
 
         let mut render_scene_graph_node =
             |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
@@ -437,7 +437,7 @@ fn main() -> Result<(), String> {
                     SceneNodeType::Empty => Ok(()),
                     SceneNodeType::Entity => match handle {
                         Some(handle) => {
-                            let mut entity_arena = entity_arena_rwl.write().unwrap();
+                            let mut entity_arena = entity_arena_rc.borrow_mut();
 
                             match entity_arena.get_mut(handle) {
                                 Ok(entry) => {
@@ -461,7 +461,7 @@ fn main() -> Result<(), String> {
                     SceneNodeType::DirectionalLight => Ok(()),
                     SceneNodeType::PointLight => match handle {
                         Some(handle) => {
-                            let mut point_light_arena = point_light_arena_rwl.write().unwrap();
+                            let mut point_light_arena = point_light_arena_rc.borrow_mut();
 
                             match point_light_arena.get_mut(handle) {
                                 Ok(entry) => {
@@ -483,7 +483,7 @@ fn main() -> Result<(), String> {
                     },
                     SceneNodeType::SpotLight => match handle {
                         Some(handle) => {
-                            let mut spot_light_arena = spot_light_arena_rwl.write().unwrap();
+                            let mut spot_light_arena = spot_light_arena_rc.borrow_mut();
 
                             match spot_light_arena.get_mut(handle) {
                                 Ok(entry) => {
@@ -520,11 +520,11 @@ fn main() -> Result<(), String> {
 
         // Write out.
 
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         match framebuffer.attachments.color.as_ref() {
             Some(color_buffer_lock) => {
-                let color_buffer = color_buffer_lock.read().unwrap();
+                let color_buffer = color_buffer_lock.borrow();
 
                 Ok(color_buffer.get_all().clone())
             }

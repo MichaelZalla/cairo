@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, sync::RwLock};
 
 use sdl2::keyboard::Keycode;
 
@@ -38,7 +38,7 @@ use cairo::{
 };
 
 pub struct GeneratePrimitivesScene<'a> {
-    framebuffer_rwl: &'a RwLock<Framebuffer>,
+    framebuffer_rc: &'a RefCell<Framebuffer>,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
     fragment_shaders: Vec<FragmentShaderFn>,
@@ -47,8 +47,8 @@ pub struct GeneratePrimitivesScene<'a> {
     active_camera_index: usize,
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
-    entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
+    entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
+    font_cache_rc: &'static RefCell<FontCache<'static>>,
     font_info: &'static FontInfo,
     material_cache: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -58,14 +58,14 @@ pub struct GeneratePrimitivesScene<'a> {
 
 impl<'a> GeneratePrimitivesScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Framebuffer>,
-        font_cache_rwl: &'static RwLock<FontCache<'static>>,
+        framebuffer_rc: &'a RefCell<Framebuffer>,
+        font_cache_rc: &'static RefCell<FontCache<'static>>,
         font_info: &'static FontInfo,
-        entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+        entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
         material_cache: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
 
@@ -207,11 +207,11 @@ impl<'a> GeneratePrimitivesScene<'a> {
         );
 
         return GeneratePrimitivesScene {
-            framebuffer_rwl,
+            framebuffer_rc,
             debug_message_buffer,
             pipeline,
             entities,
-            font_cache_rwl,
+            font_cache_rc,
             font_info,
             material_cache,
             shader_context,
@@ -344,7 +344,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
 
         context.set_spot_light(0, self.spot_lights[0]);
 
-        let mut entities = self.entities.write().unwrap();
+        let mut entities = self.entities.borrow_mut();
 
         let rotation_speed = 0.3;
 
@@ -449,16 +449,16 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
     }
 
     fn render(&mut self) {
-        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rc));
 
         let camera = self.cameras[self.active_camera_index];
 
         {
-            let framebuffer = self.framebuffer_rwl.write().unwrap();
+            let framebuffer = self.framebuffer_rc.borrow_mut();
 
             match framebuffer.attachments.depth.as_ref() {
                 Some(lock) => {
-                    let mut depth_buffer = lock.write().unwrap();
+                    let mut depth_buffer = lock.borrow_mut();
 
                     depth_buffer.set_projection_z_near(camera.get_projection_z_near());
                     depth_buffer.set_projection_z_far(camera.get_projection_z_far());
@@ -470,7 +470,7 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         self.pipeline.begin_frame();
 
         {
-            for entity in self.entities.read().unwrap().as_slice() {
+            for entity in self.entities.borrow().as_slice() {
                 self.pipeline
                     .render_entity(&entity, Some(self.material_cache));
 
@@ -515,15 +515,15 @@ impl<'a> Scene for GeneratePrimitivesScene<'a> {
         let debug_messages = self.debug_message_buffer.borrow_mut();
 
         {
-            let framebuffer = self.framebuffer_rwl.write().unwrap();
+            let framebuffer = self.framebuffer_rc.borrow_mut();
 
             match framebuffer.attachments.color.as_ref() {
                 Some(lock) => {
-                    let mut color_buffer = lock.write().unwrap();
+                    let mut color_buffer = lock.borrow_mut();
 
                     Graphics::render_debug_messages(
                         &mut *color_buffer,
-                        self.font_cache_rwl,
+                        self.font_cache_rc,
                         self.font_info,
                         (12, 12),
                         1.0,

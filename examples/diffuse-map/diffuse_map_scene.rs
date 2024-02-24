@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, f32::consts::PI, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, sync::RwLock};
 
 use cairo::{
     app::App,
@@ -22,23 +22,23 @@ use cairo::{
 };
 
 pub struct DiffuseMapScene<'a> {
-    framebuffer_rwl: &'a RwLock<Framebuffer>,
+    framebuffer_rc: &'a RefCell<Framebuffer>,
     pipeline: Pipeline<'a>,
     cameras: Vec<Camera>,
     active_camera_index: usize,
-    entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+    entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
     materials: &'a MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
 }
 
 impl<'a> DiffuseMapScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Framebuffer>,
-        entities: &'a RwLock<Vec<&'a mut Entity<'a>>>,
+        framebuffer_rc: &'a RefCell<Framebuffer>,
+        entities: &'a RefCell<Vec<&'a mut Entity<'a>>>,
         materials: &'a MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
 
@@ -124,7 +124,7 @@ impl<'a> DiffuseMapScene<'a> {
         );
 
         return DiffuseMapScene {
-            framebuffer_rwl,
+            framebuffer_rc,
             pipeline,
             entities,
             materials,
@@ -174,7 +174,7 @@ impl<'a> Scene for DiffuseMapScene<'a> {
 
         context.set_projection(camera.get_projection());
 
-        let mut entities = self.entities.write().unwrap();
+        let mut entities = self.entities.borrow_mut();
 
         let rotation_speed = 0.1 * app.timing_info.seconds_since_last_update;
 
@@ -193,11 +193,11 @@ impl<'a> Scene for DiffuseMapScene<'a> {
     }
 
     fn render(&mut self) {
-        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rc));
 
         self.pipeline.begin_frame();
 
-        for entity in self.entities.read().unwrap().as_slice() {
+        for entity in self.entities.borrow().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
 

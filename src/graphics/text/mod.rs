@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell};
 
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
@@ -27,8 +27,8 @@ pub struct TextOperation<'a> {
 impl Graphics {
     pub fn text<'a>(
         dest_buffer: &mut Buffer2D,
-        font_cache_rwl: &'a RwLock<FontCache>,
-        text_cache_rwl: Option<&'a RwLock<TextCache<'a>>>,
+        font_cache_rc: &'a RefCell<FontCache>,
+        text_cache_rc: Option<&'a RefCell<TextCache<'a>>>,
         font_info: &'a FontInfo,
         op: &TextOperation,
     ) -> Result<(), String> {
@@ -39,18 +39,18 @@ impl Graphics {
             text: op.text.clone(),
         };
 
-        match text_cache_rwl {
+        match text_cache_rc {
             Some(lock) => {
-                cache_text(font_cache_rwl, lock, font_info, op.text);
+                cache_text(font_cache_rc, lock, font_info, op.text);
 
-                let text_cache = lock.write().unwrap();
+                let text_cache = lock.borrow_mut();
 
                 let cached_texture = text_cache.get(&text_cache_key).unwrap();
 
                 Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer, None);
             }
             None => {
-                let mut font_cache = font_cache_rwl.write().unwrap();
+                let mut font_cache = font_cache_rc.borrow_mut();
 
                 let font = font_cache.load(font_info).unwrap();
 
@@ -108,7 +108,7 @@ impl Graphics {
 
     pub fn render_debug_messages<'a>(
         dest_buffer: &mut Buffer2D,
-        font_cache: &'a RwLock<FontCache>,
+        font_cache: &'a RefCell<FontCache>,
         font_info: &'a FontInfo,
         position: (u32, u32),
         padding_ems: f32,

@@ -1,4 +1,4 @@
-use std::{collections::hash_map::Entry, sync::RwLockWriteGuard};
+use std::{cell::RefMut, collections::hash_map::Entry};
 
 use sdl2::mouse::MouseButton;
 
@@ -38,7 +38,7 @@ pub struct DoNumberSliderResult {
 }
 
 pub fn do_slider(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
@@ -62,7 +62,7 @@ pub fn do_slider(
     };
 
     {
-        let text_cache = ctx.text_cache.read().unwrap();
+        let text_cache = ctx.text_cache.borrow();
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -216,7 +216,7 @@ pub fn do_slider(
 }
 
 fn draw_slider(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
@@ -228,7 +228,7 @@ fn draw_slider(
 ) {
     let cursor = layout.get_cursor();
 
-    let text_cache = ctx.text_cache.read().unwrap();
+    let text_cache = ctx.text_cache.borrow();
 
     let label_texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -275,7 +275,7 @@ fn draw_slider(
 
                 let text_formatted = format!("{:.*}", 2, text_parsed);
 
-                let mut font_cache = ctx.font_cache.write().unwrap();
+                let mut font_cache = ctx.font_cache.borrow_mut();
 
                 let font = font_cache.load(ctx.font_info).unwrap();
 

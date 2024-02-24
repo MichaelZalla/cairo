@@ -39,11 +39,11 @@ fn main() -> Result<(), String> {
         point_size: 16,
     }));
 
-    let font_cache_rwl = Box::leak(Box::new(RwLock::new(FontCache::new(
+    let font_cache_rc = Box::leak(Box::new(RefCell::new(FontCache::new(
         app.context.ttf_context,
     ))));
 
-    font_cache_rwl.write().unwrap().load(&font_info)?;
+    font_cache_rc.borrow_mut().load(&font_info)?;
 
     // Default framebuffer
 
@@ -51,7 +51,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 10000.0);
 
-    let framebuffer_rwl = RwLock::new(framebuffer);
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     // Sponza meshes
 
@@ -78,7 +78,7 @@ fn main() -> Result<(), String> {
     }
 
     // Wrap the entity collection in a memory-safe container
-    let entities_rwl = RwLock::new(entities);
+    let entities_rc = RefCell::new(entities);
 
     let mut materials = atrium_materials.unwrap();
 
@@ -86,11 +86,11 @@ fn main() -> Result<(), String> {
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SponzaScene::new(
-        &framebuffer_rwl,
-        font_cache_rwl,
+        &framebuffer_rc,
+        font_cache_rc,
         font_info,
         rendering_context,
-        &entities_rwl,
+        &entities_rc,
         &mut materials,
         &shader_context_rwl,
     ));
@@ -114,11 +114,11 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         match framebuffer.attachments.color.as_ref() {
             Some(color_buffer_lock) => {
-                let color_buffer = color_buffer_lock.read().unwrap();
+                let color_buffer = color_buffer_lock.borrow();
 
                 return Ok(color_buffer.get_all().clone());
             }

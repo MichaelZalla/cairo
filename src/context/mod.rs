@@ -1,4 +1,4 @@
-use std::sync::RwLock;
+use std::cell::RefCell;
 
 use sdl2::{
     render::{BlendMode, Canvas, Texture, TextureCreator},
@@ -23,7 +23,7 @@ pub struct ApplicationContext {
 }
 
 pub struct ApplicationRenderingContext {
-    pub canvas: RwLock<Canvas<Window>>,
+    pub canvas: RefCell<Canvas<Window>>,
 }
 
 pub fn get_application_context(window_info: &AppWindowInfo) -> Result<ApplicationContext, String> {
@@ -164,7 +164,7 @@ pub fn get_application_rendering_context<'a, 'r>(
         match window.into_canvas().present_vsync().build() {
             Ok(canvas) => {
                 return Ok(ApplicationRenderingContext {
-                    canvas: RwLock::new(canvas),
+                    canvas: RefCell::new(canvas),
                 });
             }
             Err(e) => Err(e.to_string()),
@@ -173,7 +173,7 @@ pub fn get_application_rendering_context<'a, 'r>(
         match window.into_canvas().build() {
             Ok(canvas) => {
                 return Ok(ApplicationRenderingContext {
-                    canvas: RwLock::new(canvas),
+                    canvas: RefCell::new(canvas),
                 });
             }
             Err(e) => Err(e.to_string()),

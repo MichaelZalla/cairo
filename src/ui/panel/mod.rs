@@ -1,6 +1,6 @@
 use std::{
     borrow::BorrowMut,
-    sync::{RwLock, RwLockWriteGuard},
+    cell::{RefCell, RefMut},
 };
 
 use crate::{
@@ -45,7 +45,7 @@ where
 {
     pub info: PanelInfo,
     pub buffer: Buffer2D,
-    render_rwl: Option<&'a RwLock<R>>,
+    render_rc: Option<&'a RefCell<R>>,
     left: Option<Box<Panel<'a, R>>>,
     right: Option<Box<Panel<'a, R>>>,
     alpha: f32,
@@ -62,13 +62,13 @@ where
         &MouseState,
     ) -> Result<(), String>,
 {
-    pub fn new(info: PanelInfo, render_rwl: Option<&'a RwLock<R>>) -> Self {
+    pub fn new(info: PanelInfo, render_rc: Option<&'a RefCell<R>>) -> Self {
         let buffer = Buffer2D::new(info.width, info.height, None);
 
         return Panel {
             info,
             buffer,
-            render_rwl,
+            render_rc,
             left: None,
             right: None,
             alpha: 1.0,
@@ -174,7 +174,7 @@ where
         app: &mut App,
         keyboard_state: &KeyboardState,
         mouse_state: &MouseState,
-        ui_context: &'a RwLock<UIContext>,
+        ui_context: &'a RefCell<UIContext>,
     ) -> Result<(), String> {
         match self.left.borrow_mut() {
             Some(left) => {
@@ -225,19 +225,19 @@ where
                 self.buffer.clear(None);
 
                 {
-                    let mut ctx = ui_context.write().unwrap();
+                    let mut ctx = ui_context.borrow_mut();
 
                     // Renders a filled frame sized to the panel's boundaries.
-                    self.draw_panel_frame(&mut ctx);
+                    self.draw_panel_frame(&ctx);
 
                     // Renders a default title-bar for this panel.
                     self.draw_panel_title_bar(mouse_state, &mut ctx)?;
                 }
 
                 // Runs the custom render callback, if any.
-                match self.render_rwl {
+                match self.render_rc {
                     Some(lock) => {
-                        let mut callback = lock.write().unwrap();
+                        let mut callback = lock.borrow_mut();
 
                         (*callback)(
                             &self.info,
@@ -269,7 +269,7 @@ where
 
         // let padding = 8.0;
 
-        let render_left = self.render_rwl.take();
+        let render_left = self.render_rc.take();
 
         let left_id = self.info.id * 2 + 1;
         let right_id = left_id + 1;
@@ -309,12 +309,12 @@ where
             _ => {}
         }
 
-        let render = self.left.as_mut().unwrap().render_rwl.take();
+        let render = self.left.as_mut().unwrap().render_rc.take();
 
         self.left = None;
         self.right = None;
 
-        self.render_rwl = render;
+        self.render_rc = render;
 
         self.buffer.clear(None);
 
@@ -356,7 +356,7 @@ where
         self.alpha = left.info.width as f32 / self.info.width as f32;
     }
 
-    fn draw_panel_frame(&mut self, ctx: &mut RwLockWriteGuard<'_, UIContext>) {
+    fn draw_panel_frame(&mut self, ctx: &RefMut<'_, UIContext>) {
         let theme = ctx.get_theme();
 
         let x: u32 = 0;
@@ -378,7 +378,7 @@ where
     fn draw_panel_title_bar(
         &mut self,
         mouse_state: &MouseState,
-        ctx: &mut RwLockWriteGuard<'_, UIContext>,
+        ctx: &mut RefMut<'_, UIContext>,
     ) -> Result<(), String> {
         let theme = ctx.get_theme();
 

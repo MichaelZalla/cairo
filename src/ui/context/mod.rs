@@ -1,6 +1,6 @@
 use std::{
+    cell::RefCell,
     fmt::{Display, Formatter},
-    sync::RwLock,
 };
 
 use crate::{
@@ -29,9 +29,9 @@ impl Display for UIID {
 
 #[derive(Debug)]
 pub struct UIContext<'a> {
-    pub font_cache: &'a mut RwLock<FontCache<'a>>,
+    pub font_cache: &'a mut RefCell<FontCache<'a>>,
     pub font_info: &'a FontInfo,
-    pub text_cache: &'a mut RwLock<TextCache<'a>>,
+    pub text_cache: &'a mut RefCell<TextCache<'a>>,
     hover_target: Option<UIID>,
     focus_target: Option<UIID>,
     is_focus_target_open: bool,
@@ -40,9 +40,9 @@ pub struct UIContext<'a> {
 
 impl<'a> UIContext<'a> {
     pub fn new(
-        font_cache: &'a mut RwLock<FontCache<'a>>,
+        font_cache: &'a mut RefCell<FontCache<'a>>,
         font_info: &'a FontInfo,
-        text_cache: &'a mut RwLock<TextCache<'a>>,
+        text_cache: &'a mut RefCell<TextCache<'a>>,
     ) -> Self {
         Self {
             font_cache,

@@ -1,11 +1,6 @@
 extern crate sdl2;
 
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    env,
-    sync::{RwLock, RwLockWriteGuard},
-};
+use std::{cell::RefCell, collections::HashMap, env, sync::RwLock};
 
 use sdl2::keyboard::Keycode;
 
@@ -69,16 +64,17 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
-    let ui_context: &'static RwLock<UIContext> = Box::leak(Box::new(RwLock::new(UIContext::new(
-        Box::leak(Box::new(RwLock::new(FontCache::new(
-            app.context.ttf_context,
-        )))),
-        Box::leak(Box::new(FontInfo {
-            filepath: args[1].to_string(),
-            point_size: 16,
-        })),
-        Box::leak(Box::new(RwLock::new(_text_cache))),
-    ))));
+    let ui_context: &'static RefCell<UIContext> =
+        Box::leak(Box::new(RefCell::new(UIContext::new(
+            Box::leak(Box::new(RefCell::new(FontCache::new(
+                app.context.ttf_context,
+            )))),
+            Box::leak(Box::new(FontInfo {
+                filepath: args[1].to_string(),
+                point_size: 16,
+            })),
+            Box::leak(Box::new(RefCell::new(_text_cache))),
+        ))));
 
     let mut textboxes_model = HashMap::<String, String>::new();
 
@@ -99,21 +95,21 @@ fn main() -> Result<(), String> {
 
     wojak_texture.load(rendering_context).unwrap();
 
-    let layout_direction = RwLock::new(UILayoutDirection::TopToBottom);
+    let layout_direction = RefCell::new(UILayoutDirection::TopToBottom);
 
-    let render_rwl = RwLock::new(
+    let render_rc = RefCell::new(
         |panel_info: &PanelInfo,
          panel_buffer: &mut Buffer2D,
          app: &mut App,
          keyboard_state: &KeyboardState,
          mouse_state: &MouseState|
          -> Result<(), String> {
-            let mut ctx: RwLockWriteGuard<'_, UIContext> = ui_context.write().unwrap();
+            let mut ctx = ui_context.borrow_mut();
 
             // @NOTE(mzalla) Layout cursor is currently local to panel's own UI
             // buffer.
             let mut layout = UILayoutContext::new(
-                layout_direction.read().unwrap().clone(),
+                layout_direction.borrow().clone(),
                 UILayoutExtent {
                     left: 0,
                     right: panel_info.width,
@@ -469,7 +465,7 @@ fn main() -> Result<(), String> {
         },
     );
 
-    let render_rwl_option = Some(&render_rwl);
+    let render_rc_option = Some(&render_rc);
 
     let mut root_panel = Panel::new(
         PanelInfo {
@@ -478,7 +474,7 @@ fn main() -> Result<(), String> {
             height: window_info.window_height,
             ..Default::default()
         },
-        render_rwl_option,
+        render_rc_option,
     );
 
     root_panel.split()?;
@@ -495,7 +491,7 @@ fn main() -> Result<(), String> {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::L { .. } => {
-                    let mut direction = layout_direction.write().unwrap();
+                    let mut direction = layout_direction.borrow_mut();
 
                     match *direction {
                         UILayoutDirection::TopToBottom => {

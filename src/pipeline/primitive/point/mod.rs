@@ -61,12 +61,12 @@ impl<'a> Pipeline<'a> {
         }
 
         match self.framebuffer {
-            Some(lock) => {
-                let framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let framebuffer = rc.borrow_mut();
 
                 match &framebuffer.attachments.forward_ldr {
                     Some(forward_buffer_lock) => {
-                        let mut forward_buffer = forward_buffer_lock.write().unwrap();
+                        let mut forward_buffer = forward_buffer_lock.borrow_mut();
 
                         forward_buffer.set(x, y, color_u32);
                     }

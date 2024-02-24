@@ -62,13 +62,13 @@ fn main() -> Result<(), String> {
         point_size: 16,
     }));
 
-    let font_cache_rwl = Box::leak(Box::new(RwLock::new(FontCache::new(
+    let font_cache_rc = Box::leak(Box::new(RefCell::new(FontCache::new(
         app.context.ttf_context,
     ))));
 
-    font_cache_rwl.write().unwrap().load(&font_info)?;
+    font_cache_rc.borrow_mut().load(&font_info)?;
 
-    let _text_cache_rwl = Box::leak(Box::new(RwLock::new(TextCache::new())));
+    let _text_cache_rc = Box::leak(Box::new(RefCell::new(TextCache::new())));
 
     // Default framebuffer
 
@@ -76,7 +76,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rwl = RwLock::new(framebuffer);
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     // Generate primitive meshes
 
@@ -186,17 +186,17 @@ fn main() -> Result<(), String> {
         &mut cylinder_entity,
     ];
 
-    let entities_rwl = RwLock::new(entities);
+    let entities_rc = RefCell::new(entities);
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
     // Instantiate our scene
 
     let scene = RefCell::new(GeneratePrimitivesScene::new(
-        &framebuffer_rwl,
-        font_cache_rwl,
+        &framebuffer_rc,
+        font_cache_rc,
         font_info,
-        &entities_rwl,
+        &entities_rc,
         &mut material_cache,
         &shader_context_rwl,
     ));
@@ -220,7 +220,7 @@ fn main() -> Result<(), String> {
                     app.resize_canvas(width, height).unwrap();
 
                     // Resize the framebuffer to match.
-                    let mut framebuffer = framebuffer_rwl.write().unwrap();
+                    let mut framebuffer = framebuffer_rc.borrow_mut();
 
                     framebuffer.resize(width, height, true);
                 }
@@ -242,11 +242,11 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         match framebuffer.attachments.color.as_ref() {
             Some(lock) => {
-                let color_buffer = lock.read().unwrap();
+                let color_buffer = lock.borrow();
 
                 return Ok(color_buffer.get_all().clone());
             }

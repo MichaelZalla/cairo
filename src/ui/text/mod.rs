@@ -1,4 +1,4 @@
-use std::sync::RwLockWriteGuard;
+use std::cell::RefMut;
 
 use crate::{
     buffer::Buffer2D,
@@ -40,7 +40,7 @@ impl Default for TextOptions {
 pub struct DoTextResult {}
 
 pub fn do_text(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     _id: UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
@@ -60,7 +60,7 @@ pub fn do_text(
                 text: options.text.clone(),
             };
 
-            let text_cache = ctx.text_cache.read().unwrap();
+            let text_cache = ctx.text_cache.borrow();
 
             let texture_ref = text_cache.get(&text_cache_key).unwrap();
 
@@ -83,7 +83,7 @@ pub fn do_text(
             );
         }
         false => {
-            let mut font_cache = ctx.font_cache.write().unwrap();
+            let mut font_cache = ctx.font_cache.borrow_mut();
 
             let font = font_cache.load(ctx.font_info).unwrap();
 

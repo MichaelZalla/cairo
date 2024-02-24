@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, sync::RwLock};
+use std::{borrow::BorrowMut, cell::RefCell, sync::RwLock};
 
 use sdl2::keyboard::Keycode;
 
@@ -46,8 +46,8 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 };
 
 pub struct SponzaScene<'a> {
-    framebuffer_rwl: &'a RwLock<Framebuffer>,
-    font_cache_rwl: &'static RwLock<FontCache<'static>>,
+    framebuffer_rc: &'a RefCell<Framebuffer>,
+    font_cache_rc: &'static RefCell<FontCache<'static>>,
     font_info: &'static FontInfo,
     debug_message_buffer: DebugMessageBuffer,
     pipeline: Pipeline<'a>,
@@ -58,7 +58,7 @@ pub struct SponzaScene<'a> {
     directional_light: DirectionalLight,
     point_lights: Vec<PointLight>,
     spot_lights: Vec<SpotLight>,
-    entities: &'a RwLock<Vec<Entity<'a>>>,
+    entities: &'a RefCell<Vec<Entity<'a>>>,
     skybox: CubeMap,
     materials: &'a mut MaterialCache,
     shader_context: &'a RwLock<ShaderContext>,
@@ -66,15 +66,15 @@ pub struct SponzaScene<'a> {
 
 impl<'a> SponzaScene<'a> {
     pub fn new(
-        framebuffer_rwl: &'a RwLock<Framebuffer>,
-        font_cache_rwl: &'static RwLock<FontCache<'static>>,
+        framebuffer_rc: &'a RefCell<Framebuffer>,
+        font_cache_rc: &'static RefCell<FontCache<'static>>,
         font_info: &'static FontInfo,
         rendering_context: &ApplicationRenderingContext,
-        entities: &'a RwLock<Vec<Entity<'a>>>,
+        entities: &'a RefCell<Vec<Entity<'a>>>,
         materials: &'a mut MaterialCache,
         shader_context: &'a RwLock<ShaderContext>,
     ) -> Self {
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         let vertex_shader = DEFAULT_VERTEX_SHADER;
 
@@ -180,8 +180,8 @@ impl<'a> SponzaScene<'a> {
         pipeline.geometry_shader_options.normal_mapping_active = true;
 
         return SponzaScene {
-            framebuffer_rwl,
-            font_cache_rwl,
+            framebuffer_rc,
+            font_cache_rc,
             font_info,
             debug_message_buffer,
             pipeline,
@@ -222,15 +222,10 @@ impl<'a> Scene for SponzaScene<'a> {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 Keycode::I { .. } => {
-                    let framebuffer = self.framebuffer_rwl.write().unwrap();
+                    let framebuffer = self.framebuffer_rc.borrow_mut();
 
-                    let mut depth_buffer = framebuffer
-                        .attachments
-                        .depth
-                        .as_ref()
-                        .unwrap()
-                        .write()
-                        .unwrap();
+                    let mut depth_buffer =
+                        framebuffer.attachments.depth.as_ref().unwrap().borrow_mut();
 
                     let methods = vec![
                         DepthTestMethod::Always,
@@ -373,15 +368,9 @@ impl<'a> Scene for SponzaScene<'a> {
             ));
 
             {
-                let framebuffer = self.framebuffer_rwl.read().unwrap();
+                let framebuffer = self.framebuffer_rc.borrow();
 
-                let depth_buffer = framebuffer
-                    .attachments
-                    .depth
-                    .as_ref()
-                    .unwrap()
-                    .read()
-                    .unwrap();
+                let depth_buffer = framebuffer.attachments.depth.as_ref().unwrap().borrow();
 
                 self.debug_message_buffer.write(format!(
                     "Depth test method: {:?}",
@@ -413,13 +402,13 @@ impl<'a> Scene for SponzaScene<'a> {
     }
 
     fn render(&mut self) {
-        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rwl));
+        self.pipeline.bind_framebuffer(Some(&self.framebuffer_rc));
 
         self.pipeline.begin_frame();
 
         let camera = self.cameras[self.active_camera_index];
 
-        for entity in self.entities.read().unwrap().as_slice() {
+        for entity in self.entities.borrow().as_slice() {
             self.pipeline.render_entity(&entity, Some(self.materials));
         }
 
@@ -442,22 +431,16 @@ impl<'a> Scene for SponzaScene<'a> {
         // Render debug messages
 
         {
-            let framebuffer = self.framebuffer_rwl.write().unwrap();
+            let framebuffer = self.framebuffer_rc.borrow_mut();
 
-            let mut color_buffer = framebuffer
-                .attachments
-                .color
-                .as_ref()
-                .unwrap()
-                .write()
-                .unwrap();
+            let mut color_buffer = framebuffer.attachments.color.as_ref().unwrap().borrow_mut();
 
             let debug_messages = self.debug_message_buffer.borrow_mut();
 
             {
                 Graphics::render_debug_messages(
                     &mut *color_buffer,
-                    self.font_cache_rwl,
+                    self.font_cache_rc,
                     self.font_info,
                     (12, 12),
                     1.0,

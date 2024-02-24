@@ -1,6 +1,6 @@
 use std::{
+    cell::RefCell,
     collections::{hash_map::Entry, HashMap},
-    sync::RwLock,
 };
 
 use crate::{
@@ -20,8 +20,8 @@ type TextCacheValue = Buffer2D<u8>;
 pub type TextCache<'a> = HashMap<TextCacheKey, TextCacheValue>;
 
 pub fn cache_text<'a>(
-    font_cache_rwl: &'a RwLock<FontCache>,
-    text_cache_rwl: &'a RwLock<TextCache<'a>>,
+    font_cache_rc: &'a RefCell<FontCache>,
+    text_cache_rc: &'a RefCell<TextCache<'a>>,
     font_info: &'a FontInfo,
     text: &String,
 ) {
@@ -30,7 +30,7 @@ pub fn cache_text<'a>(
         text: text.clone(),
     };
 
-    let mut text_cache = text_cache_rwl.write().unwrap();
+    let mut text_cache = text_cache_rc.borrow_mut();
 
     match text_cache.entry(text_cache_key.clone()) {
         Entry::Occupied(_) => {
@@ -38,7 +38,7 @@ pub fn cache_text<'a>(
         }
         Entry::Vacant(v) => {
             // Vacant
-            let mut font_cache = font_cache_rwl.write().unwrap();
+            let mut font_cache = font_cache_rc.borrow_mut();
 
             let font = font_cache.load(font_info).unwrap();
 

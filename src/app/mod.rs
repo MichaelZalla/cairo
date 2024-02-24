@@ -67,12 +67,7 @@ impl App {
         app_window_info.window_width = context.screen_width;
         app_window_info.window_height = context.screen_height;
 
-        let texture_creator = context
-            .rendering_context
-            .canvas
-            .read()
-            .unwrap()
-            .texture_creator();
+        let texture_creator = context.rendering_context.canvas.borrow().texture_creator();
 
         let backbuffer = make_backbuffer(
             window_info.canvas_width,
@@ -91,7 +86,7 @@ impl App {
     }
 
     pub fn resize_window(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
-        let mut canvas = self.context.rendering_context.canvas.write().unwrap();
+        let mut canvas = self.context.rendering_context.canvas.borrow_mut();
 
         match canvas.window_mut().set_size(new_width, new_height) {
             Ok(_) => {
@@ -107,7 +102,7 @@ impl App {
     }
 
     pub fn resize_canvas(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
-        let canvas = self.context.rendering_context.canvas.write().unwrap();
+        let canvas = self.context.rendering_context.canvas.borrow_mut();
 
         // Re-allocates a backbuffer.
 
@@ -346,7 +341,7 @@ impl App {
 
             // Render current scene to backbuffer
 
-            let cw = &mut self.context.rendering_context.canvas.write().unwrap();
+            let cw = &mut self.context.rendering_context.canvas.borrow_mut();
 
             self.backbuffer
                 .with_lock(None, |write_only_byte_array, _pitch| {

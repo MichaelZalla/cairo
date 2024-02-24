@@ -1,4 +1,4 @@
-use std::{collections::hash_map::Entry, sync::RwLockWriteGuard};
+use std::{cell::RefMut, collections::hash_map::Entry};
 
 use crate::{
     buffer::Buffer2D,
@@ -38,7 +38,7 @@ pub struct DoDropdownResult {
 }
 
 pub fn do_dropdown(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
@@ -62,7 +62,7 @@ pub fn do_dropdown(
     };
 
     {
-        let text_cache = ctx.text_cache.read().unwrap();
+        let text_cache = ctx.text_cache.borrow();
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -209,7 +209,7 @@ pub fn do_dropdown(
 }
 
 fn draw_dropdown(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
@@ -225,7 +225,7 @@ fn draw_dropdown(
 
     let cursor = layout.get_cursor();
 
-    let text_cache = ctx.text_cache.read().unwrap();
+    let text_cache = ctx.text_cache.borrow();
 
     let label_texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -297,7 +297,7 @@ fn draw_dropdown(
 
         // Draw the item text.
 
-        let mut font_cache = ctx.font_cache.write().unwrap();
+        let mut font_cache = ctx.font_cache.borrow_mut();
 
         let font = font_cache.load(ctx.font_info).unwrap();
 

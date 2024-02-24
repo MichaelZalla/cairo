@@ -1,4 +1,4 @@
-use std::sync::RwLockWriteGuard;
+use std::cell::RefMut;
 
 use sdl2::mouse::MouseButton;
 
@@ -23,7 +23,7 @@ pub mod textbox;
 pub mod theme;
 
 pub fn get_mouse_result(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
     mouse_state: &MouseState,

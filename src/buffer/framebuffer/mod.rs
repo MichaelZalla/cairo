@@ -1,4 +1,4 @@
-use std::sync::RwLock;
+use std::cell::RefCell;
 
 use crate::{
     pipeline::zbuffer::{self, ZBuffer},
@@ -9,11 +9,11 @@ use super::Buffer2D;
 
 #[derive(Default, Debug)]
 pub struct FramebufferAttachments {
-    pub stencil: Option<RwLock<Buffer2D<u8>>>,
-    pub depth: Option<RwLock<ZBuffer>>,
-    pub color: Option<RwLock<Buffer2D>>,
-    pub forward_ldr: Option<RwLock<Buffer2D>>,
-    pub forward_or_deferred_hdr: Option<RwLock<Buffer2D<Vec3>>>,
+    pub stencil: Option<RefCell<Buffer2D<u8>>>,
+    pub depth: Option<RefCell<ZBuffer>>,
+    pub color: Option<RefCell<Buffer2D>>,
+    pub forward_ldr: Option<RefCell<Buffer2D>>,
+    pub forward_or_deferred_hdr: Option<RefCell<Buffer2D<Vec3>>>,
 }
 
 #[derive(Default, Debug)]
@@ -37,17 +37,17 @@ impl Framebuffer {
     pub fn complete(&mut self, projection_z_near: f32, projection_z_far: f32) {
         // Bind framebuffer attachments.
 
-        self.attachments.stencil = Some(RwLock::new(Buffer2D::new(self.width, self.height, None)));
+        self.attachments.stencil = Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
 
-        self.attachments.color = Some(RwLock::new(Buffer2D::new(self.width, self.height, None)));
+        self.attachments.color = Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
 
         self.attachments.forward_ldr =
-            Some(RwLock::new(Buffer2D::new(self.width, self.height, None)));
+            Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
 
         self.attachments.forward_or_deferred_hdr =
-            Some(RwLock::new(Buffer2D::new(self.width, self.height, None)));
+            Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
 
-        self.attachments.depth = Some(RwLock::new(ZBuffer::new(
+        self.attachments.depth = Some(RefCell::new(ZBuffer::new(
             self.width,
             self.height,
             projection_z_near,
@@ -58,7 +58,7 @@ impl Framebuffer {
     pub fn validate(&self) -> Result<(), String> {
         match self.attachments.stencil.as_ref() {
             Some(lock) => {
-                let buffer = lock.read().unwrap();
+                let buffer = lock.borrow();
 
                 assert!(buffer.width == self.width && buffer.height == self.height);
             }
@@ -67,7 +67,7 @@ impl Framebuffer {
 
         match self.attachments.depth.as_ref() {
             Some(lock) => {
-                let zbuffer = lock.read().unwrap();
+                let zbuffer = lock.borrow();
 
                 assert!(zbuffer.buffer.width == self.width && zbuffer.buffer.height == self.height);
             }
@@ -76,7 +76,7 @@ impl Framebuffer {
 
         match self.attachments.color.as_ref() {
             Some(lock) => {
-                let buffer = lock.read().unwrap();
+                let buffer = lock.borrow();
 
                 assert!(buffer.width == self.width && buffer.height == self.height);
             }
@@ -85,7 +85,7 @@ impl Framebuffer {
 
         match self.attachments.forward_ldr.as_ref() {
             Some(lock) => {
-                let buffer = lock.read().unwrap();
+                let buffer = lock.borrow();
 
                 assert!(buffer.width == self.width && buffer.height == self.height);
             }
@@ -94,7 +94,7 @@ impl Framebuffer {
 
         match self.attachments.forward_or_deferred_hdr.as_ref() {
             Some(lock) => {
-                let buffer = lock.read().unwrap();
+                let buffer = lock.borrow();
 
                 assert!(buffer.width == self.width && buffer.height == self.height);
             }
@@ -107,7 +107,7 @@ impl Framebuffer {
     pub fn clear(&mut self) {
         match self.attachments.stencil.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.clear(None);
             }
@@ -116,7 +116,7 @@ impl Framebuffer {
 
         match self.attachments.depth.as_mut() {
             Some(lock) => {
-                let mut zbuffer = lock.write().unwrap();
+                let mut zbuffer = lock.borrow_mut();
 
                 zbuffer.buffer.clear(Some(zbuffer::MAX_DEPTH));
             }
@@ -125,7 +125,7 @@ impl Framebuffer {
 
         match self.attachments.color.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.clear(None);
             }
@@ -134,7 +134,7 @@ impl Framebuffer {
 
         match self.attachments.forward_ldr.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.clear(None);
             }
@@ -143,7 +143,7 @@ impl Framebuffer {
 
         match self.attachments.forward_or_deferred_hdr.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.clear(None);
             }
@@ -157,7 +157,7 @@ impl Framebuffer {
 
         match self.attachments.stencil.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.resize(width, height);
                 if should_clear {
@@ -169,7 +169,7 @@ impl Framebuffer {
 
         match self.attachments.depth.as_mut() {
             Some(lock) => {
-                let mut zbuffer = lock.write().unwrap();
+                let mut zbuffer = lock.borrow_mut();
 
                 zbuffer.buffer.resize(width, height);
 
@@ -182,7 +182,7 @@ impl Framebuffer {
 
         match self.attachments.color.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.resize(width, height);
 
@@ -195,7 +195,7 @@ impl Framebuffer {
 
         match self.attachments.forward_ldr.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.resize(width, height);
 
@@ -208,7 +208,7 @@ impl Framebuffer {
 
         match self.attachments.forward_or_deferred_hdr.as_mut() {
             Some(lock) => {
-                let mut buffer = lock.write().unwrap();
+                let mut buffer = lock.borrow_mut();
 
                 buffer.resize(width, height);
 

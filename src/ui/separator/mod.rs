@@ -1,4 +1,4 @@
-use std::sync::RwLockWriteGuard;
+use std::cell::RefMut;
 
 use crate::{buffer::Buffer2D, color::Color, graphics::Graphics};
 
@@ -27,7 +27,7 @@ impl Default for SeparatorOptions {
 pub struct DoSeparatorResult {}
 
 pub fn do_separator(
-    _ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    _ctx: &mut RefMut<'_, UIContext>,
     _id: UIID,
     layout: &mut UILayoutContext,
     options: &SeparatorOptions,

@@ -1,4 +1,7 @@
-use std::sync::{RwLock, RwLockReadGuard};
+use std::{
+    cell::RefCell,
+    sync::{RwLock, RwLockReadGuard},
+};
 
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -48,7 +51,7 @@ struct PipelineViewport {
 
 pub struct Pipeline<'a> {
     pub options: PipelineOptions,
-    framebuffer: Option<&'a RwLock<Framebuffer>>,
+    framebuffer: Option<&'a RefCell<Framebuffer>>,
     viewport: PipelineViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
@@ -104,10 +107,10 @@ impl<'a> Pipeline<'a> {
         self.fragment_shader = shader;
     }
 
-    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RwLock<Framebuffer>>) {
+    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RefCell<Framebuffer>>) {
         match framebuffer_option {
-            Some(framebuffer_rwl) => {
-                let framebuffer = framebuffer_rwl.read().unwrap();
+            Some(framebuffer_rc) => {
+                let framebuffer = framebuffer_rc.borrow();
 
                 match framebuffer.validate() {
                     Ok(()) => {
@@ -182,8 +185,8 @@ impl<'a> Pipeline<'a> {
 
     pub fn begin_frame(&mut self) {
         match self.framebuffer {
-            Some(lock) => {
-                let mut framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let mut framebuffer = rc.borrow_mut();
 
                 framebuffer.clear();
             }
@@ -223,8 +226,8 @@ impl<'a> Pipeline<'a> {
         // Blit deferred (HDR) framebuffer to the (final) color framebuffer.
 
         match self.framebuffer {
-            Some(lock) => {
-                let framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let framebuffer = rc.borrow_mut();
 
                 match (
                     framebuffer.attachments.color.as_ref(),
@@ -232,8 +235,8 @@ impl<'a> Pipeline<'a> {
                 ) {
                     (Some(color_buffer_lock), Some(deferred_buffer_lock)) => {
                         let (mut color_buffer, deferred_buffer) = (
-                            color_buffer_lock.write().unwrap(),
-                            deferred_buffer_lock.read().unwrap(),
+                            color_buffer_lock.borrow_mut(),
+                            deferred_buffer_lock.borrow(),
                         );
 
                         for y in 0..framebuffer.height {
@@ -253,10 +256,8 @@ impl<'a> Pipeline<'a> {
                     framebuffer.attachments.forward_ldr.as_ref(),
                 ) {
                     (Some(color_buffer_lock), Some(forward_buffer_lock)) => {
-                        let (mut color_buffer, forward_buffer) = (
-                            color_buffer_lock.write().unwrap(),
-                            forward_buffer_lock.read().unwrap(),
-                        );
+                        let (mut color_buffer, forward_buffer) =
+                            (color_buffer_lock.borrow_mut(), forward_buffer_lock.borrow());
 
                         let forward_fragments = forward_buffer.get_all();
 
@@ -510,12 +511,12 @@ impl<'a> Pipeline<'a> {
 
     fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
         match self.framebuffer {
-            Some(lock) => {
-                let framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let framebuffer = rc.borrow_mut();
 
                 match framebuffer.attachments.depth.as_ref() {
                     Some(depth_buffer_lock) => {
-                        let mut depth_buffer = depth_buffer_lock.write().unwrap();
+                        let mut depth_buffer = depth_buffer_lock.borrow_mut();
 
                         // Restore linear space interpolant.
 
@@ -542,8 +543,7 @@ impl<'a> Pipeline<'a> {
                                     Some(stencil_buffer_lock) => {
                                         // Write to the depth attachment.
 
-                                        let mut stencil_buffer =
-                                            stencil_buffer_lock.write().unwrap();
+                                        let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
 
                                         stencil_buffer.set(x, y, 1);
                                     }
@@ -575,9 +575,7 @@ impl<'a> Pipeline<'a> {
                                                     {
                                                         Some(forward_buffer_lock) => {
                                                             let mut forward_buffer =
-                                                                forward_buffer_lock
-                                                                    .write()
-                                                                    .unwrap();
+                                                                forward_buffer_lock.borrow_mut();
 
                                                             let forward_fragment_color = self
                                                                 .get_tone_mapped_color_from_hdr(

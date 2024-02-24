@@ -1,4 +1,4 @@
-use std::sync::RwLockWriteGuard;
+use std::cell::RefMut;
 
 use crate::{
     buffer::Buffer2D,
@@ -35,7 +35,7 @@ pub struct DoButtonResult {
 }
 
 pub fn do_button(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
@@ -58,7 +58,7 @@ pub fn do_button(
     };
 
     {
-        let text_cache = ctx.text_cache.read().unwrap();
+        let text_cache = ctx.text_cache.borrow();
 
         let texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -126,7 +126,7 @@ pub fn do_button(
 }
 
 fn draw_button(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
@@ -140,7 +140,7 @@ fn draw_button(
 
     let cursor = layout.get_cursor();
 
-    let text_cache = ctx.text_cache.read().unwrap();
+    let text_cache = ctx.text_cache.borrow();
 
     let texture = text_cache.get(&text_cache_key).unwrap();
 

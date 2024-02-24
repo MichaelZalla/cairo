@@ -7,16 +7,16 @@ use crate::{
 impl<'a> Pipeline<'a> {
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
         match self.framebuffer {
-            Some(lock) => {
-                let framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let framebuffer = rc.borrow_mut();
 
                 match (
                     framebuffer.attachments.depth.as_ref(),
                     framebuffer.attachments.forward_ldr.as_ref(),
                 ) {
                     (Some(depth_buffer_lock), Some(forward_buffer_lock)) => {
-                        let mut depth_buffer = depth_buffer_lock.write().unwrap();
-                        let mut forward_buffer = forward_buffer_lock.write().unwrap();
+                        let mut depth_buffer = depth_buffer_lock.borrow_mut();
+                        let mut forward_buffer = forward_buffer_lock.borrow_mut();
 
                         for (index, z_non_linear) in depth_buffer.iter().enumerate() {
                             // If this pixel was not shaded by our fragment shader

@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, sync::RwLock};
+use std::{cell::RefCell, env};
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -36,9 +36,9 @@ fn main() -> Result<(), String> {
         point_size: 16,
     };
 
-    let font_cache_rwl = RwLock::new(FontCache::new(app.context.ttf_context));
+    let font_cache_rc = RefCell::new(FontCache::new(app.context.ttf_context));
 
-    let _text_cache_rwl = RwLock::new(TextCache::new());
+    let _text_cache_rc = RefCell::new(TextCache::new());
 
     // Set up our app
 
@@ -72,7 +72,7 @@ fn main() -> Result<(), String> {
 
         Graphics::text(
             &mut framebuffer,
-            &font_cache_rwl,
+            &font_cache_rc,
             None,
             &font_info,
             &TextOperation {
@@ -92,7 +92,7 @@ fn main() -> Result<(), String> {
 
         Graphics::text(
             &mut framebuffer,
-            &font_cache_rwl,
+            &font_cache_rc,
             None,
             &font_info,
             &TextOperation {

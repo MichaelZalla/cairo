@@ -1,4 +1,4 @@
-use std::sync::RwLockWriteGuard;
+use std::cell::RefMut;
 
 use crate::{
     buffer::Buffer2D,
@@ -23,7 +23,7 @@ pub struct ImageOptions {
 pub struct DoImageResult {}
 
 pub fn do_image<'a>(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &mut UILayoutContext,
     map: &'a mut TextureMap,
@@ -46,7 +46,7 @@ pub fn do_image<'a>(
 }
 
 fn draw_image(
-    _ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    _ctx: &mut RefMut<'_, UIContext>,
     _id: UIID,
     layout: &UILayoutContext,
     map: &TextureMap,

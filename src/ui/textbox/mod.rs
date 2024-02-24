@@ -1,4 +1,4 @@
-use std::{collections::hash_map::Entry, f32::consts::PI, sync::RwLockWriteGuard};
+use std::{cell::RefMut, collections::hash_map::Entry, f32::consts::PI};
 
 use sdl2::keyboard::Keycode;
 
@@ -41,7 +41,7 @@ pub struct DoTextboxResult {
 }
 
 pub fn do_textbox(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
@@ -67,7 +67,7 @@ pub fn do_textbox(
     };
 
     {
-        let text_cache = ctx.text_cache.read().unwrap();
+        let text_cache = ctx.text_cache.borrow();
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -173,7 +173,7 @@ pub fn do_textbox(
 }
 
 fn draw_textbox(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
@@ -186,7 +186,7 @@ fn draw_textbox(
 ) {
     let cursor = layout.get_cursor();
 
-    let text_cache = ctx.text_cache.read().unwrap();
+    let text_cache = ctx.text_cache.borrow();
 
     let label_texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -228,7 +228,7 @@ fn draw_textbox(
             if text.len() > 0 {
                 // Draw the input value text.
 
-                let mut font_cache = ctx.font_cache.write().unwrap();
+                let mut font_cache = ctx.font_cache.borrow_mut();
 
                 let font = font_cache.load(ctx.font_info).unwrap();
 

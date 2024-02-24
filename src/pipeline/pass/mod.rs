@@ -8,12 +8,12 @@ use super::Pipeline;
 impl<'a> Pipeline<'a> {
     pub(in crate::pipeline) fn do_deferred_lighting_pass(&mut self) {
         match self.framebuffer {
-            Some(lock) => {
-                let mut framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let mut framebuffer = rc.borrow_mut();
 
                 match framebuffer.attachments.forward_or_deferred_hdr.as_mut() {
                     Some(deferred_buffer_lock) => {
-                        let mut deferred_buffer = deferred_buffer_lock.write().unwrap();
+                        let mut deferred_buffer = deferred_buffer_lock.borrow_mut();
 
                         // Perform deferred lighting pass.
 
@@ -42,12 +42,12 @@ impl<'a> Pipeline<'a> {
 
     pub(in crate::pipeline) fn do_bloom_pass(&mut self) {
         match self.framebuffer {
-            Some(lock) => {
-                let mut framebuffer = lock.write().unwrap();
+            Some(rc) => {
+                let mut framebuffer = rc.borrow_mut();
 
                 match framebuffer.attachments.forward_or_deferred_hdr.as_mut() {
                     Some(deferred_buffer_lock) => {
-                        let mut deferred_buffer = deferred_buffer_lock.write().unwrap();
+                        let mut deferred_buffer = deferred_buffer_lock.borrow_mut();
 
                         let mut bloom_frame = self.bloom_buffer.as_mut().unwrap();
 

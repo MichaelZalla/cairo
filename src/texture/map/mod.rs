@@ -121,7 +121,7 @@ impl TextureMap {
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
         // Load the map's native-sized pixel data on-demand.
 
-        let mut canvas = rendering_context.canvas.write().unwrap();
+        let mut canvas = rendering_context.canvas.borrow_mut();
 
         sdl2::image::init(InitFlag::JPG).unwrap();
 

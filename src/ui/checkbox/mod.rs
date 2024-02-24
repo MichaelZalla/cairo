@@ -1,4 +1,4 @@
-use std::{collections::hash_map::Entry, sync::RwLockWriteGuard};
+use std::{cell::RefMut, collections::hash_map::Entry};
 
 use crate::{
     buffer::Buffer2D,
@@ -34,7 +34,7 @@ pub struct DoCheckboxResult {
 }
 
 pub fn do_checkbox(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
@@ -58,7 +58,7 @@ pub fn do_checkbox(
     };
 
     {
-        let text_cache = ctx.text_cache.read().unwrap();
+        let text_cache = ctx.text_cache.borrow();
 
         let texture = text_cache.get(&text_cache_key).unwrap();
 
@@ -135,7 +135,7 @@ pub fn do_checkbox(
 }
 
 fn draw_checkbox(
-    ctx: &mut RwLockWriteGuard<'_, UIContext>,
+    ctx: &mut RefMut<'_, UIContext>,
     id: UIID,
     layout: &UILayoutContext,
     layout_offset_x: u32,
@@ -145,7 +145,7 @@ fn draw_checkbox(
     parent_buffer: &mut Buffer2D,
     result: &DoCheckboxResult,
 ) {
-    let text_cache = ctx.text_cache.read().unwrap();
+    let text_cache = ctx.text_cache.borrow();
 
     let texture = text_cache.get(&text_cache_key).unwrap();
 

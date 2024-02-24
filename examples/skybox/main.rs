@@ -34,7 +34,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rwl = RwLock::new(framebuffer);
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     // Materials cache
 
@@ -48,15 +48,15 @@ fn main() -> Result<(), String> {
 
     // Wrap the entity collection in a memory-safe container
     let entities: Vec<&mut Entity> = vec![&mut cube_entity];
-    let entities_rwl = RwLock::new(entities);
+    let entities_rc = RefCell::new(entities);
 
     let shader_context_rwl: RwLock<ShaderContext> = Default::default();
 
     // Instantiate our spinning cube scene
     let scene = RefCell::new(SkyboxScene::new(
-        &framebuffer_rwl,
+        &framebuffer_rc,
         rendering_context,
-        &entities_rwl,
+        &entities_rc,
         &mut material_cache,
         &shader_context_rwl,
     ));
@@ -81,11 +81,11 @@ fn main() -> Result<(), String> {
 
         scene.borrow_mut().render();
 
-        let framebuffer = framebuffer_rwl.read().unwrap();
+        let framebuffer = framebuffer_rc.borrow();
 
         match framebuffer.attachments.color.as_ref() {
             Some(color_buffer_lock) => {
-                let color_buffer = color_buffer_lock.read().unwrap();
+                let color_buffer = color_buffer_lock.borrow();
 
                 return Ok(color_buffer.get_all().clone());
             }
