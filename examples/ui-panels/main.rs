@@ -79,11 +79,11 @@ fn main() -> Result<(), String> {
     let mut textboxes_model = HashMap::<String, String>::new();
 
     textboxes_model.insert("1_textbox".to_string(), "ABC 123".to_string());
-    textboxes_model.insert("1_slider".to_string(), "0".to_string());
+    textboxes_model.insert("1_slider".to_string(), "0.0".to_string());
     textboxes_model.insert("1_dropdown".to_string(), "Item 1".to_string());
 
     textboxes_model.insert("2_textbox".to_string(), "o-blah-dee-o-blah-dah".to_string());
-    textboxes_model.insert("2_slider".to_string(), "0.5".to_string());
+    textboxes_model.insert("2_slider".to_string(), "0.0".to_string());
     textboxes_model.insert("2_dropdown".to_string(), "Item 4".to_string());
 
     let mut checkboxes_model = HashMap::<String, bool>::new();

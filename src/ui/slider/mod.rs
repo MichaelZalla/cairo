@@ -262,6 +262,37 @@ fn draw_slider(
         Some(theme.input_background),
     );
 
+    // Draw the slider fill (alpha).
+
+    match options.min {
+        Some(min) => match options.max {
+            Some(max) => match model {
+                Entry::Occupied(o) => {
+                    let text = o.get();
+
+                    if text.len() > 0 {
+                        let value = text.parse::<f32>().unwrap();
+                        let alpha = (value - min) / (max - min);
+                        let width = ((NUMBER_SLIDER_WIDTH - 2).max(0) as f32 * alpha) as u32;
+
+                        Graphics::rectangle(
+                            parent_buffer,
+                            slider_top_left.0 + 1,
+                            slider_top_left.1 + 1,
+                            width,
+                            slider_height - 2,
+                            theme.input_background_slider_alpha,
+                            Some(theme.input_background_slider_alpha),
+                        );
+                    }
+                }
+                Entry::Vacant(_) => (),
+            },
+            None => (),
+        },
+        None => (),
+    }
+
     // Draw the slider model value.
 
     match model {
