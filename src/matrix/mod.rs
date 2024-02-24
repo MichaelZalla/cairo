@@ -185,15 +185,15 @@ impl<const N: usize> Mat<f32, N> {
 }
 
 impl Mat<f32, 3> {
-    pub fn rotation_z(theta: f32) -> Self {
+    pub fn rotation_x(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
         Self {
             elements: [
-                [cos_theta, sin_theta, 0.0],
-                [-sin_theta, cos_theta, 0.0],
-                [0.0, 0.0, 1.0],
+                [1.0, 0.0, 0.0],
+                [0.0, cos_theta, sin_theta],
+                [0.0, -sin_theta, cos_theta],
             ],
         }
     }
@@ -211,15 +211,15 @@ impl Mat<f32, 3> {
         }
     }
 
-    pub fn rotation_x(theta: f32) -> Self {
+    pub fn rotation_z(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
         Self {
             elements: [
-                [1.0, 0.0, 0.0],
-                [0.0, cos_theta, sin_theta],
-                [0.0, -sin_theta, cos_theta],
+                [cos_theta, sin_theta, 0.0],
+                [-sin_theta, cos_theta, 0.0],
+                [0.0, 0.0, 1.0],
             ],
         }
     }
@@ -237,15 +237,15 @@ impl Mat<f32, 4> {
         }
     }
 
-    pub fn rotation_z(theta: f32) -> Self {
+    pub fn rotation_x(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
         Self {
             elements: [
-                [cos_theta, sin_theta, 0.0, 0.0],
-                [-sin_theta, cos_theta, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, cos_theta, sin_theta, 0.0],
+                [0.0, -sin_theta, cos_theta, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
         }
@@ -265,15 +265,15 @@ impl Mat<f32, 4> {
         }
     }
 
-    pub fn rotation_x(theta: f32) -> Self {
+    pub fn rotation_z(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
         Self {
             elements: [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, cos_theta, sin_theta, 0.0],
-                [0.0, -sin_theta, cos_theta, 0.0],
+                [cos_theta, sin_theta, 0.0, 0.0],
+                [-sin_theta, cos_theta, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
         }
