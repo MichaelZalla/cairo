@@ -144,6 +144,10 @@ impl Graphics {
         color: Color,
         fill: Option<Color>,
     ) {
+        if width == 0 || height == 0 {
+            return;
+        }
+
         // Draw rectangle borders.
 
         Graphics::poly_line(
