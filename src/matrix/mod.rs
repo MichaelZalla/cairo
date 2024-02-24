@@ -226,6 +226,32 @@ impl Mat<f32, 3> {
 }
 
 impl Mat<f32, 4> {
+    pub fn from_mat3(mat: Mat3) -> Self {
+        Self {
+            elements: [
+                [
+                    mat.elements[0][0],
+                    mat.elements[0][1],
+                    mat.elements[0][2],
+                    0.0,
+                ],
+                [
+                    mat.elements[1][0],
+                    mat.elements[1][1],
+                    mat.elements[1][2],
+                    0.0,
+                ],
+                [
+                    mat.elements[2][0],
+                    mat.elements[2][1],
+                    mat.elements[2][2],
+                    0.0,
+                ],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        }
+    }
+
     pub fn tbn(t: Vec3, b: Vec3, n: Vec3) -> Self {
         Self {
             elements: [
@@ -238,45 +264,15 @@ impl Mat<f32, 4> {
     }
 
     pub fn rotation_x(theta: f32) -> Self {
-        let sin_theta = theta.sin();
-        let cos_theta = theta.cos();
-
-        Self {
-            elements: [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, cos_theta, sin_theta, 0.0],
-                [0.0, -sin_theta, cos_theta, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-        }
+        Self::from_mat3(Mat3::rotation_x(theta))
     }
 
     pub fn rotation_y(theta: f32) -> Self {
-        let sin_theta = theta.sin();
-        let cos_theta = theta.cos();
-
-        Self {
-            elements: [
-                [cos_theta, 0.0, -sin_theta, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [sin_theta, 0.0, cos_theta, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-        }
+        Self::from_mat3(Mat3::rotation_y(theta))
     }
 
     pub fn rotation_z(theta: f32) -> Self {
-        let sin_theta = theta.sin();
-        let cos_theta = theta.cos();
-
-        Self {
-            elements: [
-                [cos_theta, sin_theta, 0.0, 0.0],
-                [-sin_theta, cos_theta, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-        }
+        Self::from_mat3(Mat3::rotation_z(theta))
     }
 
     pub fn translation(v: Vec3) -> Self {
