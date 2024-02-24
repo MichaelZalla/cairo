@@ -65,7 +65,7 @@ impl Graphics {
     }
 
     pub fn blit_text_from_mask(
-        texture: &Buffer2D<u8>,
+        mask: &Buffer2D<u8>,
         op: &TextOperation,
         dest_buffer: &mut Buffer2D<u32>,
         max_width: Option<u32>,
@@ -80,22 +80,22 @@ impl Graphics {
 
         let color_u32 = op.color.to_u32();
 
-        for y_rel in 0..texture.height.min(dest_buffer.height - op.y) {
-            for x_rel in
-                0..texture
-                    .width
-                    .min(dest_buffer.width - op.x)
-                    .min(if max_width.is_some() {
-                        max_width.unwrap()
-                    } else {
-                        u32::MAX
-                    })
-            {
-                let index = (x_rel as usize + y_rel as usize * texture.width as usize) * 4;
+        let available_height = mask.height.min(dest_buffer.height - op.y);
 
-                let a = texture.data[index + 3];
+        let available_width =
+            mask.width
+                .min(dest_buffer.width - op.x)
+                .min(if max_width.is_some() {
+                    max_width.unwrap()
+                } else {
+                    u32::MAX
+                });
 
-                if a == 0 {
+        for y_rel in 0..available_height {
+            for x_rel in 0..available_width {
+                let index = y_rel as usize * mask.width as usize + x_rel as usize;
+
+                if mask.data[index] == 0 {
                     // Skips unrendered pixels in our text texture (mask).
 
                     continue;
@@ -135,28 +135,20 @@ impl Graphics {
     pub fn make_text_mask(font: &Font, text: &String) -> Result<(u32, u32, TextureBuffer), String> {
         // Generate a new text texture (mask).
 
-        let color = color::WHITE;
-
         let surface = font
             .render(text)
-            .blended(SDLColor::RGBA(
-                color.r as u8,
-                color.g as u8,
-                color.b as u8,
-                color.a as u8,
-            ))
+            .solid(SDLColor::WHITE)
             .map_err(|e| e.to_string())?;
 
         // Read the pixel data from the rendered surface
 
         let text_surface_canvas = surface.into_canvas()?;
-
         let text_surface_canvas_size = text_surface_canvas.output_size()?;
 
         let width = text_surface_canvas_size.0;
         let height = text_surface_canvas_size.1;
 
-        let bytes = text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA32)?;
+        let bytes = text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::Index8)?;
 
         let buffer = Buffer2D::from_data(width, height, bytes);
 
