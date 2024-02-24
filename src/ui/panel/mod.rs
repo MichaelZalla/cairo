@@ -370,8 +370,8 @@ where
             y,
             width,
             height,
-            theme.panel_border,
             Some(theme.panel_background),
+            Some(theme.panel_border),
         )
     }
 
@@ -388,8 +388,8 @@ where
             0,
             self.info.width,
             PANEL_TITLE_BAR_HEIGHT,
-            theme.panel_titlebar_background,
             Some(theme.panel_titlebar_background),
+            None,
         );
 
         let mut panel_titlebar_layout = UILayoutContext::new(

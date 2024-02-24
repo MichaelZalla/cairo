@@ -247,8 +247,8 @@ fn draw_dropdown(
         dropdown_y,
         DROPDOWN_WIDTH,
         item_height,
-        theme.dropdown_background,
         Some(theme.dropdown_background),
+        None,
     );
 
     // Draw the dropdown carat if needed.

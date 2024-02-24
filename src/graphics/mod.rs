@@ -141,60 +141,65 @@ impl Graphics {
         y: u32,
         width: u32,
         height: u32,
-        color: Color,
         fill: Option<Color>,
+        border: Option<Color>,
     ) {
         if width == 0 || height == 0 {
             return;
         }
 
-        // Draw rectangle borders.
-
-        Graphics::poly_line(
-            buffer,
-            &[
-                // Top left
-                Vec2 {
-                    x: x as f32,
-                    y: y as f32,
-                    z: 1.0,
-                },
-                // Top right
-                Vec2 {
-                    x: (x + width - 1) as f32,
-                    y: y as f32,
-                    z: 1.0,
-                },
-                // Bottom right
-                Vec2 {
-                    x: (x + width - 1) as f32,
-                    y: (y + height - 1) as f32,
-                    z: 1.0,
-                },
-                // Bottom left
-                Vec2 {
-                    x: x as f32,
-                    y: (y + height - 1) as f32,
-                    z: 1.0,
-                },
-            ],
-            color,
-        );
-
-        // Add a fill if requested.
+        // Render a fill.
 
         match fill {
             Some(fill_color) => {
-                for current_y in y + 1..y + height - 1 {
+                for current_y in y..y + height {
                     Graphics::line(
                         buffer,
-                        (x + 1) as i32,
+                        x as i32,
                         current_y as i32,
-                        (x + width - 1 - 1) as i32,
+                        (x + width - 1) as i32,
                         current_y as i32,
                         fill_color,
                     )
                 }
+            }
+            None => (),
+        }
+
+        // Render a border.
+
+        match border {
+            Some(border_color) => {
+                Graphics::poly_line(
+                    buffer,
+                    &[
+                        // Top left
+                        Vec2 {
+                            x: x as f32,
+                            y: y as f32,
+                            z: 1.0,
+                        },
+                        // Top right
+                        Vec2 {
+                            x: (x + width - 1) as f32,
+                            y: y as f32,
+                            z: 1.0,
+                        },
+                        // Bottom right
+                        Vec2 {
+                            x: (x + width - 1) as f32,
+                            y: (y + height - 1) as f32,
+                            z: 1.0,
+                        },
+                        // Bottom left
+                        Vec2 {
+                            x: x as f32,
+                            y: (y + height - 1) as f32,
+                            z: 1.0,
+                        },
+                    ],
+                    border_color,
+                );
             }
             None => (),
         }

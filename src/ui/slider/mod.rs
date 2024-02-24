@@ -258,8 +258,8 @@ fn draw_slider(
         slider_top_left.1,
         NUMBER_SLIDER_WIDTH,
         slider_height,
-        theme.input_background,
         Some(theme.input_background),
+        None,
     );
 
     // Draw the slider fill (alpha).
@@ -281,8 +281,8 @@ fn draw_slider(
                             slider_top_left.1 + 1,
                             width,
                             slider_height - 2,
-                            theme.input_background_slider_alpha,
                             Some(theme.input_background_slider_alpha),
+                            None,
                         );
                     }
                 }

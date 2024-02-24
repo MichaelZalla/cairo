@@ -175,8 +175,8 @@ fn draw_checkbox(
         checkbox_y,
         checkbox_size,
         checkbox_size,
-        theme.checkbox_background,
         Some(theme.checkbox_background),
+        None,
     );
 
     let checkbox_top_left = (checkbox_x, checkbox_y);

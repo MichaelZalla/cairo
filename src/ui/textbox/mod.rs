@@ -212,8 +212,8 @@ fn draw_textbox(
         textbox_y,
         TEXTBOX_WIDTH,
         textbox_height,
-        theme.input_background,
         Some(theme.input_background),
+        None,
     );
 
     let textbox_top_left = (textbox_x, textbox_y);
@@ -283,8 +283,8 @@ fn draw_textbox(
                         blinking_text_cursor_y,
                         2,
                         textbox_height - 2 - 2,
-                        theme.input_cursor,
                         None,
+                        Some(theme.input_cursor),
                     );
                 }
             }
