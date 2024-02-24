@@ -88,7 +88,7 @@ pub fn do_text(
             let font = font_cache.load(ctx.font_info).unwrap();
 
             let (_label_width, _label_height, texture) =
-                Graphics::make_text_texture(font.as_ref(), &options.text).unwrap();
+                Graphics::make_text_mask(font.as_ref(), &options.text).unwrap();
 
             (layout_offset_x, layout_offset_y) = options
                 .layout_options

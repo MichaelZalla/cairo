@@ -302,7 +302,7 @@ fn draw_dropdown(
         let font = font_cache.load(ctx.font_info).unwrap();
 
         let (_label_width, _label_height, model_value_texture) =
-            Graphics::make_text_texture(font.as_ref(), &item).unwrap();
+            Graphics::make_text_mask(font.as_ref(), &item).unwrap();
 
         let max_width = DROPDOWN_WIDTH - DROPDOWN_LABEL_PADDING;
 

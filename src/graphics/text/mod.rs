@@ -55,7 +55,7 @@ impl Graphics {
                 let font = font_cache.load(font_info).unwrap();
 
                 let (_label_width, _label_height, texture) =
-                    Graphics::make_text_texture(font.as_ref(), &op.text).unwrap();
+                    Graphics::make_text_mask(font.as_ref(), &op.text).unwrap();
 
                 Graphics::blit_text_from_mask(&texture, &op, dest_buffer, None);
             }
@@ -132,10 +132,7 @@ impl Graphics {
         debug_messages.drain();
     }
 
-    pub fn make_text_texture(
-        font: &Font,
-        text: &String,
-    ) -> Result<(u32, u32, TextureBuffer), String> {
+    pub fn make_text_mask(font: &Font, text: &String) -> Result<(u32, u32, TextureBuffer), String> {
         // Generate a new text texture (mask).
 
         let color = color::WHITE;

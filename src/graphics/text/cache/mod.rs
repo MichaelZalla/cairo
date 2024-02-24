@@ -43,7 +43,7 @@ pub fn cache_text<'a>(
             let font = font_cache.load(font_info).unwrap();
 
             let (_label_width, _label_height, text_texture) =
-                Graphics::make_text_texture(font.as_ref(), text).unwrap();
+                Graphics::make_text_mask(font.as_ref(), text).unwrap();
 
             println!("Inserting texture for '{}' text into TextCache!", text);
 
