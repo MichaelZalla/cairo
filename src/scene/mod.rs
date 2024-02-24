@@ -5,6 +5,7 @@ use super::device::{GameControllerState, KeyboardState, MouseState};
 pub mod camera;
 pub mod graph;
 pub mod light;
+pub mod node;
 
 pub trait Scene {
     fn update(

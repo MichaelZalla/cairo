@@ -20,11 +20,11 @@ use cairo::{
     resource::arena::Arena,
     scene::{
         camera::Camera,
-        graph::{
-            SceneGraph, SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod,
-            SceneNodeType,
-        },
+        graph::SceneGraph,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        node::{
+            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+        },
     },
     shader::context::ShaderContext,
     shaders::{
