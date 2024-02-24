@@ -315,11 +315,7 @@ impl<'a> Pipeline<'a> {
 
         // Otherwise, cull individual triangles.
 
-        let world_transform = Mat4::identity()
-            * Mat4::rotation_x(entity.rotation.x)
-            * Mat4::rotation_y(entity.rotation.y)
-            * Mat4::rotation_z(entity.rotation.z)
-            * Mat4::translation(entity.position);
+        let world_transform = entity.transform.mat();
 
         let original_world_transform: Mat4;
 
@@ -328,7 +324,7 @@ impl<'a> Pipeline<'a> {
 
             original_world_transform = context.get_world_transform();
 
-            context.set_world_transform(world_transform);
+            context.set_world_transform(*world_transform);
         }
 
         self.render_mesh(mesh, material_cache);

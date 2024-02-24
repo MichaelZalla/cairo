@@ -1,3 +1,5 @@
+use std::slice::Iter;
+
 use uuid::Uuid;
 
 use super::handle::Handle;
@@ -10,7 +12,7 @@ pub struct ArenaEntry<T> {
 
 #[derive(Default, Debug, Clone)]
 pub struct Arena<T> {
-    entries: Vec<Option<ArenaEntry<T>>>,
+    pub entries: Vec<Option<ArenaEntry<T>>>,
 }
 
 impl<T> Arena<T> {
@@ -108,5 +110,14 @@ impl<T> Arena<T> {
             }
             None => Err(format!("Entry at index {} is None!", handle.index)),
         }
+    }
+}
+
+impl<'a, T> IntoIterator for &'a Arena<T> {
+    type Item = &'a Option<ArenaEntry<T>>;
+    type IntoIter = Iter<'a, Option<ArenaEntry<T>>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.iter()
     }
 }

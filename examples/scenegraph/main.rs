@@ -54,6 +54,8 @@ fn main() -> Result<(), String> {
     let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
     let mut cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
+    // Initialize materials
+
     // Checkerboard material
 
     let mut checkerboard_material = Material::new("checkerboard".to_string());
@@ -74,6 +76,7 @@ fn main() -> Result<(), String> {
     // Assign textures to mesh materials
 
     plane_mesh.material_name = Some(checkerboard_material.name.clone());
+
     cube_mesh.material_name = Some(checkerboard_material.name.clone());
 
     // Collect materials
@@ -93,12 +96,14 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_entity: Entity<'_> = Entity::new(&plane_mesh);
+    let plane_entity = Entity::new(&plane_mesh);
 
     let mut cube_entity = Entity::new(&cube_mesh);
-    cube_entity.position.y = 3.0;
 
-    let cube_position = cube_entity.position.clone();
+    cube_entity.transform.set_translation(Vec3 {
+        y: 3.0,
+        ..(*cube_entity.transform.translation())
+    });
 
     // Set up a camera for our scene.
 
@@ -110,7 +115,7 @@ fn main() -> Result<(), String> {
             y: 6.0,
             z: -12.0,
         },
-        cube_position,
+        *(cube_entity.transform.translation()),
         75.0,
         aspect_ratio,
     );
@@ -137,16 +142,11 @@ fn main() -> Result<(), String> {
 
     spot_light.look_vector.set_position(Vec3 {
         x: 2.0,
-        y: 12.0,
+        y: 10.0,
         z: 2.0,
     });
 
     spot_light.intensities = Vec3::ones() * 0.15;
-
-    spot_light.look_vector.set_position(Vec3 {
-        y: 10.0,
-        ..spot_light.look_vector.get_position()
-    });
 
     // Bind initial state to our shader context.
 
@@ -162,14 +162,12 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let mut pipeline = Pipeline::new(
+    let pipeline = Pipeline::new(
         &shader_context_rc,
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
-
-    pipeline.geometry_shader_options.emissive_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -258,57 +256,57 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Empty => Ok(()),
-                SceneNodeType::Entity => {
-                    //
+                SceneNodeType::Entity => match handle {
+                    Some(handle) => {
+                        let mut entity_arena = entity_arena_rc.borrow_mut();
 
-                    match handle {
-                        Some(handle) => {
-                            let mut entity_arena = entity_arena_rc.borrow_mut();
+                        match entity_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let entity = &mut entry.item;
 
-                            match entity_arena.get_mut(handle) {
-                                Ok(entry) => {
-                                    let entity = &mut entry.item;
-
-                                    if entity.mesh.object_name == "plane" {
-                                        return Ok(());
-                                    }
-
-                                    static ENTITY_ROTATION_SPEED: f32 = 0.3;
-
-                                    entity.rotation.z += 1.0
-                                        * ENTITY_ROTATION_SPEED
-                                        * PI
-                                        * app.timing_info.seconds_since_last_update;
-
-                                    entity.rotation.z %= 2.0 * PI;
-
-                                    entity.rotation.x += 1.0
-                                        * ENTITY_ROTATION_SPEED
-                                        * PI
-                                        * app.timing_info.seconds_since_last_update;
-
-                                    entity.rotation.x %= 2.0 * PI;
-
-                                    entity.rotation.y += 1.0
-                                        * ENTITY_ROTATION_SPEED
-                                        * PI
-                                        * app.timing_info.seconds_since_last_update;
-
-                                    entity.rotation.y %= 2.0 * PI;
-
-                                    Ok(())
+                                if entity.mesh.object_name == "plane" {
+                                    return Ok(());
                                 }
-                                Err(err) => panic!(
-                                    "Failed to get Entity from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
+
+                                static ENTITY_ROTATION_SPEED: f32 = 0.3;
+
+                                let mut rotation = *entity.transform.rotation();
+
+                                rotation.z += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.z %= 2.0 * PI;
+
+                                rotation.x += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.x %= 2.0 * PI;
+
+                                rotation.y += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.y %= 2.0 * PI;
+
+                                entity.transform.set_rotation(rotation);
+
+                                Ok(())
                             }
-                        }
-                        None => {
-                            panic!("Encountered a `Entity` node with no resource handle!")
+                            Err(err) => panic!(
+                                "Failed to get Entity from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
                         }
                     }
-                }
+                    None => {
+                        panic!("Encountered a `Entity` node with no resource handle!")
+                    }
+                },
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
                         let mut camera_arena = camera_arena_rc.borrow_mut();
@@ -415,8 +413,6 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our scene.
-
         let mut pipeline = pipeline_rc.borrow_mut();
 
         pipeline.bind_framebuffer(Some(&framebuffer_rc));

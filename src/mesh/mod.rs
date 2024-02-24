@@ -18,7 +18,7 @@ pub struct MaterialSource {
     pub filepath: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Mesh {
     pub object_source: String,
     pub object_name: String,

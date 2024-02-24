@@ -1,6 +1,8 @@
 extern crate sdl2;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, f32::consts::PI};
+
+use uuid::Uuid;
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -8,13 +10,23 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     mesh,
-    scene::Scene,
+    pipeline::Pipeline,
+    resource::arena::Arena,
+    scene::{
+        camera::Camera,
+        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        scenegraph::{
+            SceneGraph, SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod,
+            SceneNodeType,
+        },
+    },
     shader::context::ShaderContext,
+    shaders::{
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
+        default_vertex_shader::DEFAULT_VERTEX_SHADER,
+    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
-
-mod spinning_cube_scene;
-
-use self::spinning_cube_scene::SpinningCubeScene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -33,44 +45,328 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    // Generate a cube mesh
+    // Meshes
+
     let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
-    // Assign the mesh to a new entity
-    let mut cube_entity = Entity::new(&cube_mesh);
+    // Resource arenas
 
-    // Wrap the entity collection in a memory-safe container
-    let entities: Vec<&mut Entity> = vec![&mut cube_entity];
-    let entities_rc = RefCell::new(entities);
+    let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
+    let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
+    let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
+    let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
+    let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
+    let mut spot_light_arena: Arena<SpotLight> = Arena::<SpotLight>::new();
+
+    // Assign meshes to entities.
+
+    let cube_entity = Entity::new(&cube_mesh);
+
+    // Set up a camera for our scene.
+
+    let aspect_ratio = framebuffer_rc.borrow().width_over_height;
+
+    let camera: Camera = Camera::from_perspective(
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -5.0,
+        },
+        *(cube_entity.transform.translation()),
+        75.0,
+        aspect_ratio,
+    );
+
+    // Set up some lights for our scene.
+
+    let ambient_light = AmbientLight {
+        intensities: Vec3::ones() * 0.1,
+    };
+
+    let directional_light = DirectionalLight {
+        intensities: Vec3::ones() * 0.3,
+        direction: Vec4 {
+            x: 0.25,
+            y: -1.0,
+            z: -0.25,
+            w: 1.0,
+        }
+        .as_normal(),
+    };
+
+    let mut point_light = PointLight::new();
+
+    point_light.intensities = Vec3::ones() * 0.4;
+
+    let spot_light = SpotLight::new();
+
+    // Bind initial state to our shader context.
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
-    // Instantiate our spinning cube scene
-    let scene = RefCell::new(SpinningCubeScene::new(
-        &framebuffer_rc,
-        &entities_rc,
+    {
+        let mut context = shader_context_rc.borrow_mut();
+
+        context.set_ambient_light(ambient_light);
+        context.set_directional_light(directional_light);
+        context.set_point_light(0, point_light);
+        context.set_spot_light(0, spot_light);
+    }
+
+    // Pipeline
+
+    let pipeline = Pipeline::new(
         &shader_context_rc,
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    let pipeline_rc = RefCell::new(pipeline);
+
+    // Create resource handles from our arenas.
+
+    let cube_entity_handle = entity_arena.insert(Uuid::new_v4(), cube_entity);
+    let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
+    let _ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
+    let _directional_light_handle =
+        directional_light_arena.insert(Uuid::new_v4(), directional_light);
+    let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
+    let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
+
+    let entity_arena_rc = RefCell::new(entity_arena);
+    let camera_arena_rc = RefCell::new(camera_arena);
+    let _point_light_arena_rc = RefCell::new(point_light_arena);
+    let _spot_light_arena_rc = RefCell::new(spot_light_arena);
+
+    // Create a scene graph.
+
+    let mut scenegraph = SceneGraph::new();
+
+    // Add nodes to our scene graph's root.
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::Camera,
+        None,
+        Some(camera_handle),
+        None,
     ));
 
-    // Set up our app
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::PointLight,
+        None,
+        Some(point_light_handle),
+        None,
+    ));
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::SpotLight,
+        None,
+        Some(spot_light_handle),
+        None,
+    ));
+
+    let cube_entity_node =
+        SceneNode::new(SceneNodeType::Entity, None, Some(cube_entity_handle), None);
+
+    scenegraph.root.add_child(cube_entity_node);
+
+    // Prints the scenegraph to stdout.
+
+    println!("{}", scenegraph);
+
+    let scenegraph_rc = RefCell::new(scenegraph);
+
+    // App update and render callbacks
+
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        // Delegate the update to our spinning cube scene
+        let mut context = shader_context_rc.borrow_mut();
 
-        scene
-            .borrow_mut()
-            .update(app, keyboard_state, mouse_state, game_controller_state);
+        // Traverse the scene graph and update its nodes.
+
+        let mut scenegraph = scenegraph_rc.borrow_mut();
+
+        let mut update_scene_graph_node = |_current_depth: usize,
+                                           node: &mut SceneNode|
+         -> Result<(), String> {
+            let (node_type, handle) = (node.get_type(), node.get_handle());
+
+            match node_type {
+                SceneNodeType::Empty => Ok(()),
+                SceneNodeType::Entity => match handle {
+                    Some(handle) => {
+                        let mut entity_arena = entity_arena_rc.borrow_mut();
+
+                        match entity_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let entity = &mut entry.item;
+
+                                static ENTITY_ROTATION_SPEED: f32 = 0.2;
+
+                                let mut rotation = *entity.transform.rotation();
+
+                                rotation.z += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.z %= 2.0 * PI;
+
+                                rotation.x += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.x %= 2.0 * PI;
+
+                                rotation.y += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.y %= 2.0 * PI;
+
+                                entity.transform.set_rotation(rotation);
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Entity from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Entity` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::Camera => match handle {
+                    Some(handle) => {
+                        let mut camera_arena = camera_arena_rc.borrow_mut();
+
+                        match camera_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let camera = &mut entry.item;
+
+                                camera.update(
+                                    &app.timing_info,
+                                    keyboard_state,
+                                    mouse_state,
+                                    game_controller_state,
+                                );
+
+                                let camera_view_inverse_transform =
+                                    camera.get_view_inverse_transform();
+
+                                context.set_view_position(Vec4::new(
+                                    camera.look_vector.get_position(),
+                                    1.0,
+                                ));
+
+                                context.set_view_inverse_transform(camera_view_inverse_transform);
+
+                                context.set_projection(camera.get_projection());
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Camera from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Camera` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::DirectionalLight => Ok(()),
+                SceneNodeType::PointLight => Ok(()),
+                SceneNodeType::SpotLight => Ok(()),
+            }
+        };
+
+        scenegraph.root.visit_mut(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut update_scene_graph_node,
+        )?;
+
+        let mut pipeline = pipeline_rc.borrow_mut();
+
+        pipeline
+            .options
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        pipeline
+            .geometry_shader_options
+            .update(keyboard_state, mouse_state, game_controller_state);
 
         Ok(())
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our spinning cube scene
+        // Delegate the rendering to our scene.
 
-        scene.borrow_mut().render();
+        let mut pipeline = pipeline_rc.borrow_mut();
+
+        pipeline.bind_framebuffer(Some(&framebuffer_rc));
+
+        // Begin frame
+
+        pipeline.begin_frame();
+
+        // Render entities.
+
+        let scenegraph = scenegraph_rc.borrow_mut();
+
+        let mut render_scene_graph_node =
+            |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
+                let (node_type, handle) = (node.get_type(), node.get_handle());
+
+                match node_type {
+                    SceneNodeType::Entity => match handle {
+                        Some(handle) => {
+                            let mut entity_arena = entity_arena_rc.borrow_mut();
+
+                            match entity_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let entity = &mut entry.item;
+
+                                    pipeline.render_entity(entity, None);
+
+                                    Ok(())
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get Entity from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
+                        }
+                        None => {
+                            panic!("Encountered a `Entity` node with no resource handle!")
+                        }
+                    },
+                    _ => Ok(()),
+                }
+            };
+
+        // Traverse the scene graph and render its nodes.
+
+        scenegraph.root.visit(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut render_scene_graph_node,
+        )?;
+
+        // End frame
+
+        pipeline.end_frame();
+
+        // Write out.
 
         let framebuffer = framebuffer_rc.borrow();
 
@@ -78,7 +374,7 @@ fn main() -> Result<(), String> {
             Some(color_buffer_lock) => {
                 let color_buffer = color_buffer_lock.borrow();
 
-                return Ok(color_buffer.get_all().clone());
+                Ok(color_buffer.get_all().clone())
             }
             None => panic!(),
         }

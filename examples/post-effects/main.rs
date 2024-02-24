@@ -1,6 +1,8 @@
 extern crate sdl2;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, f32::consts::PI};
+
+use uuid::Uuid;
 
 use cairo::{
     app::{App, AppWindowInfo},
@@ -15,14 +17,24 @@ use cairo::{
     entity::Entity,
     material::{cache::MaterialCache, Material},
     mesh,
-    scene::Scene,
+    pipeline::Pipeline,
+    resource::arena::Arena,
+    scene::{
+        camera::Camera,
+        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        scenegraph::{
+            SceneGraph, SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod,
+            SceneNodeType,
+        },
+    },
     shader::context::ShaderContext,
+    shaders::{
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
+        default_vertex_shader::DEFAULT_VERTEX_SHADER,
+    },
     texture::map::{TextureMap, TextureMapStorageFormat},
+    vec::{vec3::Vec3, vec4::Vec4},
 };
-
-mod post_effects_scene;
-
-use self::post_effects_scene::PostEffectsScene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -42,7 +54,7 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    // Generate primitive meshes
+    // Meshes
 
     let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
     let mut cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
@@ -71,12 +83,12 @@ fn main() -> Result<(), String> {
     let mut lava_material = Material::new("container".to_string());
 
     let lava_diffuse_map = TextureMap::new(
-        &"./examples/emissive-map/assets/lava.png",
+        &"./examples/post-effects/assets/lava.png",
         TextureMapStorageFormat::RGB24,
     );
 
     let lava_emissive_map = TextureMap::new(
-        &"./examples/emissive-map/assets/lava_emissive.png",
+        &"./examples/post-effects/assets/lava_emissive.png",
         TextureMapStorageFormat::Index8,
     );
 
@@ -97,60 +109,460 @@ fn main() -> Result<(), String> {
     let mut material_cache: MaterialCache = Default::default();
 
     material_cache.insert(checkerboard_material);
-
     material_cache.insert(lava_material);
 
+    // Set up resource arenas for the various node types in our scene.
+
+    let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
+    let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
+    let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
+    let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
+    let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
+    let mut spot_light_arena: Arena<SpotLight> = Arena::<SpotLight>::new();
+
     // Assign the meshes to entities
-    let mut plane_entity: Entity<'_> = Entity::new(&plane_mesh);
+
+    let plane_entity = Entity::new(&plane_mesh);
 
     let mut cube_entity = Entity::new(&cube_mesh);
-    cube_entity.position.y = 3.0;
 
-    // Wrap the entity collection in a memory-safe container
+    cube_entity.transform.set_translation(Vec3 {
+        y: 3.0,
+        ..(*cube_entity.transform.translation())
+    });
 
-    let entities: Vec<&mut Entity> = vec![&mut plane_entity, &mut cube_entity];
+    // Set up a camera for rendering our scene
 
-    let entities_rc = RefCell::new(entities);
+    let aspect_ratio = framebuffer_rc.borrow().width_over_height;
+
+    let camera: Camera = Camera::from_perspective(
+        Vec3 {
+            x: 0.0,
+            y: 2.0,
+            z: -8.0,
+        },
+        Default::default(),
+        75.0,
+        aspect_ratio,
+    );
+
+    // Set up some lights for our scene.
+
+    let ambient_light: AmbientLight = Default::default();
+
+    let directional_light = DirectionalLight {
+        intensities: Default::default(),
+        direction: Vec4 {
+            x: -1.0,
+            y: 0.0,
+            z: 1.0,
+            w: 1.0,
+        },
+    };
+
+    let mut point_light = PointLight::new();
+
+    point_light.intensities = Vec3::ones() * 0.8;
+
+    let mut spot_light = SpotLight::new();
+
+    spot_light.intensities = Vec3::ones() * 0.1;
+
+    spot_light.look_vector.set_position(Vec3 {
+        y: 30.0,
+        ..spot_light.look_vector.get_position()
+    });
+
+    // Bind initial state to our shader context.
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
-    // Instantiate our spinning cube scene
-    let scene = RefCell::new(PostEffectsScene::new(
-        &framebuffer_rc,
-        &entities_rc,
-        &material_cache,
+    {
+        let mut context = shader_context_rc.borrow_mut();
+
+        context.set_ambient_light(ambient_light);
+        context.set_directional_light(directional_light);
+        context.set_spot_light(0, spot_light);
+    }
+
+    // Pipeline
+
+    let mut pipeline = Pipeline::new(
         &shader_context_rc,
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    pipeline.geometry_shader_options.emissive_mapping_active = true;
+
+    let pipeline_rc = RefCell::new(pipeline);
+
+    // Create resource handles from our arenas.
+
+    let plane_entity_handle = entity_arena.insert(Uuid::new_v4(), plane_entity);
+    let cube_entity_handle = entity_arena.insert(Uuid::new_v4(), cube_entity);
+    let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
+    let _ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
+    let _directional_light_handle =
+        directional_light_arena.insert(Uuid::new_v4(), directional_light);
+    let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
+    let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
+
+    let entity_arena_rc = RefCell::new(entity_arena);
+    let camera_arena_rc = RefCell::new(camera_arena);
+    // let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
+    // let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let point_light_arena_rc = RefCell::new(point_light_arena);
+    let spot_light_arena_rc = RefCell::new(spot_light_arena);
+
+    // Create a scene graph.
+
+    let mut scenegraph = SceneGraph::new();
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::Camera,
+        None,
+        Some(camera_handle),
+        None,
     ));
 
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::PointLight,
+        None,
+        Some(point_light_handle),
+        None,
+    ));
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::SpotLight,
+        None,
+        Some(spot_light_handle),
+        None,
+    ));
+
+    let mut plane_entity_node =
+        SceneNode::new(SceneNodeType::Entity, None, Some(plane_entity_handle), None);
+
+    plane_entity_node.add_child(SceneNode::new(
+        SceneNodeType::Entity,
+        None,
+        Some(cube_entity_handle),
+        None,
+    ));
+
+    scenegraph.root.add_child(plane_entity_node);
+
+    // Prints the scenegraph to stdout.
+
+    println!("{}", scenegraph);
+
+    let scenegraph_rc = RefCell::new(scenegraph);
+
     // Create several screen-space post-processing effects.
+
     let _outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
     let _grayscale_effect = GrayscaleEffect::new();
     let _invert_effect = InvertEffect::new();
-    let _sharpen_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
-    let _blur_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(8));
-    let edge_detection_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);
+    let _sharpen_kernel_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
+    let _blur_kernel_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(8));
+    let edge_detection_kernel_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);
 
-    // Set up our app
+    // App update and render callbacks
+
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        // Delegate the update to our spinning cube scene
+        let mut context = shader_context_rc.borrow_mut();
 
-        scene
-            .borrow_mut()
-            .update(app, &keyboard_state, &mouse_state, &game_controller_state);
+        let uptime = app.timing_info.uptime_seconds;
+
+        // Traverse the scene graph and update its nodes.
+
+        let mut scenegraph = scenegraph_rc.borrow_mut();
+
+        let mut update_scene_graph_node = |_current_depth: usize,
+                                           node: &mut SceneNode|
+         -> Result<(), String> {
+            let (node_type, handle) = (node.get_type(), node.get_handle());
+
+            match node_type {
+                SceneNodeType::Empty => Ok(()),
+                SceneNodeType::Entity => match handle {
+                    Some(handle) => {
+                        let mut entity_arena = entity_arena_rc.borrow_mut();
+
+                        match entity_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let entity = &mut entry.item;
+
+                                if entity.mesh.object_name == "plane" {
+                                    return Ok(());
+                                }
+
+                                static ENTITY_ROTATION_SPEED: f32 = 0.3;
+
+                                let mut rotation = *entity.transform.rotation();
+
+                                rotation.z += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.z %= 2.0 * PI;
+
+                                rotation.x += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.x %= 2.0 * PI;
+
+                                rotation.y += 1.0
+                                    * ENTITY_ROTATION_SPEED
+                                    * PI
+                                    * app.timing_info.seconds_since_last_update;
+
+                                rotation.y %= 2.0 * PI;
+
+                                entity.transform.set_rotation(rotation);
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Entity from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Entity` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::Camera => match handle {
+                    Some(handle) => {
+                        let mut camera_arena = camera_arena_rc.borrow_mut();
+
+                        match camera_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let camera = &mut entry.item;
+
+                                camera.update(
+                                    &app.timing_info,
+                                    keyboard_state,
+                                    mouse_state,
+                                    game_controller_state,
+                                );
+
+                                let camera_view_inverse_transform =
+                                    camera.get_view_inverse_transform();
+
+                                context.set_view_position(Vec4::new(
+                                    camera.look_vector.get_position(),
+                                    1.0,
+                                ));
+
+                                context.set_view_inverse_transform(camera_view_inverse_transform);
+
+                                context.set_projection(camera.get_projection());
+
+                                let framebuffer = framebuffer_rc.borrow_mut();
+
+                                match framebuffer.attachments.depth.as_ref() {
+                                    Some(lock) => {
+                                        let mut depth_buffer = lock.borrow_mut();
+
+                                        depth_buffer
+                                            .set_projection_z_near(camera.get_projection_z_near());
+                                        depth_buffer
+                                            .set_projection_z_far(camera.get_projection_z_far());
+                                    }
+                                    None => (),
+                                }
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Camera from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Camera` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::DirectionalLight => Ok(()),
+                SceneNodeType::PointLight => match handle {
+                    Some(handle) => {
+                        let mut point_light_arena = point_light_arena_rc.borrow_mut();
+
+                        match point_light_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let point_light = &mut entry.item;
+
+                                static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+                                static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
+
+                                point_light.intensities = Vec3 {
+                                    x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                        + 0.5,
+                                    y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                        + 0.5,
+                                    z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                        + 0.5,
+                                } * MAX_POINT_LIGHT_INTENSITY;
+
+                                let orbital_radius: f32 = 3.0;
+
+                                point_light.position = Vec3 {
+                                    x: orbital_radius * uptime.sin(),
+                                    y: 3.0,
+                                    z: orbital_radius * uptime.cos(),
+                                };
+
+                                context.set_point_light(0, point_light.clone());
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `PointLight` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::SpotLight => Ok(()),
+            }
+        };
+
+        scenegraph.root.visit_mut(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut update_scene_graph_node,
+        )?;
+
+        let mut pipeline = pipeline_rc.borrow_mut();
+
+        pipeline
+            .options
+            .update(keyboard_state, mouse_state, game_controller_state);
+
+        pipeline
+            .geometry_shader_options
+            .update(keyboard_state, mouse_state, game_controller_state);
 
         Ok(())
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our spinning cube scene
+        let mut pipeline = pipeline_rc.borrow_mut();
 
-        let mut scene_mut = scene.borrow_mut();
+        pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
-        scene_mut.render();
+        // Begin frame
+
+        pipeline.begin_frame();
+
+        // Render entities.
+
+        let scenegraph = scenegraph_rc.borrow_mut();
+
+        let mut render_scene_graph_node =
+            |_current_depth: usize, node: &SceneNode| -> Result<(), String> {
+                let (node_type, handle) = (node.get_type(), node.get_handle());
+
+                match node_type {
+                    SceneNodeType::Empty => Ok(()),
+                    SceneNodeType::Entity => match handle {
+                        Some(handle) => {
+                            let mut entity_arena = entity_arena_rc.borrow_mut();
+
+                            match entity_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let entity = &mut entry.item;
+
+                                    pipeline.render_entity(entity, Some(&material_cache));
+
+                                    Ok(())
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get Entity from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
+                        }
+                        None => {
+                            panic!("Encountered a `Entity` node with no resource handle!")
+                        }
+                    },
+                    SceneNodeType::Camera => Ok(()),
+                    SceneNodeType::DirectionalLight => Ok(()),
+                    SceneNodeType::PointLight => match handle {
+                        Some(handle) => {
+                            let mut point_light_arena = point_light_arena_rc.borrow_mut();
+
+                            match point_light_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let point_light = &mut entry.item;
+
+                                    pipeline.render_point_light(point_light, None, None);
+
+                                    Ok(())
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
+                        }
+                        None => {
+                            panic!("Encountered a `PointLight` node with no resource handle!")
+                        }
+                    },
+                    SceneNodeType::SpotLight => match handle {
+                        Some(handle) => {
+                            let mut spot_light_arena = spot_light_arena_rc.borrow_mut();
+
+                            match spot_light_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let spot_light = &mut entry.item;
+
+                                    pipeline.render_spot_light(spot_light, None, None);
+
+                                    Ok(())
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
+                        }
+                        None => {
+                            panic!("Encountered a `PointLight` node with no resource handle!")
+                        }
+                    },
+                }
+            };
+
+        // Traverse the scene graph and render its nodes.
+
+        scenegraph.root.visit(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut render_scene_graph_node,
+        )?;
+
+        // End frame
+
+        pipeline.end_frame();
+
+        // Write out.
 
         let framebuffer = framebuffer_rc.borrow();
 
@@ -172,9 +584,9 @@ fn main() -> Result<(), String> {
                     // &outline_effect,
                     // &invert_effect,
                     // &grayscale_effect,
-                    // &sharpen_effect,
-                    // &blur_effect,
-                    &edge_detection_effect,
+                    // &sharpen_kernel_effect,
+                    // &blur_kernel_effect,
+                    &edge_detection_kernel_effect,
                 ];
 
                 for effect in effects {

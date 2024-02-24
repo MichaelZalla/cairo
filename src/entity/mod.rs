@@ -1,3 +1,5 @@
+use crate::transform::Transform3D;
+
 use super::{
     mesh::{primitive, Mesh},
     physics::collision::aabb::AABB,
@@ -56,10 +58,9 @@ fn make_object_space_bounding_box(mesh: &Mesh) -> AABB {
     result
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Entity<'a> {
-    pub position: Vec3,
-    pub rotation: Vec3,
+    pub transform: Transform3D,
     pub mesh: &'a Mesh,
     pub bounds: AABB,
     pub bounds_mesh: Mesh,
@@ -71,8 +72,7 @@ impl<'a> Entity<'a> {
         let bounds_mesh = Entity::make_object_space_bounding_box_mesh(&bounds);
 
         Entity {
-            position: Vec3::new(),
-            rotation: Vec3::new(),
+            transform: Default::default(),
             mesh,
             bounds,
             bounds_mesh,
