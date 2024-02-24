@@ -1,5 +1,7 @@
 use std::{cell::RefMut, collections::hash_map::Entry};
 
+use sdl2::mouse::MouseButton;
+
 use crate::{
     buffer::Buffer2D,
     color,
@@ -114,6 +116,19 @@ pub fn do_dropdown(
             let is_open = ctx.is_focus_target_open();
 
             ctx.set_focus_target_open(!is_open);
+        }
+    } else {
+        match mouse_state.button_event {
+            Some(event) => match event.button {
+                MouseButton::Left => match event.kind {
+                    MouseEventKind::Up => {
+                        ctx.set_focus_target_open(false);
+                    }
+                    _ => (),
+                },
+                _ => (),
+            },
+            None => (),
         }
     }
 
