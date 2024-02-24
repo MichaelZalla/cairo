@@ -30,7 +30,7 @@ impl Display for UIID {
 #[derive(Debug)]
 pub struct UIContext<'a> {
     pub font_cache: &'a mut RefCell<FontCache<'a>>,
-    pub font_info: &'a FontInfo,
+    pub font_info: FontInfo,
     pub text_cache: &'a mut RefCell<TextCache<'a>>,
     hover_target: Option<UIID>,
     focus_target: Option<UIID>,
@@ -41,12 +41,12 @@ pub struct UIContext<'a> {
 impl<'a> UIContext<'a> {
     pub fn new(
         font_cache: &'a mut RefCell<FontCache<'a>>,
-        font_info: &'a FontInfo,
+        font_info: &FontInfo,
         text_cache: &'a mut RefCell<TextCache<'a>>,
     ) -> Self {
         Self {
             font_cache,
-            font_info,
+            font_info: font_info.clone(),
             text_cache,
             hover_target: None,
             focus_target: None,

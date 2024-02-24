@@ -53,7 +53,12 @@ pub fn do_text(
 
     match options.cache {
         true => {
-            cache_text(ctx.font_cache, ctx.text_cache, ctx.font_info, &options.text);
+            cache_text(
+                ctx.font_cache,
+                ctx.text_cache,
+                &ctx.font_info,
+                &options.text,
+            );
 
             let text_cache_key = TextCacheKey {
                 font_info: ctx.font_info.clone(),
@@ -85,7 +90,7 @@ pub fn do_text(
         false => {
             let mut font_cache = ctx.font_cache.borrow_mut();
 
-            let font = font_cache.load(ctx.font_info).unwrap();
+            let font = font_cache.load(&ctx.font_info).unwrap();
 
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_mask(font.as_ref(), &options.text).unwrap();

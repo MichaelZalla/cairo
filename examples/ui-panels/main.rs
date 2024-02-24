@@ -64,15 +64,17 @@ fn main() -> Result<(), String> {
 
     let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
 
+    let default_font_info = FontInfo {
+        filepath: args[1].to_string(),
+        point_size: 16,
+    };
+
     let ui_context: &'static RefCell<UIContext> =
         Box::leak(Box::new(RefCell::new(UIContext::new(
             Box::leak(Box::new(RefCell::new(FontCache::new(
                 app.context.ttf_context,
             )))),
-            Box::leak(Box::new(FontInfo {
-                filepath: args[1].to_string(),
-                point_size: 16,
-            })),
+            &default_font_info,
             Box::leak(Box::new(RefCell::new(_text_cache))),
         ))));
 

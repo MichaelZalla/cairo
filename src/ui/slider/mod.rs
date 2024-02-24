@@ -49,7 +49,7 @@ pub fn do_slider(
     cache_text(
         ctx.font_cache,
         ctx.text_cache,
-        ctx.font_info,
+        &ctx.font_info,
         &options.label,
     );
 
@@ -308,7 +308,7 @@ fn draw_slider(
 
                 let mut font_cache = ctx.font_cache.borrow_mut();
 
-                let font = font_cache.load(ctx.font_info).unwrap();
+                let font = font_cache.load(&ctx.font_info).unwrap();
 
                 let (_label_width, _label_height, model_value_texture) =
                     Graphics::make_text_mask(font.as_ref(), &text_formatted).unwrap();

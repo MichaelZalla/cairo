@@ -45,7 +45,7 @@ pub fn do_checkbox(
     cache_text(
         ctx.font_cache,
         ctx.text_cache,
-        ctx.font_info,
+        &ctx.font_info,
         &options.label,
     );
 
