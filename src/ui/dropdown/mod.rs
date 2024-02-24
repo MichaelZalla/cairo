@@ -306,6 +306,18 @@ fn draw_dropdown(
 
         let max_width = DROPDOWN_WIDTH - DROPDOWN_LABEL_PADDING;
 
+        if is_open && *item == current_item {
+            Graphics::rectangle(
+                parent_buffer,
+                x - DROPDOWN_ITEM_HORIZONTAL_PADDING / 2 + 1,
+                y + 1,
+                max_width + DROPDOWN_ITEM_HORIZONTAL_PADDING / 2 * 2 - 2,
+                model_value_texture.height,
+                Some(color::BLUE),
+                None,
+            );
+        }
+
         Graphics::blit_text_from_mask(
             &model_value_texture,
             &TextOperation {
