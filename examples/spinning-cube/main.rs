@@ -14,11 +14,11 @@ use cairo::{
     resource::arena::Arena,
     scene::{
         camera::Camera,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
-        scenegraph::{
+        graph::{
             SceneGraph, SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod,
             SceneNodeType,
         },
+        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
     },
     shader::context::ShaderContext,
     shaders::{
