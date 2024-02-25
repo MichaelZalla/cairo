@@ -630,13 +630,13 @@ fn main() -> Result<(), String> {
                                 let orbital_radius: f32 = 3.0;
 
                                 point_light.position = (Vec4::new(Default::default(), 1.0)
-                                    * current_world_transform
                                     * Mat4::translation(Vec3 {
                                         x: orbital_radius * uptime.sin(),
                                         y: 3.0,
                                         z: orbital_radius * uptime.cos(),
-                                    }))
-                                .to_vec3();
+                                    })
+                                    * current_world_transform)
+                                    .to_vec3();
 
                                 context.get_point_lights_mut().push(*point_light);
 
