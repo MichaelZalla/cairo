@@ -1,452 +1,277 @@
-use std::{
-    borrow::BorrowMut,
-    cell::{RefCell, RefMut},
-};
+use std::cell::RefMut;
+
+use sdl2::mouse::MouseButton;
+use uuid::Uuid;
 
 use crate::{
-    app::App,
     buffer::Buffer2D,
-    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
+    device::{KeyboardState, MouseEventKind, MouseState},
     graphics::Graphics,
-    ui::{
-        button::{do_button, ButtonOptions},
-        layout::{item::ItemLayoutOptions, UILayoutContext, UILayoutDirection, UILayoutExtent},
-    },
 };
 
 use super::{
-    context::UIContext,
+    button::{do_button, ButtonOptions},
+    context::{UIContext, UIID},
     layout::UILayoutOptions,
+    layout::{item::ItemLayoutOptions, UILayoutContext, UILayoutDirection, UILayoutExtent},
     text::{do_text, TextOptions},
 };
 
-pub static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
+#[derive(Debug)]
+pub struct PanelOptions {
+    pub layout_options: ItemLayoutOptions,
+    pub title: String,
+    pub resizable: bool,
+}
+
+impl Default for PanelOptions {
+    fn default() -> Self {
+        Self {
+            layout_options: Default::default(),
+            title: "Panel".to_string(),
+            resizable: false,
+        }
+    }
+}
 
 #[derive(Default, Debug)]
-pub struct PanelInfo {
-    pub id: u32,
-    pub title: String,
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
+pub struct DoPanelResult {
+    pub should_close: bool,
+    pub requested_resize: (i32, i32),
 }
 
-pub struct Panel<'a, R>
+pub fn do_panel<C>(
+    ctx: &mut RefMut<'_, UIContext>,
+    panel_uuid: &Uuid,
+    parent: u32,
+    layout: &mut UILayoutContext,
+    parent_buffer: &mut RefMut<'_, Buffer2D>,
+    options: &PanelOptions,
+    mouse_state: &MouseState,
+    keyboard_state: &KeyboardState,
+    draw_children: &mut C,
+) -> DoPanelResult
 where
-    R: FnMut(
-        &PanelInfo,
+    C: FnMut(
+        &mut RefMut<'_, UIContext>,
+        &mut UILayoutContext,
+        &Uuid,
+        &UIID,
         &mut Buffer2D,
-        &mut App,
-        &KeyboardState,
         &MouseState,
-    ) -> Result<(), String>,
-{
-    pub info: PanelInfo,
-    pub buffer: Buffer2D,
-    render_rc: Option<&'a RefCell<R>>,
-    left: Option<Box<Panel<'a, R>>>,
-    right: Option<Box<Panel<'a, R>>>,
-    alpha: f32,
-    is_resizing: bool,
-}
-
-impl<'a, R> Panel<'a, R>
-where
-    R: FnMut(
-        &PanelInfo,
-        &mut Buffer2D,
-        &mut App,
         &KeyboardState,
-        &MouseState,
-    ) -> Result<(), String>,
+    ),
 {
-    pub fn new(info: PanelInfo, render_rc: Option<&'a RefCell<R>>) -> Self {
-        let buffer = Buffer2D::new(info.width, info.height, None);
+    let panel_id: UIID = UIID {
+        parent,
+        item: ctx.next_id(),
+    };
 
-        return Panel {
-            info,
-            buffer,
-            render_rc,
-            left: None,
-            right: None,
-            alpha: 1.0,
-            is_resizing: false,
-        };
-    }
-
-    pub fn is_root(&self) -> bool {
-        self.info.id == 0
-    }
-
-    pub fn update(
-        &mut self,
-        app: &mut App,
-        keyboard_state: &KeyboardState,
-        mouse_state: &MouseState,
-        game_controller_state: &GameControllerState,
-    ) -> Result<(), String> {
-        let (x, y) = mouse_state.position;
-
+    if options.resizable {
         match mouse_state.button_event {
-            Some(event) => match event.kind {
-                MouseEventKind::Up => {
-                    // Any mouse-up event would end our resizing, even if
-                    // the event occurs outside of this panel's boundaries.
+            Some(event) => match event.button {
+                MouseButton::Left => match event.kind {
+                    MouseEventKind::Down => {
+                        let mouse_x = mouse_state.position.0;
 
-                    self.is_resizing = false;
-                }
+                        if mouse_x > layout.extent.right as i32 - 4
+                            && mouse_x < layout.extent.right as i32 + 4
+                        {
+                            ctx.set_focus_target(Some(panel_id));
+                        }
+                    }
+                    MouseEventKind::Up => {
+                        if ctx.is_focused(&panel_id) {
+                            ctx.set_focus_target(None)
+                        }
+                    }
+                },
                 _ => (),
             },
             None => (),
         }
-
-        if x < self.info.x as i32
-            || x >= (self.info.x + self.info.width) as i32
-            || y < self.info.y as i32
-            || y >= (self.info.y + self.info.height) as i32
-        {
-            // Mouse is not inside this panel.
-
-            return Ok(());
-        }
-
-        match self.left.as_mut() {
-            Some(left) => {
-                left.update(app, keyboard_state, mouse_state, game_controller_state)?;
-            }
-            None => (),
-        }
-
-        match self.right.as_mut() {
-            Some(right) => {
-                right.update(app, keyboard_state, mouse_state, game_controller_state)?;
-            }
-            None => (),
-        }
-
-        static PANEL_DIVIDER_MOUSE_PADDING: u32 = 8;
-
-        match self.left.borrow_mut() {
-            Some(left) => {
-                // Check if the mouse is within a region that bounds the panels' divider.
-
-                let panel_divider_x = self.info.x + left.info.width;
-
-                if mouse_state.position.0 > (panel_divider_x - PANEL_DIVIDER_MOUSE_PADDING) as i32
-                    && mouse_state.position.0
-                        < (panel_divider_x + PANEL_DIVIDER_MOUSE_PADDING) as i32
-                {
-                    // Set the system cursor to a horizontal-sizing style.
-
-                    let cursor =
-                        sdl2::mouse::Cursor::from_system(sdl2::mouse::SystemCursor::SizeWE)?;
-
-                    cursor.set();
-
-                    // Check for a "start resize" or "end resize" event (i.e.,
-                    // start mouse drag or end mouse drag).
-
-                    match mouse_state.button_event {
-                        Some(event) => match event.kind {
-                            MouseEventKind::Down => {
-                                self.is_resizing = true;
-                            }
-                            _ => (),
-                        },
-                        None => (),
-                    }
-                }
-
-                if self.is_resizing {
-                    self.handle_drag_resize(mouse_state);
-                }
-            }
-            None => (),
-        }
-
-        Ok(())
     }
 
-    pub fn render(
-        &mut self,
-        app: &mut App,
-        keyboard_state: &KeyboardState,
-        mouse_state: &MouseState,
-        ui_context: &'a RefCell<UIContext>,
-    ) -> Result<(), String> {
-        match self.left.borrow_mut() {
-            Some(left) => {
-                // Split panel scenario
+    let mut requested_resize: (i32, i32) = Default::default();
 
-                // 1. Render left panel to left panel pixel buffer
-                let left_mouse_state = MouseState {
-                    position: (
-                        mouse_state.position.0 - left.info.x as i32,
-                        mouse_state.position.1 - left.info.y as i32,
-                    ),
-                    buttons_down: mouse_state.buttons_down.clone(),
-                    ..*mouse_state
-                };
+    let is_resizing = ctx.is_focused(&panel_id);
 
-                left.render(app, keyboard_state, &left_mouse_state, ui_context)?;
-
-                // 2. Render right panel to right panel pixel buffer
-                let right = self.right.as_mut().unwrap();
-
-                let right_mouse_state = MouseState {
-                    position: (
-                        mouse_state.position.0 - right.info.x as i32,
-                        mouse_state.position.1 - right.info.y as i32,
-                    ),
-                    buttons_down: mouse_state.buttons_down.clone(),
-                    ..*mouse_state
-                };
-
-                right.render(app, keyboard_state, &right_mouse_state, ui_context)?;
-
-                // 3. Blit left and right panel pixel buffers onto parent pixel buffer
-                self.buffer.blit_from(
-                    left.info.x - self.info.x,
-                    left.info.y - self.info.y,
-                    &left.buffer,
-                );
-
-                self.buffer.blit_from(
-                    right.info.x - self.info.x,
-                    right.info.y - self.info.y,
-                    &right.buffer,
-                );
-            }
-            _ => {
-                // Merged panel scenario
-
-                self.buffer.clear(None);
-
-                {
-                    let mut ctx = ui_context.borrow_mut();
-
-                    // Renders a filled frame sized to the panel's boundaries.
-                    self.draw_panel_frame(&ctx);
-
-                    // Renders a default title-bar for this panel.
-                    self.draw_panel_title_bar(mouse_state, &mut ctx)?;
-                }
-
-                // Runs the custom render callback, if any.
-                match self.render_rc {
-                    Some(lock) => {
-                        let mut callback = lock.borrow_mut();
-
-                        (*callback)(
-                            &self.info,
-                            &mut self.buffer,
-                            app,
-                            keyboard_state,
-                            mouse_state,
-                        )?;
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        return Ok(());
+    if is_resizing {
+        requested_resize.0 = mouse_state.relative_motion.0;
+        requested_resize.1 = mouse_state.relative_motion.1;
     }
 
-    pub fn split(&mut self) -> Result<(), String> {
-        match self.left {
-            Some(_) => {
-                return Err("Called Panel::split() on an already-split panel!".to_string());
-            }
-            _ => {}
-        }
+    let should_close = draw_panel(
+        ctx,
+        layout,
+        &panel_uuid,
+        &panel_id,
+        options,
+        parent_buffer,
+        mouse_state,
+        keyboard_state,
+        draw_children,
+    );
 
-        self.alpha = 0.5;
+    DoPanelResult {
+        should_close,
+        requested_resize,
+    }
+}
 
-        // Generate 2 new sub-panels
+pub static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
 
-        // let padding = 8.0;
+fn draw_panel<C>(
+    ctx: &mut RefMut<'_, UIContext>,
+    layout: &mut UILayoutContext,
+    panel_uuid: &Uuid,
+    panel_id: &UIID,
+    options: &PanelOptions,
+    parent_buffer: &mut Buffer2D,
+    mouse_state: &MouseState,
+    keyboard_state: &KeyboardState,
+    draw_children: &mut C,
+) -> bool
+where
+    C: FnMut(
+        &mut RefMut<'_, UIContext>,
+        &mut UILayoutContext,
+        &Uuid,
+        &UIID,
+        &mut Buffer2D,
+        &MouseState,
+        &KeyboardState,
+    ),
+{
+    draw_panel_frame(ctx, layout, parent_buffer);
 
-        let render_left = self.render_rc.take();
+    let should_close =
+        draw_panel_title_bar(ctx, layout, panel_id, options, parent_buffer, mouse_state);
 
-        let left_id = self.info.id * 2 + 1;
-        let right_id = left_id + 1;
+    let mut panel_contents_layout = UILayoutContext::new(
+        UILayoutDirection::TopToBottom,
+        UILayoutExtent {
+            left: layout.extent.left,
+            right: layout.extent.right,
+            top: layout.extent.top + PANEL_TITLE_BAR_HEIGHT - 1,
+            bottom: layout.extent.bottom,
+        },
+        UILayoutOptions { padding: 5, gap: 8 },
+    );
 
-        self.left = Some(Box::new(Panel::new(
-            PanelInfo {
-                title: format!("Panel {}", left_id).to_string(),
-                id: left_id,
-                x: self.info.x, /* + padding as u32*/
-                y: self.info.y, /* + padding as u32*/
-                width: (self.info.width as f32 * self.alpha) as u32, /* - (1.5 * padding) as u32*/
-                height: self.info.height, /* - 2 * padding as u32*/
-            },
-            render_left,
-        )));
+    draw_children(
+        ctx,
+        &mut panel_contents_layout,
+        panel_uuid,
+        panel_id,
+        parent_buffer,
+        mouse_state,
+        keyboard_state,
+    );
 
-        self.right = Some(Box::new(Panel::new(
-            PanelInfo {
-                title: format!("Panel {}", right_id).to_string(),
-                id: right_id,
-                x: self.info.x + (self.info.width as f32 * self.alpha) as u32, /* + (0.5 * padding) as u32*/
-                y: self.info.y, /* + padding as u32 */
-                width: (self.info.width as f32 * (1.0 - self.alpha)) as u32, /* - (1.5 * padding) as u32*/
-                height: self.info.height, /* - 2 * padding as u32 */
-            },
-            render_left.clone(),
-        )));
+    should_close
+}
 
-        Ok(())
+fn draw_panel_frame(
+    ctx: &mut RefMut<'_, UIContext>,
+    layout: &UILayoutContext,
+    parent_buffer: &mut Buffer2D,
+) {
+    let theme = ctx.get_theme();
+
+    let x: u32 = layout.extent.left;
+    let y = layout.extent.top;
+    let width = layout.width();
+    let height = layout.height();
+
+    Graphics::rectangle(
+        parent_buffer,
+        x,
+        y,
+        width,
+        height,
+        Some(theme.panel_background),
+        Some(theme.panel_border),
+    )
+}
+
+fn draw_panel_title_bar(
+    ctx: &mut RefMut<'_, UIContext>,
+    layout: &mut UILayoutContext,
+    id: &UIID,
+    options: &PanelOptions,
+    parent_buffer: &mut Buffer2D,
+    mouse_state: &MouseState,
+) -> bool {
+    let theme = ctx.get_theme();
+
+    let mut panel_titlebar_layout = UILayoutContext::new(
+        UILayoutDirection::LeftToRight,
+        UILayoutExtent {
+            left: layout.extent.left,
+            right: layout.extent.right,
+            top: layout.extent.top,
+            bottom: layout.extent.top + PANEL_TITLE_BAR_HEIGHT,
+        },
+        UILayoutOptions { padding: 5, gap: 8 },
+    );
+
+    Graphics::rectangle(
+        parent_buffer,
+        layout.extent.left + 1,
+        layout.extent.top + 1,
+        layout.width() - 2,
+        PANEL_TITLE_BAR_HEIGHT - 2,
+        Some(theme.panel_titlebar_background),
+        None,
+    );
+
+    let panel_titlebar_title_text_options = TextOptions {
+        layout_options: ItemLayoutOptions {
+            ..Default::default()
+        },
+        text: options.title.clone(),
+        cache: true,
+        color: theme.text,
+    };
+
+    // Render the panel's title in its title bar.
+
+    do_text(
+        ctx,
+        id.item,
+        &mut panel_titlebar_layout,
+        parent_buffer,
+        &panel_titlebar_title_text_options,
+    );
+
+    let mut should_close = false;
+
+    static CLOSE_BUTTON_SIZE: u32 = 14;
+
+    let panel_titlebar_close_button_options = ButtonOptions {
+        layout_options: ItemLayoutOptions {
+            x_offset: (panel_titlebar_layout.width()
+                - (panel_titlebar_layout.get_cursor().x - panel_titlebar_layout.extent.left)
+                - 40),
+            ..Default::default()
+        },
+        label: "Close".to_string(),
+        ..Default::default()
+    };
+
+    if do_button(
+        ctx,
+        id.item,
+        &mut panel_titlebar_layout,
+        parent_buffer,
+        mouse_state,
+        &panel_titlebar_close_button_options,
+    )
+    .was_released
+    {
+        should_close = true;
     }
 
-    pub fn merge(&mut self) -> Result<(), String> {
-        match self.left {
-            None => {
-                return Err("Called Panel::merge() on an unsplit panel!".to_string());
-            }
-            _ => {}
-        }
-
-        let render = self.left.as_mut().unwrap().render_rc.take();
-
-        self.left = None;
-        self.right = None;
-
-        self.render_rc = render;
-
-        self.buffer.clear(None);
-
-        Ok(())
-    }
-
-    fn handle_drag_resize(&mut self, mouse_state: &MouseState) {
-        let left = self.left.as_mut().unwrap();
-        let right = self.right.as_mut().unwrap();
-
-        static MINIMUM_PANEL_WIDTH: u32 = 138;
-
-        let relative_motion_x = mouse_state.relative_motion.0;
-
-        // Update left child's width (and resize its buffer).
-
-        left.info.width = (left.info.width as i32 + relative_motion_x)
-            .max(MINIMUM_PANEL_WIDTH as i32)
-            .min(self.info.width as i32 - MINIMUM_PANEL_WIDTH as i32)
-            as u32;
-
-        left.buffer.resize(left.info.width, left.info.height);
-
-        // Update right child's x and width (and resize its buffer).
-
-        right.info.x = (right.info.x as i32 + relative_motion_x)
-            .max(MINIMUM_PANEL_WIDTH as i32)
-            .min(self.info.width as i32 - MINIMUM_PANEL_WIDTH as i32) as u32;
-
-        right.info.width = (right.info.width as i32 - relative_motion_x)
-            .max(MINIMUM_PANEL_WIDTH as i32)
-            .min(self.info.width as i32 - MINIMUM_PANEL_WIDTH as i32)
-            as u32;
-
-        right.buffer.resize(right.info.width, right.info.height);
-
-        // Update our parent's split alpha.
-
-        self.alpha = left.info.width as f32 / self.info.width as f32;
-    }
-
-    fn draw_panel_frame(&mut self, ctx: &RefMut<'_, UIContext>) {
-        let theme = ctx.get_theme();
-
-        let x: u32 = 0;
-        let y = 0;
-        let width = self.info.width - 1;
-        let height = self.info.height - 1;
-
-        Graphics::rectangle(
-            &mut self.buffer,
-            x,
-            y,
-            width,
-            height,
-            Some(theme.panel_background),
-            Some(theme.panel_border),
-        )
-    }
-
-    fn draw_panel_title_bar(
-        &mut self,
-        mouse_state: &MouseState,
-        ctx: &mut RefMut<'_, UIContext>,
-    ) -> Result<(), String> {
-        let theme = ctx.get_theme();
-
-        Graphics::rectangle(
-            &mut self.buffer,
-            0,
-            0,
-            self.info.width,
-            PANEL_TITLE_BAR_HEIGHT,
-            Some(theme.panel_titlebar_background),
-            None,
-        );
-
-        let mut panel_titlebar_layout = UILayoutContext::new(
-            UILayoutDirection::LeftToRight,
-            UILayoutExtent {
-                left: 0,
-                right: self.info.width,
-                top: 0,
-                bottom: self.info.height,
-            },
-            UILayoutOptions { padding: 8, gap: 8 },
-        );
-
-        let panel_titlebar_title_text_options = TextOptions {
-            layout_options: ItemLayoutOptions {
-                ..Default::default()
-            },
-            text: format!("Panel {}", self.info.id),
-            cache: true,
-            color: theme.text,
-        };
-
-        // Render the panel's title in its bar title.
-
-        do_text(
-            ctx,
-            self.info.id,
-            &mut panel_titlebar_layout,
-            &mut self.buffer,
-            &panel_titlebar_title_text_options,
-        );
-
-        if !self.is_root() {
-            static CLOSE_BUTTON_SIZE: u32 = 14;
-
-            let panel_titlebar_close_button_options = ButtonOptions {
-                layout_options: ItemLayoutOptions {
-                    x_offset: panel_titlebar_layout.width() - 100,
-                    ..Default::default()
-                },
-                label: "Close".to_string(),
-                ..Default::default()
-            };
-
-            if do_button(
-                ctx,
-                self.info.id,
-                &mut panel_titlebar_layout,
-                &mut self.buffer,
-                mouse_state,
-                &panel_titlebar_close_button_options,
-            )
-            .was_released
-            {
-                println!("Closing panel {}...", self.info.id);
-            }
-        }
-
-        Ok(())
-    }
+    should_close
 }
