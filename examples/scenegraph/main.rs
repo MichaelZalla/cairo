@@ -171,7 +171,9 @@ fn main() -> Result<(), String> {
         z: 2.0,
     });
 
-    spot_light.intensities = Vec3::ones() * 0.15;
+    spot_light
+        .look_vector
+        .set_target_position(Default::default());
 
     // Bind initial state to our shader context.
 
