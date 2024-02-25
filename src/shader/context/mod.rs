@@ -17,8 +17,8 @@ pub struct ShaderContext {
     pub active_material: Option<*const Material>,
     pub active_uv_test_texture_map: Option<*const TextureMap>,
     pub active_environment_map: Option<*const CubeMap>,
-    pub ambient_light: AmbientLight,
-    pub directional_light: DirectionalLight,
+    pub ambient_light: Option<AmbientLight>,
+    pub directional_light: Option<DirectionalLight>,
     pub point_lights: Vec<PointLight>,
     pub spot_lights: Vec<SpotLight>,
 }
@@ -50,8 +50,8 @@ impl ShaderContext {
         view_position: Vec4,
         view_inverse_transform: Mat4,
         projection_transform: Mat4,
-        ambient_light: AmbientLight,
-        directional_light: DirectionalLight,
+        ambient_light: Option<AmbientLight>,
+        directional_light: Option<DirectionalLight>,
         point_lights: Vec<PointLight>,
         spot_lights: Vec<SpotLight>,
     ) -> Self {
@@ -131,11 +131,11 @@ impl ShaderContext {
         ndc_space_position.to_vec3()
     }
 
-    pub fn set_ambient_light(&mut self, light: AmbientLight) {
+    pub fn set_ambient_light(&mut self, light: Option<AmbientLight>) {
         self.ambient_light = light;
     }
 
-    pub fn set_directional_light(&mut self, light: DirectionalLight) {
+    pub fn set_directional_light(&mut self, light: Option<DirectionalLight>) {
         self.directional_light = light;
     }
 

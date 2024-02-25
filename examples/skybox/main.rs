@@ -188,8 +188,8 @@ fn main() -> Result<(), String> {
     {
         let mut context = shader_context_rc.borrow_mut();
 
-        context.set_ambient_light(ambient_light);
-        context.set_directional_light(directional_light);
+        context.set_ambient_light(Some(ambient_light));
+        context.set_directional_light(Some(directional_light));
     }
 
     // Pipeline

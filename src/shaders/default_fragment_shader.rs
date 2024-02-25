@@ -10,11 +10,17 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
     |context: &ShaderContext, sample: &GeometrySample| -> Color {
         // Calculate ambient light contribution
 
-        let ambient_contribution = context.ambient_light.contribute(sample.ambient_factor);
+        let ambient_light_contribution = match context.ambient_light {
+            Some(light) => light.contribute(sample.ambient_factor),
+            None => Default::default(),
+        };
 
         // Calculate directional light contribution
 
-        let directional_light_contribution = context.directional_light.contribute(sample.normal);
+        let directional_light_contribution = match context.directional_light {
+            Some(light) => light.contribute(sample.normal),
+            None => Default::default(),
+        };
 
         // Calculate point light contributions (including specular)
 
@@ -38,7 +44,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // Combine light intensities
 
-        let total_contribution = ambient_contribution
+        let total_contribution = ambient_light_contribution
             + directional_light_contribution
             + point_light_contribution
             + spot_light_contribution

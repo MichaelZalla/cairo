@@ -186,8 +186,8 @@ fn main() -> Result<(), String> {
     {
         let mut context = shader_context_rc.borrow_mut();
 
-        context.set_ambient_light(ambient_light);
-        context.set_directional_light(directional_light);
+        context.set_ambient_light(Some(ambient_light));
+        context.set_directional_light(Some(directional_light));
     }
 
     // Fragment shaders
@@ -409,7 +409,7 @@ fn main() -> Result<(), String> {
                                 )
                                 .as_normal();
 
-                                context.set_directional_light(*light);
+                                context.set_directional_light(Some(*light));
 
                                 Ok(())
                             }
