@@ -337,6 +337,7 @@ fn main() -> Result<(), String> {
             match node_type {
                 SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Environment => Ok(()),
+                SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();
@@ -603,6 +604,7 @@ fn main() -> Result<(), String> {
             match node_type {
                 SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Environment => Ok(()),
+                SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();

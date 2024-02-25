@@ -2,13 +2,14 @@ use std::{collections::VecDeque, fmt::Display};
 
 use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub enum SceneNodeType {
     #[default]
     Scene,
     Environment,
     AmbientLight,
     DirectionalLight,
+    Skybox,
     Camera,
     PointLight,
     SpotLight,
@@ -111,52 +112,32 @@ impl<'a> SceneNode<'a> {
                     return Err("Attempted to add an Environment node as a child to a node that is not a Scene node!".to_string());
                 }
             }
-
-            SceneNodeType::AmbientLight => {
-                // AmbientLight node may only be a child of an Environment node.
+            SceneNodeType::AmbientLight
+            | SceneNodeType::DirectionalLight
+            | SceneNodeType::Skybox => {
+                // Node may only be a child of an Environment node.
                 if !self.is_type(SceneNodeType::Environment) {
-                    return Err("Attempted to add an AmbientLight node as a child to a node that is not an Environment node!".to_string());
+                    return Err(format!("Attempted to add a {} node as a child to a node that is not an Environment node!", node.node_type).to_string());
                 }
 
-                // Only one AmbientLight node may exist per scene (environment) at a time.
+                // Only one node of this type may exist per scene (environment) at a time.
                 match self.children() {
                     Some(children) => {
-                        if children
-                            .iter()
-                            .any(|child| child.is_type(SceneNodeType::AmbientLight))
-                        {
-                            return Err(
-                                "Cannot add multiple AmbientLight nodes to an Environment node!"
-                                    .to_string(),
-                            );
+                        if children.iter().any(|child| child.is_type(node.node_type)) {
+                            return Err(format!(
+                                "Cannot add multiple {} nodes to an Environment node!",
+                                node.node_type
+                            )
+                            .to_string());
                         }
                     }
                     None => (),
                 }
             }
-            SceneNodeType::DirectionalLight => {
-                // DirectionalLight node may only be a child of an Environment node.
-                if !self.is_type(SceneNodeType::Environment) {
-                    return Err("Attempted to add an DirectionalLight node as a child to a node that is not an Environment node!".to_string());
-                }
-
-                // Only one DirectionalLight node may exist per scene (environment) at a time.
-                match self.children() {
-                    Some(children) => {
-                        if children
-                            .iter()
-                            .any(|child| child.is_type(SceneNodeType::DirectionalLight))
-                        {
-                            return Err(
-                                "Cannot add multiple DirectionalLight nodes to an Environment node!"
-                                    .to_string(),
-                            );
-                        }
-                    }
-                    None => (),
-                }
-            }
-            _ => (),
+            SceneNodeType::Camera => (),
+            SceneNodeType::PointLight => (),
+            SceneNodeType::SpotLight => (),
+            SceneNodeType::Entity => (),
         }
 
         match self.children.as_mut() {

@@ -14,7 +14,7 @@ use cairo::{
     matrix::Mat4,
     mesh,
     pipeline::Pipeline,
-    resource::arena::Arena,
+    resource::{arena::Arena, handle::Handle},
     scene::{
         camera::Camera,
         environment::Environment,
@@ -29,7 +29,10 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::map::{TextureMap, TextureMapStorageFormat},
+    texture::{
+        cubemap::CubeMap,
+        map::{TextureMap, TextureMapStorageFormat},
+    },
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -117,13 +120,14 @@ fn main() -> Result<(), String> {
 
     // Set up resource arenas for the various node types in our scene.
 
-    let mut environment_arena: Arena<_> = Arena::<Environment>::new();
-    let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
-    let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
-    let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
-    let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
-    let mut spot_light_arena: Arena<SpotLight> = Arena::<SpotLight>::new();
-    let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
+    let mut environment_arena = Arena::<Environment>::new();
+    let mut ambient_light_arena = Arena::<AmbientLight>::new();
+    let mut directional_light_arena = Arena::<DirectionalLight>::new();
+    let mut skybox_arena = Arena::<CubeMap>::new();
+    let mut camera_arena = Arena::<Camera>::new();
+    let mut point_light_arena = Arena::<PointLight>::new();
+    let mut spot_light_arena = Arena::<SpotLight>::new();
+    let mut entity_arena = Arena::<Entity>::new();
 
     // Assign the meshes to entities
 
@@ -170,6 +174,24 @@ fn main() -> Result<(), String> {
         },
     };
 
+    // Set up a skybox.
+
+    let mut skybox = CubeMap::new(
+        [
+            "examples/skybox/assets/sides/front.jpg",
+            "examples/skybox/assets/sides/back.jpg",
+            "examples/skybox/assets/sides/top.jpg",
+            "examples/skybox/assets/sides/bottom.jpg",
+            "examples/skybox/assets/sides/left.jpg",
+            "examples/skybox/assets/sides/right.jpg",
+        ],
+        TextureMapStorageFormat::RGB24,
+    );
+
+    skybox.load(rendering_context).unwrap();
+
+    // Set up spatial lights in our scene.
+
     let point_light = PointLight::new();
 
     let mut spot_light = SpotLight::new();
@@ -197,6 +219,7 @@ fn main() -> Result<(), String> {
     let ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
     let directional_light_handle =
         directional_light_arena.insert(Uuid::new_v4(), directional_light);
+    let skybox_handle = skybox_arena.insert(Uuid::new_v4(), skybox);
 
     let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
 
@@ -212,6 +235,7 @@ fn main() -> Result<(), String> {
 
     let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
     let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let skybox_arena_rc = RefCell::new(skybox_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
     let point_light_arena_rc = RefCell::new(point_light_arena);
     let spot_light_arena_rc = RefCell::new(spot_light_arena);
@@ -243,6 +267,15 @@ fn main() -> Result<(), String> {
         Some(directional_light_handle),
         None,
     ))?;
+
+    let skybox_node = SceneNode::new(
+        SceneNodeType::Skybox,
+        Default::default(),
+        Some(skybox_handle),
+        None,
+    );
+
+    environment_node.add_child(skybox_node)?;
 
     scenegraph.root.add_child(environment_node)?;
 
@@ -416,6 +449,7 @@ fn main() -> Result<(), String> {
             match node_type {
                 SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Environment => Ok(()),
+                SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::AmbientLight => {
                     match handle {
                         Some(handle) => match ambient_light_arena_rc.borrow_mut().get_mut(handle) {
@@ -689,6 +723,9 @@ fn main() -> Result<(), String> {
 
         let scenegraph = scenegraph_rc.borrow_mut();
 
+        let mut skybox_handle: Option<Handle> = None;
+        let mut skybox_active_camera_handle: Option<Handle> = None;
+
         let mut render_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
                                            node: &SceneNode|
@@ -700,6 +737,17 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Environment => Ok(()),
                 SceneNodeType::AmbientLight => Ok(()),
                 SceneNodeType::DirectionalLight => Ok(()),
+                SceneNodeType::Skybox => {
+                    match handle {
+                        Some(handle) => {
+                            skybox_handle = Some(handle.clone());
+                        }
+                        None => {
+                            panic!("Encountered a `Skybox` node with no resource handle!")
+                        }
+                    }
+                    Ok(())
+                }
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();
@@ -727,8 +775,14 @@ fn main() -> Result<(), String> {
                     }
                 },
                 SceneNodeType::Camera => {
-                    // @TODO Migrate camera position to node transform.
-
+                    match handle {
+                        Some(handle) => {
+                            skybox_active_camera_handle = Some(handle.clone());
+                        }
+                        None => {
+                            panic!("Encountered a `Camera` node with no resource handle!")
+                        }
+                    }
                     Ok(())
                 }
                 SceneNodeType::PointLight => match handle {
@@ -789,6 +843,47 @@ fn main() -> Result<(), String> {
             Some(SceneNodeLocalTraversalMethod::PostOrder),
             &mut render_scene_graph_node,
         )?;
+
+        // Skybox pass
+
+        match skybox_handle {
+            Some(handle) => {
+                let skybox_arena = skybox_arena_rc.borrow();
+
+                match skybox_arena.get(&handle) {
+                    Ok(entry) => {
+                        let skybox_cube_map = &entry.item;
+
+                        match skybox_active_camera_handle {
+                            Some(handle) => {
+                                let camera_arena = camera_arena_rc.borrow();
+
+                                match camera_arena.get(&handle) {
+                                    Ok(entry) => {
+                                        let skybox_active_camera = &entry.item;
+
+                                        pipeline
+                                            .render_skybox(skybox_cube_map, skybox_active_camera);
+                                    }
+                                    Err(err) => {
+                                        panic!(
+                                            "Failed to get Camera from Arena with Handle {:?}: {}",
+                                            handle, err
+                                        )
+                                    }
+                                }
+                            }
+                            None => (),
+                        }
+                    }
+                    Err(err) => panic!(
+                        "Failed to get Entity from Arena with Handle {:?}: {}",
+                        handle, err
+                    ),
+                }
+            }
+            None => (),
+        }
 
         // End frame
 
