@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::color::blend::{self, BlendMode};
+use crate::color::blend::{self, blend, BlendMode};
 
 pub mod framebuffer;
 
@@ -97,6 +97,17 @@ where
     }
 
     pub fn set(&mut self, x: u32, y: u32, value: T) {
+        self.set_blended(x, y, value, BlendMode::Normal, None)
+    }
+
+    pub fn set_blended(
+        &mut self,
+        x: u32,
+        y: u32,
+        value: T,
+        blend_mode: BlendMode,
+        blend_mode_max_value: Option<T>,
+    ) {
         debug_assert!(x < self.width && y < self.height);
 
         if x > (self.width - 1) || y > (self.height - 1) {
@@ -105,13 +116,30 @@ where
             return;
         }
 
-        self.data[(y * self.width + x) as usize] = value;
+        let index = (y * self.width + x) as usize;
+        let lhs = self.data[index];
+        let rhs = value;
+
+        self.data[index] = blend(&blend_mode, blend_mode_max_value, &lhs, &rhs);
     }
 
     pub fn set_raw(&mut self, index: usize, value: T) {
+        self.set_raw_blended(index, value, BlendMode::Normal, None)
+    }
+
+    pub fn set_raw_blended(
+        &mut self,
+        index: usize,
+        value: T,
+        blend_mode: BlendMode,
+        blend_mode_max_value: Option<T>,
+    ) {
         debug_assert!(index < self.data.len());
 
-        self.data[index] = value;
+        let lhs = self.data[index];
+        let rhs = value;
+
+        self.data[index] = blend(&blend_mode, blend_mode_max_value, &lhs, &rhs);
     }
 
     pub fn iter(&self) -> std::slice::Iter<'_, T> {
