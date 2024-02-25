@@ -77,7 +77,7 @@ impl<'a> Pipeline<'a> {
 
         let viewport: PipelineViewport = Default::default();
 
-        return Pipeline {
+        Pipeline {
             framebuffer,
             viewport,
             g_buffer: None,
@@ -89,7 +89,7 @@ impl<'a> Pipeline<'a> {
             geometry_shader_options,
             fragment_shader,
             options,
-        };
+        }
     }
 
     pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
