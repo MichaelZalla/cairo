@@ -314,9 +314,15 @@ fn main() -> Result<(), String> {
 
         let mut context = shader_context_rc.borrow_mut();
 
+        context.get_point_lights_mut().clear();
+        context.get_spot_lights_mut().clear();
+
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
+
+        let mut point_lights_visited: usize = 0;
+        let mut spot_lights_visited: usize = 0;
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            _current_world_transform: Mat4,
@@ -432,7 +438,9 @@ fn main() -> Result<(), String> {
                                         z: 0.0,
                                     };
 
-                                context.set_point_light(0, *light);
+                                context.get_point_lights_mut().push(point_light.clone());
+
+                                point_lights_visited += 1;
 
                                 Ok(())
                             }
@@ -463,7 +471,9 @@ fn main() -> Result<(), String> {
                                         },
                                 );
 
-                                context.set_spot_light(0, *light);
+                                context.get_spot_lights_mut().push(spot_light.clone());
+
+                                spot_lights_visited += 1;
 
                                 Ok(())
                             }
@@ -684,7 +694,30 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `PointLight` node with no resource handle!")
                     }
                 },
-                SceneNodeType::SpotLight => Ok(()),
+                SceneNodeType::SpotLight => match handle {
+                    Some(handle) => {
+                        let spot_light_arena = spot_light_arena_rc.borrow_mut();
+
+                        match spot_light_arena.get(handle) {
+                            Ok(entry) => {
+                                let spot_light = &entry.item;
+
+                                // @TODO Migrate light position to node transform.
+
+                                pipeline.render_spot_light(spot_light, None, None);
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `PointLight` node with no resource handle!")
+                    }
+                },
             }
         };
 

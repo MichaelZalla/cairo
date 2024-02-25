@@ -29,7 +29,10 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     texture::map::{TextureMap, TextureMapStorageFormat},
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 fn main() -> Result<(), String> {
@@ -165,17 +168,11 @@ fn main() -> Result<(), String> {
 
     let mut spot_light = SpotLight::new();
 
-    spot_light.look_vector.set_position(Vec3 {
-        x: 2.0,
-        y: 10.0,
-        z: 2.0,
-    });
-
     spot_light
         .look_vector
         .set_target_position(Default::default());
 
-    // Bind initial state to our shader context.
+    // Bind initial lighting state to our shader context.
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
@@ -184,7 +181,6 @@ fn main() -> Result<(), String> {
 
         context.set_ambient_light(ambient_light);
         context.set_directional_light(directional_light);
-        context.set_spot_light(0, spot_light);
     }
 
     // Pipeline
@@ -284,6 +280,21 @@ fn main() -> Result<(), String> {
 
     green_cube_entity_node.add_child(blue_cube_entity_node);
 
+    let mut spot_light_node = SceneNode::new(
+        SceneNodeType::SpotLight,
+        Default::default(),
+        Some(spot_light_handle),
+        None,
+    );
+
+    spot_light_node.get_transform_mut().set_translation(Vec3 {
+        x: 0.0,
+        y: 10.0,
+        z: 0.0,
+    });
+
+    green_cube_entity_node.add_child(spot_light_node);
+
     // Red cube (3x3)
 
     let mut red_cube_entity_node = SceneNode::new(
@@ -321,6 +332,17 @@ fn main() -> Result<(), String> {
 
     plane_entity_node.add_child(red_cube_entity_node);
 
+    // Add light nodes as children of the plane node.
+
+    let point_light_node = SceneNode::new(
+        SceneNodeType::PointLight,
+        Default::default(),
+        Some(point_light_handle),
+        None,
+    );
+
+    plane_entity_node.add_child(point_light_node);
+
     scenegraph.root.add_child(plane_entity_node);
 
     // Add camera and light nodes to our scene graph's root.
@@ -338,20 +360,6 @@ fn main() -> Result<(), String> {
 
     scenegraph.root.add_child(camera_node);
 
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::PointLight,
-        Default::default(),
-        Some(point_light_handle),
-        None,
-    ));
-
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::SpotLight,
-        Default::default(),
-        Some(spot_light_handle),
-        None,
-    ));
-
     // Prints the scenegraph to stdout.
 
     println!("{}", scenegraph);
@@ -367,14 +375,20 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let mut context = shader_context_rc.borrow_mut();
 
+        context.get_point_lights_mut().clear();
+        context.get_spot_lights_mut().clear();
+
         let uptime = app.timing_info.uptime_seconds;
 
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
 
+        let mut point_lights_visited: usize = 0;
+        let mut spot_lights_visited: usize = 0;
+
         let mut update_scene_graph_node = |_current_depth: usize,
-                                           _current_world_transform: Mat4,
+                                           current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
@@ -525,13 +539,18 @@ fn main() -> Result<(), String> {
 
                                 let orbital_radius: f32 = 3.0;
 
-                                point_light.position = Vec3 {
-                                    x: orbital_radius * uptime.sin(),
-                                    y: 3.0,
-                                    z: orbital_radius * uptime.cos(),
-                                };
+                                point_light.position = (Vec4::new(Default::default(), 1.0)
+                                    * current_world_transform
+                                    * Mat4::translation(Vec3 {
+                                        x: orbital_radius * uptime.sin(),
+                                        y: 3.0,
+                                        z: orbital_radius * uptime.cos(),
+                                    }))
+                                .to_vec3();
 
-                                context.set_point_light(0, point_light.clone());
+                                context.get_point_lights_mut().push(point_light.clone());
+
+                                point_lights_visited += 1;
 
                                 Ok(())
                             }
@@ -545,7 +564,40 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `PointLight` node with no resource handle!")
                     }
                 },
-                SceneNodeType::SpotLight => Ok(()),
+                SceneNodeType::SpotLight => match handle {
+                    Some(handle) => {
+                        let mut spot_light_arena = spot_light_arena_rc.borrow_mut();
+
+                        match spot_light_arena.get_mut(handle) {
+                            Ok(entry) => {
+                                let spot_light = &mut entry.item;
+
+                                spot_light.look_vector.set_position(
+                                    (Vec4::new(Default::default(), 1.0) * current_world_transform)
+                                        .to_vec3(),
+                                );
+
+                                spot_light.look_vector.set_target_position(
+                                    (Vec4::new(vec3::UP * -1.0, 1.0) * current_world_transform)
+                                        .to_vec3(),
+                                );
+
+                                context.get_spot_lights_mut().push(spot_light.clone());
+
+                                spot_lights_visited += 1;
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `SpotLight` node with no resource handle!")
+                    }
+                },
             }
         };
 

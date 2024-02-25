@@ -220,9 +220,15 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let mut context = shader_context_rc.borrow_mut();
 
+        context.get_point_lights_mut().clear();
+        context.get_spot_lights_mut().clear();
+
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
+
+        let mut point_lights_visited: usize = 0;
+        let mut spot_lights_visited: usize = 0;
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            _current_world_transform: Mat4,
@@ -345,7 +351,9 @@ fn main() -> Result<(), String> {
                             Ok(entry) => {
                                 let light = &entry.item;
 
-                                context.set_point_light(0, *light);
+                                context.get_point_lights_mut().push(light.clone());
+
+                                point_lights_visited += 1;
 
                                 Ok(())
                             }
@@ -367,7 +375,9 @@ fn main() -> Result<(), String> {
                             Ok(entry) => {
                                 let light = &entry.item;
 
-                                context.set_spot_light(0, *light);
+                                context.get_spot_lights_mut().push(light.clone());
+
+                                spot_lights_visited += 1;
 
                                 Ok(())
                             }

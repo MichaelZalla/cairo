@@ -532,14 +532,17 @@ fn main() -> Result<(), String> {
 
         let mut context = shader_context_rc.borrow_mut();
 
+        context.get_point_lights_mut().clear();
+        context.get_spot_lights_mut().clear();
+
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
 
         static COLOR_CHANNEL_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
 
-        let mut point_light_index: usize = 0;
-        // let mut spot_light_index: usize = 0;
+        let mut point_lights_visited: usize = 0;
+        let mut spot_lights_visited: usize = 0;
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            _current_world_transform: Mat4,
@@ -676,7 +679,7 @@ fn main() -> Result<(), String> {
                                 static MAX_POINT_LIGHT_INTENSITY: f32 = 25.0;
 
                                 let light_phase_shift = (2.0 * PI / (point_lights_count as f32))
-                                    * point_light_index as f32;
+                                    * point_lights_visited as f32;
 
                                 light.intensities = Vec3 {
                                     x: (uptime
@@ -699,7 +702,7 @@ fn main() -> Result<(), String> {
                                         + 0.5,
                                 } * MAX_POINT_LIGHT_INTENSITY;
 
-                                let offset = point_light_index % 2 == 0;
+                                let offset = point_lights_visited % 2 == 0;
 
                                 light.position = Vec3 {
                                     x: ORBIT_RADIUS
@@ -711,9 +714,9 @@ fn main() -> Result<(), String> {
                                         * if offset { 1.5 } else { 1.0 },
                                 };
 
-                                context.set_point_light(point_light_index, *light);
+                                context.get_point_lights_mut().push(light.clone());
 
-                                point_light_index += 1;
+                                point_lights_visited += 1;
 
                                 Ok(())
                             }
@@ -743,7 +746,9 @@ fn main() -> Result<(), String> {
                                     z: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 2.0).cos() / 2.0 + 0.5,
                                 } * MAX_SPOT_LIGHT_INTENSITY;
 
-                                context.set_spot_light(0, *light);
+                                context.get_spot_lights_mut().push(light.clone());
+
+                                spot_lights_visited += 1;
 
                                 Ok(())
                             }

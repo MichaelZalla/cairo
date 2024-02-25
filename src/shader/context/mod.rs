@@ -139,24 +139,20 @@ impl ShaderContext {
         self.directional_light = light;
     }
 
-    pub fn set_point_light(&mut self, index: usize, light: PointLight) {
-        if index > self.point_lights.len() {
-            panic!("Called ShaderContext.set_point_light() with an index greater than point_lights.len()!");
-        } else if index == self.point_lights.len() {
-            self.point_lights.push(light);
-        } else {
-            self.point_lights[index] = light;
-        }
+    pub fn get_point_lights(&self) -> &Vec<PointLight> {
+        &self.point_lights
     }
 
-    pub fn set_spot_light(&mut self, index: usize, light: SpotLight) {
-        if index > self.point_lights.len() {
-            panic!("Called ShaderContext.set_spot_light() with an index greater than spot_lights.len()!");
-        } else if index == self.spot_lights.len() {
-            self.spot_lights.push(light);
-        } else {
-            self.spot_lights[index] = light;
-        }
+    pub fn get_point_lights_mut(&mut self) -> &mut Vec<PointLight> {
+        &mut self.point_lights
+    }
+
+    pub fn get_spot_lights(&self) -> &Vec<SpotLight> {
+        &self.spot_lights
+    }
+
+    pub fn get_spot_lights_mut(&mut self) -> &mut Vec<SpotLight> {
+        &mut self.spot_lights
     }
 
     pub fn set_active_material(&mut self, material_option: Option<*const Material>) {
