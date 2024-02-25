@@ -3,7 +3,7 @@ use std::cell::RefMut;
 use crate::{buffer::Buffer2D, color::Color, graphics::Graphics};
 
 use super::{
-    context::{UIContext, UIID},
+    context::UIContext,
     layout::{UILayoutContext, UILayoutDirection},
     theme::DEFAULT_UI_THEME,
 };
@@ -28,7 +28,7 @@ pub struct DoSeparatorResult {}
 
 pub fn do_separator(
     _ctx: &mut RefMut<'_, UIContext>,
-    _id: &UIID,
+    _parent: u32,
     layout: &mut UILayoutContext,
     options: &SeparatorOptions,
     parent_buffer: &mut Buffer2D,

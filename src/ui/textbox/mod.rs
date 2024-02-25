@@ -42,7 +42,7 @@ pub struct DoTextboxResult {
 
 pub fn do_textbox(
     ctx: &mut RefMut<'_, UIContext>,
-    id: &UIID,
+    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     uptime_seconds: f32,
@@ -51,6 +51,11 @@ pub fn do_textbox(
     options: &TextboxOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoTextboxResult {
+    let id = UIID {
+        parent,
+        item: ctx.next_id(),
+    };
+
     cache_text(
         ctx.font_cache,
         ctx.text_cache,
@@ -86,7 +91,7 @@ pub fn do_textbox(
 
     let (_is_down, _was_released) = get_mouse_result(
         ctx,
-        id,
+        &id,
         layout,
         mouse_state,
         layout_offset_x,
@@ -101,7 +106,7 @@ pub fn do_textbox(
 
     match ctx.get_focus_target() {
         Some(target_id) => {
-            if target_id == *id {
+            if target_id == id {
                 for code in &keyboard_state.keys_pressed {
                     match code {
                         Keycode::Backspace | Keycode::Delete { .. } => {
@@ -156,7 +161,7 @@ pub fn do_textbox(
 
     draw_textbox(
         ctx,
-        id,
+        &id,
         layout,
         layout_offset_x,
         layout_offset_y,

@@ -39,13 +39,18 @@ pub struct DoNumberSliderResult {
 
 pub fn do_slider(
     ctx: &mut RefMut<'_, UIContext>,
-    id: &UIID,
+    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &NumberSliderOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoNumberSliderResult {
+    let id = UIID {
+        parent,
+        item: ctx.next_id(),
+    };
+
     cache_text(
         ctx.font_cache,
         ctx.text_cache,
@@ -81,7 +86,7 @@ pub fn do_slider(
 
     let (_is_down, _was_released) = get_mouse_result(
         ctx,
-        id,
+        &id,
         layout,
         mouse_state,
         layout_offset_x,
@@ -94,7 +99,7 @@ pub fn do_slider(
 
     let mut did_edit = false;
 
-    if ctx.is_focused(id) {
+    if ctx.is_focused(&id) {
         match mouse_state.buttons_down.get(&MouseButton::Left) {
             Some(_) => {
                 match &mut model_entry {
@@ -200,7 +205,7 @@ pub fn do_slider(
 
     draw_slider(
         ctx,
-        id,
+        &id,
         layout,
         layout_offset_x,
         layout_offset_y,

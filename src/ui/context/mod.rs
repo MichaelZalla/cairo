@@ -14,16 +14,11 @@ use super::theme::{UITheme, DEFAULT_UI_THEME};
 pub struct UIID {
     pub parent: u32,
     pub item: u32,
-    pub index: u32,
 }
 
 impl Display for UIID {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "UIID {{ parent: {}, item: {}, index: {} }}",
-            self.parent, self.item, self.index
-        )
+        write!(f, "UIID {{ parent: {}, item: {} }}", self.parent, self.item)
     }
 }
 
@@ -36,6 +31,7 @@ pub struct UIContext<'a> {
     focus_target: Option<UIID>,
     is_focus_target_open: bool,
     theme: Option<&'a UITheme>,
+    next_id: u32,
 }
 
 impl<'a> UIContext<'a> {
@@ -52,6 +48,7 @@ impl<'a> UIContext<'a> {
             focus_target: None,
             is_focus_target_open: false,
             theme: Some(&DEFAULT_UI_THEME),
+            next_id: 0,
         }
     }
 
@@ -60,6 +57,18 @@ impl<'a> UIContext<'a> {
             Some(theme) => &theme,
             None => &DEFAULT_UI_THEME,
         }
+    }
+
+    pub fn next_id(&mut self) -> u32 {
+        let id = self.next_id;
+
+        self.next_id += 1;
+
+        id
+    }
+
+    pub fn reset_id_counter(&mut self, value: u32) {
+        self.next_id = value;
     }
 
     pub fn get_hover_target(&self) -> Option<UIID> {

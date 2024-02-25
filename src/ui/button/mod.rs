@@ -36,12 +36,17 @@ pub struct DoButtonResult {
 
 pub fn do_button(
     ctx: &mut RefMut<'_, UIContext>,
-    id: &UIID,
+    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &ButtonOptions,
 ) -> DoButtonResult {
+    let id = UIID {
+        parent,
+        item: ctx.next_id(),
+    };
+
     cache_text(
         ctx.font_cache,
         ctx.text_cache,
@@ -87,7 +92,7 @@ pub fn do_button(
 
     let (is_down, was_released) = get_mouse_result(
         ctx,
-        id,
+        &id,
         layout,
         mouse_state,
         layout_offset_x,
@@ -107,7 +112,7 @@ pub fn do_button(
 
     draw_button(
         ctx,
-        id,
+        &id,
         layout,
         layout_offset_x,
         layout_offset_y,

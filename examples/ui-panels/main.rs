@@ -15,7 +15,7 @@ use cairo::{
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
-        context::{UIContext, UIID},
+        context::UIContext,
         dropdown::{do_dropdown, DropdownOptions},
         image::{do_image, ImageOptions},
         layout::{
@@ -129,15 +129,9 @@ fn main() -> Result<(), String> {
                 ..Default::default()
             };
 
-            let button_1_id = UIID {
-                parent: panel_info.id,
-                item: 1,
-                index: 0,
-            };
-
             if do_button(
                 &mut ctx,
-                &button_1_id,
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -145,20 +139,14 @@ fn main() -> Result<(), String> {
             )
             .was_released
             {
-                println!("You clicked a Button ({}).", button_1_id);
+                println!("You clicked a Button.");
             }
 
             // Draw a borderless button.
 
-            let button_2_id = UIID {
-                parent: panel_info.id,
-                item: 2,
-                index: 0,
-            };
-
             if do_button(
                 &mut ctx,
-                &button_2_id,
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -170,7 +158,7 @@ fn main() -> Result<(), String> {
             )
             .was_released
             {
-                println!("You clicked a Button ({}).", button_2_id);
+                println!("You clicked a Button.");
             }
 
             // Draw a checkbox.
@@ -188,15 +176,9 @@ fn main() -> Result<(), String> {
 
             let checkbox_model_entry = checkboxes_model.entry(checkbox_model_key.clone());
 
-            let checkbox_id = UIID {
-                parent: panel_info.id,
-                item: 3,
-                index: 0,
-            };
-
             if do_checkbox(
                 &mut ctx,
-                &checkbox_id,
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -210,8 +192,7 @@ fn main() -> Result<(), String> {
                     .or_default();
 
                 println!(
-                    "The Checkbox ({}) is now {}!",
-                    checkbox_id,
+                    "The Checkbox is now {}!",
                     if *is_checked { "checked" } else { "unchecked" }
                 );
             }
@@ -220,11 +201,7 @@ fn main() -> Result<(), String> {
 
             do_separator(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 4,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 &SeparatorOptions {
                     ..Default::default()
@@ -242,11 +219,7 @@ fn main() -> Result<(), String> {
 
             do_text(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 5,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 &text_options,
@@ -254,11 +227,7 @@ fn main() -> Result<(), String> {
 
             do_text(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 6,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 &TextOptions {
@@ -278,11 +247,7 @@ fn main() -> Result<(), String> {
 
             do_text(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 7,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 &TextOptions {
@@ -301,11 +266,7 @@ fn main() -> Result<(), String> {
 
             do_separator(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 8,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 &SeparatorOptions {
                     ..Default::default()
@@ -317,11 +278,7 @@ fn main() -> Result<(), String> {
 
             do_image(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 9,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 &mut wojak_texture,
                 &ImageOptions {
@@ -336,11 +293,7 @@ fn main() -> Result<(), String> {
 
             do_separator(
                 &mut ctx,
-                &UIID {
-                    parent: panel_info.id,
-                    item: 10,
-                    index: 0,
-                },
+                panel_info.id,
                 &mut layout,
                 &SeparatorOptions {
                     ..Default::default()
@@ -364,15 +317,9 @@ fn main() -> Result<(), String> {
 
             let textbox_model_entry = textboxes_model.entry(textbox_model_key.clone());
 
-            let textbox_id = UIID {
-                parent: panel_info.id,
-                item: 11,
-                index: 0,
-            };
-
             if do_textbox(
                 &mut ctx,
-                &textbox_id,
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 app.timing_info.uptime_seconds,
@@ -383,7 +330,7 @@ fn main() -> Result<(), String> {
             )
             .did_edit
             {
-                println!("You edited a Textbox ({})!", textbox_id);
+                println!("You edited a Textbox!");
             }
 
             // Draw a number slider.
@@ -401,15 +348,9 @@ fn main() -> Result<(), String> {
 
             let slider_model_entry = textboxes_model.entry(slider_model_key.clone());
 
-            let slider_id = UIID {
-                parent: panel_info.id,
-                item: 12,
-                index: 0,
-            };
-
             if do_slider(
                 &mut ctx,
-                &slider_id,
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -418,7 +359,7 @@ fn main() -> Result<(), String> {
             )
             .did_edit
             {
-                println!("You edited a NumberSlider ({})!", slider_id);
+                println!("You edited a NumberSlider!");
             }
 
             // Draw a dropdown menu.
@@ -443,15 +384,9 @@ fn main() -> Result<(), String> {
 
             let dropdown_model_entry = textboxes_model.entry(dropdown_model_key.clone());
 
-            let dropdown_id = UIID {
-                parent: panel_info.id,
-                item: 13,
-                index: 0,
-            };
-
             if do_dropdown(
                 &mut ctx,
-                &dropdown_id,
+                panel_info.id,
                 &mut layout,
                 panel_buffer,
                 mouse_state,
@@ -460,7 +395,7 @@ fn main() -> Result<(), String> {
             )
             .did_edit
             {
-                println!("You edited a Dropdown ({})!", slider_id);
+                println!("You edited a Dropdown!");
             }
 
             Ok(())

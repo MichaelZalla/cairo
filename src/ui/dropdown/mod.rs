@@ -41,13 +41,18 @@ pub struct DoDropdownResult {
 
 pub fn do_dropdown(
     ctx: &mut RefMut<'_, UIContext>,
-    id: &UIID,
+    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &DropdownOptions,
     mut model_entry: Entry<'_, String, String>,
 ) -> DoDropdownResult {
+    let id = UIID {
+        parent,
+        item: ctx.next_id(),
+    };
+
     cache_text(
         ctx.font_cache,
         ctx.text_cache,
@@ -74,7 +79,7 @@ pub fn do_dropdown(
 
     // Check whether a mouse event occurred inside this dropdown.
 
-    let is_open = ctx.is_focused(id) && ctx.is_focus_target_open();
+    let is_open = ctx.is_focused(&id) && ctx.is_focus_target_open();
 
     let (layout_offset_x, layout_offset_y) = options
         .layout_options
@@ -100,7 +105,7 @@ pub fn do_dropdown(
 
     let (_is_down, was_released) = get_mouse_result(
         ctx,
-        id,
+        &id,
         layout,
         mouse_state,
         layout_offset_x,
@@ -110,7 +115,7 @@ pub fn do_dropdown(
     );
 
     if was_released {
-        if ctx.is_focused(id) {
+        if ctx.is_focused(&id) {
             // Toggle the open vs. closed state of our menu.
 
             let is_open = ctx.is_focus_target_open();
@@ -206,7 +211,7 @@ pub fn do_dropdown(
 
     draw_dropdown(
         ctx,
-        id,
+        &id,
         layout,
         layout_offset_x,
         layout_offset_y,

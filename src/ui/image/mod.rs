@@ -24,12 +24,17 @@ pub struct DoImageResult {}
 
 pub fn do_image<'a>(
     ctx: &mut RefMut<'_, UIContext>,
-    id: &UIID,
+    parent: u32,
     layout: &mut UILayoutContext,
     map: &'a mut TextureMap,
     options: &ImageOptions,
     parent_buffer: &mut Buffer2D,
 ) -> DoImageResult {
+    let id = UIID {
+        parent,
+        item: ctx.next_id(),
+    };
+
     if !map.is_mipmapped {
         map.enable_mipmapping().unwrap();
     }
@@ -38,7 +43,7 @@ pub fn do_image<'a>(
 
     layout.prepare_cursor(options.width, options.height);
 
-    draw_image(ctx, id, layout, map, options, parent_buffer, &result);
+    draw_image(ctx, &id, layout, map, options, parent_buffer, &result);
 
     layout.advance_cursor(options.width, options.height);
 

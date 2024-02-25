@@ -10,7 +10,6 @@ use crate::{
     graphics::Graphics,
     ui::{
         button::{do_button, ButtonOptions},
-        context::UIID,
         layout::{item::ItemLayoutOptions, UILayoutContext, UILayoutDirection, UILayoutExtent},
     },
 };
@@ -416,11 +415,7 @@ where
 
         do_text(
             ctx,
-            &UIID {
-                parent: self.info.id,
-                item: 0,
-                index: 0,
-            },
+            self.info.id,
             &mut panel_titlebar_layout,
             &mut self.buffer,
             &panel_titlebar_title_text_options,
@@ -440,11 +435,7 @@ where
 
             if do_button(
                 ctx,
-                &UIID {
-                    parent: self.info.id,
-                    item: 1,
-                    index: 0,
-                },
+                self.info.id,
                 &mut panel_titlebar_layout,
                 &mut self.buffer,
                 mouse_state,
