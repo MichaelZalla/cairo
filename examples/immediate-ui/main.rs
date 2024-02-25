@@ -40,7 +40,7 @@ fn main() -> Result<(), String> {
     let resolution = (1920, 1080);
 
     let mut window_info = AppWindowInfo {
-        title: "examples/ui-panels".to_string(),
+        title: "examples/immediate-ui".to_string(),
         window_width: resolution.0,
         window_height: resolution.1,
         canvas_width: resolution.0,
@@ -59,7 +59,7 @@ fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        println!("Usage: cargo run --example ui-panels /path/to/your-font.fon");
+        println!("Usage: cargo run --example immediate-ui /path/to/your-font.fon");
 
         return Ok(());
     }
@@ -155,7 +155,7 @@ fn main() -> Result<(), String> {
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
     let mut wojak_texture = TextureMap::new(
-        "./examples/ui-panels/assets/wojak.png",
+        "./examples/immediate-ui/assets/wojak.png",
         TextureMapStorageFormat::Index8,
     );
 
