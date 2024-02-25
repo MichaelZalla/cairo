@@ -172,16 +172,9 @@ fn main() -> Result<(), String> {
         ..spot_light.look_vector.get_position()
     });
 
-    // Bind initial state to our shader context.
+    // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
-
-    {
-        let mut context = shader_context_rc.borrow_mut();
-
-        context.set_ambient_light(Some(ambient_light));
-        context.set_directional_light(Some(directional_light));
-    }
 
     // Pipeline
 
@@ -205,16 +198,16 @@ fn main() -> Result<(), String> {
     let plane_entity_handle = entity_arena.insert(Uuid::new_v4(), plane_entity);
     let cube_entity_handle = entity_arena.insert(Uuid::new_v4(), cube_entity);
     let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
-    let _ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
-    let _directional_light_handle =
+    let ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
+    let directional_light_handle =
         directional_light_arena.insert(Uuid::new_v4(), directional_light);
     let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
     let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
 
     let entity_arena_rc = RefCell::new(entity_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
-    // let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
-    // let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
+    let directional_light_arena_rc = RefCell::new(directional_light_arena);
     let point_light_arena_rc = RefCell::new(point_light_arena);
     let spot_light_arena_rc = RefCell::new(spot_light_arena);
 
@@ -256,6 +249,24 @@ fn main() -> Result<(), String> {
         None,
     ));
 
+    let ambient_light_node = SceneNode::new(
+        SceneNodeType::AmbientLight,
+        Default::default(),
+        Some(ambient_light_handle),
+        None,
+    );
+
+    scenegraph.root.add_child(ambient_light_node);
+
+    let directional_light_node = SceneNode::new(
+        SceneNodeType::DirectionalLight,
+        Default::default(),
+        Some(directional_light_handle),
+        None,
+    );
+
+    scenegraph.root.add_child(directional_light_node);
+
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::PointLight,
         Default::default(),
@@ -285,6 +296,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let mut context = shader_context_rc.borrow_mut();
 
+        context.set_ambient_light(None);
+        context.set_directional_light(None);
         context.get_point_lights_mut().clear();
         context.get_spot_lights_mut().clear();
 
@@ -409,7 +422,47 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `Camera` node with no resource handle!")
                     }
                 },
-                SceneNodeType::DirectionalLight => Ok(()),
+                SceneNodeType::AmbientLight => {
+                    match handle {
+                        Some(handle) => match ambient_light_arena_rc.borrow_mut().get_mut(handle) {
+                            Ok(entry) => {
+                                let light = &mut entry.item;
+
+                                context.set_ambient_light(Some(*light))
+                            }
+                            Err(err) => panic!(
+                                "Failed to get AmbientLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        },
+                        None => {
+                            panic!("Encountered a `AmbientLight` node with no resource handle!")
+                        }
+                    }
+                    Ok(())
+                }
+                SceneNodeType::DirectionalLight => match handle {
+                    Some(handle) => {
+                        let arena = directional_light_arena_rc.borrow();
+
+                        match arena.get(handle) {
+                            Ok(entry) => {
+                                let light = &entry.item;
+
+                                context.set_directional_light(Some(*light));
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `DirectionalLight` node with no resource handle!")
+                    }
+                },
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {
                         let mut point_light_arena = point_light_arena_rc.borrow_mut();
@@ -558,6 +611,7 @@ fn main() -> Result<(), String> {
                     }
                 },
                 SceneNodeType::Camera => Ok(()),
+                SceneNodeType::AmbientLight => Ok(()),
                 SceneNodeType::DirectionalLight => Ok(()),
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {

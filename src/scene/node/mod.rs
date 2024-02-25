@@ -6,6 +6,7 @@ use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
 pub enum SceneNodeType {
     #[default]
     Scene,
+    AmbientLight,
     DirectionalLight,
     Camera,
     PointLight,
