@@ -33,6 +33,10 @@ pub fn do_separator(
     options: &SeparatorOptions,
     parent_buffer: &mut Buffer2D,
 ) -> DoSeparatorResult {
+    if layout.get_current_row_height() == 0 {
+        return DoSeparatorResult {};
+    }
+
     let item_width = match layout.direction {
         UILayoutDirection::LeftToRight => 1 + SEPARATOR_MARGIN * 2,
         UILayoutDirection::TopToBottom => layout.width(),
