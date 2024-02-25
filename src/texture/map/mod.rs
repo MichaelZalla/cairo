@@ -3,8 +3,8 @@ use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
+use crate::app::context::ApplicationRenderingContext;
 use crate::buffer::Buffer2D;
-use crate::context::ApplicationRenderingContext;
 
 use crate::debug_print;
 

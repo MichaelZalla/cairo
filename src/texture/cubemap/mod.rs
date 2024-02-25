@@ -1,9 +1,9 @@
 use std::fmt;
 
 use crate::{
+    app::context::ApplicationRenderingContext,
     buffer::Buffer2D,
     color::{self, Color},
-    context::ApplicationRenderingContext,
     texture::sample::sample_nearest,
     vec::{vec2::Vec2, vec4::Vec4},
 };

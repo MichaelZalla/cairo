@@ -7,9 +7,7 @@ use sdl2::{
     Sdl,
 };
 
-use crate::app::AppWindowInfo;
-
-use super::device::GameController;
+use crate::{app::AppWindowInfo, device::GameController};
 
 const GAME_CONTROLLER_COUNT: usize = 4;
 
@@ -26,7 +24,7 @@ pub struct ApplicationRenderingContext {
     pub canvas: RefCell<Canvas<Window>>,
 }
 
-pub fn get_application_context(window_info: &AppWindowInfo) -> Result<ApplicationContext, String> {
+pub fn make_application_context(window_info: &AppWindowInfo) -> Result<ApplicationContext, String> {
     let sdl_context = sdl2::init()?;
 
     sdl_context.mouse().show_cursor(window_info.show_cursor);

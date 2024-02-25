@@ -6,13 +6,16 @@ use sdl2::mouse::MouseButton;
 use sdl2::{event::Event, render::Texture};
 
 use crate::{
-    context::{get_application_context, make_backbuffer, ApplicationContext},
     debug_print,
     device::{
         GameController, GameControllerState, KeyboardState, MouseEvent, MouseEventKind, MouseState,
     },
     time::TimingInfo,
 };
+
+use self::context::{make_application_context, make_backbuffer, ApplicationContext};
+
+pub mod context;
 
 static DEFAULT_WINDOW_WIDTH: u32 = 960;
 static DEFAULT_WINDOW_HEIGHT: u32 = 540;
@@ -55,7 +58,7 @@ pub struct App {
 
 impl App {
     pub fn new(window_info: &mut AppWindowInfo) -> Self {
-        let context = get_application_context(&window_info).unwrap();
+        let context = make_application_context(&window_info).unwrap();
 
         let timing_info: TimingInfo = Default::default();
 

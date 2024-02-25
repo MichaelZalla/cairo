@@ -7,7 +7,6 @@ pub mod animation;
 pub mod app;
 pub mod buffer;
 pub mod color;
-pub mod context;
 pub mod debug;
 pub mod device;
 pub mod effect;
