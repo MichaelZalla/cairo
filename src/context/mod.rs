@@ -112,8 +112,8 @@ pub fn get_application_context(window_info: &AppWindowInfo) -> Result<Applicatio
         window_info.window_height,
     );
 
-    // window_builder.opengl()
-    // window_builder.position_centered()
+    // window_builder.opengl();
+    // window_builder.position_centered();
     // window_builder.borderless();
 
     if window_info.full_screen {
