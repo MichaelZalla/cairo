@@ -86,7 +86,7 @@ impl UILayoutContext {
                     (self.extent.left + self.width()) as i32 - self.get_cursor().x as i32;
 
                 if item_width as i32 > remaining_layout_width {
-                    self.cursor.x = self.options.padding;
+                    self.cursor.x = self.extent.left + self.options.padding;
                     self.cursor.y += self.current_row_height;
 
                     self.current_row_height = 0;

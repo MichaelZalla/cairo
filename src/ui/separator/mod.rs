@@ -82,7 +82,7 @@ fn draw_separator(
                 parent_buffer,
                 layout.extent.left as i32,
                 (cursor.y + SEPARATOR_MARGIN) as i32,
-                layout.width() as i32,
+                layout.extent.right as i32,
                 (cursor.y + SEPARATOR_MARGIN) as i32,
                 color,
             );
