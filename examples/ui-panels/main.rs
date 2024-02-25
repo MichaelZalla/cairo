@@ -16,6 +16,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     texture::map::{TextureMap, TextureMapStorageFormat},
+    time::TimingInfo,
     ui::{
         button::{do_button, ButtonOptions},
         checkbox::{do_checkbox, CheckboxOptions},
@@ -228,7 +229,7 @@ fn main() -> Result<(), String> {
                                 keyboard_state,
                                 &mut textboxes_model,
                                 &mut checkboxes_model,
-                                app.timing_info.uptime_seconds,
+                                &app.timing_info,
                                 &mut wojak_texture,
                             );
                         },
@@ -330,7 +331,7 @@ fn draw_sample_panel_contents(
     keyboard_state: &KeyboardState,
     textboxes_model: &mut HashMap<String, String>,
     checkboxes_model: &mut HashMap<String, bool>,
-    uptime_seconds: f32,
+    timing_info: &TimingInfo,
     wojak_texture: &mut TextureMap,
 ) {
     // Draw a bordered button.
@@ -458,8 +459,9 @@ fn draw_sample_panel_contents(
                 horizontal_alignment: ItemLayoutHorizontalAlignment::Center,
                 ..Default::default()
             },
-            text: text_options.text.clone(),
+            text: format!("FPS: {:.*}", 0, timing_info.frames_per_second),
             color: color::RED,
+            cache: false,
             ..text_options
         },
     );
@@ -476,7 +478,7 @@ fn draw_sample_panel_contents(
                 horizontal_alignment: ItemLayoutHorizontalAlignment::Right,
                 ..Default::default()
             },
-            text: format!("Uptime: {:.*}", 2, uptime_seconds),
+            text: format!("Uptime: {:.*}", 2, timing_info.uptime_seconds),
             cache: false,
             color: color::GREEN,
             ..text_options
@@ -548,7 +550,7 @@ fn draw_sample_panel_contents(
         panel_id.item,
         layout,
         parent_buffer,
-        uptime_seconds,
+        timing_info.uptime_seconds,
         keyboard_state,
         mouse_state,
         &textbox_options,
