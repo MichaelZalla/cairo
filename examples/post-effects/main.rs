@@ -22,6 +22,7 @@ use cairo::{
     resource::arena::Arena,
     scene::{
         camera::Camera,
+        environment::Environment,
         graph::SceneGraph,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         node::{
@@ -119,6 +120,7 @@ fn main() -> Result<(), String> {
 
     let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
     let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
+    let mut environment_arena: Arena<_> = Arena::<Environment>::new();
     let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
     let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
     let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
@@ -130,7 +132,11 @@ fn main() -> Result<(), String> {
 
     let cube_entity = Entity::new(&cube_mesh);
 
-    // Set up a camera for rendering our scene
+    // Configure a global scene environment.
+
+    let environment: Environment = Default::default();
+
+    // Set up a camera for our scene.
 
     let aspect_ratio = framebuffer_rc.borrow().width_over_height;
 
@@ -200,6 +206,7 @@ fn main() -> Result<(), String> {
     let plane_entity_handle = entity_arena.insert(Uuid::new_v4(), plane_entity);
     let cube_entity_handle = entity_arena.insert(Uuid::new_v4(), cube_entity);
     let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
+    let environment_handle = environment_arena.insert(Uuid::new_v4(), environment);
     let ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
     let directional_light_handle =
         directional_light_arena.insert(Uuid::new_v4(), directional_light);
@@ -217,7 +224,32 @@ fn main() -> Result<(), String> {
 
     let mut scenegraph = SceneGraph::new();
 
-    // Add geometry nodes to our scene graph's root.
+    // Add an environment (node) to our scene.
+
+    let mut environment_node = SceneNode::new(
+        SceneNodeType::Environment,
+        Default::default(),
+        Some(environment_handle),
+        None,
+    );
+
+    environment_node.add_child(SceneNode::new(
+        SceneNodeType::AmbientLight,
+        Default::default(),
+        Some(ambient_light_handle),
+        None,
+    ))?;
+
+    environment_node.add_child(SceneNode::new(
+        SceneNodeType::DirectionalLight,
+        Default::default(),
+        Some(directional_light_handle),
+        None,
+    ))?;
+
+    scenegraph.root.add_child(environment_node)?;
+
+    // Add geometry nodes to our scene.
 
     let mut plane_entity_node = SceneNode::new(
         SceneNodeType::Entity,
@@ -238,9 +270,9 @@ fn main() -> Result<(), String> {
         ..Default::default()
     });
 
-    plane_entity_node.add_child(cube_entity_node);
+    plane_entity_node.add_child(cube_entity_node)?;
 
-    scenegraph.root.add_child(plane_entity_node);
+    scenegraph.root.add_child(plane_entity_node)?;
 
     // Add camera and light nodes to our scene graph's root.
 
@@ -251,39 +283,21 @@ fn main() -> Result<(), String> {
         None,
     );
 
-    scenegraph.root.add_child(camera_node);
-
-    let ambient_light_node = SceneNode::new(
-        SceneNodeType::AmbientLight,
-        Default::default(),
-        Some(ambient_light_handle),
-        None,
-    );
-
-    scenegraph.root.add_child(ambient_light_node);
-
-    let directional_light_node = SceneNode::new(
-        SceneNodeType::DirectionalLight,
-        Default::default(),
-        Some(directional_light_handle),
-        None,
-    );
-
-    scenegraph.root.add_child(directional_light_node);
+    scenegraph.root.add_child(camera_node)?;
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::PointLight,
         Default::default(),
         Some(point_light_handle),
         None,
-    ));
+    ))?;
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::SpotLight,
         Default::default(),
         Some(spot_light_handle),
         None,
-    ));
+    ))?;
 
     // Prints the scenegraph to stdout.
 
@@ -331,6 +345,7 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Scene => Ok(()),
+                SceneNodeType::Environment => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();
@@ -597,6 +612,7 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Scene => Ok(()),
+                SceneNodeType::Environment => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();

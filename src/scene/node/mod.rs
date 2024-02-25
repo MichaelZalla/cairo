@@ -6,6 +6,7 @@ use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
 pub enum SceneNodeType {
     #[default]
     Scene,
+    Environment,
     AmbientLight,
     DirectionalLight,
     Camera,
@@ -67,6 +68,10 @@ impl<'a> SceneNode<'a> {
         self.parent.is_none()
     }
 
+    pub fn is_scene_root(&self) -> bool {
+        self.is_type(SceneNodeType::Scene)
+    }
+
     pub fn get_type(&self) -> &SceneNodeType {
         &self.node_type
     }
@@ -95,7 +100,65 @@ impl<'a> SceneNode<'a> {
         &mut self.children
     }
 
-    pub fn add_child(&mut self, node: SceneNode<'a>) {
+    pub fn add_child(&mut self, node: SceneNode<'a>) -> Result<(), String> {
+        match node.node_type {
+            SceneNodeType::Scene => {
+                return Err("Scene node must be the root node.".to_string());
+            }
+            SceneNodeType::Environment => {
+                // Environment node may only be a child of a Scene node.
+                if !self.is_scene_root() {
+                    return Err("Attempted to add an Environment node as a child to a node that is not a Scene node!".to_string());
+                }
+            }
+
+            SceneNodeType::AmbientLight => {
+                // AmbientLight node may only be a child of an Environment node.
+                if !self.is_type(SceneNodeType::Environment) {
+                    return Err("Attempted to add an AmbientLight node as a child to a node that is not an Environment node!".to_string());
+                }
+
+                // Only one AmbientLight node may exist per scene (environment) at a time.
+                match self.children() {
+                    Some(children) => {
+                        if children
+                            .iter()
+                            .any(|child| child.is_type(SceneNodeType::AmbientLight))
+                        {
+                            return Err(
+                                "Cannot add multiple AmbientLight nodes to an Environment node!"
+                                    .to_string(),
+                            );
+                        }
+                    }
+                    None => (),
+                }
+            }
+            SceneNodeType::DirectionalLight => {
+                // DirectionalLight node may only be a child of an Environment node.
+                if !self.is_type(SceneNodeType::Environment) {
+                    return Err("Attempted to add an DirectionalLight node as a child to a node that is not an Environment node!".to_string());
+                }
+
+                // Only one DirectionalLight node may exist per scene (environment) at a time.
+                match self.children() {
+                    Some(children) => {
+                        if children
+                            .iter()
+                            .any(|child| child.is_type(SceneNodeType::DirectionalLight))
+                        {
+                            return Err(
+                                "Cannot add multiple DirectionalLight nodes to an Environment node!"
+                                    .to_string(),
+                            );
+                        }
+                    }
+                    None => (),
+                }
+            }
+            _ => (),
+        }
+
         match self.children.as_mut() {
             Some(children) => {
                 children.push(node);
@@ -104,6 +167,8 @@ impl<'a> SceneNode<'a> {
                 self.children = Some(vec![node]);
             }
         }
+
+        Ok(())
     }
 
     pub fn visit<C>(

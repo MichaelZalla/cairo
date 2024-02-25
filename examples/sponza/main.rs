@@ -20,6 +20,7 @@ use cairo::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::Camera,
+        environment::Environment,
         graph::SceneGraph,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         node::{
@@ -109,6 +110,7 @@ fn main() -> Result<(), String> {
 
     let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
     let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
+    let mut environment_arena: Arena<_> = Arena::<Environment>::new();
     let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
     let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
     let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
@@ -120,7 +122,11 @@ fn main() -> Result<(), String> {
         entity_arena.insert(Uuid::new_v4(), Entity::new(&atrium_meshes[i]));
     }
 
-    // Set up a camera for rendering our scene
+    // Configure a global scene environment.
+
+    let environment: Environment = Default::default();
+
+    // Set up a camera for our scene.
 
     let camera_position = Vec3 {
         x: 1000.0,
@@ -215,6 +221,7 @@ fn main() -> Result<(), String> {
 
     // let cube_entity_handle = entity_arena.insert(Uuid::new_v4(), cube_entity);
     let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
+    let environment_handle = environment_arena.insert(Uuid::new_v4(), environment);
     let ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
     let directional_light_handle =
         directional_light_arena.insert(Uuid::new_v4(), directional_light);
@@ -232,42 +239,32 @@ fn main() -> Result<(), String> {
 
     let mut scenegraph = SceneGraph::new();
 
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::Camera,
-        Default::default(),
-        Some(camera_handle),
-        None,
-    ));
+    // Add an environment (node) to our scene.
 
-    let ambient_light_node = SceneNode::new(
+    let mut environment_node = SceneNode::new(
+        SceneNodeType::Environment,
+        Default::default(),
+        Some(environment_handle),
+        None,
+    );
+
+    environment_node.add_child(SceneNode::new(
         SceneNodeType::AmbientLight,
         Default::default(),
         Some(ambient_light_handle),
         None,
-    );
+    ))?;
 
-    scenegraph.root.add_child(ambient_light_node);
-
-    scenegraph.root.add_child(SceneNode::new(
+    environment_node.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
         Default::default(),
         Some(directional_light_handle),
         None,
-    ));
+    ))?;
 
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::PointLight,
-        Default::default(),
-        Some(point_light_handle),
-        None,
-    ));
+    scenegraph.root.add_child(environment_node)?;
 
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::SpotLight,
-        Default::default(),
-        Some(spot_light_handle),
-        None,
-    ));
+    // Add geometry nodes to our scene.
 
     for (index, entry) in entity_arena_rc.borrow().entries.iter().enumerate() {
         match entry {
@@ -282,11 +279,34 @@ fn main() -> Result<(), String> {
                     Default::default(),
                     Some(handle),
                     None,
-                ));
+                ))?;
             }
             None => (),
         }
     }
+
+    // Add camera and light nodes to our scene graph's root.
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::Camera,
+        Default::default(),
+        Some(camera_handle),
+        None,
+    ))?;
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::PointLight,
+        Default::default(),
+        Some(point_light_handle),
+        None,
+    ))?;
+
+    scenegraph.root.add_child(SceneNode::new(
+        SceneNodeType::SpotLight,
+        Default::default(),
+        Some(spot_light_handle),
+        None,
+    ))?;
 
     // Prints the scenegraph to stdout.
 
@@ -336,6 +356,7 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Scene => Ok(()),
+                SceneNodeType::Environment => Ok(()),
                 SceneNodeType::Entity => Ok(()),
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
@@ -667,6 +688,7 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Scene => Ok(()),
+                SceneNodeType::Environment => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();

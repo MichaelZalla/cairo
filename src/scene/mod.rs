@@ -3,6 +3,7 @@ use crate::app::App;
 use super::device::{GameControllerState, KeyboardState, MouseState};
 
 pub mod camera;
+pub mod environment;
 pub mod graph;
 pub mod light;
 pub mod node;
