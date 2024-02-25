@@ -281,7 +281,7 @@ impl TextureMap {
     where
         T: FnMut(u8, u8, u8) -> (u8, u8, u8),
     {
-        if self.is_loaded == false {
+        if !self.is_loaded {
             return Err("Called TextureMap::map() on an unloaded texture!".to_string());
         }
 

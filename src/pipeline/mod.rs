@@ -314,7 +314,7 @@ impl<'a> Pipeline<'a> {
                 }
             }
 
-            if keep == false {
+            if !keep {
                 return;
             }
         }
@@ -526,8 +526,7 @@ impl<'a> Pipeline<'a> {
 
                                 let shader_context = self.shader_context.borrow();
 
-                                if (self.alpha_shader)(&shader_context, &linear_space_interpolant)
-                                    == false
+                                if !(self.alpha_shader)(&shader_context, &linear_space_interpolant)
                                 {
                                     return;
                                 }
@@ -564,7 +563,7 @@ impl<'a> Pipeline<'a> {
                                             &linear_space_interpolant,
                                         ) {
                                             Some(sample) => {
-                                                if self.options.do_deferred_lighting == false {
+                                                if !self.options.do_deferred_lighting {
                                                     match framebuffer
                                                         .attachments
                                                         .forward_ldr

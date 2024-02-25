@@ -25,7 +25,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
     }
 
     pub fn insert(&mut self, data: T, aabb: &AABB) -> bool {
-        if self.bounds.intersects(aabb) == false {
+        if !self.bounds.intersects(aabb) {
             return false;
         }
 
