@@ -750,11 +750,11 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
-                        let mut entity_arena = entity_arena_rc.borrow_mut();
+                        let entity_arena = entity_arena_rc.borrow();
 
-                        match entity_arena.get_mut(handle) {
+                        match entity_arena.get(handle) {
                             Ok(entry) => {
-                                let entity = &mut entry.item;
+                                let entity = &entry.item;
 
                                 pipeline.render_entity(
                                     entity,
@@ -787,7 +787,7 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {
-                        let point_light_arena = point_light_arena_rc.borrow_mut();
+                        let point_light_arena = point_light_arena_rc.borrow();
 
                         match point_light_arena.get(handle) {
                             Ok(entry) => {
@@ -811,7 +811,7 @@ fn main() -> Result<(), String> {
                 },
                 SceneNodeType::SpotLight => match handle {
                     Some(handle) => {
-                        let spot_light_arena = spot_light_arena_rc.borrow_mut();
+                        let spot_light_arena = spot_light_arena_rc.borrow();
 
                         match spot_light_arena.get(handle) {
                             Ok(entry) => {
