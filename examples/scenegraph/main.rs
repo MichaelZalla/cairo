@@ -616,23 +616,23 @@ fn main() -> Result<(), String> {
                                 let point_light = &mut entry.item;
 
                                 static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
-                                static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
+                                static MAX_POINT_LIGHT_INTENSITY: f32 = 1.0;
 
                                 point_light.intensities = Vec3 {
                                     x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
                                         + 0.5,
-                                    y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                    y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).cos() / 2.0
                                         + 0.5,
-                                    z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
+                                    z: -(uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
                                         + 0.5,
                                 } * MAX_POINT_LIGHT_INTENSITY;
 
-                                let orbital_radius: f32 = 3.0;
+                                let orbital_radius: f32 = 10.0;
 
                                 point_light.position = (Vec4::new(Default::default(), 1.0)
                                     * Mat4::translation(Vec3 {
                                         x: orbital_radius * uptime.sin(),
-                                        y: 3.0,
+                                        y: 1.0,
                                         z: orbital_radius * uptime.cos(),
                                     })
                                     * current_world_transform)
@@ -733,10 +733,6 @@ fn main() -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Scene => Ok(()),
-                SceneNodeType::Environment => Ok(()),
-                SceneNodeType::AmbientLight => Ok(()),
-                SceneNodeType::DirectionalLight => Ok(()),
                 SceneNodeType::Skybox => {
                     match handle {
                         Some(handle) => {
@@ -833,6 +829,7 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `PointLight` node with no resource handle!")
                     }
                 },
+                _ => Ok(()),
             }
         };
 
