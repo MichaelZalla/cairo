@@ -13,7 +13,7 @@ pub struct SceneGraph<'a> {
 impl<'a> SceneGraph<'a> {
     pub fn new() -> Self {
         Self {
-            root: SceneNode::new(SceneNodeType::Empty, Default::default(), None, None),
+            root: SceneNode::new(SceneNodeType::Scene, Default::default(), None, None),
         }
     }
 }

@@ -237,7 +237,7 @@ fn main() -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Empty => Ok(()),
+                SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Entity => {
                     static ENTITY_ROTATION_SPEED: f32 = 0.2;
 

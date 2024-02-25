@@ -297,7 +297,7 @@ fn main() -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Empty => Ok(()),
+                SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();
@@ -521,7 +521,7 @@ fn main() -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Empty => Ok(()),
+                SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mut entity_arena = entity_arena_rc.borrow_mut();

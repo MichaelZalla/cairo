@@ -5,12 +5,12 @@ use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
 #[derive(Default, Debug, Clone, PartialEq)]
 pub enum SceneNodeType {
     #[default]
-    Empty,
-    Entity,
-    Camera,
+    Scene,
     DirectionalLight,
+    Camera,
     PointLight,
     SpotLight,
+    Entity,
 }
 
 impl Display for SceneNodeType {
@@ -58,6 +58,14 @@ impl<'a> SceneNode<'a> {
         }
     }
 
+    pub fn is_type(&self, node_type: SceneNodeType) -> bool {
+        self.node_type == node_type
+    }
+
+    pub fn is_root(&self) -> bool {
+        self.parent.is_none()
+    }
+
     pub fn get_type(&self) -> &SceneNodeType {
         &self.node_type
     }
@@ -72,14 +80,6 @@ impl<'a> SceneNode<'a> {
 
     pub fn get_handle(&self) -> &Option<Handle> {
         &self.handle
-    }
-
-    pub fn is_type(&self, node_type: SceneNodeType) -> bool {
-        self.node_type == node_type
-    }
-
-    pub fn is_root(&self) -> bool {
-        self.parent.is_none()
     }
 
     pub fn has_children(&self) -> bool {
