@@ -5,14 +5,14 @@ use super::{
 };
 
 fn make_object_space_bounding_box(mesh: &Mesh) -> AABB {
-    let mut x_min: f32 = f32::MAX;
-    let mut x_max: f32 = f32::MIN;
+    let mut x_min = f32::MAX;
+    let mut x_max = f32::MIN;
 
-    let mut y_min: f32 = f32::MAX;
-    let mut y_max: f32 = f32::MIN;
+    let mut y_min = f32::MAX;
+    let mut y_max = f32::MIN;
 
-    let mut z_min: f32 = f32::MAX;
-    let mut z_max: f32 = f32::MIN;
+    let mut z_min = f32::MAX;
+    let mut z_max = f32::MIN;
 
     for v in mesh.vertices.as_slice() {
         if v.x < x_min {
