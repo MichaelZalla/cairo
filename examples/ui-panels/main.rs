@@ -259,19 +259,22 @@ fn main() -> Result<(), String> {
                 match active_panel_uuid {
                     Some(active_uuid) => {
                         match active_panel_resize_request {
-                            Some(resize_request) => {
+                            Some(_resize_request) => {
                                 // Resize request scenario.
 
                                 static MIN_PANEL_WIDTH: u32 = 150;
 
+                                let mouse_x_relative_to_root =
+                                    mouse_state.position.0 - root_extent.left as i32;
+
                                 for ((uuid, _parent), extent) in panels_model.iter_mut() {
                                     if *uuid == active_uuid {
-                                        extent.right = (extent.right as i32 + resize_request.0)
+                                        extent.right = mouse_x_relative_to_root
                                             .min((root_extent.right - MIN_PANEL_WIDTH) as i32)
                                             .max(MIN_PANEL_WIDTH as i32)
                                             as u32;
                                     } else {
-                                        extent.left = (extent.left as i32 + resize_request.0)
+                                        extent.left = mouse_x_relative_to_root
                                             .min((root_extent.right - MIN_PANEL_WIDTH) as i32)
                                             .max(MIN_PANEL_WIDTH as i32)
                                             as u32;
