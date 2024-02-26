@@ -7,7 +7,7 @@ use sdl2::keyboard::Keycode;
 use uuid::Uuid;
 
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
@@ -45,32 +45,17 @@ use cairo::{
 };
 
 fn main() -> Result<(), String> {
-    let resolutions = vec![
-        (320, 180),
-        (640, 320),
-        (800, 450),
-        (960, 540),
-        // (1024, 576),
-        // (1200, 675),
-        // (1280, 720),
-        // (1366, 768),
-        // (1920, 1080),
-        // (2560, 1440),
-    ];
-
     let current_resolution_index_rc: RefCell<usize> = RefCell::new(2);
 
-    let resolution = resolutions[*current_resolution_index_rc.borrow()];
+    let resolution = RESOLUTIONS_16X9[*current_resolution_index_rc.borrow()];
 
     let mut window_info = AppWindowInfo {
         title: "examples/generate-primitives".to_string(),
         full_screen: false,
         vertical_sync: true,
         relative_mouse_mode: true,
-        window_width: resolution.0,
-        window_height: resolution.1,
-        canvas_width: resolution.0,
-        canvas_height: resolution.1,
+        window_resolution: resolution,
+        canvas_resolution: resolution,
         ..Default::default()
     };
 
@@ -97,7 +82,10 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let mut framebuffer = Framebuffer::new(window_info.canvas_width, window_info.canvas_height);
+    let mut framebuffer = Framebuffer::new(
+        window_info.canvas_resolution.width,
+        window_info.canvas_resolution.height,
+    );
 
     framebuffer.complete(0.3, 100.0);
 
@@ -502,18 +490,19 @@ fn main() -> Result<(), String> {
 
                     let mut current_resolution_index = current_resolution_index_rc.borrow_mut();
 
-                    *current_resolution_index = (*current_resolution_index + 1) % resolutions.len();
+                    *current_resolution_index =
+                        (*current_resolution_index + 1) % RESOLUTIONS_16X9.len();
 
-                    let (width, height) = resolutions[*current_resolution_index];
+                    let new_resolution = RESOLUTIONS_16X9[*current_resolution_index];
 
-                    app.resize_window(width, height).unwrap();
+                    app.resize_window(new_resolution).unwrap();
 
-                    app.resize_canvas(width, height).unwrap();
+                    app.resize_canvas(new_resolution).unwrap();
 
                     // Resize the framebuffer to match.
                     let mut framebuffer = framebuffer_rc.borrow_mut();
 
-                    framebuffer.resize(width, height, true);
+                    framebuffer.resize(new_resolution.width, new_resolution.height, true);
                 }
                 Keycode::H { .. } => {
                     let mut active_fragment_shader_index =
@@ -542,7 +531,7 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Resolution: {}x{}",
-            app.window_info.canvas_width, app.window_info.canvas_height
+            app.window_info.canvas_resolution.width, app.window_info.canvas_resolution.height
         ));
 
         let uptime = app.timing_info.uptime_seconds;

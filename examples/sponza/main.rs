@@ -6,7 +6,7 @@ use sdl2::keyboard::Keycode;
 use uuid::Uuid;
 
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::RESOLUTION_960_BY_540, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     color,
     debug::message::DebugMessageBuffer,
@@ -55,10 +55,8 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/sponza".to_string(),
-        window_width: 860,
-        window_height: 520,
-        canvas_width: 860,
-        canvas_height: 520,
+        window_resolution: RESOLUTION_960_BY_540,
+        canvas_resolution: RESOLUTION_960_BY_540,
         relative_mouse_mode: true,
         ..Default::default()
     };
@@ -86,7 +84,10 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let mut framebuffer = Framebuffer::new(window_info.canvas_width, window_info.canvas_height);
+    let mut framebuffer = Framebuffer::new(
+        window_info.canvas_resolution.width,
+        window_info.canvas_resolution.height,
+    );
 
     framebuffer.complete(0.3, 100.0);
 
@@ -325,7 +326,7 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Resolution: {}x{}",
-            app.window_info.canvas_width, app.window_info.canvas_height
+            app.window_info.canvas_resolution.width, app.window_info.canvas_resolution.height
         ));
 
         let uptime = app.timing_info.uptime_seconds;

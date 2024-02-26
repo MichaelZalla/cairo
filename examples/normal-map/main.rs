@@ -5,7 +5,7 @@ use std::{cell::RefCell, f32::consts::PI};
 use uuid::Uuid;
 
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::RESOLUTION_1200_BY_675, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
@@ -33,30 +33,13 @@ use cairo::{
 };
 
 fn main() -> Result<(), String> {
-    let resolutions = vec![
-        // (320, 180),
-        // (640, 320),
-        // (800, 450),
-        (960, 540),
-        // (1024, 576),
-        // (1200, 675),
-        // (1280, 720),
-        // (1366, 768),
-        // (1920, 1080),
-        // (2560, 1440),
-    ];
-
-    let resolution = resolutions[0];
-
     let mut window_info = AppWindowInfo {
         title: "examples/normal-map".to_string(),
         full_screen: false,
         vertical_sync: true,
         relative_mouse_mode: true,
-        window_width: resolution.0,
-        window_height: resolution.1,
-        canvas_width: resolution.0,
-        canvas_height: resolution.1,
+        window_resolution: RESOLUTION_1200_BY_675,
+        canvas_resolution: RESOLUTION_1200_BY_675,
         ..Default::default()
     };
 
@@ -66,7 +49,10 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let mut framebuffer = Framebuffer::new(window_info.canvas_width, window_info.canvas_height);
+    let mut framebuffer = Framebuffer::new(
+        window_info.canvas_resolution.width,
+        window_info.canvas_resolution.height,
+    );
 
     framebuffer.complete(0.3, 100.0);
 

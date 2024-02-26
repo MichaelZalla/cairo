@@ -9,6 +9,8 @@ use sdl2::{
 
 use crate::{app::AppWindowInfo, device::GameController};
 
+use super::resolution::Resolution;
+
 const GAME_CONTROLLER_COUNT: usize = 4;
 
 pub struct ApplicationContext {
@@ -106,8 +108,8 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     let mut window_builder = video_subsystem.window(
         &window_info.title,
-        window_info.window_width,
-        window_info.window_height,
+        window_info.window_resolution.width,
+        window_info.window_resolution.height,
     );
 
     // window_builder.opengl();
@@ -115,7 +117,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     // window_builder.borderless();
 
     if window_info.full_screen {
-        // Will verride `canvas_width` and `canvas_height` for the current
+        // Will verride `canvas_resolution.width` and `canvas_resolution.height` for the current
         // desktop resolution;
         window_builder.fullscreen_desktop();
     }
@@ -180,23 +182,22 @@ pub fn get_application_rendering_context<'a, 'r>(
 }
 
 pub fn make_backbuffer<'r>(
-    canvas_width: u32,
-    canvas_height: u32,
+    canvas_resolution: Resolution,
     texture_creator: &'r TextureCreator<WindowContext>,
     blend_mode: Option<BlendMode>,
 ) -> Result<Texture, String> {
     match texture_creator.create_texture_streaming(
         sdl2::pixels::PixelFormatEnum::RGBA32,
-        canvas_width,
-        canvas_height,
+        canvas_resolution.width,
+        canvas_resolution.height,
     ) {
         Ok(mut backbuffer) => {
             const BYTES_PER_PIXEL: u32 = 4;
 
-            let canvas_pitch: u32 = canvas_width * BYTES_PER_PIXEL;
+            let canvas_pitch: u32 = canvas_resolution.width * BYTES_PER_PIXEL;
 
             let pixel_buffer_size: usize =
-                (canvas_width * canvas_height * BYTES_PER_PIXEL) as usize;
+                (canvas_resolution.width * canvas_resolution.height * BYTES_PER_PIXEL) as usize;
             let pixel_buffer = &vec![0; pixel_buffer_size];
 
             match backbuffer.update(None, pixel_buffer, canvas_pitch as usize) {

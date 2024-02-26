@@ -53,7 +53,10 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let mut framebuffer = Framebuffer::new(window_info.canvas_width, window_info.canvas_height);
+    let mut framebuffer = Framebuffer::new(
+        window_info.canvas_resolution.width,
+        window_info.canvas_resolution.height,
+    );
 
     framebuffer.complete(0.3, 100.0);
 
@@ -716,8 +719,8 @@ fn main() -> Result<(), String> {
                 // Perform a post-processing pass by applying the dilation effect.
 
                 let mut buffer = Buffer2D::from_data(
-                    window_info.canvas_width,
-                    window_info.canvas_height,
+                    window_info.canvas_resolution.width,
+                    window_info.canvas_resolution.height,
                     prepost_u32,
                 );
 

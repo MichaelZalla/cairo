@@ -42,7 +42,11 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = Buffer2D::new(window_info.window_width, window_info.window_height, None);
+    let mut framebuffer = Buffer2D::new(
+        window_info.window_resolution.width,
+        window_info.window_resolution.height,
+        None,
+    );
 
     let now_seconds = RefCell::new(0.0);
 

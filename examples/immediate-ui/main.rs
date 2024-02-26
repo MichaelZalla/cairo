@@ -7,7 +7,7 @@ use std::{
 };
 
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
     buffer::{
         framebuffer::{Framebuffer, FramebufferAttachmentKind},
         Buffer2D,
@@ -37,14 +37,14 @@ use cairo::{
 use uuid::Uuid;
 
 fn main() -> Result<(), String> {
-    let resolution = (1920, 1080);
+    let current_resolution_index: usize = 6;
+
+    let resolution = RESOLUTIONS_16X9[current_resolution_index];
 
     let mut window_info = AppWindowInfo {
         title: "examples/immediate-ui".to_string(),
-        window_width: resolution.0,
-        window_height: resolution.1,
-        canvas_width: resolution.0,
-        canvas_height: resolution.1,
+        window_resolution: resolution,
+        canvas_resolution: resolution,
         ..Default::default()
     };
 
@@ -67,8 +67,8 @@ fn main() -> Result<(), String> {
     // Initialize framebuffer with attachments
 
     let framebuffer = RefCell::new(Framebuffer::new(
-        window_info.window_width,
-        window_info.window_height,
+        window_info.window_resolution.width,
+        window_info.window_resolution.height,
     ));
 
     framebuffer

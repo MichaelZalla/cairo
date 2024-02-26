@@ -14,19 +14,16 @@ use crate::{
 };
 
 use self::context::{make_application_context, make_backbuffer, ApplicationContext};
+use self::resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
 
 pub mod context;
-
-static DEFAULT_WINDOW_WIDTH: u32 = 960;
-static DEFAULT_WINDOW_HEIGHT: u32 = 540;
+pub mod resolution;
 
 #[derive(Debug, Clone)]
 pub struct AppWindowInfo {
     pub title: String,
-    pub canvas_width: u32,
-    pub canvas_height: u32,
-    pub window_width: u32,
-    pub window_height: u32,
+    pub canvas_resolution: Resolution,
+    pub window_resolution: Resolution,
     pub full_screen: bool,
     pub show_cursor: bool,
     pub relative_mouse_mode: bool,
@@ -37,10 +34,8 @@ impl Default for AppWindowInfo {
     fn default() -> Self {
         Self {
             title: "App".to_string(),
-            window_width: DEFAULT_WINDOW_WIDTH,
-            window_height: DEFAULT_WINDOW_HEIGHT,
-            canvas_width: DEFAULT_WINDOW_WIDTH,
-            canvas_height: DEFAULT_WINDOW_HEIGHT,
+            window_resolution: DEFAULT_WINDOW_RESOLUTION,
+            canvas_resolution: DEFAULT_WINDOW_RESOLUTION,
             full_screen: false,
             show_cursor: true,
             relative_mouse_mode: false,
@@ -62,23 +57,17 @@ impl App {
 
         let timing_info: TimingInfo = Default::default();
 
-        window_info.window_width = context.screen_width;
-        window_info.window_height = context.screen_height;
+        window_info.window_resolution = Resolution {
+            width: context.screen_width,
+            height: context.screen_height,
+        };
 
-        let mut app_window_info = window_info.clone();
-
-        app_window_info.window_width = context.screen_width;
-        app_window_info.window_height = context.screen_height;
+        let app_window_info = window_info.clone();
 
         let texture_creator = context.rendering_context.canvas.borrow().texture_creator();
 
-        let backbuffer = make_backbuffer(
-            window_info.canvas_width,
-            window_info.canvas_height,
-            &texture_creator,
-            None,
-        )
-        .unwrap();
+        let backbuffer =
+            make_backbuffer(window_info.canvas_resolution, &texture_creator, None).unwrap();
 
         return App {
             window_info: app_window_info,
@@ -88,15 +77,17 @@ impl App {
         };
     }
 
-    pub fn resize_window(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
+    pub fn resize_window(&mut self, new_resolution: Resolution) -> Result<(), String> {
         let mut canvas = self.context.rendering_context.canvas.borrow_mut();
 
-        match canvas.window_mut().set_size(new_width, new_height) {
+        match canvas
+            .window_mut()
+            .set_size(new_resolution.width, new_resolution.height)
+        {
             Ok(_) => {
                 // Update window info.
 
-                self.window_info.window_width = new_width;
-                self.window_info.window_height = new_height;
+                self.window_info.window_resolution = new_resolution;
 
                 Ok(())
             }
@@ -104,19 +95,18 @@ impl App {
         }
     }
 
-    pub fn resize_canvas(&mut self, new_width: u32, new_height: u32) -> Result<(), String> {
+    pub fn resize_canvas(&mut self, new_resolution: Resolution) -> Result<(), String> {
         let canvas = self.context.rendering_context.canvas.borrow_mut();
 
         // Re-allocates a backbuffer.
 
         let texture_creator = canvas.texture_creator();
 
-        match make_backbuffer(new_width, new_height, &texture_creator, None) {
+        match make_backbuffer(new_resolution, &texture_creator, None) {
             Ok(texture) => {
                 self.backbuffer = texture;
 
-                self.window_info.canvas_width = new_width;
-                self.window_info.canvas_height = new_height;
+                self.window_info.canvas_resolution = new_resolution;
 
                 Ok(())
             }
@@ -319,9 +309,9 @@ impl App {
             mouse_state.position.1 = current_mouse_state.y();
 
             mouse_state.ndc_position.0 =
-                mouse_state.position.0 as f32 / self.window_info.window_width as f32;
+                mouse_state.position.0 as f32 / self.window_info.window_resolution.width as f32;
             mouse_state.ndc_position.1 =
-                mouse_state.position.1 as f32 / self.window_info.window_height as f32;
+                mouse_state.position.1 as f32 / self.window_info.window_resolution.height as f32;
 
             // Update current scene
 
