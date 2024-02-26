@@ -17,23 +17,12 @@ use super::{
     layout::{item::ItemLayoutOptions, UILayoutContext},
 };
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct TextOptions {
     pub layout_options: ItemLayoutOptions,
     pub text: String,
     pub cache: bool,
     pub color: Color,
-}
-
-impl Default for TextOptions {
-    fn default() -> Self {
-        Self {
-            layout_options: Default::default(),
-            text: Default::default(),
-            cache: true,
-            color: Default::default(),
-        }
-    }
 }
 
 #[derive(Default, Debug)]
