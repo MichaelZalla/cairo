@@ -42,7 +42,6 @@ pub struct DoTextboxResult {
 
 pub fn do_textbox(
     ctx: &mut RefMut<'_, UIContext>,
-    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     uptime_seconds: f32,
@@ -52,7 +51,6 @@ pub fn do_textbox(
     mut model_entry: Entry<'_, String, String>,
 ) -> DoTextboxResult {
     let id = UIID {
-        parent,
         item: ctx.next_id(),
     };
 

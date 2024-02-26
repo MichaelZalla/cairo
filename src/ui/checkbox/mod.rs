@@ -35,7 +35,6 @@ pub struct DoCheckboxResult {
 
 pub fn do_checkbox(
     ctx: &mut RefMut<'_, UIContext>,
-    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
@@ -43,7 +42,6 @@ pub fn do_checkbox(
     model_entry: Entry<'_, String, bool>,
 ) -> DoCheckboxResult {
     let id = UIID {
-        parent,
         item: ctx.next_id(),
     };
 

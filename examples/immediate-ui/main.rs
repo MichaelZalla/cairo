@@ -94,7 +94,6 @@ fn main() -> Result<(), String> {
     // Data model
 
     let root_id = UIID {
-        parent: 0,
         item: global_ui_context.borrow_mut().next_id(),
     };
 
@@ -181,81 +180,79 @@ fn main() -> Result<(), String> {
                 let mut active_panel_uuid: Option<Uuid> = None;
                 let mut active_panel_resize_request: Option<(i32, i32)> = None;
 
-                panels_model.retain(|key, panel_extent: &mut UILayoutExtent| -> bool {
-                    let panel_uuid = key.0;
-                    let panel_parent = key.1;
+                panels_model.retain(
+                    |(panel_uuid, _), panel_extent: &mut UILayoutExtent| -> bool {
+                        let panel_options = PanelOptions {
+                            resizable: if *panel_uuid == left_panel_uuid {
+                                true
+                            } else {
+                                false
+                            },
+                            title: format!("Panel {}", panel_uuid).to_string(),
+                            ..Default::default()
+                        };
 
-                    let panel_options = PanelOptions {
-                        resizable: if panel_uuid == left_panel_uuid {
-                            true
-                        } else {
-                            false
-                        },
-                        title: format!("Panel {}", panel_uuid).to_string(),
-                        ..Default::default()
-                    };
+                        let mut panel_layout = UILayoutContext::new(
+                            UILayoutDirection::TopToBottom,
+                            *panel_extent,
+                            Default::default(),
+                        );
 
-                    let mut panel_layout = UILayoutContext::new(
-                        UILayoutDirection::TopToBottom,
-                        *panel_extent,
-                        Default::default(),
-                    );
+                        let do_panel_result = do_panel(
+                            &mut ctx,
+                            &panel_uuid,
+                            &mut panel_layout,
+                            &mut color_buffer,
+                            &panel_options,
+                            mouse_state,
+                            keyboard_state,
+                            &mut |ctx: &mut RefMut<'_, UIContext>,
+                                  layout: &mut UILayoutContext,
+                                  panel_uuid: &Uuid,
+                                  panel_id: &UIID,
+                                  parent_buffer: &mut Buffer2D,
+                                  mouse_state: &MouseState,
+                                  keyboard_state: &KeyboardState| {
+                                layout.direction = UILayoutDirection::LeftToRight;
 
-                    let do_panel_result = do_panel(
-                        &mut ctx,
-                        &panel_uuid,
-                        panel_parent,
-                        &mut panel_layout,
-                        &mut color_buffer,
-                        &panel_options,
-                        mouse_state,
-                        keyboard_state,
-                        &mut |ctx: &mut RefMut<'_, UIContext>,
-                              layout: &mut UILayoutContext,
-                              panel_uuid: &Uuid,
-                              panel_id: &UIID,
-                              parent_buffer: &mut Buffer2D,
-                              mouse_state: &MouseState,
-                              keyboard_state: &KeyboardState| {
-                            layout.direction = UILayoutDirection::LeftToRight;
+                                draw_sample_panel_contents(
+                                    ctx,
+                                    layout,
+                                    panel_uuid,
+                                    panel_id,
+                                    parent_buffer,
+                                    mouse_state,
+                                    keyboard_state,
+                                    &mut textboxes_model,
+                                    &mut checkboxes_model,
+                                    &app.timing_info,
+                                    &mut wojak_texture,
+                                );
+                            },
+                        );
 
-                            draw_sample_panel_contents(
-                                ctx,
-                                layout,
-                                panel_uuid,
-                                panel_id,
-                                parent_buffer,
-                                mouse_state,
-                                keyboard_state,
-                                &mut textboxes_model,
-                                &mut checkboxes_model,
-                                &app.timing_info,
-                                &mut wojak_texture,
-                            );
-                        },
-                    );
+                        if do_panel_result.should_close {
+                            println!("Closing Panel ({})...", panel_uuid);
 
-                    if do_panel_result.should_close {
-                        println!("Closing Panel ({})...", panel_uuid);
+                            active_panel_uuid = Some(*panel_uuid);
 
-                        active_panel_uuid = Some(panel_uuid);
+                            return false;
+                        }
 
-                        return false;
-                    }
+                        if do_panel_result.requested_resize.0 != 0
+                            || do_panel_result.requested_resize.1 != 0
+                        {
+                            let (delta_x, delta_y) = do_panel_result.requested_resize;
 
-                    if do_panel_result.requested_resize.0 != 0
-                        || do_panel_result.requested_resize.1 != 0
-                    {
-                        let (delta_x, delta_y) = do_panel_result.requested_resize;
+                            println!("Resizing Panel {}: {}, {}", panel_uuid, delta_x, delta_y);
 
-                        println!("Resizing Panel {}: {}, {}", panel_uuid, delta_x, delta_y);
+                            active_panel_uuid = Some(*panel_uuid);
+                            active_panel_resize_request = Some(do_panel_result.requested_resize);
+                        }
 
-                        active_panel_uuid = Some(panel_uuid);
-                        active_panel_resize_request = Some(do_panel_result.requested_resize);
-                    }
-
-                    true
-                });
+                        true
+                    },
+                );
 
                 match active_panel_uuid {
                     Some(active_uuid) => {
@@ -343,34 +340,21 @@ fn draw_sample_panel_contents(
     };
 
     let button_1_id = UIID {
-        parent: panel_id.item,
         item: ctx.next_id(),
-        // index: ctx.next_index(),
     };
 
-    if do_button(
-        ctx,
-        panel_id.item,
-        layout,
-        parent_buffer,
-        mouse_state,
-        &button_options,
-    )
-    .was_released
-    {
+    if do_button(ctx, layout, parent_buffer, mouse_state, &button_options).was_released {
         println!("You clicked a Button ({}).", button_1_id);
     }
 
     // Draw a borderless button.
 
     let button_2_id = UIID {
-        parent: panel_id.item,
         item: ctx.next_id(),
     };
 
     if do_button(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         mouse_state,
@@ -401,13 +385,11 @@ fn draw_sample_panel_contents(
     let checkbox_model_entry = checkboxes_model.entry(checkbox_model_key.clone());
 
     let checkbox_id = UIID {
-        parent: panel_id.item,
         item: ctx.next_id(),
     };
 
     if do_checkbox(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         mouse_state,
@@ -431,7 +413,6 @@ fn draw_sample_panel_contents(
 
     do_separator(
         ctx,
-        panel_id.item,
         layout,
         &SeparatorOptions {
             ..Default::default()
@@ -447,11 +428,10 @@ fn draw_sample_panel_contents(
         ..Default::default()
     };
 
-    do_text(ctx, panel_id.item, layout, parent_buffer, &text_options);
+    do_text(ctx, layout, parent_buffer, &text_options);
 
     do_text(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         &TextOptions {
@@ -470,7 +450,6 @@ fn draw_sample_panel_contents(
 
     do_text(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         &TextOptions {
@@ -489,7 +468,6 @@ fn draw_sample_panel_contents(
 
     do_separator(
         ctx,
-        panel_id.item,
         layout,
         &SeparatorOptions {
             ..Default::default()
@@ -501,7 +479,6 @@ fn draw_sample_panel_contents(
 
     do_image(
         ctx,
-        panel_id.item,
         layout,
         wojak_texture,
         &ImageOptions {
@@ -516,7 +493,6 @@ fn draw_sample_panel_contents(
 
     do_separator(
         ctx,
-        panel_id.item,
         layout,
         &SeparatorOptions {
             ..Default::default()
@@ -541,13 +517,11 @@ fn draw_sample_panel_contents(
     let textbox_model_entry = textboxes_model.entry(textbox_model_key.clone());
 
     let textbox_id = UIID {
-        parent: panel_id.item,
         item: ctx.next_id(),
     };
 
     if do_textbox(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         timing_info.uptime_seconds,
@@ -577,13 +551,11 @@ fn draw_sample_panel_contents(
     let slider_model_entry = textboxes_model.entry(slider_model_key.clone());
 
     let slider_id = UIID {
-        parent: panel_id.item,
         item: ctx.next_id(),
     };
 
     if do_slider(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         mouse_state,
@@ -619,7 +591,6 @@ fn draw_sample_panel_contents(
 
     if do_dropdown(
         ctx,
-        panel_id.item,
         layout,
         parent_buffer,
         mouse_state,

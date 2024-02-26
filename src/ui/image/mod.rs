@@ -24,14 +24,12 @@ pub struct DoImageResult {}
 
 pub fn do_image<'a>(
     ctx: &mut RefMut<'_, UIContext>,
-    parent: u32,
     layout: &mut UILayoutContext,
     map: &'a mut TextureMap,
     options: &ImageOptions,
     parent_buffer: &mut Buffer2D,
 ) -> DoImageResult {
     let id = UIID {
-        parent,
         item: ctx.next_id(),
     };
 

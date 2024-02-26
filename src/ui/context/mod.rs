@@ -12,13 +12,12 @@ use super::theme::{UITheme, DEFAULT_UI_THEME};
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UIID {
-    pub parent: u32,
     pub item: u32,
 }
 
 impl Display for UIID {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "UIID {{ parent: {}, item: {} }}", self.parent, self.item)
+        write!(f, "UIID {{ item: {} }}", self.item)
     }
 }
 

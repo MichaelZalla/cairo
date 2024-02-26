@@ -41,7 +41,6 @@ pub struct DoTextResult {}
 
 pub fn do_text(
     ctx: &mut RefMut<'_, UIContext>,
-    _parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     options: &TextOptions,

@@ -36,14 +36,12 @@ pub struct DoButtonResult {
 
 pub fn do_button(
     ctx: &mut RefMut<'_, UIContext>,
-    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     options: &ButtonOptions,
 ) -> DoButtonResult {
     let id = UIID {
-        parent,
         item: ctx.next_id(),
     };
 

@@ -39,7 +39,6 @@ pub struct DoDropdownResult {
 
 pub fn do_dropdown(
     ctx: &mut RefMut<'_, UIContext>,
-    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
@@ -47,7 +46,6 @@ pub fn do_dropdown(
     mut model_entry: Entry<'_, String, String>,
 ) -> DoDropdownResult {
     let id = UIID {
-        parent,
         item: ctx.next_id(),
     };
 

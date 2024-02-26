@@ -28,7 +28,6 @@ pub struct DoSeparatorResult {}
 
 pub fn do_separator(
     _ctx: &mut RefMut<'_, UIContext>,
-    _parent: u32,
     layout: &mut UILayoutContext,
     options: &SeparatorOptions,
     parent_buffer: &mut Buffer2D,

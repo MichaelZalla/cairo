@@ -43,7 +43,6 @@ pub struct DoPanelResult {
 pub fn do_panel<C>(
     ctx: &mut RefMut<'_, UIContext>,
     panel_uuid: &Uuid,
-    parent: u32,
     layout: &mut UILayoutContext,
     parent_buffer: &mut RefMut<'_, Buffer2D>,
     options: &PanelOptions,
@@ -63,7 +62,6 @@ where
     ),
 {
     let panel_id: UIID = UIID {
-        parent,
         item: ctx.next_id(),
     };
 
@@ -145,8 +143,7 @@ where
 {
     draw_panel_frame(ctx, layout, parent_buffer);
 
-    let should_close =
-        draw_panel_title_bar(ctx, layout, panel_id, options, parent_buffer, mouse_state);
+    let should_close = draw_panel_title_bar(ctx, layout, options, parent_buffer, mouse_state);
 
     let mut panel_contents_layout = UILayoutContext::new(
         UILayoutDirection::TopToBottom,
@@ -198,7 +195,6 @@ fn draw_panel_frame(
 fn draw_panel_title_bar(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &mut UILayoutContext,
-    id: &UIID,
     options: &PanelOptions,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
@@ -239,7 +235,6 @@ fn draw_panel_title_bar(
 
     do_text(
         ctx,
-        id.item,
         &mut panel_titlebar_layout,
         parent_buffer,
         &panel_titlebar_title_text_options,
@@ -262,7 +257,6 @@ fn draw_panel_title_bar(
 
     if do_button(
         ctx,
-        id.item,
         &mut panel_titlebar_layout,
         parent_buffer,
         mouse_state,
