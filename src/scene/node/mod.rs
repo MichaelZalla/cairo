@@ -111,6 +111,20 @@ impl<'a> SceneNode<'a> {
                 if !self.is_scene_root() {
                     return Err("Attempted to add an Environment node as a child to a node that is not a Scene node!".to_string());
                 }
+
+                // Only one Environment node may exist per scene at a time.
+                match self.children() {
+                    Some(children) => {
+                        if children
+                            .iter()
+                            .any(|child| child.is_type(SceneNodeType::Environment))
+                        {
+                            return Err("Cannot add multiple Environment nodes to a Scene node!"
+                                .to_string());
+                        }
+                    }
+                    None => (),
+                }
             }
             SceneNodeType::AmbientLight
             | SceneNodeType::DirectionalLight
