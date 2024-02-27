@@ -67,23 +67,25 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
-    // Initialize framebuffer with attachments
-
-    let framebuffer = RefCell::new(Framebuffer::new(
-        window_info.window_resolution.width,
-        window_info.window_resolution.height,
-    ));
-
-    framebuffer
-        .borrow_mut()
-        .create_attachment(FramebufferAttachmentKind::Color, None, None);
-
-    // Global UI context
-
     let default_font_info = FontInfo {
         filepath: args[1].to_string(),
         point_size: 16,
     };
+
+    // Initialize framebuffer with attachments
+
+    let framebuffer = Framebuffer::new(
+        window_info.window_resolution.width,
+        window_info.window_resolution.height,
+    );
+
+    let framebuffer_rc = RefCell::new(framebuffer);
+
+    framebuffer_rc
+        .borrow_mut()
+        .create_attachment(FramebufferAttachmentKind::Color, None, None);
+
+    // Global UI context
 
     let global_ui_context: &'static RefCell<UIContext> =
         Box::leak(Box::new(RefCell::new(UIContext::new(
@@ -94,7 +96,7 @@ fn main() -> Result<(), String> {
             Box::leak(Box::new(RefCell::new(Default::default()))),
         ))));
 
-    // Data model
+    // UI panel extents
 
     let root_id = UIID {
         item: global_ui_context.borrow_mut().next_id(),
@@ -102,9 +104,9 @@ fn main() -> Result<(), String> {
 
     let root_extent = UILayoutExtent {
         left: 0,
-        right: framebuffer.borrow().width - 1,
+        right: framebuffer_rc.borrow().width - 1,
         top: 0,
-        bottom: framebuffer.borrow().height - 1,
+        bottom: framebuffer_rc.borrow().height - 1,
     };
 
     let left_panel_uuid = Uuid::new_v4();
@@ -172,7 +174,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        match framebuffer.borrow_mut().attachments.color.as_mut() {
+        match framebuffer_rc.borrow_mut().attachments.color.as_mut() {
             Some(rc) => {
                 let mut color_buffer = rc.borrow_mut();
 
@@ -331,7 +333,7 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        match framebuffer.borrow_mut().attachments.color.as_ref() {
+        match framebuffer_rc.borrow_mut().attachments.color.as_ref() {
             Some(rc) => {
                 let color_buffer = rc.borrow();
 
