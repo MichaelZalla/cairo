@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     buffer::Buffer2D,
-    device::{KeyboardState, MouseEventKind, MouseState},
+    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     graphics::Graphics,
 };
 
@@ -48,6 +48,7 @@ pub fn do_panel<C>(
     options: &PanelOptions,
     mouse_state: &MouseState,
     keyboard_state: &KeyboardState,
+    game_controller_state: &GameControllerState,
     draw_children: &mut C,
 ) -> DoPanelResult
 where
@@ -59,6 +60,7 @@ where
         &mut Buffer2D,
         &MouseState,
         &KeyboardState,
+        &GameControllerState,
     ),
 {
     let panel_id: UIID = UIID {
@@ -108,6 +110,7 @@ where
         parent_buffer,
         mouse_state,
         keyboard_state,
+        game_controller_state,
         draw_children,
     );
 
@@ -128,6 +131,7 @@ fn draw_panel<C>(
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
     keyboard_state: &KeyboardState,
+    game_controller_state: &GameControllerState,
     draw_children: &mut C,
 ) -> bool
 where
@@ -139,6 +143,7 @@ where
         &mut Buffer2D,
         &MouseState,
         &KeyboardState,
+        &GameControllerState,
     ),
 {
     draw_panel_frame(ctx, layout, parent_buffer);
@@ -164,6 +169,7 @@ where
         parent_buffer,
         mouse_state,
         keyboard_state,
+        game_controller_state,
     );
 
     should_close

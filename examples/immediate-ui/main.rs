@@ -170,7 +170,7 @@ fn main() -> Result<(), String> {
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
-                      _game_controller_state: &GameControllerState|
+                      game_controller_state: &GameControllerState|
      -> Result<(), String> {
         match framebuffer.borrow_mut().attachments.color.as_mut() {
             Some(rc) => {
@@ -231,13 +231,16 @@ fn main() -> Result<(), String> {
                             &panel_options,
                             mouse_state,
                             keyboard_state,
+                            game_controller_state,
                             &mut |ctx: &mut RefMut<'_, UIContext>,
-                                  layout: &mut UILayoutContext,
-                                  panel_uuid: &Uuid,
-                                  panel_id: &UIID,
-                                  parent_buffer: &mut Buffer2D,
-                                  mouse_state: &MouseState,
-                                  keyboard_state: &KeyboardState| {
+                                layout: &mut UILayoutContext,
+                                panel_uuid: &Uuid,
+                                panel_id: &UIID,
+                                parent_buffer: &mut Buffer2D,
+                                mouse_state: &MouseState,
+                                keyboard_state: &KeyboardState,
+                                _game_controller_state: &GameControllerState| {
+                                
                                 layout.direction = *layout_direction_rc.borrow();
 
                                 draw_sample_panel_contents(
