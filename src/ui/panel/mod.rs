@@ -32,9 +32,12 @@ impl Default for PanelTitlebarOptions {
     }
 }
 
+static DEFAULT_CONTENT_LAYOUT_OPTIONS: UILayoutOptions = UILayoutOptions { padding: 5, gap: 8 };
+
 #[derive(Default, Debug)]
 pub struct PanelOptions {
     pub item_layout_options: ItemLayoutOptions,
+    pub content_layout_options: Option<UILayoutOptions>,
     pub titlebar_options: Option<PanelTitlebarOptions>,
     pub resizable: bool,
 }
@@ -177,7 +180,10 @@ where
     let mut panel_contents_layout = UILayoutContext::new(
         UILayoutDirection::TopToBottom,
         panel_contents_extent,
-        UILayoutOptions { padding: 5, gap: 8 },
+        match options.content_layout_options {
+            Some(options) => options,
+            None => DEFAULT_CONTENT_LAYOUT_OPTIONS,
+        },
     );
 
     draw_children(
@@ -234,7 +240,7 @@ fn draw_panel_title_bar(
             top: layout.extent.top,
             bottom: layout.extent.top + PANEL_TITLE_BAR_HEIGHT,
         },
-        UILayoutOptions { padding: 5, gap: 8 },
+        DEFAULT_CONTENT_LAYOUT_OPTIONS,
     );
 
     Graphics::rectangle(
