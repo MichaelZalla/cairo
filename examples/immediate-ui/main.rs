@@ -212,6 +212,7 @@ fn main() -> Result<(), String> {
                         let panel_options = PanelOptions {
                             titlebar_options: Some(PanelTitlebarOptions {
                                 title: format!("Panel {}", panel_uuid).to_string(),
+                                closable: true,
                             }),
                             resizable: if *panel_uuid == left_panel_uuid {
                                 true

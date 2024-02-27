@@ -20,12 +20,14 @@ use super::{
 #[derive(Debug)]
 pub struct PanelTitlebarOptions {
     pub title: String,
+    pub closable: bool,
 }
 
 impl Default for PanelTitlebarOptions {
     fn default() -> Self {
         Self {
             title: "Panel".to_string(),
+            closable: false,
         }
     }
 }
@@ -263,7 +265,9 @@ fn draw_panel_title_bar(
         &panel_titlebar_title_text_options,
     );
 
-    let mut should_close = false;
+    if !titlebar_options.closable {
+        return false;
+    }
 
     static CLOSE_BUTTON_SIZE: u32 = 14;
 
@@ -278,7 +282,7 @@ fn draw_panel_title_bar(
         ..Default::default()
     };
 
-    if do_button(
+    do_button(
         ctx,
         &mut panel_titlebar_layout,
         parent_buffer,
@@ -286,9 +290,4 @@ fn draw_panel_title_bar(
         &panel_titlebar_close_button_options,
     )
     .was_released
-    {
-        should_close = true;
-    }
-
-    should_close
 }
