@@ -186,7 +186,7 @@ where
         },
     );
 
-    draw_children(
+    let _ = draw_children(
         ctx,
         &mut panel_contents_layout,
         panel_uuid,
