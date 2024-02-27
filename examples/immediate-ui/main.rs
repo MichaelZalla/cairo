@@ -6,6 +6,8 @@ use std::{
     env,
 };
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::{resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
     buffer::{
@@ -34,6 +36,7 @@ use cairo::{
         textbox::{do_textbox, TextboxOptions},
     },
 };
+
 use uuid::Uuid;
 
 fn main() -> Result<(), String> {
@@ -160,6 +163,10 @@ fn main() -> Result<(), String> {
 
     wojak_texture.load(rendering_context).unwrap();
 
+    let layout_direction = UILayoutDirection::TopToBottom;
+
+    let layout_direction_rc = RefCell::new(layout_direction);
+
     let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
@@ -174,6 +181,24 @@ fn main() -> Result<(), String> {
                 let mut ctx = global_ui_context.borrow_mut();
 
                 ctx.reset_id_counter(root_id.item + 1);
+
+                // Process global inputs.
+
+                {
+                    for keycode in &keyboard_state.keys_pressed {
+                        match keycode {
+                            Keycode::L { .. } => {
+                                let mut layout_direction = layout_direction_rc.borrow_mut();
+                                
+                                *layout_direction = match *layout_direction {
+                                    UILayoutDirection::LeftToRight => UILayoutDirection::TopToBottom,
+                                    UILayoutDirection::TopToBottom => UILayoutDirection::LeftToRight,
+                                }
+                            }
+                            _ => ()
+                        }
+                    }
+                }
 
                 // Draw all panels.
 
@@ -213,7 +238,7 @@ fn main() -> Result<(), String> {
                                   parent_buffer: &mut Buffer2D,
                                   mouse_state: &MouseState,
                                   keyboard_state: &KeyboardState| {
-                                layout.direction = UILayoutDirection::LeftToRight;
+                                layout.direction = *layout_direction_rc.borrow();
 
                                 draw_sample_panel_contents(
                                     ctx,
