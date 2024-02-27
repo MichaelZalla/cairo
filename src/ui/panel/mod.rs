@@ -18,20 +18,23 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct PanelOptions {
-    pub layout_options: ItemLayoutOptions,
+pub struct PanelTitlebarOptions {
     pub title: String,
-    pub resizable: bool,
 }
 
-impl Default for PanelOptions {
+impl Default for PanelTitlebarOptions {
     fn default() -> Self {
         Self {
-            layout_options: Default::default(),
             title: "Panel".to_string(),
-            resizable: false,
         }
     }
+}
+
+#[derive(Default, Debug)]
+pub struct PanelOptions {
+    pub item_layout_options: ItemLayoutOptions,
+    pub titlebar_options: Option<PanelTitlebarOptions>,
+    pub resizable: bool,
 }
 
 #[derive(Default, Debug)]
@@ -148,16 +151,30 @@ where
 {
     draw_panel_frame(ctx, layout, parent_buffer);
 
-    let should_close = draw_panel_title_bar(ctx, layout, options, parent_buffer, mouse_state);
+    let mut should_close = false;
+
+    match &options.titlebar_options {
+        Some(titlebar_options) => {
+            should_close =
+                draw_panel_title_bar(ctx, layout, &titlebar_options, parent_buffer, mouse_state);
+        }
+        None => (),
+    }
+
+    let panel_contents_extent = UILayoutExtent {
+        left: layout.extent.left,
+        right: layout.extent.right,
+        top: layout.extent.top
+            + match options.titlebar_options {
+                Some(_) => PANEL_TITLE_BAR_HEIGHT - 1,
+                None => 0,
+            },
+        bottom: layout.extent.bottom,
+    };
 
     let mut panel_contents_layout = UILayoutContext::new(
         UILayoutDirection::TopToBottom,
-        UILayoutExtent {
-            left: layout.extent.left,
-            right: layout.extent.right,
-            top: layout.extent.top + PANEL_TITLE_BAR_HEIGHT - 1,
-            bottom: layout.extent.bottom,
-        },
+        panel_contents_extent,
         UILayoutOptions { padding: 5, gap: 8 },
     );
 
@@ -201,7 +218,7 @@ fn draw_panel_frame(
 fn draw_panel_title_bar(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &mut UILayoutContext,
-    options: &PanelOptions,
+    titlebar_options: &PanelTitlebarOptions,
     parent_buffer: &mut Buffer2D,
     mouse_state: &MouseState,
 ) -> bool {
@@ -232,7 +249,7 @@ fn draw_panel_title_bar(
         layout_options: ItemLayoutOptions {
             ..Default::default()
         },
-        text: options.title.clone(),
+        text: titlebar_options.title.clone(),
         cache: true,
         color: theme.text,
     };

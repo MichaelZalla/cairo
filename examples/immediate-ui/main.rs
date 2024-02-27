@@ -29,7 +29,7 @@ use cairo::{
             item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
             UILayoutContext, UILayoutDirection, UILayoutExtent,
         },
-        panel::{do_panel, PanelOptions},
+        panel::{do_panel, PanelOptions, PanelTitlebarOptions},
         separator::{do_separator, SeparatorOptions},
         slider::{do_slider, NumberSliderOptions},
         text::{do_text, TextOptions},
@@ -210,12 +210,14 @@ fn main() -> Result<(), String> {
                 panels_model.retain(
                     |(panel_uuid, _), panel_extent: &mut UILayoutExtent| -> bool {
                         let panel_options = PanelOptions {
+                            titlebar_options: Some(PanelTitlebarOptions {
+                                title: format!("Panel {}", panel_uuid).to_string(),
+                            }),
                             resizable: if *panel_uuid == left_panel_uuid {
                                 true
                             } else {
                                 false
                             },
-                            title: format!("Panel {}", panel_uuid).to_string(),
                             ..Default::default()
                         };
 
