@@ -163,9 +163,9 @@ fn main() -> Result<(), String> {
 
     // Set up some lights for our scene.
 
-    let mut ambient_light: AmbientLight = Default::default();
-
-    ambient_light.intensities = Vec3::ones() * 0.15;
+    let ambient_light = AmbientLight {
+        intensities: Vec3::ones() * 0.15,
+    };
 
     let directional_light = DirectionalLight {
         intensities: Vec3::ones() * 0.15,
