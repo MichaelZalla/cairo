@@ -32,7 +32,8 @@ impl Default for PanelTitlebarOptions {
     }
 }
 
-static DEFAULT_CONTENT_LAYOUT_OPTIONS: UILayoutOptions = UILayoutOptions { padding: 5, gap: 8 };
+pub static DEFAULT_PANEL_CONTENT_LAYOUT_OPTIONS: UILayoutOptions =
+    UILayoutOptions { padding: 5, gap: 8 };
 
 #[derive(Default, Debug)]
 pub struct PanelOptions {
@@ -182,7 +183,7 @@ where
         panel_contents_extent,
         match options.content_layout_options {
             Some(options) => options,
-            None => DEFAULT_CONTENT_LAYOUT_OPTIONS,
+            None => DEFAULT_PANEL_CONTENT_LAYOUT_OPTIONS,
         },
     );
 
@@ -240,7 +241,7 @@ fn draw_panel_title_bar(
             top: layout.extent.top,
             bottom: layout.extent.top + PANEL_TITLE_BAR_HEIGHT,
         },
-        DEFAULT_CONTENT_LAYOUT_OPTIONS,
+        DEFAULT_PANEL_CONTENT_LAYOUT_OPTIONS,
     );
 
     Graphics::rectangle(
