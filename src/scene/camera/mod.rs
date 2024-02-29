@@ -119,6 +119,21 @@ impl Camera {
         self.aspect_ratio
     }
 
+    pub fn set_aspect_ratio(&mut self, aspect_ratio: f32) -> Result<(), String> {
+        match self.kind {
+            CameraProjectionKind::Perspective => {
+                self.aspect_ratio = Some(aspect_ratio);
+
+                self.recompute_projections();
+
+                Ok(())
+            }
+            CameraProjectionKind::Orthographic => {
+                Err("Called Camera::set_aspect_ratio() on an orthographic camera!".to_string())
+            }
+        }
+    }
+
     pub fn get_projection_z_near(&self) -> f32 {
         self.projection_z_near
     }
