@@ -155,7 +155,7 @@ where
         &GameControllerState,
     ),
 {
-    draw_panel_frame(ctx, layout, parent_buffer);
+    draw_panel_frame(ctx, layout, parent_buffer, true);
 
     let mut should_close = false;
 
@@ -198,6 +198,8 @@ where
         game_controller_state,
     );
 
+    draw_panel_frame(ctx, layout, parent_buffer, false);
+
     should_close
 }
 
@@ -205,10 +207,11 @@ fn draw_panel_frame(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &UILayoutContext,
     parent_buffer: &mut Buffer2D,
+    fill: bool,
 ) {
     let theme = ctx.get_theme();
 
-    let x: u32 = layout.extent.left;
+    let x = layout.extent.left;
     let y = layout.extent.top;
     let width = layout.width();
     let height = layout.height();
@@ -219,8 +222,12 @@ fn draw_panel_frame(
         y,
         width,
         height,
-        Some(theme.panel_background),
-        Some(theme.panel_border),
+        if fill {
+            Some(theme.panel_background)
+        } else {
+            None
+        },
+        if fill { None } else { Some(theme.panel_border) },
     )
 }
 
