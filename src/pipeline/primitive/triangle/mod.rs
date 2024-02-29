@@ -121,7 +121,7 @@ impl<'a> Pipeline<'a> {
             return true;
         }
 
-        return false;
+        false
     }
 
     fn post_process_triangle_vertices(&mut self, triangle: &Triangle<DefaultVertexOut>) {
@@ -231,7 +231,7 @@ impl<'a> Pipeline<'a> {
             return true;
         }
 
-        return false;
+        false
     }
 
     fn process_triangle(&mut self, triangle: &Triangle<DefaultVertexOut>) {

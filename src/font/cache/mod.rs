@@ -53,9 +53,9 @@ impl<'l> FontCache<'l> {
 
                         self.cache.insert(key, value.clone());
 
-                        return Ok(value);
+                        Ok(value)
                     }
-                    Err(e) => return Err(e),
+                    Err(e) => Err(e),
                 }
             }
         }

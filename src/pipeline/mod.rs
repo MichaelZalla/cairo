@@ -167,8 +167,6 @@ impl<'a> Pipeline<'a> {
                 self.framebuffer = None;
                 self.g_buffer = None;
                 self.bloom_buffer = None;
-
-                return;
             }
         }
     }
