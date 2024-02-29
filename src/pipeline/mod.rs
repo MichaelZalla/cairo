@@ -113,7 +113,10 @@ impl<'a> Pipeline<'a> {
                     Ok(()) => {
                         self.framebuffer = framebuffer_option;
 
-                        self.set_viewport(&framebuffer);
+                        self.viewport.width = framebuffer.width;
+                        self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
+                        self.viewport.height = framebuffer.height;
+                        self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
 
                         let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {
@@ -169,13 +172,6 @@ impl<'a> Pipeline<'a> {
                 self.bloom_buffer = None;
             }
         }
-    }
-
-    fn set_viewport(&mut self, framebuffer: &Framebuffer) {
-        self.viewport.width = framebuffer.width;
-        self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
-        self.viewport.height = framebuffer.height;
-        self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
     }
 
     pub fn begin_frame(&mut self) {
