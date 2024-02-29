@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-#[derive(Default, Debug, Clone, Eq, PartialEq)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Handle {
     pub index: usize,
     pub uuid: Uuid,
