@@ -468,6 +468,8 @@ impl<'a> Pipeline<'a> {
 
         let mut vertices_in: Vec<DefaultVertexIn> = vec![];
 
+        vertices_in.reserve(mesh.faces.len() * 3);
+
         for face_index in 0..mesh.faces.len() {
             let face = mesh.faces[face_index];
 

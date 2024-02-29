@@ -31,6 +31,8 @@ impl<'a> Pipeline<'a> {
     ) {
         let mut triangles: Vec<Triangle<DefaultVertexOut>> = vec![];
 
+        triangles.reserve(faces.len());
+
         for face_index in 0..faces.len() {
             // Cull backfaces
 
