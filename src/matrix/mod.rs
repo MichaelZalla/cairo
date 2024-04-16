@@ -226,7 +226,7 @@ impl Mat<f32, 3> {
 }
 
 impl Mat<f32, 4> {
-    pub fn from_mat3(mat: Mat3) -> Self {
+    fn from_mat3(mat: Mat3) -> Self {
         Self {
             elements: [
                 [
@@ -431,7 +431,7 @@ impl Mat<f32, 4> {
     }
 }
 
-pub type Mat3 = Mat<f32, 3>;
+type Mat3 = Mat<f32, 3>;
 
 impl Default for Mat3 {
     fn default() -> Self {
