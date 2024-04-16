@@ -184,7 +184,7 @@ impl<const N: usize> Mat<f32, N> {
     }
 }
 
-impl Mat<f32, 3> {
+impl Mat3 {
     pub fn rotation_x(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
@@ -225,7 +225,7 @@ impl Mat<f32, 3> {
     }
 }
 
-impl Mat<f32, 4> {
+impl Mat4 {
     fn from_mat3(mat: Mat3) -> Self {
         Self {
             elements: [
