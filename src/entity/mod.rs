@@ -86,6 +86,6 @@ impl<'a> Entity<'a> {
             *v += bounds.center;
         }
 
-        return bounding_box_mesh;
+        bounding_box_mesh
     }
 }
