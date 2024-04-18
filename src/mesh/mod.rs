@@ -20,9 +20,9 @@ pub struct MaterialSource {
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
-    pub object_source: String,
-    pub object_name: String,
-    pub group_name: String,
+    pub object_source: Option<String>,
+    pub object_name: Option<String>,
+    pub group_name: Option<String>,
     pub material_source: Option<MaterialSource>,
     pub material_name: Option<String>,
     pub vertices: Vec<Vec3>,
@@ -32,11 +32,11 @@ pub struct Mesh {
 }
 
 impl Default for Mesh {
-    fn default() -> Mesh {
-        Mesh {
-            object_source: "__undefined__".to_string(),
-            object_name: "__undefined__".to_string(),
-            group_name: "__undefined__".to_string(),
+    fn default() -> Self {
+        Self {
+            object_source: None,
+            object_name: None,
+            group_name: None,
             material_source: Default::default(),
             material_name: None,
             vertices: vec![],
@@ -49,24 +49,41 @@ impl Default for Mesh {
 
 impl fmt::Display for Mesh {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(v, "Mesh (\"{}\")", self.object_name)?;
-        if self.object_source.len() > 0 {
-            writeln!(v, "  > Source: {}", self.object_source)?;
-        }
-        writeln!(v, "  > Object name: {}", self.object_name)?;
-        writeln!(v, "  > Group name: {}", self.group_name)?;
+        writeln!(
+            v,
+            "Mesh (\"{}\")",
+            self.object_name.as_ref().unwrap_or(&"Unnamed".to_string())
+        )?;
+
+        writeln!(
+            v,
+            "  > Source: {}",
+            self.object_source
+                .as_ref()
+                .unwrap_or(&"No source".to_string())
+        )?;
+
+        writeln!(
+            v,
+            "  > Group name: {}",
+            self.group_name.as_ref().unwrap_or(&"No group".to_string())
+        )?;
+
         match &self.material_source {
             Some(src) => {
                 writeln!(v, "  > Material source: {}", src.filepath)?;
             }
             None => (),
         }
-        match &self.material_name {
-            Some(name) => {
-                writeln!(v, "  > Material name: {}", name)?;
-            }
-            None => (),
-        }
+
+        writeln!(
+            v,
+            "  > Material name: {}",
+            self.material_name
+                .as_ref()
+                .unwrap_or(&"Unnamed".to_string())
+        )?;
+
         writeln!(v, "  > Vertices: {}", self.vertices.len())?;
         writeln!(v, "  > UVs: {}", self.uvs.len())?;
         writeln!(v, "  > Normals: {}", self.normals.len())?;
@@ -83,6 +100,6 @@ impl Mesh {
         mesh.uvs = uvs;
         mesh.faces = faces;
 
-        return mesh;
+        mesh
     }
 }

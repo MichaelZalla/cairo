@@ -231,7 +231,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     let mut mesh = Mesh::new(vertices, uvs, normals, faces);
 
-    mesh.object_name = "cube".to_string();
+    mesh.object_name = Some("cube".to_string());
 
     return mesh;
 }

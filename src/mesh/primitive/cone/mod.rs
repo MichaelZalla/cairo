@@ -108,7 +108,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     let mut mesh = Mesh::new(vertices, uvs, normals, faces);
 
-    mesh.object_name = "cone".to_string();
+    mesh.object_name = Some("cone".to_string());
 
     return mesh;
 }

@@ -66,13 +66,13 @@ fn main() -> Result<(), String> {
     let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
 
     let mut red_cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
-    red_cube_mesh.object_name = "red_cube".to_string();
+    red_cube_mesh.object_name = Some("red_cube".to_string());
 
     let mut green_cube_mesh = red_cube_mesh.clone();
-    green_cube_mesh.object_name = "green_cube".to_string();
+    green_cube_mesh.object_name = Some("green_cube".to_string());
 
     let mut blue_cube_mesh = red_cube_mesh.clone();
-    blue_cube_mesh.object_name = "blue_cube".to_string();
+    blue_cube_mesh.object_name = Some("blue_cube".to_string());
 
     // Initialize materials
 
@@ -505,54 +505,56 @@ fn main() -> Result<(), String> {
                                 let mut rotation = *node.get_transform().rotation();
                                 let mut translation = *node.get_transform().translation();
 
-                                match entity.mesh.object_name.as_ref() {
-                                    "plane" => {
-                                        rotation.z = PI / 12.0 * (uptime).sin();
-                                        rotation.x = PI / 12.0 * (uptime).cos();
+                                if let Some(object_name) = entity.mesh.object_name.as_ref() {
+                                    match object_name.as_str() {
+                                        "plane" => {
+                                            rotation.z = PI / 12.0 * (uptime).sin();
+                                            rotation.x = PI / 12.0 * (uptime).cos();
+                                        }
+                                        "red_cube" => {
+                                            rotation.y = (uptime / 2.0) % 2.0 * PI;
+
+                                            let uniform_scale = red_cube_original_uniform_scale
+                                                + (uptime * 2.0).sin()
+                                                    * red_cube_original_uniform_scale
+                                                    * 0.25;
+
+                                            scale.x = uniform_scale;
+                                            scale.y = uniform_scale;
+                                            scale.z = uniform_scale;
+                                        }
+                                        "green_cube" => {
+                                            rotation.y = (-uptime / 4.0) % 2.0 * PI;
+
+                                            let uniform_scale = green_cube_original_uniform_scale
+                                                + (-uptime * 2.0).sin()
+                                                    * green_cube_original_uniform_scale
+                                                    * 0.25;
+
+                                            scale.x = uniform_scale;
+                                            scale.y = uniform_scale;
+                                            scale.z = uniform_scale;
+
+                                            translation.x = (uptime).sin() * 1.0;
+                                            translation.z = (uptime).cos() * 1.0;
+                                        }
+                                        "blue_cube" => {
+                                            rotation.y = (uptime / 8.0) % 2.0 * PI;
+
+                                            let uniform_scale = blue_cube_original_uniform_scale
+                                                + (uptime * 2.0).sin()
+                                                    * blue_cube_original_uniform_scale
+                                                    * 0.25;
+
+                                            scale.x = uniform_scale;
+                                            scale.y = uniform_scale;
+                                            scale.z = uniform_scale;
+
+                                            translation.x = (-uptime).sin() * 1.0;
+                                            translation.z = (-uptime).cos() * 1.0;
+                                        }
+                                        _ => (),
                                     }
-                                    "red_cube" => {
-                                        rotation.y = (uptime / 2.0) % 2.0 * PI;
-
-                                        let uniform_scale = red_cube_original_uniform_scale
-                                            + (uptime * 2.0).sin()
-                                                * red_cube_original_uniform_scale
-                                                * 0.25;
-
-                                        scale.x = uniform_scale;
-                                        scale.y = uniform_scale;
-                                        scale.z = uniform_scale;
-                                    }
-                                    "green_cube" => {
-                                        rotation.y = (-uptime / 4.0) % 2.0 * PI;
-
-                                        let uniform_scale = green_cube_original_uniform_scale
-                                            + (-uptime * 2.0).sin()
-                                                * green_cube_original_uniform_scale
-                                                * 0.25;
-
-                                        scale.x = uniform_scale;
-                                        scale.y = uniform_scale;
-                                        scale.z = uniform_scale;
-
-                                        translation.x = (uptime).sin() * 1.0;
-                                        translation.z = (uptime).cos() * 1.0;
-                                    }
-                                    "blue_cube" => {
-                                        rotation.y = (uptime / 8.0) % 2.0 * PI;
-
-                                        let uniform_scale = blue_cube_original_uniform_scale
-                                            + (uptime * 2.0).sin()
-                                                * blue_cube_original_uniform_scale
-                                                * 0.25;
-
-                                        scale.x = uniform_scale;
-                                        scale.y = uniform_scale;
-                                        scale.z = uniform_scale;
-
-                                        translation.x = (-uptime).sin() * 1.0;
-                                        translation.z = (-uptime).cos() * 1.0;
-                                    }
-                                    _ => (),
                                 }
 
                                 node.get_transform_mut().set_scale(scale);

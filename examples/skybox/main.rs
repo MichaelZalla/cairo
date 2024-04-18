@@ -338,7 +338,12 @@ fn main() -> Result<(), String> {
                             Ok(entry) => {
                                 let entity = &mut entry.item;
 
-                                if entity.mesh.object_name == "plane" {
+                                if entity
+                                    .mesh
+                                    .object_name
+                                    .as_ref()
+                                    .is_some_and(|n| n == "plane")
+                                {
                                     return Ok(());
                                 }
 

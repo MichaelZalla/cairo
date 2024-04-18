@@ -335,18 +335,18 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
                                         object_faces.clone(),
                                     );
 
-                                    accumulated_mesh.object_source = path_display.to_string();
+                                    accumulated_mesh.object_source = Some(path_display.to_string());
 
                                     match object_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_mesh.object_name = name;
+                                            accumulated_mesh.object_name = Some(name);
                                         }
                                         None => (),
                                     }
 
                                     match group_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_mesh.group_name = name;
+                                            accumulated_mesh.group_name = Some(name);
                                         }
                                         None => (),
                                     }
@@ -360,7 +360,10 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
                                         None => (),
                                     }
 
-                                    println!("Parsed object {}.", accumulated_mesh.object_name);
+                                    println!(
+                                        "Parsed object {}.",
+                                        accumulated_mesh.object_name.as_ref().unwrap()
+                                    );
 
                                     objects.push(accumulated_mesh);
 

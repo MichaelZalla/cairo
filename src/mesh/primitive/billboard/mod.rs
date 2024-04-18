@@ -66,7 +66,7 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
 
     let mut mesh = Mesh::new(vertices, uvs, normals, faces);
 
-    mesh.object_name = "billboard".to_string();
+    mesh.object_name = Some("billboard".to_string());
 
     return mesh;
 }
