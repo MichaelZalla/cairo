@@ -254,28 +254,24 @@ fn main() -> Result<(), String> {
         SceneNodeType::Environment,
         Default::default(),
         Some(environment_handle),
-        None,
     );
 
     environment_node.add_child(SceneNode::new(
         SceneNodeType::AmbientLight,
         Default::default(),
         Some(ambient_light_handle),
-        None,
     ))?;
 
     environment_node.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
         Default::default(),
         Some(directional_light_handle),
-        None,
     ))?;
 
     let skybox_node = SceneNode::new(
         SceneNodeType::Skybox,
         Default::default(),
         Some(skybox_handle),
-        None,
     );
 
     environment_node.add_child(skybox_node)?;
@@ -290,7 +286,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(blue_cube_entity_handle),
-        None,
     );
 
     let mut blue_cube_entity_scale = *(blue_cube_entity_node.get_transform().scale());
@@ -313,7 +308,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(green_cube_entity_handle),
-        None,
     );
 
     let mut green_cube_entity_scale = *(green_cube_entity_node.get_transform().scale());
@@ -338,7 +332,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::SpotLight,
         Default::default(),
         Some(spot_light_handle),
-        None,
     );
 
     spot_light_node.get_transform_mut().set_translation(Vec3 {
@@ -355,7 +348,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(red_cube_entity_handle),
-        None,
     );
 
     let mut red_cube_entity_translation = *(red_cube_entity_node.get_transform().translation());
@@ -383,7 +375,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(plane_entity_handle),
-        None,
     );
 
     plane_entity_node.add_child(red_cube_entity_node)?;
@@ -398,7 +389,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Camera,
         Default::default(),
         Some(camera_handle),
-        None,
     );
 
     scenegraph.root.add_child(camera_node)?;
@@ -407,7 +397,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::PointLight,
         Default::default(),
         Some(point_light_handle),
-        None,
     );
 
     plane_entity_node.add_child(point_light_node)?;

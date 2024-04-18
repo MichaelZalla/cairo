@@ -231,21 +231,18 @@ fn main() -> Result<(), String> {
         SceneNodeType::Environment,
         Default::default(),
         Some(environment_handle),
-        None,
     );
 
     environment_node.add_child(SceneNode::new(
         SceneNodeType::AmbientLight,
         Default::default(),
         Some(ambient_light_handle),
-        None,
     ))?;
 
     environment_node.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
         Default::default(),
         Some(directional_light_handle),
-        None,
     ))?;
 
     scenegraph.root.add_child(environment_node)?;
@@ -256,14 +253,12 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(plane_entity_handle),
-        None,
     );
 
     let mut cube_entity_node = SceneNode::new(
         SceneNodeType::Entity,
         Default::default(),
         Some(cube_entity_handle),
-        None,
     );
 
     cube_entity_node.get_transform_mut().set_translation(Vec3 {
@@ -281,21 +276,18 @@ fn main() -> Result<(), String> {
         SceneNodeType::Camera,
         Default::default(),
         Some(camera_handle),
-        None,
     ))?;
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::PointLight,
         Default::default(),
         Some(point_light_handle),
-        None,
     ))?;
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::SpotLight,
         Default::default(),
         Some(spot_light_handle),
-        None,
     ))?;
 
     // Prints the scenegraph to stdout.

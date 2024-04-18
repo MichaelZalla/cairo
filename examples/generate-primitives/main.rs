@@ -345,21 +345,18 @@ fn main() -> Result<(), String> {
         SceneNodeType::Environment,
         Default::default(),
         Some(environment_handle),
-        None,
     );
 
     environment_node.add_child(SceneNode::new(
         SceneNodeType::AmbientLight,
         Default::default(),
         Some(ambient_light_handle),
-        None,
     ))?;
 
     environment_node.add_child(SceneNode::new(
         SceneNodeType::DirectionalLight,
         Default::default(),
         Some(directional_light_handle),
-        None,
     ))?;
 
     scenegraph.root.add_child(environment_node)?;
@@ -370,7 +367,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(plane_entity_handle),
-        None,
     );
 
     plane_entity_node.get_transform_mut().set_translation(Vec3 {
@@ -385,7 +381,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(cube_entity_handle),
-        None,
     );
 
     cube_entity_node.get_transform_mut().set_translation(Vec3 {
@@ -400,7 +395,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(cone_entity_handle),
-        None,
     );
 
     cone_entity_node.get_transform_mut().set_translation(Vec3 {
@@ -415,7 +409,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::Entity,
         Default::default(),
         Some(cylinder_entity_handle),
-        None,
     );
 
     cylinder_entity_node
@@ -434,14 +427,12 @@ fn main() -> Result<(), String> {
         SceneNodeType::Camera,
         Default::default(),
         Some(camera_handle),
-        None,
     ))?;
 
     scenegraph.root.add_child(SceneNode::new(
         SceneNodeType::Camera,
         Default::default(),
         Some(camera2_handle),
-        None,
     ))?;
 
     let point_lights_count = point_lights.len();
@@ -456,7 +447,6 @@ fn main() -> Result<(), String> {
                 SceneNodeType::PointLight,
                 Default::default(),
                 Some(point_light_handle),
-                None,
             ))?;
         }
     }
@@ -465,7 +455,6 @@ fn main() -> Result<(), String> {
         SceneNodeType::SpotLight,
         Default::default(),
         Some(spot_light_handle),
-        None,
     ))?;
 
     // Prints the scenegraph to stdout.

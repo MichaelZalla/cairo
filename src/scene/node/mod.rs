@@ -37,36 +37,25 @@ pub enum SceneNodeLocalTraversalMethod {
 }
 
 #[derive(Default, Debug, Clone)]
-pub struct SceneNode<'a> {
+pub struct SceneNode {
     node_type: SceneNodeType,
     transform: Transform3D,
     handle: Option<Handle>,
-    parent: Option<&'a SceneNode<'a>>,
-    children: Option<Vec<SceneNode<'a>>>,
+    children: Option<Vec<SceneNode>>,
 }
 
-impl<'a> SceneNode<'a> {
-    pub fn new(
-        node_type: SceneNodeType,
-        transform: Transform3D,
-        handle: Option<Handle>,
-        parent: Option<&'a SceneNode<'a>>,
-    ) -> Self {
+impl SceneNode {
+    pub fn new(node_type: SceneNodeType, transform: Transform3D, handle: Option<Handle>) -> Self {
         Self {
             node_type,
             transform,
             handle,
-            parent,
             children: None,
         }
     }
 
     pub fn is_type(&self, node_type: SceneNodeType) -> bool {
         self.node_type == node_type
-    }
-
-    pub fn is_root(&self) -> bool {
-        self.parent.is_none()
     }
 
     pub fn is_scene_root(&self) -> bool {
@@ -93,15 +82,15 @@ impl<'a> SceneNode<'a> {
         self.children.is_some()
     }
 
-    pub fn children(&self) -> &Option<Vec<SceneNode<'a>>> {
+    pub fn children(&self) -> &Option<Vec<Self>> {
         &self.children
     }
 
-    pub fn children_mut(&mut self) -> &mut Option<Vec<SceneNode<'a>>> {
+    pub fn children_mut(&mut self) -> &mut Option<Vec<Self>> {
         &mut self.children
     }
 
-    pub fn add_child(&mut self, node: SceneNode<'a>) -> Result<(), String> {
+    pub fn add_child(&mut self, node: Self) -> Result<(), String> {
         match node.node_type {
             SceneNodeType::Scene => {
                 return Err("Scene node must be the root node.".to_string());
@@ -385,7 +374,7 @@ impl<'a> SceneNode<'a> {
     }
 }
 
-impl<'a> Display for SceneNode<'a> {
+impl<'a> Display for SceneNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let uuid_suffix = match &self.handle {
             Some(handle) => format!(" | {}", handle.uuid),

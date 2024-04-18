@@ -6,19 +6,20 @@ use super::node::{
     SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
 };
 
-pub struct SceneGraph<'a> {
-    pub root: SceneNode<'a>,
+#[derive(Debug, Default, Clone)]
+pub struct SceneGraph {
+    pub root: SceneNode,
 }
 
-impl<'a> SceneGraph<'a> {
+impl SceneGraph {
     pub fn new() -> Self {
         Self {
-            root: SceneNode::new(SceneNodeType::Scene, Default::default(), None, None),
+            root: SceneNode::new(SceneNodeType::Scene, Default::default(), None),
         }
     }
 }
 
-impl<'a> Display for SceneGraph<'a> {
+impl Display for SceneGraph {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut write_node_to_formatter = |current_depth: usize,
                                            _world_transform: Mat4,
