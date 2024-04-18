@@ -77,7 +77,7 @@ fn main() -> Result<(), String> {
 
     let brick_specular_map = TextureMap::new(
         &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     let brick_normal_map = TextureMap::new(

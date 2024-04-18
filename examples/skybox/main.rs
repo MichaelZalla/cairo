@@ -104,7 +104,7 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_diffuse_map = TextureMap::new(
         &"./assets/textures/checkerboard.jpg",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     checkerboard_diffuse_map.load(rendering_context)?;

@@ -153,7 +153,7 @@ fn main() -> Result<(), String> {
 
     let mut wojak_texture = TextureMap::new(
         "./examples/immediate-ui/assets/wojak.png",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     wojak_texture.load(rendering_context).unwrap();

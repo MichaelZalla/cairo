@@ -264,7 +264,7 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                     .unwrap()
                                     .alpha_map = Some(TextureMap::new(
                                     &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::Index8,
+                                    TextureMapStorageFormat::Index8(0),
                                 ));
                             }
 
@@ -305,7 +305,7 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                     .unwrap()
                                     .displacement_map = Some(TextureMap::new(
                                     &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::Index8,
+                                    TextureMapStorageFormat::Index8(0),
                                 ));
                             }
 

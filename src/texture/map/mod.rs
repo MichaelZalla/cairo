@@ -17,7 +17,7 @@ pub enum TextureMapStorageFormat {
     #[default]
     RGBA32,
     RGB24,
-    Index8,
+    Index8(usize),
 }
 
 impl TextureMapStorageFormat {
@@ -25,7 +25,7 @@ impl TextureMapStorageFormat {
         match self {
             TextureMapStorageFormat::RGBA32 => 4,
             TextureMapStorageFormat::RGB24 => 3,
-            TextureMapStorageFormat::Index8 => 1,
+            TextureMapStorageFormat::Index8(_target_channel) => 1,
         }
     }
 }
@@ -34,7 +34,6 @@ impl TextureMapStorageFormat {
 pub struct TextureMapInfo {
     pub filepath: String,
     pub storage_format: TextureMapStorageFormat,
-    pub target_channel: usize,
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -68,7 +67,6 @@ impl TextureMap {
             info: TextureMapInfo {
                 filepath: filepath.to_string(),
                 storage_format,
-                target_channel: 0,
             },
             is_loaded: false,
             is_mipmapped: false,
@@ -90,7 +88,7 @@ impl TextureMap {
                 } else if bytes_per_pixel == 3 {
                     TextureMapStorageFormat::RGB24
                 } else if bytes_per_pixel == 1 {
-                    TextureMapStorageFormat::Index8
+                    TextureMapStorageFormat::Index8(0)
                 } else {
                     panic!(
                         "Invalid buffer data length {} for buffer size {}x{}!",
@@ -99,7 +97,6 @@ impl TextureMap {
                         height
                     )
                 },
-                target_channel: 0,
             },
             is_loaded: true,
             is_mipmapped: false,
@@ -111,11 +108,9 @@ impl TextureMap {
     }
 
     pub fn from_alpha_channel(filepath: &str) -> Self {
-        let mut map = Self::new(filepath, TextureMapStorageFormat::Index8);
+        let target_channel = PixelFormatEnum::RGBA32.byte_size_per_pixel() - 1;
 
-        map.info.target_channel = PixelFormatEnum::RGBA32.byte_size_per_pixel() - 1;
-
-        map
+        Self::new(filepath, TextureMapStorageFormat::Index8(target_channel))
     }
 
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
@@ -165,7 +160,7 @@ impl TextureMap {
                         PixelFormatEnum::RGB24
                     }
                     // Err: "Indexed pixel formats not supported"
-                    TextureMapStorageFormat::Index8 => PixelFormatEnum::RGBA32,
+                    TextureMapStorageFormat::Index8(_target_channel) => PixelFormatEnum::RGBA32,
                 };
 
                 let bytes_per_src_pixel = sdl_read_pixel_format.byte_size_per_pixel();
@@ -194,15 +189,15 @@ impl TextureMap {
 
                         original_size_bytes.copy_from_slice(pixels.as_slice());
                     }
-                    TextureMapStorageFormat::Index8 => {
+                    TextureMapStorageFormat::Index8(target_channel) => {
                         original_size_bytes.resize(pixels_bytes / bytes_per_src_pixel, 0);
 
-                        if self.info.target_channel >= bytes_per_src_pixel {
-                            panic!("Invalid channel offset ({}) for texture map with Index8 storage format!", self.info.target_channel);
+                        if target_channel >= bytes_per_src_pixel {
+                            panic!("Invalid channel offset ({}) for texture map with Index8 storage format!", target_channel);
                         }
 
                         for i in 0..pixels_bytes / bytes_per_src_pixel {
-                            original_size_bytes[i] = pixels[i * bytes_per_src_pixel + self.info.target_channel];
+                            original_size_bytes[i] = pixels[i * bytes_per_src_pixel + target_channel];
                         }
                     }
                 }
@@ -299,7 +294,7 @@ impl TextureMap {
                     g = original_size_buffer.data[i * bytes_per_pixel + 1];
                     b = original_size_buffer.data[i * bytes_per_pixel + 2];
                 }
-                TextureMapStorageFormat::Index8 => {
+                TextureMapStorageFormat::Index8(_target_channel) => {
                     g = r;
                     b = r;
                 }
@@ -314,7 +309,7 @@ impl TextureMap {
                     original_size_buffer.data[i * bytes_per_pixel + 1] = g_new;
                     original_size_buffer.data[i * bytes_per_pixel + 2] = b_new;
                 }
-                TextureMapStorageFormat::Index8 => (),
+                TextureMapStorageFormat::Index8(_target_channel) => (),
             }
         }
 

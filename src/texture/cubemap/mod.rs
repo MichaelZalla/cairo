@@ -173,7 +173,7 @@ impl CubeMap {
                                 bytes[local_pixel_index + 2] =
                                     cross_buffer.data[global_pixel_index + 2];
                             }
-                            TextureMapStorageFormat::Index8 => (),
+                            TextureMapStorageFormat::Index8(_target_channel) => (),
                         }
                     }
                 }

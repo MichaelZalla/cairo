@@ -75,7 +75,7 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_diffuse_map = TextureMap::new(
         &"./assets/textures/checkerboard.jpg",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     checkerboard_diffuse_map.load(rendering_context)?;
@@ -97,7 +97,7 @@ fn main() -> Result<(), String> {
 
     let lava_emissive_map = TextureMap::new(
         &"./examples/post-effects/assets/lava_emissive.png",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     lava_material.diffuse_map = Some(lava_diffuse_map);

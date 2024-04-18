@@ -104,7 +104,7 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_diffuse_map = TextureMap::new(
         &"./assets/textures/checkerboard.jpg",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     // Checkerboard material
@@ -136,7 +136,7 @@ fn main() -> Result<(), String> {
 
     point_light_decal_mat.alpha_map = Some(TextureMap::new(
         &"./assets/decals/point_light_small.png",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     ));
 
     point_light_decal_mat.emissive_map = point_light_decal_mat.alpha_map.clone();
@@ -149,7 +149,7 @@ fn main() -> Result<(), String> {
 
     spot_light_decal_mat.alpha_map = Some(TextureMap::new(
         &"./assets/decals/spot_light_small.png",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     ));
 
     spot_light_decal_mat.emissive_map = spot_light_decal_mat.alpha_map.clone();

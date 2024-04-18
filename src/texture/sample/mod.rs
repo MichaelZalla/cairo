@@ -315,7 +315,7 @@ fn sample_from_texel(
             g = buffer.data[texel_color_index + 1];
             b = buffer.data[texel_color_index + 2];
         }
-        TextureMapStorageFormat::Index8 => {
+        TextureMapStorageFormat::Index8(_target_channel) => {
             g = r;
             b = r;
         }

@@ -69,7 +69,7 @@ fn main() -> Result<(), String> {
 
     let mut checkerboard_diffuse_map = TextureMap::new(
         &"./assets/textures/checkerboard.jpg",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     checkerboard_diffuse_map.load(rendering_context)?;
@@ -90,7 +90,7 @@ fn main() -> Result<(), String> {
 
     let container_specular_map = TextureMap::new(
         &"./examples/specular-map/assets/container2_specular.png",
-        TextureMapStorageFormat::Index8,
+        TextureMapStorageFormat::Index8(0),
     );
 
     container_material.diffuse_map = Some(container_diffuse_map);
