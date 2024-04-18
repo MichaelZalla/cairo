@@ -13,17 +13,12 @@ pub struct Face {
     pub uvs: Option<(usize, usize, usize)>, // Indices into Vec<Vec2>
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct MaterialSource {
-    pub filepath: String,
-}
-
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub object_source: Option<String>,
     pub object_name: Option<String>,
     pub group_name: Option<String>,
-    pub material_source: Option<MaterialSource>,
+    pub material_source: Option<String>,
     pub material_name: Option<String>,
     pub vertices: Vec<Vec3>,
     pub normals: Vec<Vec3>,
@@ -69,12 +64,13 @@ impl fmt::Display for Mesh {
             self.group_name.as_ref().unwrap_or(&"No group".to_string())
         )?;
 
-        match &self.material_source {
-            Some(src) => {
-                writeln!(v, "  > Material source: {}", src.filepath)?;
-            }
-            None => (),
-        }
+        writeln!(
+            v,
+            "  > Material source: {}",
+            self.material_source
+                .as_ref()
+                .unwrap_or(&"No material".to_string())
+        )?;
 
         writeln!(
             v,

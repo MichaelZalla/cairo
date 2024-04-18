@@ -1,7 +1,7 @@
 use std::{path::Path, str::SplitWhitespace};
 
 use crate::texture::map::TextureMapStorageFormat;
-use crate::{fs::read_lines, mesh::MaterialSource, texture::map::TextureMap, vec::vec3::Vec3};
+use crate::{fs::read_lines, texture::map::TextureMap, vec::vec3::Vec3};
 
 use super::cache::MaterialCache;
 
@@ -38,9 +38,7 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 // Example:
                                 // newmtl cube
 
-                                let source = MaterialSource {
-                                    filepath: mtl_file_path_display.to_string(),
-                                };
+                                let source = mtl_file_path_display.to_string();
 
                                 let name = line_tokens.next().unwrap().to_string();
 

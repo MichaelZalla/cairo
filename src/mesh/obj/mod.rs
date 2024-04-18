@@ -6,7 +6,7 @@ use crate::fs::read_lines;
 
 use crate::material;
 use crate::material::cache::MaterialCache;
-use crate::mesh::{Face, MaterialSource};
+use crate::mesh::Face;
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 use super::Mesh;
@@ -28,7 +28,7 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
 
     let mut objects: Vec<Mesh> = vec![];
 
-    let mut material_source: Option<MaterialSource> = None;
+    let mut material_source: Option<String> = None;
 
     // Global state
 
@@ -232,9 +232,7 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
                                     .unwrap();
                                 let mtl_path_relative_str = mtl_path_relative.as_str();
 
-                                material_source = Some(MaterialSource {
-                                    filepath: mtl_path_relative_str.to_string(),
-                                });
+                                material_source = Some(mtl_path_relative_str.to_string());
                             }
                             // Material group
                             "usemtl" => {
@@ -432,7 +430,8 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
 
     match &material_source {
         Some(src) => {
-            let material_cache = material::mtl::load_mtl(&src.filepath);
+            let material_cache = material::mtl::load_mtl(&src);
+
             (objects, Some(material_cache))
         }
         None => (objects, None),

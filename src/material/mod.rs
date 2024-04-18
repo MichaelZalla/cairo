@@ -1,8 +1,7 @@
 use std::fmt;
 
 use crate::{
-    app::context::ApplicationRenderingContext, color, mesh::MaterialSource,
-    texture::map::TextureMap, vec::vec3::Vec3,
+    app::context::ApplicationRenderingContext, color, texture::map::TextureMap, vec::vec3::Vec3,
 };
 
 pub mod cache;
@@ -11,7 +10,7 @@ pub mod mtl;
 #[derive(Debug, Clone, Default)]
 pub struct Material {
     pub name: String,
-    pub material_source: Option<MaterialSource>,
+    pub material_source: Option<String>,
     pub illumination_model: u8,
     pub ambient_color: Vec3,
     pub ambient_map: Option<TextureMap>,
@@ -144,7 +143,7 @@ impl fmt::Display for Material {
 
         match &self.material_source {
             Some(source) => {
-                writeln!(v, "  > Material source : {}", source.filepath)?;
+                writeln!(v, "  > Material source : {}", source)?;
             }
             None => (),
         }
