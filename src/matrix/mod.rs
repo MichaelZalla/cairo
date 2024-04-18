@@ -1,31 +1,31 @@
 use std::{
     f32::consts::PI,
     fmt::{self, Display},
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub},
 };
 
 use super::vec::{vec3::Vec3, vec4::Vec4};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Mat<T, const N: usize> {
-    elements: [[T; N]; N],
+pub struct Mat4 {
+    elements: [[f32; 4]; 4],
 }
 
-impl<T: Copy + Display, const N: usize> Display for Mat<T, N> {
+impl Display for Mat4 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut result: Vec<String> = vec![String::from("(\n"); 1];
 
-        for i in 0..N {
+        for i in 0..4 {
             result.push(String::from(" ("));
-            for j in 0..N {
+            for j in 0..4 {
                 let value = self.elements[i][j];
                 result.push(String::from(format!("{}", value)));
-                if j < N - 1 {
+                if j < 4 - 1 {
                     result.push(String::from(","));
                 }
             }
             result.push(String::from(")"));
-            if i < N - 1 {
+            if i < 4 - 1 {
                 result.push(String::from(","));
             }
             result.push(String::from("\n"));
@@ -39,68 +39,66 @@ impl<T: Copy + Display, const N: usize> Display for Mat<T, N> {
     }
 }
 
-impl<T: MulAssign<f32>, const N: usize> MulAssign<f32> for Mat<T, N> {
+impl MulAssign<f32> for Mat4 {
     fn mul_assign(&mut self, rhs: f32) {
-        for i in 0..N {
-            for j in 0..N {
+        for i in 0..4 {
+            for j in 0..4 {
                 self.elements[i][j] *= rhs;
             }
         }
     }
 }
 
-impl<T: Clone + MulAssign<f32>, const N: usize> Mul<f32> for Mat<T, N> {
-    type Output = Mat<T, N>;
-    fn mul(self, rhs: f32) -> Mat<T, N> {
+impl Mul<f32> for Mat4 {
+    type Output = Mat4;
+    fn mul(self, rhs: f32) -> Mat4 {
         let mut result = self.clone();
         result *= rhs;
         result
     }
 }
 
-impl<T: DivAssign<f32>, const N: usize> DivAssign<f32> for Mat<T, N> {
+impl DivAssign<f32> for Mat4 {
     fn div_assign(&mut self, rhs: f32) {
-        for i in 0..N {
-            for j in 0..N {
+        for i in 0..4 {
+            for j in 0..4 {
                 self.elements[i][j] /= rhs;
             }
         }
     }
 }
 
-impl<T: Clone + DivAssign<f32>, const N: usize> Div<f32> for Mat<T, N> {
-    type Output = Mat<T, N>;
-    fn div(self, rhs: f32) -> Mat<T, N> {
+impl Div<f32> for Mat4 {
+    type Output = Mat4;
+    fn div(self, rhs: f32) -> Mat4 {
         let mut result = self.clone();
         result /= rhs;
         result
     }
 }
 
-impl<T: Default + Copy + Mul<Output = T> + AddAssign<T>, const N: usize> MulAssign<Self>
-    for Mat<T, N>
-{
+impl MulAssign<Self> for Mat4 {
     fn mul_assign(&mut self, rhs: Self) {
         let result = (*self) * rhs;
-        for i in 0..N {
-            for j in 0..N {
+        for i in 0..4 {
+            for j in 0..4 {
                 self.elements[i][j] = result.elements[i][j];
             }
         }
     }
 }
 
-impl<T: Default + Copy + Mul<Output = T> + AddAssign<T>, const N: usize> Mul<Self> for Mat<T, N> {
-    type Output = Mat<T, N>;
+impl Mul<Self> for Mat4 {
+    type Output = Mat4;
 
-    fn mul(self, rhs: Self) -> Mat<T, N> {
-        let mut result = Mat::<T, N>::new();
+    fn mul(self, rhs: Self) -> Mat4 {
+        let mut result = Mat4::new();
 
-        for i in 0..N {
-            for j in 0..N {
-                let mut sum: T = T::default();
+        for i in 0..4 {
+            for j in 0..4 {
+                let mut sum = 0.0;
 
-                for k in 0..N {
+                for k in 0..4 {
                     sum += self.elements[i][k] * rhs.elements[k][j];
                 }
 
@@ -112,26 +110,24 @@ impl<T: Default + Copy + Mul<Output = T> + AddAssign<T>, const N: usize> Mul<Sel
     }
 }
 
-impl<T: Default + Copy + Add<Output = T> + AddAssign<T>, const N: usize> AddAssign<Self>
-    for Mat<T, N>
-{
+impl AddAssign<Self> for Mat4 {
     fn add_assign(&mut self, rhs: Self) {
-        for i in 0..N {
-            for j in 0..N {
+        for i in 0..4 {
+            for j in 0..4 {
                 self.elements[i][j] += rhs.elements[i][j];
             }
         }
     }
 }
 
-impl<T: Default + Copy + Add<Output = T> + AddAssign<T>, const N: usize> Add<Self> for Mat<T, N> {
-    type Output = Mat<T, N>;
+impl Add<Self> for Mat4 {
+    type Output = Mat4;
 
-    fn add(self, rhs: Self) -> Mat<T, N> {
-        let mut result = Mat::<T, N>::new();
+    fn add(self, rhs: Self) -> Mat4 {
+        let mut result = Mat4::new();
 
-        for i in 0..N {
-            for j in 0..N {
+        for i in 0..4 {
+            for j in 0..4 {
                 result.elements[i][j] = self.elements[i][j] + rhs.elements[i][j];
             }
         }
@@ -140,14 +136,14 @@ impl<T: Default + Copy + Add<Output = T> + AddAssign<T>, const N: usize> Add<Sel
     }
 }
 
-impl<T: Default + Copy + Sub<Output = T> + SubAssign<T>, const N: usize> Sub<Self> for Mat<T, N> {
-    type Output = Mat<T, N>;
+impl Sub<Self> for Mat4 {
+    type Output = Mat4;
 
-    fn sub(self, rhs: Self) -> Mat<T, N> {
-        let mut result = Mat::<T, N>::new();
+    fn sub(self, rhs: Self) -> Mat4 {
+        let mut result = Mat4::new();
 
-        for i in 0..N {
-            for j in 0..N {
+        for i in 0..4 {
+            for j in 0..4 {
                 result.elements[i][j] = self.elements[i][j] - rhs.elements[i][j];
             }
         }
@@ -156,44 +152,41 @@ impl<T: Default + Copy + Sub<Output = T> + SubAssign<T>, const N: usize> Sub<Sel
     }
 }
 
-impl<T: Default + Copy, const N: usize> Mat<T, N> {
+impl Mat4 {
     pub fn new() -> Self {
-        Mat {
-            elements: [[T::default(); N]; N],
+        Self {
+            elements: [[Default::default(); 4]; 4],
         }
     }
 
-    pub fn new_from_elements(elements: [[T; N]; N]) -> Self {
-        Mat { elements }
+    pub fn new_from_elements(elements: [[f32; 4]; 4]) -> Self {
+        Self { elements }
     }
-}
 
-impl<const N: usize> Mat<f32, N> {
     pub fn identity() -> Self {
-        Self::scale([1.0; N])
+        Self::scale([1.0; 4])
     }
 
-    pub fn scale(scale: [f32; N]) -> Self {
-        let mut result = Mat::<f32, N>::new();
+    pub fn scale(scale: [f32; 4]) -> Self {
+        let mut result = Mat4::new();
 
-        for i in 0..N {
+        for i in 0..4 {
             result.elements[i][i] = scale[i];
         }
 
         result
     }
-}
 
-impl Mat3 {
     pub fn rotation_x(theta: f32) -> Self {
         let sin_theta = theta.sin();
         let cos_theta = theta.cos();
 
         Self {
             elements: [
-                [1.0, 0.0, 0.0],
-                [0.0, cos_theta, sin_theta],
-                [0.0, -sin_theta, cos_theta],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, cos_theta, sin_theta, 0.0],
+                [0.0, -sin_theta, cos_theta, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
             ],
         }
     }
@@ -204,9 +197,10 @@ impl Mat3 {
 
         Self {
             elements: [
-                [cos_theta, 0.0, -sin_theta],
-                [0.0, 1.0, 0.0],
-                [sin_theta, 0.0, cos_theta],
+                [cos_theta, 0.0, -sin_theta, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [sin_theta, 0.0, cos_theta, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
             ],
         }
     }
@@ -217,36 +211,9 @@ impl Mat3 {
 
         Self {
             elements: [
-                [cos_theta, sin_theta, 0.0],
-                [-sin_theta, cos_theta, 0.0],
-                [0.0, 0.0, 1.0],
-            ],
-        }
-    }
-}
-
-impl Mat4 {
-    fn from_mat3(mat: Mat3) -> Self {
-        Self {
-            elements: [
-                [
-                    mat.elements[0][0],
-                    mat.elements[0][1],
-                    mat.elements[0][2],
-                    0.0,
-                ],
-                [
-                    mat.elements[1][0],
-                    mat.elements[1][1],
-                    mat.elements[1][2],
-                    0.0,
-                ],
-                [
-                    mat.elements[2][0],
-                    mat.elements[2][1],
-                    mat.elements[2][2],
-                    0.0,
-                ],
+                [cos_theta, sin_theta, 0.0, 0.0],
+                [-sin_theta, cos_theta, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
         }
@@ -261,18 +228,6 @@ impl Mat4 {
                 [0.0, 0.0, 0.0, 1.0],
             ],
         }
-    }
-
-    pub fn rotation_x(theta: f32) -> Self {
-        Self::from_mat3(Mat3::rotation_x(theta))
-    }
-
-    pub fn rotation_y(theta: f32) -> Self {
-        Self::from_mat3(Mat3::rotation_y(theta))
-    }
-
-    pub fn rotation_z(theta: f32) -> Self {
-        Self::from_mat3(Mat3::rotation_z(theta))
     }
 
     pub fn translation(v: Vec3) -> Self {
@@ -430,43 +385,6 @@ impl Mat4 {
         result
     }
 }
-
-type Mat3 = Mat<f32, 3>;
-
-impl Default for Mat3 {
-    fn default() -> Self {
-        Self::identity()
-    }
-}
-
-impl MulAssign<Mat3> for Vec3 {
-    fn mul_assign(&mut self, rhs: Mat3) {
-        let result = self.clone() * rhs;
-
-        self.x = result.x;
-        self.y = result.y;
-        self.z = result.z;
-    }
-}
-
-impl Mul<Mat3> for Vec3 {
-    type Output = Vec3;
-    fn mul(self, rhs: Mat3) -> Self {
-        Vec3 {
-            x: (self.x * rhs.elements[0][0]
-                + self.y * rhs.elements[1][0]
-                + self.z * rhs.elements[2][0]),
-            y: (self.x * rhs.elements[0][1]
-                + self.y * rhs.elements[1][1]
-                + self.z * rhs.elements[2][1]),
-            z: (self.x * rhs.elements[0][2]
-                + self.y * rhs.elements[1][2]
-                + self.z * rhs.elements[2][2]),
-        }
-    }
-}
-
-pub type Mat4 = Mat<f32, 4>;
 
 impl Default for Mat4 {
     fn default() -> Self {
