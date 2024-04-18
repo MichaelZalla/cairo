@@ -41,13 +41,12 @@ pub enum TextureMapWrapping {
     #[default]
     Repeat,
     ClampToEdge,
-    ClampToBorder,
+    ClampToBorder((u8, u8, u8)),
 }
 
 #[derive(Default, Debug, Clone)]
 pub struct TextureMapOptions {
     pub wrapping: TextureMapWrapping,
-    pub border_color: Option<(u8, u8, u8)>,
 }
 
 #[derive(Default, Debug, Clone)]

@@ -27,7 +27,7 @@ fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
             y: uv.y.max(0.0).min(1.0),
             z: 1.0,
         },
-        TextureMapWrapping::ClampToBorder => {
+        TextureMapWrapping::ClampToBorder(_border_color) => {
             // Out-of-bounds UVs will remain out-of-bounds.
 
             uv
@@ -65,9 +65,9 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
     // Perform any out-of-bounds handling.
 
     match map.options.wrapping {
-        TextureMapWrapping::ClampToBorder => {
+        TextureMapWrapping::ClampToBorder(border_color) => {
             if safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0 {
-                return map.options.border_color.unwrap();
+                return border_color;
             }
         }
         _ => (),
