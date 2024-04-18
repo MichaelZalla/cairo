@@ -4,9 +4,11 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub},
 };
 
+use serde::{Deserialize, Serialize};
+
 use super::vec::{vec3::Vec3, vec4::Vec4};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Mat4 {
     elements: [[f32; 4]; 4],
 }

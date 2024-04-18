@@ -1,5 +1,7 @@
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     app::context::ApplicationRenderingContext,
     buffer::Buffer2D,
@@ -37,7 +39,7 @@ impl fmt::Display for Side {
     }
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct CubeMap {
     is_cross: bool,
     sides: [TextureMap; 6],

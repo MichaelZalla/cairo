@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::resource::handle::Handle;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entity {
     pub mesh: Handle,
 }

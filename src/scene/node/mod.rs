@@ -1,8 +1,10 @@
 use std::{collections::VecDeque, fmt::Display};
 
+use serde::{Deserialize, Serialize};
+
 use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
 
-#[derive(Default, Debug, Copy, Clone, PartialEq)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SceneNodeType {
     #[default]
     Scene,
@@ -36,7 +38,7 @@ pub enum SceneNodeLocalTraversalMethod {
     PostOrder,
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneNode {
     node_type: SceneNodeType,
     transform: Transform3D,

@@ -1,16 +1,19 @@
 use std::slice::Iter;
 
+use serde::{Deserialize, Serialize};
+
 use uuid::Uuid;
 
 use super::handle::Handle;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct ArenaEntry<T> {
     pub uuid: Uuid,
+    // #[serde(flatten)]
     pub item: T,
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Arena<T> {
     pub entries: Vec<Option<ArenaEntry<T>>>,
 }

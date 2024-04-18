@@ -1,12 +1,14 @@
 use std::fmt::{Display, Error};
 
+use serde::{Deserialize, Serialize};
+
 use crate::matrix::Mat4;
 
 use super::node::{
     SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
 };
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SceneGraph {
     pub root: SceneNode,
 }

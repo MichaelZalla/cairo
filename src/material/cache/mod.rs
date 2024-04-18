@@ -1,9 +1,12 @@
 use std::collections::{hash_map::Iter, HashMap};
 
+use serde::{Deserialize, Serialize};
+
 use super::Material;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct MaterialCache {
+    #[serde(flatten)]
     map: HashMap<String, Material>,
 }
 

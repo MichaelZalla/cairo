@@ -1,12 +1,13 @@
 use std::fmt::{self};
 
+use serde::{Deserialize, Serialize};
+
 use crate::vec::vec3::Vec3;
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
 pub struct AABB {
     pub center: Vec3,
     pub half_dimension: f32,
-
     pub left: f32,
     pub right: f32,
     pub top: f32,

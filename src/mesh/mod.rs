@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use self::geometry::Geometry;
 
 use super::vec::vec3::Vec3;
@@ -7,10 +9,12 @@ pub mod geometry;
 pub mod obj;
 pub mod primitive;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Mesh {
     pub geometry: Geometry,
+    #[serde(skip)]
     pub aabb: AABB,
+    // #[serde(skip)]
     // pub aabb_geometry: Geometry,
 }
 

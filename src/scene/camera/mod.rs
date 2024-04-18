@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
@@ -6,14 +8,14 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum CameraProjectionKind {
     #[default]
     Perspective,
     Orthographic,
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct CameraOrthographicExtent {
     pub left: f32,
     pub right: f32,
@@ -24,7 +26,7 @@ pub struct CameraOrthographicExtent {
 static DEFAULT_CAMERA_FIELD_OF_VIEW: f32 = 75.0;
 static DEFAULT_CAMERA_ASPECT_RATIO: f32 = 16.0 / 9.0;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Camera {
     kind: CameraProjectionKind,
     field_of_view: Option<f32>,
@@ -33,7 +35,9 @@ pub struct Camera {
     pub movement_speed: f32,
     projection_z_near: f32,
     projection_z_far: f32,
+    #[serde(skip)]
     projection_transform: Mat4,
+    #[serde(skip)]
     projection_inverse_transform: Mat4,
     pub look_vector: LookVector,
 }

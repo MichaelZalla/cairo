@@ -1,5 +1,7 @@
 use std::f32::consts::PI;
 
+use serde::{Deserialize, Serialize};
+
 use sdl2::keyboard::Keycode;
 
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
     },
 };
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct LookVector {
     position: Vec3,
     target: Vec3,

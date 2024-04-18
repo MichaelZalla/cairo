@@ -2,9 +2,12 @@ use std::cmp;
 use std::fmt;
 use std::ops;
 
+use serde_tuple::Deserialize_tuple;
+use serde_tuple::Serialize_tuple;
+
 use crate::animation::lerp;
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, Serialize_tuple, Deserialize_tuple)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,

@@ -1,12 +1,15 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{matrix::Mat4, vec::vec3::Vec3};
 
 pub mod look_vector;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Transform3D {
     translation: Vec3,
     rotation: Vec3,
     scale: Vec3,
+    #[serde(skip)]
     mat: Mat4,
 }
 

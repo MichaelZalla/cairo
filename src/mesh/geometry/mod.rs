@@ -1,15 +1,17 @@
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
 use crate::vec::{vec2::Vec2, vec3::Vec3};
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Face {
     pub vertices: (usize, usize, usize), // Indices into Vec<Vec3>
     pub normals: Option<(usize, usize, usize)>, // Indices into Vec<Vec3>
     pub uvs: Option<(usize, usize, usize)>, // Indices into Vec<Vec2>
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Geometry {
     pub object_source: Option<String>,
     pub object_name: Option<String>,

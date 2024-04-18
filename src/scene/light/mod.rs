@@ -1,12 +1,14 @@
 use std::f32::consts::PI;
 
+use serde::{Deserialize, Serialize};
+
 use crate::color;
 use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
 use crate::vec::vec3::{self, Vec3};
 use crate::vec::vec4::Vec4;
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct AmbientLight {
     pub intensities: Vec3,
 }
@@ -17,7 +19,7 @@ impl AmbientLight {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct DirectionalLight {
     pub intensities: Vec3,
     pub direction: Vec4,
@@ -34,7 +36,7 @@ impl DirectionalLight {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct PointLight {
     pub intensities: Vec3,
     pub specular_intensity: f32,
@@ -42,6 +44,7 @@ pub struct PointLight {
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
+    #[serde(skip)]
     pub influence_distance: f32,
 }
 
@@ -139,17 +142,20 @@ impl PointLight {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SpotLight {
     pub intensities: Vec3,
     pub look_vector: LookVector,
     pub inner_cutoff_angle: f32,
+    #[serde(skip)]
     pub inner_cutoff_angle_cos: f32,
     pub outer_cutoff_angle: f32,
+    #[serde(skip)]
     pub outer_cutoff_angle_cos: f32,
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
+    #[serde(skip)]
     pub influence_distance: f32,
 }
 

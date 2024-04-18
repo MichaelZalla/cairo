@@ -1,5 +1,7 @@
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     app::context::ApplicationRenderingContext,
     color,
@@ -11,7 +13,7 @@ use crate::{
 pub mod cache;
 pub mod mtl;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Material {
     pub name: String,
     pub material_source: Option<String>,

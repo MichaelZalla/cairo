@@ -1,3 +1,6 @@
+use serde::Deserialize;
+use serde::Serialize;
+
 use sdl2::image::InitFlag;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
@@ -12,7 +15,7 @@ use super::get_half_scaled;
 
 pub type TextureBuffer = Buffer2D<u8>;
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum TextureMapStorageFormat {
     #[default]
     RGBA32,
@@ -30,13 +33,13 @@ impl TextureMapStorageFormat {
     }
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct TextureMapInfo {
     pub filepath: String,
     pub storage_format: TextureMapStorageFormat,
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum TextureMapWrapping {
     #[default]
     Repeat,
@@ -44,18 +47,23 @@ pub enum TextureMapWrapping {
     ClampToBorder((u8, u8, u8)),
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct TextureMapOptions {
     pub wrapping: TextureMapWrapping,
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct TextureMap {
     pub info: TextureMapInfo,
+    #[serde(skip, default)]
     pub is_loaded: bool,
+    #[serde(skip, default)]
     pub is_mipmapped: bool,
+    #[serde(skip, default)]
     pub width: u32,
+    #[serde(skip, default)]
     pub height: u32,
+    #[serde(skip, default)]
     pub levels: Vec<TextureBuffer>,
     pub options: TextureMapOptions,
 }
