@@ -1,11 +1,14 @@
 use std::f32::consts::PI;
 
-use crate::vec::{
-    vec2::{self, Vec2},
-    vec3::{self, Vec3},
+use crate::{
+    mesh::{geometry::Geometry, Mesh},
+    vec::{
+        vec2::{self, Vec2},
+        vec3::{self, Vec3},
+    },
 };
 
-use super::{Face, Mesh};
+use super::Face;
 
 use crate::texture;
 
@@ -106,9 +109,9 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         });
     }
 
-    let mut mesh = Mesh::new(vertices, uvs, normals, faces);
+    let mut geometry = Geometry::new(vertices, uvs, normals, faces);
 
-    mesh.object_name = Some("cone".to_string());
+    geometry.object_name = Some("cone".to_string());
 
-    return mesh;
+    Mesh::new(geometry)
 }

@@ -115,9 +115,9 @@ fn main() -> Result<(), String> {
 
     // Assign textures to mesh materials
 
-    brick_wall_mesh.material_name = Some(brick_material.name.to_string());
+    brick_wall_mesh.geometry.material_name = Some(brick_material.name.to_string());
 
-    box_mesh.material_name = Some(box_material.name.to_string());
+    box_mesh.geometry.material_name = Some(box_material.name.to_string());
 
     // Collect materials
 

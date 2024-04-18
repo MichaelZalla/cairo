@@ -117,7 +117,7 @@ fn main() -> Result<(), String> {
 
     // Assign textures to mesh materials
 
-    cube_mesh.material_name = Some(checkerboard_material.name.clone());
+    cube_mesh.geometry.material_name = Some(checkerboard_material.name.clone());
 
     // Collect materials
 
@@ -333,6 +333,7 @@ fn main() -> Result<(), String> {
 
                                 if entity
                                     .mesh
+                                    .geometry
                                     .object_name
                                     .as_ref()
                                     .is_some_and(|n| n == "plane")

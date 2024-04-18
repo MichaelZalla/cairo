@@ -1,101 +1,92 @@
-use std::fmt;
+use self::geometry::Geometry;
 
 use super::vec::vec3::Vec3;
-use crate::vec::vec2::Vec2;
+use crate::physics::collision::aabb::AABB;
 
+pub mod geometry;
 pub mod obj;
 pub mod primitive;
 
-#[derive(Default, Debug, Copy, Clone)]
-pub struct Face {
-    pub vertices: (usize, usize, usize), // Indices into Vec<Vec3>
-    pub normals: Option<(usize, usize, usize)>, // Indices into Vec<Vec3>
-    pub uvs: Option<(usize, usize, usize)>, // Indices into Vec<Vec2>
-}
-
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Mesh {
-    pub object_source: Option<String>,
-    pub object_name: Option<String>,
-    pub group_name: Option<String>,
-    pub material_source: Option<String>,
-    pub material_name: Option<String>,
-    pub vertices: Vec<Vec3>,
-    pub normals: Vec<Vec3>,
-    pub uvs: Vec<Vec2>,
-    pub faces: Vec<Face>,
+    pub geometry: Geometry,
+    pub aabb: AABB,
+    // pub aabb_geometry: Geometry,
 }
 
-impl Default for Mesh {
-    fn default() -> Self {
+impl Mesh {
+    pub fn new(geometry: Geometry) -> Self {
+        let aabb = make_object_space_bounding_box(&geometry);
+        // let aabb_geometry = make_bounding_box_geometry(&aabb);
+
         Self {
-            object_source: None,
-            object_name: None,
-            group_name: None,
-            material_source: Default::default(),
-            material_name: None,
-            vertices: vec![],
-            normals: vec![],
-            uvs: vec![],
-            faces: vec![],
+            geometry,
+            aabb,
+            // aabb_geometry,
         }
     }
 }
 
-impl fmt::Display for Mesh {
-    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
-            v,
-            "Mesh (\"{}\")",
-            self.object_name.as_ref().unwrap_or(&"Unnamed".to_string())
-        )?;
+fn make_object_space_bounding_box(geometry: &Geometry) -> AABB {
+    let mut x_min = f32::MAX;
+    let mut x_max = f32::MIN;
 
-        writeln!(
-            v,
-            "  > Source: {}",
-            self.object_source
-                .as_ref()
-                .unwrap_or(&"No source".to_string())
-        )?;
+    let mut y_min = f32::MAX;
+    let mut y_max = f32::MIN;
 
-        writeln!(
-            v,
-            "  > Group name: {}",
-            self.group_name.as_ref().unwrap_or(&"No group".to_string())
-        )?;
+    let mut z_min = f32::MAX;
+    let mut z_max = f32::MIN;
 
-        writeln!(
-            v,
-            "  > Material source: {}",
-            self.material_source
-                .as_ref()
-                .unwrap_or(&"No material".to_string())
-        )?;
+    for v in geometry.vertices.as_slice() {
+        if v.x < x_min {
+            x_min = v.x;
+        } else if v.x > x_max {
+            x_max = v.x;
+        }
 
-        writeln!(
-            v,
-            "  > Material name: {}",
-            self.material_name
-                .as_ref()
-                .unwrap_or(&"Unnamed".to_string())
-        )?;
+        if v.y < y_min {
+            y_min = v.y;
+        } else if v.y > y_max {
+            y_max = v.y;
+        }
 
-        writeln!(v, "  > Vertices: {}", self.vertices.len())?;
-        writeln!(v, "  > UVs: {}", self.uvs.len())?;
-        writeln!(v, "  > Normals: {}", self.normals.len())?;
-        writeln!(v, "  > Faces: {}", self.faces.len())
+        if v.z < z_min {
+            z_min = v.z;
+        } else if v.z > z_max {
+            z_max = v.z;
+        }
+    }
+
+    let width = x_max - x_min;
+    let height = y_max - y_min;
+    let depth = z_max - z_min;
+
+    AABB {
+        center: Vec3 {
+            x: x_min + width / 2.0,
+            y: y_min + height / 2.0,
+            z: z_min + depth / 2.0,
+        },
+        half_dimension: (x_max - x_min) / 2.0,
+        left: x_min,
+        right: x_max,
+        top: y_max,
+        bottom: y_min,
+        near: z_max,
+        far: z_min,
     }
 }
 
-impl Mesh {
-    pub fn new(vertices: Vec<Vec3>, uvs: Vec<Vec2>, normals: Vec<Vec3>, faces: Vec<Face>) -> Self {
-        let mut mesh = Mesh::default();
+fn make_bounding_box_geometry(aabb: &AABB) -> Geometry {
+    let width = aabb.right - aabb.left;
+    let height = aabb.top - aabb.bottom;
+    let depth = aabb.near - aabb.far;
 
-        mesh.vertices = vertices;
-        mesh.normals = normals;
-        mesh.uvs = uvs;
-        mesh.faces = faces;
+    let mut bounding_box_mesh = primitive::cube::generate(width, height, depth);
 
-        mesh
+    for v in bounding_box_mesh.geometry.vertices.as_mut_slice() {
+        *v += aabb.center;
     }
+
+    bounding_box_mesh.geometry
 }

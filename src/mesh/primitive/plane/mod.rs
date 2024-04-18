@@ -1,9 +1,12 @@
-use crate::vec::{
-    vec2::Vec2,
-    vec3::{self, Vec3},
+use crate::{
+    mesh::{geometry::Geometry, Mesh},
+    vec::{
+        vec2::Vec2,
+        vec3::{self, Vec3},
+    },
 };
 
-use super::{Face, Mesh};
+use super::Face;
 
 pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u32) -> Mesh {
     assert!(width_divisions >= 1 && depth_divisions >= 1);
@@ -89,9 +92,9 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
         }
     }
 
-    let mut mesh = Mesh::new(vertices, uvs, normals, faces);
+    let mut geometry = Geometry::new(vertices, uvs, normals, faces);
 
-    mesh.object_name = Some("plane".to_string());
+    geometry.object_name = Some("plane".to_string());
 
-    return mesh;
+    Mesh::new(geometry)
 }

@@ -6,7 +6,7 @@ use crate::{
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
-    mesh::Face,
+    mesh::geometry::{Face, Geometry},
     shader::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
@@ -21,7 +21,7 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-use self::{gbuffer::GBuffer, options::PipelineOptions, primitive::triangle::Triangle};
+use self::{gbuffer::GBuffer, options::PipelineOptions};
 
 use super::{
     color::{self},
@@ -277,41 +277,41 @@ impl<'a> Pipeline<'a> {
 
     fn render_entity_mesh(
         &mut self,
-        entity: &Entity,
+        _entity: &Entity,
         world_transform: &Mat4,
         mesh: &Mesh,
         material_cache: Option<&MaterialCache>,
     ) {
         // Cull the entire entity, if possible, based on its bounds.
 
-        if entity.mesh.normals.len() > 1 {
-            let mut keep = false;
+        // if entity.mesh.geometry.normals.len() > 1 {
+        //     let mut keep = false;
 
-            for face in entity.bounds_mesh.faces.iter() {
-                let object_vertices_in = self.get_vertices_in(&entity.bounds_mesh, &face);
+        //     for face in entity.mesh.aabb_geometry.faces.iter() {
+        //         let object_vertices_in = self.get_vertices_in(&entity.mesh.aabb_geometry, &face);
 
-                let shader_context = self.shader_context.borrow();
+        //         let shader_context = self.shader_context.borrow();
 
-                let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
-                    .into_iter()
-                    .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
-                    .collect();
+        //         let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
+        //             .into_iter()
+        //             .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
+        //             .collect();
 
-                let mut tri: Triangle<DefaultVertexOut> = Triangle {
-                    v0: projection_space_vertices[0],
-                    v1: projection_space_vertices[1],
-                    v2: projection_space_vertices[2],
-                };
+        //         let mut tri: Triangle<DefaultVertexOut> = Triangle {
+        //             v0: projection_space_vertices[0],
+        //             v1: projection_space_vertices[1],
+        //             v2: projection_space_vertices[2],
+        //         };
 
-                if !self.should_cull_from_homogeneous_space(&mut tri) {
-                    keep = true;
-                }
-            }
+        //         if !self.should_cull_from_homogeneous_space(&mut tri) {
+        //             keep = true;
+        //         }
+        //     }
 
-            if !keep {
-                return;
-            }
-        }
+        //     if !keep {
+        //         return;
+        //     }
+        // }
 
         // Otherwise, cull individual triangles.
 
@@ -339,7 +339,7 @@ impl<'a> Pipeline<'a> {
         {
             let mut context = self.shader_context.borrow_mut();
 
-            match &mesh.material_name {
+            match &mesh.geometry.material_name {
                 Some(name) => {
                     match material_cache {
                         Some(cache) => {
@@ -358,7 +358,7 @@ impl<'a> Pipeline<'a> {
             }
         }
 
-        self.process_object_space_vertices(&mesh);
+        self.process_object_space_vertices(&mesh.geometry);
 
         // Reset the shader context's original active material.
         {
@@ -368,43 +368,43 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    fn get_vertices_in(&self, mesh: &Mesh, face: &Face) -> [DefaultVertexIn; 3] {
-        let v0 = mesh.vertices[face.vertices.0].clone();
-        let v1 = mesh.vertices[face.vertices.1].clone();
-        let v2 = mesh.vertices[face.vertices.2].clone();
+    fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
+        let v0 = geometry.vertices[face.vertices.0].clone();
+        let v1 = geometry.vertices[face.vertices.1].clone();
+        let v2 = geometry.vertices[face.vertices.2].clone();
 
         let normal0 = if face.normals.is_some() {
-            mesh.normals[face.normals.unwrap().0].clone()
+            geometry.normals[face.normals.unwrap().0].clone()
         } else {
             Default::default()
         };
 
         let normal1 = if face.normals.is_some() {
-            mesh.normals[face.normals.unwrap().1].clone()
+            geometry.normals[face.normals.unwrap().1].clone()
         } else {
             Default::default()
         };
 
         let normal2 = if face.normals.is_some() {
-            mesh.normals[face.normals.unwrap().2].clone()
+            geometry.normals[face.normals.unwrap().2].clone()
         } else {
             Default::default()
         };
 
         let uv0 = if face.uvs.is_some() {
-            mesh.uvs[face.uvs.unwrap().0].clone()
+            geometry.uvs[face.uvs.unwrap().0].clone()
         } else {
             Default::default()
         };
 
         let uv1 = if face.uvs.is_some() {
-            mesh.uvs[face.uvs.unwrap().1].clone()
+            geometry.uvs[face.uvs.unwrap().1].clone()
         } else {
             Default::default()
         };
 
         let uv2 = if face.uvs.is_some() {
-            mesh.uvs[face.uvs.unwrap().2].clone()
+            geometry.uvs[face.uvs.unwrap().2].clone()
         } else {
             Default::default()
         };
@@ -459,17 +459,17 @@ impl<'a> Pipeline<'a> {
         [v0_in, v1_in, v2_in]
     }
 
-    fn process_object_space_vertices(&mut self, mesh: &Mesh) {
+    fn process_object_space_vertices(&mut self, geometry: &Geometry) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
         let mut vertices_in: Vec<DefaultVertexIn> = vec![];
 
-        vertices_in.reserve(mesh.faces.len() * 3);
+        vertices_in.reserve(geometry.faces.len() * 3);
 
-        for face_index in 0..mesh.faces.len() {
-            let face = mesh.faces[face_index];
+        for face_index in 0..geometry.faces.len() {
+            let face = geometry.faces[face_index];
 
-            let [v0_in, v1_in, v2_in] = self.get_vertices_in(mesh, &face);
+            let [v0_in, v1_in, v2_in] = self.get_vertices_in(geometry, &face);
 
             vertices_in.push(v0_in);
             vertices_in.push(v1_in);
@@ -488,7 +488,7 @@ impl<'a> Pipeline<'a> {
                 .collect();
         }
 
-        self.process_triangles(&mesh.faces, projection_space_vertices);
+        self.process_triangles(&geometry.faces, projection_space_vertices);
     }
 
     fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {

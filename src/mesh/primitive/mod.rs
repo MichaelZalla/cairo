@@ -1,4 +1,4 @@
-use super::{Face, Mesh};
+use super::geometry::Face;
 
 pub mod billboard;
 pub mod cone;

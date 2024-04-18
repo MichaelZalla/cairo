@@ -20,11 +20,11 @@ impl<'a> MeshOctTree<'a> {
 
         let mut result = MeshOctTree { mesh, root };
 
-        for face_index in 0..result.mesh.faces.len() {
+        for face_index in 0..result.mesh.geometry.faces.len() {
             result.insert_face(face_index);
         }
 
-        return result;
+        result
     }
 
     pub fn insert_face(&mut self, face_index: usize) -> bool {
@@ -32,18 +32,18 @@ impl<'a> MeshOctTree<'a> {
 
         let aabb = AABB::new_from_triangle(&vertices.0, &vertices.1, &vertices.2);
 
-        return self.root.insert(face_index, &aabb);
+        self.root.insert(face_index, &aabb)
     }
 
     fn get_vertices_for_face(&self, face_index: usize) -> (&Vec3, &Vec3, &Vec3) {
-        let v0_index = self.mesh.faces[face_index].vertices.0;
-        let v1_index = self.mesh.faces[face_index].vertices.1;
-        let v2_index = self.mesh.faces[face_index].vertices.2;
+        let v0_index = self.mesh.geometry.faces[face_index].vertices.0;
+        let v1_index = self.mesh.geometry.faces[face_index].vertices.1;
+        let v2_index = self.mesh.geometry.faces[face_index].vertices.2;
 
-        return (
-            &self.mesh.vertices[v0_index],
-            &self.mesh.vertices[v1_index],
-            &self.mesh.vertices[v2_index],
-        );
+        (
+            &self.mesh.geometry.vertices[v0_index],
+            &self.mesh.geometry.vertices[v1_index],
+            &self.mesh.geometry.vertices[v2_index],
+        )
     }
 }

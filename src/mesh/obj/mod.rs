@@ -6,10 +6,11 @@ use crate::fs::read_lines;
 
 use crate::material;
 use crate::material::cache::MaterialCache;
-use crate::mesh::Face;
+use crate::mesh::{
+    geometry::{Face, Geometry},
+    Mesh,
+};
 use crate::vec::{vec2::Vec2, vec3::Vec3};
-
-use super::Mesh;
 
 pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
     let path = Path::new(&filepath);
@@ -326,44 +327,48 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
                                 }
 
                                 if vertex_index_offset_for_current_object > 0 {
-                                    let mut accumulated_mesh = Mesh::new(
+                                    let mut accumulated_geometry = Geometry::new(
                                         object_vertices,
                                         object_uvs,
                                         object_normals,
                                         object_faces.clone(),
                                     );
 
-                                    accumulated_mesh.object_source = Some(path_display.to_string());
+                                    accumulated_geometry.object_source =
+                                        Some(path_display.to_string());
 
                                     match object_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_mesh.object_name = Some(name);
+                                            accumulated_geometry.object_name = Some(name);
                                         }
                                         None => (),
                                     }
 
                                     match group_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_mesh.group_name = Some(name);
+                                            accumulated_geometry.group_name = Some(name);
                                         }
                                         None => (),
                                     }
 
-                                    accumulated_mesh.material_source = material_source.clone();
+                                    accumulated_geometry.material_source = material_source.clone();
 
                                     match material_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_mesh.material_name = Some(name);
+                                            accumulated_geometry.material_name = Some(name);
                                         }
                                         None => (),
                                     }
 
                                     println!(
                                         "Parsed object {}.",
-                                        accumulated_mesh.object_name.as_ref().unwrap()
+                                        accumulated_geometry
+                                            .object_name
+                                            .as_ref()
+                                            .unwrap_or(&"Unnamed".to_string())
                                     );
 
-                                    objects.push(accumulated_mesh);
+                                    objects.push(Mesh::new(accumulated_geometry));
 
                                     object_counter += 1;
                                 }
@@ -422,8 +427,9 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
     println!();
 
     for mesh in objects.as_mut_slice() {
-        // Print a summary of this mesh
-        println!("{}", mesh);
+        // Print a summary of this Mesh.
+
+        println!("{:?}", mesh.geometry.object_name);
     }
 
     // Parse the set of materials inside this OBJ file's MTL file

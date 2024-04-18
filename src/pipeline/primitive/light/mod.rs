@@ -45,7 +45,7 @@ impl<'a> Pipeline<'a> {
                     Some(material) => {
                         material.diffuse_color = light_intensities;
 
-                        light_quad.material_name = Some(light_material_name.to_string());
+                        light_quad.geometry.material_name = Some(light_material_name.to_string());
 
                         let light_quad_entity = Entity::new(&light_quad);
 

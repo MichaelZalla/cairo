@@ -46,7 +46,7 @@ impl<'a> Pipeline<'a> {
                     Some(material) => {
                         material.diffuse_color = color.to_vec3() / 255.0;
 
-                        quad.material_name = Some(mat_name.clone());
+                        quad.geometry.material_name = Some(mat_name.clone());
 
                         let light_quad_entity = Entity::new(&quad);
 

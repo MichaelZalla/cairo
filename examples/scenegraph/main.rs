@@ -66,13 +66,13 @@ fn main() -> Result<(), String> {
     let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
 
     let mut red_cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
-    red_cube_mesh.object_name = Some("red_cube".to_string());
+    red_cube_mesh.geometry.object_name = Some("red_cube".to_string());
 
     let mut green_cube_mesh = red_cube_mesh.clone();
-    green_cube_mesh.object_name = Some("green_cube".to_string());
+    green_cube_mesh.geometry.object_name = Some("green_cube".to_string());
 
     let mut blue_cube_mesh = red_cube_mesh.clone();
-    blue_cube_mesh.object_name = Some("blue_cube".to_string());
+    blue_cube_mesh.geometry.object_name = Some("blue_cube".to_string());
 
     // Initialize materials
 
@@ -106,11 +106,11 @@ fn main() -> Result<(), String> {
 
     // Assign textures to mesh materials
 
-    plane_mesh.material_name = Some(checkerboard_material.name.clone());
+    plane_mesh.geometry.material_name = Some(checkerboard_material.name.clone());
 
-    red_cube_mesh.material_name = Some("red".to_string());
-    green_cube_mesh.material_name = Some("green".to_string());
-    blue_cube_mesh.material_name = Some("blue".to_string());
+    red_cube_mesh.geometry.material_name = Some("red".to_string());
+    green_cube_mesh.geometry.material_name = Some("green".to_string());
+    blue_cube_mesh.geometry.material_name = Some("blue".to_string());
 
     // Collect materials
 
@@ -494,7 +494,8 @@ fn main() -> Result<(), String> {
                                 let mut rotation = *node.get_transform().rotation();
                                 let mut translation = *node.get_transform().translation();
 
-                                if let Some(object_name) = entity.mesh.object_name.as_ref() {
+                                if let Some(object_name) = entity.mesh.geometry.object_name.as_ref()
+                                {
                                     match object_name.as_str() {
                                         "plane" => {
                                             rotation.z = PI / 12.0 * (uptime).sin();
