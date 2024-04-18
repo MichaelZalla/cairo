@@ -12,7 +12,7 @@ use super::map::{TextureMap, TextureMapStorageFormat};
 
 static SIDES: usize = 6;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 enum Side {
     FRONT = 0,
     BACK = 1,
