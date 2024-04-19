@@ -28,7 +28,7 @@ impl Default for Geometry {
             object_source: None,
             object_name: None,
             group_name: None,
-            material_source: Default::default(),
+            material_source: None,
             material_name: None,
             vertices: vec![],
             normals: vec![],
