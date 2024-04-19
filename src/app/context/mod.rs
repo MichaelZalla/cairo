@@ -7,7 +7,7 @@ use sdl2::{
     Sdl,
 };
 
-use crate::{app::AppWindowInfo, device::GameController};
+use crate::{app::AppWindowInfo, debug_print, device::GameController};
 
 use super::resolution::Resolution;
 
@@ -35,7 +35,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     match sdl2::ttf::init() {
         Ok(context) => {
-            println!("Initialized TTF font subsystem.");
+            debug_print!("Initialized TTF font subsystem.\n");
 
             let boxed = Box::new(context);
 
@@ -59,8 +59,8 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     let count = game_controller_subsystem.num_joysticks()?;
 
-    println!(
-        "Initialized game controller subsystem with {} joysticks.",
+    debug_print!(
+        "Initialized game controller subsystem with {} joysticks.\n",
         count
     );
 
@@ -84,7 +84,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     let haptic_subsystem = sdl_context.haptic()?;
 
-    println!("Initialized haptic subsystem.");
+    debug_print!("Initialized haptic subsystem.\n");
 
     for controller in game_controllers.as_mut_slice() {
         if controller.is_some() {
