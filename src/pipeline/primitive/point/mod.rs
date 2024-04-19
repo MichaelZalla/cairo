@@ -1,6 +1,11 @@
 use crate::{
-    color::Color, entity::Entity, material::cache::MaterialCache, mesh, pipeline::Pipeline,
-    scene::camera::Camera, transform::Transform3D, vec::vec3::Vec3,
+    color::Color,
+    material::cache::MaterialCache,
+    mesh::{self, Mesh},
+    pipeline::Pipeline,
+    scene::camera::Camera,
+    transform::Transform3D,
+    vec::vec3::Vec3,
 };
 
 impl<'a> Pipeline<'a> {
@@ -33,7 +38,7 @@ impl<'a> Pipeline<'a> {
                 let mat_name = material_name.unwrap();
                 let billboard_scale = scale.unwrap();
 
-                let mut quad = mesh::primitive::billboard::generate(
+                let mut light_quad = mesh::primitive::billboard::generate(
                     point_world_space,
                     &camera.unwrap().look_vector.get_position(),
                     billboard_scale,
@@ -46,13 +51,17 @@ impl<'a> Pipeline<'a> {
                     Some(material) => {
                         material.diffuse_color = color.to_vec3() / 255.0;
 
-                        quad.geometry.material_name = Some(mat_name.clone());
+                        light_quad.material_name = Some(mat_name.clone());
 
-                        let light_quad_entity = Entity::new(&quad);
+                        let light_quad_mesh = Mesh::new(light_quad);
 
                         let transform: Transform3D = Default::default();
 
-                        self.render_entity(&light_quad_entity, &transform.mat(), Some(materials));
+                        self.render_entity_mesh(
+                            &light_quad_mesh,
+                            &transform.mat(),
+                            Some(materials),
+                        );
 
                         return;
                     }

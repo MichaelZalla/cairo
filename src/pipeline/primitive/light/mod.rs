@@ -1,8 +1,7 @@
 use crate::{
     color::{self, Color},
-    entity::Entity,
     material::cache::MaterialCache,
-    mesh,
+    mesh::{self, Mesh},
     pipeline::Pipeline,
     scene::{
         camera::Camera,
@@ -45,13 +44,17 @@ impl<'a> Pipeline<'a> {
                     Some(material) => {
                         material.diffuse_color = light_intensities;
 
-                        light_quad.geometry.material_name = Some(light_material_name.to_string());
+                        light_quad.material_name = Some(light_material_name.to_string());
 
-                        let light_quad_entity = Entity::new(&light_quad);
+                        let light_quad_mesh = Mesh::new(light_quad);
 
                         let transform: Transform3D = Default::default();
 
-                        self.render_entity(&light_quad_entity, &transform.mat(), Some(&materials));
+                        self.render_entity_mesh(
+                            &light_quad_mesh,
+                            &transform.mat(),
+                            Some(&materials),
+                        );
                     }
                     None => {
                         self.render_point_indicator(light_position, light_influence_distance * 0.2);

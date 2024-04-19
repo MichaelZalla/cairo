@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use crate::{
-    mesh::{geometry::Geometry, Mesh},
+    mesh::geometry::Geometry,
     vec::{
         vec2::{self, Vec2},
         vec3::{self, Vec3},
@@ -12,7 +12,7 @@ use super::Face;
 
 use crate::texture;
 
-pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
+pub fn generate(radius: f32, height: f32, divisions: u32) -> Geometry {
     assert!(divisions >= 3);
 
     // Generate vertices and UVs
@@ -224,5 +224,5 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     geometry.object_name = Some("cylinder".to_string());
 
-    Mesh::new(geometry)
+    geometry
 }

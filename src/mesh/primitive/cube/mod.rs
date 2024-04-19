@@ -1,5 +1,5 @@
 use crate::{
-    mesh::{geometry::Geometry, Mesh},
+    mesh::geometry::Geometry,
     texture,
     vec::{
         vec2::Vec2,
@@ -9,7 +9,7 @@ use crate::{
 
 use super::Face;
 
-pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
+pub fn generate(width: f32, height: f32, depth: f32) -> Geometry {
     // Generate vertices
 
     let front_top_left = Vec3 {
@@ -234,5 +234,5 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     geometry.object_name = Some("cube".to_string());
 
-    Mesh::new(geometry)
+    geometry
 }

@@ -10,7 +10,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
     matrix::Mat4,
-    mesh,
+    mesh::{self, Mesh},
     pipeline::Pipeline,
     resource::arena::Arena,
     scene::{
@@ -55,10 +55,11 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
+    let cube_geometry = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
     // Resource arenas
 
+    let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
     let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
     let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
     let mut environment_arena: Arena<_> = Arena::<Environment>::new();
@@ -69,7 +70,8 @@ fn main() -> Result<(), String> {
 
     // Assign meshes to entities.
 
-    let cube_entity = Entity::new(&cube_mesh);
+    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
+    let cube_entity = Entity::new(cube_mesh_handle);
 
     // Configure a global scene environment.
 
@@ -139,6 +141,7 @@ fn main() -> Result<(), String> {
     let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
     let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
 
+    let mesh_arena_rc = RefCell::new(mesh_arena);
     let entity_arena_rc = RefCell::new(entity_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
     let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
@@ -502,13 +505,19 @@ fn main() -> Result<(), String> {
             match node_type {
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
+                        let mesh_arena = mesh_arena_rc.borrow();
                         let mut entity_arena = entity_arena_rc.borrow_mut();
 
                         match entity_arena.get_mut(handle) {
                             Ok(entry) => {
                                 let entity = &mut entry.item;
 
-                                pipeline.render_entity(entity, &current_world_transform, None);
+                                pipeline.render_entity(
+                                    entity,
+                                    &current_world_transform,
+                                    &mesh_arena,
+                                    None,
+                                );
 
                                 Ok(())
                             }

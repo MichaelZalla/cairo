@@ -11,7 +11,7 @@ use cairo::{
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
-    mesh,
+    mesh::{self, Mesh},
     pipeline::Pipeline,
     resource::arena::Arena,
     scene::{
@@ -61,9 +61,9 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut brick_wall_mesh = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
+    let mut brick_wall_geometry = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
 
-    let mut box_mesh = brick_wall_mesh.clone();
+    let mut box_geometry = brick_wall_geometry.clone();
 
     // Initialize materials
 
@@ -115,9 +115,9 @@ fn main() -> Result<(), String> {
 
     // Assign textures to mesh materials
 
-    brick_wall_mesh.geometry.material_name = Some(brick_material.name.to_string());
+    brick_wall_geometry.material_name = Some(brick_material.name.to_string());
 
-    box_mesh.geometry.material_name = Some(box_material.name.to_string());
+    box_geometry.material_name = Some(box_material.name.to_string());
 
     // Collect materials
 
@@ -128,6 +128,7 @@ fn main() -> Result<(), String> {
 
     // Set up resource arenas for the various node types in our scene.
 
+    let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
     let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
     let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
     let mut environment_arena: Arena<_> = Arena::<Environment>::new();
@@ -138,8 +139,11 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let brick_wall_entity = Entity::new(&brick_wall_mesh);
-    let box_entity = Entity::new(&box_mesh);
+    let brick_wall_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(brick_wall_geometry));
+    let brick_wall_entity = Entity::new(brick_wall_mesh_handle);
+
+    let box_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(box_geometry));
+    let box_entity = Entity::new(box_mesh_handle);
 
     // Configure a global scene environment.
 
@@ -222,6 +226,7 @@ fn main() -> Result<(), String> {
     let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
     let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
 
+    let mesh_arena_rc = RefCell::new(mesh_arena);
     let entity_arena_rc = RefCell::new(entity_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
     let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
@@ -583,6 +588,7 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
+                        let mesh_arena = mesh_arena_rc.borrow_mut();
                         let mut entity_arena = entity_arena_rc.borrow_mut();
 
                         match entity_arena.get_mut(handle) {
@@ -592,6 +598,7 @@ fn main() -> Result<(), String> {
                                 pipeline.render_entity(
                                     entity,
                                     &current_world_transform,
+                                    &mesh_arena,
                                     Some(&material_cache),
                                 );
 

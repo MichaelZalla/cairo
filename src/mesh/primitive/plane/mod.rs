@@ -1,5 +1,5 @@
 use crate::{
-    mesh::{geometry::Geometry, Mesh},
+    mesh::geometry::Geometry,
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
@@ -8,7 +8,7 @@ use crate::{
 
 use super::Face;
 
-pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u32) -> Mesh {
+pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u32) -> Geometry {
     assert!(width_divisions >= 1 && depth_divisions >= 1);
 
     // Generate vertices and UVs
@@ -96,5 +96,5 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
 
     geometry.object_name = Some("plane".to_string());
 
-    Mesh::new(geometry)
+    geometry
 }

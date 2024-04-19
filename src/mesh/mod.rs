@@ -84,9 +84,9 @@ fn make_bounding_box_geometry(aabb: &AABB) -> Geometry {
 
     let mut bounding_box_mesh = primitive::cube::generate(width, height, depth);
 
-    for v in bounding_box_mesh.geometry.vertices.as_mut_slice() {
+    for v in bounding_box_mesh.vertices.as_mut_slice() {
         *v += aabb.center;
     }
 
-    bounding_box_mesh.geometry
+    bounding_box_mesh
 }

@@ -1,5 +1,5 @@
 use crate::{
-    mesh::{geometry::Geometry, Mesh},
+    mesh::geometry::Geometry,
     texture::uv,
     vec::{
         vec2::Vec2,
@@ -9,7 +9,7 @@ use crate::{
 
 use super::Face;
 
-pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -> Mesh {
+pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -> Geometry {
     // Computes basis vectors based on billboard position and view (camera) position.
 
     let world_up = vec3::UP;
@@ -69,5 +69,5 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
 
     geometry.object_name = Some("billboard".to_string());
 
-    Mesh::new(geometry)
+    geometry
 }

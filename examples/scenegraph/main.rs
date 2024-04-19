@@ -12,7 +12,7 @@ use cairo::{
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
-    mesh,
+    mesh::{self, Mesh},
     pipeline::Pipeline,
     resource::{arena::Arena, handle::Handle},
     scene::{
@@ -63,9 +63,9 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+    let mut plane_mesh = Mesh::new(mesh::primitive::plane::generate(80.0, 80.0, 8, 8));
 
-    let mut red_cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
+    let mut red_cube_mesh = Mesh::new(mesh::primitive::cube::generate(3.0, 3.0, 3.0));
     red_cube_mesh.geometry.object_name = Some("red_cube".to_string());
 
     let mut green_cube_mesh = red_cube_mesh.clone();
@@ -123,6 +123,7 @@ fn main() -> Result<(), String> {
 
     // Set up resource arenas for the various node types in our scene.
 
+    let mut mesh_arena = Arena::<Mesh>::new();
     let mut environment_arena = Arena::<Environment>::new();
     let mut ambient_light_arena = Arena::<AmbientLight>::new();
     let mut directional_light_arena = Arena::<DirectionalLight>::new();
@@ -134,11 +135,16 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_entity = Entity::new(&plane_mesh);
+    let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), plane_mesh);
+    let plane_entity = Entity::new(plane_mesh_handle);
 
-    let red_cube_entity = Entity::new(&red_cube_mesh);
-    let green_cube_entity = Entity::new(&green_cube_mesh);
-    let blue_cube_entity = Entity::new(&blue_cube_mesh);
+    let red_cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), red_cube_mesh);
+    let green_cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), green_cube_mesh);
+    let blue_cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), blue_cube_mesh);
+
+    let red_cube_entity = Entity::new(red_cube_mesh_handle);
+    let green_cube_entity = Entity::new(green_cube_mesh_handle);
+    let blue_cube_entity = Entity::new(blue_cube_mesh_handle);
 
     // Configure a global scene environment.
 
@@ -236,13 +242,14 @@ fn main() -> Result<(), String> {
 
     // Wrap each arena in a RefCell for future borrowing.
 
+    let mesh_arena_rc = RefCell::new(mesh_arena);
+    let entity_arena_rc = RefCell::new(entity_arena);
     let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
     let directional_light_arena_rc = RefCell::new(directional_light_arena);
     let skybox_arena_rc = RefCell::new(skybox_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
     let point_light_arena_rc = RefCell::new(point_light_arena);
     let spot_light_arena_rc = RefCell::new(spot_light_arena);
-    let entity_arena_rc = RefCell::new(entity_arena);
 
     // Create a scene graph.
 
@@ -484,6 +491,7 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
+                        let mesh_arena = mesh_arena_rc.borrow();
                         let mut entity_arena = entity_arena_rc.borrow_mut();
 
                         match entity_arena.get_mut(handle) {
@@ -494,56 +502,60 @@ fn main() -> Result<(), String> {
                                 let mut rotation = *node.get_transform().rotation();
                                 let mut translation = *node.get_transform().translation();
 
-                                if let Some(object_name) = entity.mesh.geometry.object_name.as_ref()
-                                {
-                                    match object_name.as_str() {
-                                        "plane" => {
-                                            rotation.z = PI / 12.0 * (uptime).sin();
-                                            rotation.x = PI / 12.0 * (uptime).cos();
+                                if let Ok(entry) = mesh_arena.get(&entity.mesh) {
+                                    let mesh = &entry.item;
+
+                                    if let Some(object_name) = &mesh.geometry.object_name {
+                                        match object_name.as_str() {
+                                            "plane" => {
+                                                rotation.z = PI / 12.0 * (uptime).sin();
+                                                rotation.x = PI / 12.0 * (uptime).cos();
+                                            }
+                                            "red_cube" => {
+                                                rotation.y = (uptime / 2.0) % 2.0 * PI;
+
+                                                let uniform_scale = red_cube_original_uniform_scale
+                                                    + (uptime * 2.0).sin()
+                                                        * red_cube_original_uniform_scale
+                                                        * 0.25;
+
+                                                scale.x = uniform_scale;
+                                                scale.y = uniform_scale;
+                                                scale.z = uniform_scale;
+                                            }
+                                            "green_cube" => {
+                                                rotation.y = (-uptime / 4.0) % 2.0 * PI;
+
+                                                let uniform_scale =
+                                                    green_cube_original_uniform_scale
+                                                        + (-uptime * 2.0).sin()
+                                                            * green_cube_original_uniform_scale
+                                                            * 0.25;
+
+                                                scale.x = uniform_scale;
+                                                scale.y = uniform_scale;
+                                                scale.z = uniform_scale;
+
+                                                translation.x = (uptime).sin() * 1.0;
+                                                translation.z = (uptime).cos() * 1.0;
+                                            }
+                                            "blue_cube" => {
+                                                rotation.y = (uptime / 8.0) % 2.0 * PI;
+
+                                                let uniform_scale = blue_cube_original_uniform_scale
+                                                    + (uptime * 2.0).sin()
+                                                        * blue_cube_original_uniform_scale
+                                                        * 0.25;
+
+                                                scale.x = uniform_scale;
+                                                scale.y = uniform_scale;
+                                                scale.z = uniform_scale;
+
+                                                translation.x = (-uptime).sin() * 1.0;
+                                                translation.z = (-uptime).cos() * 1.0;
+                                            }
+                                            _ => (),
                                         }
-                                        "red_cube" => {
-                                            rotation.y = (uptime / 2.0) % 2.0 * PI;
-
-                                            let uniform_scale = red_cube_original_uniform_scale
-                                                + (uptime * 2.0).sin()
-                                                    * red_cube_original_uniform_scale
-                                                    * 0.25;
-
-                                            scale.x = uniform_scale;
-                                            scale.y = uniform_scale;
-                                            scale.z = uniform_scale;
-                                        }
-                                        "green_cube" => {
-                                            rotation.y = (-uptime / 4.0) % 2.0 * PI;
-
-                                            let uniform_scale = green_cube_original_uniform_scale
-                                                + (-uptime * 2.0).sin()
-                                                    * green_cube_original_uniform_scale
-                                                    * 0.25;
-
-                                            scale.x = uniform_scale;
-                                            scale.y = uniform_scale;
-                                            scale.z = uniform_scale;
-
-                                            translation.x = (uptime).sin() * 1.0;
-                                            translation.z = (uptime).cos() * 1.0;
-                                        }
-                                        "blue_cube" => {
-                                            rotation.y = (uptime / 8.0) % 2.0 * PI;
-
-                                            let uniform_scale = blue_cube_original_uniform_scale
-                                                + (uptime * 2.0).sin()
-                                                    * blue_cube_original_uniform_scale
-                                                    * 0.25;
-
-                                            scale.x = uniform_scale;
-                                            scale.y = uniform_scale;
-                                            scale.z = uniform_scale;
-
-                                            translation.x = (-uptime).sin() * 1.0;
-                                            translation.z = (-uptime).cos() * 1.0;
-                                        }
-                                        _ => (),
                                     }
                                 }
 
@@ -741,6 +753,7 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
+                        let mesh_arena = mesh_arena_rc.borrow();
                         let entity_arena = entity_arena_rc.borrow();
 
                         match entity_arena.get(handle) {
@@ -750,6 +763,7 @@ fn main() -> Result<(), String> {
                                 pipeline.render_entity(
                                     entity,
                                     &current_world_transform,
+                                    &mesh_arena,
                                     Some(&material_cache),
                                 );
 

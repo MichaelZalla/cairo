@@ -7,6 +7,7 @@ use crate::{
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
     mesh::geometry::{Face, Geometry},
+    resource::arena::Arena,
     shader::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
@@ -270,26 +271,35 @@ impl<'a> Pipeline<'a> {
         &mut self,
         entity: &Entity,
         world_transform: &Mat4,
+        mesh_arena: &Arena<Mesh>,
         material_cache: Option<&MaterialCache>,
     ) {
-        self.render_entity_mesh(entity, world_transform, entity.mesh, material_cache);
+        match mesh_arena.get(&entity.mesh) {
+            Ok(entry) => {
+                let mesh = &entry.item;
+
+                self.render_entity_mesh(mesh, world_transform, material_cache);
+            }
+            Err(err) => panic!(
+                "Failed to get Mesh from Arena with Handle {:?}: {}",
+                entity.mesh, err
+            ),
+        }
     }
 
     fn render_entity_mesh(
         &mut self,
-        _entity: &Entity,
-        world_transform: &Mat4,
         mesh: &Mesh,
+        world_transform: &Mat4,
         material_cache: Option<&MaterialCache>,
     ) {
         // Cull the entire entity, if possible, based on its bounds.
 
-        // if entity.mesh.geometry.normals.len() > 1 {
+        // if mesh.geometry.normals.len() > 1 {
         //     let mut keep = false;
 
-        //     for face in entity.mesh.aabb_geometry.faces.iter() {
-        //         let object_vertices_in = self.get_vertices_in(&entity.mesh.aabb_geometry, &face);
-
+        //     for face in mesh.aabb_geometry.faces.iter() {
+        //         let object_vertices_in = self.get_vertices_in(&mesh.aabb_geometry, &face);
         //         let shader_context = self.shader_context.borrow();
 
         //         let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
@@ -325,7 +335,7 @@ impl<'a> Pipeline<'a> {
             context.set_world_transform(*world_transform);
         }
 
-        self.render_mesh(mesh, material_cache);
+        self.render_mesh_geometry(&mesh.geometry, material_cache);
 
         // Reset the shader context's original world transform.
         {
@@ -335,11 +345,15 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    fn render_mesh(&mut self, mesh: &Mesh, material_cache: Option<&MaterialCache>) {
+    fn render_mesh_geometry(
+        &mut self,
+        geometry: &Geometry,
+        material_cache: Option<&MaterialCache>,
+    ) {
         {
             let mut context = self.shader_context.borrow_mut();
 
-            match &mesh.geometry.material_name {
+            match &geometry.material_name {
                 Some(name) => {
                     match material_cache {
                         Some(cache) => {
@@ -358,7 +372,7 @@ impl<'a> Pipeline<'a> {
             }
         }
 
-        self.process_object_space_vertices(&mesh.geometry);
+        self.process_object_space_vertices(&geometry);
 
         // Reset the shader context's original active material.
         {

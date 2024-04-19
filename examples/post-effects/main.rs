@@ -17,7 +17,7 @@ use cairo::{
     entity::Entity,
     material::{cache::MaterialCache, Material},
     matrix::Mat4,
-    mesh,
+    mesh::{self, Mesh},
     pipeline::Pipeline,
     resource::arena::Arena,
     scene::{
@@ -64,8 +64,8 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
-    let mut cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let mut plane_geometry = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+    let mut cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
     // Initialize materials
 
@@ -108,9 +108,9 @@ fn main() -> Result<(), String> {
 
     // Assign textures to mesh materials
 
-    plane_mesh.geometry.material_name = Some(checkerboard_material.name.clone());
+    plane_geometry.material_name = Some(checkerboard_material.name.clone());
 
-    cube_mesh.geometry.material_name = Some(lava_material.name.clone());
+    cube_geometry.material_name = Some(lava_material.name.clone());
 
     // Collect materials
 
@@ -121,6 +121,7 @@ fn main() -> Result<(), String> {
 
     // Set up resource arenas for the various node types in our scene.
 
+    let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
     let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
     let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
     let mut environment_arena: Arena<_> = Arena::<Environment>::new();
@@ -131,9 +132,11 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_entity = Entity::new(&plane_mesh);
+    let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(plane_geometry));
+    let plane_entity = Entity::new(plane_mesh_handle);
 
-    let cube_entity = Entity::new(&cube_mesh);
+    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
+    let cube_entity = Entity::new(cube_mesh_handle);
 
     // Configure a global scene environment.
 
@@ -216,6 +219,7 @@ fn main() -> Result<(), String> {
     let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
     let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
 
+    let mesh_arena_rc = RefCell::new(mesh_arena);
     let entity_arena_rc = RefCell::new(entity_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
     let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
@@ -344,20 +348,21 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
+                        let mesh_arena = mesh_arena_rc.borrow();
                         let mut entity_arena = entity_arena_rc.borrow_mut();
 
                         match entity_arena.get_mut(handle) {
                             Ok(entry) => {
                                 let entity = &mut entry.item;
 
-                                if entity
-                                    .mesh
-                                    .geometry
-                                    .object_name
-                                    .as_ref()
-                                    .is_some_and(|n| n == "plane")
-                                {
-                                    return Ok(());
+                                if let Ok(entry) = mesh_arena.get(&entity.mesh) {
+                                    let mesh = &entry.item;
+
+                                    if let Some(object_name) = &mesh.geometry.object_name {
+                                        if object_name == "plane" {
+                                            return Ok(());
+                                        }
+                                    }
                                 }
 
                                 static ENTITY_ROTATION_SPEED: f32 = 0.3;
@@ -618,6 +623,7 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
+                        let mesh_arena = mesh_arena_rc.borrow();
                         let mut entity_arena = entity_arena_rc.borrow_mut();
 
                         match entity_arena.get_mut(handle) {
@@ -627,6 +633,7 @@ fn main() -> Result<(), String> {
                                 pipeline.render_entity(
                                     entity,
                                     &current_world_transform,
+                                    &mesh_arena,
                                     Some(&material_cache),
                                 );
 

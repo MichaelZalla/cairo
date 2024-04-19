@@ -1,12 +1,12 @@
-use super::mesh::Mesh;
+use crate::resource::handle::Handle;
 
 #[derive(Debug, Clone)]
-pub struct Entity<'a> {
-    pub mesh: &'a Mesh,
+pub struct Entity {
+    pub mesh: Handle,
 }
 
-impl<'a> Entity<'a> {
-    pub fn new(mesh: &'a Mesh) -> Self {
+impl Entity {
+    pub fn new(mesh: Handle) -> Self {
         Self { mesh }
     }
 }
