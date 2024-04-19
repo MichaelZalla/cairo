@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI};
 
 use uuid::Uuid;
 
@@ -13,7 +13,7 @@ use cairo::{
     matrix::Mat4,
     mesh::{self, Mesh},
     pipeline::Pipeline,
-    resource::arena::Arena,
+    resource::{arena::Arena, handle::Handle},
     scene::{
         camera::Camera,
         environment::Environment,
@@ -137,6 +137,7 @@ fn main() -> Result<(), String> {
     let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
     let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
     let mut spot_light_arena: Arena<SpotLight> = Arena::<SpotLight>::new();
+    let mut skybox_arena: Arena<CubeMap> = Arena::<CubeMap>::new();
 
     // Assign the meshes to entities
 
@@ -198,8 +199,6 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
-    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
-
     // Pipeline
 
     let pipeline = Pipeline::new(
@@ -221,14 +220,22 @@ fn main() -> Result<(), String> {
         directional_light_arena.insert(Uuid::new_v4(), directional_light);
     let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
     let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
+    let skybox_handle = skybox_arena.insert(Uuid::new_v4(), skybox);
 
     let mesh_arena_rc = RefCell::new(mesh_arena);
     let entity_arena_rc = RefCell::new(entity_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
-    let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
-    let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let _ambient_light_arena_rc = RefCell::new(ambient_light_arena);
+    let _directional_light_arena_rc = RefCell::new(directional_light_arena);
     let point_light_arena_rc = RefCell::new(point_light_arena);
     let spot_light_arena_rc = RefCell::new(spot_light_arena);
+    let skybox_arena_rc = RefCell::new(skybox_arena);
+
+    // Bind skybox (environment) map to shader context.
+
+    shader_context_rc
+        .borrow_mut()
+        .set_active_environment_map(Some(skybox_handle.clone()));
 
     // Create a scene graph.
 
@@ -304,21 +311,18 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let mut context = shader_context_rc.borrow_mut();
+        let mut shader_context = shader_context_rc.borrow_mut();
 
-        context.set_ambient_light(None);
-        context.set_directional_light(None);
-        context.get_point_lights_mut().clear();
-        context.get_spot_lights_mut().clear();
+        shader_context.set_ambient_light(None);
+        shader_context.set_directional_light(None);
+        shader_context.get_point_lights_mut().clear();
+        shader_context.get_spot_lights_mut().clear();
 
         let uptime = app.timing_info.uptime_seconds;
 
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
-
-        let mut point_lights_visited: usize = 0;
-        let mut spot_lights_visited: usize = 0;
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
@@ -406,14 +410,15 @@ fn main() -> Result<(), String> {
                                 let camera_view_inverse_transform =
                                     camera.get_view_inverse_transform();
 
-                                context.set_view_position(Vec4::new(
+                                shader_context.set_view_position(Vec4::new(
                                     camera.look_vector.get_position(),
                                     1.0,
                                 ));
 
-                                context.set_view_inverse_transform(camera_view_inverse_transform);
+                                shader_context
+                                    .set_view_inverse_transform(camera_view_inverse_transform);
 
-                                context.set_projection(camera.get_projection());
+                                shader_context.set_projection(camera.get_projection());
 
                                 Ok(())
                             }
@@ -429,17 +434,7 @@ fn main() -> Result<(), String> {
                 },
                 SceneNodeType::AmbientLight => {
                     match handle {
-                        Some(handle) => match ambient_light_arena_rc.borrow_mut().get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                context.set_ambient_light(Some(*light))
-                            }
-                            Err(err) => panic!(
-                                "Failed to get AmbientLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        },
+                        Some(handle) => shader_context.set_ambient_light(Some(*handle)),
                         None => {
                             panic!("Encountered a `AmbientLight` node with no resource handle!")
                         }
@@ -448,21 +443,9 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::DirectionalLight => match handle {
                     Some(handle) => {
-                        let arena = directional_light_arena_rc.borrow();
+                        shader_context.set_directional_light(Some(*handle));
 
-                        match arena.get(handle) {
-                            Ok(entry) => {
-                                let light = &entry.item;
-
-                                context.set_directional_light(Some(*light));
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
+                        Ok(())
                     }
                     None => {
                         panic!("Encountered a `DirectionalLight` node with no resource handle!")
@@ -496,9 +479,7 @@ fn main() -> Result<(), String> {
                                     z: orbital_radius * uptime.cos(),
                                 };
 
-                                context.get_point_lights_mut().push(point_light.clone());
-
-                                point_lights_visited += 1;
+                                shader_context.get_point_lights_mut().push(*handle);
 
                                 Ok(())
                             }
@@ -530,9 +511,7 @@ fn main() -> Result<(), String> {
                                         .to_vec3(),
                                 );
 
-                                context.get_spot_lights_mut().push(spot_light.clone());
-
-                                spot_lights_visited += 1;
+                                shader_context.get_spot_lights_mut().push(*handle);
 
                                 Ok(())
                             }
@@ -577,21 +556,12 @@ fn main() -> Result<(), String> {
 
         pipeline.begin_frame();
 
-        // Bind skybox (environment) map to shader context.
-
-        {
-            let mut context = shader_context_rc.borrow_mut();
-
-            let cubemap_raw_mut = &skybox as *const CubeMap;
-
-            context.set_active_environment_map(Some(cubemap_raw_mut));
-        }
-
         // Render scene.
 
         let scenegraph = scenegraph_rc.borrow_mut();
 
-        let mut active_camera: Option<Camera> = None;
+        let mut active_camera_handle: Option<Handle> = None;
+        let mut active_skybox_handle: Option<Handle> = None;
 
         let mut render_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
@@ -602,7 +572,18 @@ fn main() -> Result<(), String> {
             match node_type {
                 SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Environment => Ok(()),
-                SceneNodeType::Skybox => Ok(()),
+                SceneNodeType::Skybox => {
+                    match handle {
+                        Some(handle) => {
+                            active_skybox_handle = Some(*handle);
+                        }
+                        None => {
+                            panic!("Encountered a `Skybox` node with no resource handle!")
+                        }
+                    }
+
+                    Ok(())
+                }
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mesh_arena = mesh_arena_rc.borrow();
@@ -616,7 +597,6 @@ fn main() -> Result<(), String> {
                                     entity,
                                     &current_world_transform,
                                     &mesh_arena,
-                                    Some(&material_cache),
                                 );
 
                                 Ok(())
@@ -633,21 +613,9 @@ fn main() -> Result<(), String> {
                 },
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
-                        let camera_arena = camera_arena_rc.borrow();
+                        active_camera_handle = Some(*handle);
 
-                        match camera_arena.get(handle) {
-                            Ok(entry) => {
-                                let camera = &entry.item;
-
-                                active_camera = Some(camera.clone());
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
+                        Ok(())
                     }
                     None => {
                         panic!("Encountered a `Camera` node with no resource handle!")
@@ -712,19 +680,25 @@ fn main() -> Result<(), String> {
 
         // End frame
 
-        match active_camera {
-            Some(camera) => {
-                pipeline.render_skybox(&skybox, &camera);
+        match (active_camera_handle, active_skybox_handle) {
+            (Some(camera_handle), Some(skybox_handle)) => {
+                let camera_arena = camera_arena_rc.borrow();
+                let skybox_arena = skybox_arena_rc.borrow();
 
-                // pipeline.render_ground_plane(1.0);
+                match (
+                    camera_arena.get(&camera_handle),
+                    skybox_arena.get(&skybox_handle),
+                ) {
+                    (Ok(camera_entry), Ok(skybox_entry)) => {
+                        let camera = &camera_entry.item;
+                        let skybox = &skybox_entry.item;
+
+                        pipeline.render_skybox(&skybox, &camera);
+                    }
+                    _ => (),
+                }
             }
-            None => (),
-        }
-
-        {
-            let mut context = shader_context_rc.borrow_mut();
-
-            context.set_active_environment_map(None);
+            _ => {}
         }
 
         pipeline.end_frame();

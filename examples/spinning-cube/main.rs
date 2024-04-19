@@ -144,8 +144,8 @@ fn main() -> Result<(), String> {
     let mesh_arena_rc = RefCell::new(mesh_arena);
     let entity_arena_rc = RefCell::new(entity_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
-    let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
-    let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let _ambient_light_arena_rc = RefCell::new(ambient_light_arena);
+    let _directional_light_arena_rc = RefCell::new(directional_light_arena);
     let point_light_arena_rc = RefCell::new(point_light_arena);
     let spot_light_arena_rc = RefCell::new(spot_light_arena);
 
@@ -242,21 +242,18 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let mut context = shader_context_rc.borrow_mut();
+        let mut shader_context = shader_context_rc.borrow_mut();
 
-        context.set_ambient_light(None);
-        context.set_directional_light(None);
-        context.get_point_lights_mut().clear();
-        context.get_spot_lights_mut().clear();
+        shader_context.set_ambient_light(None);
+        shader_context.set_directional_light(None);
+        shader_context.get_point_lights_mut().clear();
+        shader_context.get_spot_lights_mut().clear();
 
         let uptime = app.timing_info.uptime_seconds;
 
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
-
-        let mut point_lights_visited: usize = 0;
-        let mut spot_lights_visited: usize = 0;
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
@@ -316,14 +313,15 @@ fn main() -> Result<(), String> {
                                 let camera_view_inverse_transform =
                                     camera.get_view_inverse_transform();
 
-                                context.set_view_position(Vec4::new(
+                                shader_context.set_view_position(Vec4::new(
                                     camera.look_vector.get_position(),
                                     1.0,
                                 ));
 
-                                context.set_view_inverse_transform(camera_view_inverse_transform);
+                                shader_context
+                                    .set_view_inverse_transform(camera_view_inverse_transform);
 
-                                context.set_projection(camera.get_projection());
+                                shader_context.set_projection(camera.get_projection());
 
                                 Ok(())
                             }
@@ -337,42 +335,21 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `Camera` node with no resource handle!")
                     }
                 },
-                SceneNodeType::AmbientLight => {
-                    match handle {
-                        Some(handle) => match ambient_light_arena_rc.borrow_mut().get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
+                SceneNodeType::AmbientLight => match handle {
+                    Some(handle) => {
+                        shader_context.set_ambient_light(Some(*handle));
 
-                                context.set_ambient_light(Some(*light))
-                            }
-                            Err(err) => panic!(
-                                "Failed to get AmbientLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        },
-                        None => {
-                            panic!("Encountered a `AmbientLight` node with no resource handle!")
-                        }
+                        Ok(())
                     }
-                    Ok(())
-                }
+                    None => {
+                        panic!("Encountered a `AmbientLight` node with no resource handle!")
+                    }
+                },
                 SceneNodeType::DirectionalLight => match handle {
                     Some(handle) => {
-                        let arena = directional_light_arena_rc.borrow();
+                        shader_context.set_directional_light(Some(*handle));
 
-                        match arena.get(handle) {
-                            Ok(entry) => {
-                                let light = &entry.item;
-
-                                context.set_directional_light(Some(*light));
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
+                        Ok(())
                     }
                     None => {
                         panic!("Encountered a `DirectionalLight` node with no resource handle!")
@@ -409,9 +386,7 @@ fn main() -> Result<(), String> {
                                     }))
                                 .to_vec3();
 
-                                context.get_point_lights_mut().push(point_light.clone());
-
-                                point_lights_visited += 1;
+                                shader_context.get_point_lights_mut().push(*handle);
 
                                 Ok(())
                             }
@@ -443,9 +418,7 @@ fn main() -> Result<(), String> {
                                         .to_vec3(),
                                 );
 
-                                context.get_spot_lights_mut().push(spot_light.clone());
-
-                                spot_lights_visited += 1;
+                                shader_context.get_spot_lights_mut().push(*handle);
 
                                 Ok(())
                             }
@@ -516,7 +489,6 @@ fn main() -> Result<(), String> {
                                     entity,
                                     &current_world_transform,
                                     &mesh_arena,
-                                    None,
                                 );
 
                                 Ok(())

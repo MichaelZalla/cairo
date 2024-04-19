@@ -4,7 +4,6 @@ use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     entity::Entity,
-    material::{cache::MaterialCache, Material},
     matrix::Mat4,
     mesh::geometry::{Face, Geometry},
     resource::arena::Arena,
@@ -272,13 +271,12 @@ impl<'a> Pipeline<'a> {
         entity: &Entity,
         world_transform: &Mat4,
         mesh_arena: &Arena<Mesh>,
-        material_cache: Option<&MaterialCache>,
     ) {
         match mesh_arena.get(&entity.mesh) {
             Ok(entry) => {
                 let mesh = &entry.item;
 
-                self.render_entity_mesh(mesh, world_transform, material_cache);
+                self.render_entity_mesh(mesh, world_transform);
             }
             Err(err) => panic!(
                 "Failed to get Mesh from Arena with Handle {:?}: {}",
@@ -287,12 +285,7 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    fn render_entity_mesh(
-        &mut self,
-        mesh: &Mesh,
-        world_transform: &Mat4,
-        material_cache: Option<&MaterialCache>,
-    ) {
+    fn render_entity_mesh(&mut self, mesh: &Mesh, world_transform: &Mat4) {
         // Cull the entire entity, if possible, based on its bounds.
 
         // if mesh.geometry.normals.len() > 1 {
@@ -335,7 +328,7 @@ impl<'a> Pipeline<'a> {
             context.set_world_transform(*world_transform);
         }
 
-        self.render_mesh_geometry(&mesh.geometry, material_cache);
+        self.render_mesh_geometry(&mesh.geometry);
 
         // Reset the shader context's original world transform.
         {
@@ -345,28 +338,13 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    fn render_mesh_geometry(
-        &mut self,
-        geometry: &Geometry,
-        material_cache: Option<&MaterialCache>,
-    ) {
+    fn render_mesh_geometry(&mut self, geometry: &Geometry) {
         {
             let mut context = self.shader_context.borrow_mut();
 
             match &geometry.material_name {
                 Some(name) => {
-                    match material_cache {
-                        Some(cache) => {
-                            // Set the pipeline effect's active material to this
-                            // mesh's material.
-
-                            let material = cache.get(name).unwrap();
-                            let material_raw_mut = &*material as *const Material;
-
-                            context.set_active_material(Some(material_raw_mut));
-                        }
-                        None => (),
-                    }
+                    context.set_active_material(Some(name.clone()));
                 }
                 None => (),
             }

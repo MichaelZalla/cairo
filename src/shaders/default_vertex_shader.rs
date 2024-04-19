@@ -42,12 +42,35 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
 
         let tbn_inverse = tbn.transposed();
 
+        let point_light_handle = context.point_lights[0];
+
+        let point_light_position = match &context.resources {
+            Some(resources) => match resources
+                .borrow()
+                .point_light
+                .borrow()
+                .get(&point_light_handle)
+            {
+                Ok(entry) => {
+                    let light = &entry.item;
+
+                    light.position
+                }
+                Err(err) => {
+                    panic!(
+                        "Failed to get PointLight from Arena: {:?}: {}",
+                        point_light_handle, err
+                    )
+                }
+            },
+            None => Default::default(),
+        };
+
         out.tangent_space_info = TangentSpaceInfo {
             tbn,
             tbn_inverse,
             normal: (normal * tbn_inverse).to_vec3(),
-            point_light_position: (Vec4::new(context.point_lights[0].position, 1.0) * tbn_inverse)
-                .to_vec3(),
+            point_light_position: (Vec4::new(point_light_position, 1.0) * tbn_inverse).to_vec3(),
             view_position: (context.view_position * tbn_inverse).to_vec3(),
             fragment_position: (world_pos * tbn_inverse).to_vec3(),
         };

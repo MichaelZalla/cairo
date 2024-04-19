@@ -57,11 +57,7 @@ impl<'a> Pipeline<'a> {
 
                         let transform: Transform3D = Default::default();
 
-                        self.render_entity_mesh(
-                            &light_quad_mesh,
-                            &transform.mat(),
-                            Some(materials),
-                        );
+                        self.render_entity_mesh(&light_quad_mesh, &transform.mat());
 
                         return;
                     }

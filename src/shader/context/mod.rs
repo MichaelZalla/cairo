@@ -1,11 +1,9 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    material::Material,
     matrix::Mat4,
-    resource::arena::Arena,
-    scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
-    texture::{cubemap::CubeMap, map::TextureMap},
+    resource::handle::Handle,
+    scene::resources::SceneResources,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -17,14 +15,14 @@ pub struct ShaderContext {
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
     pub default_specular_exponent: i32,
-    pub texture_arena: Option<Rc<Arena<TextureMap>>>,
-    pub active_material: Option<*const Material>,
-    pub active_uv_test_texture_map: Option<*const TextureMap>,
-    pub active_environment_map: Option<*const CubeMap>,
-    pub ambient_light: Option<AmbientLight>,
-    pub directional_light: Option<DirectionalLight>,
-    pub point_lights: Vec<PointLight>,
-    pub spot_lights: Vec<SpotLight>,
+    pub resources: Option<Rc<RefCell<SceneResources>>>,
+    pub active_material: Option<String>,
+    pub active_uv_test_texture_map: Option<Handle>,
+    pub active_environment_map: Option<Handle>,
+    pub ambient_light: Option<Handle>,
+    pub directional_light: Option<Handle>,
+    pub point_lights: Vec<Handle>,
+    pub spot_lights: Vec<Handle>,
 }
 
 impl Default for ShaderContext {
@@ -37,7 +35,7 @@ impl Default for ShaderContext {
             projection_transform: Mat4::identity(),
             world_view_projection_transform: Default::default(),
             default_specular_exponent: 8,
-            texture_arena: None,
+            resources: None,
             active_material: None,
             active_uv_test_texture_map: None,
             active_environment_map: None,
@@ -55,10 +53,10 @@ impl ShaderContext {
         view_position: Vec4,
         view_inverse_transform: Mat4,
         projection_transform: Mat4,
-        ambient_light: Option<AmbientLight>,
-        directional_light: Option<DirectionalLight>,
-        point_lights: Vec<PointLight>,
-        spot_lights: Vec<SpotLight>,
+        ambient_light: Option<Handle>,
+        directional_light: Option<Handle>,
+        point_lights: Vec<Handle>,
+        spot_lights: Vec<Handle>,
     ) -> Self {
         Self {
             world_transform,
@@ -70,7 +68,7 @@ impl ShaderContext {
                 * view_inverse_transform
                 * projection_transform,
             default_specular_exponent: 8,
-            texture_arena: None,
+            resources: None,
             active_material: None,
             active_uv_test_texture_map: None,
             active_environment_map: None,
@@ -137,31 +135,31 @@ impl ShaderContext {
         ndc_space_position.to_vec3()
     }
 
-    pub fn set_ambient_light(&mut self, light: Option<AmbientLight>) {
+    pub fn set_ambient_light(&mut self, light: Option<Handle>) {
         self.ambient_light = light;
     }
 
-    pub fn set_directional_light(&mut self, light: Option<DirectionalLight>) {
+    pub fn set_directional_light(&mut self, light: Option<Handle>) {
         self.directional_light = light;
     }
 
-    pub fn get_point_lights(&self) -> &Vec<PointLight> {
+    pub fn get_point_lights(&self) -> &Vec<Handle> {
         &self.point_lights
     }
 
-    pub fn get_point_lights_mut(&mut self) -> &mut Vec<PointLight> {
+    pub fn get_point_lights_mut(&mut self) -> &mut Vec<Handle> {
         &mut self.point_lights
     }
 
-    pub fn get_spot_lights(&self) -> &Vec<SpotLight> {
+    pub fn get_spot_lights(&self) -> &Vec<Handle> {
         &self.spot_lights
     }
 
-    pub fn get_spot_lights_mut(&mut self) -> &mut Vec<SpotLight> {
+    pub fn get_spot_lights_mut(&mut self) -> &mut Vec<Handle> {
         &mut self.spot_lights
     }
 
-    pub fn set_active_material(&mut self, material_option: Option<*const Material>) {
+    pub fn set_active_material(&mut self, material_option: Option<String>) {
         match material_option {
             Some(material_raw_mut) => {
                 self.active_material = Some(material_raw_mut);
@@ -172,7 +170,7 @@ impl ShaderContext {
         }
     }
 
-    pub fn set_active_uv_test_texture_map(&mut self, map: Option<*const TextureMap>) {
+    pub fn set_active_uv_test_texture_map(&mut self, map: Option<Handle>) {
         match map {
             Some(texture_raw_mut) => {
                 self.active_uv_test_texture_map = Some(texture_raw_mut);
@@ -183,7 +181,7 @@ impl ShaderContext {
         }
     }
 
-    pub fn set_active_environment_map(&mut self, skybox: Option<*const CubeMap>) {
+    pub fn set_active_environment_map(&mut self, skybox: Option<Handle>) {
         match skybox {
             Some(cubemap_raw_mut) => {
                 self.active_environment_map = Some(cubemap_raw_mut);

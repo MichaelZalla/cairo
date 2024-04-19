@@ -9,29 +9,39 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub const UvTestFragmentShader: FragmentShaderFn =
-    |context: &ShaderContext, sample: &GeometrySample| -> Color {
-        // Emit an RGB representation of this fragment's interpolated UV.
+pub const UvTestFragmentShader: FragmentShaderFn = |context: &ShaderContext,
+                                                    sample: &GeometrySample|
+ -> Color {
+    // Emit an RGB representation of this fragment's interpolated UV.
 
-        let r: u8;
-        let g: u8;
-        let b: u8;
+    let r: u8;
+    let g: u8;
+    let b: u8;
 
-        match context.active_uv_test_texture_map {
-            Some(map_raw_mut) => unsafe {
-                let map = &(*map_raw_mut);
-                (r, g, b) = sample_bilinear(sample.uv, map, None);
+    match &context.active_uv_test_texture_map {
+        Some(handle) => match &context.resources {
+            Some(resources) => match resources.borrow().texture.borrow().get(&handle) {
+                Ok(entry) => {
+                    let map = &entry.item;
 
-                Color::from_vec3(Vec3 {
-                    x: r as f32 / 255.0,
-                    y: g as f32 / 255.0,
-                    z: b as f32 / 255.0,
-                })
+                    (r, g, b) = sample_bilinear(sample.uv, map, None);
+
+                    return Color::from_vec3(Vec3 {
+                        x: r as f32 / 255.0,
+                        y: g as f32 / 255.0,
+                        z: b as f32 / 255.0,
+                    });
+                }
+                Err(err) => panic!("Failed to get TextureMap from Arena: {:?}: {}", handle, err),
             },
-            None => Color::from_vec3(Vec3 {
-                x: sample.uv.x,
-                y: sample.uv.y,
-                z: sample.uv.z,
-            }),
-        }
-    };
+            None => (),
+        },
+        None => (),
+    }
+
+    Color::from_vec3(Vec3 {
+        x: sample.uv.x,
+        y: sample.uv.y,
+        z: sample.uv.z,
+    })
+};

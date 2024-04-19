@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI};
 
 use uuid::Uuid;
 
@@ -211,21 +211,6 @@ fn main() -> Result<(), String> {
         .look_vector
         .set_target_position(Default::default());
 
-    // Pipeline
-
-    let shader_context_rc: RefCell<ShaderContext> = Default::default();
-
-    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
-
-    let pipeline = Pipeline::new(
-        &shader_context_rc,
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
-
-    let pipeline_rc = RefCell::new(pipeline);
-
     // Create resource handles.
 
     let environment_handle = environment_arena.insert(Uuid::new_v4(), environment);
@@ -244,12 +229,32 @@ fn main() -> Result<(), String> {
     let green_cube_entity_handle = entity_arena.insert(Uuid::new_v4(), green_cube_entity);
     let blue_cube_entity_handle = entity_arena.insert(Uuid::new_v4(), blue_cube_entity);
 
+    // ShaderContext
+
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().ambient_light = Some(ambient_light_handle);
+    shader_context_rc.borrow_mut().directional_light = Some(directional_light_handle);
+    shader_context_rc.borrow_mut().point_lights = vec![point_light_handle];
+    shader_context_rc.borrow_mut().spot_lights = vec![spot_light_handle];
+
+    // Pipeline
+
+    let pipeline = Pipeline::new(
+        &shader_context_rc,
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    let pipeline_rc = RefCell::new(pipeline);
+
     // Wrap each arena in a RefCell for future borrowing.
 
     let mesh_arena_rc = RefCell::new(mesh_arena);
     let entity_arena_rc = RefCell::new(entity_arena);
-    let ambient_light_arena_rc = RefCell::new(ambient_light_arena);
-    let directional_light_arena_rc = RefCell::new(directional_light_arena);
+    let _ambient_light_arena_rc = RefCell::new(ambient_light_arena);
+    let _directional_light_arena_rc = RefCell::new(directional_light_arena);
     let skybox_arena_rc = RefCell::new(skybox_arena);
     let camera_arena_rc = RefCell::new(camera_arena);
     let point_light_arena_rc = RefCell::new(point_light_arena);
@@ -414,10 +419,6 @@ fn main() -> Result<(), String> {
 
     scenegraph.root.add_child(plane_entity_node)?;
 
-    // Prints the scenegraph to stdout.
-
-    println!("{}", scenegraph);
-
     // App update and render callbacks
 
     let scenegraph_rc = RefCell::new(scenegraph);
@@ -429,19 +430,11 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let mut context = shader_context_rc.borrow_mut();
 
-        context.set_ambient_light(None);
-        context.set_directional_light(None);
-        context.get_point_lights_mut().clear();
-        context.get_spot_lights_mut().clear();
-
         let uptime = app.timing_info.uptime_seconds;
 
         // Traverse the scene graph and update its nodes.
 
         let mut scenegraph = scenegraph_rc.borrow_mut();
-
-        let mut point_lights_visited: usize = 0;
-        let mut spot_lights_visited: usize = 0;
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
@@ -453,46 +446,8 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Scene => Ok(()),
                 SceneNodeType::Environment => Ok(()),
                 SceneNodeType::Skybox => Ok(()),
-                SceneNodeType::AmbientLight => {
-                    match handle {
-                        Some(handle) => match ambient_light_arena_rc.borrow_mut().get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                context.set_ambient_light(Some(*light))
-                            }
-                            Err(err) => panic!(
-                                "Failed to get AmbientLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        },
-                        None => {
-                            panic!("Encountered a `AmbientLight` node with no resource handle!")
-                        }
-                    }
-                    Ok(())
-                }
-                SceneNodeType::DirectionalLight => {
-                    match handle {
-                        Some(handle) => {
-                            match directional_light_arena_rc.borrow_mut().get_mut(handle) {
-                                Ok(entry) => {
-                                    let light = &mut entry.item;
-
-                                    context.set_directional_light(Some(*light))
-                                }
-                                Err(err) => panic!(
-                                    "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
-                            }
-                        }
-                        None => {
-                            panic!("Encountered a `DirectionalLight` node with no resource handle!")
-                        }
-                    }
-                    Ok(())
-                }
+                SceneNodeType::AmbientLight => Ok(()),
+                SceneNodeType::DirectionalLight => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mesh_arena = mesh_arena_rc.borrow();
@@ -649,10 +604,6 @@ fn main() -> Result<(), String> {
                                     * current_world_transform)
                                     .to_vec3();
 
-                                context.get_point_lights_mut().push(*point_light);
-
-                                point_lights_visited += 1;
-
                                 Ok(())
                             }
                             Err(err) => panic!(
@@ -682,10 +633,6 @@ fn main() -> Result<(), String> {
                                     (Vec4::new(vec3::UP * -1.0, 1.0) * current_world_transform)
                                         .to_vec3(),
                                 );
-
-                                context.get_spot_lights_mut().push(*spot_light);
-
-                                spot_lights_visited += 1;
 
                                 Ok(())
                             }
@@ -768,7 +715,6 @@ fn main() -> Result<(), String> {
                                     entity,
                                     &current_world_transform,
                                     &mesh_arena,
-                                    Some(&material_cache),
                                 );
 
                                 Ok(())

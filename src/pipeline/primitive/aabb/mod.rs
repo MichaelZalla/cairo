@@ -38,7 +38,7 @@ impl<'a> Pipeline<'a> {
                     },
                 };
 
-                self.render_entity_mesh(mesh, world_transform, None);
+                self.render_entity_mesh(mesh, world_transform);
 
                 self.options = original_options;
             }

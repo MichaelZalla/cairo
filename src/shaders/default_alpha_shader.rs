@@ -8,32 +8,42 @@ pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
     |context: &ShaderContext, out: &DefaultVertexOut| -> bool {
         // Check if this fragment can be discarded.
 
-        match context.active_material {
-            Some(material_raw_mut) => unsafe {
-                match &(*material_raw_mut).alpha_map {
-                    Some(texture_handle) => {
-                        match &context.texture_arena {
-                            Some(arena) => match arena.get(texture_handle) {
-                                Ok(entry) => {
-                                    let map = &entry.item;
+        match &context.active_material {
+            Some(name) => {
+                match &context.resources {
+                    Some(resources) => match resources.borrow().material.borrow().get(&name) {
+                        Some(material) => {
+                            match material.alpha_map {
+                                Some(handle) => {
+                                    match resources.borrow().texture.borrow().get(&handle) {
+                                        Ok(entry) => {
+                                            let map = &entry.item;
 
-                                    // Read in a per-fragment normal, with components in the
-                                    // range [0, 255].
+                                            // Read in a per-fragment normal, with components in the
+                                            // range [0, 255].
 
-                                    let (r, _g, _b) = sample_nearest(out.uv, map, None);
+                                            let (r, _g, _b) = sample_nearest(out.uv, map, None);
 
-                                    if r < 4 {
-                                        return false;
+                                            if r < 4 {
+                                                return false;
+                                            }
+                                        }
+                                        Err(err) => {
+                                            panic!(
+                                                "Failed to get TextureMap from Arena: {:?}: {}",
+                                                name, err
+                                            )
+                                        }
                                     }
                                 }
-                                Err(_) => panic!("Invalid TextureMap handle!"),
-                            },
-                            None => (),
+                                None => (),
+                            }
                         }
-                    }
+                        None => (),
+                    },
                     None => (),
                 }
-            },
+            }
             None => (),
         }
 
