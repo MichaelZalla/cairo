@@ -47,29 +47,30 @@ impl<T> Arena<T> {
     }
 
     pub fn insert(&mut self, uuid: Uuid, item: T) -> Handle {
-        // @TODO Validate `item`?
-
         let entry = ArenaEntry {
             uuid: uuid.clone(),
             item,
         };
 
+        let index = self.get_first_empty_index();
+
+        if index == self.entries.len() {
+            self.entries.push(Some(entry));
+        } else {
+            self.entries[index] = Some(entry)
+        };
+
+        Handle { index, uuid }
+    }
+
+    fn get_first_empty_index(&self) -> usize {
         let mut first_empty_index: usize = 0;
 
         while first_empty_index < self.entries.len() && self.entries[first_empty_index].is_some() {
             first_empty_index += 1;
         }
 
-        if first_empty_index == self.entries.len() {
-            self.entries.push(Some(entry));
-        } else {
-            self.entries[first_empty_index] = Some(entry)
-        };
-
-        Handle {
-            index: first_empty_index,
-            uuid,
-        }
+        first_empty_index
     }
 
     pub fn remove(&mut self, handle: &Handle) -> Result<ArenaEntry<T>, String> {
