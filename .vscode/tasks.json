@@ -15,15 +15,7 @@
         "isDefault": true
       },
       "label": "Rust: cargo build --examples",
-      "windows": {
-        "command": "cargo build --examples"
-      },
-      "osx": {
-        "command": "cargo build --examples"
-      },
-      "linux": {
-        "command": "cargo build --examples"
-      }
+      "command": "cargo build --examples"
     },
     {
       "type": "shell",
@@ -32,15 +24,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example basic-window",
-      "windows": {
-        "command": "cargo run --example basic-window"
-      },
-      "osx": {
-        "command": "cargo run --example basic-window"
-      },
-      "linux": {
-        "command": "cargo run --example basic-window"
-      }
+      "command": "cargo run --example basic-window"
     },
     {
       "type": "shell",
@@ -83,15 +67,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example scenegraph",
-      "windows": {
-        "command": "cargo run --example scenegraph"
-      },
-      "osx": {
-        "command": "cargo run --example scenegraph"
-      },
-      "linux": {
-        "command": "cargo run --example scenegraph"
-      }
+      "command": "cargo run --example scenegraph"
     },
     {
       "type": "shell",
@@ -100,15 +76,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example spinning-cube",
-      "windows": {
-        "command": "cargo run --example spinning-cube"
-      },
-      "osx": {
-        "command": "cargo run --example spinning-cube"
-      },
-      "linux": {
-        "command": "cargo run --example spinning-cube"
-      }
+      "command": "cargo run --example spinning-cube"
     },
     {
       "type": "shell",
@@ -117,15 +85,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example generate-primitives",
-      "windows": {
-        "command": "cargo run --example generate-primitives"
-      },
-      "osx": {
-        "command": "cargo run --example generate-primitives"
-      },
-      "linux": {
-        "command": "cargo run --example generate-primitives"
-      }
+      "command": "cargo run --example generate-primitives"
     },
     {
       "type": "shell",
@@ -134,15 +94,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example diffuse-map",
-      "windows": {
-        "command": "cargo run --example diffuse-map"
-      },
-      "osx": {
-        "command": "cargo run --example diffuse-map"
-      },
-      "linux": {
-        "command": "cargo run --example diffuse-map"
-      }
+      "command": "cargo run --example diffuse-map"
     },
     {
       "type": "shell",
@@ -151,12 +103,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example normal-map",
-      "windows": {
-        "command": "cargo run --example normal-map"
-      },
-      "linux": {
-        "command": "cargo run --example normal-map"
-      }
+      "command": "cargo run --example normal-map"
     },
     {
       "type": "shell",
@@ -165,12 +112,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example displacement-map",
-      "windows": {
-        "command": "cargo run --example displacement-map"
-      },
-      "linux": {
-        "command": "cargo run --example displacement-map"
-      }
+      "command": "cargo run --example displacement-map"
     },
     {
       "type": "shell",
@@ -179,12 +121,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example specular-map",
-      "windows": {
-        "command": "cargo run --example specular-map"
-      },
-      "linux": {
-        "command": "cargo run --example specular-map"
-      }
+      "command": "cargo run --example specular-map"
     },
     {
       "type": "shell",
@@ -193,12 +130,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example emissive-map",
-      "windows": {
-        "command": "cargo run --example emissive-map"
-      },
-      "linux": {
-        "command": "cargo run --example emissive-map"
-      }
+      "command": "cargo run --example emissive-map"
     },
     {
       "type": "shell",
@@ -207,15 +139,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example skybox",
-      "windows": {
-        "command": "cargo run --example skybox"
-      },
-      "osx": {
-        "command": "cargo run --example skybox"
-      },
-      "linux": {
-        "command": "cargo run --example skybox"
-      }
+      "command": "cargo run --example skybox"
     },
     {
       "type": "shell",
@@ -224,15 +148,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example post-effects",
-      "windows": {
-        "command": "cargo run --example post-effects"
-      },
-      "osx": {
-        "command": "cargo run --example post-effects"
-      },
-      "linux": {
-        "command": "cargo run --example post-effects"
-      }
+      "command": "cargo run --example post-effects"
     },
     {
       "type": "shell",
@@ -241,12 +157,7 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example sponza",
-      "windows": {
-        "command": "cargo run --example sponza"
-      },
-      "linux": {
-        "command": "cargo run --example sponza"
-      }
+      "command": "cargo run --example sponza"
     },
   ]
 }
