@@ -6,6 +6,7 @@ use crate::{
     app::context::ApplicationRenderingContext,
     color,
     resource::{arena::Arena, handle::Handle},
+    serde::PostDeserialize,
     texture::map::TextureMap,
     vec::vec3::Vec3,
 };
@@ -36,6 +37,12 @@ pub struct Material {
     pub normal_map: Option<Handle>,
     pub displacement_map: Option<Handle>,
     pub displacement_scale: f32,
+}
+
+impl PostDeserialize for Material {
+    fn post_deserialize(&mut self) {
+        // Nothing to do.
+    }
 }
 
 impl Material {

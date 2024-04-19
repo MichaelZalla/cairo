@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
+    serde::PostDeserialize,
     time::TimingInfo,
     transform::look_vector::LookVector,
     vec::{vec3::Vec3, vec4::Vec4},
@@ -42,6 +43,12 @@ pub struct Camera {
     pub look_vector: LookVector,
 }
 
+impl PostDeserialize for Camera {
+    fn post_deserialize(&mut self) {
+        self.recompute_projections();
+    }
+}
+
 impl Camera {
     pub fn new(
         kind: CameraProjectionKind,
@@ -67,9 +74,9 @@ impl Camera {
             look_vector: LookVector::new(position, target),
         };
 
-        camera.recompute_projections();
+        camera.post_deserialize();
 
-        return camera;
+        camera
     }
 
     pub fn from_orthographic(

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use self::geometry::Geometry;
 
 use super::vec::vec3::Vec3;
-use crate::physics::collision::aabb::AABB;
+use crate::{physics::collision::aabb::AABB, serde::PostDeserialize};
 
 pub mod geometry;
 pub mod obj;
@@ -18,16 +18,24 @@ pub struct Mesh {
     // pub aabb_geometry: Geometry,
 }
 
+impl PostDeserialize for Mesh {
+    fn post_deserialize(&mut self) {
+        self.aabb = make_object_space_bounding_box(&self.geometry);
+        // self.aabb_geometry = make_bounding_box_geometry(&self.aabb);
+    }
+}
+
 impl Mesh {
     pub fn new(geometry: Geometry) -> Self {
-        let aabb = make_object_space_bounding_box(&geometry);
-        // let aabb_geometry = make_bounding_box_geometry(&aabb);
-
-        Self {
+        let mut mesh = Mesh {
             geometry,
-            aabb,
-            // aabb_geometry,
-        }
+            aabb: Default::default(),
+            // aabb_geometry: Default::default(),
+        };
+
+        mesh.post_deserialize();
+
+        mesh
     }
 }
 

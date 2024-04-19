@@ -6,10 +6,10 @@ use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
-use crate::app::context::ApplicationRenderingContext;
-use crate::buffer::Buffer2D;
-
-use crate::debug_print;
+use crate::{
+    app::context::ApplicationRenderingContext, buffer::Buffer2D, debug_print,
+    serde::PostDeserialize,
+};
 
 use super::get_half_scaled;
 
@@ -66,6 +66,12 @@ pub struct TextureMap {
     #[serde(skip, default)]
     pub levels: Vec<TextureBuffer>,
     pub options: TextureMapOptions,
+}
+
+impl PostDeserialize for TextureMap {
+    fn post_deserialize(&mut self) {
+        // Nothing to do.
+    }
 }
 
 impl TextureMap {

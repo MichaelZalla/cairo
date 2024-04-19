@@ -4,21 +4,38 @@ use serde::{Deserialize, Serialize};
 
 use uuid::Uuid;
 
+use crate::serde::PostDeserialize;
+
 use super::handle::Handle;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct ArenaEntry<T> {
+pub struct ArenaEntry<T: PostDeserialize> {
     pub uuid: Uuid,
     // #[serde(flatten)]
     pub item: T,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct Arena<T> {
+pub struct Arena<T: PostDeserialize> {
     pub entries: Vec<Option<ArenaEntry<T>>>,
 }
 
-impl<T> Arena<T> {
+impl<T: PostDeserialize> PostDeserialize for Arena<T> {
+    fn post_deserialize(&mut self) {
+        for slot in self.entries.iter_mut() {
+            match slot {
+                Some(entry) => {
+                    let item = &mut entry.item;
+
+                    item.post_deserialize();
+                }
+                None => (),
+            }
+        }
+    }
+}
+
+impl<T: PostDeserialize> Arena<T> {
     pub fn new() -> Self {
         Self { entries: vec![] }
     }
@@ -117,7 +134,7 @@ impl<T> Arena<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a Arena<T> {
+impl<'a, T: PostDeserialize> IntoIterator for &'a Arena<T> {
     type Item = &'a Option<ArenaEntry<T>>;
     type IntoIter = Iter<'a, Option<ArenaEntry<T>>>;
 

@@ -6,6 +6,7 @@ use sdl2::keyboard::Keycode;
 
 use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
+    serde::PostDeserialize,
     time::TimingInfo,
     vec::{
         vec2::Vec2,
@@ -25,6 +26,12 @@ pub struct LookVector {
     roll: f32,
 }
 
+impl PostDeserialize for LookVector {
+    fn post_deserialize(&mut self) {
+        self.set_target_position(self.target);
+    }
+}
+
 impl LookVector {
     pub fn new(position: Vec3, target: Vec3) -> Self {
         let mut vector = Self {
@@ -38,7 +45,7 @@ impl LookVector {
             roll: 0.0,
         };
 
-        vector.set_target_position(target);
+        vector.post_deserialize();
 
         vector
     }

@@ -2,7 +2,7 @@ use std::fmt::{Display, Error};
 
 use serde::{Deserialize, Serialize};
 
-use crate::matrix::Mat4;
+use crate::{matrix::Mat4, serde::PostDeserialize};
 
 use super::node::{
     SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
@@ -11,6 +11,12 @@ use super::node::{
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SceneGraph {
     pub root: SceneNode,
+}
+
+impl PostDeserialize for SceneGraph {
+    fn post_deserialize(&mut self) {
+        self.root.post_deserialize();
+    }
 }
 
 impl SceneGraph {

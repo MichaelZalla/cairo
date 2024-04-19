@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::color;
+use crate::serde::PostDeserialize;
 use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
 use crate::vec::vec3::{self, Vec3};
@@ -11,6 +12,12 @@ use crate::vec::vec4::Vec4;
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct AmbientLight {
     pub intensities: Vec3,
+}
+
+impl PostDeserialize for AmbientLight {
+    fn post_deserialize(&mut self) {
+        // Nothing to do.
+    }
 }
 
 impl AmbientLight {
@@ -23,6 +30,12 @@ impl AmbientLight {
 pub struct DirectionalLight {
     pub intensities: Vec3,
     pub direction: Vec4,
+}
+
+impl PostDeserialize for DirectionalLight {
+    fn post_deserialize(&mut self) {
+        // Nothing to do.
+    }
 }
 
 impl DirectionalLight {
@@ -48,6 +61,16 @@ pub struct PointLight {
     pub influence_distance: f32,
 }
 
+impl PostDeserialize for PointLight {
+    fn post_deserialize(&mut self) {
+        self.influence_distance = get_approximate_influence_distance(
+            self.quadratic_attenuation,
+            self.linear_attenuation,
+            self.constant_attenuation,
+        );
+    }
+}
+
 impl PointLight {
     pub fn new() -> Self {
         let mut light = PointLight {
@@ -64,11 +87,7 @@ impl PointLight {
             influence_distance: 0.0,
         };
 
-        light.influence_distance = get_approximate_influence_distance(
-            light.quadratic_attenuation,
-            light.linear_attenuation,
-            light.constant_attenuation,
-        );
+        light.post_deserialize();
 
         light
     }
@@ -159,6 +178,16 @@ pub struct SpotLight {
     pub influence_distance: f32,
 }
 
+impl PostDeserialize for SpotLight {
+    fn post_deserialize(&mut self) {
+        self.influence_distance = get_approximate_influence_distance(
+            self.quadratic_attenuation,
+            self.linear_attenuation,
+            self.constant_attenuation,
+        );
+    }
+}
+
 impl SpotLight {
     pub fn new() -> Self {
         let default_light_position = Vec3 {
@@ -187,11 +216,7 @@ impl SpotLight {
             influence_distance: 0.0,
         };
 
-        light.influence_distance = get_approximate_influence_distance(
-            light.quadratic_attenuation,
-            light.linear_attenuation,
-            light.constant_attenuation,
-        );
+        light.post_deserialize();
 
         light
     }

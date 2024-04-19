@@ -22,6 +22,7 @@ pub mod physics;
 pub mod pipeline;
 pub mod resource;
 pub mod scene;
+pub mod serde;
 pub mod shader;
 pub mod shaders;
 pub mod texture;

@@ -6,6 +6,7 @@ use crate::{
     app::context::ApplicationRenderingContext,
     buffer::Buffer2D,
     color::{self, Color},
+    serde::PostDeserialize,
     texture::sample::sample_nearest,
     vec::{vec2::Vec2, vec4::Vec4},
 };
@@ -43,6 +44,14 @@ impl fmt::Display for Side {
 pub struct CubeMap {
     is_cross: bool,
     sides: [TextureMap; 6],
+}
+
+impl PostDeserialize for CubeMap {
+    fn post_deserialize(&mut self) {
+        for side in self.sides.iter_mut() {
+            side.post_deserialize();
+        }
+    }
 }
 
 impl CubeMap {

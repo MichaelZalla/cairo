@@ -2,7 +2,9 @@ use std::{collections::VecDeque, fmt::Display};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{matrix::Mat4, resource::handle::Handle, transform::Transform3D};
+use crate::{
+    matrix::Mat4, resource::handle::Handle, serde::PostDeserialize, transform::Transform3D,
+};
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SceneNodeType {
@@ -44,6 +46,12 @@ pub struct SceneNode {
     transform: Transform3D,
     handle: Option<Handle>,
     children: Option<Vec<SceneNode>>,
+}
+
+impl PostDeserialize for SceneNode {
+    fn post_deserialize(&mut self) {
+        // Nothing to do.
+    }
 }
 
 impl SceneNode {

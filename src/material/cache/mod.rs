@@ -2,12 +2,20 @@ use std::collections::{hash_map::Iter, HashMap};
 
 use serde::{Deserialize, Serialize};
 
+use crate::serde::PostDeserialize;
+
 use super::Material;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct MaterialCache {
     #[serde(flatten)]
     map: HashMap<String, Material>,
+}
+
+impl PostDeserialize for MaterialCache {
+    fn post_deserialize(&mut self) {
+        // Nothing to do.
+    }
 }
 
 impl MaterialCache {
