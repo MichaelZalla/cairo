@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
 use crate::{
     material::Material,
     matrix::Mat4,
+    resource::arena::Arena,
     scene::light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
     texture::{cubemap::CubeMap, map::TextureMap},
     vec::{vec3::Vec3, vec4::Vec4},
@@ -14,6 +17,7 @@ pub struct ShaderContext {
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
     pub default_specular_exponent: i32,
+    pub texture_arena: Option<Rc<Arena<TextureMap>>>,
     pub active_material: Option<*const Material>,
     pub active_uv_test_texture_map: Option<*const TextureMap>,
     pub active_environment_map: Option<*const CubeMap>,
@@ -33,6 +37,7 @@ impl Default for ShaderContext {
             projection_transform: Mat4::identity(),
             world_view_projection_transform: Default::default(),
             default_specular_exponent: 8,
+            texture_arena: None,
             active_material: None,
             active_uv_test_texture_map: None,
             active_environment_map: None,
@@ -65,6 +70,7 @@ impl ShaderContext {
                 * view_inverse_transform
                 * projection_transform,
             default_specular_exponent: 8,
+            texture_arena: None,
             active_material: None,
             active_uv_test_texture_map: None,
             active_environment_map: None,

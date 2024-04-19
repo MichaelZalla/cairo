@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use uuid::Uuid;
 
@@ -64,32 +64,37 @@ fn main() -> Result<(), String> {
 
     // Initialize materials
 
+    let mut texture_arena = Arena::<TextureMap>::new();
+
     // Bricks material
 
     let mut brick_material = Material::new("brick".to_string());
 
     brick_material.specular_exponent = 32;
 
-    let brick_diffuse_map = TextureMap::new(
-        &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
-        TextureMapStorageFormat::RGB24,
-    );
+    brick_material.diffuse_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
+            TextureMapStorageFormat::RGB24,
+        ),
+    ));
+    brick_material.specular_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
+            TextureMapStorageFormat::Index8(0),
+        ),
+    ));
+    brick_material.normal_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
+            TextureMapStorageFormat::RGB24,
+        ),
+    ));
 
-    let brick_specular_map = TextureMap::new(
-        &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
-        TextureMapStorageFormat::Index8(0),
-    );
-
-    let brick_normal_map = TextureMap::new(
-        &"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
-        TextureMapStorageFormat::RGB24,
-    );
-
-    brick_material.diffuse_map = Some(brick_diffuse_map);
-    brick_material.specular_map = Some(brick_specular_map);
-    brick_material.normal_map = Some(brick_normal_map);
-
-    brick_material.load_all_maps(rendering_context)?;
+    brick_material.load_all_maps(&mut texture_arena, rendering_context)?;
 
     // Assign textures to mesh materials
 
@@ -172,6 +177,8 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
 
     // Pipeline
 

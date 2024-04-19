@@ -1,13 +1,18 @@
 use std::{path::Path, str::SplitWhitespace};
 
-use crate::texture::map::TextureMapStorageFormat;
-use crate::{fs::read_lines, texture::map::TextureMap, vec::vec3::Vec3};
+use uuid::Uuid;
+
+use crate::{
+    resource::arena::Arena,
+    texture::map::TextureMapStorageFormat,
+    {fs::read_lines, texture::map::TextureMap, vec::vec3::Vec3},
+};
 
 use super::cache::MaterialCache;
 
 use super::Material;
 
-pub fn load_mtl(filepath: &str) -> MaterialCache {
+pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> MaterialCache {
     let mtl_file_path = Path::new(&filepath);
     let mtl_file_path_display = mtl_file_path.display();
 
@@ -189,13 +194,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .ambient_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::RGB24,
-                                ));
+                                    .ambient_map = Some(texture_map_handle);
                             }
 
                             // Diffuse texture map (typically identical to map_Ka)
@@ -207,13 +217,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .diffuse_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::RGB24,
-                                ));
+                                    .diffuse_map = Some(texture_map_handle);
                             }
 
                             // Specular color map
@@ -225,13 +240,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .specular_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::RGB24,
-                                ));
+                                    .specular_map = Some(texture_map_handle);
                             }
 
                             // Emissive color map
@@ -243,13 +263,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .emissive_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::RGB24,
-                                ));
+                                    .emissive_map = Some(texture_map_handle);
                             }
 
                             // Alpha map
@@ -257,13 +282,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .alpha_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::Index8(0),
-                                ));
+                                    .alpha_map = Some(texture_map_handle);
                             }
 
                             // Bump map
@@ -280,13 +310,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .normal_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::RGB24,
-                                ));
+                                    .normal_map = Some(texture_map_handle);
                             }
 
                             // Displacement (height) map
@@ -298,13 +333,18 @@ pub fn load_mtl(filepath: &str) -> MaterialCache {
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        &mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
+                                );
+
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .displacement_map = Some(TextureMap::new(
-                                    &mtl_relative_filepath.as_str(),
-                                    TextureMapStorageFormat::Index8(0),
-                                ));
+                                    .displacement_map = Some(texture_map_handle);
                             }
 
                             // Stencil (decal) map

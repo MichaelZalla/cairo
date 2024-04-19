@@ -10,9 +10,16 @@ use crate::mesh::{
     geometry::{Face, Geometry},
     Mesh,
 };
-use crate::vec::{vec2::Vec2, vec3::Vec3};
+use crate::{
+    resource::arena::Arena,
+    texture::map::TextureMap,
+    vec::{vec2::Vec2, vec3::Vec3},
+};
 
-pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
+pub fn load_obj(
+    filepath: &str,
+    texture_arena: &mut Arena<TextureMap>,
+) -> (Vec<Mesh>, Option<MaterialCache>) {
     let path = Path::new(&filepath);
     let path_display = path.display();
     let path_parent = path.parent().unwrap();
@@ -436,7 +443,7 @@ pub fn load_obj(filepath: &str) -> (Vec<Mesh>, Option<MaterialCache>) {
 
     match &material_source {
         Some(src) => {
-            let material_cache = material::mtl::load_mtl(&src);
+            let material_cache = material::mtl::load_mtl(&src, texture_arena);
 
             (objects, Some(material_cache))
         }

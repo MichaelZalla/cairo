@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -98,6 +98,8 @@ fn main() -> Result<(), String> {
     let mut cone_geometry = mesh::primitive::cone::generate(2.0, 2.0, 40);
     let mut cylinder_geometry = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
 
+    let mut texture_arena = Arena::<TextureMap>::new();
+
     // Create a new textured material
 
     let mut checkerboard_mat = Material::new("checkerboard".to_string());
@@ -113,10 +115,6 @@ fn main() -> Result<(), String> {
 
     checkerboard_diffuse_map.load(rendering_context)?;
 
-    let checkerboard_specular_map = checkerboard_diffuse_map.clone();
-
-    // Pump up diffuse value of the darkest pixels
-
     checkerboard_diffuse_map.map(|r, g, b| {
         if r < 4 && g < 4 && b < 4 {
             return (18, 18, 18);
@@ -124,37 +122,48 @@ fn main() -> Result<(), String> {
         (r, g, b)
     })?;
 
-    checkerboard_mat.diffuse_map = Some(checkerboard_diffuse_map);
+    let checkerboard_diffuse_map_handle =
+        texture_arena.insert(Uuid::new_v4(), checkerboard_diffuse_map);
+
+    // Pump up diffuse value of the darkest pixels
+
+    checkerboard_mat.diffuse_map = Some(checkerboard_diffuse_map_handle);
 
     checkerboard_mat.specular_exponent = 8;
 
-    checkerboard_mat.specular_map = Some(checkerboard_specular_map);
+    checkerboard_mat.specular_map = Some(checkerboard_diffuse_map_handle);
 
     // Point light decal material
 
     let mut point_light_decal_mat = Material::new("point_light_decal".to_string());
 
-    point_light_decal_mat.alpha_map = Some(TextureMap::new(
-        &"./assets/decals/point_light_small.png",
-        TextureMapStorageFormat::Index8(0),
+    point_light_decal_mat.alpha_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./assets/decals/point_light_small.png",
+            TextureMapStorageFormat::Index8(0),
+        ),
     ));
 
     point_light_decal_mat.emissive_map = point_light_decal_mat.alpha_map.clone();
 
-    point_light_decal_mat.load_all_maps(rendering_context)?;
+    point_light_decal_mat.load_all_maps(&mut texture_arena, rendering_context)?;
 
     // Spot light decal material
 
     let mut spot_light_decal_mat = Material::new("spot_light_decal".to_string());
 
-    spot_light_decal_mat.alpha_map = Some(TextureMap::new(
-        &"./assets/decals/spot_light_small.png",
-        TextureMapStorageFormat::Index8(0),
+    spot_light_decal_mat.alpha_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./assets/decals/spot_light_small.png",
+            TextureMapStorageFormat::Index8(0),
+        ),
     ));
 
     spot_light_decal_mat.emissive_map = spot_light_decal_mat.alpha_map.clone();
 
-    spot_light_decal_mat.load_all_maps(rendering_context)?;
+    spot_light_decal_mat.load_all_maps(&mut texture_arena, rendering_context)?;
 
     // Assign textures to mesh materials
 
@@ -291,6 +300,8 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
 
     // Fragment shaders
 

@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use uuid::Uuid;
 
@@ -67,51 +67,71 @@ fn main() -> Result<(), String> {
 
     // Initialize materials
 
+    let mut texture_arena = Arena::<TextureMap>::new();
+
     // Bricks material
 
     let mut brick_material = Material::new("bricks".to_string());
 
-    brick_material.diffuse_map = Some(TextureMap::new(
-        &"./examples/displacement-map/assets/bricks2.jpg",
-        TextureMapStorageFormat::RGB24,
+    brick_material.diffuse_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/displacement-map/assets/bricks2.jpg",
+            TextureMapStorageFormat::RGB24,
+        ),
     ));
 
-    brick_material.normal_map = Some(TextureMap::new(
-        &"./examples/displacement-map/assets/bricks2_normal.jpg",
-        TextureMapStorageFormat::RGB24,
+    brick_material.normal_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/displacement-map/assets/bricks2_normal.jpg",
+            TextureMapStorageFormat::RGB24,
+        ),
     ));
 
-    brick_material.displacement_map = Some(TextureMap::new(
-        &"./examples/displacement-map/assets/bricks2_disp.jpg",
-        TextureMapStorageFormat::Index8(0),
+    brick_material.displacement_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/displacement-map/assets/bricks2_disp.jpg",
+            TextureMapStorageFormat::Index8(0),
+        ),
     ));
 
     brick_material.displacement_scale = 0.05;
 
-    brick_material.load_all_maps(rendering_context)?;
+    brick_material.load_all_maps(&mut texture_arena, rendering_context)?;
 
     // Box material
 
     let mut box_material = Material::new("box".to_string());
 
-    box_material.diffuse_map = Some(TextureMap::new(
-        &"./examples/displacement-map/assets/wood.png",
-        TextureMapStorageFormat::RGB24,
+    box_material.diffuse_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/displacement-map/assets/wood.png",
+            TextureMapStorageFormat::RGB24,
+        ),
     ));
 
-    box_material.normal_map = Some(TextureMap::new(
-        &"./examples/displacement-map/assets/toy_box_normal.png",
-        TextureMapStorageFormat::RGB24,
+    box_material.normal_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/displacement-map/assets/toy_box_normal.png",
+            TextureMapStorageFormat::RGB24,
+        ),
     ));
 
-    box_material.displacement_map = Some(TextureMap::new(
-        &"./examples/displacement-map/assets/toy_box_disp.png",
-        TextureMapStorageFormat::Index8(0),
+    box_material.displacement_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/displacement-map/assets/toy_box_disp.png",
+            TextureMapStorageFormat::Index8(0),
+        ),
     ));
 
     box_material.displacement_scale = 0.05;
 
-    box_material.load_all_maps(rendering_context)?;
+    box_material.load_all_maps(&mut texture_arena, rendering_context)?;
 
     // Assign textures to mesh materials
 
@@ -199,6 +219,8 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
 
     // Pipeline
 

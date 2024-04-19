@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use uuid::Uuid;
 
@@ -69,6 +69,8 @@ fn main() -> Result<(), String> {
 
     // Initialize materials
 
+    let mut texture_arena = Arena::<TextureMap>::new();
+
     // Checkerboard material
 
     let mut checkerboard_material = Material::new("checkerboard".to_string());
@@ -80,31 +82,35 @@ fn main() -> Result<(), String> {
 
     checkerboard_diffuse_map.load(rendering_context)?;
 
-    let checkerboard_specular_map = checkerboard_diffuse_map.clone();
+    let checkerboard_diffuse_map_handle =
+        texture_arena.insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
-    checkerboard_material.diffuse_map = Some(checkerboard_diffuse_map);
-
-    checkerboard_material.specular_map = Some(checkerboard_specular_map);
+    checkerboard_material.diffuse_map = Some(checkerboard_diffuse_map_handle);
+    checkerboard_material.specular_map = Some(checkerboard_diffuse_map_handle);
 
     // Lava material
 
     let mut lava_material = Material::new("container".to_string());
 
-    let lava_diffuse_map = TextureMap::new(
-        &"./examples/post-effects/assets/lava.png",
-        TextureMapStorageFormat::RGB24,
-    );
+    lava_material.diffuse_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/post-effects/assets/lava.png",
+            TextureMapStorageFormat::RGB24,
+        ),
+    ));
 
-    let lava_emissive_map = TextureMap::new(
-        &"./examples/post-effects/assets/lava_emissive.png",
-        TextureMapStorageFormat::Index8(0),
-    );
+    lava_material.emissive_map = Some(texture_arena.insert(
+        Uuid::new_v4(),
+        TextureMap::new(
+            &"./examples/post-effects/assets/lava_emissive.png",
+            TextureMapStorageFormat::Index8(0),
+        ),
+    ));
 
-    lava_material.diffuse_map = Some(lava_diffuse_map);
-
-    lava_material.emissive_map = Some(lava_emissive_map);
-
-    lava_material.load_all_maps(rendering_context).unwrap();
+    lava_material
+        .load_all_maps(&mut texture_arena, rendering_context)
+        .unwrap();
 
     // Assign textures to mesh materials
 
@@ -193,6 +199,8 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
 
     // Pipeline
 

@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use uuid::Uuid;
 
@@ -27,6 +27,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
+    texture::map::TextureMap,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -56,15 +57,19 @@ fn main() -> Result<(), String> {
 
     // Meshes and materials
 
+    let mut texture_arena = Arena::<TextureMap>::new();
+
     let (mut cube_meshes, mut cube_materials_cache) =
-        mesh::obj::load_obj(&"./data/obj/cube-textured.obj");
+        mesh::obj::load_obj(&"./data/obj/cube-textured.obj", &mut texture_arena);
 
     let cube_mesh = &mut cube_meshes[0];
 
     match &mut cube_materials_cache {
         Some(cache) => {
             for material in cache.values_mut() {
-                material.load_all_maps(rendering_context).unwrap();
+                material
+                    .load_all_maps(&mut texture_arena, rendering_context)
+                    .unwrap();
             }
         }
         None => (),
@@ -139,6 +144,8 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
 
     // Pipeline
 

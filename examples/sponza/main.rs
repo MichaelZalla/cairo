@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 use uuid::Uuid;
@@ -39,7 +39,10 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
+    texture::{
+        cubemap::CubeMap,
+        map::{TextureMap, TextureMapStorageFormat},
+    },
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -95,13 +98,15 @@ fn main() -> Result<(), String> {
 
     // Sponza meshes and materials
 
-    let (atrium_meshes, mut atrium_materials_cache) =
-        mesh::obj::load_obj("./examples/sponza/assets/sponza.obj");
+    let mut texture_arena = Arena::<TextureMap>::new();
 
-    match &mut atrium_materials_cache {
+    let (atrium_meshes, mut materials_cache) =
+        mesh::obj::load_obj("./examples/sponza/assets/sponza.obj", &mut texture_arena);
+
+    match &mut materials_cache {
         Some(cache) => {
             for material in cache.values_mut() {
-                material.load_all_maps(rendering_context)?;
+                material.load_all_maps(&mut texture_arena, rendering_context)?;
             }
         }
         None => (),
@@ -192,6 +197,8 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    shader_context_rc.borrow_mut().texture_arena = Some(Rc::new(texture_arena));
 
     // Fragment shaders
 
@@ -305,10 +312,6 @@ fn main() -> Result<(), String> {
         Default::default(),
         Some(spot_light_handle),
     ))?;
-
-    // Prints the scenegraph to stdout.
-
-    println!("{}", scenegraph);
 
     let scenegraph_rc = RefCell::new(scenegraph);
 
@@ -701,7 +704,7 @@ fn main() -> Result<(), String> {
                                     entity,
                                     &current_world_transform,
                                     &mesh_arena_rc.borrow(),
-                                    atrium_materials_cache.as_ref(),
+                                    materials_cache.as_ref(),
                                 );
 
                                 Ok(())

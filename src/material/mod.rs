@@ -1,7 +1,11 @@
 use std::fmt;
 
 use crate::{
-    app::context::ApplicationRenderingContext, color, texture::map::TextureMap, vec::vec3::Vec3,
+    app::context::ApplicationRenderingContext,
+    color,
+    resource::{arena::Arena, handle::Handle},
+    texture::map::TextureMap,
+    vec::vec3::Vec3,
 };
 
 pub mod cache;
@@ -13,124 +17,66 @@ pub struct Material {
     pub material_source: Option<String>,
     pub illumination_model: u8,
     pub ambient_color: Vec3,
-    pub ambient_map: Option<TextureMap>,
-    pub ambient_occlusion_map: Option<TextureMap>,
+    pub ambient_map: Option<Handle>,
+    pub ambient_occlusion_map: Option<Handle>,
     pub diffuse_color: Vec3,
-    pub diffuse_map: Option<TextureMap>,
+    pub diffuse_map: Option<Handle>,
     pub specular_color: Vec3,
     pub specular_exponent: i32, // aka "shininess"
-    pub specular_map: Option<TextureMap>,
+    pub specular_map: Option<Handle>,
     pub emissive_color: Vec3,
-    pub emissive_map: Option<TextureMap>,
+    pub emissive_map: Option<Handle>,
     pub dissolve: f32,
     pub transparency: f32,
-    pub alpha_map: Option<TextureMap>,
+    pub alpha_map: Option<Handle>,
     pub transmission_filter_color: Vec3,
     pub index_of_refraction: f32,
-    pub normal_map: Option<TextureMap>,
-    pub displacement_map: Option<TextureMap>,
+    pub normal_map: Option<Handle>,
+    pub displacement_map: Option<Handle>,
     pub displacement_scale: f32,
 }
 
 impl Material {
     pub fn new(name: String) -> Self {
         let mut mat: Material = Default::default();
+
         mat.name = name;
         mat.diffuse_color = color::WHITE.to_vec3() / 255.0;
         mat.specular_exponent = 8;
+
         mat
     }
 
     pub fn load_all_maps(
         &mut self,
+        texture_arena: &mut Arena<TextureMap>,
         rendering_context: &ApplicationRenderingContext,
     ) -> Result<(), String> {
-        // Ambient map
-        match &mut self.ambient_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
-        }
+        let optional_handles = [
+            &mut self.ambient_map,
+            &mut self.ambient_occlusion_map,
+            &mut self.diffuse_map,
+            &mut self.specular_map,
+            &mut self.emissive_map,
+            &mut self.normal_map,
+            &mut self.displacement_map,
+            &mut self.alpha_map,
+        ];
 
-        // Ambient occlusion map
-        match &mut self.ambient_occlusion_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
-        }
+        for handle in optional_handles {
+            match handle {
+                Some(handle) => match texture_arena.get_mut(handle) {
+                    Ok(entry) => {
+                        let map = &mut entry.item;
 
-        // Diffuse map
-        match &mut self.diffuse_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
+                        if !map.is_loaded {
+                            map.load(rendering_context)?;
+                        }
+                    }
+                    Err(_err) => panic!("Invalid TextureMap handle!"),
+                },
+                None => (),
             }
-            None => (),
-        }
-
-        // Specular map
-        match &mut self.specular_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
-        }
-
-        // Emissive map
-        match &mut self.emissive_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
-        }
-
-        // Normal map
-        match &mut self.normal_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
-        }
-
-        // Displacement map
-        match &mut self.displacement_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
-        }
-
-        // Alpha map
-        match &mut self.alpha_map {
-            Some(map) => {
-                if !map.is_loaded {
-                    map.load(rendering_context)?
-                } else {
-                }
-            }
-            None => (),
         }
 
         Ok(())
@@ -157,15 +103,15 @@ impl fmt::Display for Material {
         )?;
 
         match &self.ambient_map {
-            Some(map) => {
-                writeln!(v, "  > Ambient map: {}", map.info.filepath)?;
+            Some(handle) => {
+                writeln!(v, "  > Ambient map: {}", handle.uuid)?;
             }
             None => (),
         }
 
         match &self.ambient_occlusion_map {
-            Some(map) => {
-                writeln!(v, "  > Ambient occlusion map: {}", map.info.filepath)?;
+            Some(handle) => {
+                writeln!(v, "  > Ambient occlusion map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -177,8 +123,8 @@ impl fmt::Display for Material {
         )?;
 
         match &self.diffuse_map {
-            Some(map) => {
-                writeln!(v, "  > Diffuse map: {}", map.info.filepath)?;
+            Some(handle) => {
+                writeln!(v, "  > Diffuse map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -192,8 +138,8 @@ impl fmt::Display for Material {
         writeln!(v, "  > Specular exponent: {}", self.specular_exponent)?;
 
         match &self.specular_map {
-            Some(map) => {
-                writeln!(v, "  > Specular map: {}", map.info.filepath)?;
+            Some(handle) => {
+                writeln!(v, "  > Specular map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -205,8 +151,8 @@ impl fmt::Display for Material {
         )?;
 
         match &self.emissive_map {
-            Some(map) => {
-                writeln!(v, "  > Emissive map: {}", map.info.filepath)?;
+            Some(handle) => {
+                writeln!(v, "  > Emissive map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -216,8 +162,8 @@ impl fmt::Display for Material {
         writeln!(v, "  > Transparency: {}", self.transparency)?;
 
         match &self.alpha_map {
-            Some(map) => {
-                writeln!(v, "  > Alpha map: {}", map.info.filepath)?;
+            Some(handle) => {
+                writeln!(v, "  > Alpha map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -231,14 +177,14 @@ impl fmt::Display for Material {
         writeln!(v, "  > Index of refraction: {}", self.index_of_refraction)?;
 
         match &self.normal_map {
-            Some(map) => writeln!(v, "  > Normal map: {}", map.info.filepath),
+            Some(handle) => writeln!(v, "  > Normal map: {}", handle.uuid),
             _ => Ok(()),
         }?;
 
         writeln!(v, "  > Displacement scale: {}", self.displacement_scale)?;
 
         match &self.displacement_map {
-            Some(map) => writeln!(v, "  > Displacement map: {}", map.info.filepath),
+            Some(handle) => writeln!(v, "  > Displacement map: {}", handle.uuid),
             _ => Ok(()),
         }
     }
