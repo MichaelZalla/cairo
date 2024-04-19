@@ -17,7 +17,7 @@ pub struct AABB {
 
 impl AABB {
     pub fn new(center: Vec3, half_dimension: f32) -> Self {
-        return AABB {
+        AABB {
             center,
             half_dimension,
             left: center.x - half_dimension,
@@ -26,7 +26,7 @@ impl AABB {
             bottom: center.y - half_dimension,
             near: center.z + half_dimension,
             far: center.z - half_dimension,
-        };
+        }
     }
 
     pub fn new_from_triangle(v0: &Vec3, v1: &Vec3, v2: &Vec3) -> Self {
@@ -52,7 +52,7 @@ impl AABB {
 
         let half_dimension = largest_dimension / 2.0;
 
-        return AABB::new(center, half_dimension);
+        AABB::new(center, half_dimension)
     }
 
     pub fn contains_point(&self, p: Vec3) -> bool {
@@ -66,7 +66,7 @@ impl AABB {
             return false;
         }
 
-        return true;
+        true
     }
 
     pub fn intersects(&self, rhs: &Self) -> bool {
@@ -80,7 +80,7 @@ impl AABB {
             return false;
         }
 
-        return true;
+        true
     }
 }
 
