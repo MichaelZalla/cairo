@@ -160,10 +160,10 @@ fn main() -> Result<(), String> {
     // Assign the meshes to entities
 
     let brick_wall_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(brick_wall_geometry));
-    let brick_wall_entity = Entity::new(brick_wall_mesh_handle);
+    let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
 
     let box_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(box_geometry));
-    let box_entity = Entity::new(box_mesh_handle);
+    let box_entity = Entity::new(box_mesh_handle, Some("box".to_string()));
 
     // Configure a global scene environment.
 

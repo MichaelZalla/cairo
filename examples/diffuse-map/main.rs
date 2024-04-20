@@ -89,7 +89,7 @@ fn main() -> Result<(), String> {
     // Assign the meshes to entities
 
     let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), cube_mesh.to_owned());
-    let cube_entity = Entity::new(cube_mesh_handle);
+    let cube_entity = Entity::new(cube_mesh_handle, Some("cube".to_string()));
 
     // Configure a global scene environment.
 

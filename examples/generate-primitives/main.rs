@@ -194,16 +194,16 @@ fn main() -> Result<(), String> {
     // Assign the meshes to entities
 
     let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(plane_geometry));
-    let plane_entity = Entity::new(plane_mesh_handle);
+    let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
 
     let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
-    let cube_entity = Entity::new(cube_mesh_handle);
+    let cube_entity = Entity::new(cube_mesh_handle, Some("checkerboard".to_string()));
 
     let cone_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cone_geometry));
-    let cone_entity = Entity::new(cone_mesh_handle);
+    let cone_entity = Entity::new(cone_mesh_handle, Some("checkerboard".to_string()));
 
     let cylinder_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cylinder_geometry));
-    let cylinder_entity = Entity::new(cylinder_mesh_handle);
+    let cylinder_entity = Entity::new(cylinder_mesh_handle, Some("checkerboard".to_string()));
 
     // Configure a global scene environment.
 

@@ -126,9 +126,11 @@ fn main() -> Result<(), String> {
     // Assign the meshes to entities
 
     for i in 0..atrium_meshes.len() {
+        let material_name = atrium_meshes[i].geometry.material_name.clone();
+
         let mesh_handle = mesh_arena.insert(Uuid::new_v4(), atrium_meshes[i].to_owned());
 
-        entity_arena.insert(Uuid::new_v4(), Entity::new(mesh_handle));
+        entity_arena.insert(Uuid::new_v4(), Entity::new(mesh_handle, material_name));
     }
 
     // Configure a global scene environment.

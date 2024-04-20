@@ -138,15 +138,15 @@ fn main() -> Result<(), String> {
     // Assign the meshes to entities
 
     let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), plane_mesh);
-    let plane_entity = Entity::new(plane_mesh_handle);
+    let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
 
     let red_cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), red_cube_mesh);
     let green_cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), green_cube_mesh);
     let blue_cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), blue_cube_mesh);
 
-    let red_cube_entity = Entity::new(red_cube_mesh_handle);
-    let green_cube_entity = Entity::new(green_cube_mesh_handle);
-    let blue_cube_entity = Entity::new(blue_cube_mesh_handle);
+    let red_cube_entity = Entity::new(red_cube_mesh_handle, Some("red".to_string()));
+    let green_cube_entity = Entity::new(green_cube_mesh_handle, Some("green".to_string()));
+    let blue_cube_entity = Entity::new(blue_cube_mesh_handle, Some("blue".to_string()));
 
     // Configure a global scene environment.
 

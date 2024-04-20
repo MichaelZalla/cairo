@@ -275,8 +275,30 @@ impl<'a> Pipeline<'a> {
         match mesh_arena.get(&entity.mesh) {
             Ok(entry) => {
                 let mesh = &entry.item;
+                let mut did_set_active_material = false;
+
+                {
+                    let mut context = self.shader_context.borrow_mut();
+
+                    match &entity.material {
+                        Some(name) => {
+                            context.set_active_material(Some(name.clone()));
+
+                            did_set_active_material = true;
+                        }
+                        None => (),
+                    }
+                }
 
                 self.render_entity_mesh(mesh, world_transform);
+
+                if did_set_active_material {
+                    // Reset the shader context's original active material.
+
+                    let mut context = self.shader_context.borrow_mut();
+
+                    context.set_active_material(None);
+                }
             }
             Err(err) => panic!(
                 "Failed to get Mesh from Arena with Handle {:?}: {}",
@@ -339,25 +361,7 @@ impl<'a> Pipeline<'a> {
     }
 
     fn render_mesh_geometry(&mut self, geometry: &Geometry) {
-        {
-            let mut context = self.shader_context.borrow_mut();
-
-            match &geometry.material_name {
-                Some(name) => {
-                    context.set_active_material(Some(name.clone()));
-                }
-                None => (),
-            }
-        }
-
         self.process_object_space_vertices(&geometry);
-
-        // Reset the shader context's original active material.
-        {
-            let mut context = self.shader_context.borrow_mut();
-
-            context.set_active_material(None);
-        }
     }
 
     fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {

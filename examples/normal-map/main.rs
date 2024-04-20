@@ -121,7 +121,7 @@ fn main() -> Result<(), String> {
 
     let brick_wall_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(brick_wall_geometry));
 
-    let brick_wall_entity = Entity::new(brick_wall_mesh_handle);
+    let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
 
     // Configure a global scene environment.
 

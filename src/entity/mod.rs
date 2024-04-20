@@ -5,6 +5,7 @@ use crate::{resource::handle::Handle, serde::PostDeserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entity {
     pub mesh: Handle,
+    pub material: Option<String>,
 }
 
 impl PostDeserialize for Entity {
@@ -14,7 +15,7 @@ impl PostDeserialize for Entity {
 }
 
 impl Entity {
-    pub fn new(mesh: Handle) -> Self {
-        Self { mesh }
+    pub fn new(mesh: Handle, material: Option<String>) -> Self {
+        Self { mesh, material }
     }
 }

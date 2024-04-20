@@ -134,11 +134,11 @@ fn main() -> Result<(), String> {
 
     let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(plane_geometry));
 
-    let plane_entity = Entity::new(plane_mesh_handle);
+    let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
 
     let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
 
-    let cube_entity = Entity::new(cube_mesh_handle);
+    let cube_entity = Entity::new(cube_mesh_handle, Some("container".to_string()));
 
     // Configure a global scene environment.
 
