@@ -13,11 +13,6 @@ pub struct Face {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Geometry {
-    pub object_source: Option<String>,
-    pub object_name: Option<String>,
-    pub group_name: Option<String>,
-    pub material_source: Option<String>,
-    pub material_name: Option<String>,
     pub vertices: Vec<Vec3>,
     pub normals: Vec<Vec3>,
     pub uvs: Vec<Vec2>,
@@ -27,11 +22,6 @@ pub struct Geometry {
 impl Default for Geometry {
     fn default() -> Self {
         Self {
-            object_source: None,
-            object_name: None,
-            group_name: None,
-            material_source: None,
-            material_name: None,
             vertices: vec![],
             normals: vec![],
             uvs: vec![],
@@ -42,42 +32,7 @@ impl Default for Geometry {
 
 impl fmt::Display for Geometry {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
-            v,
-            "Geometry (\"{}\")",
-            self.object_name.as_ref().unwrap_or(&"Unnamed".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Source: {}",
-            self.object_source
-                .as_ref()
-                .unwrap_or(&"No source".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Group name: {}",
-            self.group_name.as_ref().unwrap_or(&"No group".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Material source: {}",
-            self.material_source
-                .as_ref()
-                .unwrap_or(&"No material".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Material name: {}",
-            self.material_name
-                .as_ref()
-                .unwrap_or(&"Unnamed".to_string())
-        )?;
-
+        writeln!(v, "Geometry",)?;
         writeln!(v, "  > Vertices: {}", self.vertices.len())?;
         writeln!(v, "  > UVs: {}", self.uvs.len())?;
         writeln!(v, "  > Normals: {}", self.normals.len())?;

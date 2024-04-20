@@ -60,7 +60,7 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut brick_wall_geometry = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
+    let brick_wall_geometry = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
 
     // Initialize materials
 
@@ -96,16 +96,6 @@ fn main() -> Result<(), String> {
 
     brick_material.load_all_maps(&mut texture_arena, rendering_context)?;
 
-    // Assign textures to mesh materials
-
-    brick_wall_geometry.material_name = Some(brick_material.name.to_string());
-
-    // Collect materials
-
-    let mut material_cache: MaterialCache = Default::default();
-
-    material_cache.insert(brick_material);
-
     // Set up resource arenas for the various node types in our scene.
 
     let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
@@ -119,9 +109,21 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let brick_wall_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(brick_wall_geometry));
+    let brick_wall_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(brick_wall_geometry, Some(brick_material.name.to_string())),
+    );
 
-    let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
+    let brick_wall_entity = Entity::new(
+        brick_wall_mesh_handle,
+        Some(brick_material.name.to_string()),
+    );
+
+    // Collect materials
+
+    let mut material_cache: MaterialCache = Default::default();
+
+    material_cache.insert(brick_material);
 
     // Configure a global scene environment.
 

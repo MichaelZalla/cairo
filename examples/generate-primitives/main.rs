@@ -93,10 +93,10 @@ fn main() -> Result<(), String> {
 
     // Generate primitive meshes
 
-    let mut plane_geometry = mesh::primitive::plane::generate(32.0, 32.0, 1, 1);
-    let mut cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
-    let mut cone_geometry = mesh::primitive::cone::generate(2.0, 2.0, 40);
-    let mut cylinder_geometry = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
+    let plane_geometry = mesh::primitive::plane::generate(32.0, 32.0, 1, 1);
+    let cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let cone_geometry = mesh::primitive::cone::generate(2.0, 2.0, 40);
+    let cylinder_geometry = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
 
     let mut texture_arena = Arena::<TextureMap>::new();
 
@@ -165,21 +165,6 @@ fn main() -> Result<(), String> {
 
     spot_light_decal_mat.load_all_maps(&mut texture_arena, rendering_context)?;
 
-    // Assign textures to mesh materials
-
-    plane_geometry.material_name = Some(checkerboard_mat.name.clone());
-    cube_geometry.material_name = Some(checkerboard_mat.name.clone());
-    cone_geometry.material_name = Some(checkerboard_mat.name.clone());
-    cylinder_geometry.material_name = Some(checkerboard_mat.name.clone());
-
-    // Collect materials
-
-    let mut materials_cache: MaterialCache = Default::default();
-
-    materials_cache.insert(checkerboard_mat);
-    materials_cache.insert(point_light_decal_mat);
-    materials_cache.insert(spot_light_decal_mat);
-
     // Set up resource arenas for the various node types in our scene.
 
     let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
@@ -193,17 +178,41 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(plane_geometry));
+    let plane_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(plane_geometry, Some(checkerboard_mat.name.clone())),
+    );
+
     let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
 
-    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
+    let cube_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(cube_geometry, Some(checkerboard_mat.name.clone())),
+    );
+
     let cube_entity = Entity::new(cube_mesh_handle, Some("checkerboard".to_string()));
 
-    let cone_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cone_geometry));
+    let cone_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(cone_geometry, Some(checkerboard_mat.name.clone())),
+    );
+
     let cone_entity = Entity::new(cone_mesh_handle, Some("checkerboard".to_string()));
 
-    let cylinder_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cylinder_geometry));
+    let cylinder_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(cylinder_geometry, Some(checkerboard_mat.name.clone())),
+    );
+
     let cylinder_entity = Entity::new(cylinder_mesh_handle, Some("checkerboard".to_string()));
+
+    // Collect materials
+
+    let mut materials_cache: MaterialCache = Default::default();
+
+    materials_cache.insert(checkerboard_mat);
+    materials_cache.insert(point_light_decal_mat);
+    materials_cache.insert(spot_light_decal_mat);
 
     // Configure a global scene environment.
 
@@ -585,7 +594,7 @@ fn main() -> Result<(), String> {
                                 if let Ok(entry) = mesh_arena.get(&entity.mesh) {
                                     let mesh = &entry.item;
 
-                                    if let Some(object_name) = &mesh.geometry.object_name {
+                                    if let Some(object_name) = &mesh.object_name {
                                         if object_name == "plane" {
                                             return Ok(());
                                         }

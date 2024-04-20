@@ -230,9 +230,5 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Geometry {
     faces.push(right_face_1);
     faces.push(right_face_2);
 
-    let mut geometry = Geometry::new(vertices, uvs, normals, faces);
-
-    geometry.object_name = Some("cube".to_string());
-
-    geometry
+    Geometry::new(vertices, uvs, normals, faces)
 }

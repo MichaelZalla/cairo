@@ -92,9 +92,5 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
         }
     }
 
-    let mut geometry = Geometry::new(vertices, uvs, normals, faces);
-
-    geometry.object_name = Some("plane".to_string());
-
-    geometry
+    Geometry::new(vertices, uvs, normals, faces)
 }

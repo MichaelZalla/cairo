@@ -38,26 +38,24 @@ impl<'a> Pipeline<'a> {
                 let mat_name = material_name.unwrap();
                 let billboard_scale = scale.unwrap();
 
-                let mut light_quad = mesh::primitive::billboard::generate(
+                let billboard_quad = mesh::primitive::billboard::generate(
                     point_world_space,
                     &camera.unwrap().look_vector.get_position(),
                     billboard_scale,
                     billboard_scale,
                 );
 
-                let light_mat = materials.get_mut(&mat_name);
+                let billboard_mat = materials.get_mut(&mat_name);
 
-                match light_mat {
+                match billboard_mat {
                     Some(material) => {
                         material.diffuse_color = color.to_vec3() / 255.0;
 
-                        light_quad.material_name = Some(mat_name.clone());
-
-                        let light_quad_mesh = Mesh::new(light_quad);
+                        let billboard_quad_mesh = Mesh::new(billboard_quad, Some(mat_name.clone()));
 
                         let transform: Transform3D = Default::default();
 
-                        self.render_entity_mesh(&light_quad_mesh, &transform.mat());
+                        self.render_entity_mesh(&billboard_quad_mesh, &transform.mat());
 
                         return;
                     }

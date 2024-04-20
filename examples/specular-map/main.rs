@@ -58,8 +58,8 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut plane_geometry = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
-    let mut cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let plane_geometry = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+    let cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
     // Initialize materials
 
@@ -106,19 +106,6 @@ fn main() -> Result<(), String> {
         .load_all_maps(&mut texture_arena, rendering_context)
         .unwrap();
 
-    // Assign textures to mesh materials
-
-    plane_geometry.material_name = Some(checkerboard_material.name.clone());
-
-    cube_geometry.material_name = Some(container_material.name.clone());
-
-    // Collect materials
-
-    let mut material_cache: MaterialCache = Default::default();
-
-    material_cache.insert(checkerboard_material);
-    material_cache.insert(container_material);
-
     // Set up resource arenas for the various node types in our scene.
 
     let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
@@ -132,13 +119,26 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(plane_geometry));
+    let plane_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(plane_geometry, Some(checkerboard_material.name.clone())),
+    );
 
     let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
 
-    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
+    let cube_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(cube_geometry, Some(container_material.name.clone())),
+    );
 
     let cube_entity = Entity::new(cube_mesh_handle, Some("container".to_string()));
+
+    // Collect materials
+
+    let mut material_cache: MaterialCache = Default::default();
+
+    material_cache.insert(checkerboard_material);
+    material_cache.insert(container_material);
 
     // Configure a global scene environment.
 
@@ -356,7 +356,7 @@ fn main() -> Result<(), String> {
                                 if let Ok(entry) = mesh_arena.get(&entity.mesh) {
                                     let mesh = &entry.item;
 
-                                    if let Some(object_name) = &mesh.geometry.object_name {
+                                    if let Some(object_name) = &mesh.object_name {
                                         if object_name == "plane" {
                                             return Ok(());
                                         }

@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
     // Skybox (environment) textures
 
@@ -117,16 +117,6 @@ fn main() -> Result<(), String> {
     checkerboard_material.diffuse_map = Some(checkerboard_diffuse_map_handle);
     checkerboard_material.specular_map = Some(checkerboard_diffuse_map_handle);
 
-    // Assign textures to mesh materials
-
-    cube_geometry.material_name = Some(checkerboard_material.name.clone());
-
-    // Collect materials
-
-    let mut material_cache: MaterialCache = Default::default();
-
-    material_cache.insert(checkerboard_material);
-
     // Set up resource arenas for the various node types in our scene.
 
     let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
@@ -141,8 +131,18 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), Mesh::new(cube_geometry));
-    let cube_entity = Entity::new(cube_mesh_handle, Some("checkerboard".to_string()));
+    let cube_mesh_handle = mesh_arena.insert(
+        Uuid::new_v4(),
+        Mesh::new(cube_geometry, Some(checkerboard_material.name.clone())),
+    );
+
+    let cube_entity = Entity::new(cube_mesh_handle, Some(checkerboard_material.name.clone()));
+
+    // Collect materials
+
+    let mut material_cache: MaterialCache = Default::default();
+
+    material_cache.insert(checkerboard_material);
 
     // Configure a global scene environment.
 
@@ -346,7 +346,7 @@ fn main() -> Result<(), String> {
                                 if let Ok(entry) = mesh_arena.get(&entity.mesh) {
                                     let mesh = &entry.item;
 
-                                    if let Some(object_name) = &mesh.geometry.object_name {
+                                    if let Some(object_name) = &mesh.object_name {
                                         if object_name == "plane" {
                                             return Ok(());
                                         }

@@ -220,9 +220,5 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Geometry {
         });
     }
 
-    let mut geometry = Geometry::new(vertices, uvs, normals, faces);
-
-    geometry.object_name = Some("cylinder".to_string());
-
-    geometry
+    Geometry::new(vertices, uvs, normals, faces)
 }

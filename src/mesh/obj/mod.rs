@@ -334,48 +334,39 @@ pub fn load_obj(
                                 }
 
                                 if vertex_index_offset_for_current_object > 0 {
-                                    let mut accumulated_geometry = Geometry::new(
+                                    let accumulated_geometry = Geometry::new(
                                         object_vertices,
                                         object_uvs,
                                         object_normals,
                                         object_faces.clone(),
                                     );
 
-                                    accumulated_geometry.object_source =
-                                        Some(path_display.to_string());
+                                    let mut mesh = Mesh::new(accumulated_geometry, material_name);
+
+                                    mesh.object_source = Some(path_display.to_string());
 
                                     match object_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_geometry.object_name = Some(name);
+                                            mesh.object_name = Some(name);
                                         }
                                         None => (),
                                     }
 
                                     match group_name.to_owned() {
                                         Some(name) => {
-                                            accumulated_geometry.group_name = Some(name);
+                                            mesh.group_name = Some(name);
                                         }
                                         None => (),
                                     }
 
-                                    accumulated_geometry.material_source = material_source.clone();
-
-                                    match material_name.to_owned() {
-                                        Some(name) => {
-                                            accumulated_geometry.material_name = Some(name);
-                                        }
-                                        None => (),
-                                    }
+                                    mesh.material_source = material_source.clone();
 
                                     println!(
-                                        "Parsed object {}.",
-                                        accumulated_geometry
-                                            .object_name
-                                            .as_ref()
-                                            .unwrap_or(&"Unnamed".to_string())
+                                        "Parsed Mesh '{}'.",
+                                        mesh.object_name.as_ref().unwrap_or(&"Unnamed".to_string())
                                     );
 
-                                    objects.push(Mesh::new(accumulated_geometry));
+                                    objects.push(mesh);
 
                                     object_counter += 1;
                                 }
@@ -436,7 +427,7 @@ pub fn load_obj(
     for mesh in objects.as_mut_slice() {
         // Print a summary of this Mesh.
 
-        println!("{:?}", mesh.geometry.object_name);
+        println!("{:?}", mesh.object_name);
     }
 
     // Parse the set of materials inside this OBJ file's MTL file

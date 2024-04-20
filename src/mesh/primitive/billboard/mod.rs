@@ -65,9 +65,5 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
         },
     ];
 
-    let mut geometry = Geometry::new(vertices, uvs, normals, faces);
-
-    geometry.object_name = Some("billboard".to_string());
-
-    geometry
+    Geometry::new(vertices, uvs, normals, faces)
 }
