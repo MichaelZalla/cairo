@@ -43,8 +43,8 @@ impl Default for ShaderContext {
             active_environment_map: None,
             ambient_light: None,
             directional_light: None,
-            point_lights: Default::default(),
-            spot_lights: Default::default(),
+            point_lights: vec![],
+            spot_lights: vec![],
         }
     }
 }
