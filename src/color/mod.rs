@@ -34,21 +34,21 @@ impl fmt::Display for Color {
 
 impl Color {
     pub const fn rgb(r: u8, g: u8, b: u8) -> Color {
-        return Color {
+        Color {
             r: r as f32,
             g: g as f32,
             b: b as f32,
             a: 255.0,
-        };
+        }
     }
 
     pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
-        return Color {
+        Color {
             r: r as f32,
             g: g as f32,
             b: b as f32,
             a: a as f32,
-        };
+        }
     }
 
     pub fn to_u8(&self) -> (u8, u8, u8) {
@@ -65,10 +65,7 @@ impl Color {
     }
 
     pub const fn to_u32(&self) -> u32 {
-        return (self.r as u32)
-            | (self.g as u32) << 8
-            | (self.b as u32) << 16
-            | (self.a as u32) << 24;
+        (self.r as u32) | (self.g as u32) << 8 | (self.b as u32) << 16 | (self.a as u32) << 24
     }
 
     pub const fn from_vec3(color: Vec3) -> Self {
@@ -81,11 +78,11 @@ impl Color {
     }
 
     pub const fn to_vec3(&self) -> Vec3 {
-        return Vec3 {
+        Vec3 {
             x: self.r,
             y: self.g,
             z: self.b,
-        };
+        }
     }
 
     pub const fn from_vec4(color: Vec4) -> Self {
@@ -98,11 +95,11 @@ impl Color {
     }
 
     pub const fn to_vec4(&self) -> Vec4 {
-        return Vec4 {
+        Vec4 {
             x: self.r,
             y: self.g,
             z: self.b,
             w: self.a,
-        };
+        }
     }
 }
