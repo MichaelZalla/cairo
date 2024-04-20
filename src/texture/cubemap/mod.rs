@@ -37,6 +37,7 @@ impl fmt::Display for Side {
     }
 }
 
+#[derive(Default, Debug, Clone)]
 pub struct CubeMap {
     is_cross: bool,
     sides: [TextureMap; 6],
