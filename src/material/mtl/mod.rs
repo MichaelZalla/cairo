@@ -343,11 +343,12 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
     );
 
     println!();
+
     for material in cache.values() {
         println!("{}", material);
     }
 
-    return cache;
+    cache
 }
 
 fn next_rgb<'a>(line_tokens: &mut SplitWhitespace<'a>) -> Vec3 {
@@ -355,7 +356,7 @@ fn next_rgb<'a>(line_tokens: &mut SplitWhitespace<'a>) -> Vec3 {
     let g = line_tokens.next().unwrap().parse::<f32>().unwrap();
     let b = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-    return Vec3 { x: r, y: g, z: b };
+    Vec3 { x: r, y: g, z: b }
 }
 
 fn next_filepath<'a>(line_tokens: &mut SplitWhitespace<'a>, mtl_file_path: &Path) -> String {
@@ -369,5 +370,5 @@ fn next_filepath<'a>(line_tokens: &mut SplitWhitespace<'a>, mtl_file_path: &Path
         .into_string()
         .unwrap();
 
-    return mtl_relative_filepath;
+    mtl_relative_filepath
 }
