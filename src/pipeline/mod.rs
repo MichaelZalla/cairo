@@ -23,11 +23,7 @@ use crate::{
 
 use self::{gbuffer::GBuffer, options::PipelineOptions};
 
-use super::{
-    color::{self},
-    mesh::Mesh,
-    vec::vec3::Vec3,
-};
+use super::{mesh::Mesh, vec::vec3::Vec3};
 
 mod gbuffer;
 pub mod options;
@@ -425,13 +421,15 @@ impl<'a> Pipeline<'a> {
             z: f * (-delta_uv1.x * edge0.z + delta_uv0.x * edge1.z),
         };
 
+        static WHITE: Vec3 = Vec3::ones();
+
         let v0_in = DefaultVertexIn {
             position: v0,
             normal: normal0,
             tangent,
             bitangent,
             uv: uv0,
-            color: color::WHITE.to_vec3() / 255.0,
+            color: WHITE.clone(),
         };
 
         let v1_in = DefaultVertexIn {
@@ -440,7 +438,7 @@ impl<'a> Pipeline<'a> {
             tangent,
             bitangent,
             uv: uv1,
-            color: color::WHITE.to_vec3() / 255.0,
+            color: WHITE.clone(),
         };
 
         let v2_in = DefaultVertexIn {
@@ -449,7 +447,7 @@ impl<'a> Pipeline<'a> {
             tangent,
             bitangent,
             uv: uv2,
-            color: color::WHITE.to_vec3() / 255.0,
+            color: WHITE.clone(),
         };
 
         [v0_in, v1_in, v2_in]

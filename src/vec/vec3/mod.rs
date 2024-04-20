@@ -25,7 +25,7 @@ impl Vec3 {
         Default::default()
     }
 
-    pub fn ones() -> Self {
+    pub const fn ones() -> Self {
         Vec3 {
             x: 1.0,
             y: 1.0,
