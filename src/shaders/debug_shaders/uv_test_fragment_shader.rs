@@ -2,6 +2,7 @@
 
 use crate::{
     color::Color,
+    scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
@@ -9,18 +10,16 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub const UvTestFragmentShader: FragmentShaderFn = |context: &ShaderContext,
-                                                    sample: &GeometrySample|
- -> Color {
-    // Emit an RGB representation of this fragment's interpolated UV.
+pub const UvTestFragmentShader: FragmentShaderFn =
+    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
+        // Emit an RGB representation of this fragment's interpolated UV.
 
-    let r: u8;
-    let g: u8;
-    let b: u8;
+        let r: u8;
+        let g: u8;
+        let b: u8;
 
-    match &context.active_uv_test_texture_map {
-        Some(handle) => match &context.resources {
-            Some(resources) => match resources.borrow().texture.borrow().get(&handle) {
+        match &context.active_uv_test_texture_map {
+            Some(handle) => match resources.texture.borrow().get(&handle) {
                 Ok(entry) => {
                     let map = &entry.item;
 
@@ -35,13 +34,11 @@ pub const UvTestFragmentShader: FragmentShaderFn = |context: &ShaderContext,
                 Err(err) => panic!("Failed to get TextureMap from Arena: {:?}: {}", handle, err),
             },
             None => (),
-        },
-        None => (),
-    }
+        }
 
-    Color::from_vec3(Vec3 {
-        x: sample.uv.x,
-        y: sample.uv.y,
-        z: sample.uv.z,
-    })
-};
+        Color::from_vec3(Vec3 {
+            x: sample.uv.x,
+            y: sample.uv.y,
+            z: sample.uv.z,
+        })
+    };

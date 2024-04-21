@@ -1,19 +1,18 @@
 use crate::{
     color::Color,
+    scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
     vec::vec3::Vec3,
 };
 
-pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn = |context: &ShaderContext,
-                                                        sample: &GeometrySample|
- -> Color {
-    // Calculate ambient light contribution
+pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
+    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
+        // Calculate ambient light contribution
 
-    let ambient_light_contribution = match &context.ambient_light {
-        Some(handle) => match &context.resources {
-            Some(resources) => match resources.borrow().ambient_light.borrow().get(&handle) {
+        let ambient_light_contribution = match &context.ambient_light {
+            Some(handle) => match resources.ambient_light.borrow().get(&handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 
@@ -25,15 +24,12 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn = |context: &ShaderContext,
                 ),
             },
             None => Default::default(),
-        },
-        None => Default::default(),
-    };
+        };
 
-    // Calculate directional light contribution
+        // Calculate directional light contribution
 
-    let directional_light_contribution = match &context.directional_light {
-        Some(handle) => match &context.resources {
-            Some(resources) => match resources.borrow().directional_light.borrow().get(&handle) {
+        let directional_light_contribution = match &context.directional_light {
+            Some(handle) => match resources.directional_light.borrow().get(&handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 
@@ -45,69 +41,61 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn = |context: &ShaderContext,
                 ),
             },
             None => Default::default(),
-        },
-        None => Default::default(),
-    };
+        };
 
-    // Calculate point light contributions (including specular)
+        // Calculate point light contributions (including specular)
 
-    let mut point_light_contribution: Vec3 = Default::default();
+        let mut point_light_contribution: Vec3 = Default::default();
 
-    for handle in &context.point_lights {
-        match &context.resources {
-            Some(resources) => match resources.borrow().point_light.borrow().get(handle) {
+        for handle in &context.point_lights {
+            match resources.point_light.borrow().get(handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 
                     point_light_contribution += light.contribute(sample);
                 }
                 Err(err) => panic!("Failed to get PointLight from Arena: {:?}: {}", handle, err),
-            },
-            None => (),
+            }
         }
-    }
 
-    // Calculate spot light contributions (including specular).
+        // Calculate spot light contributions (including specular).
 
-    let mut spot_light_contribution: Vec3 = Default::default();
+        let mut spot_light_contribution: Vec3 = Default::default();
 
-    for handle in &context.spot_lights {
-        match &context.resources {
-            Some(resources) => match resources.borrow().spot_light.borrow().get(handle) {
+        for handle in &context.spot_lights {
+            match resources.spot_light.borrow().get(handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 
                     spot_light_contribution += light.contribute(sample.world_pos);
                 }
                 Err(err) => panic!("Failed to get SpotLight from Arena: {:?}: {}", handle, err),
-            },
-            None => (),
+            }
         }
-    }
 
-    // Calculate emissive light contribution
+        // Calculate emissive light contribution
 
-    let emissive_light_contribution: Vec3 = sample.emissive;
+        let emissive_light_contribution: Vec3 = sample.emissive;
 
-    // Combine light intensities
+        // Combine light intensities
 
-    let total_contribution = ambient_light_contribution
-        + directional_light_contribution
-        + point_light_contribution
-        + spot_light_contribution
-        + emissive_light_contribution;
+        let total_contribution = ambient_light_contribution
+            + directional_light_contribution
+            + point_light_contribution
+            + spot_light_contribution
+            + emissive_light_contribution;
 
-    // @TODO Honor each material's ambient, diffuse, and specular colors.
+        // @TODO Honor each material's ambient, diffuse, and specular colors.
 
-    let mut color: Vec3 = sample.diffuse;
+        let mut color: Vec3 = sample.diffuse;
 
-    // Transform sRGB space to linear space.
+        // Transform sRGB space to linear space.
 
-    color.srgb_to_linear();
+        color.srgb_to_linear();
 
-    // Multiply by total lighting contribution and saturate.
+        // Multiply by total lighting contribution and saturate.
 
-    color *= total_contribution;
+        color *= total_contribution;
 
-    Color::from_vec3(color)
-};
+        Color::from_vec3(color)
+    };

@@ -1,9 +1,6 @@
-use std::{cell::RefCell, rc::Rc};
-
 use crate::{
     matrix::Mat4,
     resource::handle::Handle,
-    scene::resources::SceneResources,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -15,7 +12,6 @@ pub struct ShaderContext {
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
     pub default_specular_exponent: i32,
-    pub resources: Option<Rc<RefCell<SceneResources>>>,
     pub active_material: Option<String>,
     pub active_uv_test_texture_map: Option<Handle>,
     pub active_environment_map: Option<Handle>,
@@ -35,7 +31,6 @@ impl Default for ShaderContext {
             projection_transform: Mat4::identity(),
             world_view_projection_transform: Default::default(),
             default_specular_exponent: 8,
-            resources: None,
             active_material: None,
             active_uv_test_texture_map: None,
             active_environment_map: None,
@@ -68,7 +63,6 @@ impl ShaderContext {
                 * view_inverse_transform
                 * projection_transform,
             default_specular_exponent: 8,
-            resources: None,
             active_material: None,
             active_uv_test_texture_map: None,
             active_environment_map: None,

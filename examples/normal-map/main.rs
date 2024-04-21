@@ -9,13 +9,13 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     entity::Entity,
-    material::{cache::MaterialCache, Material},
+    material::Material,
     matrix::Mat4,
-    mesh::{self, Mesh},
+    mesh::{self},
     pipeline::Pipeline,
-    resource::arena::Arena,
     scene::{
         camera::Camera,
+        context::SceneContext,
         environment::Environment,
         graph::SceneGraph,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
@@ -58,119 +58,212 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    // Meshes
+    // Scene context
 
-    let brick_wall_mesh = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
+    let scene_context: SceneContext = Default::default();
 
-    // Initialize materials
+    {
+        let resources = scene_context.resources.borrow_mut();
 
-    let mut texture_arena = Arena::<TextureMap>::new();
+        // Meshes
 
-    // Bricks material
+        let brick_wall_mesh = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
 
-    let mut brick_material = Material::new("brick".to_string());
+        // Bricks material
 
-    brick_material.specular_exponent = 32;
+        let mut brick_material = Material::new("brick".to_string());
 
-    brick_material.diffuse_map = Some(texture_arena.insert(
-        Uuid::new_v4(),
-        TextureMap::new(
-            &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
-            TextureMapStorageFormat::RGB24,
-        ),
-    ));
-    brick_material.specular_map = Some(texture_arena.insert(
-        Uuid::new_v4(),
-        TextureMap::new(
-            &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
-            TextureMapStorageFormat::Index8(0),
-        ),
-    ));
-    brick_material.normal_map = Some(texture_arena.insert(
-        Uuid::new_v4(),
-        TextureMap::new(
-            &"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
-            TextureMapStorageFormat::RGB24,
-        ),
-    ));
+        brick_material.specular_exponent = 32;
 
-    brick_material.load_all_maps(&mut texture_arena, rendering_context)?;
+        brick_material.diffuse_map = Some(resources.texture.borrow_mut().insert(
+            Uuid::new_v4(),
+            TextureMap::new(
+                &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
+                TextureMapStorageFormat::RGB24,
+            ),
+        ));
+        brick_material.specular_map = Some(resources.texture.borrow_mut().insert(
+            Uuid::new_v4(),
+            TextureMap::new(
+                &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
+                TextureMapStorageFormat::Index8(0),
+            ),
+        ));
+        brick_material.normal_map = Some(resources.texture.borrow_mut().insert(
+            Uuid::new_v4(),
+            TextureMap::new(
+                &"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
+                TextureMapStorageFormat::RGB24,
+            ),
+        ));
 
-    // Set up resource arenas for the various node types in our scene.
+        brick_material.load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;
 
-    let mut mesh_arena: Arena<Mesh> = Arena::<Mesh>::new();
-    let mut entity_arena: Arena<Entity> = Arena::<Entity>::new();
-    let mut camera_arena: Arena<Camera> = Arena::<Camera>::new();
-    let mut environment_arena: Arena<_> = Arena::<Environment>::new();
-    let mut ambient_light_arena: Arena<AmbientLight> = Arena::<AmbientLight>::new();
-    let mut directional_light_arena: Arena<DirectionalLight> = Arena::<DirectionalLight>::new();
-    let mut point_light_arena: Arena<PointLight> = Arena::<PointLight>::new();
-    let mut spot_light_arena: Arena<SpotLight> = Arena::<SpotLight>::new();
+        // Assign the meshes to entities
 
-    // Assign the meshes to entities
+        let brick_wall_mesh_handle = resources
+            .mesh
+            .borrow_mut()
+            .insert(Uuid::new_v4(), brick_wall_mesh);
 
-    let brick_wall_mesh_handle = mesh_arena.insert(Uuid::new_v4(), brick_wall_mesh);
-    let brick_wall_entity = Entity::new(
-        brick_wall_mesh_handle,
-        Some(brick_material.name.to_string()),
-    );
+        let brick_wall_entity = Entity::new(
+            brick_wall_mesh_handle,
+            Some(brick_material.name.to_string()),
+        );
 
-    // Collect materials
+        // Collect materials
 
-    let mut material_cache: MaterialCache = Default::default();
+        {
+            let mut materials = resources.material.borrow_mut();
 
-    material_cache.insert(brick_material);
-
-    // Configure a global scene environment.
-
-    let environment: Environment = Default::default();
-
-    // Set up a camera for our scene.
-
-    let aspect_ratio = framebuffer_rc.borrow().width_over_height;
-
-    let mut camera: Camera = Camera::from_perspective(
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -8.0,
-        },
-        Default::default(),
-        75.0,
-        aspect_ratio,
-    );
-
-    camera.movement_speed = 5.0;
-
-    // Set up some lights for our scene.
-
-    let ambient_light = AmbientLight {
-        intensities: Vec3::ones() * 0.1,
-    };
-
-    let directional_light = DirectionalLight {
-        intensities: Vec3::ones() * 0.15,
-        direction: Vec4 {
-            x: 0.0,
-            y: 1.0,
-            z: 1.0,
-            w: 1.0,
+            materials.insert(brick_material);
         }
-        .as_normal(),
-    };
 
-    let mut point_light = PointLight::new();
+        // Configure a global scene environment.
 
-    point_light.position.y = 0.0;
-    point_light.position.z = -4.0;
+        let environment: Environment = Default::default();
 
-    point_light.intensities = Vec3::ones() * 10.0;
-    point_light.specular_intensity = 10.0;
-    point_light.constant_attenuation = 1.0;
-    point_light.linear_attenuation = 0.35;
-    point_light.quadratic_attenuation = 0.44;
+        // Set up a camera for our scene.
 
-    let spot_light = SpotLight::new();
+        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
+
+        let mut camera: Camera = Camera::from_perspective(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -8.0,
+            },
+            Default::default(),
+            75.0,
+            aspect_ratio,
+        );
+
+        camera.movement_speed = 5.0;
+
+        // Set up some lights for our scene.
+
+        let ambient_light = AmbientLight {
+            intensities: Vec3::ones() * 0.1,
+        };
+
+        let directional_light = DirectionalLight {
+            intensities: Vec3::ones() * 0.15,
+            direction: Vec4 {
+                x: 0.0,
+                y: 1.0,
+                z: 1.0,
+                w: 1.0,
+            }
+            .as_normal(),
+        };
+
+        let mut point_light = PointLight::new();
+
+        point_light.position.y = 0.0;
+        point_light.position.z = -4.0;
+
+        point_light.intensities = Vec3::ones() * 10.0;
+        point_light.specular_intensity = 10.0;
+        point_light.constant_attenuation = 1.0;
+        point_light.linear_attenuation = 0.35;
+        point_light.quadratic_attenuation = 0.44;
+
+        let spot_light = SpotLight::new();
+
+        // Create resource handles from our arenas.
+
+        let brick_wall_entity_handle = resources
+            .entity
+            .borrow_mut()
+            .insert(Uuid::new_v4(), brick_wall_entity);
+
+        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
+
+        let environment_handle = resources
+            .environment
+            .borrow_mut()
+            .insert(Uuid::new_v4(), environment);
+
+        let ambient_light_handle = resources
+            .ambient_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), ambient_light);
+
+        let directional_light_handle = resources
+            .directional_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), directional_light);
+
+        let point_light_handle = resources
+            .point_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), point_light);
+
+        let spot_light_handle = resources
+            .spot_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), spot_light);
+
+        // Create a scene graph.
+
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        let mut scenegraph = SceneGraph::new();
+
+        // Add an environment (node) to our scene.
+
+        let mut environment_node = SceneNode::new(
+            SceneNodeType::Environment,
+            Default::default(),
+            Some(environment_handle),
+        );
+
+        environment_node.add_child(SceneNode::new(
+            SceneNodeType::AmbientLight,
+            Default::default(),
+            Some(ambient_light_handle),
+        ))?;
+
+        environment_node.add_child(SceneNode::new(
+            SceneNodeType::DirectionalLight,
+            Default::default(),
+            Some(directional_light_handle),
+        ))?;
+
+        scenegraph.root.add_child(environment_node)?;
+
+        // Add geometry nodes to our scene.
+
+        scenegraph.root.add_child(SceneNode::new(
+            SceneNodeType::Entity,
+            Default::default(),
+            Some(brick_wall_entity_handle),
+        ))?;
+
+        // Add camera and light nodes to our scene graph's root.
+
+        scenegraph.root.add_child(SceneNode::new(
+            SceneNodeType::Camera,
+            Default::default(),
+            Some(camera_handle),
+        ))?;
+
+        scenegraph.root.add_child(SceneNode::new(
+            SceneNodeType::PointLight,
+            Default::default(),
+            Some(point_light_handle),
+        ))?;
+
+        scenegraph.root.add_child(SceneNode::new(
+            SceneNodeType::SpotLight,
+            Default::default(),
+            Some(spot_light_handle),
+        ))?;
+
+        scenes.push(scenegraph);
+    }
+
+    let scene_context_rc = RefCell::new(scene_context);
 
     // Shader context
 
@@ -180,6 +273,7 @@ fn main() -> Result<(), String> {
 
     let mut pipeline = Pipeline::new(
         &shader_context_rc,
+        scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -190,85 +284,6 @@ fn main() -> Result<(), String> {
 
     let pipeline_rc = RefCell::new(pipeline);
 
-    // Create resource handles from our arenas.
-
-    let brick_wall_entity_handle = entity_arena.insert(Uuid::new_v4(), brick_wall_entity);
-    let camera_handle = camera_arena.insert(Uuid::new_v4(), camera);
-    let environment_handle = environment_arena.insert(Uuid::new_v4(), environment);
-    let ambient_light_handle = ambient_light_arena.insert(Uuid::new_v4(), ambient_light);
-    let directional_light_handle =
-        directional_light_arena.insert(Uuid::new_v4(), directional_light);
-    let point_light_handle = point_light_arena.insert(Uuid::new_v4(), point_light);
-    let spot_light_handle = spot_light_arena.insert(Uuid::new_v4(), spot_light);
-
-    let mesh_arena_rc = RefCell::new(mesh_arena);
-    let entity_arena_rc = RefCell::new(entity_arena);
-    let camera_arena_rc = RefCell::new(camera_arena);
-    let _ambient_light_arena_rc = RefCell::new(ambient_light_arena);
-    let _directional_light_arena_rc = RefCell::new(directional_light_arena);
-    let point_light_arena_rc = RefCell::new(point_light_arena);
-    let _spot_light_arena_rc = RefCell::new(spot_light_arena);
-
-    // Create a scene graph.
-
-    let mut scenegraph = SceneGraph::new();
-
-    // Add an environment (node) to our scene.
-
-    let mut environment_node = SceneNode::new(
-        SceneNodeType::Environment,
-        Default::default(),
-        Some(environment_handle),
-    );
-
-    environment_node.add_child(SceneNode::new(
-        SceneNodeType::AmbientLight,
-        Default::default(),
-        Some(ambient_light_handle),
-    ))?;
-
-    environment_node.add_child(SceneNode::new(
-        SceneNodeType::DirectionalLight,
-        Default::default(),
-        Some(directional_light_handle),
-    ))?;
-
-    scenegraph.root.add_child(environment_node)?;
-
-    // Add geometry nodes to our scene.
-
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::Entity,
-        Default::default(),
-        Some(brick_wall_entity_handle),
-    ))?;
-
-    // Add camera and light nodes to our scene graph's root.
-
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::Camera,
-        Default::default(),
-        Some(camera_handle),
-    ))?;
-
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::PointLight,
-        Default::default(),
-        Some(point_light_handle),
-    ))?;
-
-    scenegraph.root.add_child(SceneNode::new(
-        SceneNodeType::SpotLight,
-        Default::default(),
-        Some(spot_light_handle),
-    ))?;
-
-    // Prints the scenegraph to stdout.
-
-    println!("{}", scenegraph);
-
-    let scenegraph_rc = RefCell::new(scenegraph);
-
     // App update and render callbacks
 
     let mut update = |app: &mut App,
@@ -276,6 +291,9 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
+        let scene_context = scene_context_rc.borrow_mut();
+        let resources = scene_context.resources.borrow_mut();
+        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = shader_context_rc.borrow_mut();
 
         shader_context.set_ambient_light(None);
@@ -284,8 +302,6 @@ fn main() -> Result<(), String> {
         shader_context.get_spot_lights_mut().clear();
 
         // Traverse the scene graph and update its nodes.
-
-        let mut scenegraph = scenegraph_rc.borrow_mut();
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            _current_world_transform: Mat4,
@@ -329,7 +345,7 @@ fn main() -> Result<(), String> {
                 }
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
-                        let mut camera_arena = camera_arena_rc.borrow_mut();
+                        let mut camera_arena = resources.camera.borrow_mut();
 
                         match camera_arena.get_mut(handle) {
                             Ok(entry) => {
@@ -424,7 +440,7 @@ fn main() -> Result<(), String> {
             }
         };
 
-        scenegraph.root.visit_mut(
+        scenes[0].root.visit_mut(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),
             &mut update_scene_graph_node,
@@ -452,9 +468,11 @@ fn main() -> Result<(), String> {
 
         pipeline.begin_frame();
 
-        // Render entities.
+        // Render scene.
 
-        let scenegraph = scenegraph_rc.borrow_mut();
+        let scene_context = scene_context_rc.borrow();
+        let resources = scene_context.resources.borrow();
+        let scenes = scene_context.scenes.borrow();
 
         let mut render_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
@@ -468,12 +486,12 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
-                        let mut entity_arena = entity_arena_rc.borrow_mut();
-                        let mesh_arena = mesh_arena_rc.borrow_mut();
+                        let mesh_arena = resources.mesh.borrow_mut();
+                        let entity_arena = resources.entity.borrow();
 
-                        match entity_arena.get_mut(handle) {
+                        match entity_arena.get(handle) {
                             Ok(entry) => {
-                                let entity = &mut entry.item;
+                                let entity = &entry.item;
 
                                 pipeline.render_entity(
                                     entity,
@@ -498,11 +516,11 @@ fn main() -> Result<(), String> {
                 SceneNodeType::DirectionalLight => Ok(()),
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {
-                        let mut point_light_arena = point_light_arena_rc.borrow_mut();
+                        let point_light_arena = resources.point_light.borrow();
 
-                        match point_light_arena.get_mut(handle) {
+                        match point_light_arena.get(handle) {
                             Ok(entry) => {
-                                let point_light = &mut entry.item;
+                                let point_light = &entry.item;
 
                                 pipeline.render_point_light(point_light, None, None);
 
@@ -524,7 +542,7 @@ fn main() -> Result<(), String> {
 
         // Traverse the scene graph and render its nodes.
 
-        scenegraph.root.visit(
+        scenes[0].root.visit(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),
             &mut render_scene_graph_node,

@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, cell::RefCell};
+use std::{borrow::Borrow, cell::RefCell, rc::Rc};
 
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -7,6 +7,7 @@ use crate::{
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
     resource::arena::Arena,
+    scene::resources::SceneResources,
     shader::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
@@ -49,6 +50,7 @@ pub struct Pipeline<'a> {
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
     pub shader_context: &'a RefCell<ShaderContext>,
+    pub scene_resources: Rc<RefCell<SceneResources>>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
     pub geometry_shader_options: GeometryShaderOptions,
@@ -59,6 +61,7 @@ pub struct Pipeline<'a> {
 impl<'a> Pipeline<'a> {
     pub fn new(
         shader_context: &'a RefCell<ShaderContext>,
+        scene_resources: Rc<RefCell<SceneResources>>,
         vertex_shader: VertexShaderFn,
         fragment_shader: FragmentShaderFn,
         options: PipelineOptions,
@@ -79,6 +82,7 @@ impl<'a> Pipeline<'a> {
             g_buffer: None,
             bloom_buffer: None,
             shader_context,
+            scene_resources,
             vertex_shader,
             alpha_shader,
             geometry_shader,
@@ -478,10 +482,11 @@ impl<'a> Pipeline<'a> {
 
         {
             let shader_context = self.shader_context.borrow();
+            let scene_resources = (*self.scene_resources).borrow();
 
             projection_space_vertices = vertices_in
                 .into_iter()
-                .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
+                .map(|v_in| return (self.vertex_shader)(&shader_context, &scene_resources, &v_in))
                 .collect();
         }
 
@@ -499,7 +504,14 @@ impl<'a> Pipeline<'a> {
         v.position.w = w_inverse;
     }
 
-    fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
+    fn test_and_set_z_buffer(
+        &mut self,
+        x: u32,
+        y: u32,
+        interpolant: &mut DefaultVertexOut,
+        // shader_context: &ShaderContext,
+        // scene_resources: &SceneResources,
+    ) {
         match self.framebuffer {
             Some(rc) => {
                 let framebuffer = rc.borrow_mut();
@@ -518,9 +530,13 @@ impl<'a> Pipeline<'a> {
                                 // Alpha shader test.
 
                                 let shader_context = self.shader_context.borrow();
+                                let scene_resources = (*self.scene_resources).borrow();
 
-                                if !(self.alpha_shader)(&shader_context, &linear_space_interpolant)
-                                {
+                                if !(self.alpha_shader)(
+                                    &shader_context,
+                                    &scene_resources,
+                                    &linear_space_interpolant,
+                                ) {
                                     return;
                                 }
 
@@ -552,6 +568,7 @@ impl<'a> Pipeline<'a> {
 
                                         match (self.geometry_shader)(
                                             &shader_context,
+                                            &scene_resources,
                                             &self.geometry_shader_options,
                                             &linear_space_interpolant,
                                         ) {
@@ -570,6 +587,7 @@ impl<'a> Pipeline<'a> {
                                                                 .get_tone_mapped_color_from_hdr(
                                                                     self.get_hdr_color_for_sample(
                                                                         &shader_context,
+                                                                        &scene_resources,
                                                                         &sample,
                                                                     ),
                                                                 );
@@ -607,10 +625,11 @@ impl<'a> Pipeline<'a> {
     fn get_hdr_color_for_sample(
         &self,
         shader_context: &ShaderContext,
+        scene_resources: &SceneResources,
         sample: &GeometrySample,
     ) -> Vec3 {
         if self.options.do_lighting {
-            (self.fragment_shader)(shader_context, &sample).to_vec3()
+            (self.fragment_shader)(shader_context, scene_resources, &sample).to_vec3()
         } else {
             sample.diffuse
         }

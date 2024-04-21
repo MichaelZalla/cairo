@@ -1,5 +1,5 @@
-use crate::color::Color;
+use crate::{color::Color, scene::resources::SceneResources};
 
 use super::{context::ShaderContext, geometry::sample::GeometrySample};
 
-pub type FragmentShaderFn = fn(&ShaderContext, &GeometrySample) -> Color;
+pub type FragmentShaderFn = fn(&ShaderContext, &SceneResources, &GeometrySample) -> Color;

@@ -18,6 +18,7 @@ impl<'a> Pipeline<'a> {
                         // Perform deferred lighting pass.
 
                         let shader_context = self.shader_context.borrow();
+                        let scene_resources = self.scene_resources.borrow();
 
                         // Call the active fragment shader on every G-buffer sample that was
                         // written to by the rasterizer.
@@ -27,7 +28,11 @@ impl<'a> Pipeline<'a> {
                                 let x = index as u32 % self.viewport.width;
                                 let y = index as u32 / self.viewport.width;
 
-                                let color = self.get_hdr_color_for_sample(&shader_context, &sample);
+                                let color = self.get_hdr_color_for_sample(
+                                    &shader_context,
+                                    &scene_resources,
+                                    &sample,
+                                );
 
                                 deferred_buffer.set(x, y, color);
                             }

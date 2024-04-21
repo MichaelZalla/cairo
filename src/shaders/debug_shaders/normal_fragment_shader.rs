@@ -2,6 +2,7 @@
 
 use crate::{
     color::Color,
+    scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
@@ -9,7 +10,7 @@ use crate::{
 };
 
 pub const NormalFragmentShader: FragmentShaderFn =
-    |_context: &ShaderContext, sample: &GeometrySample| -> Color {
+    |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // let context: std::sync::RefCell<ShaderContext> = self.context.read().unwrap();
 
         // Emit only the world-space normal (RBG space) for this fragment.

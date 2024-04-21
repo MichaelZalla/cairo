@@ -2,13 +2,14 @@
 
 use crate::{
     color::Color,
+    scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
 };
 
 pub const EmissiveFragmentShader: FragmentShaderFn =
-    |_context: &ShaderContext, sample: &GeometrySample| -> Color {
+    |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the emissive color for this fragment.
 
         Color::from_vec3(sample.emissive)
