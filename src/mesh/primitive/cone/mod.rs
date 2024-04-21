@@ -1,18 +1,16 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, rc::Rc};
 
 use crate::{
-    mesh::geometry::Geometry,
+    mesh::{geometry::Geometry, Face, Mesh},
     vec::{
         vec2::{self, Vec2},
         vec3::{self, Vec3},
     },
 };
 
-use super::Face;
-
 use crate::texture;
 
-pub fn generate(radius: f32, height: f32, divisions: u32) -> Geometry {
+pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     assert!(divisions >= 3);
 
     // Generate vertices and UVs
@@ -109,5 +107,11 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Geometry {
         });
     }
 
-    Geometry::new(vertices, uvs, normals, faces)
+    let geometry = Geometry::new(vertices, uvs, normals);
+
+    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+
+    mesh.object_name = Some("cone".to_string());
+
+    mesh
 }

@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
     // Skybox (environment) textures
 
@@ -131,11 +131,7 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let cube_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(cube_geometry, Some(checkerboard_material.name.clone())),
-    );
-
+    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), cube_mesh);
     let cube_entity = Entity::new(cube_mesh_handle, Some(checkerboard_material.name.clone()));
 
     // Collect materials

@@ -1,14 +1,14 @@
+use std::rc::Rc;
+
 use crate::{
-    mesh::geometry::Geometry,
+    mesh::{geometry::Geometry, Face, Mesh},
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
     },
 };
 
-use super::Face;
-
-pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u32) -> Geometry {
+pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u32) -> Mesh {
     assert!(width_divisions >= 1 && depth_divisions >= 1);
 
     // Generate vertices and UVs
@@ -92,5 +92,11 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
         }
     }
 
-    Geometry::new(vertices, uvs, normals, faces)
+    let geometry = Geometry::new(vertices, uvs, normals);
+
+    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+
+    mesh.object_name = Some("plane".to_string());
+
+    mesh
 }

@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +11,13 @@ pub mod geometry;
 pub mod obj;
 pub mod primitive;
 
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct Face {
+    pub vertices: (usize, usize, usize), // Indices into Vec<Vec3>
+    pub normals: Option<(usize, usize, usize)>, // Indices into Vec<Vec3>
+    pub uvs: Option<(usize, usize, usize)>, // Indices into Vec<Vec2>
+}
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Mesh {
     pub object_source: Option<String>,
@@ -18,7 +25,8 @@ pub struct Mesh {
     pub group_name: Option<String>,
     pub material_source: Option<String>,
     pub material_name: Option<String>,
-    pub geometry: Geometry,
+    pub geometry: Option<Rc<Geometry>>,
+    pub faces: Vec<Face>,
     #[serde(skip)]
     pub aabb: AABB,
     // #[serde(skip)]
@@ -27,8 +35,13 @@ pub struct Mesh {
 
 impl PostDeserialize for Mesh {
     fn post_deserialize(&mut self) {
-        self.aabb = make_object_space_bounding_box(&self.geometry);
-        // self.aabb_geometry = make_bounding_box_geometry(&self.aabb);
+        match &self.geometry {
+            Some(geometry) => {
+                self.aabb = make_object_space_bounding_box(&geometry);
+                // self.aabb_geometry = make_bounding_box_geometry(&self.aabb);
+            }
+            None => (),
+        }
     }
 }
 
@@ -73,7 +86,11 @@ impl fmt::Display for Mesh {
 }
 
 impl Mesh {
-    pub fn new(geometry: Geometry, material_name: Option<String>) -> Self {
+    pub fn new(
+        geometry: Option<Rc<Geometry>>,
+        faces: Vec<Face>,
+        material_name: Option<String>,
+    ) -> Self {
         let mut mesh = Mesh {
             object_source: None,
             object_name: None,
@@ -81,6 +98,7 @@ impl Mesh {
             material_source: None,
             material_name,
             geometry,
+            faces,
             aabb: Default::default(),
             // aabb_geometry: Default::default(),
         };
@@ -141,16 +159,16 @@ fn make_object_space_bounding_box(geometry: &Geometry) -> AABB {
     }
 }
 
-fn make_bounding_box_geometry(aabb: &AABB) -> Geometry {
-    let width = aabb.right - aabb.left;
-    let height = aabb.top - aabb.bottom;
-    let depth = aabb.near - aabb.far;
+// fn make_bounding_box_geometry(aabb: &AABB) -> Geometry {
+//     let width = aabb.right - aabb.left;
+//     let height = aabb.top - aabb.bottom;
+//     let depth = aabb.near - aabb.far;
 
-    let mut bounding_box_mesh = primitive::cube::generate(width, height, depth);
+//     let mut bounding_box_mesh = primitive::cube::generate(width, height, depth);
 
-    for v in bounding_box_mesh.vertices.as_mut_slice() {
-        *v += aabb.center;
-    }
+//     for v in bounding_box_mesh.vertices.as_mut_slice() {
+//         *v += aabb.center;
+//     }
 
-    bounding_box_mesh
-}
+//     bounding_box_mesh
+// }

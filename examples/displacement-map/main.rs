@@ -61,8 +61,8 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let brick_wall_geometry = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
-    let box_geometry = brick_wall_geometry.clone();
+    let brick_wall_mesh = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
+    let box_mesh = brick_wall_mesh.clone();
 
     // Initialize materials
 
@@ -145,18 +145,10 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let brick_wall_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(brick_wall_geometry, Some("brick".to_string())),
-    );
-
+    let brick_wall_mesh_handle = mesh_arena.insert(Uuid::new_v4(), brick_wall_mesh);
     let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
 
-    let box_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(box_geometry, Some(box_material.name.to_string())),
-    );
-
+    let box_mesh_handle = mesh_arena.insert(Uuid::new_v4(), box_mesh);
     let box_entity = Entity::new(box_mesh_handle, Some("box".to_string()));
 
     // Collect materials

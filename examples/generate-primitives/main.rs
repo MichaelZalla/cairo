@@ -93,10 +93,10 @@ fn main() -> Result<(), String> {
 
     // Generate primitive meshes
 
-    let plane_geometry = mesh::primitive::plane::generate(32.0, 32.0, 1, 1);
-    let cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
-    let cone_geometry = mesh::primitive::cone::generate(2.0, 2.0, 40);
-    let cylinder_geometry = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
+    let plane_mesh = mesh::primitive::plane::generate(32.0, 32.0, 1, 1);
+    let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let cone_mesh = mesh::primitive::cone::generate(2.0, 2.0, 40);
+    let cylinder_mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
 
     let mut texture_arena = Arena::<TextureMap>::new();
 
@@ -178,32 +178,16 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(plane_geometry, Some(checkerboard_mat.name.clone())),
-    );
-
+    let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), plane_mesh);
     let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
 
-    let cube_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(cube_geometry, Some(checkerboard_mat.name.clone())),
-    );
-
+    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), cube_mesh);
     let cube_entity = Entity::new(cube_mesh_handle, Some("checkerboard".to_string()));
 
-    let cone_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(cone_geometry, Some(checkerboard_mat.name.clone())),
-    );
-
+    let cone_mesh_handle = mesh_arena.insert(Uuid::new_v4(), cone_mesh);
     let cone_entity = Entity::new(cone_mesh_handle, Some("checkerboard".to_string()));
 
-    let cylinder_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(cylinder_geometry, Some(checkerboard_mat.name.clone())),
-    );
-
+    let cylinder_mesh_handle = mesh_arena.insert(Uuid::new_v4(), cylinder_mesh);
     let cylinder_entity = Entity::new(cylinder_mesh_handle, Some("checkerboard".to_string()));
 
     // Collect materials

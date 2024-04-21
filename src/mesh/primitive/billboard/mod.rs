@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use crate::{
-    mesh::geometry::Geometry,
+    mesh::{geometry::Geometry, Face, Mesh},
     texture::uv,
     vec::{
         vec2::Vec2,
@@ -7,9 +9,7 @@ use crate::{
     },
 };
 
-use super::Face;
-
-pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -> Geometry {
+pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -> Mesh {
     // Computes basis vectors based on billboard position and view (camera) position.
 
     let world_up = vec3::UP;
@@ -65,5 +65,11 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
         },
     ];
 
-    Geometry::new(vertices, uvs, normals, faces)
+    let geometry = Geometry::new(vertices, uvs, normals);
+
+    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+
+    mesh.object_name = Some("billboard".to_string());
+
+    mesh
 }

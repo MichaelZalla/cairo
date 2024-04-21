@@ -1,6 +1,6 @@
 use crate::{
     color,
-    mesh::geometry::Face,
+    mesh::Face,
     pipeline::{
         options::{PipelineFaceCullingReject, PipelineFaceCullingWindingOrder},
         Pipeline,

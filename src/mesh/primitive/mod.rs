@@ -1,5 +1,3 @@
-use super::geometry::Face;
-
 pub mod billboard;
 pub mod cone;
 pub mod cube;

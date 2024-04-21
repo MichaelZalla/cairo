@@ -58,8 +58,8 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let plane_geometry = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
-    let cube_geometry = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+    let plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+    let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
     // Initialize materials
 
@@ -119,18 +119,10 @@ fn main() -> Result<(), String> {
 
     // Assign the meshes to entities
 
-    let plane_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(plane_geometry, Some(checkerboard_material.name.clone())),
-    );
-
+    let plane_mesh_handle = mesh_arena.insert(Uuid::new_v4(), plane_mesh);
     let plane_entity = Entity::new(plane_mesh_handle, Some(checkerboard_material.name.clone()));
 
-    let cube_mesh_handle = mesh_arena.insert(
-        Uuid::new_v4(),
-        Mesh::new(cube_geometry, Some(lava_material.name.clone())),
-    );
-
+    let cube_mesh_handle = mesh_arena.insert(Uuid::new_v4(), cube_mesh);
     let cube_entity = Entity::new(cube_mesh_handle, Some(lava_material.name.clone()));
 
     // Collect materials

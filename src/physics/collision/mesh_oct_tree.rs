@@ -1,15 +1,26 @@
-use crate::{mesh::Mesh, vec::vec3::Vec3};
+use std::rc::Rc;
+
+use crate::{
+    mesh::{geometry::Geometry, Mesh},
+    vec::vec3::Vec3,
+};
 
 use super::{aabb::AABB, oct_tree::OctTreeNode};
 
 #[derive(Clone)]
 pub struct MeshOctTree<'a> {
+    geometry: &'a Rc<Geometry>,
     mesh: &'a Mesh,
     pub root: OctTreeNode<usize>,
 }
 
 impl<'a> MeshOctTree<'a> {
-    pub fn new(mesh: &'a Mesh, level_capacity: usize, bounds: AABB) -> Self {
+    pub fn new(
+        geometry: &'a Rc<Geometry>,
+        mesh: &'a Mesh,
+        level_capacity: usize,
+        bounds: AABB,
+    ) -> Self {
         let root = OctTreeNode::<usize> {
             depth: 0,
             bounds,
@@ -18,9 +29,13 @@ impl<'a> MeshOctTree<'a> {
             data: vec![],
         };
 
-        let mut result = MeshOctTree { mesh, root };
+        let mut result = MeshOctTree {
+            geometry,
+            mesh,
+            root,
+        };
 
-        for face_index in 0..result.mesh.geometry.faces.len() {
+        for face_index in 0..result.mesh.faces.len() {
             result.insert_face(face_index);
         }
 
@@ -36,14 +51,14 @@ impl<'a> MeshOctTree<'a> {
     }
 
     fn get_vertices_for_face(&self, face_index: usize) -> (&Vec3, &Vec3, &Vec3) {
-        let v0_index = self.mesh.geometry.faces[face_index].vertices.0;
-        let v1_index = self.mesh.geometry.faces[face_index].vertices.1;
-        let v2_index = self.mesh.geometry.faces[face_index].vertices.2;
+        let v0_index = self.mesh.faces[face_index].vertices.0;
+        let v1_index = self.mesh.faces[face_index].vertices.1;
+        let v2_index = self.mesh.faces[face_index].vertices.2;
 
         (
-            &self.mesh.geometry.vertices[v0_index],
-            &self.mesh.geometry.vertices[v1_index],
-            &self.mesh.geometry.vertices[v2_index],
+            &self.geometry.vertices[v0_index],
+            &self.geometry.vertices[v1_index],
+            &self.geometry.vertices[v2_index],
         )
     }
 }

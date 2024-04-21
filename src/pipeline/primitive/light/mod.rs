@@ -1,7 +1,7 @@
 use crate::{
     color::{self, Color},
     material::cache::MaterialCache,
-    mesh::{self, Mesh},
+    mesh,
     pipeline::Pipeline,
     scene::{
         camera::Camera,
@@ -31,7 +31,7 @@ impl<'a> Pipeline<'a> {
 
                 let billboard_scale: f32 = if is_spot_light { 1.25 } else { 0.75 };
 
-                let light_quad = mesh::primitive::billboard::generate(
+                let mut light_mesh = mesh::primitive::billboard::generate(
                     light_position,
                     &camera.unwrap().look_vector.get_position(),
                     billboard_scale,
@@ -44,18 +44,17 @@ impl<'a> Pipeline<'a> {
                     Some(material) => {
                         material.diffuse_color = light_intensities;
 
-                        let mut light_quad_mesh =
-                            Mesh::new(light_quad, Some(light_material_name.to_string()));
-
-                        light_quad_mesh.object_name = if is_spot_light {
+                        light_mesh.object_name = if is_spot_light {
                             Some("spot_light".to_string())
                         } else {
                             Some("point_light".to_string())
                         };
 
+                        light_mesh.material_name = Some(light_material_name.to_string());
+
                         let transform: Transform3D = Default::default();
 
-                        self.render_entity_mesh(&light_quad_mesh, &transform.mat());
+                        self.render_entity_mesh(&light_mesh, &transform.mat());
                     }
                     None => {
                         self.render_point_indicator(light_position, light_influence_distance * 0.2);

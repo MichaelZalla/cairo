@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use crate::{
-    mesh::geometry::Geometry,
+    mesh::{geometry::Geometry, Face, Mesh},
     texture,
     vec::{
         vec2::Vec2,
@@ -7,9 +9,7 @@ use crate::{
     },
 };
 
-use super::Face;
-
-pub fn generate(width: f32, height: f32, depth: f32) -> Geometry {
+pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     // Generate vertices
 
     let front_top_left = Vec3 {
@@ -230,5 +230,11 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Geometry {
     faces.push(right_face_1);
     faces.push(right_face_2);
 
-    Geometry::new(vertices, uvs, normals, faces)
+    let geometry = Geometry::new(vertices, uvs, normals);
+
+    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+
+    mesh.object_name = Some("cube".to_string());
+
+    mesh
 }

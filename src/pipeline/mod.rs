@@ -1,11 +1,11 @@
-use std::cell::RefCell;
+use std::{borrow::Borrow, cell::RefCell};
 
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     entity::Entity,
     matrix::Mat4,
-    mesh::geometry::{Face, Geometry},
+    mesh::{geometry::Geometry, Face},
     resource::arena::Arena,
     shader::{
         alpha::AlphaShaderFn,
@@ -311,6 +311,7 @@ impl<'a> Pipeline<'a> {
 
         //     for face in mesh.aabb_geometry.faces.iter() {
         //         let object_vertices_in = self.get_vertices_in(&mesh.aabb_geometry, &face);
+
         //         let shader_context = self.shader_context.borrow();
 
         //         let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
@@ -346,7 +347,9 @@ impl<'a> Pipeline<'a> {
             context.set_world_transform(*world_transform);
         }
 
-        self.render_mesh_geometry(&mesh.geometry);
+        let geometry = mesh.geometry.as_ref().unwrap().borrow();
+
+        self.render_mesh_geometry(geometry, &mesh.faces);
 
         // Reset the shader context's original world transform.
         {
@@ -356,8 +359,8 @@ impl<'a> Pipeline<'a> {
         }
     }
 
-    fn render_mesh_geometry(&mut self, geometry: &Geometry) {
-        self.process_object_space_vertices(&geometry);
+    fn render_mesh_geometry(&mut self, geometry: &Geometry, faces: &Vec<Face>) {
+        self.process_object_space_vertices(geometry, faces);
     }
 
     fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
@@ -453,15 +456,15 @@ impl<'a> Pipeline<'a> {
         [v0_in, v1_in, v2_in]
     }
 
-    fn process_object_space_vertices(&mut self, geometry: &Geometry) {
+    fn process_object_space_vertices(&mut self, geometry: &Geometry, faces: &Vec<Face>) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
         let mut vertices_in: Vec<DefaultVertexIn> = vec![];
 
-        vertices_in.reserve(geometry.faces.len() * 3);
+        vertices_in.reserve(faces.len() * 3);
 
-        for face_index in 0..geometry.faces.len() {
-            let face = geometry.faces[face_index];
+        for face_index in 0..faces.len() {
+            let face = faces[face_index];
 
             let [v0_in, v1_in, v2_in] = self.get_vertices_in(geometry, &face);
 
@@ -482,7 +485,7 @@ impl<'a> Pipeline<'a> {
                 .collect();
         }
 
-        self.process_triangles(&geometry.faces, projection_space_vertices);
+        self.process_triangles(faces, projection_space_vertices);
     }
 
     fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {

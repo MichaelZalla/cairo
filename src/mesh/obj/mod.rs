@@ -1,15 +1,14 @@
 use std::collections::HashSet;
 use std::io::Error;
+use std::mem;
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::fs::read_lines;
 
 use crate::material;
 use crate::material::cache::MaterialCache;
-use crate::mesh::{
-    geometry::{Face, Geometry},
-    Mesh,
-};
+use crate::mesh::{geometry::Geometry, Face, Mesh};
 use crate::{
     resource::arena::Arena,
     texture::map::TextureMap,
@@ -334,14 +333,16 @@ pub fn load_obj(
                                 }
 
                                 if vertex_index_offset_for_current_object > 0 {
-                                    let accumulated_geometry = Geometry::new(
-                                        object_vertices,
-                                        object_uvs,
-                                        object_normals,
-                                        object_faces.clone(),
+                                    let accumulated_geometry =
+                                        Geometry::new(object_vertices, object_uvs, object_normals);
+
+                                    let mut mesh = Mesh::new(
+                                        Some(Rc::new(accumulated_geometry)),
+                                        vec![],
+                                        material_name,
                                     );
 
-                                    let mut mesh = Mesh::new(accumulated_geometry, material_name);
+                                    mem::swap(&mut mesh.faces, &mut object_faces);
 
                                     mesh.object_source = Some(path_display.to_string());
 

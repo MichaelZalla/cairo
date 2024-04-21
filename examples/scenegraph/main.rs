@@ -63,9 +63,9 @@ fn main() -> Result<(), String> {
 
     // Meshes
 
-    let mut plane_mesh = Mesh::new(mesh::primitive::plane::generate(80.0, 80.0, 8, 8), None);
+    let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
 
-    let mut red_cube_mesh = Mesh::new(mesh::primitive::cube::generate(3.0, 3.0, 3.0), None);
+    let mut red_cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
     red_cube_mesh.object_name = Some("red_cube".to_string());
 
     let mut green_cube_mesh = red_cube_mesh.clone();
