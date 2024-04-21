@@ -59,12 +59,15 @@ fn main() -> Result<(), String> {
 
     let mut texture_arena = Arena::<TextureMap>::new();
 
-    let (mut cube_meshes, mut cube_materials_cache) =
-        mesh::obj::load_obj(&"./data/obj/cube-textured.obj", &mut texture_arena);
+    let result = mesh::obj::load::load_obj(&"./data/obj/cube-textured.obj", &mut texture_arena);
+
+    let _cube_geometry = result.0;
+    let mut cube_meshes = result.1;
+    let mut cube_materials = result.2;
 
     let cube_mesh = &mut cube_meshes[0];
 
-    match &mut cube_materials_cache {
+    match &mut cube_materials {
         Some(cache) => {
             for material in cache.values_mut() {
                 material

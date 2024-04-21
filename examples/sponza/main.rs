@@ -100,10 +100,14 @@ fn main() -> Result<(), String> {
 
     let mut texture_arena = Arena::<TextureMap>::new();
 
-    let (atrium_meshes, mut materials_cache) =
-        mesh::obj::load_obj("./examples/sponza/assets/sponza.obj", &mut texture_arena);
+    let result =
+        mesh::obj::load::load_obj("./examples/sponza/assets/sponza.obj", &mut texture_arena);
 
-    match &mut materials_cache {
+    let _atrium_geometry = result.0;
+    let atrium_meshes = result.1;
+    let mut atrium_materials = result.2;
+
+    match &mut atrium_materials {
         Some(cache) => {
             for material in cache.values_mut() {
                 material.load_all_maps(&mut texture_arena, rendering_context)?;
