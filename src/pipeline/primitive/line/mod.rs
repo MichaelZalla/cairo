@@ -136,7 +136,7 @@ impl<'a> Pipeline<'a> {
                         let mut forward_buffer = forward_buffer_lock.borrow_mut();
 
                         Graphics::line(
-                            &mut *forward_buffer,
+                            &mut forward_buffer,
                             (start.x * self.viewport.width as f32) as i32,
                             (start.y * self.viewport.height as f32) as i32,
                             (end.x * self.viewport.width as f32) as i32,

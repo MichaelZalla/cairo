@@ -47,7 +47,7 @@ impl Graphics {
 
                 let cached_texture = text_cache.get(&text_cache_key).unwrap();
 
-                Graphics::blit_text_from_mask(&cached_texture, &op, dest_buffer, None);
+                Graphics::blit_text_from_mask(cached_texture, op, dest_buffer, None);
             }
             None => {
                 let mut font_cache = font_cache_rc.borrow_mut();
@@ -55,9 +55,9 @@ impl Graphics {
                 let font = font_cache.load(font_info).unwrap();
 
                 let (_label_width, _label_height, texture) =
-                    Graphics::make_text_mask(font.as_ref(), &op.text).unwrap();
+                    Graphics::make_text_mask(font.as_ref(), op.text).unwrap();
 
-                Graphics::blit_text_from_mask(&texture, &op, dest_buffer, None);
+                Graphics::blit_text_from_mask(&texture, op, dest_buffer, None);
             }
         }
 
@@ -85,8 +85,8 @@ impl Graphics {
         let available_width =
             mask.width
                 .min(dest_buffer.width - op.x)
-                .min(if max_width.is_some() {
-                    max_width.unwrap()
+                .min(if let Some(width) = max_width {
+                    width
                 } else {
                     u32::MAX
                 });
@@ -124,7 +124,7 @@ impl Graphics {
                 color: color::WHITE,
             };
 
-            Graphics::text(dest_buffer, font_cache, None, &font_info, &op).unwrap();
+            Graphics::text(dest_buffer, font_cache, None, font_info, &op).unwrap();
 
             y_offset += (font_info.point_size as f32 * padding_ems) as u32;
         }
@@ -132,7 +132,7 @@ impl Graphics {
         debug_messages.drain();
     }
 
-    pub fn make_text_mask(font: &Font, text: &String) -> Result<(u32, u32, TextureBuffer), String> {
+    pub fn make_text_mask(font: &Font, text: &str) -> Result<(u32, u32, TextureBuffer), String> {
         // Generate a new text texture (mask).
 
         let surface = font

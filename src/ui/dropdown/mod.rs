@@ -110,14 +110,12 @@ pub fn do_dropdown(
         item_height,
     );
 
-    if was_released {
-        if ctx.is_focused(&id) {
-            // Toggle the open vs. closed state of our menu.
+    if was_released && ctx.is_focused(&id) {
+        // Toggle the open vs. closed state of our menu.
 
-            let is_open = ctx.is_focus_target_open();
+        let is_open = ctx.is_focus_target_open();
 
-            ctx.set_focus_target_open(!is_open);
-        }
+        ctx.set_focus_target_open(!is_open);
     }
 
     // Updates the state of our textbox model, if needed.
@@ -134,50 +132,47 @@ pub fn do_dropdown(
             // Check if we've selected an option from the open menu.
 
             if is_open {
-                match mouse_state.button_event {
-                    Some(event) => {
-                        match event.kind {
-                            MouseEventKind::Down => {
-                                let cursor = layout.get_cursor();
+                if let Some(event) = mouse_state.button_event {
+                    match event.kind {
+                        MouseEventKind::Down => {
+                            let cursor = layout.get_cursor();
 
-                                let (mouse_x, mouse_y) = (
-                                    mouse_state.position.0 - cursor.x as i32,
-                                    mouse_state.position.1 - cursor.y as i32,
-                                );
+                            let (mouse_x, mouse_y) = (
+                                mouse_state.position.0 - cursor.x as i32,
+                                mouse_state.position.1 - cursor.y as i32,
+                            );
 
-                                if mouse_x >= layout_offset_x as i32
-                                    && mouse_x < (layout_offset_x + DROPDOWN_WIDTH) as i32
-                                    && mouse_y > layout_offset_y as i32
-                                    && mouse_y < (layout_offset_y + item_height) as i32
-                                {
-                                    let relative_mouse_y = mouse_state.position.1 as u32 - cursor.y;
+                            if mouse_x >= layout_offset_x as i32
+                                && mouse_x < (layout_offset_x + DROPDOWN_WIDTH) as i32
+                                && mouse_y > layout_offset_y as i32
+                                && mouse_y < (layout_offset_y + item_height) as i32
+                            {
+                                let relative_mouse_y = mouse_state.position.1 as u32 - cursor.y;
 
-                                    let mut target_item_index: i32 = -1;
+                                let mut target_item_index: i32 = -1;
 
-                                    let mut current_y = layout_offset_y;
+                                let mut current_y = layout_offset_y;
 
-                                    while current_y < relative_mouse_y {
-                                        target_item_index += 1;
+                                while current_y < relative_mouse_y {
+                                    target_item_index += 1;
 
-                                        current_y +=
-                                            label_texture_height + DROPDOWN_ITEM_VERTICAL_PADDING;
-                                    }
+                                    current_y +=
+                                        label_texture_height + DROPDOWN_ITEM_VERTICAL_PADDING;
+                                }
 
-                                    let target_item = &options.items[target_item_index as usize];
+                                let target_item = &options.items[target_item_index as usize];
 
-                                    if *target_item != current_item {
-                                        did_edit = true;
+                                if *target_item != current_item {
+                                    did_edit = true;
 
-                                        *o.get_mut() = (*target_item).clone();
-                                    }
+                                    *o.get_mut() = (*target_item).clone();
                                 }
                             }
-                            MouseEventKind::Up => {
-                                // Do nothing
-                            }
+                        }
+                        MouseEventKind::Up => {
+                            // Do nothing
                         }
                     }
-                    None => (),
                 }
             }
         }
@@ -230,7 +225,7 @@ fn draw_dropdown(
 
     let text_cache = ctx.text_cache.borrow();
 
-    let label_texture = text_cache.get(&text_cache_key).unwrap();
+    let label_texture = text_cache.get(text_cache_key).unwrap();
 
     let label_color = if ctx.is_focused(id) {
         theme.text_focus
@@ -305,7 +300,7 @@ fn draw_dropdown(
         let font = font_cache.load(&ctx.font_info).unwrap();
 
         let (_label_width, _label_height, model_value_texture) =
-            Graphics::make_text_mask(font.as_ref(), &item).unwrap();
+            Graphics::make_text_mask(font.as_ref(), item).unwrap();
 
         let max_width = DROPDOWN_WIDTH - DROPDOWN_LABEL_PADDING;
 
@@ -324,7 +319,7 @@ fn draw_dropdown(
         Graphics::blit_text_from_mask(
             &model_value_texture,
             &TextOperation {
-                text: &item,
+                text: item,
                 x,
                 y: y + 1,
                 color: if is_open && *item == current_item {

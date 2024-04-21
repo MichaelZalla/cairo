@@ -127,7 +127,7 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
                             }
                             // External material reference
                             "mtllib" => {
-                                let path = parse_mtllib(&mut line_tokens, &parent_path).unwrap();
+                                let path = parse_mtllib(&mut line_tokens, parent_path).unwrap();
 
                                 material_source = Some(path);
 
@@ -211,7 +211,7 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
     let mut materials: Option<MaterialCache> = None;
 
     match &material_source {
-        Some(src) => materials = Some(load_mtl(&src, texture_arena)),
+        Some(src) => materials = Some(load_mtl(src, texture_arena)),
         None => (),
     }
 

@@ -14,10 +14,7 @@ pub struct DilationEffect {
 
 impl DilationEffect {
     pub fn new(outline_color: Color, key_color: Color, rounds: Option<u32>) -> Self {
-        let rounds = match rounds {
-            Some(value) => value,
-            None => 1,
-        };
+        let rounds = if let Some(value) = rounds { value } else { 1 };
 
         Self {
             rounds,
@@ -36,9 +33,7 @@ impl DilationEffect {
                 if *color != self.key_color_u32 {
                     dest.set(x as u32, y as u32, *color);
 
-                    for (index, (n_x, n_y)) in
-                        get_coordinates(x as i32, y as i32).iter().enumerate()
-                    {
+                    for (index, (n_x, n_y)) in get_coordinates(x, y).iter().enumerate() {
                         if index == 4 {
                             // Skips center coordinate (4).
                             continue;

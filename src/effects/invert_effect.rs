@@ -1,12 +1,7 @@
 use crate::{buffer::Buffer2D, color::Color, effect::Effect};
 
+#[derive(Default)]
 pub struct InvertEffect {}
-
-impl InvertEffect {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 impl Effect for InvertEffect {
     fn apply(&self, buffer: &mut Buffer2D) {

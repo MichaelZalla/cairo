@@ -53,7 +53,7 @@ impl<'a> UIContext<'a> {
 
     pub fn get_theme(&self) -> &UITheme {
         match &self.theme {
-            Some(theme) => &theme,
+            Some(theme) => theme,
             None => &DEFAULT_UI_THEME,
         }
     }

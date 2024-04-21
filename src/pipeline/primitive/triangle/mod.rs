@@ -33,9 +33,7 @@ impl<'a> Pipeline<'a> {
         // shader_context: &ShaderContext,
         // scene_resources: &SceneResources,
     ) {
-        let mut triangles: Vec<Triangle<DefaultVertexOut>> = vec![];
-
-        triangles.reserve(faces.len());
+        let mut triangles: Vec<Triangle<DefaultVertexOut>> = Vec::with_capacity(faces.len());
 
         for face_index in 0..faces.len() {
             // Cull backfaces
@@ -140,7 +138,7 @@ impl<'a> Pipeline<'a> {
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
 
-        let mut ndc_space_vertices = projection_space_vertices.clone();
+        let mut ndc_space_vertices = projection_space_vertices;
 
         self.transform_to_ndc_space(&mut ndc_space_vertices[0]);
         self.transform_to_ndc_space(&mut ndc_space_vertices[1]);
@@ -172,31 +170,28 @@ impl<'a> Pipeline<'a> {
         if self.options.do_visualize_normals {
             static NORMALS_SCALE: f32 = 0.05;
 
-            for i in 0..3 {
+            for vertex in &projection_space_vertices {
                 self.render_line(
-                    projection_space_vertices[i].world_pos,
-                    projection_space_vertices[i].world_pos
-                        + projection_space_vertices[i].normal.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos,
+                    vertex.world_pos + vertex.normal.to_vec3() * NORMALS_SCALE,
                     color::BLUE,
                 );
 
-                let tangent_world_space = Vec4::new(vec3::LEFT * -1.0, 1.0)
-                    * projection_space_vertices[i].tangent_space_info.tbn;
+                let tangent_world_space =
+                    Vec4::new(vec3::LEFT * -1.0, 1.0) * vertex.tangent_space_info.tbn;
 
                 self.render_line(
-                    projection_space_vertices[i].world_pos,
-                    projection_space_vertices[i].world_pos
-                        + tangent_world_space.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos,
+                    vertex.world_pos + tangent_world_space.to_vec3() * NORMALS_SCALE,
                     color::RED,
                 );
 
-                let bitangent_world_space = Vec4::new(vec3::UP * -1.0, 1.0)
-                    * projection_space_vertices[i].tangent_space_info.tbn;
+                let bitangent_world_space =
+                    Vec4::new(vec3::UP * -1.0, 1.0) * vertex.tangent_space_info.tbn;
 
                 self.render_line(
-                    projection_space_vertices[i].world_pos,
-                    projection_space_vertices[i].world_pos
-                        + bitangent_world_space.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos,
+                    vertex.world_pos + bitangent_world_space.to_vec3() * NORMALS_SCALE,
                     color::GREEN,
                 );
             }
@@ -451,7 +446,7 @@ impl<'a> Pipeline<'a> {
         //  - Left-edge and right-edge interpolants both begin at top vertex.
 
         // Left edge is always it0
-        let mut left_edge_interpolant = it0.clone();
+        let mut left_edge_interpolant = *it0;
 
         // Calculate our start and end Y (end here is non-inclusive), such that
         // they are non-fractional screen coordinates.
@@ -478,7 +473,7 @@ impl<'a> Pipeline<'a> {
 
             // Create an interpolant that we can move across our horizontal
             // scanline.
-            let mut line_interpolant = left_edge_interpolant.clone();
+            let mut line_interpolant = left_edge_interpolant;
 
             // Calculate the width of our scanline, for this Y position.
             let dx = right_edge_interpolant.position.x - left_edge_interpolant.position.x;

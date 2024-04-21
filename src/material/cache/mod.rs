@@ -31,6 +31,10 @@ impl MaterialCache {
         self.map.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
     pub fn values(&self) -> std::collections::hash_map::Values<'_, String, Material> {
         self.map.values()
     }

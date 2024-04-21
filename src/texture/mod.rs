@@ -70,5 +70,5 @@ fn get_half_scaled(half_scaled_dimension: u32, buffer: &Buffer2D<u8>) -> Vec<u8>
         }
     }
 
-    return result;
+    result
 }

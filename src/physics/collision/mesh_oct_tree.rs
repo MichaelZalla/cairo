@@ -45,7 +45,7 @@ impl<'a> MeshOctTree<'a> {
     pub fn insert_face(&mut self, face_index: usize) -> bool {
         let vertices = self.get_vertices_for_face(face_index);
 
-        let aabb = AABB::new_from_triangle(&vertices.0, &vertices.1, &vertices.2);
+        let aabb = AABB::new_from_triangle(vertices.0, vertices.1, vertices.2);
 
         self.root.insert(face_index, &aabb)
     }

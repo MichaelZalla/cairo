@@ -19,14 +19,15 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                                         options: &GeometryShaderOptions,
                                                         interpolant: &DefaultVertexOut|
  -> Option<GeometrySample> {
-    let mut out: GeometrySample = Default::default();
-
-    out.stencil = true;
-    out.uv = interpolant.uv;
-    out.normal = interpolant.normal.to_vec3();
-    out.tangent_space_info = interpolant.tangent_space_info;
-    out.world_pos = interpolant.world_pos;
-    out.depth = interpolant.depth;
+    let mut out = GeometrySample {
+        stencil: true,
+        uv: interpolant.uv,
+        normal: interpolant.normal.to_vec3(),
+        tangent_space_info: interpolant.tangent_space_info,
+        world_pos: interpolant.world_pos,
+        depth: interpolant.depth,
+        ..Default::default()
+    };
 
     // Displacement (height)
 
@@ -35,7 +36,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         &context.active_material,
     ) {
         (true, Some(name)) => {
-            match resources.material.borrow().get(&name) {
+            match resources.material.borrow().get(name) {
                 Some(material) => {
                     match material.displacement_map {
                         Some(handle) => {
@@ -43,7 +44,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                 Ok(entry) => {
                                     let map = &entry.item;
 
-                                    let (r, _g, _b) = sample_nearest(interpolant.uv, &map, None);
+                                    let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
 
                                     let displacement = r as f32 / 255.0;
 
@@ -83,7 +84,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                                     / fragment_to_view_direction_tangent_space.z,
                                                 z: 1.0,
                                             } * displacement
-                                                * *(&material.displacement_scale);
+                                                * material.displacement_scale;
 
                                             let uv_step = p / layer_count;
 
@@ -98,7 +99,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                                                 // Re-sample the displacement map at this new UV coordinate.
                                                 current_sampled_displacement =
-                                                    sample_nearest(current_uv, &map, None).0 as f32
+                                                    sample_nearest(current_uv, map, None).0 as f32
                                                         / 255.0;
 
                                                 // Update "current" layer depth for our next loop iteration.
@@ -115,7 +116,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                                 current_sampled_displacement - current_layer_depth;
 
                                             let before_depth =
-                                                (sample_nearest(previous_uv, &map, None).0 as f32
+                                                (sample_nearest(previous_uv, map, None).0 as f32
                                                     / 255.0)
                                                     - current_layer_depth
                                                     + layer_depth;
@@ -172,65 +173,59 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
     // World-space surface normal
 
-    match (options.normal_mapping_active, &context.active_material) {
-        (true, Some(name)) => {
-            match resources.material.borrow().get(&name) {
-                Some(material) => {
-                    match material.normal_map {
-                        Some(handle) => {
-                            match resources.texture.borrow().get(&handle) {
-                                Ok(entry) => {
-                                    let map = &entry.item;
+    if let (true, Some(name)) = (options.normal_mapping_active, &context.active_material) {
+        match resources.material.borrow().get(name) {
+            Some(material) => {
+                match material.normal_map {
+                    Some(handle) => {
+                        match resources.texture.borrow().get(&handle) {
+                            Ok(entry) => {
+                                let map = &entry.item;
 
-                                    let (r, g, b) = sample_nearest(out.uv, map, None);
+                                let (r, g, b) = sample_nearest(out.uv, map, None);
 
-                                    // Map the normal's components into the range [-1, 1].
+                                // Map the normal's components into the range [-1, 1].
 
-                                    // @TODO Flip y axis for standard normal maps.
-                                    let tangent_space_normal = Vec4 {
-                                        x: (r as f32 / 255.0) * 2.0 - 1.0,
-                                        y: (g as f32 / 255.0) * 2.0 - 1.0,
-                                        z: (b as f32 / 255.0) * 2.0 - 1.0,
-                                        w: 1.0,
-                                    };
+                                // @TODO Flip y axis for standard normal maps.
+                                let tangent_space_normal = Vec4 {
+                                    x: (r as f32 / 255.0) * 2.0 - 1.0,
+                                    y: (g as f32 / 255.0) * 2.0 - 1.0,
+                                    z: (b as f32 / 255.0) * 2.0 - 1.0,
+                                    w: 1.0,
+                                };
 
-                                    // Perturb the surface normal using the local
-                                    // tangent-space information read from `map`.
+                                // Perturb the surface normal using the local
+                                // tangent-space information read from `map`.
 
-                                    out.normal = (tangent_space_normal
-                                        * interpolant.tangent_space_info.tbn)
-                                        .to_vec3()
-                                        .as_normal();
+                                out.normal = (tangent_space_normal
+                                    * interpolant.tangent_space_info.tbn)
+                                    .to_vec3()
+                                    .as_normal();
 
-                                    out.tangent_space_info.normal =
-                                        tangent_space_normal.to_vec3().as_normal();
-                                }
-                                Err(err) => {
-                                    panic!(
-                                        "Failed to get TextureMap from Arena: {:?}: {}",
-                                        name, err
-                                    )
-                                }
+                                out.tangent_space_info.normal =
+                                    tangent_space_normal.to_vec3().as_normal();
+                            }
+                            Err(err) => {
+                                panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
                             }
                         }
-                        None => {
-                            // No normal map defined for this material.
-                        }
+                    }
+                    None => {
+                        // No normal map defined for this material.
                     }
                 }
-                None => {
-                    panic!("Failed to get Material from MaterialCache: {}", name);
-                }
+            }
+            None => {
+                panic!("Failed to get Material from MaterialCache: {}", name);
             }
         }
-        _ => (),
     }
 
     // Ambient lighting (AO)
 
     match &context.active_material {
         Some(name) => {
-            match resources.material.borrow().get(&name) {
+            match resources.material.borrow().get(name) {
                 Some(material) => match (
                     options.ambient_occlusion_mapping_active,
                     material.ambient_occlusion_map,
@@ -271,7 +266,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
     match &context.active_material {
         Some(name) => {
-            match resources.material.borrow().get(&name) {
+            match resources.material.borrow().get(name) {
                 Some(material) => {
                     match (options.diffuse_mapping_active, material.diffuse_map) {
                         (true, Some(handle)) => match resources.texture.borrow().get(&handle) {
@@ -312,14 +307,14 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
     // Specular lighting
 
-    let default_point_light: Option<PointLight> = if context.point_lights.len() > 0 {
+    let default_point_light: Option<PointLight> = if !context.point_lights.is_empty() {
         let handle = context.point_lights[0];
 
         match resources.point_light.borrow().get(&handle) {
             Ok(entry) => {
                 let light = &entry.item;
 
-                Some(light.clone())
+                Some(*light)
             }
             Err(err) => {
                 panic!("Failed to get PointLight from Arena: {:?}: {}", handle, err)
@@ -331,7 +326,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
     match &context.active_material {
         Some(name) => {
-            match resources.material.borrow().get(&name) {
+            match resources.material.borrow().get(name) {
                 Some(material) => {
                     out.specular_exponent = material.specular_exponent;
 
@@ -354,8 +349,8 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             // No specular map defined for this material, or
                             // specular mapping is disabled.
 
-                            out.specular_intensity = if default_point_light.is_some() {
-                                default_point_light.unwrap().specular_intensity
+                            out.specular_intensity = if let Some(light) = default_point_light {
+                                light.specular_intensity
                             } else {
                                 0.0
                             };
@@ -372,8 +367,8 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
             out.specular_exponent = 8;
 
-            out.specular_intensity = if default_point_light.is_some() {
-                default_point_light.unwrap().specular_intensity
+            out.specular_intensity = if let Some(light) = default_point_light {
+                light.specular_intensity
             } else {
                 0.0
             };
@@ -384,7 +379,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
     match &context.active_material {
         Some(name) => {
-            match resources.material.borrow().get(&name) {
+            match resources.material.borrow().get(name) {
                 Some(material) => match material.emissive_map {
                     Some(handle) => match resources.texture.borrow().get(&handle) {
                         Ok(entry) => {
@@ -420,13 +415,13 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
     match &context.active_material {
         Some(name) => {
-            match resources.material.borrow().get(&name) {
+            match resources.material.borrow().get(name) {
                 Some(material) => match material.alpha_map {
                     Some(handle) => match resources.texture.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_nearest(out.uv, &map, None);
+                            let (r, _g, _b) = sample_nearest(out.uv, map, None);
 
                             out.alpha = r as f32 / 255.0;
                         }

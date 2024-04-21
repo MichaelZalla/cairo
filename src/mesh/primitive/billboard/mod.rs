@@ -33,8 +33,8 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
 
     // Bakes a world-space transform into the vertices.
 
-    for i in 0..vertices.len() {
-        vertices[i] += position;
+    for vertex in &mut vertices {
+        *vertex += position;
     }
 
     let uvs: Vec<Vec2> = vec![

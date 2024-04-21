@@ -15,13 +15,13 @@ pub struct OctTreeNode<T> {
 
 impl<T: Copy + Display> OctTreeNode<T> {
     pub fn new(parent: &Self, bounds: AABB) -> Self {
-        return OctTreeNode::<T> {
+        OctTreeNode::<T> {
             depth: parent.depth + 1,
             bounds,
             data_capacity: parent.data_capacity,
             data: vec![],
             children: vec![],
-        };
+        }
     }
 
     pub fn insert(&mut self, data: T, aabb: &AABB) -> bool {
@@ -29,12 +29,12 @@ impl<T: Copy + Display> OctTreeNode<T> {
             return false;
         }
 
-        if self.children.len() == 0 && self.data.len() < self.data_capacity {
+        if self.children.is_empty() && self.data.len() < self.data_capacity {
             self.data.push(data);
             return true;
         }
 
-        if self.children.len() == 0 {
+        if self.children.is_empty() {
             self.subdivide();
         }
 
@@ -44,7 +44,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             }
         }
 
-        return false;
+        false
     }
 
     fn subdivide(&mut self) {

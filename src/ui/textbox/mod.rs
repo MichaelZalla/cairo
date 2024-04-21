@@ -102,53 +102,50 @@ pub fn do_textbox(
 
     let mut did_edit = false;
 
-    match ctx.get_focus_target() {
-        Some(target_id) => {
-            if target_id == id {
-                for code in &keyboard_state.keys_pressed {
-                    match code {
-                        Keycode::Backspace | Keycode::Delete { .. } => {
-                            // Remove one character from the model value, if possible.
+    if let Some(target_id) = ctx.get_focus_target() {
+        if target_id == id {
+            for code in &keyboard_state.keys_pressed {
+                match code {
+                    Keycode::Backspace | Keycode::Delete { .. } => {
+                        // Remove one character from the model value, if possible.
 
-                            match &mut model_entry {
-                                Entry::Occupied(o) => {
-                                    (*o.get_mut()).pop();
+                        match &mut model_entry {
+                            Entry::Occupied(o) => {
+                                (*o.get_mut()).pop();
 
-                                    did_edit = true;
-                                }
-                                Entry::Vacant(_v) => {
-                                    // Ignore this keypress.
-                                }
+                                did_edit = true;
+                            }
+                            Entry::Vacant(_v) => {
+                                // Ignore this keypress.
                             }
                         }
-                        _ => {
-                            match get_alpha_numeric(code) {
-                                Some(char) => {
-                                    // Add this character to the model value (string).
+                    }
+                    _ => {
+                        match get_alpha_numeric(code) {
+                            Some(char) => {
+                                // Add this character to the model value (string).
 
-                                    match &mut model_entry {
-                                        Entry::Occupied(o) => {
-                                            *o.get_mut() += char;
+                                match &mut model_entry {
+                                    Entry::Occupied(o) => {
+                                        *o.get_mut() += char;
 
-                                            did_edit = true;
-                                        }
-                                        Entry::Vacant(_v) => {
-                                            // No model value exists at this entry.
+                                        did_edit = true;
+                                    }
+                                    Entry::Vacant(_v) => {
+                                        // No model value exists at this entry.
 
-                                            // Ignore this keypress.
-                                        }
+                                        // Ignore this keypress.
                                     }
                                 }
-                                None => {
-                                    // Ignore this keypress.
-                                }
+                            }
+                            None => {
+                                // Ignore this keypress.
                             }
                         }
                     }
                 }
             }
         }
-        None => (),
     }
 
     let result = DoTextboxResult { did_edit };
@@ -191,7 +188,7 @@ fn draw_textbox(
 
     let text_cache = ctx.text_cache.borrow();
 
-    let label_texture = text_cache.get(&text_cache_key).unwrap();
+    let label_texture = text_cache.get(text_cache_key).unwrap();
 
     let textbox_height = label_texture.height;
 
@@ -228,7 +225,7 @@ fn draw_textbox(
         Entry::Occupied(o) => {
             let text = o.get();
 
-            if text.len() > 0 {
+            if !text.is_empty() {
                 // Draw the input value text.
 
                 let mut font_cache = ctx.font_cache.borrow_mut();

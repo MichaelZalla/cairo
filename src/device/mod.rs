@@ -24,10 +24,10 @@ pub struct MouseEvent {
 
 impl Default for MouseEvent {
     fn default() -> Self {
-        return MouseEvent {
+        MouseEvent {
             button: MouseButton::Unknown,
-            kind: MouseEventKind::Down,
-        };
+            kind: Default::default(),
+        }
     }
 }
 
@@ -62,16 +62,9 @@ impl Default for MouseState {
     }
 }
 
+#[derive(Default)]
 pub struct KeyboardState {
     pub keys_pressed: Vec<Keycode>,
-}
-
-impl KeyboardState {
-    pub fn new() -> Self {
-        return KeyboardState {
-            keys_pressed: vec![],
-        };
-    }
 }
 
 #[derive(Default)]
@@ -89,7 +82,7 @@ impl GameController {
 
         result.state.axis_dead_zone = 8000;
 
-        return result;
+        result
     }
 
     pub fn new_with_handle(handle: sdl2::controller::GameController) -> Self {
@@ -97,7 +90,7 @@ impl GameController {
 
         result.handle = Some(handle);
 
-        return result;
+        result
     }
 
     pub fn set_button_state(&mut self, button: Button, on: bool) {
@@ -196,20 +189,16 @@ impl GameController {
             let handle = self.handle.as_mut().unwrap();
 
             match handle.set_rumble(low_intensity, high_intensity, duration) {
-                Ok(_) => {
-                    return Ok(());
-                }
-                Err(e) => {
-                    return Err(format!(
-                        "Failed to set haptic intensity for device {}: {}",
-                        self.id, e
-                    ));
-                }
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!(
+                    "Failed to set haptic intensity for device {}: {}",
+                    self.id, e
+                )),
             }
         } else {
-            return Err(String::from(
+            Err(String::from(
                 "Called GameController::set_haptic_intensity with no device handle attached!",
-            ));
+            ))
         }
     }
 }
@@ -278,7 +267,7 @@ pub struct GameControllerState {
     pub joysticks: GameControllerStateJoysticks,
 }
 
-impl<'a> fmt::Display for GameController {
+impl fmt::Display for GameController {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(v, "GameController {} ({})", self.id, self.name)
     }

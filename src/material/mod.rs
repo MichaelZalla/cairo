@@ -47,13 +47,12 @@ impl PostDeserialize for Material {
 
 impl Material {
     pub fn new(name: String) -> Self {
-        let mut mat: Material = Default::default();
-
-        mat.name = name;
-        mat.diffuse_color = color::WHITE.to_vec3() / 255.0;
-        mat.specular_exponent = 8;
-
-        mat
+        Material {
+            name,
+            diffuse_color: color::WHITE.to_vec3() / 255.0,
+            specular_exponent: 8,
+            ..Default::default()
+        }
     }
 
     pub fn load_all_maps(

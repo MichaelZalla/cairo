@@ -17,23 +17,23 @@ static SIDES: usize = 6;
 
 #[derive(Copy, Clone, Debug)]
 enum Side {
-    FRONT = 0,
-    BACK = 1,
-    TOP = 2,
-    BOTTOM = 3,
-    LEFT = 4,
-    RIGHT = 5,
+    Front = 0,
+    Back = 1,
+    Top = 2,
+    Bottom = 3,
+    Left = 4,
+    Right = 5,
 }
 
 impl fmt::Display for Side {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         let repr = match self {
-            Side::FRONT => "FRONT",
-            Side::BACK => "BACK",
-            Side::TOP => "TOP",
-            Side::BOTTOM => "BOTTOM",
-            Side::LEFT => "LEFT",
-            Side::RIGHT => "RIGHT",
+            Side::Front => "Front",
+            Side::Back => "Back",
+            Side::Top => "Top",
+            Side::Bottom => "Bottom",
+            Side::Left => "Left",
+            Side::Right => "Right",
         };
 
         writeln!(v, "Side (\"{}\")", repr)
@@ -59,12 +59,12 @@ impl CubeMap {
         Self {
             is_cross: false,
             sides: [
-                TextureMap::new(texture_paths[Side::FRONT as usize], storage_format),
-                TextureMap::new(texture_paths[Side::BACK as usize], storage_format),
-                TextureMap::new(texture_paths[Side::TOP as usize], storage_format),
-                TextureMap::new(texture_paths[Side::BOTTOM as usize], storage_format),
-                TextureMap::new(texture_paths[Side::LEFT as usize], storage_format),
-                TextureMap::new(texture_paths[Side::RIGHT as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Front as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Back as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Top as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Bottom as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Left as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Right as usize], storage_format),
             ],
         }
     }
@@ -106,39 +106,31 @@ impl CubeMap {
 
             for (side_index, side_map) in self.sides.iter_mut().enumerate() {
                 let side = match side_index {
-                    0 => Side::FRONT,
-                    1 => Side::BACK,
-                    2 => Side::TOP,
-                    3 => Side::BOTTOM,
-                    4 => Side::LEFT,
-                    _ => Side::RIGHT,
+                    0 => Side::Front,
+                    1 => Side::Back,
+                    2 => Side::Top,
+                    3 => Side::Bottom,
+                    4 => Side::Left,
+                    _ => Side::Right,
                 };
 
                 side_map.width = dimension;
                 side_map.height = dimension;
 
-                let block_coordinate: (u32, u32);
-
-                match side {
-                    Side::FRONT => {
-                        block_coordinate = (1, 1);
+                let block_coordinate = match side {
+                    Side::Front => (1, 1),
+                    Side::Back => {
+                        if is_horizontal {
+                            (3, 1)
+                        } else {
+                            (1, 3)
+                        }
                     }
-                    Side::BACK => {
-                        block_coordinate = if is_horizontal { (3, 1) } else { (1, 3) };
-                    }
-                    Side::TOP => {
-                        block_coordinate = (1, 0);
-                    }
-                    Side::BOTTOM => {
-                        block_coordinate = (1, 2);
-                    }
-                    Side::LEFT => {
-                        block_coordinate = (0, 1);
-                    }
-                    Side::RIGHT => {
-                        block_coordinate = (2, 1);
-                    }
-                }
+                    Side::Top => (1, 0),
+                    Side::Bottom => (1, 2),
+                    Side::Left => (0, 1),
+                    Side::Right => (2, 1),
+                };
 
                 let block_pixel_coordinate = (
                     block_coordinate.0 * dimension,
@@ -167,7 +159,7 @@ impl CubeMap {
                         let mut local_x = global_x - block_pixel_coordinate.0;
                         let mut local_y = global_y - block_pixel_coordinate.1;
 
-                        if side_index == Side::BACK as usize && !is_horizontal {
+                        if side_index == Side::Back as usize && !is_horizontal {
                             // Flip back texture data
                             local_x = dimension - local_x - 1;
                             local_y = dimension - local_y - 1;
@@ -202,7 +194,7 @@ impl CubeMap {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 
     pub fn sample(&self, direction: &Vec4) -> Color {
@@ -217,9 +209,9 @@ impl CubeMap {
         if absolute.x >= absolute.y && absolute.x >= absolute.z {
             // X has the greatest magnitude
             side = if direction.x >= 0.0 {
-                Side::RIGHT
+                Side::Right
             } else {
-                Side::LEFT
+                Side::Left
             };
 
             uv_scaling_factor = 0.5 / absolute.x;
@@ -236,9 +228,9 @@ impl CubeMap {
         } else if absolute.y >= absolute.z {
             // Y has the greatest magnitude
             side = if direction.y >= 0.0 {
-                Side::TOP
+                Side::Top
             } else {
-                Side::BOTTOM
+                Side::Bottom
             };
 
             uv_scaling_factor = 0.5 / absolute.y;
@@ -255,9 +247,9 @@ impl CubeMap {
         } else {
             // Z has the greatest magnitude
             side = if direction.z >= 0.0 {
-                Side::BACK
+                Side::Back
             } else {
-                Side::FRONT
+                Side::Front
             };
 
             uv_scaling_factor = 0.5 / absolute.z;
@@ -292,7 +284,7 @@ impl CubeMap {
             return COLORS[side as usize];
         }
 
-        let (r, g, b) = sample_nearest(uv, &map, None);
+        let (r, g, b) = sample_nearest(uv, map, None);
 
         Color::rgb(r, g, b)
     }

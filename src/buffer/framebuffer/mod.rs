@@ -89,98 +89,68 @@ impl Framebuffer {
     }
 
     pub fn validate(&self) -> Result<(), String> {
-        match self.attachments.stencil.as_ref() {
-            Some(lock) => {
-                let buffer = lock.borrow();
+        if let Some(lock) = self.attachments.stencil.as_ref() {
+            let buffer = lock.borrow();
 
-                assert!(buffer.width == self.width && buffer.height == self.height);
-            }
-            None => (),
+            assert!(buffer.width == self.width && buffer.height == self.height);
         }
 
-        match self.attachments.depth.as_ref() {
-            Some(lock) => {
-                let zbuffer = lock.borrow();
+        if let Some(lock) = self.attachments.depth.as_ref() {
+            let zbuffer = lock.borrow();
 
-                assert!(zbuffer.buffer.width == self.width && zbuffer.buffer.height == self.height);
-            }
-            None => (),
+            assert!(zbuffer.buffer.width == self.width && zbuffer.buffer.height == self.height);
         }
 
-        match self.attachments.color.as_ref() {
-            Some(lock) => {
-                let buffer = lock.borrow();
+        if let Some(lock) = self.attachments.color.as_ref() {
+            let buffer = lock.borrow();
 
-                assert!(buffer.width == self.width && buffer.height == self.height);
-            }
-            None => (),
+            assert!(buffer.width == self.width && buffer.height == self.height);
         }
 
-        match self.attachments.forward_ldr.as_ref() {
-            Some(lock) => {
-                let buffer = lock.borrow();
+        if let Some(lock) = self.attachments.forward_ldr.as_ref() {
+            let buffer = lock.borrow();
 
-                assert!(buffer.width == self.width && buffer.height == self.height);
-            }
-            None => (),
+            assert!(buffer.width == self.width && buffer.height == self.height);
         }
 
-        match self.attachments.forward_or_deferred_hdr.as_ref() {
-            Some(lock) => {
-                let buffer = lock.borrow();
+        if let Some(lock) = self.attachments.forward_or_deferred_hdr.as_ref() {
+            let buffer = lock.borrow();
 
-                assert!(buffer.width == self.width && buffer.height == self.height);
-            }
-            None => (),
+            assert!(buffer.width == self.width && buffer.height == self.height);
         }
 
         Ok(())
     }
 
     pub fn clear(&mut self) {
-        match self.attachments.stencil.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.stencil.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.clear(None);
-            }
-            None => (),
+            buffer.clear(None);
         }
 
-        match self.attachments.depth.as_mut() {
-            Some(lock) => {
-                let mut zbuffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.depth.as_mut() {
+            let mut zbuffer = lock.borrow_mut();
 
-                zbuffer.buffer.clear(Some(zbuffer::MAX_DEPTH));
-            }
-            None => (),
+            zbuffer.buffer.clear(Some(zbuffer::MAX_DEPTH));
         }
 
-        match self.attachments.color.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.color.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.clear(None);
-            }
-            None => (),
+            buffer.clear(None);
         }
 
-        match self.attachments.forward_ldr.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.forward_ldr.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.clear(None);
-            }
-            None => (),
+            buffer.clear(None);
         }
 
-        match self.attachments.forward_or_deferred_hdr.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.forward_or_deferred_hdr.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.clear(None);
-            }
-            None => (),
+            buffer.clear(None);
         }
     }
 
@@ -188,68 +158,53 @@ impl Framebuffer {
         self.width = width;
         self.height = height;
 
-        match self.attachments.stencil.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.stencil.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.resize(width, height);
-                if should_clear {
-                    buffer.clear(None);
-                }
+            buffer.resize(width, height);
+            if should_clear {
+                buffer.clear(None);
             }
-            None => (),
         }
 
-        match self.attachments.depth.as_mut() {
-            Some(lock) => {
-                let mut zbuffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.depth.as_mut() {
+            let mut zbuffer = lock.borrow_mut();
 
-                zbuffer.buffer.resize(width, height);
+            zbuffer.buffer.resize(width, height);
 
-                if should_clear {
-                    zbuffer.buffer.clear(None);
-                }
+            if should_clear {
+                zbuffer.buffer.clear(None);
             }
-            None => (),
         }
 
-        match self.attachments.color.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.color.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.resize(width, height);
+            buffer.resize(width, height);
 
-                if should_clear {
-                    buffer.clear(None);
-                }
+            if should_clear {
+                buffer.clear(None);
             }
-            None => (),
         }
 
-        match self.attachments.forward_ldr.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.forward_ldr.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.resize(width, height);
+            buffer.resize(width, height);
 
-                if should_clear {
-                    buffer.clear(None);
-                }
+            if should_clear {
+                buffer.clear(None);
             }
-            None => (),
         }
 
-        match self.attachments.forward_or_deferred_hdr.as_mut() {
-            Some(lock) => {
-                let mut buffer = lock.borrow_mut();
+        if let Some(lock) = self.attachments.forward_or_deferred_hdr.as_mut() {
+            let mut buffer = lock.borrow_mut();
 
-                buffer.resize(width, height);
+            buffer.resize(width, height);
 
-                if should_clear {
-                    buffer.clear(None);
-                }
+            if should_clear {
+                buffer.clear(None);
             }
-            None => (),
         }
     }
 }

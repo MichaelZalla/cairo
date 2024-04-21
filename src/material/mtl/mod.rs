@@ -35,7 +35,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
     let mtl_file_path = Path::new(&filepath);
     let mtl_file_path_display = mtl_file_path.display();
 
-    let lines = match read_lines(&mtl_file_path) {
+    let lines = match read_lines(mtl_file_path) {
         Err(why) => panic!("Failed to open file {}: {}", mtl_file_path_display, why),
         Ok(lines) => lines,
     };
@@ -282,7 +282,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                             // Bump map
                             "map_bump" | "bump" => {
-                                println!("@TODO Implementation for \"{}\".", "decal");
+                                println!("@TODO Implementation for token 'map_bump' and 'bump'.");
                             }
 
                             // Normal map
@@ -319,7 +319,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                             // Stencil (decal) map
                             "decal" => {
-                                println!("@TODO Implementation for \"{}\".", "decal");
+                                println!("@TODO Implementation for token 'decal'.");
                             }
 
                             // Unrecognized prefix
@@ -351,7 +351,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
     cache
 }
 
-fn next_rgb<'a>(line_tokens: &mut SplitWhitespace<'a>) -> Vec3 {
+fn next_rgb(line_tokens: &mut SplitWhitespace<'_>) -> Vec3 {
     let r = line_tokens.next().unwrap().parse::<f32>().unwrap();
     let g = line_tokens.next().unwrap().parse::<f32>().unwrap();
     let b = line_tokens.next().unwrap().parse::<f32>().unwrap();
@@ -359,7 +359,7 @@ fn next_rgb<'a>(line_tokens: &mut SplitWhitespace<'a>) -> Vec3 {
     Vec3 { x: r, y: g, z: b }
 }
 
-fn next_filepath<'a>(line_tokens: &mut SplitWhitespace<'a>, mtl_file_path: &Path) -> String {
+fn next_filepath(line_tokens: &mut SplitWhitespace<'_>, mtl_file_path: &Path) -> String {
     let filepath = line_tokens.next().unwrap().to_string();
 
     let mtl_relative_filepath = mtl_file_path

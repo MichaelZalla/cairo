@@ -120,19 +120,16 @@ pub fn do_slider(
 
                         let scaling_factor = max - min;
 
-                        match parse_result {
-                            Ok(value) => {
-                                let adjusted = (value + delta * scaling_factor).clamp(min, max);
+                        if let Ok(value) = parse_result {
+                            let adjusted = (value + delta * scaling_factor).clamp(min, max);
 
-                                let adjusted_str = adjusted.to_string();
+                            let adjusted_str = adjusted.to_string();
 
-                                if *o.get() != adjusted_str {
-                                    did_edit = true;
+                            if *o.get() != adjusted_str {
+                                did_edit = true;
 
-                                    *o.get_mut() = adjusted.to_string();
-                                }
+                                *o.get_mut() = adjusted.to_string();
                             }
-                            Err(_) => {}
                         }
                     }
                     Entry::Vacant(_v) => {
@@ -233,7 +230,7 @@ fn draw_slider(
 
     let text_cache = ctx.text_cache.borrow();
 
-    let label_texture = text_cache.get(&text_cache_key).unwrap();
+    let label_texture = text_cache.get(text_cache_key).unwrap();
 
     let slider_height = label_texture.height;
 
@@ -267,13 +264,13 @@ fn draw_slider(
 
     // Draw the slider fill (alpha).
 
-    match options.min {
-        Some(min) => match options.max {
-            Some(max) => match model {
+    if let Some(min) = options.min {
+        if let Some(max) = options.max {
+            match model {
                 Entry::Occupied(o) => {
                     let text = o.get();
 
-                    if text.len() > 0 {
+                    if !text.is_empty() {
                         let value = text.parse::<f32>().unwrap();
                         let alpha = (value - min) / (max - min);
                         let width = ((NUMBER_SLIDER_WIDTH - 2).max(0) as f32 * alpha) as u32;
@@ -290,10 +287,8 @@ fn draw_slider(
                     }
                 }
                 Entry::Vacant(_) => (),
-            },
-            None => (),
-        },
-        None => (),
+            }
+        }
     }
 
     // Draw the slider model value.
@@ -302,7 +297,7 @@ fn draw_slider(
         Entry::Occupied(o) => {
             let text = o.get();
 
-            if text.len() > 0 {
+            if !text.is_empty() {
                 // Draw the slider value text (formatted).
 
                 let text_parsed = text.parse::<f32>().unwrap();

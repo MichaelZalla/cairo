@@ -53,7 +53,7 @@ pub struct App {
 
 impl App {
     pub fn new(window_info: &mut AppWindowInfo) -> Self {
-        let context = make_application_context(&window_info).unwrap();
+        let context = make_application_context(window_info).unwrap();
 
         let timing_info: TimingInfo = Default::default();
 
@@ -69,12 +69,12 @@ impl App {
         let backbuffer =
             make_backbuffer(window_info.canvas_resolution, &texture_creator, None).unwrap();
 
-        return App {
+        App {
             window_info: app_window_info,
             context,
             backbuffer,
             timing_info,
-        };
+        }
     }
 
     pub fn resize_window(&mut self, new_resolution: Resolution) -> Result<(), String> {
@@ -173,7 +173,7 @@ impl App {
 
             let mut mouse_state: MouseState = Default::default();
 
-            let mut keyboard_state = KeyboardState::new();
+            let mut keyboard_state: KeyboardState = Default::default();
 
             let mut game_controller = GameController::new();
 
@@ -381,23 +381,21 @@ impl App {
             self.timing_info.frames_per_second =
                 (ticks_per_second as f64 / ticks_for_current_frame as f64) as f32;
 
-            let unused_ticks: u64;
-
-            if ticks_for_current_frame < desired_ticks_per_frame {
-                unused_ticks = std::cmp::min(
+            let unused_ticks = if ticks_for_current_frame < desired_ticks_per_frame {
+                std::cmp::min(
                     desired_ticks_per_frame,
                     desired_ticks_per_frame - ticks_for_current_frame,
-                );
+                )
             } else {
-                unused_ticks = 0;
-            }
+                0
+            };
 
             self.timing_info.unused_seconds =
                 (unused_ticks as f64 / ticks_per_second as f64) as f32;
 
             self.timing_info.unused_milliseconds = self.timing_info.unused_seconds * 1000.0;
 
-            let unused_seconds = (unused_ticks as f64 / ticks_per_second as f64) as f64;
+            let unused_seconds = unused_ticks as f64 / ticks_per_second as f64;
             let _unused_milliseconds = unused_seconds * 1000.0;
 
             if current_tick % 50 == 0 {

@@ -36,19 +36,19 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
         z: -depth / 2.0,
     };
 
-    let mut back_top_left = front_top_left.clone();
+    let mut back_top_left = front_top_left;
 
     back_top_left.z += depth;
 
-    let mut back_top_right = front_top_right.clone();
+    let mut back_top_right = front_top_right;
 
     back_top_right.z += depth;
 
-    let mut back_bottom_left = front_bottom_left.clone();
+    let mut back_bottom_left = front_bottom_left;
 
     back_bottom_left.z += depth;
 
-    let mut back_bottom_right = front_bottom_right.clone();
+    let mut back_bottom_right = front_bottom_right;
 
     back_bottom_right.z += depth;
 

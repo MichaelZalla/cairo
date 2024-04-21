@@ -28,52 +28,40 @@ impl<'a> Pipeline<'a> {
 
         let color_u32 = color.to_u32();
 
-        match material_cache {
-            Some(materials) => {
-                let mat_name = material_name.unwrap();
-                let billboard_scale = scale.unwrap();
+        if let Some(materials) = material_cache {
+            let mat_name = material_name.unwrap();
+            let billboard_scale = scale.unwrap();
 
-                let mut billboard_mesh = mesh::primitive::billboard::generate(
-                    point_world_space,
-                    &camera.unwrap().look_vector.get_position(),
-                    billboard_scale,
-                    billboard_scale,
-                );
+            let mut billboard_mesh = mesh::primitive::billboard::generate(
+                point_world_space,
+                &camera.unwrap().look_vector.get_position(),
+                billboard_scale,
+                billboard_scale,
+            );
 
-                let billboard_mat = materials.get_mut(&mat_name);
+            let billboard_mat = materials.get_mut(&mat_name);
 
-                match billboard_mat {
-                    Some(material) => {
-                        material.diffuse_color = color.to_vec3() / 255.0;
+            if let Some(material) = billboard_mat {
+                material.diffuse_color = color.to_vec3() / 255.0;
 
-                        billboard_mesh.material_name = Some(mat_name.clone());
+                billboard_mesh.material_name = Some(mat_name.clone());
 
-                        let transform: Transform3D = Default::default();
+                let transform: Transform3D = Default::default();
 
-                        self.render_entity_mesh(&billboard_mesh, &transform.mat());
+                self.render_entity_mesh(&billboard_mesh, transform.mat());
 
-                        return;
-                    }
-                    None => (),
-                }
+                return;
             }
-            None => (),
         }
 
-        match self.framebuffer {
-            Some(rc) => {
-                let framebuffer = rc.borrow_mut();
+        if let Some(framebuffer_rc) = self.framebuffer {
+            let framebuffer = framebuffer_rc.borrow_mut();
 
-                match &framebuffer.attachments.forward_ldr {
-                    Some(forward_buffer_lock) => {
-                        let mut forward_buffer = forward_buffer_lock.borrow_mut();
+            if let Some(forward_buffer_lock) = &framebuffer.attachments.forward_ldr {
+                let mut forward_buffer = forward_buffer_lock.borrow_mut();
 
-                        forward_buffer.set(x, y, color_u32);
-                    }
-                    None => (),
-                }
+                forward_buffer.set(x, y, color_u32);
             }
-            None => (),
         }
     }
 }

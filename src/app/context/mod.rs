@@ -31,23 +31,16 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     sdl_context.mouse().show_cursor(window_info.show_cursor);
 
-    let ttf_context: &'static Sdl2TtfContext;
-
-    match sdl2::ttf::init() {
+    let ttf_context: &'static Sdl2TtfContext = match sdl2::ttf::init() {
         Ok(context) => {
             debug_print!("Initialized TTF font subsystem.\n");
 
             let boxed = Box::new(context);
 
-            ttf_context = Box::leak(boxed);
+            Box::leak(boxed)
         }
-        Err(e) => {
-            return Err(format!(
-                "Error initializing TTF font subsystem: '{}'",
-                e.to_string()
-            ))
-        }
-    }
+        Err(e) => return Err(format!("Error initializing TTF font subsystem: '{}'", e)),
+    };
 
     let game_controller_subsystem = sdl_context.game_controller()?;
 
@@ -156,34 +149,30 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     }
 }
 
-pub fn get_application_rendering_context<'a, 'r>(
+pub fn get_application_rendering_context(
     window: Window,
     vertical_sync: bool,
 ) -> Result<ApplicationRenderingContext, String> {
     if vertical_sync {
         match window.into_canvas().present_vsync().build() {
-            Ok(canvas) => {
-                return Ok(ApplicationRenderingContext {
-                    canvas: RefCell::new(canvas),
-                });
-            }
+            Ok(canvas) => Ok(ApplicationRenderingContext {
+                canvas: RefCell::new(canvas),
+            }),
             Err(e) => Err(e.to_string()),
         }
     } else {
         match window.into_canvas().build() {
-            Ok(canvas) => {
-                return Ok(ApplicationRenderingContext {
-                    canvas: RefCell::new(canvas),
-                });
-            }
+            Ok(canvas) => Ok(ApplicationRenderingContext {
+                canvas: RefCell::new(canvas),
+            }),
             Err(e) => Err(e.to_string()),
         }
     }
 }
 
-pub fn make_backbuffer<'r>(
+pub fn make_backbuffer(
     canvas_resolution: Resolution,
-    texture_creator: &'r TextureCreator<WindowContext>,
+    texture_creator: &TextureCreator<WindowContext>,
     blend_mode: Option<BlendMode>,
 ) -> Result<Texture, String> {
     match texture_creator.create_texture_streaming(
@@ -209,7 +198,7 @@ pub fn make_backbuffer<'r>(
 
                     backbuffer.set_blend_mode(mode);
 
-                    return Ok(backbuffer);
+                    Ok(backbuffer)
                 }
                 Err(e) => Err(e.to_string()),
             }

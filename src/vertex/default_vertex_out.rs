@@ -29,7 +29,6 @@ impl Add<TangentSpaceInfo> for TangentSpaceInfo {
             point_light_position: self.point_light_position + rhs.point_light_position,
             view_position: self.view_position + rhs.view_position,
             fragment_position: self.fragment_position + rhs.fragment_position,
-            ..self
         }
     }
 }
@@ -55,7 +54,6 @@ impl Sub<TangentSpaceInfo> for TangentSpaceInfo {
             point_light_position: self.point_light_position - rhs.point_light_position,
             view_position: self.view_position - rhs.view_position,
             fragment_position: self.fragment_position - rhs.fragment_position,
-            ..self
         }
     }
 }
@@ -70,7 +68,6 @@ impl Mul<f32> for TangentSpaceInfo {
             point_light_position: self.point_light_position * scalar,
             view_position: self.view_position * scalar,
             fragment_position: self.fragment_position * scalar,
-            ..self
         }
     }
 }
@@ -96,7 +93,6 @@ impl Div<f32> for TangentSpaceInfo {
             point_light_position: self.point_light_position / scalar,
             view_position: self.view_position / scalar,
             fragment_position: self.fragment_position / scalar,
-            ..self
         }
     }
 }

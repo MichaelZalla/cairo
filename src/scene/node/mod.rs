@@ -283,35 +283,29 @@ impl SceneNode {
             SceneNodeLocalTraversalMethod::PreOrder => {
                 visit_action(current_depth, current_world_transform, self)?;
 
-                match self.children.as_mut() {
-                    Some(children) => {
-                        for child in children {
-                            child.visit_dfs_mut(
-                                local_method,
-                                current_depth + 1,
-                                current_world_transform,
-                                visit_action,
-                            )?;
-                        }
+                if let Some(children) = self.children.as_mut() {
+                    for child in children {
+                        child.visit_dfs_mut(
+                            local_method,
+                            current_depth + 1,
+                            current_world_transform,
+                            visit_action,
+                        )?;
                     }
-                    None => (),
                 }
 
                 Ok(())
             }
             SceneNodeLocalTraversalMethod::PostOrder => {
-                match self.children.as_mut() {
-                    Some(children) => {
-                        for child in children {
-                            child.visit_dfs_mut(
-                                local_method,
-                                current_depth + 1,
-                                current_world_transform,
-                                visit_action,
-                            )?;
-                        }
+                if let Some(children) = self.children.as_mut() {
+                    for child in children {
+                        child.visit_dfs_mut(
+                            local_method,
+                            current_depth + 1,
+                            current_world_transform,
+                            visit_action,
+                        )?;
                     }
-                    None => (),
                 }
 
                 visit_action(current_depth, current_world_transform, self)
@@ -330,7 +324,7 @@ impl SceneNode {
 
         frontier.push_front((current_depth, parent_world_transform, self));
 
-        while frontier.len() > 0 {
+        while !frontier.is_empty() {
             let (current_depth, parent_world_transform, current_node) =
                 frontier.pop_front().unwrap();
 
@@ -362,7 +356,7 @@ impl SceneNode {
 
         frontier.push_front((current_depth, parent_world_transform, self));
 
-        while frontier.len() > 0 {
+        while !frontier.is_empty() {
             let (current_depth, parent_world_transform, current_node) =
                 frontier.pop_front().unwrap();
 
@@ -370,13 +364,10 @@ impl SceneNode {
 
             visit_action(current_depth, current_world_transform, current_node)?;
 
-            match current_node.children.as_mut() {
-                Some(children) => {
-                    for child in children {
-                        frontier.push_back((current_depth + 1, current_world_transform, child));
-                    }
+            if let Some(children) = current_node.children.as_mut() {
+                for child in children {
+                    frontier.push_back((current_depth + 1, current_world_transform, child));
                 }
-                None => (),
             }
         }
 
@@ -384,7 +375,7 @@ impl SceneNode {
     }
 }
 
-impl<'a> Display for SceneNode {
+impl Display for SceneNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let uuid_suffix = match &self.handle {
             Some(handle) => format!(" | {}", handle.uuid),

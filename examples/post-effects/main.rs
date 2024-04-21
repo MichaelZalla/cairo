@@ -332,8 +332,8 @@ fn main() -> Result<(), String> {
     // Create several screen-space post-processing effects.
 
     let _outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
-    let _grayscale_effect = GrayscaleEffect::new();
-    let _invert_effect = InvertEffect::new();
+    let _grayscale_effect = GrayscaleEffect {};
+    let _invert_effect = InvertEffect {};
     let _sharpen_kernel_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
     let _blur_kernel_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(8));
     let edge_detection_kernel_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);

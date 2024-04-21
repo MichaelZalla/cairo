@@ -22,10 +22,10 @@ pub struct ImageOptions {
 
 pub struct DoImageResult {}
 
-pub fn do_image<'a>(
+pub fn do_image(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &mut UILayoutContext,
-    map: &'a mut TextureMap,
+    map: &mut TextureMap,
     options: &ImageOptions,
     parent_buffer: &mut Buffer2D,
 ) -> DoImageResult {
@@ -72,7 +72,7 @@ fn draw_image(
     let mut far_level_index = 0;
     let mut near_level_index = 0;
 
-    if map.levels.len() > 0 {
+    if !map.levels.is_empty() {
         while map.levels[near_level_index].width >= options.width
             && near_level_index < map.levels.len() - 1
         {
@@ -109,8 +109,8 @@ fn draw_image(
 
     // Draw the optional inner border.
 
-    match options.border {
-        Some(color) => Graphics::poly_line(
+    if let Some(color) = options.border {
+        Graphics::poly_line(
             parent_buffer,
             &[
                 Vec2 {
@@ -135,7 +135,6 @@ fn draw_image(
                 },
             ],
             color,
-        ),
-        None => (),
+        )
     }
 }

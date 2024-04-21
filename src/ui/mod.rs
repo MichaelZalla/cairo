@@ -73,9 +73,9 @@ pub fn get_mouse_result(
         (None, false) => (),
     }
 
-    match mouse_state.button_event {
-        Some(event) => match event.button {
-            MouseButton::Left => match (event.kind, mouse_in_bounds) {
+    if let Some(event) = mouse_state.button_event {
+        if let MouseButton::Left = event.button {
+            match (event.kind, mouse_in_bounds) {
                 (MouseEventKind::Up, true) => {
                     // Check whether LMB was just released inside of this
                     // button.
@@ -96,30 +96,24 @@ pub fn get_mouse_result(
                     }
                 }
                 (MouseEventKind::Up, false) => {}
-                (MouseEventKind::Down, false) => match ctx.get_focus_target() {
-                    Some(target_id) => {
+                (MouseEventKind::Down, false) => {
+                    if let Some(target_id) = ctx.get_focus_target() {
                         if target_id == *id {
                             ctx.set_focus_target(None)
                         }
                     }
-                    None => (),
-                },
-            },
-            _ => (),
-        },
-        None => (),
+                }
+            }
+        }
     }
 
     // Check whether LMB is down inside of this button.
 
-    match (
+    if let (Some(_), true) = (
         mouse_state.buttons_down.get(&MouseButton::Left),
         mouse_in_bounds,
     ) {
-        (Some(_), true) => {
-            is_down = true;
-        }
-        _ => (),
+        is_down = true;
     }
 
     (is_down, was_released)

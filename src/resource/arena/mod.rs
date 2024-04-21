@@ -44,6 +44,10 @@ impl<T: PostDeserialize> Arena<T> {
         self.entries.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
     pub fn get(&self, handle: &Handle) -> Result<&ArenaEntry<T>, String> {
         match self.validate_handle(handle) {
             Ok(index) => {
@@ -67,10 +71,7 @@ impl<T: PostDeserialize> Arena<T> {
     }
 
     pub fn insert(&mut self, uuid: Uuid, item: T) -> Handle {
-        let entry = ArenaEntry {
-            uuid: uuid.clone(),
-            item,
-        };
+        let entry = ArenaEntry { uuid, item };
 
         let index = self.get_first_empty_index();
 

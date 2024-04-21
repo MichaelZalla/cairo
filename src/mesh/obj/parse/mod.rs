@@ -5,7 +5,7 @@ use crate::{
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
-pub fn parse_vertex<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec3, String> {
+pub fn parse_vertex(tokens: &mut SplitWhitespace<'_>) -> Result<Vec3, String> {
     // `v  -0.512365 -40.559704 21.367237` (x y z)
     // `v  -0.512365 -40.559704 21.367237 50 255 0` (x y z r g b)
 
@@ -18,7 +18,7 @@ pub fn parse_vertex<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec3, String
     Ok(Vec3 { x, y, z })
 }
 
-pub fn parse_vertex_uv<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec2, String> {
+pub fn parse_vertex_uv(tokens: &mut SplitWhitespace<'_>) -> Result<Vec2, String> {
     // `vt 0.500 1 [0]` (u v w?)
 
     let u = tokens.next().unwrap().parse::<f32>().unwrap();
@@ -27,26 +27,20 @@ pub fn parse_vertex_uv<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec2, Str
 
     let result = tokens.next();
 
-    match result {
-        Some(value) => {
-            v = value.parse::<f32>().unwrap();
+    if let Some(value) = result {
+        v = value.parse::<f32>().unwrap();
 
-            let result = tokens.next();
+        let result = tokens.next();
 
-            match result {
-                Some(value) => {
-                    w = value.parse::<f32>().unwrap();
-                }
-                None => (),
-            }
+        if let Some(value) = result {
+            w = value.parse::<f32>().unwrap();
         }
-        None => (),
     }
 
     Ok(Vec2 { x: u, y: v, z: w })
 }
 
-pub fn parse_vertex_normal<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec3, String> {
+pub fn parse_vertex_normal(tokens: &mut SplitWhitespace<'_>) -> Result<Vec3, String> {
     // `vn  0.000005 -34.698460 -17.753405` (x y z)
 
     let x = tokens.next().unwrap().parse::<f32>().unwrap();
@@ -56,7 +50,7 @@ pub fn parse_vertex_normal<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec3,
     Ok(Vec3 { x, y, z })
 }
 
-pub fn parse_face<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Face, String> {
+pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<Face, String> {
     // Vertex indices only:             f v1 v2 v3 ....
     // Vertex and UV indices:           f v1/uv1 v2/uv2 v3/uv3 ...
     // Vertex, UV, and normal indices:  f v1/uv1/n1 v2/uv2/n2 v3/uv3/n3 ...
@@ -72,9 +66,9 @@ pub fn parse_face<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Face, String> 
 
     let mut face: Face = Default::default();
 
-    let mut v1_iter = tokens.next().unwrap().split("/");
-    let mut v2_iter = tokens.next().unwrap().split("/");
-    let mut v3_iter = tokens.next().unwrap().split("/");
+    let mut v1_iter = tokens.next().unwrap().split('/');
+    let mut v2_iter = tokens.next().unwrap().split('/');
+    let mut v3_iter = tokens.next().unwrap().split('/');
 
     face.vertices = (
         v1_iter.next().unwrap().parse::<usize>().unwrap() - 1,
@@ -86,44 +80,38 @@ pub fn parse_face<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Face, String> 
     let v2_uv_index = v2_iter.next();
     let v3_uv_index = v3_iter.next();
 
-    match v1_uv_index {
-        Some(index) => {
-            if index != "" {
-                let v1_uv = v1_uv_index.unwrap().parse::<usize>().unwrap() - 1;
-                let v2_uv = v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
-                let v3_uv = v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+    if let Some(index) = v1_uv_index {
+        if !index.is_empty() {
+            let v1_uv = v1_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+            let v2_uv = v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+            let v3_uv = v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
 
-                face.uvs = Some((v1_uv, v2_uv, v3_uv));
-            }
+            face.uvs = Some((v1_uv, v2_uv, v3_uv));
         }
-        None => (),
     }
 
     let v1_normal_index = v1_iter.next();
 
-    match v1_normal_index {
-        Some(_) => {
-            let v2_normal_index = v2_iter.next();
-            let v3_normal_index = v3_iter.next();
+    if v1_normal_index.is_some() {
+        let v2_normal_index = v2_iter.next();
+        let v3_normal_index = v3_iter.next();
 
-            let v1_n_raw = v1_normal_index.unwrap().parse::<usize>().unwrap();
-            let v2_n_raw = v2_normal_index.unwrap().parse::<usize>().unwrap();
-            let v3_n_raw = v3_normal_index.unwrap().parse::<usize>().unwrap();
+        let v1_n_raw = v1_normal_index.unwrap().parse::<usize>().unwrap();
+        let v2_n_raw = v2_normal_index.unwrap().parse::<usize>().unwrap();
+        let v3_n_raw = v3_normal_index.unwrap().parse::<usize>().unwrap();
 
-            let v1_n = v1_n_raw - 1;
-            let v2_n = v2_n_raw - 1;
-            let v3_n = v3_n_raw - 1;
+        let v1_n = v1_n_raw - 1;
+        let v2_n = v2_n_raw - 1;
+        let v3_n = v3_n_raw - 1;
 
-            face.normals = Some((v1_n, v2_n, v3_n));
-        }
-        None => (),
+        face.normals = Some((v1_n, v2_n, v3_n));
     }
 
     Ok(face)
 }
 
-pub fn parse_mtllib<'a>(
-    tokens: &mut SplitWhitespace<'a>,
+pub fn parse_mtllib(
+    tokens: &mut SplitWhitespace<'_>,
     parent_path: &Path,
 ) -> Result<String, String> {
     let mtl_filepath = tokens.next().unwrap();

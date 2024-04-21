@@ -53,24 +53,21 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 
     // Determine our map dimensions, based on the level index.
     let level_width = match level_index {
-        Some(index) => map.width / (2 as u32).pow(index as u32),
+        Some(index) => map.width / 2_u32.pow(index as u32),
         None => map.width,
     };
 
     let level_height = match level_index {
-        Some(index) => map.height / (2 as u32).pow(index as u32),
+        Some(index) => map.height / 2_u32.pow(index as u32),
         None => map.height,
     };
 
     // Perform any out-of-bounds handling.
 
-    match map.options.wrapping {
-        TextureMapWrapping::ClampToBorder(border_color) => {
-            if safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0 {
-                return border_color;
-            }
+    if let TextureMapWrapping::ClampToBorder(border_color) = map.options.wrapping {
+        if safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0 {
+            return border_color;
         }
-        _ => (),
     }
 
     // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
@@ -78,7 +75,7 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
     let texel_x = safe_uv.x * (level_width - 1) as f32;
     let texel_y = (1.0 - safe_uv.y) * (level_height - 1) as f32;
 
-    return sample_from_texel((texel_x, texel_y), map, level_index);
+    sample_from_texel((texel_x, texel_y), map, level_index)
 }
 
 pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
@@ -88,17 +85,17 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
 
     // Determine our map dimensions, based on the level index.
     let level_width = match level_index {
-        Some(index) => map.width / (2 as u32).pow(index as u32),
+        Some(index) => map.width / 2_u32.pow(index as u32),
         None => map.width,
     };
 
     let level_height = match level_index {
-        Some(index) => map.height / (2 as u32).pow(index as u32),
+        Some(index) => map.height / 2_u32.pow(index as u32),
         None => map.height,
     };
 
     debug_assert!(
-        level_index == None || level_index.unwrap() < map.levels.len(),
+        level_index.is_none() || level_index.unwrap() < map.levels.len(),
         "map={}, level_index={}, map.levels.len={}",
         map.info.filepath,
         level_index.unwrap(),
@@ -251,9 +248,7 @@ pub fn sample_trilinear(
 ) -> (u8, u8, u8) {
     // Sample a color from both mipmaps, using bilinear sampling.
 
-    if near_level_index == far_level_index {
-        return sample_bilinear(uv, map, Some(near_level_index));
-    } else if alpha == 0.0 {
+    if (near_level_index == far_level_index) || alpha == 0.0 {
         return sample_bilinear(uv, map, Some(near_level_index));
     } else if alpha >= 1.0 {
         return sample_bilinear(uv, map, Some(far_level_index));
@@ -287,7 +282,7 @@ fn sample_from_texel(
     // Determine our map width based on the level index.
 
     let level_width = match level_index {
-        Some(index) => map.width / (2 as u32).pow(index as u32),
+        Some(index) => map.width / 2_u32.pow(index as u32),
         None => map.width,
     };
 
@@ -324,16 +319,18 @@ fn sample_from_texel(
     (r, g, b)
 }
 
+type GetNeighborsResult = (
+    Option<(f32, f32)>,
+    Option<(f32, f32)>,
+    Option<(f32, f32)>,
+    Option<(f32, f32)>,
+);
+
 pub fn get_neighbors(
     fractional_texel: Vec2,
     map: &TextureMap,
     level_index: Option<usize>,
-) -> (
-    Option<(f32, f32)>,
-    Option<(f32, f32)>,
-    Option<(f32, f32)>,
-    Option<(f32, f32)>,
-) {
+) -> GetNeighborsResult {
     let fractional_x = fractional_texel.x - (fractional_texel.x as u32) as f32;
     let fractional_y = fractional_texel.y - (fractional_texel.y as u32) as f32;
 
@@ -341,12 +338,13 @@ pub fn get_neighbors(
     let nearest_y = (fractional_texel.y as u32) as f32;
 
     debug_assert!(
-        fractional_x >= 0.0 && fractional_x < 1.0,
+        (0.0..1.0).contains(&fractional_x),
         "fractional_x is negative, or greater than 1! (fractional_x = {}).",
         fractional_x
     );
+
     debug_assert!(
-        fractional_y >= 0.0 && fractional_y < 1.0,
+        (0.0..1.0).contains(&fractional_y),
         "fractional_y is negative, or greater than 1! (fractional_y = {}).",
         fractional_y
     );
@@ -386,30 +384,28 @@ pub fn get_neighbors(
 
     // Determine our map dimensions, based on the level index.
     let level_width = match level_index {
-        Some(index) => (map.width / (2 as u32).pow(index as u32)) as f32,
+        Some(index) => (map.width / 2_u32.pow(index as u32)) as f32,
         None => map.width as f32,
     };
 
     let level_height = match level_index {
-        Some(index) => (map.height / (2 as u32).pow(index as u32)) as f32,
+        Some(index) => (map.height / 2_u32.pow(index as u32)) as f32,
         None => map.height as f32,
     };
 
     match (map.options.wrapping, level_width == 1.0) {
-        (TextureMapWrapping::Repeat, _) | (_, true) => {
-            return (
-                Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
-                Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),
-                Some((
-                    bottom_left.0.rem(level_width),
-                    bottom_left.1.rem(level_height),
-                )),
-                Some((
-                    bottom_right.0.rem(level_width),
-                    bottom_right.1.rem(level_height),
-                )),
-            );
-        }
+        (TextureMapWrapping::Repeat, _) | (_, true) => (
+            Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
+            Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),
+            Some((
+                bottom_left.0.rem(level_width),
+                bottom_left.1.rem(level_height),
+            )),
+            Some((
+                bottom_right.0.rem(level_width),
+                bottom_right.1.rem(level_height),
+            )),
+        ),
         (_, false) => (
             if top_left.0 >= 0.0 && top_left.1 >= 0.0 {
                 Some((top_left.0, top_left.1))

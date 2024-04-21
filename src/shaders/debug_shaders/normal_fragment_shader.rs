@@ -20,10 +20,10 @@ pub const NormalFragmentShader: FragmentShaderFn =
         // let view_space_surface_normal =
         //     (world_space_surface_normal * context.view_inverse_transform).as_normal();
 
-        return Color {
+        Color {
             r: world_space_surface_normal.x,
             g: world_space_surface_normal.y,
             b: (1.0 - world_space_surface_normal.z),
             a: 1.0,
-        };
+        }
     };

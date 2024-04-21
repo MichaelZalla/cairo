@@ -60,7 +60,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     uvs.append(&mut ring_uvs);
     uvs.append(&mut vec![center_uv]);
 
-    let center_uv_index = uvs.len() - 1 as usize;
+    let center_uv_index = uvs.len() - 1_usize;
 
     // Generate normals
 

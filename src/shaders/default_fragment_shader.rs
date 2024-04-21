@@ -12,7 +12,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
         // Calculate ambient light contribution
 
         let ambient_light_contribution = match &context.ambient_light {
-            Some(handle) => match resources.ambient_light.borrow().get(&handle) {
+            Some(handle) => match resources.ambient_light.borrow().get(handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 
@@ -29,7 +29,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
         // Calculate directional light contribution
 
         let directional_light_contribution = match &context.directional_light {
-            Some(handle) => match resources.directional_light.borrow().get(&handle) {
+            Some(handle) => match resources.directional_light.borrow().get(handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 

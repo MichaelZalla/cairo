@@ -25,7 +25,7 @@ impl Graphics {
             || y1 as u32 >= buffer.height
             || y2 as u32 >= buffer.height
         {
-            match Graphics::clip_line(buffer, x1 as i32, y1 as i32, x2 as i32, y2 as i32) {
+            match Graphics::clip_line(buffer, x1, y1, x2, y2) {
                 Some((_x1, _y1, _x2, _y2)) => {
                     x1 = _x1;
                     y1 = _y1;
@@ -78,8 +78,9 @@ impl Graphics {
         } else {
             // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
 
-            let dx = x2 as i32 - x1 as i32;
-            let dy = y2 as i32 - y1 as i32;
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+
             let m = dy as f32 / dx as f32;
             let b = (y1 as f32 + y2 as f32 - m * (x1 + x2) as f32) / 2.0;
 
@@ -87,9 +88,7 @@ impl Graphics {
 
             if m.abs() > 1.0 {
                 if y2 < y1 {
-                    let t = y1;
-                    y1 = y2;
-                    y2 = t;
+                    std::mem::swap(&mut y1, &mut y2);
                 }
 
                 // Vertical-ish line
@@ -98,9 +97,7 @@ impl Graphics {
                 }
             } else {
                 if x2 < x1 {
-                    let t = x1;
-                    x1 = x2;
-                    x2 = t;
+                    std::mem::swap(&mut x1, &mut x2);
                 }
 
                 // Horizontal-ish line
@@ -150,58 +147,52 @@ impl Graphics {
 
         // Render a fill.
 
-        match fill {
-            Some(fill_color) => {
-                for current_y in y..y + height {
-                    Graphics::line(
-                        buffer,
-                        x as i32,
-                        current_y as i32,
-                        (x + width - 1) as i32,
-                        current_y as i32,
-                        fill_color,
-                    )
-                }
+        if let Some(fill_color) = fill {
+            for current_y in y..y + height {
+                Graphics::line(
+                    buffer,
+                    x as i32,
+                    current_y as i32,
+                    (x + width - 1) as i32,
+                    current_y as i32,
+                    fill_color,
+                )
             }
-            None => (),
         }
 
         // Render a border.
 
-        match border {
-            Some(border_color) => {
-                Graphics::poly_line(
-                    buffer,
-                    &[
-                        // Top left
-                        Vec2 {
-                            x: x as f32,
-                            y: y as f32,
-                            z: 1.0,
-                        },
-                        // Top right
-                        Vec2 {
-                            x: (x + width - 1) as f32,
-                            y: y as f32,
-                            z: 1.0,
-                        },
-                        // Bottom right
-                        Vec2 {
-                            x: (x + width - 1) as f32,
-                            y: (y + height - 1) as f32,
-                            z: 1.0,
-                        },
-                        // Bottom left
-                        Vec2 {
-                            x: x as f32,
-                            y: (y + height - 1) as f32,
-                            z: 1.0,
-                        },
-                    ],
-                    border_color,
-                );
-            }
-            None => (),
+        if let Some(border_color) = border {
+            Graphics::poly_line(
+                buffer,
+                &[
+                    // Top left
+                    Vec2 {
+                        x: x as f32,
+                        y: y as f32,
+                        z: 1.0,
+                    },
+                    // Top right
+                    Vec2 {
+                        x: (x + width - 1) as f32,
+                        y: y as f32,
+                        z: 1.0,
+                    },
+                    // Bottom right
+                    Vec2 {
+                        x: (x + width - 1) as f32,
+                        y: (y + height - 1) as f32,
+                        z: 1.0,
+                    },
+                    // Bottom left
+                    Vec2 {
+                        x: x as f32,
+                        y: (y + height - 1) as f32,
+                        z: 1.0,
+                    },
+                ],
+                border_color,
+            );
         }
     }
 
@@ -288,15 +279,12 @@ impl Graphics {
             (x1, y1) = temp;
         }
 
-        let slope: f32;
-        let bias: f32;
-
         // m = (y2 - y1) / (x2 - x1)
-        slope = (y2 - y1) as f32 / (x2 - x1) as f32;
+        let slope: f32 = (y2 - y1) as f32 / (x2 - x1) as f32;
 
         // y = mx + b
         // b = y - mx
-        bias = y1 as f32 - (slope * x1 as f32);
+        let bias: f32 = y1 as f32 - (slope * x1 as f32);
 
         if slope == f32::INFINITY {
             // Vertical line, safe to simply crop coordinates.
@@ -325,34 +313,40 @@ impl Graphics {
             y2 = (slope * x2 as f32 + bias) as i32;
         } else if x2 < 0 {
             // y = mx + b
-            x2 = 0 as i32;
+            x2 = 0_i32;
             y2 = (slope * x2 as f32 + bias) as i32;
         }
 
         if y1 >= buffer.height as i32 {
             // x = (y - b) / m
             y1 = (buffer.height - 1) as i32;
-            x1 = ((y1 as f32 - bias) as f32 / slope) as i32;
+            x1 = ((y1 as f32 - bias) / slope) as i32;
         } else if y1 < 0 {
             // x = (y - b) / m
-            y1 = 0 as i32;
-            x1 = ((y1 as f32 - bias) as f32 / slope) as i32;
+            y1 = 0_i32;
+            x1 = ((y1 as f32 - bias) / slope) as i32;
         }
 
         if y2 >= buffer.height as i32 {
             // x = (y - b) / m
             y2 = (buffer.height - 1) as i32;
-            x2 = ((y2 as f32 - bias) as f32 / slope) as i32;
+            x2 = ((y2 as f32 - bias) / slope) as i32;
         } else if y2 < 0 {
             // x = (y - b) / m
-            y2 = 0 as i32;
-            x2 = ((y2 as f32 - bias) as f32 / slope) as i32;
+            y2 = 0_i32;
+            x2 = ((y2 as f32 - bias) / slope) as i32;
         }
 
-        if x1 >= 0 && x1 < buffer.width as i32 && x2 >= 0 && x2 < buffer.width as i32 {
-            if y1 >= 0 && y1 < buffer.height as i32 && y2 >= 0 && y2 < buffer.height as i32 {
-                return Some((x1, y1, x2, y2));
-            }
+        if x1 >= 0
+            && x1 < buffer.width as i32
+            && x2 >= 0
+            && x2 < buffer.width as i32
+            && y1 >= 0
+            && y1 < buffer.height as i32
+            && y2 >= 0
+            && y2 < buffer.height as i32
+        {
+            return Some((x1, y1, x2, y2));
         }
 
         None

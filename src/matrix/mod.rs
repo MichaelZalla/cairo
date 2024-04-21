@@ -21,7 +21,7 @@ impl Display for Mat4 {
             result.push(String::from(" ("));
             for j in 0..4 {
                 let value = self.elements[i][j];
-                result.push(String::from(format!("{}", value)));
+                result.push(format!("{}", value));
                 if j < 4 - 1 {
                     result.push(String::from(","));
                 }
@@ -54,7 +54,7 @@ impl MulAssign<f32> for Mat4 {
 impl Mul<f32> for Mat4 {
     type Output = Mat4;
     fn mul(self, rhs: f32) -> Mat4 {
-        let mut result = self.clone();
+        let mut result = self;
         result *= rhs;
         result
     }
@@ -73,7 +73,7 @@ impl DivAssign<f32> for Mat4 {
 impl Div<f32> for Mat4 {
     type Output = Mat4;
     fn div(self, rhs: f32) -> Mat4 {
-        let mut result = self.clone();
+        let mut result = self;
         result /= rhs;
         result
     }
@@ -289,8 +289,8 @@ impl Mat4 {
 
         Self {
             elements: [
-                [2.0 * n / w as f32, 0.0, 0.0, 0.0],
-                [0.0, 2.0 * n / h as f32, 0.0, 0.0],
+                [2.0 * n / w, 0.0, 0.0, 0.0],
+                [0.0, 2.0 * n / h, 0.0, 0.0],
                 [0.0, 0.0, f / (f - n), 1.0],
                 [0.0, 0.0, (-n * f) / (f - n), 0.0],
             ],
@@ -376,7 +376,7 @@ impl Mat4 {
     }
 
     pub fn transposed(&self) -> Self {
-        let mut result: Self = self.clone();
+        let mut result: Self = *self;
 
         for i in 0..self.elements.len() {
             for j in 0..self.elements[0].len() {
@@ -396,7 +396,7 @@ impl Default for Mat4 {
 
 impl MulAssign<Mat4> for Vec4 {
     fn mul_assign(&mut self, rhs: Mat4) {
-        let result = self.clone() * rhs;
+        let result = *self * rhs;
 
         self.x = result.x;
         self.y = result.y;

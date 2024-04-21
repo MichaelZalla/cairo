@@ -120,26 +120,16 @@ impl<'a> Pipeline<'a> {
 
                         let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {
-                                if g_buffer.buffer.width != framebuffer.width
+                                g_buffer.buffer.width != framebuffer.width
                                     || g_buffer.buffer.height != framebuffer.height
-                                {
-                                    true
-                                } else {
-                                    false
-                                }
                             }
                             None => true,
                         };
 
                         let should_reallocate_bloom_buffer = match &self.bloom_buffer {
                             Some(bloom_buffer) => {
-                                if bloom_buffer.width != framebuffer.width
+                                bloom_buffer.width != framebuffer.width
                                     || bloom_buffer.height != framebuffer.height
-                                {
-                                    true
-                                } else {
-                                    false
-                                }
                             }
                             None => true,
                         };
@@ -175,100 +165,76 @@ impl<'a> Pipeline<'a> {
     }
 
     pub fn begin_frame(&mut self) {
-        match self.framebuffer {
-            Some(rc) => {
-                let mut framebuffer = rc.borrow_mut();
+        if let Some(rc) = self.framebuffer {
+            let mut framebuffer = rc.borrow_mut();
 
-                framebuffer.clear();
-            }
-            None => (),
+            framebuffer.clear();
         }
 
         if self.options.do_rasterized_geometry {
-            match self.g_buffer.as_mut() {
-                Some(g_buffer) => {
-                    g_buffer.clear();
-                }
-                None => (),
+            if let Some(g_buffer) = self.g_buffer.as_mut() {
+                g_buffer.clear();
             }
 
-            match self.bloom_buffer.as_mut() {
-                Some(bloom_buffer) => {
-                    bloom_buffer.clear(None);
-                }
-                None => (),
+            if let Some(bloom_buffer) = self.bloom_buffer.as_mut() {
+                bloom_buffer.clear(None);
             }
         }
     }
 
     pub fn end_frame(&mut self) {
-        if self.options.do_rasterized_geometry {
-            if self.options.do_deferred_lighting {
-                self.do_deferred_lighting_pass();
+        if self.options.do_rasterized_geometry && self.options.do_deferred_lighting {
+            self.do_deferred_lighting_pass();
 
-                // Bloom pass over the deferred (HDR) buffer.
+            // Bloom pass over the deferred (HDR) buffer.
 
-                if self.options.do_bloom {
-                    self.do_bloom_pass();
-                }
+            if self.options.do_bloom {
+                self.do_bloom_pass();
             }
         }
 
         // Blit deferred (HDR) framebuffer to the (final) color framebuffer.
 
-        match self.framebuffer {
-            Some(rc) => {
-                let framebuffer = rc.borrow_mut();
+        if let Some(rc) = self.framebuffer {
+            let framebuffer = rc.borrow_mut();
 
-                if self.options.do_rasterized_geometry {
-                    match (
-                        framebuffer.attachments.color.as_ref(),
-                        framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
-                    ) {
-                        (Some(color_buffer_lock), Some(deferred_buffer_lock)) => {
-                            let (mut color_buffer, deferred_buffer) = (
-                                color_buffer_lock.borrow_mut(),
-                                deferred_buffer_lock.borrow(),
-                            );
-
-                            for y in 0..framebuffer.height {
-                                for x in 0..framebuffer.width {
-                                    let lit_geometry_fragment_color_tone = self
-                                        .get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
-
-                                    color_buffer.set(
-                                        x,
-                                        y,
-                                        lit_geometry_fragment_color_tone.to_u32(),
-                                    );
-                                }
-                            }
-                        }
-                        _ => (),
-                    }
-                }
-
-                match (
+            if self.options.do_rasterized_geometry {
+                if let (Some(color_buffer_lock), Some(deferred_buffer_lock)) = (
                     framebuffer.attachments.color.as_ref(),
-                    framebuffer.attachments.forward_ldr.as_ref(),
+                    framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
                 ) {
-                    (Some(color_buffer_lock), Some(forward_buffer_lock)) => {
-                        let (mut color_buffer, forward_buffer) =
-                            (color_buffer_lock.borrow_mut(), forward_buffer_lock.borrow());
+                    let (mut color_buffer, deferred_buffer) = (
+                        color_buffer_lock.borrow_mut(),
+                        deferred_buffer_lock.borrow(),
+                    );
 
-                        let forward_fragments = forward_buffer.get_all();
+                    for y in 0..framebuffer.height {
+                        for x in 0..framebuffer.width {
+                            let lit_geometry_fragment_color_tone =
+                                self.get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
 
-                        // Skips pixels in our forward buffer if they weren't written to.
-                        for (index, value) in forward_fragments.iter().enumerate() {
-                            if Color::from_u32(*value).a > 0.0 {
-                                color_buffer.set_raw(index, *value);
-                            }
+                            color_buffer.set(x, y, lit_geometry_fragment_color_tone.to_u32());
                         }
                     }
-                    _ => (),
                 }
             }
-            None => (),
+
+            if let (Some(color_buffer_lock), Some(forward_buffer_lock)) = (
+                framebuffer.attachments.color.as_ref(),
+                framebuffer.attachments.forward_ldr.as_ref(),
+            ) {
+                let (mut color_buffer, forward_buffer) =
+                    (color_buffer_lock.borrow_mut(), forward_buffer_lock.borrow());
+
+                let forward_fragments = forward_buffer.get_all();
+
+                // Skips pixels in our forward buffer if they weren't written to.
+                for (index, value) in forward_fragments.iter().enumerate() {
+                    if Color::from_u32(*value).a > 0.0 {
+                        color_buffer.set_raw(index, *value);
+                    }
+                }
+            }
         }
     }
 
@@ -374,42 +340,42 @@ impl<'a> Pipeline<'a> {
     }
 
     fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
-        let v0 = geometry.vertices[face.vertices.0].clone();
-        let v1 = geometry.vertices[face.vertices.1].clone();
-        let v2 = geometry.vertices[face.vertices.2].clone();
+        let v0 = geometry.vertices[face.vertices.0];
+        let v1 = geometry.vertices[face.vertices.1];
+        let v2 = geometry.vertices[face.vertices.2];
 
         let normal0 = if face.normals.is_some() {
-            geometry.normals[face.normals.unwrap().0].clone()
+            geometry.normals[face.normals.unwrap().0]
         } else {
             Default::default()
         };
 
         let normal1 = if face.normals.is_some() {
-            geometry.normals[face.normals.unwrap().1].clone()
+            geometry.normals[face.normals.unwrap().1]
         } else {
             Default::default()
         };
 
         let normal2 = if face.normals.is_some() {
-            geometry.normals[face.normals.unwrap().2].clone()
+            geometry.normals[face.normals.unwrap().2]
         } else {
             Default::default()
         };
 
         let uv0 = if face.uvs.is_some() {
-            geometry.uvs[face.uvs.unwrap().0].clone()
+            geometry.uvs[face.uvs.unwrap().0]
         } else {
             Default::default()
         };
 
         let uv1 = if face.uvs.is_some() {
-            geometry.uvs[face.uvs.unwrap().1].clone()
+            geometry.uvs[face.uvs.unwrap().1]
         } else {
             Default::default()
         };
 
         let uv2 = if face.uvs.is_some() {
-            geometry.uvs[face.uvs.unwrap().2].clone()
+            geometry.uvs[face.uvs.unwrap().2]
         } else {
             Default::default()
         };
@@ -442,7 +408,7 @@ impl<'a> Pipeline<'a> {
             tangent,
             bitangent,
             uv: uv0,
-            color: WHITE.clone(),
+            color: WHITE,
         };
 
         let v1_in = DefaultVertexIn {
@@ -451,7 +417,7 @@ impl<'a> Pipeline<'a> {
             tangent,
             bitangent,
             uv: uv1,
-            color: WHITE.clone(),
+            color: WHITE,
         };
 
         let v2_in = DefaultVertexIn {
@@ -460,7 +426,7 @@ impl<'a> Pipeline<'a> {
             tangent,
             bitangent,
             uv: uv2,
-            color: WHITE.clone(),
+            color: WHITE,
         };
 
         [v0_in, v1_in, v2_in]
@@ -469,14 +435,10 @@ impl<'a> Pipeline<'a> {
     fn process_object_space_vertices(&mut self, geometry: &Geometry, faces: &Vec<Face>) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
-        let mut vertices_in: Vec<DefaultVertexIn> = vec![];
+        let mut vertices_in: Vec<DefaultVertexIn> = Vec::with_capacity(faces.len() * 3);
 
-        vertices_in.reserve(faces.len() * 3);
-
-        for face_index in 0..faces.len() {
-            let face = faces[face_index];
-
-            let [v0_in, v1_in, v2_in] = self.get_vertices_in(geometry, &face);
+        for face in faces {
+            let [v0_in, v1_in, v2_in] = self.get_vertices_in(geometry, face);
 
             vertices_in.push(v0_in);
             vertices_in.push(v1_in);
@@ -492,7 +454,7 @@ impl<'a> Pipeline<'a> {
 
             projection_space_vertices = vertices_in
                 .into_iter()
-                .map(|v_in| return (self.vertex_shader)(&shader_context, &scene_resources, &v_in))
+                .map(|v_in| (self.vertex_shader)(&shader_context, &scene_resources, &v_in))
                 .collect();
         }
 
@@ -531,92 +493,79 @@ impl<'a> Pipeline<'a> {
                         let mut linear_space_interpolant =
                             *interpolant * (1.0 / interpolant.position.w);
 
-                        match depth_buffer.test(x, y, linear_space_interpolant.position.z) {
-                            Some(((x, y), non_linear_z)) => {
-                                // Alpha shader test.
+                        if let Some(((x, y), non_linear_z)) =
+                            depth_buffer.test(x, y, linear_space_interpolant.position.z)
+                        {
+                            // Alpha shader test.
 
-                                let shader_context = self.shader_context.borrow();
-                                let scene_resources = (*self.scene_resources).borrow();
+                            let shader_context = self.shader_context.borrow();
+                            let scene_resources = (*self.scene_resources).borrow();
 
-                                if !(self.alpha_shader)(
-                                    &shader_context,
-                                    &scene_resources,
-                                    &linear_space_interpolant,
-                                ) {
-                                    return;
-                                }
+                            if !(self.alpha_shader)(
+                                &shader_context,
+                                &scene_resources,
+                                &linear_space_interpolant,
+                            ) {
+                                return;
+                            }
 
+                            // Write to the depth attachment.
+
+                            depth_buffer.set(x, y, non_linear_z);
+
+                            if let Some(stencil_buffer_lock) =
+                                framebuffer.attachments.stencil.as_ref()
+                            {
                                 // Write to the depth attachment.
 
-                                depth_buffer.set(x, y, non_linear_z);
+                                let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
 
-                                match framebuffer.attachments.stencil.as_ref() {
-                                    Some(stencil_buffer_lock) => {
-                                        // Write to the depth attachment.
+                                stencil_buffer.set(x, y, 1);
+                            }
 
-                                        let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
+                            // Geometry shader.
 
-                                        stencil_buffer.set(x, y, 1);
-                                    }
-                                    None => (),
-                                }
+                            if let Some(g_buffer) = self.g_buffer.as_mut() {
+                                let z = linear_space_interpolant.position.z;
+                                let near = depth_buffer.get_projection_z_near();
+                                let far = depth_buffer.get_projection_z_far();
 
-                                // Geometry shader.
+                                linear_space_interpolant.depth =
+                                    ((z - near) / (far - near)).max(0.0).min(1.0);
 
-                                match self.g_buffer.as_mut() {
-                                    Some(g_buffer) => {
-                                        let z = linear_space_interpolant.position.z;
-                                        let near = depth_buffer.get_projection_z_near();
-                                        let far = depth_buffer.get_projection_z_far();
+                                if let Some(sample) = (self.geometry_shader)(
+                                    &shader_context,
+                                    &scene_resources,
+                                    &self.geometry_shader_options,
+                                    &linear_space_interpolant,
+                                ) {
+                                    if !self.options.do_deferred_lighting {
+                                        if let Some(forward_buffer_lock) =
+                                            framebuffer.attachments.forward_ldr.as_ref()
+                                        {
+                                            let mut forward_buffer =
+                                                forward_buffer_lock.borrow_mut();
 
-                                        linear_space_interpolant.depth =
-                                            ((z - near) / (far - near)).max(0.0).min(1.0);
+                                            let forward_fragment_color = self
+                                                .get_tone_mapped_color_from_hdr(
+                                                    self.get_hdr_color_for_sample(
+                                                        &shader_context,
+                                                        &scene_resources,
+                                                        &sample,
+                                                    ),
+                                                );
 
-                                        match (self.geometry_shader)(
-                                            &shader_context,
-                                            &scene_resources,
-                                            &self.geometry_shader_options,
-                                            &linear_space_interpolant,
-                                        ) {
-                                            Some(sample) => {
-                                                if !self.options.do_deferred_lighting {
-                                                    match framebuffer
-                                                        .attachments
-                                                        .forward_ldr
-                                                        .as_ref()
-                                                    {
-                                                        Some(forward_buffer_lock) => {
-                                                            let mut forward_buffer =
-                                                                forward_buffer_lock.borrow_mut();
-
-                                                            let forward_fragment_color = self
-                                                                .get_tone_mapped_color_from_hdr(
-                                                                    self.get_hdr_color_for_sample(
-                                                                        &shader_context,
-                                                                        &scene_resources,
-                                                                        &sample,
-                                                                    ),
-                                                                );
-
-                                                            forward_buffer.set(
-                                                                x,
-                                                                y,
-                                                                forward_fragment_color.to_u32(),
-                                                            );
-                                                        }
-                                                        None => (),
-                                                    }
-                                                } else {
-                                                    g_buffer.set(x, y, sample);
-                                                }
-                                            }
-                                            None => (),
+                                            forward_buffer.set(
+                                                x,
+                                                y,
+                                                forward_fragment_color.to_u32(),
+                                            );
                                         }
+                                    } else {
+                                        g_buffer.set(x, y, sample);
                                     }
-                                    None => (),
                                 }
                             }
-                            None => (),
                         }
                     }
                     _ => {
@@ -635,7 +584,7 @@ impl<'a> Pipeline<'a> {
         sample: &GeometrySample,
     ) -> Vec3 {
         if self.options.do_lighting {
-            (self.fragment_shader)(shader_context, scene_resources, &sample).to_vec3()
+            (self.fragment_shader)(shader_context, scene_resources, sample).to_vec3()
         } else {
             sample.diffuse
         }

@@ -150,7 +150,7 @@ fn draw_checkbox(
 ) {
     let text_cache = ctx.text_cache.borrow();
 
-    let texture = text_cache.get(&text_cache_key).unwrap();
+    let texture = text_cache.get(text_cache_key).unwrap();
 
     let checkbox_size = texture.height;
 

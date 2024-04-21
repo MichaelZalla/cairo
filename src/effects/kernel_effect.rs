@@ -13,12 +13,9 @@ pub struct KernelEffect {
 
 impl KernelEffect {
     pub fn new(weights: [i32; 9], rounds: Option<u8>) -> Self {
-        let total = weights.iter().fold(0, |acc, value| acc + value);
+        let total = weights.iter().sum::<i32>();
 
-        let rounds = match rounds {
-            Some(value) => value,
-            None => 1,
-        };
+        let rounds = if let Some(value) = rounds { value } else { 1 };
 
         Self {
             total,

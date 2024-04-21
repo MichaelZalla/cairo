@@ -12,11 +12,7 @@ pub const StencilFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the stencil value for this fragment (black or white).
 
-        let value = if sample.stencil {
-            1.0 as f32
-        } else {
-            0.0 as f32
-        };
+        let value = if sample.stencil { 1.0_f32 } else { 0.0_f32 };
 
         Color {
             r: value,

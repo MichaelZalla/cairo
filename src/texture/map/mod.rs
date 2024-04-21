@@ -93,7 +93,7 @@ impl TextureMap {
     pub fn from_buffer(width: u32, height: u32, buffer: &Buffer2D<u8>) -> Self {
         let bytes_per_pixel = buffer.data.len() as u32 / width / height;
 
-        return Self {
+        Self {
             info: TextureMapInfo {
                 filepath: "Buffer".to_string(),
                 storage_format: if bytes_per_pixel == 4 {
@@ -117,7 +117,7 @@ impl TextureMap {
             height,
             levels: vec![buffer.clone()],
             options: Default::default(),
-        };
+        }
     }
 
     pub fn from_alpha_channel(filepath: &str) -> Self {
@@ -233,7 +233,7 @@ impl TextureMap {
 
         self.is_loaded = true;
 
-        if self.is_mipmapped && self.levels.len() == 0 {
+        if self.is_mipmapped && self.levels.is_empty() {
             self.make_mipmaps()?
         }
 
@@ -274,15 +274,15 @@ impl TextureMap {
 
         // Generate each level of our mipmapped texture
         for level_index in 1..levels as usize {
-            let dimension = self.width as u32 / (2 as u32).pow(level_index as u32);
+            let dimension = self.width / 2_u32.pow(level_index as u32);
 
-            let bytes = get_half_scaled(dimension, &self.levels.last().unwrap());
+            let bytes = get_half_scaled(dimension, self.levels.last().unwrap());
 
             self.levels
                 .push(Buffer2D::from_data(dimension, dimension, bytes));
         }
 
-        return Ok(());
+        Ok(())
     }
 
     pub fn map<T>(&mut self, mut callback: T) -> Result<(), String>

@@ -71,7 +71,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     vertices.append(&mut vec![bottom_center_vertex]);
 
     let top_center_index = (divisions + 1) as usize;
-    let bottom_center_index = vertices.len() - 1 as usize;
+    let bottom_center_index = vertices.len() - 1_usize;
 
     let mut uvs: Vec<Vec2> = vec![];
 
@@ -79,7 +79,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     uvs.append(&mut bottom_ring_uvs);
     uvs.append(&mut vec![center_uv]);
 
-    let center_uv_index = uvs.len() - 1 as usize;
+    let center_uv_index = uvs.len() - 1_usize;
 
     let uv_strips_start_index = uvs.len();
 
@@ -99,12 +99,12 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         // Vertex indices
 
         let top_center = top_center_index;
-        let top_ring_left = i as usize;
-        let top_ring_right = i as usize + 1;
+        let top_ring_left = i;
+        let top_ring_right = i + 1;
 
         let bottom_center = bottom_center_index;
-        let bottom_ring_left = divisions as usize + 2 + i as usize;
-        let bottom_ring_right = divisions as usize + 2 + i as usize + 1;
+        let bottom_ring_left = divisions as usize + 2 + i;
+        let bottom_ring_right = divisions as usize + 2 + i + 1;
 
         // Generate a top face
 
@@ -114,7 +114,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
             // (up, up, up)
             normals: Some((0, 0, 0)),
             // (ring_i + 1, ring_i, center) (counter-clockwise)
-            uvs: Some((i as usize + 1, i as usize, center_uv_index)),
+            uvs: Some((i + 1, i, center_uv_index)),
         });
 
         // Generate a bottom face
@@ -124,7 +124,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
             // (down, down, down)
             normals: Some((1, 1, 1)),
             // (ring_i, ring_i + 1, center) (counter-clockwise)
-            uvs: Some((i as usize, i as usize + 1, center_uv_index)),
+            uvs: Some((i, i + 1, center_uv_index)),
         });
 
         // Generate 2 side faces (for each quad)

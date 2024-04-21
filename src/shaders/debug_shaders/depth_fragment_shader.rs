@@ -13,9 +13,5 @@ pub const DepthFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
 
-        Color::from_vec3(Vec3 {
-            x: sample.depth,
-            y: sample.depth,
-            z: sample.depth,
-        })
+        Color::from_vec3(Vec3::ones() * sample.depth)
     };

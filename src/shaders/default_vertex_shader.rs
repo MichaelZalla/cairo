@@ -70,9 +70,8 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
         fragment_position: (world_pos * tbn_inverse).to_vec3(),
     };
 
-    out.color = v.color.clone();
-
-    out.uv = v.uv.clone();
+    out.color = v.color;
+    out.uv = v.uv;
 
     out
 };

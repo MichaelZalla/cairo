@@ -22,7 +22,7 @@ impl<'a> Pipeline<'a> {
             Ok(entry) => {
                 let mesh = &entry.item;
 
-                let original_options = self.options.clone();
+                let original_options = self.options;
 
                 self.options = PipelineOptions {
                     wireframe_color: color,

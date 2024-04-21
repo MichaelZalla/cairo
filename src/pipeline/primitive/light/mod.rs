@@ -54,7 +54,7 @@ impl<'a> Pipeline<'a> {
 
                         let transform: Transform3D = Default::default();
 
-                        self.render_entity_mesh(&light_mesh, &transform.mat());
+                        self.render_entity_mesh(&light_mesh, transform.mat());
                     }
                     None => {
                         self.render_point_indicator(light_position, light_influence_distance * 0.2);

@@ -23,12 +23,12 @@ impl fmt::Display for Vec4 {
 
 impl Vec4 {
     pub const fn new(v: Vec3, w: f32) -> Self {
-        return Vec4 {
+        Vec4 {
             x: v.x,
             y: v.y,
             z: v.z,
             w,
-        };
+        }
     }
 }
 
@@ -153,21 +153,20 @@ impl Vec4 {
     }
 
     pub fn mag(self) -> f32 {
-        return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
 
     pub fn dot(self, rhs: Vec4) -> f32 {
-        // return self.mag() * rhs.mag() * theta.cos();
-        return self.x * rhs.x + self.y * rhs.y + self.z * rhs.z;
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     pub fn cross(self, rhs: Vec4) -> Vec4 {
-        return Vec4 {
+        Vec4 {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
             w: self.w,
-        };
+        }
     }
 
     pub fn as_normal(self) -> Vec4 {
@@ -185,7 +184,7 @@ impl Vec4 {
         self.y = self.y.max(0.0).min(1.0);
         self.z = self.z.max(0.0).min(1.0);
 
-        return self;
+        self
     }
 }
 

@@ -77,9 +77,9 @@ where
     };
 
     if options.resizable {
-        match mouse_state.button_event {
-            Some(event) => match event.button {
-                MouseButton::Left => match event.kind {
+        if let Some(event) = mouse_state.button_event {
+            if let MouseButton::Left = event.button {
+                match event.kind {
                     MouseEventKind::Down => {
                         let mouse_x = mouse_state.position.0;
 
@@ -94,10 +94,8 @@ where
                             ctx.set_focus_target(None)
                         }
                     }
-                },
-                _ => (),
-            },
-            None => (),
+                }
+            }
         }
     }
 
@@ -113,7 +111,7 @@ where
     let should_close = draw_panel(
         ctx,
         layout,
-        &panel_uuid,
+        panel_uuid,
         &panel_id,
         options,
         parent_buffer,
@@ -162,7 +160,7 @@ where
     match &options.titlebar_options {
         Some(titlebar_options) => {
             should_close =
-                draw_panel_title_bar(ctx, layout, &titlebar_options, parent_buffer, mouse_state);
+                draw_panel_title_bar(ctx, layout, titlebar_options, parent_buffer, mouse_state);
         }
         None => (),
     }
@@ -187,7 +185,7 @@ where
         },
     );
 
-    let _ = draw_children(
+    draw_children(
         ctx,
         &mut panel_contents_layout,
         panel_uuid,

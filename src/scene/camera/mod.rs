@@ -290,10 +290,9 @@ impl Camera {
 
         // Note: Treating the camera's position as the world-space origin.
 
-        let pixel_coordinate_world_space =
-            pixel_coordinate_camera_view_space * self.get_view_rotation_transform();
+        // Pixel coordinate in world-space.
 
-        pixel_coordinate_world_space
+        pixel_coordinate_camera_view_space * self.get_view_rotation_transform()
     }
 
     pub fn update(

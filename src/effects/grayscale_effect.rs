@@ -1,12 +1,7 @@
 use crate::{buffer::Buffer2D, color::Color, effect::Effect, vec::vec3::Vec3};
 
+#[derive(Default)]
 pub struct GrayscaleEffect {}
-
-impl GrayscaleEffect {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 impl Effect for GrayscaleEffect {
     fn apply(&self, buffer: &mut Buffer2D) {

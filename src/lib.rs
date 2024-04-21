@@ -1,4 +1,7 @@
 #![allow(dead_code)]
+#![allow(clippy::manual_memcpy)]
+#![allow(clippy::too_many_arguments)]
+
 extern crate sdl2;
 
 pub mod macros;

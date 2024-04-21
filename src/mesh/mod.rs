@@ -37,7 +37,8 @@ impl PostDeserialize for Mesh {
     fn post_deserialize(&mut self) {
         match &self.geometry {
             Some(geometry) => {
-                self.aabb = make_object_space_bounding_box(&geometry);
+                self.aabb = make_object_space_bounding_box(geometry);
+
                 // self.aabb_geometry = make_bounding_box_geometry(&self.aabb);
             }
             None => (),

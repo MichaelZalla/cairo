@@ -22,7 +22,7 @@ impl PostDeserialize for AmbientLight {
 
 impl AmbientLight {
     pub fn contribute(self, ambient_intensity_factor: f32) -> Vec3 {
-        return self.intensities * ambient_intensity_factor;
+        self.intensities * ambient_intensity_factor
     }
 }
 
@@ -41,7 +41,7 @@ impl PostDeserialize for DirectionalLight {
 impl DirectionalLight {
     pub fn contribute(self, surface_normal: Vec3) -> Vec3 {
         self.intensities
-            * (0.0 as f32).max((surface_normal * -1.0).dot(Vec3 {
+            * 0.0_f32.max((surface_normal * -1.0).dot(Vec3 {
                 x: self.direction.x,
                 y: self.direction.y,
                 z: self.direction.z,
@@ -106,7 +106,7 @@ impl PointLight {
         let direction_to_point_light_tangent_space =
             fragment_to_point_light_tangent_space / distance_to_point_light_tangent_space;
 
-        let likeness = (0.0 as f32).max(
+        let likeness = 0.0_f32.max(
             sample
                 .tangent_space_info
                 .normal
@@ -119,7 +119,7 @@ impl PointLight {
                     + self.linear_attenuation * distance_to_point_light_tangent_space
                     + self.constant_attenuation);
 
-            point_contribution = self.intensities * attentuation * (0.0 as f32).max(likeness);
+            point_contribution = self.intensities * attentuation * 0.0_f32.max(likeness);
 
             // Calculate specular light intensity
 
@@ -147,17 +147,16 @@ impl PointLight {
 
             let view_direction_normal = fragment_to_view_tangent_space.as_normal();
 
-            let cosine_theta =
-                (1.0 as f32).min(reflected_ray_normal.dot(view_direction_normal * -1.0));
+            let cosine_theta = 1.0_f32.min(reflected_ray_normal.dot(view_direction_normal * -1.0));
 
-            let similarity = (0.0 as f32).max(cosine_theta);
+            let similarity = 0.0_f32.max(cosine_theta);
 
             specular_contribution = point_contribution
                 * sample.specular_intensity
                 * similarity.powi(sample.specular_exponent);
         }
 
-        return point_contribution + specular_contribution;
+        point_contribution + specular_contribution
     }
 }
 
@@ -231,7 +230,7 @@ impl SpotLight {
         let direction_to_spot_light = vertex_to_spot_light / distance_to_spot_light;
 
         let theta_angle =
-            (0.0 as f32).max((self.look_vector.get_forward()).dot(direction_to_spot_light * -1.0));
+            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_spot_light * -1.0));
 
         let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
 

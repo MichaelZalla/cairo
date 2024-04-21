@@ -40,7 +40,7 @@ impl<'a> Pipeline<'a> {
             front_bottom_left_clip_space,
         ];
 
-        let far_plane_points_clip_space = near_plane_points_clip_space.clone().map(|mut coord| {
+        let far_plane_points_clip_space = near_plane_points_clip_space.map(|mut coord| {
             coord.z = camera.get_projection_z_far();
             coord
         });
@@ -65,9 +65,7 @@ impl<'a> Pipeline<'a> {
                         coord.x *= camera.get_projection_z_near() * opposite_over_adjacent_x;
                         coord.y *= camera.get_projection_z_near() * opposite_over_adjacent_y;
 
-                        let coord_projection_space = coord * camera.get_view_transform();
-
-                        coord_projection_space
+                        coord * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
 
@@ -76,28 +74,20 @@ impl<'a> Pipeline<'a> {
                         coord.x *= camera.get_projection_z_far() * opposite_over_adjacent_x;
                         coord.y *= camera.get_projection_z_far() * opposite_over_adjacent_y;
 
-                        let coord_projection_space = coord * camera.get_view_transform();
-
-                        coord_projection_space
+                        coord * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
             }
             CameraProjectionKind::Orthographic => {
                 near_plane_points_world_space = near_plane_points_clip_space
                     .map(|coord| {
-                        let coord_projection_space =
-                            coord * camera.get_projection_inverse() * camera.get_view_transform();
-
-                        coord_projection_space
+                        coord * camera.get_projection_inverse() * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
 
                 far_plane_points_world_space = far_plane_points_clip_space
                     .map(|coord| {
-                        let coord_projection_space =
-                            coord * camera.get_projection_inverse() * camera.get_view_transform();
-
-                        coord_projection_space
+                        coord * camera.get_projection_inverse() * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
             }
