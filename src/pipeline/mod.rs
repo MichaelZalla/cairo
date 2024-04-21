@@ -220,26 +220,32 @@ impl<'a> Pipeline<'a> {
             Some(rc) => {
                 let framebuffer = rc.borrow_mut();
 
-                match (
-                    framebuffer.attachments.color.as_ref(),
-                    framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
-                ) {
-                    (Some(color_buffer_lock), Some(deferred_buffer_lock)) => {
-                        let (mut color_buffer, deferred_buffer) = (
-                            color_buffer_lock.borrow_mut(),
-                            deferred_buffer_lock.borrow(),
-                        );
+                if self.options.do_rasterized_geometry {
+                    match (
+                        framebuffer.attachments.color.as_ref(),
+                        framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
+                    ) {
+                        (Some(color_buffer_lock), Some(deferred_buffer_lock)) => {
+                            let (mut color_buffer, deferred_buffer) = (
+                                color_buffer_lock.borrow_mut(),
+                                deferred_buffer_lock.borrow(),
+                            );
 
-                        for y in 0..framebuffer.height {
-                            for x in 0..framebuffer.width {
-                                let lit_geometry_fragment_color_tone =
-                                    self.get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
+                            for y in 0..framebuffer.height {
+                                for x in 0..framebuffer.width {
+                                    let lit_geometry_fragment_color_tone = self
+                                        .get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
 
-                                color_buffer.set(x, y, lit_geometry_fragment_color_tone.to_u32());
+                                    color_buffer.set(
+                                        x,
+                                        y,
+                                        lit_geometry_fragment_color_tone.to_u32(),
+                                    );
+                                }
                             }
                         }
+                        _ => (),
                     }
-                    _ => (),
                 }
 
                 match (
