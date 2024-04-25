@@ -21,8 +21,8 @@ impl PostDeserialize for AmbientLight {
 }
 
 impl AmbientLight {
-    pub fn contribute(self, ambient_intensity_factor: f32) -> Vec3 {
-        self.intensities * ambient_intensity_factor
+    pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
+        self.intensities * sample.ambient_factor
     }
 }
 

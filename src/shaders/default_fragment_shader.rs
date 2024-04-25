@@ -16,7 +16,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    light.contribute(sample.ambient_factor)
+                    light.contribute(sample)
                 }
                 Err(err) => panic!(
                     "Failed to get AmbientLight from Arena: {:?}: {}",
