@@ -114,12 +114,9 @@ impl PointLight {
         let likeness = 0.0_f32.max(normal.dot(direction_to_point_light_tangent_space));
 
         if likeness > 0.0 {
-            let attentuation = 1.0
-                / (self.quadratic_attenuation * distance_to_point_light_tangent_space.powi(2)
-                    + self.linear_attenuation * distance_to_point_light_tangent_space
-                    + self.constant_attenuation);
+            let attenuation = self.get_attentuation(distance_to_point_light_tangent_space);
 
-            point_contribution = self.intensities * attentuation * 0.0_f32.max(likeness);
+            point_contribution = self.intensities * attenuation * 0.0_f32.max(likeness);
 
             // Calculate specular light intensity
             let incoming_ray = fragment_to_point_light_tangent_space * -1.0;
@@ -156,6 +153,13 @@ impl PointLight {
         }
 
         point_contribution + specular_contribution
+    }
+
+    #[inline]
+    fn get_attentuation(&self, distance: f32) -> f32 {
+        1.0 / (self.quadratic_attenuation * distance.powi(2)
+            + self.linear_attenuation * distance
+            + self.constant_attenuation)
     }
 }
 
