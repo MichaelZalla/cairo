@@ -198,6 +198,8 @@ impl Vec3 {
     }
 }
 
+pub static ONES: Vec3 = Vec3::ones();
+
 pub static UP: Vec3 = Vec3 {
     x: -0.0,
     y: 1.0,
