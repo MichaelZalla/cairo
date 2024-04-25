@@ -88,37 +88,14 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .illumination_model = value;
                             }
 
-                            // Ambient color
-                            "ka" => {
-                                // R G B
-                                // Example:
-                                // Ka 0.0000 0.0000 0.0000
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .ambient_color = next_rgb(&mut line_tokens);
-                            }
-
-                            // Ambient color map
-                            "map_ka" => {
-                                // [filepath]
-                                // Example:
-                                // map_Ka cube.png
-
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    ambient_color_map
-                                );
-                            }
+                            // Common attributes
+                            //
+                            // See: https://benhouston3d.com/blog/extended-wavefront-obj-mtl-for-pbr/
+                            //
 
                             // Diffuse color
                             "kd" => {
-                                // R G B
+                                // (r,g,b)
                                 // Example:
                                 // Kd 0.5880 0.5880 0.5880
 
@@ -144,51 +121,9 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 );
                             }
 
-                            // Specular color
-                            "ks" => {
-                                // R G B
-                                // Example:
-                                // Ks 0.0000 0.0000 0.0000
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .specular_color = next_rgb(&mut line_tokens);
-                            }
-
-                            // Specular exponent
-                            "ns" => {
-                                // [0, 1000] range
-                                // Example:
-                                // Ns 10.0000
-
-                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .specular_exponent = value as i32;
-                            }
-
-                            // Specular color map
-                            "map_ks" | "map_ns" => {
-                                // [filepath]
-                                // Example:
-                                // map_Ks cube_specular.png
-
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    specular_exponent_map
-                                );
-                            }
-
                             // Emissive color
                             "ke" => {
-                                // R G B
+                                // (r,g,b)
                                 // Example:
                                 // Ke 0.0000 0.0000 0.0000
 
@@ -196,60 +131,6 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
                                     .emissive_color = next_rgb(&mut line_tokens);
-                            }
-
-                            // Dissolve (opaqueness)
-                            "d" => {
-                                // [0, 1] range
-                                // Example:
-                                // d 1.0000
-
-                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .dissolve = value;
-                            }
-
-                            // Transparency
-                            "tr" => {
-                                // [0, 1] range
-                                // Example:
-                                // Tr 0.0000
-
-                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .transparency = value;
-                            }
-
-                            // Translucency
-                            "tf" => {
-                                // R G B
-                                // Example:
-                                // Tf 1.0000 1.0000 1.0000
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .translucency = next_rgb(&mut line_tokens);
-                            }
-
-                            // Index of refraction
-                            "ni" => {
-                                // [0.001, 10] range
-                                // Example:
-                                // Ni 1.5000
-
-                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .index_of_refraction = value;
                             }
 
                             // Emissive color map
@@ -268,8 +149,26 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 );
                             }
 
+                            // Dissolve (opaqueness)
+                            "d" => {
+                                // [0, 1] range
+                                // Example:
+                                // d 1.0000
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .dissolve = value;
+                            }
+
                             // Alpha map
                             "map_d" => {
+                                // [filepath]
+                                // Example:
+                                // map_d cube_alpha.png
+
                                 create_and_set_material_map!(
                                     line_tokens,
                                     mtl_file_path,
@@ -280,9 +179,49 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 );
                             }
 
+                            // Transparency
+                            "tr" => {
+                                // [0, 1] range
+                                // Example:
+                                // Tr 0.0000
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .transparency = value;
+                            }
+
+                            // Translucency (transmission filter color)
+                            "tf" => {
+                                // (r,g,b)
+                                // Example:
+                                // Tf 1.0000 1.0000 1.0000
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .translucency = next_rgb(&mut line_tokens);
+                            }
+
                             // Bump map
                             "map_bump" | "bump" => {
-                                println!("@TODO Implementation for token 'map_bump' and 'bump'.");
+                                // [filepath]
+                                // Example:
+                                // map_bump cube_bump.png
+
+                                line_tokens.next();
+                                line_tokens.next();
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    normal_map
+                                );
                             }
 
                             // Normal map
@@ -302,7 +241,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                             }
 
                             // Displacement (height) map
-                            "map_disp" | "disp" => {
+                            "disp" | "map_disp" => {
                                 // [filepath]
                                 // Example:
                                 // disp cube_displacement.png
@@ -320,6 +259,110 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                             // Stencil (decal) map
                             "decal" => {
                                 println!("@TODO Implementation for token 'decal'.");
+                            }
+
+                            // Index of refraction
+                            "ni" => {
+                                // [0.001, 10] range
+                                // Example:
+                                // Ni 1.5000
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .index_of_refraction = value;
+                            }
+
+                            //
+                            // Blinn-Phong attributes
+                            //
+
+                            // Ambient color
+                            "ka" => {
+                                // (r,g,b)
+                                // Example:
+                                // Ka 0.0000 0.0000 0.0000
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .ambient_color = next_rgb(&mut line_tokens);
+                            }
+
+                            // Ambient color map
+                            "map_ka" => {
+                                // [filepath]
+                                // Example:
+                                // map_Ka cube.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    ambient_color_map
+                                );
+                            }
+
+                            // Specular exponent
+                            "ns" => {
+                                // [0, 1000] range
+                                // Example:
+                                // Ns 10.0000
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .specular_exponent = value as i32;
+                            }
+
+                            // Specular exponent map
+                            "map_ns" => {
+                                // [filepath]
+                                // Example:
+                                // map_Ns cube_shininess.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    specular_exponent_map
+                                );
+                            }
+
+                            // Specular color
+                            "ks" => {
+                                // (r,g,b)
+                                // Example:
+                                // Ks 0.0000 0.0000 0.0000
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .specular_color = next_rgb(&mut line_tokens);
+                            }
+
+                            // Specular color map
+                            "map_ks" => {
+                                // [filepath]
+                                // Example:
+                                // map_Ks cube_specular_color.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    specular_color_map
+                                );
                             }
 
                             // Unrecognized prefix
