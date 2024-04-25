@@ -1,4 +1,4 @@
-use std::{fmt, rc::Rc};
+use std::{collections::HashMap, fmt, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,6 +9,54 @@ use crate::{physics::collision::aabb::AABB, serde::PostDeserialize, vec::vec3::V
 pub mod geometry;
 pub mod obj;
 pub mod primitive;
+
+static TANGENT_BITANGENT_SMOOTHING_LIKENESS_THRESHOLD: f32 = 4.0;
+
+macro_rules! smooth_tangents_or_bitangents {
+    ($self:ident, $field:ident, &mut $frontier:ident) => {
+        // Process local tangents/bitangents in batches, based on
+        // their level of similarity (using a threshold value).
+
+        while !$frontier.is_empty() {
+            let mut smoothing_group = vec![$frontier.pop().unwrap()];
+
+            if !$frontier.is_empty() {
+                let to_visit = $frontier.len();
+
+                for i in 0..to_visit {
+                    let (_face_index, _vertex_index_position, face_vertex_tangent_or_bitangent) =
+                        &$frontier[i - (smoothing_group.len() - 1)];
+
+                    if smoothing_group[0].2.dot(*face_vertex_tangent_or_bitangent)
+                        >= TANGENT_BITANGENT_SMOOTHING_LIKENESS_THRESHOLD
+                    {
+                        smoothing_group.push($frontier.pop().unwrap());
+                    }
+                }
+            }
+
+            let smooth_tangent = {
+                let mut st: Vec3 = Default::default();
+
+                for (_face_index, _vertex_index_position, face_vertex_tangent_or_bitangent) in
+                    &smoothing_group
+                {
+                    st += *face_vertex_tangent_or_bitangent;
+                }
+
+                st = st.as_normal();
+
+                st
+            };
+
+            for (face_index, vertex_index_position, _face_vertex_tangent_or_bitangent) in
+                &smoothing_group
+            {
+                $self.faces[*face_index].$field[*vertex_index_position] = smooth_tangent;
+            }
+        }
+    };
+}
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct PartialFace {
@@ -182,6 +230,75 @@ impl Mesh {
 
         mesh.post_deserialize();
 
+        mesh.post_process().unwrap();
+
         mesh
+    }
+
+    fn post_process(&mut self) -> Result<(), String> {
+        // Tangent and bitangent smoothing.
+
+        let mut face_indices_per_vertex = HashMap::<usize, Vec<usize>>::new();
+
+        for (face_index, face) in self.faces.iter().enumerate() {
+            for vertex_index in &face.vertices {
+                match face_indices_per_vertex.get_mut(vertex_index) {
+                    Some(entry) => {
+                        entry.push(face_index);
+                    }
+                    None => {
+                        face_indices_per_vertex.insert(*vertex_index, vec![face_index]);
+                    }
+                }
+            }
+        }
+
+        let vertex_indices: Vec<usize> = face_indices_per_vertex.keys().copied().collect();
+
+        static VERTEX_CONNECTIVITY_THRESHOLD: usize = 32;
+
+        for vertex_index in &vertex_indices {
+            match face_indices_per_vertex.get(vertex_index) {
+                Some(face_indices) => {
+                    if face_indices.len() >= VERTEX_CONNECTIVITY_THRESHOLD {
+                        continue;
+                    }
+
+                    let mut tangents: Vec<(usize, usize, Vec3)> = vec![];
+                    let mut bitangents: Vec<(usize, usize, Vec3)> = vec![];
+
+                    for face_index in face_indices {
+                        let face = &self.faces[*face_index];
+
+                        let vertex_index_position = face
+                            .vertices
+                            .iter()
+                            .position(|i| *i == *vertex_index)
+                            .unwrap();
+
+                        let face_vertex_tangent = face.tangents[vertex_index_position];
+
+                        tangents.push((*face_index, vertex_index_position, face_vertex_tangent));
+
+                        let face_vertex_bitangent = face.bitangents[vertex_index_position];
+
+                        bitangents.push((
+                            *face_index,
+                            vertex_index_position,
+                            face_vertex_bitangent,
+                        ));
+                    }
+
+                    // Tangent smoothing pass
+                    smooth_tangents_or_bitangents!(self, tangents, &mut tangents);
+
+                    // Bitangent smoothing pass
+                    smooth_tangents_or_bitangents!(self, bitangents, &mut bitangents);
+                }
+                None => panic!(),
+            }
+        }
+
+        Ok(())
     }
 }
