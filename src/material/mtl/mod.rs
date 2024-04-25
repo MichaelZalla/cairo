@@ -294,13 +294,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Ka cube.png
 
+                                // create_and_set_material_map!(
+                                //     line_tokens,
+                                //     mtl_file_path,
+                                //     texture_arena,
+                                //     cache,
+                                //     current_material_name,
+                                //     ambient_color_map
+                                // );
+
                                 create_and_set_material_map!(
                                     line_tokens,
                                     mtl_file_path,
                                     texture_arena,
                                     cache,
                                     current_material_name,
-                                    ambient_color_map
+                                    albedo_map
                                 );
                             }
 
@@ -360,6 +369,156 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     current_material_name,
                                     specular_color_map
                                 );
+                            }
+
+                            //
+                            // PBR extensions.
+                            //
+
+                            // Roughness
+                            "pr" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // Pr 0.2
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .roughness = value;
+                            }
+
+                            // Roughness (map)
+                            "map_pr" => {
+                                // [filepath]
+                                // Example:
+                                // map_Pr cube_roughness.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    roughness_map
+                                );
+                            }
+
+                            // Metallic
+                            "pm" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // Pm 0.0
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .metallic = value;
+                            }
+
+                            // Metallic (map)
+                            "map_pm" => {
+                                // [filepath]
+                                // Example:
+                                // map_Pr cube_metallic.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    metallic_map
+                                );
+                            }
+
+                            // Sheen
+                            "ps" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // Ps 0.05
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .sheen = value;
+                            }
+
+                            // Sheen (map)
+                            "map_ps" => {
+                                // [filepath]
+                                // Example:
+                                // map_Pr cube_sheen.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    sheen_map
+                                );
+                            }
+
+                            // Clearcoat thickness
+                            "pc" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // Pc 0.05
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .clearcoat_thickness = value;
+                            }
+
+                            // Clearcoat roughness
+                            "pcr" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // Pcr 0.05
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .clearcoat_roughness = value;
+                            }
+
+                            // Anisotropy
+                            "aniso" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // aniso 0.05
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .anisotropy = value;
+                            }
+
+                            // Anisotropy rotation
+                            "anisor" => {
+                                // [0.0, 1.0] range
+                                // Example:
+                                // anisor 0.05
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .anisotropy_rotation = value;
                             }
 
                             //

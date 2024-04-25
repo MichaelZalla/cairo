@@ -39,6 +39,21 @@ pub struct Material {
     pub specular_color_map: Option<Handle>,
     pub specular_exponent: i32, // aka "shininess"
     pub specular_exponent_map: Option<Handle>,
+    // PBR attributes
+    pub albedo: Vec3,
+    pub albedo_map: Option<Handle>,
+    pub specular_tint: Vec3,
+    pub roughness: f32,
+    pub roughness_map: Option<Handle>,
+    pub metallic: f32,
+    pub metallic_map: Option<Handle>,
+    pub sheen: f32,
+    pub sheen_map: Option<Handle>,
+    pub clearcoat_thickness: f32,
+    pub clearcoat_roughness: f32,
+    pub anisotropy: f32,
+    pub anisotropy_rotation: f32,
+    // Miscellaneous
     pub decal_map: Option<Handle>,
 }
 
@@ -67,11 +82,15 @@ impl Material {
             &mut self.alpha_map,
             &mut self.ambient_color_map,
             &mut self.ambient_occlusion_map,
+            &mut self.albedo_map,
             &mut self.decal_map,
             &mut self.diffuse_color_map,
             &mut self.displacement_map,
             &mut self.emissive_color_map,
+            &mut self.metallic_map,
             &mut self.normal_map,
+            &mut self.roughness_map,
+            &mut self.sheen_map,
             &mut self.specular_color_map,
             &mut self.specular_exponent_map,
             &mut self.transparency_map,
