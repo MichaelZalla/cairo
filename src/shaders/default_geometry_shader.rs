@@ -26,7 +26,12 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         tangent_space_info: interpolant.tangent_space_info,
         world_pos: interpolant.world_pos,
         depth: interpolant.depth,
-        ..Default::default()
+        ambient_factor: 1.0,
+        diffuse_color: Vec3::ones(),
+        specular_color: Default::default(),
+        specular_exponent: 8,
+        emissive_color: Default::default(),
+        alpha: 1.0,
     };
 
     // World-space surface normal
@@ -104,8 +109,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         // No ambient occlusion map defined for this
                         // material, or ambient occlusion mapping is
                         // disabled.
-
-                        out.ambient_factor = 1.0;
                     }
                 },
                 None => {
@@ -115,8 +118,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         }
         None => {
             // No active material bound to this shader context.
-
-            out.ambient_factor = 1.0;
         }
     }
 
@@ -161,8 +162,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         }
         None => {
             // No active material bound to this shader context.
-
-            out.diffuse_color = color::WHITE.to_vec3() / 255.0;
         }
     }
 
@@ -214,11 +213,9 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             // material, or specular exponent mapping is
                             // disabled.
 
-                            out.specular_color = if let Some(light) = default_point_light {
-                                Vec3::ones() * light.specular_intensity
-                            } else {
-                                Default::default()
-                            };
+                            if let Some(light) = default_point_light {
+                                out.specular_color = Vec3::ones() * light.specular_intensity
+                            }
                         }
                     }
                 }
@@ -230,13 +227,9 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         None => {
             // No active material bound to this shader context.
 
-            out.specular_exponent = 8;
-
-            out.specular_color = if let Some(light) = default_point_light {
-                Vec3::ones() * light.specular_intensity
-            } else {
-                Default::default()
-            };
+            if let Some(light) = default_point_light {
+                out.specular_color = Vec3::ones() * light.specular_intensity
+            }
         }
     }
 
@@ -271,8 +264,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         }
         None => {
             // No active material bound to this shader context.
-
-            out.emissive_color = Default::default();
         }
     }
 
@@ -307,8 +298,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         }
         None => {
             // No active material bound to this shader context.
-
-            out.alpha = 1.0;
         }
     }
 
