@@ -8,23 +8,21 @@ use crate::{
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct GeometrySample {
     pub stencil: bool,
-    pub uv: Vec2,
-    pub ambient_factor: f32,
-    pub diffuse_color: Vec3,
-    // @TODO reconstruct z component:
-    // normal.z = (1.0 - normal.x^2 - normal.y^2).sqrt()
-    pub world_normal: Vec3, // 12 bytes
-    pub tangent_space_info: TangentSpaceInfo,
     // @TODO reconstruct from depth sample + pixel coordinate (index)
-    pub world_pos: Vec3, // 12 bytes
+    pub world_pos: Vec3,
     // Non-linear Z in world-view-projection space
+    // @TODO reconstruct z component:
+    //   normal.z = (1.0 - normal.x^2 - normal.y^2).sqrt()
+    pub world_normal: Vec3,
+    pub uv: Vec2,
     pub depth: f32,
-    // @TODO could be an i8
-    pub specular_exponent: i32,
-    // @TODO could be an i8 (0 -> 255, 0.0 -> 1.0)
+    pub tangent_space_info: TangentSpaceInfo,
     pub specular_intensity: f32,
+    pub specular_exponent: i32,
     pub emissive_color: Vec3,
     pub alpha: f32,
+    pub ambient_factor: f32,
+    pub diffuse_color: Vec3,
 }
 
 impl Add<GeometrySample> for GeometrySample {
