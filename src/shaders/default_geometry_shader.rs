@@ -26,9 +26,12 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         tangent_space_info: interpolant.tangent_space_info,
         world_pos: interpolant.world_pos,
         depth: interpolant.depth,
+        roughness: 1.0,
+        metallic: 0.0,
+        albedo: vec3::ONES,
         ambient_factor: 1.0,
-        diffuse_color: Vec3::ones(),
-        specular_color: Default::default(),
+        diffuse_color: vec3::ONES,
+        specular_color: vec3::ONES,
         specular_exponent: 8,
         emissive_color: Default::default(),
         alpha: 1.0,
@@ -95,7 +98,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 // Diffuse color
                 match (
                     &material.diffuse_color_map,
-                    options.diffuse_color_mapping_active,
+                    options.base_color_mapping_active,
                 ) {
                     (Some(handle), true) => match resources.texture.borrow().get(handle) {
                         Ok(entry) => {
@@ -323,10 +326,93 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         }
                     }
                 }
+
+                // Albedo color
+                match (options.base_color_mapping_active, material.albedo_map) {
+                    (true, Some(handle)) => match resources.texture.borrow().get(&handle) {
+                        Ok(entry) => {
+                            let map = &entry.item;
+
+                            let (r, g, b) = sample_bilinear(out.uv, map, None);
+
+                            let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
+
+                            color.srgb_to_linear();
+
+                            out.albedo = color;
+                        }
+                        Err(err) => {
+                            panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
+                        }
+                    },
+                    _ => {
+                        out.albedo = material.albedo;
+                    }
+                }
+
+                // Roughness
+                match material.roughness_map {
+                    Some(handle) => match resources.texture.borrow().get(&handle) {
+                        Ok(entry) => {
+                            let map = &entry.item;
+
+                            let (r, _g, _b) = sample_bilinear(out.uv, map, None);
+
+                            out.roughness = r as f32 / 255.0;
+                        }
+                        Err(err) => {
+                            panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
+                        }
+                    },
+                    None => {
+                        out.roughness = material.roughness;
+                    }
+                }
+
+                // Metallic
+                match (material.metallic_map, options.metallic_mapping_active) {
+                    (Some(handle), true) => match resources.texture.borrow().get(&handle) {
+                        Ok(entry) => {
+                            let map = &entry.item;
+
+                            let (r, _g, _b) = sample_bilinear(out.uv, map, None);
+
+                            out.metallic = r as f32 / 255.0;
+                        }
+                        Err(err) => {
+                            panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
+                        }
+                    },
+                    _ => {
+                        out.metallic = material.metallic;
+                    }
+                }
+
+                // // Sheen
+                // match material.sheen_map {
+                //     Some(handle) => match resources.texture.borrow().get(&handle) {
+                //         Ok(entry) => {
+                //             let map = &entry.item;
+
+                //             let (r, _g, _b) = sample_nearest(out.uv, map, None);
+
+                //             out.sheen = r as f32 / 255.0;
+                //         }
+                //         Err(err) => {
+                //             panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
+                //         }
+                //     },
+                //     None => {
+                //         out.sheen = material.sheen;
+                //     }
+                // }
+
+                // out.clearcoat_thickness = material.clearcoat_thickness;
+                // out.clearcoat_roughness = material.clearcoat_roughness;
+                // out.anisotropy = material.anisotropy;
+                // out.anisotropy_rotation = material.anisotropy_rotation;
             }
-            None => {
-                panic!("Failed to get Material from MaterialCache: {}", name);
-            }
+            None => panic!("Failed to get Material from MaterialCache: {}", name),
         }
     }
 

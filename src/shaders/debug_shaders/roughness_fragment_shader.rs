@@ -6,11 +6,12 @@ use crate::{
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
+    vec::vec3::Vec3,
 };
 
-pub const AlbedoFragmentShader: FragmentShaderFn =
+pub const RoughnessFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
-        // Emit only the diffuse color for this fragment.
+        // Emit only the roughness for this fragment.
 
-        Color::from_vec3(sample.albedo)
+        Color::from_vec3(Vec3::ones() * sample.roughness)
     };

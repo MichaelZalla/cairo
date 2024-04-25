@@ -1,0 +1,11 @@
+# Blender 4.0.2 MTL File: 'None'
+# www.blender.org
+newmtl sphere
+illum 2
+pr 0.0
+map_pr rusted-iron/rustediron2_roughness.png
+pm 1.0
+map_pm rusted-iron/rustediron2_metallic.png
+map_ka rusted-iron/rustediron2_basecolor.png
+map_kd rusted-iron/rustediron2_basecolor.png
+map_kn rusted-iron/rustediron2_normal.png

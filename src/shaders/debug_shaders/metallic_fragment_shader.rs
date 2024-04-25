@@ -6,11 +6,12 @@ use crate::{
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
+    vec::vec3::Vec3,
 };
 
-pub const AlbedoFragmentShader: FragmentShaderFn =
+pub const MetallicFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
-        // Emit only the diffuse color for this fragment.
+        // Emit only the metallic for this fragment.
 
-        Color::from_vec3(sample.albedo)
+        Color::from_vec3(Vec3::ones() * sample.metallic)
     };

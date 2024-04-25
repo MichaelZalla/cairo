@@ -1,4 +1,5 @@
 use crate::{
+    animation::lerp,
     color::Color,
     scene::resources::SceneResources,
     shader::{
@@ -9,6 +10,18 @@ use crate::{
 
 pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
     |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
+        // Surface reflection at zero incidence.
+        #[allow(non_upper_case_globals)]
+        static f0_dielectic: Vec3 = Vec3 {
+            x: 0.04,
+            y: 0.04,
+            z: 0.04,
+        };
+
+        let f0_metal = sample.albedo;
+
+        let f0 = lerp(f0_dielectic, f0_metal, sample.metallic);
+
         // Calculate ambient light contribution
 
         let ambient_light_contribution = match &context.ambient_light {
@@ -16,7 +29,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    light.contribute(sample)
+                    light.contribute_pbr(sample)
                 }
                 Err(err) => panic!(
                     "Failed to get AmbientLight from Arena: {:?}: {}",
@@ -33,7 +46,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    light.contribute(sample)
+                    light.contribute_pbr(sample, &f0)
                 }
                 Err(err) => panic!(
                     "Failed to get DirectionalLight from Arena: {:?}: {}",
@@ -52,7 +65,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    point_light_contribution += light.contribute(sample);
+                    point_light_contribution += light.contribute_pbr(sample, &f0);
                 }
                 Err(err) => panic!("Failed to get PointLight from Arena: {:?}: {}", handle, err),
             }
@@ -67,7 +80,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    spot_light_contribution += light.contribute(sample.world_pos);
+                    spot_light_contribution += light.contribute_pbr(sample, &f0);
                 }
                 Err(err) => panic!("Failed to get SpotLight from Arena: {:?}: {}", handle, err),
             }
@@ -85,17 +98,5 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             + spot_light_contribution
             + emissive_light_contribution;
 
-        // @TODO Honor each material's ambient, diffuse, and specular colors.
-
-        let mut color: Vec3 = sample.diffuse_color;
-
-        // Transform sRGB space to linear space.
-
-        color.srgb_to_linear();
-
-        // Multiply by total lighting contribution and saturate.
-
-        color *= total_contribution;
-
-        Color::from_vec3(color)
+        Color::from_vec3(total_contribution)
     };

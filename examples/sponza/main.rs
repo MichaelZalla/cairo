@@ -328,9 +328,7 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline
-        .geometry_shader_options
-        .diffuse_color_mapping_active = false;
+    pipeline.geometry_shader_options.base_color_mapping_active = false;
 
     pipeline
         .geometry_shader_options

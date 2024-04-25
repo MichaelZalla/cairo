@@ -147,6 +147,15 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example pbr",
+      "command": "cargo run --example pbr"
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example post-effects",
       "command": "cargo run --example post-effects"
     },

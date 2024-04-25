@@ -3,11 +3,65 @@ use std::f32::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::color;
+use crate::physics::pbr;
 use crate::serde::PostDeserialize;
 use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
 use crate::vec::vec3::{self, Vec3};
 use crate::vec::vec4::Vec4;
+
+fn contribute_pbr(
+    sample: &GeometrySample,
+    light_intensities: &Vec3,
+    direction_to_light: &Vec3,
+    f0: &Vec3,
+) -> Vec3 {
+    let tangent_space_info = sample.tangent_space_info;
+
+    let normal = &tangent_space_info.normal;
+
+    let direction_to_view_position =
+        (tangent_space_info.view_position - tangent_space_info.fragment_position).as_normal();
+
+    let likeness_to_point_light = normal.dot(*direction_to_light).max(0.0);
+    let likeness_to_view_position = normal.dot(direction_to_view_position).max(0.0);
+
+    let halfway = (direction_to_view_position + *direction_to_light).as_normal();
+
+    // Cook-Torrance BRDF
+
+    let distribution = pbr::distribution_ggx(normal, &halfway, sample.roughness);
+
+    let geometry = pbr::geometry_smith(
+        normal,
+        &direction_to_view_position,
+        direction_to_light,
+        sample.roughness,
+    );
+
+    let fresnel = pbr::fresnel_schlick(halfway.dot(direction_to_view_position), f0);
+
+    // Rendering equation
+
+    // Ratio of reflected light energy.
+    let k_s = fresnel;
+
+    // Ratio of refracted light energy.
+    let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
+
+    // Specular reflection contribution.
+    let numerator = fresnel * distribution * geometry;
+    let denominator = 4.0 * likeness_to_view_position * likeness_to_point_light + 0.0001;
+    let specular = numerator / denominator;
+
+    if likeness_to_point_light > 0.0 {
+        let radiance = *light_intensities;
+
+        (k_d * sample.albedo / PI + specular) * radiance * likeness_to_point_light
+    } else {
+        Default::default()
+    }
+}
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct AmbientLight {
@@ -23,6 +77,10 @@ impl PostDeserialize for AmbientLight {
 impl AmbientLight {
     pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
         self.intensities * sample.ambient_factor
+    }
+
+    pub fn contribute_pbr(self, sample: &GeometrySample) -> Vec3 {
+        self.intensities * sample.albedo * sample.ambient_factor
     }
 }
 
@@ -49,6 +107,16 @@ impl DirectionalLight {
             .as_normal();
 
         self.intensities * 0.0_f32.max((*normal * -1.0).dot(direction_to_light))
+    }
+
+    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+        let tangent_space_info = sample.tangent_space_info;
+
+        let direction_to_light = (self.direction * -1.0 * tangent_space_info.tbn_inverse)
+            .to_vec3()
+            .as_normal();
+
+        contribute_pbr(sample, &self.intensities, &direction_to_light, f0)
     }
 }
 
@@ -158,6 +226,20 @@ impl PointLight {
         point_contribution + specular_contribution
     }
 
+    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+        let tangent_space_info = sample.tangent_space_info;
+
+        let point_light_position =
+            (Vec4::new(self.position, 1.0) * tangent_space_info.tbn_inverse).to_vec3();
+
+        let fragment_to_point_light = point_light_position - tangent_space_info.fragment_position;
+        let distance_to_point_light = fragment_to_point_light.mag();
+        let direction_to_point_light = fragment_to_point_light / distance_to_point_light;
+
+        contribute_pbr(sample, &self.intensities, &direction_to_point_light, f0)
+            * self.get_attentuation(distance_to_point_light)
+    }
+
     #[inline]
     fn get_attentuation(&self, distance: f32) -> f32 {
         1.0 / (self.quadratic_attenuation * distance.powi(2)
@@ -248,6 +330,32 @@ impl SpotLight {
         }
 
         spot_light_contribution
+    }
+
+    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+        let tangent_space_info = sample.tangent_space_info;
+
+        let spot_light_position_tangent_space = (Vec4::new(self.look_vector.get_position(), 1.0)
+            * tangent_space_info.tbn_inverse)
+            .to_vec3();
+
+        let direction_to_light =
+            (spot_light_position_tangent_space - tangent_space_info.fragment_position).as_normal();
+
+        let theta_angle =
+            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_light * -1.0));
+
+        let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
+
+        let spot_attenuation =
+            ((theta_angle - self.outer_cutoff_angle_cos) / epsilon).clamp(0.0, 1.0);
+
+        if theta_angle > self.outer_cutoff_angle_cos {
+            return contribute_pbr(sample, &self.intensities, &direction_to_light, f0)
+                * spot_attenuation;
+        }
+
+        Default::default()
     }
 }
 

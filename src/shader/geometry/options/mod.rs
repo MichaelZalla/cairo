@@ -7,7 +7,8 @@ pub struct GeometryShaderOptions {
     pub bilinear_active: bool,
     pub trilinear_active: bool,
     pub ambient_occlusion_mapping_active: bool,
-    pub diffuse_color_mapping_active: bool,
+    pub base_color_mapping_active: bool,
+    pub metallic_mapping_active: bool,
     pub normal_mapping_active: bool,
     pub displacement_mapping_active: bool,
     pub specular_exponent_mapping_active: bool,
@@ -20,7 +21,8 @@ impl Default for GeometryShaderOptions {
             bilinear_active: false,
             trilinear_active: false,
             ambient_occlusion_mapping_active: false,
-            diffuse_color_mapping_active: true,
+            base_color_mapping_active: true,
+            metallic_mapping_active: true,
             normal_mapping_active: false,
             displacement_mapping_active: false,
             specular_exponent_mapping_active: false,
@@ -57,11 +59,11 @@ impl GeometryShaderOptions {
                     )
                 }
                 Keycode::P { .. } => {
-                    self.diffuse_color_mapping_active = !self.diffuse_color_mapping_active;
+                    self.base_color_mapping_active = !self.base_color_mapping_active;
 
                     println!(
                         "Diffuse color mapping: {}",
-                        if self.diffuse_color_mapping_active {
+                        if self.base_color_mapping_active {
                             "On"
                         } else {
                             "Off"
@@ -93,11 +95,11 @@ impl GeometryShaderOptions {
                     )
                 }
                 Keycode::M { .. } => {
-                    self.specular_exponent_mapping_active = !self.specular_exponent_mapping_active;
+                    self.metallic_mapping_active = !self.metallic_mapping_active;
 
                     println!(
                         "Metallic mapping: {}",
-                        if self.specular_exponent_mapping_active {
+                        if self.metallic_mapping_active {
                             "On"
                         } else {
                             "Off"
