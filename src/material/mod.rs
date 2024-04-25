@@ -20,19 +20,19 @@ pub struct Material {
     pub material_source: Option<String>,
     pub illumination_model: u8,
     pub ambient_color: Vec3,
-    pub ambient_map: Option<Handle>,
+    pub ambient_color_map: Option<Handle>,
     pub ambient_occlusion_map: Option<Handle>,
     pub diffuse_color: Vec3,
-    pub diffuse_map: Option<Handle>,
+    pub diffuse_color_map: Option<Handle>,
     pub specular_color: Vec3,
     pub specular_exponent: i32, // aka "shininess"
-    pub specular_map: Option<Handle>,
+    pub specular_exponent_map: Option<Handle>,
     pub emissive_color: Vec3,
-    pub emissive_map: Option<Handle>,
+    pub emissive_color_map: Option<Handle>,
     pub dissolve: f32,
     pub transparency: f32,
     pub alpha_map: Option<Handle>,
-    pub transmission_filter_color: Vec3,
+    pub translucency: Vec3,
     pub index_of_refraction: f32,
     pub normal_map: Option<Handle>,
     pub displacement_map: Option<Handle>,
@@ -61,11 +61,11 @@ impl Material {
         rendering_context: &ApplicationRenderingContext,
     ) -> Result<(), String> {
         let optional_handles = [
-            &mut self.ambient_map,
+            &mut self.ambient_color_map,
             &mut self.ambient_occlusion_map,
-            &mut self.diffuse_map,
-            &mut self.specular_map,
-            &mut self.emissive_map,
+            &mut self.diffuse_color_map,
+            &mut self.specular_exponent_map,
+            &mut self.emissive_color_map,
             &mut self.normal_map,
             &mut self.displacement_map,
             &mut self.alpha_map,
@@ -110,9 +110,9 @@ impl fmt::Display for Material {
             color::Color::from_vec3(self.ambient_color * 255.0)
         )?;
 
-        match &self.ambient_map {
+        match &self.ambient_color_map {
             Some(handle) => {
-                writeln!(v, "  > Ambient map: {}", handle.uuid)?;
+                writeln!(v, "  > Ambient color map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -130,9 +130,9 @@ impl fmt::Display for Material {
             color::Color::from_vec3(self.diffuse_color * 255.0)
         )?;
 
-        match &self.diffuse_map {
+        match &self.diffuse_color_map {
             Some(handle) => {
-                writeln!(v, "  > Diffuse map: {}", handle.uuid)?;
+                writeln!(v, "  > Diffuse color map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -145,9 +145,9 @@ impl fmt::Display for Material {
 
         writeln!(v, "  > Specular exponent: {}", self.specular_exponent)?;
 
-        match &self.specular_map {
+        match &self.specular_exponent_map {
             Some(handle) => {
-                writeln!(v, "  > Specular map: {}", handle.uuid)?;
+                writeln!(v, "  > Specular exponent map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -158,9 +158,9 @@ impl fmt::Display for Material {
             color::Color::from_vec3(self.emissive_color * 255.0)
         )?;
 
-        match &self.emissive_map {
+        match &self.emissive_color_map {
             Some(handle) => {
-                writeln!(v, "  > Emissive map: {}", handle.uuid)?;
+                writeln!(v, "  > Emissive color map: {}", handle.uuid)?;
             }
             None => (),
         }
@@ -176,11 +176,7 @@ impl fmt::Display for Material {
             None => (),
         }
 
-        writeln!(
-            v,
-            "  > Transmission filter color: {}",
-            self.transmission_filter_color
-        )?;
+        writeln!(v, "  > Translucency: {}", self.translucency)?;
 
         writeln!(v, "  > Index of refraction: {}", self.index_of_refraction)?;
 

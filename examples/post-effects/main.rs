@@ -90,14 +90,14 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
-        checkerboard_material.diffuse_map = Some(checkerboard_diffuse_map_handle);
-        checkerboard_material.specular_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
 
         // Lava material
 
         let mut lava_material = Material::new("container".to_string());
 
-        lava_material.diffuse_map = Some(resources.texture.borrow_mut().insert(
+        lava_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/post-effects/assets/lava.png",
@@ -105,7 +105,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        lava_material.emissive_map = Some(resources.texture.borrow_mut().insert(
+        lava_material.emissive_color_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/post-effects/assets/lava_emissive.png",
@@ -325,7 +325,9 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.geometry_shader_options.emissive_mapping_active = true;
+    pipeline
+        .geometry_shader_options
+        .emissive_color_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);
 

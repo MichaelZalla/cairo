@@ -33,7 +33,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    light.contribute(sample.normal)
+                    light.contribute(sample.world_normal)
                 }
                 Err(err) => panic!(
                     "Failed to get DirectionalLight from Arena: {:?}: {}",
@@ -75,7 +75,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // Calculate emissive light contribution
 
-        let emissive_light_contribution: Vec3 = sample.emissive;
+        let emissive_light_contribution: Vec3 = sample.emissive_color;
 
         // Combine light intensities
 
@@ -87,7 +87,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // @TODO Honor each material's ambient, diffuse, and specular colors.
 
-        let mut color: Vec3 = sample.diffuse;
+        let mut color: Vec3 = sample.diffuse_color;
 
         // Transform sRGB space to linear space.
 

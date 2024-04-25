@@ -22,7 +22,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
     let mut out = GeometrySample {
         stencil: true,
         uv: interpolant.uv,
-        normal: interpolant.normal.to_vec3(),
+        world_normal: interpolant.normal.to_vec3(),
         tangent_space_info: interpolant.tangent_space_info,
         world_pos: interpolant.world_pos,
         depth: interpolant.depth,
@@ -197,7 +197,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                 // Perturb the surface normal using the local
                                 // tangent-space information read from `map`.
 
-                                out.normal = (tangent_space_normal
+                                out.world_normal = (tangent_space_normal
                                     * interpolant.tangent_space_info.tbn)
                                     .to_vec3()
                                     .as_normal();
@@ -268,7 +268,10 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         Some(name) => {
             match resources.material.borrow().get(name) {
                 Some(material) => {
-                    match (options.diffuse_mapping_active, material.diffuse_map) {
+                    match (
+                        options.diffuse_color_mapping_active,
+                        material.diffuse_color_map,
+                    ) {
                         (true, Some(handle)) => match resources.texture.borrow().get(&handle) {
                             Ok(entry) => {
                                 let map = &entry.item;
@@ -279,7 +282,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                     sample_nearest(out.uv, map, None)
                                 };
 
-                                out.diffuse = color::Color::rgb(r, g, b).to_vec3() / 255.0;
+                                out.diffuse_color = color::Color::rgb(r, g, b).to_vec3() / 255.0;
                             }
                             Err(err) => {
                                 panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
@@ -289,7 +292,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             // No diffuse map defined for this material, or
                             // diffuse mapping is disabled.
 
-                            out.diffuse = material.diffuse_color;
+                            out.diffuse_color = material.diffuse_color;
                         }
                     }
                 }
@@ -301,7 +304,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         None => {
             // No active material bound to this shader context.
 
-            out.diffuse = color::WHITE.to_vec3() / 255.0;
+            out.diffuse_color = color::WHITE.to_vec3() / 255.0;
         }
     }
 
@@ -330,7 +333,10 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 Some(material) => {
                     out.specular_exponent = material.specular_exponent;
 
-                    match (options.specular_mapping_active, &material.specular_map) {
+                    match (
+                        options.specular_exponent_mapping_active,
+                        &material.specular_exponent_map,
+                    ) {
                         (true, Some(handle)) => match &resources.texture.borrow().get(handle) {
                             Ok(entry) => {
                                 let map = &entry.item;
@@ -346,8 +352,9 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             Err(_) => panic!("Invalid TextureMap handle!"),
                         },
                         _ => {
-                            // No specular map defined for this material, or
-                            // specular mapping is disabled.
+                            // No specular exponent map defined for this
+                            // material, or specular exponent mapping is
+                            // disabled.
 
                             out.specular_intensity = if let Some(light) = default_point_light {
                                 light.specular_intensity
@@ -380,14 +387,14 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
     match &context.active_material {
         Some(name) => {
             match resources.material.borrow().get(name) {
-                Some(material) => match material.emissive_map {
+                Some(material) => match material.emissive_color_map {
                     Some(handle) => match resources.texture.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
                             let (r, g, b) = sample_nearest(out.uv, map, None);
 
-                            out.emissive = Color::rgb(r, g, b).to_vec3() / 255.0;
+                            out.emissive_color = Color::rgb(r, g, b).to_vec3() / 255.0;
                         }
                         Err(err) => {
                             panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
@@ -396,7 +403,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                     None => {
                         // No emissive map defined for this material.
 
-                        out.emissive = material.emissive_color;
+                        out.emissive_color = material.emissive_color;
                     }
                 },
                 None => {
@@ -407,7 +414,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         None => {
             // No active material bound to this shader context.
 
-            out.emissive = Default::default();
+            out.emissive_color = Default::default();
         }
     }
 

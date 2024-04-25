@@ -7,11 +7,11 @@ pub struct GeometryShaderOptions {
     pub bilinear_active: bool,
     pub trilinear_active: bool,
     pub ambient_occlusion_mapping_active: bool,
-    pub diffuse_mapping_active: bool,
+    pub diffuse_color_mapping_active: bool,
     pub normal_mapping_active: bool,
     pub displacement_mapping_active: bool,
-    pub specular_mapping_active: bool,
-    pub emissive_mapping_active: bool,
+    pub specular_exponent_mapping_active: bool,
+    pub emissive_color_mapping_active: bool,
 }
 
 impl Default for GeometryShaderOptions {
@@ -20,11 +20,11 @@ impl Default for GeometryShaderOptions {
             bilinear_active: false,
             trilinear_active: false,
             ambient_occlusion_mapping_active: false,
-            diffuse_mapping_active: true,
+            diffuse_color_mapping_active: true,
             normal_mapping_active: false,
             displacement_mapping_active: false,
-            specular_mapping_active: false,
-            emissive_mapping_active: false,
+            specular_exponent_mapping_active: false,
+            emissive_color_mapping_active: false,
         }
     }
 }
@@ -52,16 +52,16 @@ impl GeometryShaderOptions {
                     self.ambient_occlusion_mapping_active = !self.ambient_occlusion_mapping_active;
 
                     println!(
-                        "ambient_occlusion_mapping_active: {}",
+                        "Ambient occlusion mapping: {}",
                         self.ambient_occlusion_mapping_active
                     )
                 }
                 Keycode::P { .. } => {
-                    self.diffuse_mapping_active = !self.diffuse_mapping_active;
+                    self.diffuse_color_mapping_active = !self.diffuse_color_mapping_active;
 
                     println!(
-                        "Diffuse mapping: {}",
-                        if self.diffuse_mapping_active {
+                        "Diffuse color mapping: {}",
+                        if self.diffuse_color_mapping_active {
                             "On"
                         } else {
                             "Off"
@@ -93,11 +93,11 @@ impl GeometryShaderOptions {
                     )
                 }
                 Keycode::M { .. } => {
-                    self.specular_mapping_active = !self.specular_mapping_active;
+                    self.specular_exponent_mapping_active = !self.specular_exponent_mapping_active;
 
                     println!(
-                        "Specular mapping: {}",
-                        if self.specular_mapping_active {
+                        "Metallic mapping: {}",
+                        if self.specular_exponent_mapping_active {
                             "On"
                         } else {
                             "Off"
@@ -105,11 +105,11 @@ impl GeometryShaderOptions {
                     )
                 }
                 Keycode::K { .. } => {
-                    self.emissive_mapping_active = !self.emissive_mapping_active;
+                    self.emissive_color_mapping_active = !self.emissive_color_mapping_active;
 
                     println!(
-                        "Emissive mapping: {}",
-                        if self.emissive_mapping_active {
+                        "Emissive color mapping: {}",
+                        if self.emissive_color_mapping_active {
                             "On"
                         } else {
                             "Off"

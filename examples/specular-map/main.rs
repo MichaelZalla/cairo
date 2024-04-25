@@ -86,14 +86,14 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
-        checkerboard_material.diffuse_map = Some(checkerboard_diffuse_map_handle);
-        checkerboard_material.specular_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
 
         // Metal-wrapped wooden container
 
         let mut container_material = Material::new("container".to_string());
 
-        container_material.diffuse_map = Some(resources.texture.borrow_mut().insert(
+        container_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/specular-map/assets/container2.png",
@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        container_material.specular_map = Some(resources.texture.borrow_mut().insert(
+        container_material.specular_exponent_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/specular-map/assets/container2_specular.png",
@@ -327,7 +327,9 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.geometry_shader_options.specular_mapping_active = true;
+    pipeline
+        .geometry_shader_options
+        .specular_exponent_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);
 

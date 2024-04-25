@@ -178,7 +178,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .transparency = value;
                             }
 
-                            // Transmission filter color
+                            // Translucency
                             "tf" => {
                                 // R G B
                                 // Example:
@@ -187,7 +187,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .transmission_filter_color = next_rgb(&mut line_tokens);
+                                    .translucency = next_rgb(&mut line_tokens);
                             }
 
                             // Index of refraction
@@ -216,7 +216,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     texture_arena,
                                     cache,
                                     current_material_name,
-                                    ambient_map
+                                    ambient_color_map
                                 );
                             }
 
@@ -232,7 +232,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     texture_arena,
                                     cache,
                                     current_material_name,
-                                    diffuse_map
+                                    diffuse_color_map
                                 );
                             }
 
@@ -248,7 +248,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     texture_arena,
                                     cache,
                                     current_material_name,
-                                    specular_map
+                                    specular_exponent_map
                                 );
                             }
 
@@ -264,7 +264,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     texture_arena,
                                     cache,
                                     current_material_name,
-                                    emissive_map
+                                    emissive_color_map
                                 );
                             }
 

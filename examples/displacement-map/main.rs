@@ -76,7 +76,7 @@ fn main() -> Result<(), String> {
 
         let mut brick_material = Material::new("brick".to_string());
 
-        brick_material.diffuse_map = Some(resources.texture.borrow_mut().insert(
+        brick_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/bricks2.jpg",
@@ -108,7 +108,7 @@ fn main() -> Result<(), String> {
 
         let mut box_material = Material::new("box".to_string());
 
-        box_material.diffuse_map = Some(resources.texture.borrow_mut().insert(
+        box_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/wood.png",

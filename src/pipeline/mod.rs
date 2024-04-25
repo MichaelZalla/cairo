@@ -586,7 +586,7 @@ impl<'a> Pipeline<'a> {
         if self.options.do_lighting {
             (self.fragment_shader)(shader_context, scene_resources, sample).to_vec3()
         } else {
-            sample.diffuse
+            sample.diffuse_color
         }
     }
 

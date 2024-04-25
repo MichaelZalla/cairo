@@ -139,11 +139,11 @@ fn main() -> Result<(), String> {
 
         // Pump up diffuse value of the darkest pixels
 
-        checkerboard_mat.diffuse_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_mat.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
 
         checkerboard_mat.specular_exponent = 8;
 
-        checkerboard_mat.specular_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_mat.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
 
         // Point light decal material
 
@@ -157,7 +157,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        point_light_decal_mat.emissive_map = point_light_decal_mat.alpha_map.clone();
+        point_light_decal_mat.emissive_color_map = point_light_decal_mat.alpha_map.clone();
 
         point_light_decal_mat
             .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;
@@ -174,7 +174,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        spot_light_decal_mat.emissive_map = spot_light_decal_mat.alpha_map.clone();
+        spot_light_decal_mat.emissive_color_map = spot_light_decal_mat.alpha_map.clone();
 
         spot_light_decal_mat
             .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;

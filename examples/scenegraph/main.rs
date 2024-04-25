@@ -103,8 +103,8 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
-        checkerboard_material.diffuse_map = Some(checkerboard_diffuse_map_handle);
-        checkerboard_material.specular_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
 
         // Cube materials
 

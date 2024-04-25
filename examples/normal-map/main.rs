@@ -75,14 +75,14 @@ fn main() -> Result<(), String> {
 
         brick_material.specular_exponent = 32;
 
-        brick_material.diffuse_map = Some(resources.texture.borrow_mut().insert(
+        brick_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
-        brick_material.specular_map = Some(resources.texture.borrow_mut().insert(
+        brick_material.specular_exponent_map = Some(resources.texture.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
@@ -279,7 +279,9 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.geometry_shader_options.diffuse_mapping_active = false;
+    pipeline
+        .geometry_shader_options
+        .diffuse_color_mapping_active = false;
     pipeline.geometry_shader_options.normal_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);

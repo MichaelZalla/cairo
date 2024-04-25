@@ -12,5 +12,5 @@ pub const EmissiveFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the emissive color for this fragment.
 
-        Color::from_vec3(sample.emissive)
+        Color::from_vec3(sample.emissive_color)
     };

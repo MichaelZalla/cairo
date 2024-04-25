@@ -328,8 +328,14 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.geometry_shader_options.diffuse_mapping_active = false;
-    pipeline.geometry_shader_options.specular_mapping_active = true;
+    pipeline
+        .geometry_shader_options
+        .diffuse_color_mapping_active = false;
+
+    pipeline
+        .geometry_shader_options
+        .specular_exponent_mapping_active = true;
+
     pipeline.geometry_shader_options.normal_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);
