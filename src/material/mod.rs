@@ -39,6 +39,7 @@ pub struct Material {
     pub specular_color_map: Option<Handle>,
     pub specular_exponent: i32, // aka "shininess"
     pub specular_exponent_map: Option<Handle>,
+    pub decal_map: Option<Handle>,
 }
 
 impl PostDeserialize for Material {
@@ -66,6 +67,7 @@ impl Material {
             &mut self.alpha_map,
             &mut self.ambient_color_map,
             &mut self.ambient_occlusion_map,
+            &mut self.decal_map,
             &mut self.diffuse_color_map,
             &mut self.displacement_map,
             &mut self.emissive_color_map,

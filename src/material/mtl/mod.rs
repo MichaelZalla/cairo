@@ -274,7 +274,18 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                             // Stencil (decal) map
                             "decal" => {
-                                println!("@TODO Implementation for token 'decal'.");
+                                // [filepath]
+                                // Example:
+                                // decal cube_decal.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    decal_map
+                                );
                             }
 
                             // Index of refraction
