@@ -14,7 +14,6 @@ pub struct TangentSpaceInfo {
     pub tbn: Mat4,
     pub tbn_inverse: Mat4,
     pub normal: Vec3,
-    pub point_light_position: Vec3,
     pub view_position: Vec3,
     pub fragment_position: Vec3,
 }
@@ -26,7 +25,6 @@ impl Add<TangentSpaceInfo> for TangentSpaceInfo {
             tbn: self.tbn + rhs.tbn,
             tbn_inverse: self.tbn_inverse + rhs.tbn_inverse,
             normal: self.normal + rhs.normal,
-            point_light_position: self.point_light_position + rhs.point_light_position,
             view_position: self.view_position + rhs.view_position,
             fragment_position: self.fragment_position + rhs.fragment_position,
         }
@@ -38,7 +36,6 @@ impl AddAssign<TangentSpaceInfo> for TangentSpaceInfo {
         self.tbn += rhs.tbn;
         self.tbn_inverse += rhs.tbn_inverse;
         self.normal += rhs.normal;
-        self.point_light_position += rhs.point_light_position;
         self.view_position += rhs.view_position;
         self.fragment_position += rhs.fragment_position;
     }
@@ -51,7 +48,6 @@ impl Sub<TangentSpaceInfo> for TangentSpaceInfo {
             tbn: self.tbn - rhs.tbn,
             tbn_inverse: self.tbn_inverse - rhs.tbn_inverse,
             normal: self.normal - rhs.normal,
-            point_light_position: self.point_light_position - rhs.point_light_position,
             view_position: self.view_position - rhs.view_position,
             fragment_position: self.fragment_position - rhs.fragment_position,
         }
@@ -65,7 +61,6 @@ impl Mul<f32> for TangentSpaceInfo {
             tbn: self.tbn * scalar,
             tbn_inverse: self.tbn_inverse * scalar,
             normal: self.normal * scalar,
-            point_light_position: self.point_light_position * scalar,
             view_position: self.view_position * scalar,
             fragment_position: self.fragment_position * scalar,
         }
@@ -77,7 +72,6 @@ impl MulAssign<f32> for TangentSpaceInfo {
         self.tbn *= scalar;
         self.tbn_inverse *= scalar;
         self.normal *= scalar;
-        self.point_light_position *= scalar;
         self.view_position *= scalar;
         self.fragment_position *= scalar;
     }
@@ -90,7 +84,6 @@ impl Div<f32> for TangentSpaceInfo {
             tbn: self.tbn / scalar,
             tbn_inverse: self.tbn_inverse / scalar,
             normal: self.normal / scalar,
-            point_light_position: self.point_light_position / scalar,
             view_position: self.view_position / scalar,
             fragment_position: self.fragment_position / scalar,
         }

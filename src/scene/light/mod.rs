@@ -98,20 +98,20 @@ impl PointLight {
 
         let tangent_space_info = sample.tangent_space_info;
 
+        let normal = &tangent_space_info.normal;
+
+        let point_light_position_tangent_space =
+            (Vec4::new(self.position, 1.0) * tangent_space_info.tbn_inverse).to_vec3();
+
         let fragment_to_point_light_tangent_space =
-            tangent_space_info.point_light_position - tangent_space_info.fragment_position;
+            point_light_position_tangent_space - tangent_space_info.fragment_position;
 
         let distance_to_point_light_tangent_space = fragment_to_point_light_tangent_space.mag();
 
         let direction_to_point_light_tangent_space =
             fragment_to_point_light_tangent_space / distance_to_point_light_tangent_space;
 
-        let likeness = 0.0_f32.max(
-            sample
-                .tangent_space_info
-                .normal
-                .dot(direction_to_point_light_tangent_space),
-        );
+        let likeness = 0.0_f32.max(normal.dot(direction_to_point_light_tangent_space));
 
         if likeness > 0.0 {
             let attentuation = 1.0
@@ -122,7 +122,6 @@ impl PointLight {
             point_contribution = self.intensities * attentuation * 0.0_f32.max(likeness);
 
             // Calculate specular light intensity
-
             let incoming_ray = fragment_to_point_light_tangent_space * -1.0;
 
             // Project the incoming ray forward through the fragment/surface

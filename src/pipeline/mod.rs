@@ -450,11 +450,10 @@ impl<'a> Pipeline<'a> {
 
         {
             let shader_context = self.shader_context.borrow();
-            let scene_resources = (*self.scene_resources).borrow();
 
             projection_space_vertices = vertices_in
                 .into_iter()
-                .map(|v_in| (self.vertex_shader)(&shader_context, &scene_resources, &v_in))
+                .map(|v_in| (self.vertex_shader)(&shader_context, &v_in))
                 .collect();
         }
 
