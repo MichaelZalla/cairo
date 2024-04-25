@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    mesh::{geometry::Geometry, Face, Mesh},
+    mesh::{geometry::Geometry, Mesh, PartialFace},
     texture,
     vec::{
         vec2::Vec2,
@@ -90,149 +90,149 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     // Generate faces
 
-    let mut faces: Vec<Face> = vec![];
+    let mut partial_faces: Vec<PartialFace> = vec![];
 
     // Front face
 
-    let front_face_1 = Face {
+    let front_face_1 = PartialFace {
         // (front_top_right, front_bottom_left, front_top_left)
-        vertices: (1, 2, 0),
+        vertices: [1, 2, 0],
         // (top_right, bottom_left, top_left)
-        uvs: Some((1, 2, 0)),
+        uvs: Some([1, 2, 0]),
         // (backward, backward, backward)
-        normals: Some((1, 1, 1)),
+        normals: Some([1, 1, 1]),
     };
 
-    let front_face_2 = Face {
+    let front_face_2 = PartialFace {
         // (front_top_right, front_bottom_right, front_bottom_left)
-        vertices: (1, 3, 2),
+        vertices: [1, 3, 2],
         // (top_right, bottom_right, bottom_left)
-        uvs: Some((1, 3, 2)),
+        uvs: Some([1, 3, 2]),
         // (backward, backward, backward)
-        normals: Some((1, 1, 1)),
+        normals: Some([1, 1, 1]),
     };
 
-    faces.push(front_face_1);
-    faces.push(front_face_2);
+    partial_faces.push(front_face_1);
+    partial_faces.push(front_face_2);
 
     // Back face
 
-    let back_face_1 = Face {
+    let back_face_1 = PartialFace {
         // (back_bottom_left, back_top_right, back_top_left)
-        vertices: (6, 5, 4),
+        vertices: [6, 5, 4],
         // (bottom_right, top_left, top_right)
-        uvs: Some((3, 0, 1)),
+        uvs: Some([3, 0, 1]),
         // (forward, forward, forward)
-        normals: Some((0, 0, 0)),
+        normals: Some([0, 0, 0]),
     };
 
-    let back_face_2 = Face {
+    let back_face_2 = PartialFace {
         // (back_bottom_left, back_bottom_right, back_top_right)
-        vertices: (6, 7, 5),
+        vertices: [6, 7, 5],
         // (bottom_right, bottom_left, top_left)
-        uvs: Some((3, 2, 0)),
+        uvs: Some([3, 2, 0]),
         // (forward, forward, forward)
-        normals: Some((0, 0, 0)),
+        normals: Some([0, 0, 0]),
     };
 
-    faces.push(back_face_1);
-    faces.push(back_face_2);
+    partial_faces.push(back_face_1);
+    partial_faces.push(back_face_2);
 
     // Top face
 
-    let top_face_1 = Face {
+    let top_face_1 = PartialFace {
         // (back_top_right, front_top_left, back_top_left)
-        vertices: (5, 0, 4),
+        vertices: [5, 0, 4],
         // (top_right, bottom_left, top_left)
-        uvs: Some((1, 2, 0)),
+        uvs: Some([1, 2, 0]),
         // (up, up, up)
-        normals: Some((2, 2, 2)),
+        normals: Some([2, 2, 2]),
     };
 
-    let top_face_2 = Face {
+    let top_face_2 = PartialFace {
         // (back_top_right, front_top_right, front_top_left)
-        vertices: (5, 1, 0),
+        vertices: [5, 1, 0],
         // (top_right, bottom_right, bottom_left)
-        uvs: Some((1, 3, 2)),
+        uvs: Some([1, 3, 2]),
         // (up, up, up)
-        normals: Some((2, 2, 2)),
+        normals: Some([2, 2, 2]),
     };
 
-    faces.push(top_face_1);
-    faces.push(top_face_2);
+    partial_faces.push(top_face_1);
+    partial_faces.push(top_face_2);
 
     // Bottom face
 
-    let bottom_face_1 = Face {
+    let bottom_face_1 = PartialFace {
         // (front_bottom_left, back_bottom_right, back_bottom_left)
-        vertices: (2, 7, 6),
+        vertices: [2, 7, 6],
         // (top_left, bottom_right, bottom_left)
-        uvs: Some((0, 3, 2)),
+        uvs: Some([0, 3, 2]),
         // (down, down, down)
-        normals: Some((3, 3, 3)),
+        normals: Some([3, 3, 3]),
     };
 
-    let bottom_face_2 = Face {
+    let bottom_face_2 = PartialFace {
         // (front_bottom_left, front_bottom_right, back_bottom_right)
-        vertices: (2, 3, 7),
+        vertices: [2, 3, 7],
         // (top_left, top_right, bottom_right)
-        uvs: Some((0, 1, 3)),
+        uvs: Some([0, 1, 3]),
         // (down, down, down)
-        normals: Some((3, 3, 3)),
+        normals: Some([3, 3, 3]),
     };
 
-    faces.push(bottom_face_1);
-    faces.push(bottom_face_2);
+    partial_faces.push(bottom_face_1);
+    partial_faces.push(bottom_face_2);
 
     // Left face
 
-    let left_face_1 = Face {
+    let left_face_1 = PartialFace {
         // (front_top_left, back_bottom_left, back_top_left)
-        vertices: (0, 6, 4),
+        vertices: [0, 6, 4],
         // (top_right, bottom_left, top_left)
-        uvs: Some((1, 2, 0)),
+        uvs: Some([1, 2, 0]),
         // (left, left, left)
-        normals: Some((4, 4, 4)),
+        normals: Some([4, 4, 4]),
     };
 
-    let left_face_2 = Face {
+    let left_face_2 = PartialFace {
         // (front_top_left, front_bottom_left, back_bottom_left)
-        vertices: (0, 2, 6),
+        vertices: [0, 2, 6],
         // (top_right, bottom_right, bottom_left)
-        uvs: Some((1, 3, 2)),
+        uvs: Some([1, 3, 2]),
         // (left, left, left)
-        normals: Some((4, 4, 4)),
+        normals: Some([4, 4, 4]),
     };
 
-    faces.push(left_face_1);
-    faces.push(left_face_2);
+    partial_faces.push(left_face_1);
+    partial_faces.push(left_face_2);
 
     // Right face
 
-    let right_face_1 = Face {
+    let right_face_1 = PartialFace {
         // (back_bottom_right, front_bottom_right, front_top_right)
-        vertices: (7, 3, 1),
+        vertices: [7, 3, 1],
         // (bottom_right, bottom_left, top_left)
-        uvs: Some((3, 2, 0)),
+        uvs: Some([3, 2, 0]),
         // (right, right, right)
-        normals: Some((5, 5, 5)),
+        normals: Some([5, 5, 5]),
     };
 
-    let right_face_2 = Face {
+    let right_face_2 = PartialFace {
         // (front_top_right back_top_right, back_bottom_right)
-        vertices: (1, 5, 7),
+        vertices: [1, 5, 7],
         // (top_left, top_right, bottom_right)
-        uvs: Some((0, 1, 3)),
+        uvs: Some([0, 1, 3]),
         // (right, right, right)
-        normals: Some((5, 5, 5)),
+        normals: Some([5, 5, 5]),
     };
 
-    faces.push(right_face_1);
-    faces.push(right_face_2);
+    partial_faces.push(right_face_1);
+    partial_faces.push(right_face_2);
 
     let geometry = Geometry::new(vertices, uvs, normals);
 
-    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+    let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 
     mesh.object_name = Some("cube".to_string());
 

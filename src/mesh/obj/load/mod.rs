@@ -8,7 +8,7 @@ use crate::{
         obj::parse::{
             parse_face, parse_mtllib, parse_vertex, parse_vertex_normal, parse_vertex_uv,
         },
-        Face, Mesh,
+        Mesh, PartialFace,
     },
     resource::arena::Arena,
     texture::map::TextureMap,
@@ -33,6 +33,14 @@ impl fmt::Display for ObjDataTypeCounts {
     }
 }
 
+struct PartialMesh {
+    partial_faces: Vec<PartialFace>,
+    object_source: String,
+    object_name: Option<String>,
+    group_name: Option<String>,
+    material_name: Option<String>,
+}
+
 pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadObjResult {
     let path = Path::new(&filepath);
 
@@ -54,9 +62,8 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
         uvs: vec![],
     };
 
-    let mut faces: Vec<Face> = vec![];
-
-    let mut meshes: Vec<Mesh> = vec![];
+    let mut partial_faces: Vec<PartialFace> = vec![];
+    let mut partial_meshes: Vec<PartialMesh> = vec![];
 
     let mut counts: ObjDataTypeCounts = Default::default();
 
@@ -115,9 +122,9 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
                             }
                             // Polygonal face
                             "f" => {
-                                let face = parse_face(&mut line_tokens).unwrap();
+                                let partial_face = parse_face(&mut line_tokens).unwrap();
 
-                                faces.push(face);
+                                partial_faces.push(partial_face);
 
                                 counts.face += 1;
                             }
@@ -142,18 +149,17 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
                                     Some(line_tokens.next().unwrap().to_string());
 
                                 if next_material_name != material_name {
-                                    let mut faces_for_material: Vec<Face> = vec![];
+                                    let mut partial_mesh = PartialMesh {
+                                        partial_faces: vec![],
+                                        object_source: object_source.as_ref().unwrap().clone(),
+                                        object_name: object_name.clone(),
+                                        group_name: group_name.clone(),
+                                        material_name,
+                                    };
 
-                                    mem::swap(&mut faces, &mut faces_for_material);
+                                    mem::swap(&mut partial_faces, &mut partial_mesh.partial_faces);
 
-                                    let mut mesh =
-                                        Mesh::new(None, faces_for_material, material_name);
-
-                                    mesh.object_name = object_name.clone();
-                                    mesh.object_source = object_source.clone();
-                                    mesh.group_name = group_name.clone();
-
-                                    meshes.push(mesh);
+                                    partial_meshes.push(partial_mesh);
                                 }
 
                                 material_name = next_material_name;
@@ -197,16 +203,26 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
         }
     }
 
-    println!("{}", counts);
-    println!("Parsed {} meshes.", meshes.len());
-
     let geometry_rc = Rc::new(geometry);
 
-    for mesh in meshes.iter_mut() {
-        // Sets a reference to the shared geometry from this OBJ file.
+    let mut meshes: Vec<Mesh> = vec![];
 
-        mesh.geometry = Some(geometry_rc.clone());
+    for partial_mesh in partial_meshes {
+        let mut mesh = Mesh::new(
+            geometry_rc.clone(),
+            partial_mesh.partial_faces,
+            partial_mesh.material_name.to_owned(),
+        );
+
+        mesh.object_name = partial_mesh.object_name.to_owned();
+        mesh.object_source = Some(partial_mesh.object_source.to_owned());
+        mesh.group_name = partial_mesh.group_name.to_owned();
+
+        meshes.push(mesh);
     }
+
+    println!("{}", counts);
+    println!("Parsed {} meshes.", meshes.len());
 
     let mut materials: Option<MaterialCache> = None;
 

@@ -11,10 +11,17 @@ pub mod obj;
 pub mod primitive;
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct PartialFace {
+    pub vertices: [usize; 3],
+    pub normals: Option<[usize; 3]>,
+    pub uvs: Option<[usize; 3]>,
+}
+
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Face {
-    pub vertices: (usize, usize, usize), // Indices into Vec<Vec3>
-    pub normals: Option<(usize, usize, usize)>, // Indices into Vec<Vec3>
-    pub uvs: Option<(usize, usize, usize)>, // Indices into Vec<Vec2>
+    pub vertices: [usize; 3],
+    pub normals: [usize; 3],
+    pub uvs: [usize; 3],
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -24,7 +31,7 @@ pub struct Mesh {
     pub group_name: Option<String>,
     pub material_source: Option<String>,
     pub material_name: Option<String>,
-    pub geometry: Option<Rc<Geometry>>,
+    pub geometry: Rc<Geometry>,
     pub faces: Vec<Face>,
     #[serde(skip)]
     pub aabb: AABB,
@@ -34,14 +41,7 @@ pub struct Mesh {
 
 impl PostDeserialize for Mesh {
     fn post_deserialize(&mut self) {
-        match &self.geometry {
-            Some(geometry) => {
-                self.aabb = geometry.make_object_space_bounding_box();
-
-                // self.aabb_geometry = make_bounding_box_geometry(&self.aabb);
-            }
-            None => (),
-        }
+        self.aabb = self.geometry.make_object_space_bounding_box();
     }
 }
 
@@ -85,12 +85,43 @@ impl fmt::Display for Mesh {
     }
 }
 
+fn get_processed_faces(_geometry: &Rc<Geometry>, partial_faces: &Vec<PartialFace>) -> Vec<Face> {
+    let mut faces: Vec<Face> = Vec::<Face>::with_capacity(partial_faces.len());
+
+    for partial_face in partial_faces {
+        let normals = match partial_face.normals {
+            Some(face_normal_indices) => face_normal_indices,
+            None => {
+                todo!("Compute flat normals for this face, insert into Geometry.normals, and return indices.");
+            }
+        };
+
+        let uvs = match partial_face.uvs {
+            Some(face_uv_indices) => face_uv_indices,
+            None => {
+                // Can't derive UVs; we leave them "blank".
+                Default::default()
+            }
+        };
+
+        faces.push(Face {
+            vertices: partial_face.vertices.to_owned(),
+            normals,
+            uvs,
+        });
+    }
+
+    faces
+}
+
 impl Mesh {
     pub fn new(
-        geometry: Option<Rc<Geometry>>,
-        faces: Vec<Face>,
+        geometry: Rc<Geometry>,
+        partial_faces: Vec<PartialFace>,
         material_name: Option<String>,
     ) -> Self {
+        let faces = get_processed_faces(&geometry, &partial_faces);
+
         let mut mesh = Mesh {
             object_source: None,
             object_name: None,

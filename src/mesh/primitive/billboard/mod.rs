@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    mesh::{geometry::Geometry, Face, Mesh},
+    mesh::{geometry::Geometry, Mesh, PartialFace},
     texture::uv,
     vec::{
         vec2::Vec2,
@@ -46,28 +46,28 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
 
     let normals: Vec<Vec3> = vec![forward];
 
-    let faces: Vec<Face> = vec![
-        Face {
+    let faces = vec![
+        PartialFace {
             // (top_right, bottom_left, top_left)
-            vertices: (1, 2, 0),
+            vertices: [1, 2, 0],
             // (top_right, bottom_left, top_left)
-            uvs: Some((1, 2, 0)),
+            uvs: Some([1, 2, 0]),
             // (backward, backward, backward)
-            normals: Some((0, 0, 0)),
+            normals: Some([0, 0, 0]),
         },
-        Face {
+        PartialFace {
             // (top_right, bottom_right, bottom_left)
-            vertices: (1, 3, 2),
+            vertices: [1, 3, 2],
             // (top_right, bottom_right, bottom_left)
-            uvs: Some((1, 3, 2)),
+            uvs: Some([1, 3, 2]),
             // (backward, backward, backward)
-            normals: Some((0, 0, 0)),
+            normals: Some([0, 0, 0]),
         },
     ];
 
     let geometry = Geometry::new(vertices, uvs, normals);
 
-    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+    let mut mesh = Mesh::new(Rc::new(geometry), faces, None);
 
     mesh.object_name = Some("billboard".to_string());
 

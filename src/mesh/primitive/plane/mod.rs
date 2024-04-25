@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    mesh::{geometry::Geometry, Face, Mesh},
+    mesh::{geometry::Geometry, Mesh, PartialFace},
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
@@ -47,54 +47,54 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
 
     // Generate faces
 
-    let mut faces: Vec<Face> = vec![];
+    let mut partial_faces: Vec<PartialFace> = vec![];
 
     let pitch = width_divisions + 1;
 
     for z in 0..depth_divisions {
         for x in 0..width_divisions {
-            let face_1 = Face {
+            let face_1 = PartialFace {
                 // (near_left, far_right, far_left) (counter-clockwise)
-                vertices: (
+                vertices: [
                     ((z + 1) * pitch + x) as usize,
                     (z * pitch + x + 1) as usize,
                     (z * pitch + x) as usize,
-                ),
+                ],
                 // (bottom_left, top_right, top_left) (counter-clockwise)
-                uvs: Some((
+                uvs: Some([
                     ((z + 1) * pitch + x) as usize,
                     (z * pitch + x + 1) as usize,
                     (z * pitch + x) as usize,
-                )),
+                ]),
                 // (up, up, up)
-                normals: Some((0, 0, 0)),
+                normals: Some([0, 0, 0]),
             };
 
-            let face_2 = Face {
+            let face_2 = PartialFace {
                 // (near_left, far_right, near_right) (counter-clockwise)
-                vertices: (
+                vertices: [
                     ((z + 1) * pitch + x + 1) as usize,
                     (z * pitch + x + 1) as usize,
                     ((z + 1) * pitch + x) as usize,
-                ),
+                ],
                 // (bottom_left, top_right, bottom_right) (counter-clockwise)
-                uvs: Some((
+                uvs: Some([
                     ((z + 1) * pitch + x + 1) as usize,
                     (z * pitch + x + 1) as usize,
                     ((z + 1) * pitch + x) as usize,
-                )),
+                ]),
                 // (up, up, up)
-                normals: Some((0, 0, 0)),
+                normals: Some([0, 0, 0]),
             };
 
-            faces.push(face_1);
-            faces.push(face_2);
+            partial_faces.push(face_1);
+            partial_faces.push(face_2);
         }
     }
 
     let geometry = Geometry::new(vertices, uvs, normals);
 
-    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+    let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 
     mesh.object_name = Some("plane".to_string());
 

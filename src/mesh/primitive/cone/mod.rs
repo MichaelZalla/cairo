@@ -1,7 +1,7 @@
 use std::{f32::consts::PI, rc::Rc};
 
 use crate::{
-    mesh::{geometry::Geometry, Face, Mesh},
+    mesh::{geometry::Geometry, Mesh, PartialFace},
     vec::{
         vec2::{self, Vec2},
         vec3::{self, Vec3},
@@ -72,44 +72,44 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     // Generate faces
 
-    let mut faces: Vec<Face> = vec![];
+    let mut partial_faces: Vec<PartialFace> = vec![];
 
     for i in 0..divisions {
         // Generate a ring of faces around the base
 
-        faces.push(Face {
+        partial_faces.push(PartialFace {
             // (ring_i, ring_i + 1, bottom_center) (clockwise)
-            vertices: (i as usize, i as usize + 1, bottom_center_index),
+            vertices: [i as usize, i as usize + 1, bottom_center_index],
             // (down, down, down)
-            normals: Some((0, 0, 0)),
+            normals: Some([0, 0, 0]),
             // (ring_i, ring_i + 1, center) (clockwise)
-            uvs: Some((i as usize, i as usize + 1, center_uv_index)),
+            uvs: Some([i as usize, i as usize + 1, center_uv_index]),
         });
 
         // (ring_i + 1, ring_i, top_center) (counter-clockwise)
-        let vertex_indices = (i as usize + 1, i as usize, top_center_index);
+        let vertex_indices = [i as usize + 1, i as usize, top_center_index];
 
         // @TODO Smooth normals for cone sides
         normals.push(
-            (vertices[vertex_indices.1] - vertices[vertex_indices.0])
-                .cross(vertices[vertex_indices.2] - vertices[vertex_indices.0])
+            (vertices[vertex_indices[1]] - vertices[vertex_indices[0]])
+                .cross(vertices[vertex_indices[2]] - vertices[vertex_indices[0]])
                 .as_normal(),
         );
 
         let normal_index = normals.len() - 1;
 
-        faces.push(Face {
+        partial_faces.push(PartialFace {
             vertices: vertex_indices,
             // (normal to the face)
-            normals: Some((normal_index, normal_index, normal_index)),
+            normals: Some([normal_index, normal_index, normal_index]),
             // (ring_i + 1, ring_i, center) (counter-clockwise)
-            uvs: Some((i as usize + 1, i as usize, center_uv_index)),
+            uvs: Some([i as usize + 1, i as usize, center_uv_index]),
         });
     }
 
     let geometry = Geometry::new(vertices, uvs, normals);
 
-    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+    let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 
     mesh.object_name = Some("cone".to_string());
 

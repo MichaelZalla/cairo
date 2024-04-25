@@ -1,7 +1,7 @@
 use std::{path::Path, str::SplitWhitespace};
 
 use crate::{
-    mesh::Face,
+    mesh::PartialFace,
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
@@ -50,7 +50,7 @@ pub fn parse_vertex_normal(tokens: &mut SplitWhitespace<'_>) -> Result<Vec3, Str
     Ok(Vec3 { x, y, z })
 }
 
-pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<Face, String> {
+pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<PartialFace, String> {
     // Vertex indices only:             f v1 v2 v3 ....
     // Vertex and UV indices:           f v1/uv1 v2/uv2 v3/uv3 ...
     // Vertex, UV, and normal indices:  f v1/uv1/n1 v2/uv2/n2 v3/uv3/n3 ...
@@ -64,17 +64,17 @@ pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<Face, String> {
     // `f 1004//1004 1003//1003 1002//1002` ({x,y,z}{vert_index, texture_index, vert_normal_index})
     // `f 1004//1004 1003//1003 1002//1002` ({x,y,z}{vert_index, texture_index, vert_normal_index})
 
-    let mut face: Face = Default::default();
+    let mut partial_face: PartialFace = Default::default();
 
     let mut v1_iter = tokens.next().unwrap().split('/');
     let mut v2_iter = tokens.next().unwrap().split('/');
     let mut v3_iter = tokens.next().unwrap().split('/');
 
-    face.vertices = (
+    partial_face.vertices = [
         v1_iter.next().unwrap().parse::<usize>().unwrap() - 1,
         v2_iter.next().unwrap().parse::<usize>().unwrap() - 1,
         v3_iter.next().unwrap().parse::<usize>().unwrap() - 1,
-    );
+    ];
 
     let v1_uv_index = v1_iter.next();
     let v2_uv_index = v2_iter.next();
@@ -86,7 +86,7 @@ pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<Face, String> {
             let v2_uv = v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
             let v3_uv = v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
 
-            face.uvs = Some((v1_uv, v2_uv, v3_uv));
+            partial_face.uvs = Some([v1_uv, v2_uv, v3_uv]);
         }
     }
 
@@ -104,10 +104,10 @@ pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<Face, String> {
         let v2_n = v2_n_raw - 1;
         let v3_n = v3_n_raw - 1;
 
-        face.normals = Some((v1_n, v2_n, v3_n));
+        partial_face.normals = Some([v1_n, v2_n, v3_n]);
     }
 
-    Ok(face)
+    Ok(partial_face)
 }
 
 pub fn parse_mtllib(
@@ -126,7 +126,3 @@ pub fn parse_mtllib(
 
     Ok(mtl_path_relative_str.to_string())
 }
-
-// pub fn parse_vertex<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec3, String> {}
-
-// pub fn parse_vertex<'a>(tokens: &mut SplitWhitespace<'a>) -> Result<Vec3, String> {}

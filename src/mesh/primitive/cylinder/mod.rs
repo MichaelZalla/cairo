@@ -1,7 +1,7 @@
 use std::{f32::consts::PI, rc::Rc};
 
 use crate::{
-    mesh::{geometry::Geometry, Face, Mesh},
+    mesh::{geometry::Geometry, Mesh, PartialFace},
     vec::{
         vec2::{self, Vec2},
         vec3::{self, Vec3},
@@ -93,7 +93,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     // Generate faces
 
-    let mut faces: Vec<Face> = vec![];
+    let mut partial_faces: Vec<PartialFace> = vec![];
 
     for i in 0..divisions as usize {
         // Vertex indices
@@ -108,23 +108,23 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
         // Generate a top face
 
-        faces.push(Face {
+        partial_faces.push(PartialFace {
             // (top_ring_right, top_ring_left, top_center) (counter-clockwise)
-            vertices: (top_ring_right, top_ring_left, top_center),
+            vertices: [top_ring_right, top_ring_left, top_center],
             // (up, up, up)
-            normals: Some((0, 0, 0)),
+            normals: Some([0, 0, 0]),
             // (ring_i + 1, ring_i, center) (counter-clockwise)
-            uvs: Some((i + 1, i, center_uv_index)),
+            uvs: Some([i + 1, i, center_uv_index]),
         });
 
         // Generate a bottom face
-        faces.push(Face {
+        partial_faces.push(PartialFace {
             // (bottom_ring_left, bottom_ring_right, bottom_center) (counter-clockwise)
-            vertices: (bottom_ring_left, bottom_ring_right, bottom_center),
+            vertices: [bottom_ring_left, bottom_ring_right, bottom_center],
             // (down, down, down)
-            normals: Some((1, 1, 1)),
+            normals: Some([1, 1, 1]),
             // (ring_i, ring_i + 1, center) (counter-clockwise)
-            uvs: Some((i, i + 1, center_uv_index)),
+            uvs: Some([i, i + 1, center_uv_index]),
         });
 
         // Generate 2 side faces (for each quad)
@@ -170,57 +170,57 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         let uv_strip_bottom_right_index = uv_strips_start_index + i * 4 + 3;
 
         // (top_ring_right, bottom_ring_left, top_ring_left) (counter-clockwise)
-        let vertex_indices_1 = (top_ring_right, bottom_ring_left, top_ring_left);
+        let vertex_indices_1 = [top_ring_right, bottom_ring_left, top_ring_left];
 
         // @TODO Smooth normals for cylinder sides
         normals.push(
-            (vertices[vertex_indices_1.1] - vertices[vertex_indices_1.0])
-                .cross(vertices[vertex_indices_1.2] - vertices[vertex_indices_1.0])
+            (vertices[vertex_indices_1[1]] - vertices[vertex_indices_1[0]])
+                .cross(vertices[vertex_indices_1[2]] - vertices[vertex_indices_1[0]])
                 .as_normal(),
         );
 
         let mut normal_index = normals.len() - 1;
 
-        faces.push(Face {
+        partial_faces.push(PartialFace {
             vertices: vertex_indices_1,
             // (normal to the face)
-            normals: Some((normal_index, normal_index, normal_index)),
+            normals: Some([normal_index, normal_index, normal_index]),
             // (uv_strip_top_right, uv_strip_bottom_left, uv_strip_top_left) (counter-clockwise)
-            uvs: Some((
+            uvs: Some([
                 uv_strip_top_right_index,
                 uv_strip_bottom_left_index,
                 uv_strip_top_left_index,
-            )),
+            ]),
         });
 
         // (top_ring_right, bottom_ring_right, bottom_ring_left) (counter-clockwise)
-        let vertex_indices_2 = (top_ring_right, bottom_ring_right, bottom_ring_left);
+        let vertex_indices_2 = [top_ring_right, bottom_ring_right, bottom_ring_left];
 
         // @TODO Smooth normals for cylinder sides
         normals.push(
-            (vertices[vertex_indices_2.1] - vertices[vertex_indices_2.0])
-                .cross(vertices[vertex_indices_2.2] - vertices[vertex_indices_2.0])
+            (vertices[vertex_indices_2[1]] - vertices[vertex_indices_2[0]])
+                .cross(vertices[vertex_indices_2[2]] - vertices[vertex_indices_2[0]])
                 .as_normal(),
         );
 
         normal_index = normals.len() - 1;
 
-        faces.push(Face {
+        partial_faces.push(PartialFace {
             vertices: vertex_indices_2,
             // (normal to the face)
-            normals: Some((normal_index, normal_index, normal_index)),
+            normals: Some([normal_index, normal_index, normal_index]),
             // (uv_strip_top_right, uv_strip_bottom_right, uv_strip_bottom_left) (counter-clockwise)
-            uvs: Some((
+            uvs: Some([
                 uv_strip_top_right_index,
                 uv_strip_bottom_right_index,
                 uv_strip_bottom_left_index,
-            )),
+            ]),
         });
     }
 
     let geometry = Geometry::new(vertices, uvs, normals);
 
-    let mut mesh = Mesh::new(Some(Rc::new(geometry)), faces, None);
+    let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 
     mesh.object_name = Some("cylinder".to_string());
 

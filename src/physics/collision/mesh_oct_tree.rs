@@ -51,9 +51,9 @@ impl<'a> MeshOctTree<'a> {
     }
 
     fn get_vertices_for_face(&self, face_index: usize) -> (&Vec3, &Vec3, &Vec3) {
-        let v0_index = self.mesh.faces[face_index].vertices.0;
-        let v1_index = self.mesh.faces[face_index].vertices.1;
-        let v2_index = self.mesh.faces[face_index].vertices.2;
+        let v0_index = self.mesh.faces[face_index].vertices[0];
+        let v1_index = self.mesh.faces[face_index].vertices[1];
+        let v2_index = self.mesh.faces[face_index].vertices[2];
 
         (
             &self.geometry.vertices[v0_index],

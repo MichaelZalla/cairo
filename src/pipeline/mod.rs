@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -323,7 +323,7 @@ impl<'a> Pipeline<'a> {
             context.set_world_transform(*world_transform);
         }
 
-        let geometry = mesh.geometry.as_ref().unwrap().borrow();
+        let geometry = mesh.geometry.as_ref();
 
         self.render_mesh_geometry(geometry, &mesh.faces);
 
@@ -340,45 +340,17 @@ impl<'a> Pipeline<'a> {
     }
 
     fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
-        let v0 = geometry.vertices[face.vertices.0];
-        let v1 = geometry.vertices[face.vertices.1];
-        let v2 = geometry.vertices[face.vertices.2];
+        let v0 = geometry.vertices[face.vertices[0]];
+        let v1 = geometry.vertices[face.vertices[1]];
+        let v2 = geometry.vertices[face.vertices[2]];
 
-        let normal0 = if face.normals.is_some() {
-            geometry.normals[face.normals.unwrap().0]
-        } else {
-            Default::default()
-        };
+        let normal0 = geometry.normals[face.normals[0]];
+        let normal1 = geometry.normals[face.normals[1]];
+        let normal2 = geometry.normals[face.normals[2]];
 
-        let normal1 = if face.normals.is_some() {
-            geometry.normals[face.normals.unwrap().1]
-        } else {
-            Default::default()
-        };
-
-        let normal2 = if face.normals.is_some() {
-            geometry.normals[face.normals.unwrap().2]
-        } else {
-            Default::default()
-        };
-
-        let uv0 = if face.uvs.is_some() {
-            geometry.uvs[face.uvs.unwrap().0]
-        } else {
-            Default::default()
-        };
-
-        let uv1 = if face.uvs.is_some() {
-            geometry.uvs[face.uvs.unwrap().1]
-        } else {
-            Default::default()
-        };
-
-        let uv2 = if face.uvs.is_some() {
-            geometry.uvs[face.uvs.unwrap().2]
-        } else {
-            Default::default()
-        };
+        let uv0 = geometry.uvs[face.uvs[0]];
+        let uv1 = geometry.uvs[face.uvs[1]];
+        let uv2 = geometry.uvs[face.uvs[2]];
 
         let edge0 = v1 - v0;
         let edge1 = v2 - v0;
