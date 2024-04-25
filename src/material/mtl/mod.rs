@@ -342,12 +342,6 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
         mtl_file_path_display
     );
 
-    println!();
-
-    for material in cache.values() {
-        println!("{}", material);
-    }
-
     cache
 }
 
