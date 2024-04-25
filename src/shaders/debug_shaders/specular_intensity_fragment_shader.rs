@@ -6,12 +6,11 @@ use crate::{
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
-    vec::vec3::Vec3,
 };
 
 pub const SpecularIntensityFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the specular intensity for this fragment.
 
-        Color::from_vec3(Vec3::ones() * sample.specular_intensity)
+        Color::from_vec3(sample.specular_color)
     };

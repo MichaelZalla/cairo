@@ -343,11 +343,11 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                                 let (r, g, b) = sample_nearest(out.uv, map, None);
 
-                                let r_f = r as f32;
-                                let g_f = g as f32;
-                                let b_f = b as f32;
-
-                                out.specular_intensity = (r_f + g_f + b_f) / 255.0;
+                                out.specular_color = Vec3 {
+                                    x: r as f32,
+                                    y: g as f32,
+                                    z: b as f32,
+                                } / 255.0;
                             }
                             Err(_) => panic!("Invalid TextureMap handle!"),
                         },
@@ -356,10 +356,10 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             // material, or specular exponent mapping is
                             // disabled.
 
-                            out.specular_intensity = if let Some(light) = default_point_light {
-                                light.specular_intensity
+                            out.specular_color = if let Some(light) = default_point_light {
+                                Vec3::ones() * light.specular_intensity
                             } else {
-                                0.0
+                                Default::default()
                             };
                         }
                     }
@@ -374,10 +374,10 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
             out.specular_exponent = 8;
 
-            out.specular_intensity = if let Some(light) = default_point_light {
-                light.specular_intensity
+            out.specular_color = if let Some(light) = default_point_light {
+                Vec3::ones() * light.specular_intensity
             } else {
-                0.0
+                Default::default()
             };
         }
     }

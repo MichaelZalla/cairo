@@ -17,7 +17,7 @@ pub struct GeometrySample {
     pub uv: Vec2,
     pub depth: f32,
     pub tangent_space_info: TangentSpaceInfo,
-    pub specular_intensity: f32,
+    pub specular_color: Vec3,
     pub specular_exponent: i32,
     pub emissive_color: Vec3,
     pub alpha: f32,
@@ -39,7 +39,7 @@ impl Add<GeometrySample> for GeometrySample {
             world_pos: self.world_pos + rhs.world_pos,
             depth: self.depth + rhs.depth,
             specular_exponent: self.specular_exponent + rhs.specular_exponent,
-            specular_intensity: self.specular_intensity + rhs.specular_intensity,
+            specular_color: self.specular_color + rhs.specular_color,
             emissive_color: self.emissive_color + rhs.emissive_color,
             alpha: self.alpha + rhs.alpha,
         }
@@ -60,7 +60,7 @@ impl Sub<GeometrySample> for GeometrySample {
             world_pos: self.world_pos - rhs.world_pos,
             depth: self.depth - rhs.depth,
             specular_exponent: self.specular_exponent - rhs.specular_exponent,
-            specular_intensity: self.specular_intensity - rhs.specular_intensity,
+            specular_color: self.specular_color - rhs.specular_color,
             emissive_color: self.emissive_color - rhs.emissive_color,
             alpha: self.alpha - rhs.alpha,
         }
@@ -81,7 +81,7 @@ impl Mul<GeometrySample> for GeometrySample {
             world_pos: self.world_pos * rhs.world_pos,
             depth: self.depth * rhs.depth,
             specular_exponent: self.specular_exponent * rhs.specular_exponent,
-            specular_intensity: self.specular_intensity * rhs.specular_intensity,
+            specular_color: self.specular_color * rhs.specular_color,
             emissive_color: self.emissive_color * rhs.emissive_color,
             alpha: self.alpha * rhs.alpha,
         }
@@ -102,7 +102,7 @@ impl Div<GeometrySample> for GeometrySample {
             world_pos: self.world_pos / rhs.world_pos,
             depth: self.depth / rhs.depth,
             specular_exponent: self.specular_exponent / rhs.specular_exponent,
-            specular_intensity: self.specular_intensity / rhs.specular_intensity,
+            specular_color: self.specular_color / rhs.specular_color,
             emissive_color: self.emissive_color / rhs.emissive_color,
             alpha: self.alpha / rhs.alpha,
         }

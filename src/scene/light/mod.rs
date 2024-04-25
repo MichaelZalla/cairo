@@ -151,7 +151,7 @@ impl PointLight {
             let similarity = 0.0_f32.max(cosine_theta);
 
             specular_contribution = point_contribution
-                * sample.specular_intensity
+                * sample.specular_color
                 * similarity.powi(sample.specular_exponent);
         }
 
