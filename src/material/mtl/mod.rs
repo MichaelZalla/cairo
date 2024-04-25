@@ -100,6 +100,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .ambient_color = next_rgb(&mut line_tokens);
                             }
 
+                            // Ambient color map
+                            "map_ka" => {
+                                // [filepath]
+                                // Example:
+                                // map_Ka cube.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    ambient_color_map
+                                );
+                            }
+
                             // Diffuse color
                             "kd" => {
                                 // R G B
@@ -110,6 +126,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
                                     .diffuse_color = next_rgb(&mut line_tokens);
+                            }
+
+                            // Diffuse color map
+                            "map_kd" => {
+                                // [filepath]
+                                // Example:
+                                // map_Kd cube.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    diffuse_color_map
+                                );
                             }
 
                             // Specular color
@@ -136,6 +168,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
                                     .specular_exponent = value as i32;
+                            }
+
+                            // Specular color map
+                            "map_ks" | "map_ns" => {
+                                // [filepath]
+                                // Example:
+                                // map_Ks cube_specular.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    specular_exponent_map
+                                );
                             }
 
                             // Emissive color
@@ -202,54 +250,6 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
                                     .index_of_refraction = value;
-                            }
-
-                            // Ambient texture map
-                            "map_ka" => {
-                                // [filepath]
-                                // Example:
-                                // map_Ka cube.png
-
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    ambient_color_map
-                                );
-                            }
-
-                            // Diffuse texture map (typically identical to map_Ka)
-                            "map_kd" => {
-                                // [filepath]
-                                // Example:
-                                // map_Kd cube.png
-
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    diffuse_color_map
-                                );
-                            }
-
-                            // Specular color map
-                            "map_ks" | "map_ns" => {
-                                // [filepath]
-                                // Example:
-                                // map_Ks cube_specular.png
-
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    specular_exponent_map
-                                );
                             }
 
                             // Emissive color map
