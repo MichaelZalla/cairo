@@ -29,148 +29,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         ..Default::default()
     };
 
-    // Displacement (height)
-
-    match (
-        options.displacement_mapping_active,
-        &context.active_material,
-    ) {
-        (true, Some(name)) => {
-            match resources.material.borrow().get(name) {
-                Some(material) => {
-                    match material.displacement_map {
-                        Some(handle) => {
-                            match resources.texture.borrow().get(&handle) {
-                                Ok(entry) => {
-                                    let map = &entry.item;
-
-                                    let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
-
-                                    let displacement = r as f32 / 255.0;
-
-                                    // Modify sample UV based on height map, if
-                                    // necessary, before proceeding.
-
-                                    static LAYER_COUNT_MIN: f32 = 8.0;
-                                    static LAYER_COUNT_MAX: f32 = 32.0;
-
-                                    static Z_FORWARD_TANGENT_SPACE: Vec3 = vec3::FORWARD;
-
-                                    let get_parallax_mapped_uv =
-                                        |uv: Vec2,
-                                         fragment_to_view_direction_tangent_space: Vec3,
-                                         displacement: f32|
-                                         -> Vec2 {
-                                            // Scale the view-direction vector (in tangent
-                                            // space) by the sampled displacement, modulated
-                                            // by a scaling factor.
-
-                                            let alpha = Z_FORWARD_TANGENT_SPACE
-                                                .dot(fragment_to_view_direction_tangent_space)
-                                                .max(0.0);
-
-                                            let layer_count = (LAYER_COUNT_MAX
-                                                - (LAYER_COUNT_MAX - LAYER_COUNT_MIN) * alpha)
-                                                .floor();
-
-                                            // let layer_count = LAYER_COUNT_MAX;
-
-                                            let layer_depth: f32 = 1.0 / layer_count;
-
-                                            let p = Vec2 {
-                                                x: fragment_to_view_direction_tangent_space.x
-                                                    / fragment_to_view_direction_tangent_space.z,
-                                                y: fragment_to_view_direction_tangent_space.y
-                                                    / fragment_to_view_direction_tangent_space.z,
-                                                z: 1.0,
-                                            } * displacement
-                                                * material.displacement_scale;
-
-                                            let uv_step = p / layer_count;
-
-                                            let mut current_layer_depth = 0.0;
-                                            let mut current_uv = uv;
-                                            let mut current_sampled_displacement = displacement;
-
-                                            while current_layer_depth < current_sampled_displacement
-                                            {
-                                                // Take a step along P.
-                                                current_uv -= uv_step;
-
-                                                // Re-sample the displacement map at this new UV coordinate.
-                                                current_sampled_displacement =
-                                                    sample_nearest(current_uv, map, None).0 as f32
-                                                        / 255.0;
-
-                                                // Update "current" layer depth for our next loop iteration.
-                                                current_layer_depth += layer_depth;
-                                            }
-
-                                            // Interpolate between the sampled
-                                            // displacements at the previous layer and
-                                            // the current layer.
-
-                                            let previous_uv = current_uv + uv_step;
-
-                                            let after_depth =
-                                                current_sampled_displacement - current_layer_depth;
-
-                                            let before_depth =
-                                                (sample_nearest(previous_uv, map, None).0 as f32
-                                                    / 255.0)
-                                                    - current_layer_depth
-                                                    + layer_depth;
-
-                                            let alpha = after_depth / (after_depth - before_depth);
-
-                                            previous_uv * alpha + current_uv * (1.0 - alpha)
-                                        };
-
-                                    if displacement != 0.0 {
-                                        let fragment_to_view_direction_tangent_space =
-                                            (out.tangent_space_info.view_position
-                                                - out.tangent_space_info.fragment_position)
-                                                .as_normal();
-
-                                        out.uv = get_parallax_mapped_uv(
-                                            out.uv,
-                                            fragment_to_view_direction_tangent_space,
-                                            displacement,
-                                        );
-
-                                        if out.uv.x < 0.0
-                                            || out.uv.x > 1.0
-                                            || out.uv.y < 0.0
-                                            || out.uv.y > 1.0
-                                        {
-                                            return None;
-                                        }
-                                    }
-                                }
-                                Err(err) => {
-                                    panic!(
-                                        "Failed to get TextureMap from Arena: {:?}: {}",
-                                        name, err
-                                    )
-                                }
-                            }
-                        }
-                        None => {
-                            // No displacement map defined on this material.
-                        }
-                    }
-                }
-                None => {
-                    panic!("Failed to get Material from MaterialCache: {}", name);
-                }
-            }
-        }
-        _ => {
-            // No active material set for this shader context, or dispacement
-            // mapping is disabled.
-        }
-    }
-
     // World-space surface normal
 
     if let (true, Some(name)) = (options.normal_mapping_active, &context.active_material) {
@@ -451,6 +309,148 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
             // No active material bound to this shader context.
 
             out.alpha = 1.0;
+        }
+    }
+
+    // Displacement (height)
+
+    match (
+        options.displacement_mapping_active,
+        &context.active_material,
+    ) {
+        (true, Some(name)) => {
+            match resources.material.borrow().get(name) {
+                Some(material) => {
+                    match material.displacement_map {
+                        Some(handle) => {
+                            match resources.texture.borrow().get(&handle) {
+                                Ok(entry) => {
+                                    let map = &entry.item;
+
+                                    let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
+
+                                    let displacement = r as f32 / 255.0;
+
+                                    // Modify sample UV based on height map, if
+                                    // necessary, before proceeding.
+
+                                    static LAYER_COUNT_MIN: f32 = 8.0;
+                                    static LAYER_COUNT_MAX: f32 = 32.0;
+
+                                    static Z_FORWARD_TANGENT_SPACE: Vec3 = vec3::FORWARD;
+
+                                    let get_parallax_mapped_uv =
+                                        |uv: Vec2,
+                                         fragment_to_view_direction_tangent_space: Vec3,
+                                         displacement: f32|
+                                         -> Vec2 {
+                                            // Scale the view-direction vector (in tangent
+                                            // space) by the sampled displacement, modulated
+                                            // by a scaling factor.
+
+                                            let alpha = Z_FORWARD_TANGENT_SPACE
+                                                .dot(fragment_to_view_direction_tangent_space)
+                                                .max(0.0);
+
+                                            let layer_count = (LAYER_COUNT_MAX
+                                                - (LAYER_COUNT_MAX - LAYER_COUNT_MIN) * alpha)
+                                                .floor();
+
+                                            // let layer_count = LAYER_COUNT_MAX;
+
+                                            let layer_depth: f32 = 1.0 / layer_count;
+
+                                            let p = Vec2 {
+                                                x: fragment_to_view_direction_tangent_space.x
+                                                    / fragment_to_view_direction_tangent_space.z,
+                                                y: fragment_to_view_direction_tangent_space.y
+                                                    / fragment_to_view_direction_tangent_space.z,
+                                                z: 1.0,
+                                            } * displacement
+                                                * material.displacement_scale;
+
+                                            let uv_step = p / layer_count;
+
+                                            let mut current_layer_depth = 0.0;
+                                            let mut current_uv = uv;
+                                            let mut current_sampled_displacement = displacement;
+
+                                            while current_layer_depth < current_sampled_displacement
+                                            {
+                                                // Take a step along P.
+                                                current_uv -= uv_step;
+
+                                                // Re-sample the displacement map at this new UV coordinate.
+                                                current_sampled_displacement =
+                                                    sample_nearest(current_uv, map, None).0 as f32
+                                                        / 255.0;
+
+                                                // Update "current" layer depth for our next loop iteration.
+                                                current_layer_depth += layer_depth;
+                                            }
+
+                                            // Interpolate between the sampled
+                                            // displacements at the previous layer and
+                                            // the current layer.
+
+                                            let previous_uv = current_uv + uv_step;
+
+                                            let after_depth =
+                                                current_sampled_displacement - current_layer_depth;
+
+                                            let before_depth =
+                                                (sample_nearest(previous_uv, map, None).0 as f32
+                                                    / 255.0)
+                                                    - current_layer_depth
+                                                    + layer_depth;
+
+                                            let alpha = after_depth / (after_depth - before_depth);
+
+                                            previous_uv * alpha + current_uv * (1.0 - alpha)
+                                        };
+
+                                    if displacement != 0.0 {
+                                        let fragment_to_view_direction_tangent_space =
+                                            (out.tangent_space_info.view_position
+                                                - out.tangent_space_info.fragment_position)
+                                                .as_normal();
+
+                                        out.uv = get_parallax_mapped_uv(
+                                            out.uv,
+                                            fragment_to_view_direction_tangent_space,
+                                            displacement,
+                                        );
+
+                                        if out.uv.x < 0.0
+                                            || out.uv.x > 1.0
+                                            || out.uv.y < 0.0
+                                            || out.uv.y > 1.0
+                                        {
+                                            return None;
+                                        }
+                                    }
+                                }
+                                Err(err) => {
+                                    panic!(
+                                        "Failed to get TextureMap from Arena: {:?}: {}",
+                                        name, err
+                                    )
+                                }
+                            }
+                        }
+                        None => {
+                            // No displacement map defined on this material.
+                        }
+                    }
+                }
+                None => {
+                    panic!("Failed to get Material from MaterialCache: {}", name);
+                }
+            }
+        }
+        _ => {
+            // No active material set for this shader context, or dispacement
+            // mapping is disabled.
         }
     }
 
