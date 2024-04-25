@@ -33,7 +33,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    light.contribute(sample.world_normal)
+                    light.contribute(sample)
                 }
                 Err(err) => panic!(
                     "Failed to get DirectionalLight from Arena: {:?}: {}",

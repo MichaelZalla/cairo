@@ -39,13 +39,16 @@ impl PostDeserialize for DirectionalLight {
 }
 
 impl DirectionalLight {
-    pub fn contribute(self, surface_normal: Vec3) -> Vec3 {
-        self.intensities
-            * 0.0_f32.max((surface_normal * -1.0).dot(Vec3 {
-                x: self.direction.x,
-                y: self.direction.y,
-                z: self.direction.z,
-            }))
+    pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
+        let tangent_space_info = sample.tangent_space_info;
+
+        let normal = &tangent_space_info.normal;
+
+        let direction_to_light = (self.direction * -1.0 * tangent_space_info.tbn_inverse)
+            .to_vec3()
+            .as_normal();
+
+        self.intensities * 0.0_f32.max((*normal * -1.0).dot(direction_to_light))
     }
 }
 
