@@ -272,36 +272,6 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 );
                             }
 
-                            // Stencil (decal) map
-                            "decal" => {
-                                // [filepath]
-                                // Example:
-                                // decal cube_decal.png
-
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    decal_map
-                                );
-                            }
-
-                            // Index of refraction
-                            "ni" => {
-                                // [0.001, 10] range
-                                // Example:
-                                // Ni 1.5000
-
-                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
-
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .index_of_refraction = value;
-                            }
-
                             //
                             // Blinn-Phong attributes
                             //
@@ -389,6 +359,40 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     cache,
                                     current_material_name,
                                     specular_color_map
+                                );
+                            }
+
+                            //
+                            // Miscellaneous
+                            //
+
+                            // Index of refraction
+                            "ni" => {
+                                // [0.001, 10] range
+                                // Example:
+                                // Ni 1.5000
+
+                                let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
+
+                                cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap()
+                                    .index_of_refraction = value;
+                            }
+
+                            // Stencil (decal) map
+                            "decal" => {
+                                // [filepath]
+                                // Example:
+                                // decal cube_decal.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    decal_map
                                 );
                             }
 
