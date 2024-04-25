@@ -18,6 +18,7 @@ pub mod entity;
 pub mod font;
 pub mod fs;
 pub mod graphics;
+pub mod hdr;
 pub mod material;
 pub mod matrix;
 pub mod mesh;

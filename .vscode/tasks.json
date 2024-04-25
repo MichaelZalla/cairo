@@ -156,6 +156,15 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example ibl",
+      "command": "cargo run --example ibl"
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example post-effects",
       "command": "cargo run --example post-effects"
     },
