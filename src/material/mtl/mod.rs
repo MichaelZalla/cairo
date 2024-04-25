@@ -193,6 +193,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     .transparency = value;
                             }
 
+                            // Transparency map
+                            "map_tr" => {
+                                // [filepath]
+                                // Example:
+                                // map_d cube_transparency.png
+
+                                create_and_set_material_map!(
+                                    line_tokens,
+                                    mtl_file_path,
+                                    texture_arena,
+                                    cache,
+                                    current_material_name,
+                                    transparency_map
+                                );
+                            }
+
                             // Translucency (transmission filter color)
                             "tf" => {
                                 // (r,g,b)

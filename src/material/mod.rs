@@ -23,6 +23,7 @@ pub struct Material {
     pub dissolve: f32,
     pub alpha_map: Option<Handle>,
     pub transparency: f32,
+    pub transparency_map: Option<Handle>,
     pub translucency: Vec3,
     pub index_of_refraction: f32,
     pub normal_map: Option<Handle>,
@@ -71,6 +72,7 @@ impl Material {
             &mut self.normal_map,
             &mut self.specular_color_map,
             &mut self.specular_exponent_map,
+            &mut self.transparency_map,
         ];
 
         optional_handles.into_iter().for_each(|optional_handle| {
