@@ -94,6 +94,8 @@ impl Div<f32> for TangentSpaceInfo {
 pub struct DefaultVertexOut {
     pub position: Vec4,
     pub normal: Vec4,
+    pub tangent: Vec4,
+    pub bitangent: Vec4,
     pub tangent_space_info: TangentSpaceInfo,
     pub color: Vec3,
     pub uv: Vec2,
@@ -117,6 +119,8 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position + rhs.position,
             normal: self.normal + rhs.normal,
+            tangent: self.tangent + rhs.tangent,
+            bitangent: self.bitangent + rhs.bitangent,
             tangent_space_info: self.tangent_space_info + rhs.tangent_space_info,
             color: self.color + rhs.color,
             uv: self.uv + rhs.uv,
@@ -130,6 +134,8 @@ impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
     fn add_assign(&mut self, rhs: DefaultVertexOut) {
         self.position += rhs.position;
         self.normal += rhs.normal;
+        self.tangent += rhs.tangent;
+        self.bitangent += rhs.bitangent;
         self.tangent_space_info += rhs.tangent_space_info;
         self.color += rhs.color;
         self.uv += rhs.uv;
@@ -144,6 +150,8 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position - rhs.position,
             normal: self.normal - rhs.normal,
+            tangent: self.tangent - rhs.tangent,
+            bitangent: self.bitangent - rhs.bitangent,
             tangent_space_info: self.tangent_space_info - rhs.tangent_space_info,
             color: self.color - rhs.color,
             uv: self.uv - rhs.uv,
@@ -159,6 +167,8 @@ impl Mul<f32> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position * scalar,
             normal: self.normal * scalar,
+            tangent: self.tangent * scalar,
+            bitangent: self.bitangent * scalar,
             tangent_space_info: self.tangent_space_info * scalar,
             color: self.color * scalar,
             uv: self.uv * scalar,
@@ -172,6 +182,8 @@ impl MulAssign<f32> for DefaultVertexOut {
     fn mul_assign(&mut self, scalar: f32) {
         self.position *= scalar;
         self.normal *= scalar;
+        self.tangent *= scalar;
+        self.bitangent *= scalar;
         self.tangent_space_info *= scalar;
         self.color *= scalar;
         self.uv *= scalar;
@@ -186,6 +198,8 @@ impl Div<f32> for DefaultVertexOut {
         DefaultVertexOut {
             position: self.position / scalar,
             normal: self.normal / scalar,
+            tangent: self.tangent / scalar,
+            bitangent: self.bitangent / scalar,
             tangent_space_info: self.tangent_space_info / scalar,
             color: self.color / scalar,
             uv: self.uv / scalar,

@@ -7,10 +7,7 @@ use crate::{
     },
     // scene::resources::SceneResources,
     // shader::{self, context::ShaderContext},
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
@@ -177,21 +174,15 @@ impl<'a> Pipeline<'a> {
                     color::BLUE,
                 );
 
-                let tangent_world_space =
-                    Vec4::new(vec3::LEFT * -1.0, 1.0) * vertex.tangent_space_info.tbn;
-
                 self.render_line(
                     vertex.world_pos,
-                    vertex.world_pos + tangent_world_space.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos + vertex.tangent.to_vec3() * NORMALS_SCALE,
                     color::RED,
                 );
 
-                let bitangent_world_space =
-                    Vec4::new(vec3::UP * -1.0, 1.0) * vertex.tangent_space_info.tbn;
-
                 self.render_line(
                     vertex.world_pos,
-                    vertex.world_pos + bitangent_world_space.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos + vertex.bitangent.to_vec3() * NORMALS_SCALE,
                     color::GREEN,
                 );
             }

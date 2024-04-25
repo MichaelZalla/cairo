@@ -340,64 +340,55 @@ impl<'a> Pipeline<'a> {
     }
 
     fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
-        let v0 = geometry.vertices[face.vertices[0]];
-        let v1 = geometry.vertices[face.vertices[1]];
-        let v2 = geometry.vertices[face.vertices[2]];
+        let (v0, v1, v2) = (
+            geometry.vertices[face.vertices[0]],
+            geometry.vertices[face.vertices[1]],
+            geometry.vertices[face.vertices[2]],
+        );
 
-        let normal0 = geometry.normals[face.normals[0]];
-        let normal1 = geometry.normals[face.normals[1]];
-        let normal2 = geometry.normals[face.normals[2]];
+        let (normal0, normal1, normal2) = (
+            geometry.normals[face.normals[0]],
+            geometry.normals[face.normals[1]],
+            geometry.normals[face.normals[2]],
+        );
 
-        let uv0 = geometry.uvs[face.uvs[0]];
-        let uv1 = geometry.uvs[face.uvs[1]];
-        let uv2 = geometry.uvs[face.uvs[2]];
+        let (uv0, uv1, uv2) = (
+            geometry.uvs[face.uvs[0]],
+            geometry.uvs[face.uvs[1]],
+            geometry.uvs[face.uvs[2]],
+        );
 
-        let edge0 = v1 - v0;
-        let edge1 = v2 - v0;
+        let (tangent0, tangent1, tangent2) = (face.tangents[0], face.tangents[1], face.tangents[2]);
 
-        let delta_uv0 = uv1 - uv0;
-        let delta_uv1 = uv2 - uv0;
-
-        let f = 1.0 / (delta_uv0.x * delta_uv1.y - delta_uv1.x * delta_uv0.y);
-
-        let tangent = Vec3 {
-            x: f * (delta_uv1.y * edge0.x - delta_uv0.y * edge1.x),
-            y: f * (delta_uv1.y * edge0.y - delta_uv0.y * edge1.y),
-            z: f * (delta_uv1.y * edge0.z - delta_uv0.y * edge1.z),
-        };
-
-        let bitangent = Vec3 {
-            x: f * (-delta_uv1.x * edge0.x + delta_uv0.x * edge1.x),
-            y: f * (-delta_uv1.x * edge0.y + delta_uv0.x * edge1.y),
-            z: f * (-delta_uv1.x * edge0.z + delta_uv0.x * edge1.z),
-        };
+        let (bitangent0, bitangent1, bitangent2) =
+            (face.bitangents[0], face.bitangents[1], face.bitangents[2]);
 
         static WHITE: Vec3 = Vec3::ones();
 
         let v0_in = DefaultVertexIn {
             position: v0,
             normal: normal0,
-            tangent,
-            bitangent,
             uv: uv0,
+            tangent: tangent0,
+            bitangent: bitangent0,
             color: WHITE,
         };
 
         let v1_in = DefaultVertexIn {
             position: v1,
             normal: normal1,
-            tangent,
-            bitangent,
             uv: uv1,
+            tangent: tangent1,
+            bitangent: bitangent1,
             color: WHITE,
         };
 
         let v2_in = DefaultVertexIn {
             position: v2,
             normal: normal2,
-            tangent,
-            bitangent,
             uv: uv2,
+            tangent: tangent2,
+            bitangent: bitangent2,
             color: WHITE,
         };
 

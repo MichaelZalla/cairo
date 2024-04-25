@@ -33,6 +33,8 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
         let bitangent = (Vec4::new(v.bitangent, 0.0) * context.world_transform).as_normal();
 
         out.normal = normal;
+        out.tangent = tangent;
+        out.bitangent = bitangent;
 
         let (t, b, n) = (tangent, bitangent, normal);
 
