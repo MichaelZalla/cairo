@@ -314,13 +314,13 @@ fn draw_slider(
                 let max_width = NUMBER_SLIDER_WIDTH - NUMBER_SLIDER_LABEL_PADDING;
 
                 let input_text_x = slider_top_left.0
-                    + (NUMBER_SLIDER_WIDTH as f32 / 2.0 - model_value_texture.width as f32 / 2.0)
+                    + (NUMBER_SLIDER_WIDTH as f32 / 2.0 - model_value_texture.0.width as f32 / 2.0)
                         as u32;
 
                 let input_text_y = slider_top_left.1 + 1;
 
                 Graphics::blit_text_from_mask(
-                    &model_value_texture,
+                    &model_value_texture.0,
                     &TextOperation {
                         text,
                         x: input_text_x,

@@ -241,18 +241,18 @@ fn draw_textbox(
                     + match options.input_text_alignment {
                         ItemTextAlignment::Left => TEXTBOX_TEXT_PADDING,
                         ItemTextAlignment::Center => {
-                            (TEXTBOX_WIDTH as f32 / 2.0 - model_value_texture.width as f32 / 2.0)
+                            (TEXTBOX_WIDTH as f32 / 2.0 - model_value_texture.0.width as f32 / 2.0)
                                 as u32
                         }
                         ItemTextAlignment::Right => {
-                            TEXTBOX_WIDTH - model_value_texture.width - TEXTBOX_LABEL_PADDING
+                            TEXTBOX_WIDTH - model_value_texture.0.width - TEXTBOX_LABEL_PADDING
                         }
                     };
 
                 let input_text_y = textbox_top_left.1 + 1;
 
                 Graphics::blit_text_from_mask(
-                    &model_value_texture,
+                    &model_value_texture.0,
                     &TextOperation {
                         text,
                         x: input_text_x,
@@ -271,6 +271,7 @@ fn draw_textbox(
                     let blinking_text_cursor_x = textbox_top_left.0
                         + TEXTBOX_TEXT_PADDING
                         + model_value_texture
+                            .0
                             .width
                             .min(max_width - TEXTBOX_CURSOR_PADDING)
                         + TEXTBOX_CURSOR_PADDING;

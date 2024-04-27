@@ -57,7 +57,7 @@ impl Graphics {
                 let (_label_width, _label_height, texture) =
                     Graphics::make_text_mask(font.as_ref(), op.text).unwrap();
 
-                Graphics::blit_text_from_mask(&texture, op, dest_buffer, None);
+                Graphics::blit_text_from_mask(&texture.0, op, dest_buffer, None);
             }
         }
 
@@ -152,6 +152,6 @@ impl Graphics {
 
         let buffer = Buffer2D::from_data(width, height, bytes);
 
-        Ok((width, height, buffer))
+        Ok((width, height, TextureBuffer(buffer)))
     }
 }

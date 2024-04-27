@@ -41,14 +41,14 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
     let safe_uv = apply_wrapping_options(uv, map);
 
     debug_assert!(
-        map.levels[0].data.len()
-            == (map.width * map.height * map.get_bytes_per_pixel() as u32) as usize,
-        "filepath={}, levels[0].data.len() = {}, map.width={}, map.height={}, map.bytes_per_pixel={}",
+        map.levels[0].0.data.len()
+            == (map.width * map.height * map.get_buffer_samples_per_pixel() as u32) as usize,
+        "filepath={}, levels[0].0.data.len() = {}, map.width={}, map.height={}, map.get_buffer_samples_per_pixel={}",
         map.info.filepath,
-        map.levels[0].data.len(),
+        map.levels[0].0.data.len(),
         map.width,
         map.height,
-        map.get_bytes_per_pixel(),
+        map.get_buffer_samples_per_pixel(),
     );
 
     // Determine our map dimensions, based on the level index.
@@ -286,8 +286,8 @@ fn sample_from_texel(
         None => map.width,
     };
 
-    let texel_color_index =
-        map.get_bytes_per_pixel() * (texel.1 as u32 * level_width + texel.0 as u32) as usize;
+    let texel_color_index = map.get_buffer_samples_per_pixel()
+        * (texel.1 as u32 * level_width + texel.0 as u32) as usize;
 
     let buffer = match level_index {
         Some(index) => {
@@ -299,16 +299,16 @@ fn sample_from_texel(
         None => &map.levels[0],
     };
 
-    debug_assert!(texel_color_index < buffer.data.len());
+    debug_assert!(texel_color_index < buffer.0.data.len());
 
-    let r = buffer.data[texel_color_index];
+    let r = buffer.0.data[texel_color_index];
     let g;
     let b;
 
     match map.info.storage_format {
         TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
-            g = buffer.data[texel_color_index + 1];
-            b = buffer.data[texel_color_index + 2];
+            g = buffer.0.data[texel_color_index + 1];
+            b = buffer.0.data[texel_color_index + 2];
         }
         TextureMapStorageFormat::Index8(_target_channel) => {
             g = r;

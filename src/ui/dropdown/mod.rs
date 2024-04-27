@@ -310,14 +310,14 @@ fn draw_dropdown(
                 x - DROPDOWN_ITEM_HORIZONTAL_PADDING / 2 + 1,
                 y + 1,
                 max_width + DROPDOWN_ITEM_HORIZONTAL_PADDING / 2 * 2 - 2,
-                model_value_texture.height,
+                model_value_texture.0.height,
                 Some(color::BLUE),
                 None,
             );
         }
 
         Graphics::blit_text_from_mask(
-            &model_value_texture,
+            &model_value_texture.0,
             &TextOperation {
                 text: item,
                 x,
@@ -332,7 +332,7 @@ fn draw_dropdown(
             Some(max_width),
         );
 
-        y += model_value_texture.height + DROPDOWN_ITEM_VERTICAL_PADDING;
+        y += model_value_texture.0.height + DROPDOWN_ITEM_VERTICAL_PADDING;
     }
 
     // Draw the textbox label.

@@ -7,7 +7,7 @@ use crate::color::blend::{self, blend, BlendMode};
 
 pub mod framebuffer;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Buffer2D<T = u32>
 where
     T: Default + PartialEq + Copy + Clone + Debug,

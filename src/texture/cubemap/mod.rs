@@ -7,7 +7,7 @@ use crate::{
     buffer::Buffer2D,
     color::{self, Color},
     serde::PostDeserialize,
-    texture::sample::sample_nearest,
+    texture::{map::TextureBuffer, sample::sample_nearest},
     vec::{vec2::Vec2, vec4::Vec4},
 };
 
@@ -141,9 +141,9 @@ impl CubeMap {
 
                 let mut bytes: Vec<u8> = vec![];
 
-                let bytes_per_pixel = side_map.get_bytes_per_pixel();
+                let buffer_samples_per_pixel = side_map.get_buffer_samples_per_pixel();
 
-                let new_len = dimension as usize * dimension as usize * bytes_per_pixel;
+                let new_len = dimension as usize * dimension as usize * buffer_samples_per_pixel;
 
                 bytes.resize(new_len, 0);
 
@@ -153,8 +153,8 @@ impl CubeMap {
                     for global_x in block_pixel_coordinate.0..(block_pixel_coordinate.0 + dimension)
                     {
                         let global_pixel_index = ((global_y * map.width) as usize
-                            * bytes_per_pixel)
-                            + global_x as usize * bytes_per_pixel;
+                            * buffer_samples_per_pixel)
+                            + global_x as usize * buffer_samples_per_pixel;
 
                         let mut local_x = global_x - block_pixel_coordinate.0;
                         let mut local_y = global_y - block_pixel_coordinate.1;
@@ -165,17 +165,18 @@ impl CubeMap {
                             local_y = dimension - local_y - 1;
                         }
 
-                        let local_pixel_index = ((local_y * dimension) as usize * bytes_per_pixel)
-                            + local_x as usize * bytes_per_pixel;
+                        let local_pixel_index = ((local_y * dimension) as usize
+                            * buffer_samples_per_pixel)
+                            + local_x as usize * buffer_samples_per_pixel;
 
-                        bytes[local_pixel_index] = cross_buffer.data[global_pixel_index];
+                        bytes[local_pixel_index] = cross_buffer.0.data[global_pixel_index];
 
                         match side_map.info.storage_format {
                             TextureMapStorageFormat::RGB24 | TextureMapStorageFormat::RGBA32 => {
                                 bytes[local_pixel_index + 1] =
-                                    cross_buffer.data[global_pixel_index + 1];
+                                    cross_buffer.0.data[global_pixel_index + 1];
                                 bytes[local_pixel_index + 2] =
-                                    cross_buffer.data[global_pixel_index + 2];
+                                    cross_buffer.0.data[global_pixel_index + 2];
                             }
                             TextureMapStorageFormat::Index8(_target_channel) => (),
                         }
@@ -184,7 +185,7 @@ impl CubeMap {
 
                 let buffer = Buffer2D::from_data(dimension, dimension, bytes);
 
-                side_map.levels.push(buffer);
+                side_map.levels.push(TextureBuffer(buffer));
 
                 side_map.is_loaded = true;
             }

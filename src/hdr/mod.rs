@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::vec::vec3::Vec3;
+use crate::{buffer::Buffer2D, texture::map::TextureMap, vec::vec3::Vec3};
 
 use self::rgbe::Rgbe;
 
@@ -55,5 +55,17 @@ impl Hdr {
         }
 
         vecs
+    }
+
+    pub fn to_buffer(&self) -> Buffer2D<Vec3> {
+        let v = self.to_vec3();
+
+        Buffer2D::<Vec3>::from_data(self.source.width as u32, self.source.height as u32, v)
+    }
+
+    pub fn to_texture_map(&self) -> TextureMap<Vec3> {
+        let buffer = self.to_buffer();
+
+        TextureMap::<Vec3>::from_buffer(buffer.width, buffer.height, buffer)
     }
 }

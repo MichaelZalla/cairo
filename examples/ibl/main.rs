@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use cairo::{buffer::Buffer2D, hdr::load::load_hdr, vec::vec3::Vec3};
+use cairo::hdr::load::load_hdr;
 
 fn main() -> Result<(), String> {
     let filepath = Path::new("./examples/ibl/assets/rural_asphalt_road_4k.hdr");
@@ -11,15 +11,9 @@ fn main() -> Result<(), String> {
             println!("{:?}", hdr.headers);
             println!("Decoded {} bytes from file.", hdr.bytes.len());
 
-            let vecs = hdr.to_vec3();
+            let hdr_texture = hdr.to_texture_map();
 
-            let buffer = Buffer2D::<Vec3>::from_data(
-                hdr.source.width as u32,
-                hdr.source.height as u32,
-                vecs,
-            );
-
-            println!("{}x{}", buffer.width, buffer.height);
+            println!("{}x{}", hdr_texture.width, hdr_texture.height);
         }
         Err(e) => {
             return Err(format!("Failed to read HDR file: {}", e).to_string());

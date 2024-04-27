@@ -73,7 +73,7 @@ fn draw_image(
     let mut near_level_index = 0;
 
     if !map.levels.is_empty() {
-        while map.levels[near_level_index].width >= options.width
+        while map.levels[near_level_index].0.width >= options.width
             && near_level_index < map.levels.len() - 1
         {
             near_level_index += 1;
@@ -82,8 +82,8 @@ fn draw_image(
         far_level_index = near_level_index - 1;
     }
 
-    let alpha = (options.width - map.levels[near_level_index].width) as f32
-        / (map.levels[far_level_index].width - map.levels[near_level_index].width) as f32;
+    let alpha = (options.width - map.levels[near_level_index].0.width) as f32
+        / (map.levels[far_level_index].0.width - map.levels[near_level_index].0.width) as f32;
 
     for sample_y in 0..options.height {
         for sample_x in 0..options.width {

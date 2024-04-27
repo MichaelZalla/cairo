@@ -83,12 +83,14 @@ pub fn do_text(
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_mask(font.as_ref(), &options.text).unwrap();
 
+            let buffer = texture.0;
+
             (layout_offset_x, layout_offset_y) = options
                 .layout_options
-                .get_layout_offset(layout, texture.width);
+                .get_layout_offset(layout, buffer.width);
 
-            item_width = texture.width;
-            item_height = texture.height;
+            item_width = buffer.width;
+            item_height = buffer.height;
 
             layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
@@ -96,7 +98,7 @@ pub fn do_text(
                 layout,
                 layout_offset_x,
                 layout_offset_y,
-                &texture,
+                &buffer,
                 options,
                 parent_buffer,
             );

@@ -45,7 +45,7 @@ pub fn cache_text<'a>(
             let (_label_width, _label_height, text_texture) =
                 Graphics::make_text_mask(font.as_ref(), text).unwrap();
 
-            v.insert(text_texture);
+            v.insert(text_texture.0.to_owned());
 
             println!("Inserted text mask texture for '{}' into TextCache.", text);
         }
