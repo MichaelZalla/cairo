@@ -276,7 +276,9 @@ impl TextureMap {
         for level_index in 1..levels as usize {
             let dimension = self.width / 2_u32.pow(level_index as u32);
 
-            let bytes = get_half_scaled(dimension, self.levels.last().unwrap());
+            let last = self.levels.last().unwrap();
+
+            let bytes = get_half_scaled(dimension, last);
 
             self.levels
                 .push(Buffer2D::from_data(dimension, dimension, bytes));
