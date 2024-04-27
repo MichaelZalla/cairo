@@ -114,18 +114,18 @@ fn main() -> Result<(), String> {
 
         let mut checkerboard_mat = Material::new("checkerboard".to_string());
 
-        let mut checkerboard_diffuse_map = TextureMap::new(
+        let mut checkerboard_diffuse_color_map = TextureMap::new(
             &"./assets/textures/checkerboard.jpg",
             TextureMapStorageFormat::Index8(0),
         );
 
         // Checkerboard material
 
-        checkerboard_diffuse_map.options.wrapping = TextureMapWrapping::Repeat;
+        checkerboard_diffuse_color_map.sampling_options.wrapping = TextureMapWrapping::Repeat;
 
-        checkerboard_diffuse_map.load(rendering_context)?;
+        checkerboard_diffuse_color_map.load(rendering_context)?;
 
-        checkerboard_diffuse_map.map(|r, g, b| {
+        checkerboard_diffuse_color_map.map(|r, g, b| {
             if r < 4 && g < 4 && b < 4 {
                 return (18, 18, 18);
             }
@@ -135,7 +135,7 @@ fn main() -> Result<(), String> {
         let checkerboard_diffuse_map_handle = resources
             .texture
             .borrow_mut()
-            .insert(Uuid::new_v4(), checkerboard_diffuse_map);
+            .insert(Uuid::new_v4(), checkerboard_diffuse_color_map);
 
         // Pump up diffuse value of the darkest pixels
 

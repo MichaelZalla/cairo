@@ -8,7 +8,7 @@ use crate::{
 use super::map::TextureMap;
 
 fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
-    match map.options.wrapping {
+    match map.sampling_options.wrapping {
         TextureMapWrapping::Repeat => Vec2 {
             x: if uv.x < 0.0 || uv.x >= 1.0 {
                 uv.x.rem_euclid(1.0)
@@ -64,7 +64,7 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
 
     // Perform any out-of-bounds handling.
 
-    if let TextureMapWrapping::ClampToBorder(border_color) = map.options.wrapping {
+    if let TextureMapWrapping::ClampToBorder(border_color) = map.sampling_options.wrapping {
         if safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0 {
             return border_color;
         }
@@ -393,7 +393,7 @@ pub fn get_neighbors(
         None => map.height as f32,
     };
 
-    match (map.options.wrapping, level_width == 1.0) {
+    match (map.sampling_options.wrapping, level_width == 1.0) {
         (TextureMapWrapping::Repeat, _) | (_, true) => (
             Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
             Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),

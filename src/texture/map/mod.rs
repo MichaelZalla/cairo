@@ -48,7 +48,7 @@ pub enum TextureMapWrapping {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct TextureMapOptions {
+pub struct TextureMapSamplingOptions {
     pub wrapping: TextureMapWrapping,
 }
 
@@ -65,7 +65,7 @@ pub struct TextureMap {
     pub height: u32,
     #[serde(skip, default)]
     pub levels: Vec<TextureBuffer>,
-    pub options: TextureMapOptions,
+    pub sampling_options: TextureMapSamplingOptions,
 }
 
 impl PostDeserialize for TextureMap {
@@ -86,7 +86,7 @@ impl TextureMap {
             width: 0,
             height: 0,
             levels: vec![],
-            options: Default::default(),
+            sampling_options: Default::default(),
         }
     }
 
@@ -116,7 +116,7 @@ impl TextureMap {
             width,
             height,
             levels: vec![buffer.clone()],
-            options: Default::default(),
+            sampling_options: Default::default(),
         }
     }
 
