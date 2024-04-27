@@ -324,7 +324,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 cache
                                     .get_mut(current_material_name.as_ref().unwrap())
                                     .unwrap()
-                                    .specular_exponent = value as i32;
+                                    .specular_exponent = value as u8;
                             }
 
                             // Specular exponent map

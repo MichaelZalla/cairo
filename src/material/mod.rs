@@ -37,7 +37,7 @@ pub struct Material {
     pub diffuse_color_map: Option<Handle>,
     pub specular_color: Vec3,
     pub specular_color_map: Option<Handle>,
-    pub specular_exponent: i32, // aka "shininess"
+    pub specular_exponent: u8,
     pub specular_exponent_map: Option<Handle>,
     // PBR attributes
     pub albedo: Vec3,

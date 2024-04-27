@@ -220,7 +220,7 @@ impl PointLight {
 
             specular_contribution = point_contribution
                 * sample.specular_color
-                * similarity.powi(sample.specular_exponent);
+                * similarity.powi(sample.specular_exponent as i32);
         }
 
         point_contribution + specular_contribution

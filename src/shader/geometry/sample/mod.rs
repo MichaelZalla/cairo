@@ -19,7 +19,7 @@ pub struct GeometrySample {
     pub tangent_space_info: TangentSpaceInfo,
     // Common
     pub specular_color: Vec3,
-    pub specular_exponent: i32,
+    pub specular_exponent: u8,
     pub emissive_color: Vec3,
     pub alpha: f32,
     // Blinn-Phong
