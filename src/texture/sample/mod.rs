@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::ops::Rem;
 
 use crate::{
@@ -7,7 +8,10 @@ use crate::{
 
 use super::map::TextureMap;
 
-fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
+fn apply_wrapping_options<T: Default + Debug + Copy + PartialEq>(
+    uv: Vec2,
+    map: &TextureMap<T>,
+) -> Vec2 {
     match map.sampling_options.wrapping {
         TextureMapWrapping::Repeat => Vec2 {
             x: if uv.x < 0.0 || uv.x >= 1.0 {
