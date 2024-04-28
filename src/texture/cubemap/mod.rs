@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Debug};
 
 use serde::{Deserialize, Serialize};
 
@@ -8,15 +8,18 @@ use crate::{
     color::{self, Color},
     serde::PostDeserialize,
     texture::{map::TextureBuffer, sample::sample_nearest_u8},
-    vec::{vec2::Vec2, vec4::Vec4},
+    vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
-use super::map::{TextureMap, TextureMapStorageFormat};
+use super::{
+    map::{TextureMap, TextureMapStorageFormat},
+    sample::sample_nearest_vec3,
+};
 
 static SIDES: usize = 6;
 
 #[derive(Copy, Clone, Debug)]
-enum Side {
+pub enum Side {
     Front = 0,
     Back = 1,
     Top = 2,
@@ -41,12 +44,12 @@ impl fmt::Display for Side {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct CubeMap {
+pub struct CubeMap<T: Default + Debug + Copy + PartialEq = u8> {
     is_cross: bool,
-    sides: [TextureMap; 6],
+    pub sides: [TextureMap<T>; 6],
 }
 
-impl PostDeserialize for CubeMap {
+impl<T: Default + Debug + Copy + PartialEq> PostDeserialize for CubeMap<T> {
     fn post_deserialize(&mut self) {
         for side in self.sides.iter_mut() {
             side.post_deserialize();
@@ -54,7 +57,7 @@ impl PostDeserialize for CubeMap {
     }
 }
 
-impl CubeMap {
+impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
     pub fn new(texture_paths: [&str; 6], storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: false,
@@ -83,6 +86,106 @@ impl CubeMap {
         }
     }
 
+    pub fn get_uv_for_direction(&self, direction: &Vec4) -> (Side, Vec2) {
+        let absolute = direction.abs();
+
+        let side: Side;
+
+        let uv_scaling_factor: f32;
+
+        let mut uv: Vec2;
+
+        if absolute.x >= absolute.y && absolute.x >= absolute.z {
+            // X has the greatest magnitude
+            side = if direction.x >= 0.0 {
+                Side::Right
+            } else {
+                Side::Left
+            };
+
+            uv_scaling_factor = 0.5 / absolute.x;
+
+            uv = Vec2 {
+                x: if direction.x < 0.0 {
+                    -direction.z
+                } else {
+                    direction.z
+                },
+                y: direction.y,
+                z: 0.0,
+            };
+        } else if absolute.y >= absolute.z {
+            // Y has the greatest magnitude
+            side = if direction.y >= 0.0 {
+                Side::Top
+            } else {
+                Side::Bottom
+            };
+
+            uv_scaling_factor = 0.5 / absolute.y;
+
+            uv = Vec2 {
+                x: direction.x,
+                y: if direction.y < 0.0 {
+                    -direction.z
+                } else {
+                    direction.z
+                },
+                z: 0.0,
+            };
+        } else {
+            // Z has the greatest magnitude
+            side = if direction.z >= 0.0 {
+                Side::Back
+            } else {
+                Side::Front
+            };
+
+            uv_scaling_factor = 0.5 / absolute.z;
+
+            uv = Vec2 {
+                x: if direction.z < 0.0 {
+                    direction.x
+                } else {
+                    -direction.x
+                },
+                y: direction.y,
+                z: 0.0,
+            };
+        }
+
+        uv *= uv_scaling_factor;
+        uv.x += 0.5;
+        uv.y += 0.5;
+
+        (side, uv)
+    }
+}
+
+impl CubeMap<Vec3> {
+    pub fn sample(&self, direction: &Vec4) -> Vec3 {
+        let (side, uv) = self.get_uv_for_direction(direction);
+
+        let map = &self.sides[side as usize];
+
+        if !map.is_loaded {
+            static COLORS: [Color; 6] = [
+                color::BLUE,
+                color::RED,
+                color::WHITE,
+                color::BLACK,
+                color::GREEN,
+                color::YELLOW,
+            ];
+
+            return COLORS[side as usize].to_vec3();
+        }
+
+        sample_nearest_vec3(uv, map)
+    }
+}
+
+impl CubeMap {
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
         if self.is_cross {
             // Read in the horizontal or vertical cross texture
@@ -196,81 +299,6 @@ impl CubeMap {
         }
 
         Ok(())
-    }
-
-    fn get_uv_for_direction(&self, direction: &Vec4) -> (Side, Vec2) {
-        let absolute = direction.abs();
-
-        let side: Side;
-
-        let uv_scaling_factor: f32;
-
-        let mut uv: Vec2;
-
-        if absolute.x >= absolute.y && absolute.x >= absolute.z {
-            // X has the greatest magnitude
-            side = if direction.x >= 0.0 {
-                Side::Right
-            } else {
-                Side::Left
-            };
-
-            uv_scaling_factor = 0.5 / absolute.x;
-
-            uv = Vec2 {
-                x: if direction.x < 0.0 {
-                    -direction.z
-                } else {
-                    direction.z
-                },
-                y: direction.y,
-                z: 0.0,
-            };
-        } else if absolute.y >= absolute.z {
-            // Y has the greatest magnitude
-            side = if direction.y >= 0.0 {
-                Side::Top
-            } else {
-                Side::Bottom
-            };
-
-            uv_scaling_factor = 0.5 / absolute.y;
-
-            uv = Vec2 {
-                x: direction.x,
-                y: if direction.y < 0.0 {
-                    -direction.z
-                } else {
-                    direction.z
-                },
-                z: 0.0,
-            };
-        } else {
-            // Z has the greatest magnitude
-            side = if direction.z >= 0.0 {
-                Side::Back
-            } else {
-                Side::Front
-            };
-
-            uv_scaling_factor = 0.5 / absolute.z;
-
-            uv = Vec2 {
-                x: if direction.z < 0.0 {
-                    direction.x
-                } else {
-                    -direction.x
-                },
-                y: direction.y,
-                z: 0.0,
-            };
-        }
-
-        uv *= uv_scaling_factor;
-        uv.x += 0.5;
-        uv.y += 0.5;
-
-        (side, uv)
     }
 
     pub fn sample(&self, direction: &Vec4) -> Color {
