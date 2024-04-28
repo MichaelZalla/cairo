@@ -32,6 +32,7 @@ pub struct SceneResources {
     pub texture: RefCell<Arena<TextureMap>>,
     pub hdr: RefCell<Arena<TextureMap<Vec3>>>,
     pub skybox: RefCell<Arena<CubeMap>>,
+    pub skybox_hdr: RefCell<Arena<CubeMap<Vec3>>>,
 }
 
 impl PostDeserialize for SceneResources {
@@ -48,6 +49,7 @@ impl PostDeserialize for SceneResources {
         self.texture.borrow_mut().post_deserialize();
         self.hdr.borrow_mut().post_deserialize();
         self.skybox.borrow_mut().post_deserialize();
+        self.skybox_hdr.borrow_mut().post_deserialize();
     }
 }
 
@@ -66,6 +68,7 @@ impl Default for SceneResources {
             texture: RefCell::new(Arena::<_>::new()),
             hdr: RefCell::new(Arena::<_>::new()),
             skybox: RefCell::new(Arena::<_>::new()),
+            skybox_hdr: RefCell::new(Arena::<_>::new()),
         }
     }
 }
