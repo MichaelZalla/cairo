@@ -9,6 +9,7 @@ use crate::{
     resource::arena::Arena,
     serde::PostDeserialize,
     texture::{cubemap::CubeMap, map::TextureMap},
+    vec::vec3::Vec3,
 };
 
 use super::{
@@ -29,6 +30,7 @@ pub struct SceneResources {
     pub entity: RefCell<Arena<Entity>>,
     pub material: RefCell<MaterialCache>,
     pub texture: RefCell<Arena<TextureMap>>,
+    pub hdr: RefCell<Arena<TextureMap<Vec3>>>,
     pub skybox: RefCell<Arena<CubeMap>>,
 }
 
@@ -44,6 +46,7 @@ impl PostDeserialize for SceneResources {
         self.entity.borrow_mut().post_deserialize();
         self.material.borrow_mut().post_deserialize();
         self.texture.borrow_mut().post_deserialize();
+        self.hdr.borrow_mut().post_deserialize();
         self.skybox.borrow_mut().post_deserialize();
     }
 }
@@ -61,6 +64,7 @@ impl Default for SceneResources {
             entity: RefCell::new(Arena::<_>::new()),
             material: RefCell::new(Default::default()),
             texture: RefCell::new(Arena::<_>::new()),
+            hdr: RefCell::new(Arena::<_>::new()),
             skybox: RefCell::new(Arena::<_>::new()),
         }
     }
