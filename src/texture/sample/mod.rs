@@ -82,6 +82,28 @@ pub fn sample_nearest_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>)
     sample_from_texel_u8((texel_x, texel_y), map, level_index)
 }
 
+pub fn sample_nearest_vec3(uv: Vec2, map: &TextureMap<Vec3>) -> Vec3 {
+    debug_assert!(map.is_loaded);
+
+    let safe_uv = apply_wrapping_options(uv, map);
+
+    // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
+
+    let texel_x = safe_uv.x * (map.width - 1) as f32;
+    let texel_y = (1.0 - safe_uv.y) * (map.height - 1) as f32;
+
+    // Determine our map width based on the level index.
+
+    let texel_color_index =
+        map.get_buffer_samples_per_pixel() * (texel_y as u32 * map.width + texel_x as u32) as usize;
+
+    let buffer = &map.levels[0];
+
+    debug_assert!(texel_color_index < buffer.0.data.len());
+
+    buffer.0.data[texel_color_index]
+}
+
 pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
