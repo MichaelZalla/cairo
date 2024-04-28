@@ -198,7 +198,7 @@ impl CubeMap {
         Ok(())
     }
 
-    pub fn sample(&self, direction: &Vec4) -> Color {
+    fn get_uv_for_direction(&self, direction: &Vec4) -> (Side, Vec2) {
         let absolute = direction.abs();
 
         let side: Side;
@@ -270,7 +270,13 @@ impl CubeMap {
         uv.x += 0.5;
         uv.y += 0.5;
 
-        let map: &TextureMap = &self.sides[side as usize];
+        (side, uv)
+    }
+
+    pub fn sample(&self, direction: &Vec4) -> Color {
+        let (side, uv) = self.get_uv_for_direction(direction);
+
+        let map = &self.sides[side as usize];
 
         if !map.is_loaded {
             static COLORS: [Color; 6] = [
