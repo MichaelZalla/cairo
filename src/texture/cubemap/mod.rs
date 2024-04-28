@@ -28,6 +28,15 @@ pub enum Side {
     Right = 5,
 }
 
+pub static CUBE_MAP_SIDES: [Side; 6] = [
+    Side::Front,
+    Side::Back,
+    Side::Top,
+    Side::Bottom,
+    Side::Left,
+    Side::Right,
+];
+
 impl fmt::Display for Side {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         let repr = match self {
