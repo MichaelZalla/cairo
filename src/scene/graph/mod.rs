@@ -2,7 +2,7 @@ use std::fmt::{Display, Error};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{matrix::Mat4, pipeline::Pipeline, serde::PostDeserialize};
+use crate::{matrix::Mat4, pipeline::Pipeline, resource::handle::Handle, serde::PostDeserialize};
 
 use super::{
     node::{
@@ -40,6 +40,9 @@ impl SceneGraph {
 
         // Render scene.
 
+        let mut active_camera_handle: Option<Handle> = None;
+        let mut active_skybox_handle: Option<Handle> = None;
+
         let mut render_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
                                            node: &SceneNode|
@@ -47,6 +50,28 @@ impl SceneGraph {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
+                SceneNodeType::Camera => match handle {
+                    Some(handle) => {
+                        active_camera_handle = Some(*handle);
+
+                        Ok(())
+                    }
+                    None => {
+                        panic!("Encountered a `Camera` node with no resource handle!")
+                    }
+                },
+                SceneNodeType::Skybox => {
+                    match handle {
+                        Some(handle) => {
+                            active_skybox_handle = Some(*handle);
+                        }
+                        None => {
+                            panic!("Encountered a `Skybox` node with no resource handle!")
+                        }
+                    }
+
+                    Ok(())
+                }
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mesh_arena = resources.mesh.borrow();
@@ -87,6 +112,20 @@ impl SceneGraph {
         )?;
 
         // End frame
+
+        if let (Some(camera_handle), Some(skybox_handle)) =
+            (active_camera_handle, active_skybox_handle)
+        {
+            if let (Ok(camera_entry), Ok(skybox_entry)) = (
+                resources.camera.borrow().get(&camera_handle),
+                resources.skybox_hdr.borrow().get(&skybox_handle),
+            ) {
+                let camera = &camera_entry.item;
+                let skybox_hdr = &skybox_entry.item;
+
+                pipeline.render_skybox_hdr(skybox_hdr, camera);
+            }
+        }
 
         pipeline.end_frame();
 

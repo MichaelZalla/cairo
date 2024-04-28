@@ -1,12 +1,14 @@
 use std::{borrow::BorrowMut, cell::RefCell, path::Path};
 
+use uuid::Uuid;
+
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     hdr::load::load_hdr,
     matrix::Mat4,
-    pipeline::{options::PipelineFaceCullingReject, Pipeline},
+    pipeline::Pipeline,
     resource::handle::Handle,
     scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
     shader::context::ShaderContext,
@@ -15,13 +17,12 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
 };
-use shader::{
-    HdrEquirectangularProjectionFragmentShader, HdrEquirectangularProjectionVertexShader,
-};
-use uuid::Uuid;
+
+use skybox::make_skybox_for_radiance;
 
 pub mod scene;
 pub mod shader;
+pub mod skybox;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -43,7 +44,7 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    //
+    // Scene context
 
     let mut scene_context =
         scene::make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
@@ -64,7 +65,7 @@ fn main() -> Result<(), String> {
             println!("{}x{}", hdr_texture.width, hdr_texture.height);
 
             hdr_texture_handle = Some(
-                (*scene_context.borrow_mut().resources)
+                (*scene_context.resources)
                     .borrow_mut()
                     .hdr
                     .borrow_mut()
@@ -76,13 +77,9 @@ fn main() -> Result<(), String> {
         }
     }
 
-    let scene_context_rc = RefCell::new(scene_context);
-
     // Shader context
 
-    let mut shader_context = ShaderContext::default();
-
-    shader_context.set_active_hdr_map(hdr_texture_handle);
+    let shader_context = ShaderContext::default();
 
     let shader_context_rc = RefCell::new(shader_context);
 
@@ -90,18 +87,68 @@ fn main() -> Result<(), String> {
 
     let mut pipeline = Pipeline::new(
         &shader_context_rc,
-        scene_context_rc.borrow().resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
 
-    pipeline.set_vertex_shader(HdrEquirectangularProjectionVertexShader);
-    pipeline.set_fragment_shader(HdrEquirectangularProjectionFragmentShader);
+    // Generate a cubemap texture from our (projected) radiance texture.
 
-    pipeline.options.do_deferred_lighting = false;
-    // pipeline.options.do_lighting = false;
-    pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+    static AMBIENT_DIFFUSE_CUBEMAP_SIZE: u32 = 1024;
+
+    let cubemap_face_framebuffer = {
+        let mut framebuffer =
+            Framebuffer::new(AMBIENT_DIFFUSE_CUBEMAP_SIZE, AMBIENT_DIFFUSE_CUBEMAP_SIZE);
+
+        framebuffer.complete(0.3, 100.0);
+
+        framebuffer
+    };
+
+    let cubemap_face_framebuffer_rc = Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+
+    let ambient_diffuse_skybox_handle = {
+        let scene_context = scene_context.borrow_mut();
+
+        let skybox_hdr = make_skybox_for_radiance(
+            &hdr_texture_handle.unwrap(),
+            AMBIENT_DIFFUSE_CUBEMAP_SIZE,
+            cubemap_face_framebuffer_rc,
+            scene_context,
+            &shader_context_rc,
+            &mut pipeline,
+        );
+
+        (*scene_context.resources)
+            .borrow_mut()
+            .skybox_hdr
+            .borrow_mut()
+            .insert(Uuid::new_v4(), skybox_hdr)
+    };
+
+    let ambient_diffuse_skybox_node = SceneNode::new(
+        cairo::scene::node::SceneNodeType::Skybox,
+        Default::default(),
+        Some(ambient_diffuse_skybox_handle),
+    );
+
+    {
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
+
+        match scene.root.children_mut() {
+            Some(children) => {
+                for child in children.iter_mut() {
+                    if child.is_type(cairo::scene::node::SceneNodeType::Environment) {
+                        child.add_child(ambient_diffuse_skybox_node.to_owned())?;
+                    }
+                }
+            }
+            None => (),
+        }
+    }
+
+    let scene_context_rc = RefCell::new(scene_context);
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -113,7 +160,7 @@ fn main() -> Result<(), String> {
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
         let scene_context = scene_context_rc.borrow_mut();
-        let resources = scene_context.resources.borrow();
+        let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = shader_context_rc.borrow_mut();
 
@@ -163,8 +210,7 @@ fn main() -> Result<(), String> {
         // Render scene.
 
         let scene_context = scene_context_rc.borrow();
-
-        let resources = scene_context.resources.borrow();
+        let resources = (*scene_context.resources).borrow();
 
         let mut pipeline = pipeline_rc.borrow_mut();
 
