@@ -153,36 +153,15 @@ impl ShaderContext {
         &mut self.spot_lights
     }
 
-    pub fn set_active_material(&mut self, material_option: Option<String>) {
-        match material_option {
-            Some(material_raw_mut) => {
-                self.active_material = Some(material_raw_mut);
-            }
-            None => {
-                self.active_material = None;
-            }
-        }
+    pub fn set_active_material(&mut self, optional_handle: Option<String>) {
+        self.active_material = optional_handle;
     }
 
-    pub fn set_active_uv_test_texture_map(&mut self, map: Option<Handle>) {
-        match map {
-            Some(texture_raw_mut) => {
-                self.active_uv_test_texture_map = Some(texture_raw_mut);
-            }
-            None => {
-                self.active_uv_test_texture_map = None;
-            }
-        }
+    pub fn set_active_uv_test_texture_map(&mut self, optional_handle: Option<Handle>) {
+        self.active_uv_test_texture_map = optional_handle;
     }
 
-    pub fn set_active_environment_map(&mut self, skybox: Option<Handle>) {
-        match skybox {
-            Some(cubemap_raw_mut) => {
-                self.active_environment_map = Some(cubemap_raw_mut);
-            }
-            None => {
-                self.active_environment_map = None;
-            }
-        }
+    pub fn set_active_environment_map(&mut self, optional_handle: Option<Handle>) {
+        self.active_environment_map = optional_handle;
     }
 }
