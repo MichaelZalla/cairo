@@ -3,8 +3,17 @@ use std::{collections::VecDeque, fmt::Display};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    matrix::Mat4, resource::handle::Handle, serde::PostDeserialize, transform::Transform3D,
+    app::App,
+    device::{GameControllerState, KeyboardState, MouseState},
+    matrix::Mat4,
+    resource::handle::Handle,
+    serde::PostDeserialize,
+    shader::context::ShaderContext,
+    transform::Transform3D,
+    vec::vec4::Vec4,
 };
+
+use super::resources::SceneResources;
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SceneNodeType {
@@ -372,6 +381,81 @@ impl SceneNode {
         }
 
         Ok(())
+    }
+
+    pub fn update(
+        &mut self,
+        resources: &SceneResources,
+        app: &App,
+        mouse_state: &MouseState,
+        keyboard_state: &KeyboardState,
+        game_controller_state: &GameControllerState,
+        shader_context: &mut ShaderContext,
+    ) -> Result<(), String> {
+        let (node_type, handle) = (self.get_type(), self.get_handle());
+
+        match node_type {
+            SceneNodeType::Camera => match handle {
+                Some(handle) => {
+                    let mut camera_arena = resources.camera.borrow_mut();
+
+                    match camera_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let camera = &mut entry.item;
+
+                            camera.update(
+                                &app.timing_info,
+                                keyboard_state,
+                                mouse_state,
+                                game_controller_state,
+                            );
+
+                            let camera_view_inverse_transform = camera.get_view_inverse_transform();
+
+                            shader_context.set_view_position(Vec4::new(
+                                camera.look_vector.get_position(),
+                                1.0,
+                            ));
+
+                            shader_context
+                                .set_view_inverse_transform(camera_view_inverse_transform);
+
+                            shader_context.set_projection(camera.get_projection());
+
+                            Ok(())
+                        }
+                        Err(err) => panic!(
+                            "Failed to get Camera from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `Camera` node with no resource handle!")
+                }
+            },
+            SceneNodeType::AmbientLight => match handle {
+                Some(handle) => {
+                    shader_context.set_ambient_light(Some(*handle));
+
+                    Ok(())
+                }
+                None => {
+                    panic!("Encountered a `AmbientLight` node with no resource handle!")
+                }
+            },
+            SceneNodeType::DirectionalLight => match handle {
+                Some(handle) => {
+                    shader_context.set_directional_light(Some(*handle));
+
+                    Ok(())
+                }
+                None => {
+                    panic!("Encountered a `DirectionalLight` node with no resource handle!")
+                }
+            },
+            _ => Ok(()),
+        }
     }
 }
 
