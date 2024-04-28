@@ -14,6 +14,7 @@ pub struct ShaderContext {
     pub default_specular_exponent: i32,
     pub active_material: Option<String>,
     pub active_uv_test_texture_map: Option<Handle>,
+    pub active_hdr_map: Option<Handle>,
     pub active_environment_map: Option<Handle>,
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
@@ -33,6 +34,7 @@ impl Default for ShaderContext {
             default_specular_exponent: 8,
             active_material: None,
             active_uv_test_texture_map: None,
+            active_hdr_map: None,
             active_environment_map: None,
             ambient_light: None,
             directional_light: None,
@@ -65,6 +67,7 @@ impl ShaderContext {
             default_specular_exponent: 8,
             active_material: None,
             active_uv_test_texture_map: None,
+            active_hdr_map: None,
             active_environment_map: None,
             ambient_light,
             directional_light,
@@ -163,5 +166,9 @@ impl ShaderContext {
 
     pub fn set_active_environment_map(&mut self, optional_handle: Option<Handle>) {
         self.active_environment_map = optional_handle;
+    }
+
+    pub fn set_active_hdr_map(&mut self, optional_handle: Option<Handle>) {
+        self.active_hdr_map = optional_handle;
     }
 }
