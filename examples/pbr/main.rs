@@ -16,7 +16,6 @@ use cairo::{
     scene::{
         camera::Camera,
         context::SceneContext,
-        graph::SceneGraph,
         light::{AmbientLight, DirectionalLight, PointLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
@@ -57,10 +56,11 @@ fn main() -> Result<(), String> {
 
     // Add scene resources.
 
-    let mut scene = SceneGraph::new();
-
     {
         let resources = (*(scene_context.resources)).borrow_mut();
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        let scene = &mut scenes[0];
 
         // Populate our scene (graph).
 
@@ -233,8 +233,6 @@ fn main() -> Result<(), String> {
             }
         }
     }
-
-    scene_context.scenes.borrow_mut().push(scene);
 
     let scene_context_rc = RefCell::new(scene_context);
 

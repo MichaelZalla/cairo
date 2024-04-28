@@ -23,7 +23,6 @@ use cairo::{
         camera::Camera,
         context::SceneContext,
         environment::Environment,
-        graph::SceneGraph,
         light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
@@ -359,7 +358,7 @@ fn main() -> Result<(), String> {
 
         let mut scenes = scene_context.scenes.borrow_mut();
 
-        let mut scenegraph = SceneGraph::new();
+        let scenegraph = &mut scenes[0];
 
         // Add an environment (node) to our scene.
 
@@ -476,8 +475,6 @@ fn main() -> Result<(), String> {
             Default::default(),
             Some(spot_light_handle),
         ))?;
-
-        scenes.push(scenegraph);
     }
 
     let scene_context_rc = RefCell::new(scene_context);
