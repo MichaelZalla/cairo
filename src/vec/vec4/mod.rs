@@ -178,14 +178,6 @@ impl Vec4 {
             w: self.w,
         }
     }
-
-    pub fn saturate(&mut self) -> &Self {
-        self.x = self.x.max(0.0).min(1.0);
-        self.y = self.y.max(0.0).min(1.0);
-        self.z = self.z.max(0.0).min(1.0);
-
-        self
-    }
 }
 
 pub static UP: Vec4 = Vec4::new(vec3::UP, 1.0);
