@@ -72,6 +72,13 @@ impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
         }
     }
 
+    pub fn from_textures(sides: [TextureMap<T>; 6]) -> Self {
+        Self {
+            is_cross: false,
+            sides,
+        }
+    }
+
     pub fn cross(texture_path: &str, storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: true,
