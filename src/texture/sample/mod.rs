@@ -35,7 +35,7 @@ fn apply_wrapping_options(uv: Vec2, map: &TextureMap) -> Vec2 {
     }
 }
 
-pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
+pub fn sample_nearest_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
     let safe_uv = apply_wrapping_options(uv, map);
@@ -75,7 +75,7 @@ pub fn sample_nearest(uv: Vec2, map: &TextureMap, level_index: Option<usize>) ->
     let texel_x = safe_uv.x * (level_width - 1) as f32;
     let texel_y = (1.0 - safe_uv.y) * (level_height - 1) as f32;
 
-    sample_from_texel((texel_x, texel_y), map, level_index)
+    sample_from_texel_u8((texel_x, texel_y), map, level_index)
 }
 
 pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
@@ -139,14 +139,14 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
         (None, None, Some(texel), None) |
 
         // Case: One neighbor (bottom-right)
-        (None, None, None, Some(texel)) => return sample_from_texel(texel, map, level_index),
+        (None, None, None, Some(texel)) => return sample_from_texel_u8(texel, map, level_index),
 
         // Case: Two neighbors (left column)
         (Some(top_left), None, Some(bottom_left), None) => {
             // Interpolate between top_left and bottom_left (based on uv.y).
 
-            let sample_a = sample_from_texel(top_left, map, level_index);
-            let sample_b = sample_from_texel(bottom_left, map, level_index);
+            let sample_a = sample_from_texel_u8(top_left, map, level_index);
+            let sample_b = sample_from_texel_u8(bottom_left, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.y - top_left.1;
 
@@ -159,8 +159,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
         (None, Some(top_right), None, Some(bottom_right)) => {
             // Interpolate between top_right and bottom_right (based on uv.y).
 
-            let sample_a = sample_from_texel(top_right, map, level_index);
-            let sample_b = sample_from_texel(bottom_right, map, level_index);
+            let sample_a = sample_from_texel_u8(top_right, map, level_index);
+            let sample_b = sample_from_texel_u8(bottom_right, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.y - top_right.1;
 
@@ -173,8 +173,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
         (Some(top_left), Some(top_right), None, None) => {
             // Interpolate between top_left and top_right (based on uv.x).
 
-            let sample_a = sample_from_texel(top_left, map, level_index);
-            let sample_b = sample_from_texel(top_right, map, level_index);
+            let sample_a = sample_from_texel_u8(top_left, map, level_index);
+            let sample_b = sample_from_texel_u8(top_right, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.x - top_left.0;
 
@@ -187,8 +187,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
         (None, None, Some(bottom_left), Some(bottom_right)) => {
             // Interpolate between bottom_left and bottom_right (based on uv.x).
 
-            let sample_a = sample_from_texel(bottom_left, map, level_index);
-            let sample_b = sample_from_texel(bottom_right, map, level_index);
+            let sample_a = sample_from_texel_u8(bottom_left, map, level_index);
+            let sample_b = sample_from_texel_u8(bottom_right, map, level_index);
 
             let alpha = wrapped_uv_as_fractional_texel.x - bottom_left.0;
 
@@ -203,8 +203,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
             let alpha_y = wrapped_uv_as_fractional_texel.y - top_left.1;
 
             // 1. Interpolate between top_left and top_right (based on uv.x).
-            let sample_a_1 = sample_from_texel(top_left, map, level_index);
-            let sample_b_1 = sample_from_texel(top_right, map, level_index);
+            let sample_a_1 = sample_from_texel_u8(top_left, map, level_index);
+            let sample_b_1 = sample_from_texel_u8(top_right, map, level_index);
 
             let r_1 = sample_a_1.0 as f32 + (sample_b_1.0 as f32 - sample_a_1.0 as f32) * alpha_x;
             let g_1 = sample_a_1.1 as f32 + (sample_b_1.1 as f32 - sample_a_1.1 as f32) * alpha_x;
@@ -212,8 +212,8 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
 
             // 2. Interpolate between bottom_left and bottom_right (based on uv.x).
 
-            let sample_a_2 = sample_from_texel(bottom_left, map, level_index);
-            let sample_b_2 = sample_from_texel(bottom_right, map, level_index);
+            let sample_a_2 = sample_from_texel_u8(bottom_left, map, level_index);
+            let sample_b_2 = sample_from_texel_u8(bottom_right, map, level_index);
 
             let r_2 = sample_a_2.0 as f32 + (sample_b_2.0 as f32 - sample_a_2.0 as f32) * alpha_x;
             let g_2 = sample_a_2.1 as f32 + (sample_b_2.1 as f32 - sample_a_2.1 as f32) * alpha_x;
@@ -274,7 +274,7 @@ pub fn sample_trilinear(
     (color.x as u8, color.y as u8, color.z as u8)
 }
 
-fn sample_from_texel(
+fn sample_from_texel_u8(
     texel: (f32, f32),
     map: &TextureMap,
     level_index: Option<usize>,

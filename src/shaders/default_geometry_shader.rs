@@ -5,7 +5,7 @@ use crate::{
         context::ShaderContext,
         geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
     },
-    texture::sample::{sample_bilinear, sample_nearest},
+    texture::sample::{sample_bilinear, sample_nearest_u8},
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
@@ -47,7 +47,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, g, b) = sample_nearest(out.uv, map, None);
+                            let (r, g, b) = sample_nearest_u8(out.uv, map, None);
 
                             // Map the normal's components into the range [-1, 1].
 
@@ -85,7 +85,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_nearest(out.uv, map, None);
+                            let (r, _g, _b) = sample_nearest_u8(out.uv, map, None);
 
                             out.ambient_factor = r as f32 / 255.0;
                         }
@@ -107,7 +107,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             let (r, g, b) = if options.bilinear_active {
                                 sample_bilinear(out.uv, map, None)
                             } else {
-                                sample_nearest(out.uv, map, None)
+                                sample_nearest_u8(out.uv, map, None)
                             };
 
                             let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
@@ -137,7 +137,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, g, b) = sample_nearest(out.uv, map, None);
+                            let (r, g, b) = sample_nearest_u8(out.uv, map, None);
 
                             let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
 
@@ -161,7 +161,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_nearest(out.uv, map, None);
+                            let (r, _g, _b) = sample_nearest_u8(out.uv, map, None);
 
                             out.specular_exponent = r as u8;
                         }
@@ -178,7 +178,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, g, b) = sample_nearest(out.uv, map, None);
+                            let (r, g, b) = sample_nearest_u8(out.uv, map, None);
 
                             let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
 
@@ -201,7 +201,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_nearest(out.uv, map, None);
+                            let (r, _g, _b) = sample_nearest_u8(out.uv, map, None);
 
                             out.alpha = r as f32 / 255.0;
                         }
@@ -223,7 +223,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_nearest(interpolant.uv, map, None);
+                            let (r, _g, _b) = sample_nearest_u8(interpolant.uv, map, None);
 
                             let displacement = r as f32 / 255.0;
 
@@ -275,7 +275,8 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                                         // Re-sample the displacement map at this new UV coordinate.
                                         current_sampled_displacement =
-                                            sample_nearest(current_uv, map, None).0 as f32 / 255.0;
+                                            sample_nearest_u8(current_uv, map, None).0 as f32
+                                                / 255.0;
 
                                         // Update "current" layer depth for our next loop iteration.
                                         current_layer_depth += layer_depth;
@@ -290,10 +291,11 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                     let after_depth =
                                         current_sampled_displacement - current_layer_depth;
 
-                                    let before_depth =
-                                        (sample_nearest(previous_uv, map, None).0 as f32 / 255.0)
-                                            - current_layer_depth
-                                            + layer_depth;
+                                    let before_depth = (sample_nearest_u8(previous_uv, map, None).0
+                                        as f32
+                                        / 255.0)
+                                        - current_layer_depth
+                                        + layer_depth;
 
                                     let alpha = after_depth / (after_depth - before_depth);
 
@@ -394,7 +396,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 //         Ok(entry) => {
                 //             let map = &entry.item;
 
-                //             let (r, _g, _b) = sample_nearest(out.uv, map, None);
+                //             let (r, _g, _b) = sample_nearest_u8(out.uv, map, None);
 
                 //             out.sheen = r as f32 / 255.0;
                 //         }

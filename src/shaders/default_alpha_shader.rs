@@ -1,7 +1,7 @@
 use crate::{
     scene::resources::SceneResources,
     shader::{alpha::AlphaShaderFn, context::ShaderContext},
-    texture::sample::sample_nearest,
+    texture::sample::sample_nearest_u8,
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
@@ -20,7 +20,7 @@ pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
                                 // Read in a per-fragment normal, with components in the
                                 // range [0, 255].
 
-                                let (r, _g, _b) = sample_nearest(out.uv, map, None);
+                                let (r, _g, _b) = sample_nearest_u8(out.uv, map, None);
 
                                 if r < 4 {
                                     return false;

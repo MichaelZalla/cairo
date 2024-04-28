@@ -7,7 +7,7 @@ use crate::{
     buffer::Buffer2D,
     color::{self, Color},
     serde::PostDeserialize,
-    texture::{map::TextureBuffer, sample::sample_nearest},
+    texture::{map::TextureBuffer, sample::sample_nearest_u8},
     vec::{vec2::Vec2, vec4::Vec4},
 };
 
@@ -285,7 +285,7 @@ impl CubeMap {
             return COLORS[side as usize];
         }
 
-        let (r, g, b) = sample_nearest(uv, map, None);
+        let (r, g, b) = sample_nearest_u8(uv, map, None);
 
         Color::rgb(r, g, b)
     }
