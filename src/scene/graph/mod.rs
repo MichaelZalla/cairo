@@ -2,10 +2,13 @@ use std::fmt::{Display, Error};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{matrix::Mat4, serde::PostDeserialize};
+use crate::{matrix::Mat4, pipeline::Pipeline, serde::PostDeserialize};
 
-use super::node::{
-    SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+use super::{
+    node::{
+        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    },
+    resources::SceneResources,
 };
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -24,6 +27,70 @@ impl SceneGraph {
         Self {
             root: SceneNode::new(SceneNodeType::Scene, Default::default(), None),
         }
+    }
+
+    pub fn render(
+        &self,
+        resources: &SceneResources,
+        pipeline: &mut Pipeline,
+    ) -> Result<(), String> {
+        // Begin frame
+
+        pipeline.begin_frame();
+
+        // Render scene.
+
+        let mut render_scene_graph_node = |_current_depth: usize,
+                                           current_world_transform: Mat4,
+                                           node: &SceneNode|
+         -> Result<(), String> {
+            let (node_type, handle) = (node.get_type(), node.get_handle());
+
+            match node_type {
+                SceneNodeType::Entity => match handle {
+                    Some(handle) => {
+                        let mesh_arena = resources.mesh.borrow();
+                        let entity_arena = resources.entity.borrow();
+
+                        match entity_arena.get(handle) {
+                            Ok(entry) => {
+                                let entity = &entry.item;
+
+                                pipeline.render_entity(
+                                    entity,
+                                    &current_world_transform,
+                                    &mesh_arena,
+                                );
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Entity from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Entity` node with no resource handle!")
+                    }
+                },
+                _ => Ok(()),
+            }
+        };
+
+        // Traverse the scene graph and render its nodes.
+
+        self.root.visit(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut render_scene_graph_node,
+        )?;
+
+        // End frame
+
+        pipeline.end_frame();
+
+        Ok(())
     }
 }
 
