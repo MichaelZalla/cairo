@@ -18,7 +18,7 @@ use cairo::{
     },
 };
 
-use skybox::make_skybox_for_radiance;
+use skybox::render_radiance_to_cubemap;
 
 pub mod scene;
 pub mod shader;
@@ -108,10 +108,10 @@ fn main() -> Result<(), String> {
 
     let cubemap_face_framebuffer_rc = Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
 
-    let ambient_diffuse_skybox_handle = {
+    let ambient_diffuse_cubemap_handle = {
         let scene_context = scene_context.borrow_mut();
 
-        let skybox_hdr = make_skybox_for_radiance(
+        let cubemap_hdr = render_radiance_to_cubemap(
             &hdr_texture_handle.unwrap(),
             AMBIENT_DIFFUSE_CUBEMAP_SIZE,
             cubemap_face_framebuffer_rc,
@@ -124,13 +124,13 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .skybox_hdr
             .borrow_mut()
-            .insert(Uuid::new_v4(), skybox_hdr)
+            .insert(Uuid::new_v4(), cubemap_hdr)
     };
 
     let ambient_diffuse_skybox_node = SceneNode::new(
         cairo::scene::node::SceneNodeType::Skybox,
         Default::default(),
-        Some(ambient_diffuse_skybox_handle),
+        Some(ambient_diffuse_cubemap_handle),
     );
 
     {

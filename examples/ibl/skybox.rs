@@ -24,7 +24,7 @@ use crate::shader::{
     HdrEquirectangularProjectionFragmentShader, HdrEquirectangularProjectionVertexShader,
 };
 
-pub fn make_skybox_for_radiance(
+pub fn render_radiance_to_cubemap(
     hdr_texture_handle: &Handle,
     cubemap_size: u32,
     framebuffer_rc: &'static mut RefCell<Framebuffer>,
@@ -32,7 +32,7 @@ pub fn make_skybox_for_radiance(
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
 ) -> CubeMap<Vec3> {
-    let mut skybox = CubeMap::from_textures([
+    let mut cubemap = CubeMap::from_textures([
         TextureMap::<Vec3>::default(),
         TextureMap::<Vec3>::default(),
         TextureMap::<Vec3>::default(),
@@ -41,12 +41,10 @@ pub fn make_skybox_for_radiance(
         TextureMap::<Vec3>::default(),
     ]);
 
-    for side in &mut skybox.sides {
+    for side in &mut cubemap.sides {
         side.info.storage_format = TextureMapStorageFormat::Index8(0);
-
         side.width = cubemap_size;
         side.height = cubemap_size;
-
         side.is_loaded = true;
     }
 
@@ -118,7 +116,7 @@ pub fn make_skybox_for_radiance(
                     Some(hdr_attachment_rc) => {
                         let hdr_buffer = hdr_attachment_rc.borrow();
 
-                        skybox.sides[side as usize]
+                        cubemap.sides[side as usize]
                             .levels
                             .push(TextureBuffer::<Vec3>(hdr_buffer.clone()));
                     }
@@ -143,5 +141,5 @@ pub fn make_skybox_for_radiance(
 
     shader_context_rc.borrow_mut().set_active_hdr_map(None);
 
-    skybox
+    cubemap
 }
