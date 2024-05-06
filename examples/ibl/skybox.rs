@@ -53,7 +53,10 @@ pub fn render_radiance_to_cubemap(
         .borrow_mut()
         .set_active_hdr_map(Some(*hdr_texture_handle));
 
-    // Render a single face of our cubemap.
+    // Render each face of our cubemap.
+
+    let mut cubemap_face_camera =
+        Camera::from_perspective(Default::default(), vec3::FORWARD, 90.0, 1.0);
 
     for side in CUBE_MAP_SIDES {
         let face_direction = match side {
@@ -73,10 +76,9 @@ pub fn render_radiance_to_cubemap(
             Side::Right => vec3::LEFT * -1.0,
         };
 
-        let cubemap_face_camera =
-            Camera::from_perspective(Default::default(), face_direction, 90.0, 1.0);
-
-        let camera_view_inverse_transform = cubemap_face_camera.get_view_inverse_transform();
+        cubemap_face_camera
+            .look_vector
+            .set_target_position(face_direction);
 
         {
             let mut shader_context = shader_context_rc.borrow_mut();
@@ -86,7 +88,8 @@ pub fn render_radiance_to_cubemap(
                 1.0,
             ));
 
-            shader_context.set_view_inverse_transform(camera_view_inverse_transform);
+            shader_context
+                .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
 
             shader_context.set_projection(cubemap_face_camera.get_projection());
         }
