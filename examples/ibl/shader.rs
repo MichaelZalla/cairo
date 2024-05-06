@@ -65,24 +65,24 @@ pub const HdrEquirectangularProjectionVertexShader: VertexShaderFn =
         out
     };
 
-fn sample_spherical_to_cartesian(pos: Vec3) -> Vec2 {
-    // See: http://disq.us/p/2nvby4v
-
-    let n = pos.as_normal();
-
-    let u = (pos.x).atan2(pos.z) / (2.0 * PI) + 0.5;
-    let v = n.y * 0.5 + 0.5;
-
-    Vec2 { x: u, y: v, z: 0.0 }
-}
-
-static HDR_EXPOSURE: f32 = 100.0;
-
 pub const HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
     |shader_context: &ShaderContext,
      resources: &SceneResources,
      sample: &GeometrySample|
      -> Color {
+        fn sample_spherical_to_cartesian(pos: Vec3) -> Vec2 {
+            // See: http://disq.us/p/2nvby4v
+
+            let n = pos.as_normal();
+
+            let u = (pos.x).atan2(pos.z) / (2.0 * PI) + 0.5;
+            let v = n.y * 0.5 + 0.5;
+
+            Vec2 { x: u, y: v, z: 0.0 }
+        }
+
+        static HDR_EXPOSURE: f32 = 100.0;
+
         if let Some(handle) = shader_context.active_hdr_map {
             if let Ok(entry) = resources.hdr.borrow().get(&handle) {
                 let map = &entry.item;
@@ -93,7 +93,18 @@ pub const HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
                 sample *= HDR_EXPOSURE;
 
-                return Color::from_vec3(sample);
+                // return Color::from_vec3(sample);
+
+                // Exposure tone mapping
+
+                let color_tone_mapped_vec3 = Vec3::ones()
+                    - Vec3 {
+                        x: (-sample.x).exp(),
+                        y: (-sample.y).exp(),
+                        z: (-sample.z).exp(),
+                    };
+
+                return Color::from_vec3(color_tone_mapped_vec3);
             }
         }
 
@@ -109,11 +120,89 @@ pub const HdrCubemapConvolutionFragmentShader: FragmentShaderFn =
             if let Ok(entry) = resources.skybox_hdr.borrow().get(&handle) {
                 let map = &entry.item;
 
-                let direction = Vec4::new(sample.world_pos.as_normal(), 1.0);
+                let normal = sample.world_pos.as_normal();
 
-                return Color::from_vec3(map.sample(&direction));
+                // return Color::from_vec3(map.sample(&Vec4::new(normal, 1.0)));
+
+                let mut irradiance = Vec3::new();
+
+                static SAMPLE_DELTA: f32 = 0.05;
+                // static SAMPLE_DELTA: f32 = 0.25;
+
+                let mut sample_count: usize = 0;
+
+                // Convolution.
+
+                let mut up = Vec3 {
+                    y: 1.0,
+                    ..Default::default()
+                };
+                let right = up.cross(normal).as_normal();
+                up = normal.cross(right).as_normal();
+
+                let mut phi = 0.0;
+
+                while phi < 2.0 * PI {
+                    let mut theta = 0.0;
+
+                    while theta < 0.5 * PI {
+                        // Spherical to cartesian (in tangent space).
+
+                        let cartesian = Vec3 {
+                            x: theta.sin() * phi.cos(),
+                            y: theta.sin() * phi.sin(),
+                            z: theta.cos(),
+                        };
+
+                        // Tangent space to world position.
+
+                        let world_pos =
+                            right * cartesian.x + up * cartesian.y + normal * cartesian.z;
+
+                        // Sampled radiance, scaled by the incoming light angle (theta).
+
+                        // "Note that we scale the sampled color value by
+                        // cos(theta) due to the light being weaker at larger
+                        // angles and by sin(theta) to account for the smaller
+                        // sample areas in the higher hemisphere areas."
+
+                        let radiance =
+                            map.sample(&Vec4::new(world_pos, 1.0))/* * theta.cos() * theta.sin()*/;
+
+                        irradiance += radiance;
+
+                        sample_count += 1;
+
+                        theta += SAMPLE_DELTA;
+                    }
+
+                    phi += SAMPLE_DELTA;
+                }
+
+                irradiance = irradiance * PI * (1.0 / sample_count as f32);
+
+                return Color::from_vec3(irradiance);
             }
         }
 
+        color::GREEN
+    };
+
+pub const AmbientDiffuseCubemapFragmentShader: FragmentShaderFn =
+    |shader_context: &ShaderContext,
+     resources: &SceneResources,
+     sample: &GeometrySample|
+     -> Color {
+        if let Some(handle) = shader_context.active_environment_map {
+            if let Ok(entry) = resources.skybox_hdr.borrow().get(&handle) {
+                let map = &entry.item;
+
+                let normal = sample.world_pos.as_normal();
+
+                let irradiance = map.sample(&Vec4::new(normal, 1.0));
+
+                return Color::from_vec3(irradiance);
+            }
+        }
         color::GREEN
     };

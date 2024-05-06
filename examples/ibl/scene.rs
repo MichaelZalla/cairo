@@ -45,7 +45,7 @@ pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String>
                 Vec3 {
                     x: 0.0,
                     y: 0.0,
-                    z: 0.0,
+                    z: -3.0,
                 },
                 vec3::FORWARD,
                 75.0,

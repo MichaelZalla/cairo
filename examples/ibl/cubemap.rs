@@ -21,7 +21,8 @@ use cairo::{
 };
 
 use crate::shader::{
-    HdrEquirectangularProjectionFragmentShader, HdrEquirectangularProjectionVertexShader,
+    HdrCubemapConvolutionFragmentShader, HdrEquirectangularProjectionFragmentShader,
+    HdrEquirectangularProjectionVertexShader,
 };
 
 pub fn render_radiance_to_cubemap(
@@ -32,17 +33,21 @@ pub fn render_radiance_to_cubemap(
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
 ) -> CubeMap<Vec3> {
-    pipeline.set_vertex_shader(HdrEquirectangularProjectionVertexShader);
+    {
+        // Setup
 
-    pipeline.set_fragment_shader(HdrEquirectangularProjectionFragmentShader);
+        pipeline.set_vertex_shader(HdrEquirectangularProjectionVertexShader);
 
-    pipeline.bind_framebuffer(Some(framebuffer_rc));
+        pipeline.set_fragment_shader(HdrEquirectangularProjectionFragmentShader);
 
-    pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+        pipeline.bind_framebuffer(Some(framebuffer_rc));
 
-    shader_context_rc
-        .borrow_mut()
-        .set_active_hdr_map(Some(*hdr_texture_handle));
+        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+
+        shader_context_rc
+            .borrow_mut()
+            .set_active_hdr_map(Some(*hdr_texture_handle));
+    }
 
     let cubemap = render_scene_to_cubemap(
         cubemap_size,
@@ -52,15 +57,66 @@ pub fn render_radiance_to_cubemap(
         pipeline,
     );
 
-    pipeline.set_vertex_shader(DEFAULT_VERTEX_SHADER);
+    {
+        // Cleanup
 
-    pipeline.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
+        pipeline.set_vertex_shader(DEFAULT_VERTEX_SHADER);
 
-    pipeline.bind_framebuffer(None);
+        pipeline.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
 
-    pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+        pipeline.bind_framebuffer(None);
 
-    shader_context_rc.borrow_mut().set_active_hdr_map(None);
+        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+
+        shader_context_rc.borrow_mut().set_active_hdr_map(None);
+    }
+
+    cubemap
+}
+
+pub fn render_irradiance_to_cubemap(
+    radiance_cubemap_texture_handle: &Handle,
+    cubemap_size: u32,
+    framebuffer_rc: &'static mut RefCell<Framebuffer>,
+    scene_context: &SceneContext,
+    shader_context_rc: &RefCell<ShaderContext>,
+    pipeline: &mut Pipeline,
+) -> CubeMap<Vec3> {
+    {
+        // Setup
+
+        pipeline.set_fragment_shader(HdrCubemapConvolutionFragmentShader);
+
+        pipeline.bind_framebuffer(Some(framebuffer_rc));
+
+        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+
+        shader_context_rc
+            .borrow_mut()
+            .set_active_environment_map(Some(*radiance_cubemap_texture_handle));
+    }
+
+    let cubemap = render_scene_to_cubemap(
+        cubemap_size,
+        framebuffer_rc,
+        scene_context,
+        shader_context_rc,
+        pipeline,
+    );
+
+    {
+        // Cleanup
+
+        pipeline.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
+
+        pipeline.bind_framebuffer(None);
+
+        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+
+        shader_context_rc
+            .borrow_mut()
+            .set_active_environment_map(None);
+    }
 
     cubemap
 }

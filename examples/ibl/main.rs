@@ -1,5 +1,6 @@
 use std::{borrow::BorrowMut, cell::RefCell, path::Path};
 
+use shader::AmbientDiffuseCubemapFragmentShader;
 use uuid::Uuid;
 
 use cairo::{
@@ -18,9 +19,7 @@ use cairo::{
     },
 };
 
-use cubemap::render_radiance_to_cubemap;
-
-use crate::shader::HdrCubemapConvolutionFragmentShader;
+use crate::cubemap::{render_irradiance_to_cubemap, render_radiance_to_cubemap};
 
 pub mod cubemap;
 pub mod scene;
@@ -50,6 +49,8 @@ fn main() -> Result<(), String> {
 
     let mut scene_context =
         scene::make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
+
+    // Load an HDR image as an available texture.
 
     let hdr_texture_handle: Option<Handle>;
 
@@ -97,25 +98,25 @@ fn main() -> Result<(), String> {
 
     // Generate a cubemap texture from our (projected) radiance texture.
 
-    static AMBIENT_DIFFUSE_CUBEMAP_SIZE: u32 = 1024;
+    let preconvolution_ambient_diffuse_handle = {
+        static CUBEMAP_SIZE: u32 = 1024;
 
-    let cubemap_face_framebuffer = {
-        let mut framebuffer =
-            Framebuffer::new(AMBIENT_DIFFUSE_CUBEMAP_SIZE, AMBIENT_DIFFUSE_CUBEMAP_SIZE);
+        let cubemap_face_framebuffer = {
+            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
 
-        framebuffer.complete(0.3, 100.0);
+            framebuffer.complete(0.3, 100.0);
 
-        framebuffer
-    };
+            framebuffer
+        };
 
-    let cubemap_face_framebuffer_rc = Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+        let cubemap_face_framebuffer_rc =
+            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
 
-    let ambient_diffuse_cubemap_handle = {
         let scene_context = scene_context.borrow_mut();
 
         let cubemap_hdr = render_radiance_to_cubemap(
             &hdr_texture_handle.unwrap(),
-            AMBIENT_DIFFUSE_CUBEMAP_SIZE,
+            CUBEMAP_SIZE,
             cubemap_face_framebuffer_rc,
             scene_context,
             &shader_context_rc,
@@ -129,13 +130,49 @@ fn main() -> Result<(), String> {
             .insert(Uuid::new_v4(), cubemap_hdr)
     };
 
-    pipeline.set_fragment_shader(HdrCubemapConvolutionFragmentShader);
+    // Convolute the resulting cubemap texture, approximating irradiance.
+
+    let postconvolution_ambient_diffuse_handle = {
+        static CUBEMAP_SIZE: u32 = 32;
+
+        let cubemap_face_framebuffer = {
+            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
+
+            framebuffer.complete(0.3, 100.0);
+
+            framebuffer
+        };
+
+        let cubemap_face_framebuffer_rc =
+            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+
+        let scene_context = scene_context.borrow_mut();
+
+        let cubemap_hdr = render_irradiance_to_cubemap(
+            &preconvolution_ambient_diffuse_handle,
+            CUBEMAP_SIZE,
+            cubemap_face_framebuffer_rc,
+            scene_context,
+            &shader_context_rc,
+            &mut pipeline,
+        );
+
+        (*scene_context.resources)
+            .borrow_mut()
+            .skybox_hdr
+            .borrow_mut()
+            .insert(Uuid::new_v4(), cubemap_hdr)
+    };
+
+    // Set the convoluted ambient diffuse map as our current "environment" map.
 
     shader_context_rc
         .borrow_mut()
-        .set_active_environment_map(Some(ambient_diffuse_cubemap_handle));
+        .set_active_environment_map(Some(postconvolution_ambient_diffuse_handle));
 
     let scene_context_rc = RefCell::new(scene_context);
+
+    pipeline.set_fragment_shader(AmbientDiffuseCubemapFragmentShader);
 
     let pipeline_rc = RefCell::new(pipeline);
 
