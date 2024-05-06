@@ -18,11 +18,11 @@ use cairo::{
     },
 };
 
-use skybox::render_radiance_to_cubemap;
+use cubemap::render_radiance_to_cubemap;
 
+pub mod cubemap;
 pub mod scene;
 pub mod shader;
-pub mod skybox;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
