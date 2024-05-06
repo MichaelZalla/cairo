@@ -97,12 +97,6 @@ pub fn render_radiance_to_cubemap(
         let resources = (*scene_context.resources).borrow();
         let scene = &scene_context.scenes.borrow()[0];
 
-        {
-            shader_context_rc
-                .borrow_mut()
-                .set_active_hdr_map(Some(*hdr_texture_handle));
-        }
-
         match scene.render(&resources, pipeline) {
             Ok(()) => {
                 // Blit our framebuffer's color attachment buffer to our cubemap face texture.
@@ -120,10 +114,6 @@ pub fn render_radiance_to_cubemap(
                 }
             }
             Err(e) => panic!("{}", e),
-        }
-
-        {
-            shader_context_rc.borrow_mut().set_active_hdr_map(None);
         }
     }
 
