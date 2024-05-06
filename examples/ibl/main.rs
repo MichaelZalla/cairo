@@ -20,6 +20,8 @@ use cairo::{
 
 use cubemap::render_radiance_to_cubemap;
 
+use crate::shader::HdrCubemapConvolutionFragmentShader;
+
 pub mod cubemap;
 pub mod scene;
 pub mod shader;
@@ -127,26 +129,11 @@ fn main() -> Result<(), String> {
             .insert(Uuid::new_v4(), cubemap_hdr)
     };
 
-    let ambient_diffuse_skybox_node = SceneNode::new(
-        cairo::scene::node::SceneNodeType::Skybox,
-        Default::default(),
-        Some(ambient_diffuse_cubemap_handle),
-    );
+    pipeline.set_fragment_shader(HdrCubemapConvolutionFragmentShader);
 
-    {
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
-
-        match scene.root.children_mut() {
-            Some(children) => {
-                for child in children.iter_mut() {
-                    if child.is_type(cairo::scene::node::SceneNodeType::Environment) {
-                        child.add_child(ambient_diffuse_skybox_node.to_owned())?;
-                    }
-                }
-            }
-            None => (),
-        }
-    }
+    shader_context_rc
+        .borrow_mut()
+        .set_active_environment_map(Some(ambient_diffuse_cubemap_handle));
 
     let scene_context_rc = RefCell::new(scene_context);
 

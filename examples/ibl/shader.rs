@@ -99,3 +99,21 @@ pub const HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
         color::GREEN
     };
+
+pub const HdrCubemapConvolutionFragmentShader: FragmentShaderFn =
+    |shader_context: &ShaderContext,
+     resources: &SceneResources,
+     sample: &GeometrySample|
+     -> Color {
+        if let Some(handle) = shader_context.active_environment_map {
+            if let Ok(entry) = resources.skybox_hdr.borrow().get(&handle) {
+                let map = &entry.item;
+
+                let direction = Vec4::new(sample.world_pos.as_normal(), 1.0);
+
+                return Color::from_vec3(map.sample(&direction));
+            }
+        }
+
+        color::GREEN
+    };
