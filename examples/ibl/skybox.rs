@@ -12,7 +12,7 @@ use cairo::{
     },
     texture::{
         cubemap::{CubeMap, Side, CUBE_MAP_SIDES},
-        map::{TextureBuffer, TextureMap, TextureMapStorageFormat},
+        map::{TextureBuffer, TextureMapStorageFormat},
     },
     vec::{
         vec3::{self, Vec3},
@@ -32,14 +32,7 @@ pub fn render_radiance_to_cubemap(
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
 ) -> CubeMap<Vec3> {
-    let mut cubemap = CubeMap::from_textures([
-        TextureMap::<Vec3>::default(),
-        TextureMap::<Vec3>::default(),
-        TextureMap::<Vec3>::default(),
-        TextureMap::<Vec3>::default(),
-        TextureMap::<Vec3>::default(),
-        TextureMap::<Vec3>::default(),
-    ]);
+    let mut cubemap: CubeMap<Vec3> = Default::default();
 
     for side in &mut cubemap.sides {
         side.info.storage_format = TextureMapStorageFormat::Index8(0);
