@@ -32,15 +32,6 @@ pub fn render_radiance_to_cubemap(
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
 ) -> CubeMap<Vec3> {
-    let mut cubemap: CubeMap<Vec3> = Default::default();
-
-    for side in &mut cubemap.sides {
-        side.info.storage_format = TextureMapStorageFormat::Index8(0);
-        side.width = cubemap_size;
-        side.height = cubemap_size;
-        side.is_loaded = true;
-    }
-
     pipeline.set_vertex_shader(HdrEquirectangularProjectionVertexShader);
 
     pipeline.set_fragment_shader(HdrEquirectangularProjectionFragmentShader);
@@ -52,6 +43,43 @@ pub fn render_radiance_to_cubemap(
     shader_context_rc
         .borrow_mut()
         .set_active_hdr_map(Some(*hdr_texture_handle));
+
+    let cubemap = render_scene_to_cubemap(
+        cubemap_size,
+        framebuffer_rc,
+        scene_context,
+        shader_context_rc,
+        pipeline,
+    );
+
+    pipeline.set_vertex_shader(DEFAULT_VERTEX_SHADER);
+
+    pipeline.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
+
+    pipeline.bind_framebuffer(None);
+
+    pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+
+    shader_context_rc.borrow_mut().set_active_hdr_map(None);
+
+    cubemap
+}
+
+fn render_scene_to_cubemap(
+    cubemap_size: u32,
+    framebuffer_rc: &'static RefCell<Framebuffer>,
+    scene_context: &SceneContext,
+    shader_context_rc: &RefCell<ShaderContext>,
+    pipeline: &mut Pipeline,
+) -> CubeMap<Vec3> {
+    let mut cubemap: CubeMap<Vec3> = Default::default();
+
+    for side in &mut cubemap.sides {
+        side.info.storage_format = TextureMapStorageFormat::Index8(0);
+        side.width = cubemap_size;
+        side.height = cubemap_size;
+        side.is_loaded = true;
+    }
 
     // Render each face of our cubemap.
 
@@ -116,16 +144,6 @@ pub fn render_radiance_to_cubemap(
             Err(e) => panic!("{}", e),
         }
     }
-
-    pipeline.set_vertex_shader(DEFAULT_VERTEX_SHADER);
-
-    pipeline.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
-
-    pipeline.bind_framebuffer(None);
-
-    pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
-
-    shader_context_rc.borrow_mut().set_active_hdr_map(None);
 
     cubemap
 }
