@@ -1,7 +1,8 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, path::Path};
 
 use cairo::{
     buffer::framebuffer::Framebuffer,
+    hdr::load::load_hdr,
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
     resource::handle::Handle,
     scene::{camera::Camera, context::SceneContext},
@@ -20,12 +21,125 @@ use cairo::{
     },
 };
 
-use crate::shader::{
-    HdrCubemapConvolutionFragmentShader, HdrEquirectangularProjectionFragmentShader,
-    HdrEquirectangularProjectionVertexShader,
+use uuid::Uuid;
+
+use crate::{
+    scene,
+    shader::{
+        HdrCubemapConvolutionFragmentShader, HdrEquirectangularProjectionFragmentShader,
+        HdrEquirectangularProjectionVertexShader,
+    },
 };
 
-pub fn render_radiance_to_cubemap(
+pub fn bake_diffuse_irradiance_for_hdri(
+    hdr_filepath: &Path,
+) -> Result<(CubeMap<Vec3>, CubeMap<Vec3>), String> {
+    // Set up a simple cube scene, that we can use to render each side of a cubemap.
+
+    let cube_scene_context = scene::make_cube_scene(1.0).unwrap();
+
+    // Load the HDR image data into a texture.
+
+    let hdr_texture = match load_hdr(hdr_filepath) {
+        Ok(hdr) => {
+            println!("{:?}", hdr.source);
+            println!("{:?}", hdr.headers);
+            println!("Decoded {} bytes from file.", hdr.bytes.len());
+
+            hdr.to_texture_map()
+        }
+        Err(e) => {
+            panic!("{}", format!("Failed to read HDR file: {}", e).to_string());
+        }
+    };
+
+    println!("{}x{}", hdr_texture.width, hdr_texture.height);
+
+    // Store the texture in our scene resources' HDR texture arena.
+
+    let hdr_texture_handle = (*cube_scene_context.resources)
+        .borrow_mut()
+        .hdr
+        .borrow_mut()
+        .insert(Uuid::new_v4(), hdr_texture);
+
+    // Set up a pipeline for rendering our cubemaps.
+
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    let mut pipeline = Pipeline::new(
+        &shader_context_rc,
+        cube_scene_context.resources.clone(),
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    // Generate a radiance cubemap texture from our HDR texture.
+
+    let radiance_cubemap = {
+        static CUBEMAP_SIZE: u32 = 1024;
+
+        let cubemap_face_framebuffer = {
+            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
+
+            framebuffer.complete(0.3, 100.0);
+
+            framebuffer
+        };
+
+        let cubemap_face_framebuffer_rc =
+            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+
+        render_radiance_to_cubemap(
+            &hdr_texture_handle,
+            CUBEMAP_SIZE,
+            cubemap_face_framebuffer_rc,
+            &cube_scene_context,
+            &shader_context_rc,
+            &mut pipeline,
+        )
+    };
+
+    // Generate an (approximate) irradiance cubemap texture from our radiance
+    // cubemap texture.
+
+    let irradiance_cubemap = {
+        static CUBEMAP_SIZE: u32 = 32;
+
+        let cubemap_face_framebuffer = {
+            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
+
+            framebuffer.complete(0.3, 100.0);
+
+            framebuffer
+        };
+
+        let cubemap_face_framebuffer_rc =
+            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+
+        let radiance_cubemap_texture_handle = {
+            (*cube_scene_context.resources)
+                .borrow_mut()
+                .skybox_hdr
+                .borrow_mut()
+                .insert(Uuid::new_v4(), radiance_cubemap.clone())
+        };
+
+        render_irradiance_to_cubemap(
+            &radiance_cubemap_texture_handle,
+            CUBEMAP_SIZE,
+            cubemap_face_framebuffer_rc,
+            &cube_scene_context,
+            &shader_context_rc,
+            &mut pipeline,
+        )
+    };
+
+    Ok((radiance_cubemap, irradiance_cubemap))
+}
+
+fn render_radiance_to_cubemap(
     hdr_texture_handle: &Handle,
     cubemap_size: u32,
     framebuffer_rc: &'static mut RefCell<Framebuffer>,
@@ -74,7 +188,7 @@ pub fn render_radiance_to_cubemap(
     cubemap
 }
 
-pub fn render_irradiance_to_cubemap(
+fn render_irradiance_to_cubemap(
     radiance_cubemap_texture_handle: &Handle,
     cubemap_size: u32,
     framebuffer_rc: &'static mut RefCell<Framebuffer>,

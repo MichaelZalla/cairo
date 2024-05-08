@@ -97,6 +97,10 @@ impl SceneNode {
         &self.handle
     }
 
+    pub fn set_handle(&mut self, handle: Option<Handle>) {
+        self.handle = handle;
+    }
+
     pub fn has_children(&self) -> bool {
         self.children.is_some()
     }

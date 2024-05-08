@@ -1,17 +1,16 @@
 use std::{borrow::BorrowMut, cell::RefCell, path::Path};
 
-use shader::AmbientDiffuseCubemapFragmentShader;
 use uuid::Uuid;
 
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
-    hdr::load::load_hdr,
     matrix::Mat4,
     pipeline::Pipeline,
-    resource::handle::Handle,
-    scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
+    scene::node::{
+        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    },
     shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
@@ -19,7 +18,7 @@ use cairo::{
     },
 };
 
-use crate::cubemap::{render_irradiance_to_cubemap, render_radiance_to_cubemap};
+use cubemap::bake_diffuse_irradiance_for_hdri;
 
 pub mod cubemap;
 pub mod scene;
@@ -34,7 +33,11 @@ fn main() -> Result<(), String> {
 
     let app = App::new(&mut window_info);
 
-    // Default framebuffer
+    // Bake diffuse radiance and irradiance maps for a given HDR.
+
+    let hdr_paths = [Path::new("./examples/ibl/assets/poly_haven_studio_4k.hdr")];
+
+    // Set up a sphere grid (scene).
 
     let mut framebuffer = Framebuffer::new(
         window_info.canvas_resolution.width,
@@ -50,45 +53,50 @@ fn main() -> Result<(), String> {
     let mut scene_context =
         scene::make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
 
-    // Load an HDR image as an available texture.
+    {
+        let scene_context = scene_context.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-    let hdr_texture_handle: Option<Handle>;
+        for node in scene.root.children_mut().as_mut().unwrap() {
+            if node.is_type(SceneNodeType::Environment) {
+                // No handle for now.
 
-    // let hdr_filepath = Path::new("./examples/ibl/assets/rural_asphalt_road_4k.hdr");
-    let hdr_filepath = Path::new("./examples/ibl/assets/poly_haven_studio_4k.hdr");
+                let skybox_node = SceneNode::new(SceneNodeType::Skybox, Default::default(), None);
 
-    match load_hdr(hdr_filepath) {
-        Ok(hdr) => {
-            println!("{:?}", hdr.source);
-            println!("{:?}", hdr.headers);
-            println!("Decoded {} bytes from file.", hdr.bytes.len());
-
-            let hdr_texture = hdr.to_texture_map();
-
-            println!("{}x{}", hdr_texture.width, hdr_texture.height);
-
-            hdr_texture_handle = Some(
-                (*scene_context.resources)
-                    .borrow_mut()
-                    .hdr
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), hdr_texture),
-            );
-        }
-        Err(e) => {
-            panic!("{}", format!("Failed to read HDR file: {}", e).to_string());
+                node.add_child(skybox_node)?;
+            }
         }
     }
 
-    // Shader context
+    // For each HDR image, generate a corresponding radiance-irradiance cubemap
+    // pair, and store the textures in our scene's HDR cubemap texture arena.
 
-    let shader_context = ShaderContext::default();
+    let mut radiance_irradiance_handles = vec![];
 
-    let shader_context_rc = RefCell::new(shader_context);
+    {
+        let resources = (*scene_context.resources).borrow_mut();
 
-    // Pipeline
+        let mut skybox_hdr = resources.skybox_hdr.borrow_mut();
 
-    let mut pipeline = Pipeline::new(
+        for hdr_path in hdr_paths {
+            let (radiance_cubemap, irradiance_cubemap) =
+                bake_diffuse_irradiance_for_hdri(hdr_path).unwrap();
+
+            let radiance_cubemap_handle = skybox_hdr
+                .borrow_mut()
+                .insert(Uuid::new_v4(), radiance_cubemap.clone());
+
+            let irradiance_cubemap_handle = skybox_hdr
+                .borrow_mut()
+                .insert(Uuid::new_v4(), irradiance_cubemap);
+
+            radiance_irradiance_handles.push((radiance_cubemap_handle, irradiance_cubemap_handle));
+        }
+    }
+
+    let shader_context_rc: RefCell<ShaderContext> = Default::default();
+
+    let pipeline = Pipeline::new(
         &shader_context_rc,
         scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
@@ -96,83 +104,7 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    // Generate a cubemap texture from our (projected) radiance texture.
-
-    let preconvolution_ambient_diffuse_handle = {
-        static CUBEMAP_SIZE: u32 = 1024;
-
-        let cubemap_face_framebuffer = {
-            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
-
-            framebuffer.complete(0.3, 100.0);
-
-            framebuffer
-        };
-
-        let cubemap_face_framebuffer_rc =
-            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
-
-        let scene_context = scene_context.borrow_mut();
-
-        let cubemap_hdr = render_radiance_to_cubemap(
-            &hdr_texture_handle.unwrap(),
-            CUBEMAP_SIZE,
-            cubemap_face_framebuffer_rc,
-            scene_context,
-            &shader_context_rc,
-            &mut pipeline,
-        );
-
-        (*scene_context.resources)
-            .borrow_mut()
-            .skybox_hdr
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cubemap_hdr)
-    };
-
-    // Convolute the resulting cubemap texture, approximating irradiance.
-
-    let postconvolution_ambient_diffuse_handle = {
-        static CUBEMAP_SIZE: u32 = 32;
-
-        let cubemap_face_framebuffer = {
-            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
-
-            framebuffer.complete(0.3, 100.0);
-
-            framebuffer
-        };
-
-        let cubemap_face_framebuffer_rc =
-            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
-
-        let scene_context = scene_context.borrow_mut();
-
-        let cubemap_hdr = render_irradiance_to_cubemap(
-            &preconvolution_ambient_diffuse_handle,
-            CUBEMAP_SIZE,
-            cubemap_face_framebuffer_rc,
-            scene_context,
-            &shader_context_rc,
-            &mut pipeline,
-        );
-
-        (*scene_context.resources)
-            .borrow_mut()
-            .skybox_hdr
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cubemap_hdr)
-    };
-
-    // Set the convoluted ambient diffuse map as our current "environment" map.
-
-    shader_context_rc
-        .borrow_mut()
-        .set_active_ambient_diffuse_map(Some(postconvolution_ambient_diffuse_handle));
-
     let scene_context_rc = RefCell::new(scene_context);
-
-    pipeline.set_fragment_shader(AmbientDiffuseCubemapFragmentShader);
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -235,12 +167,33 @@ fn main() -> Result<(), String> {
 
         let scene_context = scene_context_rc.borrow();
         let resources = (*scene_context.resources).borrow();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
         let mut pipeline = pipeline_rc.borrow_mut();
 
         pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
-        let scene = &scene_context.scenes.borrow()[0];
+        {
+            let mut shader_context = shader_context_rc.borrow_mut();
+
+            let (radiance_cubemap_handle, irradiance_cubemap_handle) =
+                radiance_irradiance_handles[0];
+
+            shader_context.set_active_ambient_diffuse_map(Some(irradiance_cubemap_handle));
+
+            // Set the irradiance map as our scene's ambient diffuse light map.
+
+            for node in scene.root.children_mut().as_mut().unwrap() {
+                if node.is_type(SceneNodeType::Environment) {
+                    for child in node.children_mut().as_mut().unwrap() {
+                        if child.is_type(SceneNodeType::Skybox) {
+                            child.set_handle(Some(radiance_cubemap_handle));
+                        }
+                    }
+                }
+            }
+        }
 
         match scene.render(&resources, &mut pipeline) {
             Ok(()) => {
