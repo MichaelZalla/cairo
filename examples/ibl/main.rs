@@ -2,6 +2,8 @@ use std::{borrow::BorrowMut, cell::RefCell, path::Path};
 
 use uuid::Uuid;
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
@@ -35,7 +37,12 @@ fn main() -> Result<(), String> {
 
     // Bake diffuse radiance and irradiance maps for a given HDR.
 
-    let hdr_paths = [Path::new("./examples/ibl/assets/poly_haven_studio_4k.hdr")];
+    let hdr_paths = [
+        Path::new("./examples/ibl/assets/poly_haven_studio_4k.hdr"),
+        Path::new("./examples/ibl/assets/kloppenheim_06_puresky_4k.hdr"),
+        Path::new("./examples/ibl/assets/rural_asphalt_road_4k.hdr"),
+        Path::new("./examples/ibl/assets/thatch_chapel_4k.hdr"),
+    ];
 
     // Set up a sphere grid (scene).
 
@@ -72,6 +79,8 @@ fn main() -> Result<(), String> {
     // pair, and store the textures in our scene's HDR cubemap texture arena.
 
     let mut radiance_irradiance_handles = vec![];
+
+    let current_handles_index = RefCell::new(0);
 
     {
         let resources = (*scene_context.resources).borrow_mut();
@@ -147,6 +156,30 @@ fn main() -> Result<(), String> {
             &mut update_scene_graph_node,
         )?;
 
+        for keycode in &keyboard_state.keys_pressed {
+            match keycode {
+                Keycode::Num0 => {
+                    let mut current_index = current_handles_index.borrow_mut();
+
+                    *current_index = (*current_index + 1) % radiance_irradiance_handles.len();
+
+                    println!("{}", current_index);
+                }
+                Keycode::Num9 => {
+                    let mut current_index = current_handles_index.borrow_mut();
+
+                    if *current_index == 0 {
+                        *current_index = radiance_irradiance_handles.len() - 1;
+                    } else {
+                        *current_index -= 1;
+                    }
+
+                    println!("{}", current_index);
+                }
+                _ => (),
+            }
+        }
+
         let mut pipeline = pipeline_rc.borrow_mut();
 
         pipeline
@@ -178,7 +211,7 @@ fn main() -> Result<(), String> {
             let mut shader_context = shader_context_rc.borrow_mut();
 
             let (radiance_cubemap_handle, irradiance_cubemap_handle) =
-                radiance_irradiance_handles[0];
+                radiance_irradiance_handles[*current_handles_index.borrow()];
 
             shader_context.set_active_ambient_diffuse_map(Some(irradiance_cubemap_handle));
 
