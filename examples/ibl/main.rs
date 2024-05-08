@@ -168,7 +168,7 @@ fn main() -> Result<(), String> {
 
     shader_context_rc
         .borrow_mut()
-        .set_active_environment_map(Some(postconvolution_ambient_diffuse_handle));
+        .set_active_ambient_diffuse_map(Some(postconvolution_ambient_diffuse_handle));
 
     let scene_context_rc = RefCell::new(scene_context);
 
