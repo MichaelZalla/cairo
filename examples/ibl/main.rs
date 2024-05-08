@@ -55,13 +55,11 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    // Scene context
-
-    let mut scene_context =
-        scene::make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
+    let mut spheres_scene_context =
+        scene::make_sphere_grid_scene(framebuffer_rc.borrow().width_over_height).unwrap();
 
     {
-        let scene_context = scene_context.borrow_mut();
+        let scene_context = spheres_scene_context.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
         for node in scene.root.children_mut().as_mut().unwrap() {
@@ -83,7 +81,7 @@ fn main() -> Result<(), String> {
     let current_handles_index = RefCell::new(0);
 
     {
-        let resources = (*scene_context.resources).borrow_mut();
+        let resources = (*spheres_scene_context.resources).borrow_mut();
 
         let mut skybox_hdr = resources.skybox_hdr.borrow_mut();
 
@@ -107,13 +105,13 @@ fn main() -> Result<(), String> {
 
     let pipeline = Pipeline::new(
         &shader_context_rc,
-        scene_context.resources.clone(),
+        spheres_scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
 
-    let scene_context_rc = RefCell::new(scene_context);
+    let spheres_scene_context_rc = RefCell::new(spheres_scene_context);
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -124,7 +122,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let scene_context = scene_context_rc.borrow_mut();
+        let scene_context = spheres_scene_context_rc.borrow_mut();
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = shader_context_rc.borrow_mut();
@@ -198,7 +196,7 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        let scene_context = scene_context_rc.borrow();
+        let scene_context = spheres_scene_context_rc.borrow();
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];

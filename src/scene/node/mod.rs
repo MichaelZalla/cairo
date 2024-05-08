@@ -458,6 +458,20 @@ impl SceneNode {
                     panic!("Encountered a `DirectionalLight` node with no resource handle!")
                 }
             },
+            SceneNodeType::PointLight => {
+                shader_context
+                    .get_point_lights_mut()
+                    .push(self.get_handle().unwrap());
+
+                Ok(())
+            }
+            SceneNodeType::SpotLight => {
+                shader_context
+                    .get_spot_lights_mut()
+                    .push(self.get_handle().unwrap());
+
+                Ok(())
+            }
             _ => Ok(()),
         }
     }
