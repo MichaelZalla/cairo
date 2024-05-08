@@ -46,3 +46,7 @@ pub fn geometry_smith(normal: &Vec3, view: &Vec3, light: &Vec3, roughness: f32) 
 pub fn fresnel_schlick(likeness: f32, f0: &Vec3) -> Vec3 {
     *f0 + (vec3::ONES - *f0) * (1.0 - likeness).clamp(0.0, 1.0).powi(5)
 }
+
+pub fn fresnel_schlick_roughness(likeness: f32, f0: &Vec3, roughness: f32) -> Vec3 {
+    *f0 + (vec3::ONES * (1.0 - roughness) - *f0) * (1.0 - likeness).clamp(0.0, 1.0).powi(5)
+}

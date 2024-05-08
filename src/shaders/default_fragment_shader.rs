@@ -1,11 +1,15 @@
 use crate::{
     animation::lerp,
     color::Color,
+    physics::pbr::fresnel_schlick_roughness,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
-    vec::vec3::Vec3,
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
@@ -24,19 +28,54 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // Calculate ambient light contribution
 
-        let ambient_light_contribution = match &context.ambient_light {
-            Some(handle) => match resources.ambient_light.borrow().get(handle) {
+        let ambient_light_contribution = match &context.active_ambient_diffuse_map {
+            Some(handle) => match resources.skybox_hdr.borrow().get(handle) {
                 Ok(entry) => {
-                    let light = &entry.item;
+                    let map = &entry.item;
 
-                    light.contribute_pbr(sample)
+                    let fragment_to_view_tangent_space = sample.tangent_space_info.view_position
+                        - sample.tangent_space_info.fragment_position;
+
+                    let view_direction_normal = fragment_to_view_tangent_space.as_normal();
+
+                    let likeness = sample
+                        .tangent_space_info
+                        .normal
+                        .dot(view_direction_normal)
+                        .max(0.0);
+
+                    // Rendering equation
+
+                    let fresnel = fresnel_schlick_roughness(likeness, &f0, sample.roughness);
+
+                    // Ratio of reflected light energy.
+                    let k_s = fresnel;
+
+                    // Ratio of refracted light energy.
+                    let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
+
+                    let irradiance = map.sample(&Vec4::new(sample.world_normal, 1.0));
+
+                    let diffuse = irradiance * sample.albedo;
+
+                    (k_d * diffuse) * sample.ambient_factor
                 }
-                Err(err) => panic!(
-                    "Failed to get AmbientLight from Arena: {:?}: {}",
-                    handle, err
-                ),
+                Err(err) => panic!("Failed to get CubeMap from Arena: {:?}: {}", handle, err),
             },
-            None => Default::default(),
+            None => match &context.ambient_light {
+                Some(handle) => match resources.ambient_light.borrow().get(handle) {
+                    Ok(entry) => {
+                        let light = &entry.item;
+
+                        light.contribute_pbr(sample)
+                    }
+                    Err(err) => panic!(
+                        "Failed to get AmbientLight from Arena: {:?}: {}",
+                        handle, err
+                    ),
+                },
+                None => Default::default(),
+            },
         };
 
         // Calculate directional light contribution
