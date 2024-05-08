@@ -13,32 +13,19 @@ use cairo::{
         vec4::Vec4,
     },
 };
+
 use uuid::Uuid;
 
-pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
+pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
     let scene_context: SceneContext = Default::default();
 
     {
         let resources = scene_context.resources.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
-
         let environment: Environment = Default::default();
 
         // Create resource handles from our arenas.
-
-        let cube_entity_handle = {
-            let cube_mesh_handle = resources
-                .mesh
-                .borrow_mut()
-                .insert(Uuid::new_v4(), cube_mesh);
-
-            resources
-                .entity
-                .borrow_mut()
-                .insert(Uuid::new_v4(), Entity::new(cube_mesh_handle, None))
-        };
 
         let camera_handle = {
             let camera: Camera = Camera::from_perspective(
@@ -109,14 +96,6 @@ pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String>
 
         scene.root.add_child(environment_node)?;
 
-        let cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(cube_entity_handle),
-        );
-
-        scene.root.add_child(cube_entity_node)?;
-
         let camera_node = SceneNode::new(
             SceneNodeType::Camera,
             Default::default(),
@@ -124,6 +103,39 @@ pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String>
         );
 
         scene.root.add_child(camera_node)?;
+    }
+
+    Ok(scene_context)
+}
+
+pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
+    let scene_context = make_empty_scene(camera_aspect_ratio)?;
+
+    {
+        let resources = scene_context.resources.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
+
+        let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
+
+        let cube_entity_handle = {
+            let cube_mesh_handle = resources
+                .mesh
+                .borrow_mut()
+                .insert(Uuid::new_v4(), cube_mesh);
+
+            resources
+                .entity
+                .borrow_mut()
+                .insert(Uuid::new_v4(), Entity::new(cube_mesh_handle, None))
+        };
+
+        let cube_entity_node = SceneNode::new(
+            SceneNodeType::Entity,
+            Default::default(),
+            Some(cube_entity_handle),
+        );
+
+        scene.root.add_child(cube_entity_node)?;
     }
 
     Ok(scene_context)
