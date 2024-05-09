@@ -132,7 +132,7 @@ fn main() -> Result<(), String> {
         })?;
 
         let checkerboard_diffuse_map_handle = resources
-            .texture
+            .texture_u8
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_color_map);
 
@@ -148,7 +148,7 @@ fn main() -> Result<(), String> {
 
         let mut point_light_decal_mat = Material::new("point_light_decal".to_string());
 
-        point_light_decal_mat.alpha_map = Some(resources.texture.borrow_mut().insert(
+        point_light_decal_mat.alpha_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./assets/decals/point_light_small.png",
@@ -159,13 +159,13 @@ fn main() -> Result<(), String> {
         point_light_decal_mat.emissive_color_map = point_light_decal_mat.alpha_map.clone();
 
         point_light_decal_mat
-            .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;
+            .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
         // Spot light decal material
 
         let mut spot_light_decal_mat = Material::new("spot_light_decal".to_string());
 
-        spot_light_decal_mat.alpha_map = Some(resources.texture.borrow_mut().insert(
+        spot_light_decal_mat.alpha_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./assets/decals/spot_light_small.png",
@@ -176,7 +176,7 @@ fn main() -> Result<(), String> {
         spot_light_decal_mat.emissive_color_map = spot_light_decal_mat.alpha_map.clone();
 
         spot_light_decal_mat
-            .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;
+            .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
         // Assign the meshes to entities
 

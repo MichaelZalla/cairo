@@ -19,7 +19,7 @@ pub const UvTestFragmentShader: FragmentShaderFn =
         let b: u8;
 
         match &context.active_uv_test_texture_map {
-            Some(handle) => match resources.texture.borrow().get(handle) {
+            Some(handle) => match resources.texture_u8.borrow().get(handle) {
                 Ok(entry) => {
                     let map = &entry.item;
 

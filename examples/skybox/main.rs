@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
         checkerboard_diffuse_map.load(rendering_context)?;
 
         let checkerboard_diffuse_map_handle = resources
-            .texture
+            .texture_u8
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
@@ -223,7 +223,10 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), spot_light);
 
-        let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+        let skybox_handle = resources
+            .cubemap_u8
+            .borrow_mut()
+            .insert(Uuid::new_v4(), skybox);
 
         // Create a scene graph.
 
@@ -700,7 +703,7 @@ fn main() -> Result<(), String> {
             (Some(camera_handle), Some(skybox_handle)) => {
                 match (
                     resources.camera.borrow().get(&camera_handle),
-                    resources.skybox.borrow().get(&skybox_handle),
+                    resources.cubemap_u8.borrow().get(&skybox_handle),
                 ) {
                     (Ok(camera_entry), Ok(skybox_entry)) => {
                         let camera = &camera_entry.item;

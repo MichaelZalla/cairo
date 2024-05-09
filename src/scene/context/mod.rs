@@ -40,7 +40,7 @@ impl SceneContext {
 
         let resources = self.resources.borrow_mut();
 
-        let mut textures = resources.texture.borrow_mut();
+        let mut textures = resources.texture_u8.borrow_mut();
 
         // Load all texture map data from materials.
 
@@ -54,7 +54,7 @@ impl SceneContext {
 
         // Load all texture map data from cubemaps.
 
-        let mut cubemaps = resources.skybox.borrow_mut();
+        let mut cubemaps = resources.cubemap_u8.borrow_mut();
 
         for slot in cubemaps.entries.iter_mut() {
             match slot {

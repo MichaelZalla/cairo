@@ -13,7 +13,7 @@ pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
             Some(name) => {
                 if let Some(material) = resources.material.borrow().get(name) {
                     if let Some(handle) = material.alpha_map {
-                        match resources.texture.borrow().get(&handle) {
+                        match resources.texture_u8.borrow().get(&handle) {
                             Ok(entry) => {
                                 let map = &entry.item;
 

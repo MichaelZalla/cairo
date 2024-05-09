@@ -84,7 +84,7 @@ pub const HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
         static HDR_EXPOSURE: f32 = 100.0;
 
         if let Some(handle) = shader_context.active_hdr_map {
-            if let Ok(entry) = resources.hdr.borrow().get(&handle) {
+            if let Ok(entry) = resources.texture_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
                 let uv: Vec2 = sample_spherical_to_cartesian(sample.world_pos.as_normal());
@@ -117,7 +117,7 @@ pub const HdrCubemapConvolutionFragmentShader: FragmentShaderFn =
      sample: &GeometrySample|
      -> Color {
         if let Some(handle) = shader_context.active_ambient_diffuse_map {
-            if let Ok(entry) = resources.skybox_hdr.borrow().get(&handle) {
+            if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
                 let normal = sample.world_pos.as_normal();
@@ -194,7 +194,7 @@ pub const AmbientDiffuseCubemapFragmentShader: FragmentShaderFn =
      sample: &GeometrySample|
      -> Color {
         if let Some(handle) = shader_context.active_ambient_diffuse_map {
-            if let Ok(entry) = resources.skybox_hdr.borrow().get(&handle) {
+            if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
                 let normal = sample.world_pos.as_normal();

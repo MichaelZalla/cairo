@@ -43,7 +43,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 // Surface normal mapping.
                 if let (Some(handle), true) = (&material.normal_map, options.normal_mapping_active)
                 {
-                    match resources.texture.borrow().get(handle) {
+                    match resources.texture_u8.borrow().get(handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -81,7 +81,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                     &material.ambient_occlusion_map,
                     options.ambient_occlusion_mapping_active,
                 ) {
-                    match resources.texture.borrow().get(handle) {
+                    match resources.texture_u8.borrow().get(handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -100,7 +100,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                     &material.diffuse_color_map,
                     options.base_color_mapping_active,
                 ) {
-                    (Some(handle), true) => match resources.texture.borrow().get(handle) {
+                    (Some(handle), true) => match resources.texture_u8.borrow().get(handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -133,7 +133,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                     &material.specular_color_map,
                     options.specular_exponent_mapping_active,
                 ) {
-                    (Some(handle), true) => match &resources.texture.borrow().get(handle) {
+                    (Some(handle), true) => match &resources.texture_u8.borrow().get(handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -157,7 +157,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                     &material.specular_exponent_map,
                     options.specular_exponent_mapping_active,
                 ) {
-                    (Some(handle), true) => match &resources.texture.borrow().get(handle) {
+                    (Some(handle), true) => match &resources.texture_u8.borrow().get(handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -174,7 +174,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                 // Emissive color
                 match material.emissive_color_map {
-                    Some(handle) => match resources.texture.borrow().get(&handle) {
+                    Some(handle) => match resources.texture_u8.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -197,7 +197,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                 // Alpha transparency
                 match material.alpha_map {
-                    Some(handle) => match resources.texture.borrow().get(&handle) {
+                    Some(handle) => match resources.texture_u8.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -219,7 +219,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                     &material.displacement_map,
                     options.displacement_mapping_active,
                 ) {
-                    match resources.texture.borrow().get(handle) {
+                    match resources.texture_u8.borrow().get(handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -331,7 +331,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                 // Albedo color
                 match (options.base_color_mapping_active, material.albedo_map) {
-                    (true, Some(handle)) => match resources.texture.borrow().get(&handle) {
+                    (true, Some(handle)) => match resources.texture_u8.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -354,7 +354,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                 // Roughness
                 match material.roughness_map {
-                    Some(handle) => match resources.texture.borrow().get(&handle) {
+                    Some(handle) => match resources.texture_u8.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -373,7 +373,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                 // Metallic
                 match (material.metallic_map, options.metallic_mapping_active) {
-                    (Some(handle), true) => match resources.texture.borrow().get(&handle) {
+                    (Some(handle), true) => match resources.texture_u8.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 

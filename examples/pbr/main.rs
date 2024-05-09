@@ -156,7 +156,7 @@ fn main() -> Result<(), String> {
 
         let result = load_obj(
             "./examples/pbr/assets/sphere.obj",
-            &mut resources.texture.borrow_mut(),
+            &mut resources.texture_u8.borrow_mut(),
         );
 
         let _geometry = result.0;
@@ -164,7 +164,7 @@ fn main() -> Result<(), String> {
         let mut materials = result.2;
 
         {
-            let mut texture_arena = resources.texture.borrow_mut();
+            let mut texture_arena = resources.texture_u8.borrow_mut();
 
             for material in &mut materials.as_mut().unwrap().values_mut() {
                 material.load_all_maps(&mut texture_arena, rendering_context)?;

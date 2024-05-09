@@ -29,10 +29,10 @@ pub struct SceneResources {
     pub mesh: RefCell<Arena<Mesh>>,
     pub entity: RefCell<Arena<Entity>>,
     pub material: RefCell<MaterialCache>,
-    pub texture: RefCell<Arena<TextureMap>>,
-    pub hdr: RefCell<Arena<TextureMap<Vec3>>>,
-    pub skybox: RefCell<Arena<CubeMap>>,
-    pub skybox_hdr: RefCell<Arena<CubeMap<Vec3>>>,
+    pub texture_u8: RefCell<Arena<TextureMap>>,
+    pub texture_vec3: RefCell<Arena<TextureMap<Vec3>>>,
+    pub cubemap_u8: RefCell<Arena<CubeMap>>,
+    pub cubemap_vec3: RefCell<Arena<CubeMap<Vec3>>>,
 }
 
 impl PostDeserialize for SceneResources {
@@ -46,10 +46,10 @@ impl PostDeserialize for SceneResources {
         self.mesh.borrow_mut().post_deserialize();
         self.entity.borrow_mut().post_deserialize();
         self.material.borrow_mut().post_deserialize();
-        self.texture.borrow_mut().post_deserialize();
-        self.hdr.borrow_mut().post_deserialize();
-        self.skybox.borrow_mut().post_deserialize();
-        self.skybox_hdr.borrow_mut().post_deserialize();
+        self.texture_u8.borrow_mut().post_deserialize();
+        self.texture_vec3.borrow_mut().post_deserialize();
+        self.cubemap_u8.borrow_mut().post_deserialize();
+        self.cubemap_vec3.borrow_mut().post_deserialize();
     }
 }
 
@@ -65,10 +65,10 @@ impl Default for SceneResources {
             mesh: RefCell::new(Arena::<_>::new()),
             entity: RefCell::new(Arena::<_>::new()),
             material: RefCell::new(Default::default()),
-            texture: RefCell::new(Arena::<_>::new()),
-            hdr: RefCell::new(Arena::<_>::new()),
-            skybox: RefCell::new(Arena::<_>::new()),
-            skybox_hdr: RefCell::new(Arena::<_>::new()),
+            texture_u8: RefCell::new(Arena::<_>::new()),
+            texture_vec3: RefCell::new(Arena::<_>::new()),
+            cubemap_u8: RefCell::new(Arena::<_>::new()),
+            cubemap_vec3: RefCell::new(Arena::<_>::new()),
         }
     }
 }

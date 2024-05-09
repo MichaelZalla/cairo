@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
 
         let result = mesh::obj::load::load_obj(
             &"./data/obj/cube-textured.obj",
-            &mut resources.texture.borrow_mut(),
+            &mut resources.texture_u8.borrow_mut(),
         );
 
         let _cube_geometry = result.0;
@@ -75,7 +75,7 @@ fn main() -> Result<(), String> {
             Some(cache) => {
                 for material in cache.values_mut() {
                     material
-                        .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)
+                        .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
                         .unwrap();
 
                     resources.material.borrow_mut().insert(material.to_owned());

@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
         checkerboard_diffuse_map.load(rendering_context)?;
 
         let checkerboard_diffuse_map_handle = resources
-            .texture
+            .texture_u8
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
@@ -92,7 +92,7 @@ fn main() -> Result<(), String> {
 
         let mut container_material = Material::new("container".to_string());
 
-        container_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
+        container_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/specular-map/assets/container2.png",
@@ -100,7 +100,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        container_material.specular_exponent_map = Some(resources.texture.borrow_mut().insert(
+        container_material.specular_exponent_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/specular-map/assets/container2_specular.png",
@@ -109,7 +109,7 @@ fn main() -> Result<(), String> {
         ));
 
         container_material
-            .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)
+            .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
             .unwrap();
 
         // Assign the meshes to entities

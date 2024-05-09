@@ -185,7 +185,7 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
 
         let result = load_obj(
             "./examples/pbr/assets/sphere.obj",
-            &mut resources.texture.borrow_mut(),
+            &mut resources.texture_u8.borrow_mut(),
         );
 
         let _geometry = result.0;

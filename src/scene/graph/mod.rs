@@ -118,7 +118,7 @@ impl SceneGraph {
         {
             if let (Ok(camera_entry), Ok(skybox_entry)) = (
                 resources.camera.borrow().get(&camera_handle),
-                resources.skybox_hdr.borrow().get(&skybox_handle),
+                resources.cubemap_vec3.borrow().get(&skybox_handle),
             ) {
                 let camera = &camera_entry.item;
                 let skybox_hdr = &skybox_entry.item;

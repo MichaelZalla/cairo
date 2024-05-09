@@ -59,7 +59,7 @@ pub fn bake_diffuse_irradiance_for_hdri(
 
     let hdr_texture_handle = (*cube_scene_context.resources)
         .borrow_mut()
-        .hdr
+        .texture_vec3
         .borrow_mut()
         .insert(Uuid::new_v4(), hdr_texture);
 
@@ -121,7 +121,7 @@ pub fn bake_diffuse_irradiance_for_hdri(
         let radiance_cubemap_texture_handle = {
             (*cube_scene_context.resources)
                 .borrow_mut()
-                .skybox_hdr
+                .cubemap_vec3
                 .borrow_mut()
                 .insert(Uuid::new_v4(), radiance_cubemap.clone())
         };

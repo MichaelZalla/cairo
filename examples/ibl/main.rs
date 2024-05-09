@@ -83,7 +83,7 @@ fn main() -> Result<(), String> {
     {
         let resources = (*spheres_scene_context.resources).borrow_mut();
 
-        let mut skybox_hdr = resources.skybox_hdr.borrow_mut();
+        let mut skybox_hdr = resources.cubemap_vec3.borrow_mut();
 
         for hdr_path in hdr_paths {
             let (radiance_cubemap, irradiance_cubemap) =

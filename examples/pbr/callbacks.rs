@@ -215,7 +215,7 @@ pub fn render_skybox_node_default(
     skybox_handle: &Handle,
     camera_handle: &Handle,
 ) {
-    match scene_resources.skybox.borrow().get(skybox_handle) {
+    match scene_resources.cubemap_u8.borrow().get(skybox_handle) {
         Ok(entry) => {
             let skybox_cube_map = &entry.item;
 

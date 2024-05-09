@@ -98,7 +98,7 @@ fn main() -> Result<(), String> {
         checkerboard_diffuse_map.load(rendering_context)?;
 
         let checkerboard_diffuse_map_handle = resources
-            .texture
+            .texture_u8
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
@@ -243,7 +243,10 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), directional_light);
 
-        let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+        let skybox_handle = resources
+            .cubemap_u8
+            .borrow_mut()
+            .insert(Uuid::new_v4(), skybox);
 
         let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
 
@@ -866,7 +869,7 @@ fn main() -> Result<(), String> {
 
         match skybox_handle {
             Some(handle) => {
-                let skybox_arena = resources.skybox.borrow();
+                let skybox_arena = resources.cubemap_u8.borrow();
 
                 match skybox_arena.get(&handle) {
                     Ok(entry) => {

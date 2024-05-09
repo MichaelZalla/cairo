@@ -79,7 +79,7 @@ fn main() -> Result<(), String> {
         checkerboard_diffuse_map.load(rendering_context)?;
 
         let checkerboard_diffuse_map_handle = resources
-            .texture
+            .texture_u8
             .borrow_mut()
             .insert(Uuid::new_v4(), checkerboard_diffuse_map);
 
@@ -90,7 +90,7 @@ fn main() -> Result<(), String> {
 
         let mut lava_material = Material::new("container".to_string());
 
-        lava_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
+        lava_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/post-effects/assets/lava.png",
@@ -98,7 +98,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        lava_material.emissive_color_map = Some(resources.texture.borrow_mut().insert(
+        lava_material.emissive_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/post-effects/assets/lava_emissive.png",
@@ -107,7 +107,7 @@ fn main() -> Result<(), String> {
         ));
 
         lava_material
-            .load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)
+            .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
             .unwrap();
 
         // Assign the meshes to entities

@@ -75,7 +75,7 @@ fn main() -> Result<(), String> {
 
         let mut brick_material = Material::new("brick".to_string());
 
-        brick_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
+        brick_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/bricks2.jpg",
@@ -83,7 +83,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        brick_material.normal_map = Some(resources.texture.borrow_mut().insert(
+        brick_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/bricks2_normal.jpg",
@@ -91,7 +91,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        brick_material.displacement_map = Some(resources.texture.borrow_mut().insert(
+        brick_material.displacement_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/bricks2_disp.jpg",
@@ -101,13 +101,13 @@ fn main() -> Result<(), String> {
 
         brick_material.displacement_scale = 0.05;
 
-        brick_material.load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;
+        brick_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
         // Box material
 
         let mut box_material = Material::new("box".to_string());
 
-        box_material.diffuse_color_map = Some(resources.texture.borrow_mut().insert(
+        box_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/wood.png",
@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        box_material.normal_map = Some(resources.texture.borrow_mut().insert(
+        box_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/toy_box_normal.png",
@@ -123,7 +123,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        box_material.displacement_map = Some(resources.texture.borrow_mut().insert(
+        box_material.displacement_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
                 &"./examples/displacement-map/assets/toy_box_disp.png",
@@ -133,7 +133,7 @@ fn main() -> Result<(), String> {
 
         box_material.displacement_scale = 0.05;
 
-        box_material.load_all_maps(&mut resources.texture.borrow_mut(), rendering_context)?;
+        box_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
         // Assign the meshes to entities
 
