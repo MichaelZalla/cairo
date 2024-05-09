@@ -9,7 +9,7 @@ use crate::{
     resource::arena::Arena,
     serde::PostDeserialize,
     texture::{cubemap::CubeMap, map::TextureMap},
-    vec::vec3::Vec3,
+    vec::{vec2::Vec2, vec3::Vec3},
 };
 
 use super::{
@@ -30,6 +30,7 @@ pub struct SceneResources {
     pub entity: RefCell<Arena<Entity>>,
     pub material: RefCell<MaterialCache>,
     pub texture_u8: RefCell<Arena<TextureMap>>,
+    pub texture_vec2: RefCell<Arena<TextureMap<Vec2>>>,
     pub texture_vec3: RefCell<Arena<TextureMap<Vec3>>>,
     pub cubemap_u8: RefCell<Arena<CubeMap>>,
     pub cubemap_vec3: RefCell<Arena<CubeMap<Vec3>>>,
@@ -47,6 +48,7 @@ impl PostDeserialize for SceneResources {
         self.entity.borrow_mut().post_deserialize();
         self.material.borrow_mut().post_deserialize();
         self.texture_u8.borrow_mut().post_deserialize();
+        self.texture_vec2.borrow_mut().post_deserialize();
         self.texture_vec3.borrow_mut().post_deserialize();
         self.cubemap_u8.borrow_mut().post_deserialize();
         self.cubemap_vec3.borrow_mut().post_deserialize();
@@ -66,6 +68,7 @@ impl Default for SceneResources {
             entity: RefCell::new(Arena::<_>::new()),
             material: RefCell::new(Default::default()),
             texture_u8: RefCell::new(Arena::<_>::new()),
+            texture_vec2: RefCell::new(Arena::<_>::new()),
             texture_vec3: RefCell::new(Arena::<_>::new()),
             cubemap_u8: RefCell::new(Arena::<_>::new()),
             cubemap_vec3: RefCell::new(Arena::<_>::new()),
