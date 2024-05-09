@@ -163,7 +163,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
 
                             let (r, _g, _b) = sample_nearest_u8(out.uv, map, None);
 
-                            out.specular_exponent = r as u8;
+                            out.specular_exponent = r;
                         }
                         Err(_) => panic!("Invalid TextureMap handle!"),
                     },

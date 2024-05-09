@@ -108,7 +108,7 @@ fn main() -> Result<(), String> {
         let mut checkerboard_material = Material::new("checkerboard".to_string());
 
         let mut checkerboard_diffuse_map = TextureMap::new(
-            &"./assets/textures/checkerboard.jpg",
+            "./assets/textures/checkerboard.jpg",
             TextureMapStorageFormat::Index8(0),
         );
 
@@ -301,12 +301,6 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
-
-    // Bind skybox (environment) map to shader context.
-
-    // shader_context_rc
-    //     .borrow_mut()
-    //     .set_active_ambient_diffuse_map(Some(skybox_handle.clone()));
 
     // Pipeline
 
@@ -699,22 +693,18 @@ fn main() -> Result<(), String> {
 
         // End frame
 
-        match (active_camera_handle, active_skybox_handle) {
-            (Some(camera_handle), Some(skybox_handle)) => {
-                match (
-                    resources.camera.borrow().get(&camera_handle),
-                    resources.cubemap_u8.borrow().get(&skybox_handle),
-                ) {
-                    (Ok(camera_entry), Ok(skybox_entry)) => {
-                        let camera = &camera_entry.item;
-                        let skybox = &skybox_entry.item;
+        if let (Some(camera_handle), Some(skybox_handle)) =
+            (active_camera_handle, active_skybox_handle)
+        {
+            if let (Ok(camera_entry), Ok(skybox_entry)) = (
+                resources.camera.borrow().get(&camera_handle),
+                resources.cubemap_u8.borrow().get(&skybox_handle),
+            ) {
+                let camera = &camera_entry.item;
+                let skybox = &skybox_entry.item;
 
-                        pipeline.render_skybox(&skybox, &camera);
-                    }
-                    _ => (),
-                }
+                pipeline.render_skybox(skybox, camera);
             }
-            _ => {}
         }
 
         pipeline.end_frame();

@@ -78,7 +78,7 @@ fn main() -> Result<(), String> {
         brick_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/displacement-map/assets/bricks2.jpg",
+                "./examples/displacement-map/assets/bricks2.jpg",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -86,7 +86,7 @@ fn main() -> Result<(), String> {
         brick_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/displacement-map/assets/bricks2_normal.jpg",
+                "./examples/displacement-map/assets/bricks2_normal.jpg",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -94,7 +94,7 @@ fn main() -> Result<(), String> {
         brick_material.displacement_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/displacement-map/assets/bricks2_disp.jpg",
+                "./examples/displacement-map/assets/bricks2_disp.jpg",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));
@@ -110,7 +110,7 @@ fn main() -> Result<(), String> {
         box_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/displacement-map/assets/wood.png",
+                "./examples/displacement-map/assets/wood.png",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -118,7 +118,7 @@ fn main() -> Result<(), String> {
         box_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/displacement-map/assets/toy_box_normal.png",
+                "./examples/displacement-map/assets/toy_box_normal.png",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -126,7 +126,7 @@ fn main() -> Result<(), String> {
         box_material.displacement_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/displacement-map/assets/toy_box_disp.png",
+                "./examples/displacement-map/assets/toy_box_disp.png",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));
@@ -440,16 +440,13 @@ fn main() -> Result<(), String> {
 
                                 let framebuffer = framebuffer_rc.borrow_mut();
 
-                                match framebuffer.attachments.depth.as_ref() {
-                                    Some(lock) => {
-                                        let mut depth_buffer = lock.borrow_mut();
+                                if let Some(lock) = framebuffer.attachments.depth.as_ref() {
+                                    let mut depth_buffer = lock.borrow_mut();
 
-                                        depth_buffer
-                                            .set_projection_z_near(camera.get_projection_z_near());
-                                        depth_buffer
-                                            .set_projection_z_far(camera.get_projection_z_far());
-                                    }
-                                    None => (),
+                                    depth_buffer
+                                        .set_projection_z_near(camera.get_projection_z_near());
+                                    depth_buffer
+                                        .set_projection_z_far(camera.get_projection_z_far());
                                 }
 
                                 Ok(())

@@ -72,7 +72,7 @@ fn main() -> Result<(), String> {
         let mut checkerboard_material = Material::new("checkerboard".to_string());
 
         let mut checkerboard_diffuse_map = TextureMap::new(
-            &"./assets/textures/checkerboard.jpg",
+            "./assets/textures/checkerboard.jpg",
             TextureMapStorageFormat::Index8(0),
         );
 
@@ -93,7 +93,7 @@ fn main() -> Result<(), String> {
         lava_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/post-effects/assets/lava.png",
+                "./examples/post-effects/assets/lava.png",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
         lava_material.emissive_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/post-effects/assets/lava_emissive.png",
+                "./examples/post-effects/assets/lava_emissive.png",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));
@@ -300,9 +300,10 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let mut pipeline_options: PipelineOptions = Default::default();
-
-    pipeline_options.do_bloom = true;
+    let pipeline_options = PipelineOptions {
+        do_bloom: true,
+        ..Default::default()
+    };
 
     let mut pipeline = Pipeline::new(
         &shader_context_rc,
@@ -437,16 +438,13 @@ fn main() -> Result<(), String> {
 
                                 let framebuffer = framebuffer_rc.borrow_mut();
 
-                                match framebuffer.attachments.depth.as_ref() {
-                                    Some(lock) => {
-                                        let mut depth_buffer = lock.borrow_mut();
+                                if let Some(lock) = framebuffer.attachments.depth.as_ref() {
+                                    let mut depth_buffer = lock.borrow_mut();
 
-                                        depth_buffer
-                                            .set_projection_z_near(camera.get_projection_z_near());
-                                        depth_buffer
-                                            .set_projection_z_far(camera.get_projection_z_far());
-                                    }
-                                    None => (),
+                                    depth_buffer
+                                        .set_projection_z_near(camera.get_projection_z_near());
+                                    depth_buffer
+                                        .set_projection_z_far(camera.get_projection_z_far());
                                 }
 
                                 Ok(())

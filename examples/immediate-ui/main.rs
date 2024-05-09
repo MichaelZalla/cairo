@@ -167,162 +167,149 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        match framebuffer_rc.borrow_mut().attachments.color.as_mut() {
-            Some(rc) => {
-                let mut color_buffer = rc.borrow_mut();
+        if let Some(rc) = framebuffer_rc.borrow_mut().attachments.color.as_mut() {
+            let mut color_buffer = rc.borrow_mut();
 
-                color_buffer.clear(None);
+            color_buffer.clear(None);
 
-                let mut ctx = global_ui_context.borrow_mut();
+            let mut ctx = global_ui_context.borrow_mut();
 
-                ctx.reset_id_counter(root_id.item + 1);
+            ctx.reset_id_counter(root_id.item + 1);
 
-                // Process global inputs.
+            // Process global inputs.
 
-                {
-                    for keycode in &keyboard_state.keys_pressed {
-                        match keycode {
-                            Keycode::L { .. } => {
-                                let mut layout_direction = layout_direction_rc.borrow_mut();
-                                
-                                *layout_direction = match *layout_direction {
-                                    UILayoutDirection::LeftToRight => UILayoutDirection::TopToBottom,
-                                    UILayoutDirection::TopToBottom => UILayoutDirection::LeftToRight,
-                                }
-                            }
-                            _ => ()
+            {
+                for keycode in &keyboard_state.keys_pressed {
+                    if let Keycode::L { .. } = keycode {
+                        let mut layout_direction = layout_direction_rc.borrow_mut();
+                    
+                        *layout_direction = match *layout_direction {
+                            UILayoutDirection::LeftToRight => UILayoutDirection::TopToBottom,
+                            UILayoutDirection::TopToBottom => UILayoutDirection::LeftToRight,
                         }
                     }
-                }
-
-                // Draw all panels.
-
-                let mut active_panel_uuid: Option<Uuid> = None;
-                let mut active_panel_resize_request: Option<(i32, i32)> = None;
-
-                panels_model.retain(
-                    |(panel_uuid, _), panel_extent: &mut UILayoutExtent| -> bool {
-                        let panel_options = PanelOptions {
-                            titlebar_options: Some(PanelTitlebarOptions {
-                                title: format!("Panel {}", panel_uuid).to_string(),
-                                closable: true,
-                            }),
-                            resizable: if *panel_uuid == left_panel_uuid {
-                                true
-                            } else {
-                                false
-                            },
-                            ..Default::default()
-                        };
-
-                        let mut panel_layout = UILayoutContext::new(
-                            UILayoutDirection::TopToBottom,
-                            *panel_extent,
-                            Default::default(),
-                        );
-
-                        let do_panel_result = do_panel(
-                            &mut ctx,
-                            &panel_uuid,
-                            &mut panel_layout,
-                            &mut color_buffer,
-                            &panel_options,
-                            mouse_state,
-                            keyboard_state,
-                            game_controller_state,
-                            &mut |ctx: &mut RefMut<'_, UIContext>,
-                                layout: &mut UILayoutContext,
-                                panel_uuid: &Uuid,
-                                panel_id: &UIID,
-                                parent_buffer: &mut Buffer2D,
-                                mouse_state: &MouseState,
-                                keyboard_state: &KeyboardState,
-                                _game_controller_state: &GameControllerState| {
-                                
-                                layout.direction = *layout_direction_rc.borrow();
-
-                                draw_sample_panel_contents(
-                                    ctx,
-                                    layout,
-                                    panel_uuid,
-                                    panel_id,
-                                    parent_buffer,
-                                    mouse_state,
-                                    keyboard_state,
-                                    &mut textboxes_model,
-                                    &mut checkboxes_model,
-                                    &app.timing_info,
-                                    &mut wojak_texture,
-                                );
-                            },
-                        );
-
-                        if do_panel_result.should_close {
-                            println!("Closing Panel ({})...", panel_uuid);
-
-                            active_panel_uuid = Some(*panel_uuid);
-
-                            return false;
-                        }
-
-                        if do_panel_result.requested_resize.0 != 0
-                            || do_panel_result.requested_resize.1 != 0
-                        {
-                            let (delta_x, delta_y) = do_panel_result.requested_resize;
-
-                            println!("Resizing Panel {}: {}, {}", panel_uuid, delta_x, delta_y);
-
-                            active_panel_uuid = Some(*panel_uuid);
-                            active_panel_resize_request = Some(do_panel_result.requested_resize);
-                        }
-
-                        true
-                    },
-                );
-
-                match active_panel_uuid {
-                    Some(active_uuid) => {
-                        match active_panel_resize_request {
-                            Some(_resize_request) => {
-                                // Resize request scenario.
-
-                                static MIN_PANEL_WIDTH: u32 = 150;
-
-                                let mouse_x_relative_to_root =
-                                    mouse_state.position.0 - root_extent.left as i32;
-
-                                for ((uuid, _parent), extent) in panels_model.iter_mut() {
-                                    if *uuid == active_uuid {
-                                        extent.right = mouse_x_relative_to_root
-                                            .min((root_extent.right - MIN_PANEL_WIDTH) as i32)
-                                            .max(MIN_PANEL_WIDTH as i32)
-                                            as u32;
-                                    } else {
-                                        extent.left = mouse_x_relative_to_root
-                                            .min((root_extent.right - MIN_PANEL_WIDTH) as i32)
-                                            .max(MIN_PANEL_WIDTH as i32)
-                                            as u32;
-                                    }
-                                }
-                            }
-                            None => {
-                                // Close request scenario.
-
-                                // Update the sibling panel's extent.
-
-                                for ((uuid, _parent), extent) in panels_model.iter_mut() {
-                                    if *uuid != active_uuid {
-                                        extent.left = root_extent.left;
-                                        extent.right = root_extent.right;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    None => (),
                 }
             }
-            None => (),
+
+            // Draw all panels.
+
+            let mut active_panel_uuid: Option<Uuid> = None;
+            let mut active_panel_resize_request: Option<(i32, i32)> = None;
+
+            panels_model.retain(
+                |(panel_uuid, _), panel_extent: &mut UILayoutExtent| -> bool {
+                    let panel_options = PanelOptions {
+                        titlebar_options: Some(PanelTitlebarOptions {
+                            title: format!("Panel {}", panel_uuid).to_string(),
+                            closable: true,
+                        }),
+                        resizable: *panel_uuid == left_panel_uuid,
+                        ..Default::default()
+                    };
+
+                    let mut panel_layout = UILayoutContext::new(
+                        UILayoutDirection::TopToBottom,
+                        *panel_extent,
+                        Default::default(),
+                    );
+
+                    let do_panel_result = do_panel(
+                        &mut ctx,
+                        panel_uuid,
+                        &mut panel_layout,
+                        &mut color_buffer,
+                        &panel_options,
+                        mouse_state,
+                        keyboard_state,
+                        game_controller_state,
+                        &mut |ctx: &mut RefMut<'_, UIContext>,
+                            layout: &mut UILayoutContext,
+                            panel_uuid: &Uuid,
+                            panel_id: &UIID,
+                            parent_buffer: &mut Buffer2D,
+                            mouse_state: &MouseState,
+                            keyboard_state: &KeyboardState,
+                            _game_controller_state: &GameControllerState| {
+                    
+                            layout.direction = *layout_direction_rc.borrow();
+
+                            draw_sample_panel_contents(
+                                ctx,
+                                layout,
+                                panel_uuid,
+                                panel_id,
+                                parent_buffer,
+                                mouse_state,
+                                keyboard_state,
+                                &mut textboxes_model,
+                                &mut checkboxes_model,
+                                &app.timing_info,
+                                &mut wojak_texture,
+                            );
+                        },
+                    );
+
+                    if do_panel_result.should_close {
+                        println!("Closing Panel ({})...", panel_uuid);
+
+                        active_panel_uuid = Some(*panel_uuid);
+
+                        return false;
+                    }
+
+                    if do_panel_result.requested_resize.0 != 0
+                        || do_panel_result.requested_resize.1 != 0
+                    {
+                        let (delta_x, delta_y) = do_panel_result.requested_resize;
+
+                        println!("Resizing Panel {}: {}, {}", panel_uuid, delta_x, delta_y);
+
+                        active_panel_uuid = Some(*panel_uuid);
+                        active_panel_resize_request = Some(do_panel_result.requested_resize);
+                    }
+
+                    true
+                },
+            );
+
+            if let Some(active_uuid) = active_panel_uuid {
+                match active_panel_resize_request {
+                    Some(_resize_request) => {
+                        // Resize request scenario.
+
+                        static MIN_PANEL_WIDTH: u32 = 150;
+
+                        let mouse_x_relative_to_root =
+                            mouse_state.position.0 - root_extent.left as i32;
+
+                        for ((uuid, _parent), extent) in panels_model.iter_mut() {
+                            if *uuid == active_uuid {
+                                extent.right = mouse_x_relative_to_root
+                                    .min((root_extent.right - MIN_PANEL_WIDTH) as i32)
+                                    .max(MIN_PANEL_WIDTH as i32)
+                                    as u32;
+                            } else {
+                                extent.left = mouse_x_relative_to_root
+                                    .min((root_extent.right - MIN_PANEL_WIDTH) as i32)
+                                    .max(MIN_PANEL_WIDTH as i32)
+                                    as u32;
+                            }
+                        }
+                    }
+                    None => {
+                        // Close request scenario.
+
+                        // Update the sibling panel's extent.
+
+                        for ((uuid, _parent), extent) in panels_model.iter_mut() {
+                            if *uuid != active_uuid {
+                                extent.left = root_extent.left;
+                                extent.right = root_extent.right;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Ok(())

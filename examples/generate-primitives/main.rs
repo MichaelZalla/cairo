@@ -151,7 +151,7 @@ fn main() -> Result<(), String> {
         point_light_decal_mat.alpha_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./assets/decals/point_light_small.png",
+                "./assets/decals/point_light_small.png",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));
@@ -168,7 +168,7 @@ fn main() -> Result<(), String> {
         spot_light_decal_mat.alpha_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./assets/decals/spot_light_small.png",
+                "./assets/decals/spot_light_small.png",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));
@@ -485,7 +485,7 @@ fn main() -> Result<(), String> {
 
     // Fragment shaders
 
-    let fragment_shaders = vec![
+    let fragment_shaders = [
         DEFAULT_FRAGMENT_SHADER,
         AlbedoFragmentShader,
         DepthFragmentShader,
@@ -699,16 +699,13 @@ fn main() -> Result<(), String> {
 
                                 let framebuffer = framebuffer_rc.borrow_mut();
 
-                                match framebuffer.attachments.depth.as_ref() {
-                                    Some(lock) => {
-                                        let mut depth_buffer = lock.borrow_mut();
+                                if let Some(lock) = framebuffer.attachments.depth.as_ref() {
+                                    let mut depth_buffer = lock.borrow_mut();
 
-                                        depth_buffer
-                                            .set_projection_z_near(camera.get_projection_z_near());
-                                        depth_buffer
-                                            .set_projection_z_far(camera.get_projection_z_far());
-                                    }
-                                    None => (),
+                                    depth_buffer
+                                        .set_projection_z_near(camera.get_projection_z_near());
+                                    depth_buffer
+                                        .set_projection_z_far(camera.get_projection_z_far());
                                 }
 
                                 Ok(())
@@ -919,7 +916,7 @@ fn main() -> Result<(), String> {
                         let mut depth_buffer =
                             framebuffer.attachments.depth.as_ref().unwrap().borrow_mut();
 
-                        let methods = vec![
+                        let methods = [
                             DepthTestMethod::Always,
                             DepthTestMethod::Never,
                             DepthTestMethod::Less,
@@ -1064,12 +1061,12 @@ fn main() -> Result<(), String> {
                                     Ok(entry) => {
                                         let active_camera = &entry.item;
         
-                                        match point_light_arena.get(&point_light_handle) {
+                                        match point_light_arena.get(point_light_handle) {
                                             Ok(entry) => {
                                                 let point_light = &entry.item;
         
                                                 pipeline.render_point_light(
-                                                    &point_light,
+                                                    point_light,
                                                     Some(active_camera),
                                                     Some(&mut resources.material.borrow_mut()),
                                                 );
@@ -1106,12 +1103,12 @@ fn main() -> Result<(), String> {
                                     Ok(entry) => {
                                         let active_camera = &entry.item;
         
-                                        match spot_light_arena.get(&spot_light_handle) {
+                                        match spot_light_arena.get(spot_light_handle) {
                                             Ok(entry) => {
                                                 let spot_light = &entry.item;
         
                                                 pipeline.render_spot_light(
-                                                    &spot_light,
+                                                    spot_light,
                                                     Some(active_camera),
                                                     Some(&mut resources.material.borrow_mut()),
                                                 );
@@ -1164,7 +1161,7 @@ fn main() -> Result<(), String> {
 
                 {
                     Graphics::render_debug_messages(
-                        &mut *color_buffer,
+                        &mut color_buffer,
                         font_cache_rc,
                         font_info,
                         (12, 12),
