@@ -93,7 +93,6 @@ pub fn bake_diffuse_irradiance_for_hdri(
 
         render_radiance_to_cubemap(
             &hdr_texture_handle,
-            CUBEMAP_SIZE,
             cubemap_face_framebuffer_rc,
             &cube_scene_context,
             &shader_context_rc,
@@ -128,7 +127,6 @@ pub fn bake_diffuse_irradiance_for_hdri(
 
         render_irradiance_to_cubemap(
             &radiance_cubemap_texture_handle,
-            CUBEMAP_SIZE,
             cubemap_face_framebuffer_rc,
             &cube_scene_context,
             &shader_context_rc,
@@ -141,8 +139,7 @@ pub fn bake_diffuse_irradiance_for_hdri(
 
 fn render_radiance_to_cubemap(
     hdr_texture_handle: &Handle,
-    cubemap_size: u32,
-    framebuffer_rc: &'static mut RefCell<Framebuffer>,
+    framebuffer_rc: &'static RefCell<Framebuffer>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
@@ -163,13 +160,8 @@ fn render_radiance_to_cubemap(
             .set_active_hdr_map(Some(*hdr_texture_handle));
     }
 
-    let cubemap = render_scene_to_cubemap(
-        cubemap_size,
-        framebuffer_rc,
-        scene_context,
-        shader_context_rc,
-        pipeline,
-    );
+    let cubemap =
+        render_scene_to_cubemap(framebuffer_rc, scene_context, shader_context_rc, pipeline);
 
     {
         // Cleanup
@@ -190,7 +182,6 @@ fn render_radiance_to_cubemap(
 
 fn render_irradiance_to_cubemap(
     radiance_cubemap_texture_handle: &Handle,
-    cubemap_size: u32,
     framebuffer_rc: &'static mut RefCell<Framebuffer>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
@@ -210,13 +201,8 @@ fn render_irradiance_to_cubemap(
             .set_active_ambient_diffuse_map(Some(*radiance_cubemap_texture_handle));
     }
 
-    let cubemap = render_scene_to_cubemap(
-        cubemap_size,
-        framebuffer_rc,
-        scene_context,
-        shader_context_rc,
-        pipeline,
-    );
+    let cubemap =
+        render_scene_to_cubemap(framebuffer_rc, scene_context, shader_context_rc, pipeline);
 
     {
         // Cleanup
@@ -236,12 +222,19 @@ fn render_irradiance_to_cubemap(
 }
 
 fn render_scene_to_cubemap(
-    cubemap_size: u32,
     framebuffer_rc: &'static RefCell<Framebuffer>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
 ) -> CubeMap<Vec3> {
+    let cubemap_size = {
+        let framebuffer = framebuffer_rc.borrow();
+
+        assert_eq!(framebuffer.width, framebuffer.height);
+
+        framebuffer.width
+    };
+
     let mut cubemap: CubeMap<Vec3> = Default::default();
 
     for side in &mut cubemap.sides {
