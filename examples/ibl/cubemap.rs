@@ -198,7 +198,7 @@ fn render_irradiance_to_cubemap(
 
         shader_context_rc
             .borrow_mut()
-            .set_active_ambient_diffuse_map(Some(*radiance_cubemap_texture_handle));
+            .set_active_ambient_diffuse_irradiance_map(Some(*radiance_cubemap_texture_handle));
     }
 
     let cubemap =
@@ -215,7 +215,7 @@ fn render_irradiance_to_cubemap(
 
         shader_context_rc
             .borrow_mut()
-            .set_active_ambient_diffuse_map(None);
+            .set_active_ambient_diffuse_irradiance_map(None);
     }
 
     cubemap

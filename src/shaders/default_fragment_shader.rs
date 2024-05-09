@@ -28,7 +28,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // Calculate ambient light contribution
 
-        let ambient_light_contribution = match &context.active_ambient_diffuse_map {
+        let ambient_light_contribution = match &context.active_ambient_diffuse_irradiance_map {
             Some(handle) => match resources.cubemap_vec3.borrow().get(handle) {
                 Ok(entry) => {
                     let map = &entry.item;

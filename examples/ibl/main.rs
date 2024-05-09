@@ -211,7 +211,8 @@ fn main() -> Result<(), String> {
             let (radiance_cubemap_handle, irradiance_cubemap_handle) =
                 radiance_irradiance_handles[*current_handles_index.borrow()];
 
-            shader_context.set_active_ambient_diffuse_map(Some(irradiance_cubemap_handle));
+            shader_context
+                .set_active_ambient_diffuse_irradiance_map(Some(irradiance_cubemap_handle));
 
             // Set the irradiance map as our scene's ambient diffuse light map.
 

@@ -116,7 +116,7 @@ pub const HdrCubemapConvolutionFragmentShader: FragmentShaderFn =
      resources: &SceneResources,
      sample: &GeometrySample|
      -> Color {
-        if let Some(handle) = shader_context.active_ambient_diffuse_map {
+        if let Some(handle) = shader_context.active_ambient_diffuse_irradiance_map {
             if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
@@ -193,7 +193,7 @@ pub const AmbientDiffuseCubemapFragmentShader: FragmentShaderFn =
      resources: &SceneResources,
      sample: &GeometrySample|
      -> Color {
-        if let Some(handle) = shader_context.active_ambient_diffuse_map {
+        if let Some(handle) = shader_context.active_ambient_diffuse_irradiance_map {
             if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
