@@ -4,7 +4,7 @@ use crate::{
     buffer::Buffer2D,
     color::Color,
     graphics::Graphics,
-    texture::{map::TextureMap, sample::sample_trilinear},
+    texture::{map::TextureMap, sample::sample_trilinear_u8},
     vec::vec2::Vec2,
 };
 
@@ -93,7 +93,7 @@ fn draw_image(
                 z: 0.0,
             };
 
-            let sample = sample_trilinear(uv, map, near_level_index, far_level_index, alpha);
+            let sample = sample_trilinear_u8(uv, map, near_level_index, far_level_index, alpha);
 
             let (screen_x, screen_y) = (cursor.x + sample_x, cursor.y + sample_y);
 

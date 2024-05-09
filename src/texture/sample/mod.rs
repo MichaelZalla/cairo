@@ -104,7 +104,7 @@ pub fn sample_nearest_vec3(uv: Vec2, map: &TextureMap<Vec3>) -> Vec3 {
     buffer.0.data[texel_color_index]
 }
 
-pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
+pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
     let safe_uv = apply_wrapping_options(uv, map);
@@ -265,7 +265,7 @@ pub fn sample_bilinear(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -
     (r as u8, g as u8, b as u8)
 }
 
-pub fn sample_trilinear(
+pub fn sample_trilinear_u8(
     uv: Vec2,
     map: &TextureMap,
     near_level_index: usize,
@@ -275,13 +275,13 @@ pub fn sample_trilinear(
     // Sample a color from both mipmaps, using bilinear sampling.
 
     if (near_level_index == far_level_index) || alpha == 0.0 {
-        return sample_bilinear(uv, map, Some(near_level_index));
+        return sample_bilinear_u8(uv, map, Some(near_level_index));
     } else if alpha >= 1.0 {
-        return sample_bilinear(uv, map, Some(far_level_index));
+        return sample_bilinear_u8(uv, map, Some(far_level_index));
     }
 
-    let near_color = sample_bilinear(uv, map, Some(near_level_index));
-    let far_color = sample_bilinear(uv, map, Some(far_level_index));
+    let near_color = sample_bilinear_u8(uv, map, Some(near_level_index));
+    let far_color = sample_bilinear_u8(uv, map, Some(far_level_index));
 
     let near_color_vec3 = Vec3 {
         x: near_color.0 as f32,

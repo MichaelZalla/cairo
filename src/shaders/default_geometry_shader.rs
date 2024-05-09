@@ -5,7 +5,7 @@ use crate::{
         context::ShaderContext,
         geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
     },
-    texture::sample::{sample_bilinear, sample_nearest_u8},
+    texture::sample::{sample_bilinear_u8, sample_nearest_u8},
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
@@ -105,7 +105,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             let map = &entry.item;
 
                             let (r, g, b) = if options.bilinear_active {
-                                sample_bilinear(out.uv, map, None)
+                                sample_bilinear_u8(out.uv, map, None)
                             } else {
                                 sample_nearest_u8(out.uv, map, None)
                             };
@@ -335,7 +335,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, g, b) = sample_bilinear(out.uv, map, None);
+                            let (r, g, b) = sample_bilinear_u8(out.uv, map, None);
 
                             let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
 
@@ -358,7 +358,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_bilinear(out.uv, map, None);
+                            let (r, _g, _b) = sample_bilinear_u8(out.uv, map, None);
 
                             out.roughness = r as f32 / 255.0;
                         }
@@ -377,7 +377,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_bilinear(out.uv, map, None);
+                            let (r, _g, _b) = sample_bilinear_u8(out.uv, map, None);
 
                             out.metallic = r as f32 / 255.0;
                         }

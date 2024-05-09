@@ -6,7 +6,7 @@ use crate::{
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
-    texture::sample::sample_bilinear,
+    texture::sample::sample_bilinear_u8,
     vec::vec3::Vec3,
 };
 
@@ -23,7 +23,7 @@ pub const UvTestFragmentShader: FragmentShaderFn =
                 Ok(entry) => {
                     let map = &entry.item;
 
-                    (r, g, b) = sample_bilinear(sample.uv, map, None);
+                    (r, g, b) = sample_bilinear_u8(sample.uv, map, None);
 
                     return Color::from_vec3(Vec3 {
                         x: r as f32 / 255.0,
