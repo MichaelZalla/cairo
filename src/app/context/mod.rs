@@ -110,7 +110,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     // window_builder.borderless();
 
     if window_info.full_screen {
-        // Will verride `canvas_resolution.width` and `canvas_resolution.height` for the current
+        // Will override `canvas_resolution.width` and `canvas_resolution.height` for the current
         // desktop resolution;
         window_builder.fullscreen_desktop();
     }
