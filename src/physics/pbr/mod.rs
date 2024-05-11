@@ -1,6 +1,9 @@
 use std::f32::consts::PI;
 
-use crate::vec::vec3::{self, Vec3};
+use crate::{
+    shader::geometry::sample::GeometrySample,
+    vec::vec3::{self, Vec3},
+};
 
 // Distribution
 
@@ -49,4 +52,34 @@ pub fn fresnel_schlick_direct(likeness: f32, f0: &Vec3) -> Vec3 {
 
 pub fn fresnel_schlick_indirect(likeness: f32, f0: &Vec3, roughness: f32) -> Vec3 {
     *f0 + (vec3::ONES * (1.0 - roughness) - *f0) * (1.0 - likeness).clamp(0.0, 1.0).powi(5)
+}
+
+// Cook-Torrance BRDF
+
+pub fn cook_torrance_brdf(
+    sample: &GeometrySample,
+    halfway: &Vec3,
+    direction_to_view_position: &Vec3,
+    likeness_to_view_direction: f32,
+    direction_to_light: &Vec3,
+    likeness_to_light_direction: f32,
+    fresnel: &Vec3,
+) -> Vec3 {
+    let normal = &sample.tangent_space_info.normal;
+
+    let distribution = distribution_ggx(normal, halfway, sample.roughness);
+
+    let geometry = geometry_smith(
+        normal,
+        direction_to_view_position,
+        direction_to_light,
+        sample.roughness,
+    );
+
+    // Specular reflection contribution.
+
+    let numerator = *fresnel * distribution * geometry;
+    let denominator = 4.0 * likeness_to_view_direction * likeness_to_light_direction + 0.0001;
+
+    numerator / denominator
 }

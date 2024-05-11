@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::color;
-use crate::physics::pbr;
+use crate::physics::pbr::{self, cook_torrance_brdf};
 use crate::serde::PostDeserialize;
 use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
@@ -24,40 +24,41 @@ fn contribute_pbr(
         (tangent_space_info.view_position - tangent_space_info.fragment_position).as_normal();
 
     let likeness_to_light_direction = normal.dot(*direction_to_light).max(0.0);
-    let likeness_to_view_direction = normal.dot(direction_to_view_position).max(0.0);
-
-    let halfway = (direction_to_view_position + *direction_to_light).as_normal();
-
-    // Cook-Torrance BRDF
-
-    let distribution = pbr::distribution_ggx(normal, &halfway, sample.roughness);
-
-    let geometry = pbr::geometry_smith(
-        normal,
-        &direction_to_view_position,
-        direction_to_light,
-        sample.roughness,
-    );
-
-    let fresnel = pbr::fresnel_schlick_direct(halfway.dot(direction_to_view_position), f0);
-
-    // Rendering equation
-
-    // Ratio of reflected light energy.
-    let k_s = fresnel;
-
-    // Ratio of refracted light energy.
-    let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
-
-    // Specular reflection contribution.
-    let numerator = fresnel * distribution * geometry;
-    let denominator = 4.0 * likeness_to_view_direction * likeness_to_light_direction + 0.0001;
-    let specular = numerator / denominator;
 
     if likeness_to_light_direction > 0.0 {
         let radiance = *light_intensities;
 
-        (k_d * sample.albedo / PI + specular) * radiance * likeness_to_light_direction
+        let halfway = (direction_to_view_position + *direction_to_light).as_normal();
+
+        let halfway_likeness_to_view = halfway.dot(direction_to_view_position);
+
+        let fresnel = pbr::fresnel_schlick_direct(halfway_likeness_to_view, f0);
+
+        // Rendering equation
+
+        // Ratio of reflected light energy.
+        let k_s = fresnel;
+
+        // Ratio of refracted light energy.
+        let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
+
+        // BRDF
+
+        let diffuse = k_d * (sample.albedo / PI);
+
+        let likeness_to_view_direction = normal.dot(direction_to_view_position).max(0.0);
+
+        let specular = cook_torrance_brdf(
+            sample,
+            &halfway,
+            &direction_to_view_position,
+            likeness_to_view_direction,
+            direction_to_light,
+            likeness_to_light_direction,
+            &fresnel,
+        );
+
+        (diffuse + specular) * radiance * likeness_to_light_direction
     } else {
         Default::default()
     }
