@@ -39,7 +39,7 @@ fn contribute_pbr(
         sample.roughness,
     );
 
-    let fresnel = pbr::fresnel_schlick(halfway.dot(direction_to_view_position), f0);
+    let fresnel = pbr::fresnel_schlick_direct(halfway.dot(direction_to_view_position), f0);
 
     // Rendering equation
 

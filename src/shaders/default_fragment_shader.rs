@@ -1,7 +1,7 @@
 use crate::{
     animation::lerp,
     color::Color,
-    physics::pbr::fresnel_schlick_roughness,
+    physics::pbr::fresnel_schlick_indirect,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
@@ -46,7 +46,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
                     // Rendering equation
 
-                    let fresnel = fresnel_schlick_roughness(likeness, &f0, sample.roughness);
+                    let fresnel = fresnel_schlick_indirect(likeness, &f0, sample.roughness);
 
                     // Ratio of reflected light energy.
                     let k_s = fresnel;
