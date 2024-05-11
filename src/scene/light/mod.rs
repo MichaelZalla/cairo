@@ -23,8 +23,8 @@ fn contribute_pbr(
     let direction_to_view_position =
         (tangent_space_info.view_position - tangent_space_info.fragment_position).as_normal();
 
-    let likeness_to_point_light = normal.dot(*direction_to_light).max(0.0);
-    let likeness_to_view_position = normal.dot(direction_to_view_position).max(0.0);
+    let likeness_to_light_direction = normal.dot(*direction_to_light).max(0.0);
+    let likeness_to_view_direction = normal.dot(direction_to_view_position).max(0.0);
 
     let halfway = (direction_to_view_position + *direction_to_light).as_normal();
 
@@ -51,13 +51,13 @@ fn contribute_pbr(
 
     // Specular reflection contribution.
     let numerator = fresnel * distribution * geometry;
-    let denominator = 4.0 * likeness_to_view_position * likeness_to_point_light + 0.0001;
+    let denominator = 4.0 * likeness_to_view_direction * likeness_to_light_direction + 0.0001;
     let specular = numerator / denominator;
 
-    if likeness_to_point_light > 0.0 {
+    if likeness_to_light_direction > 0.0 {
         let radiance = *light_intensities;
 
-        (k_d * sample.albedo / PI + specular) * radiance * likeness_to_point_light
+        (k_d * sample.albedo / PI + specular) * radiance * likeness_to_light_direction
     } else {
         Default::default()
     }
