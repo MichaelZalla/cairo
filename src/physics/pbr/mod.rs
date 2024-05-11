@@ -5,18 +5,18 @@ use crate::{
     vec::vec3::{self, Vec3},
 };
 
-// Distribution
+// Normal distribution function
 
 pub fn distribution_ggx(normal: &Vec3, halfway: &Vec3, roughness: f32) -> f32 {
     let a = roughness.powi(2);
     let a2 = a.powi(2);
 
-    let likeness = normal.dot(*halfway).max(0.0);
-    let likeness2 = likeness.powi(2);
+    let likeness_to_halfway = normal.dot(*halfway).max(0.0);
+    let likeness_to_halfway_squared = likeness_to_halfway.powi(2);
 
     let numerator = a2;
 
-    let denominator = likeness2 * (a2 - 1.0) + 1.0;
+    let denominator = likeness_to_halfway_squared * (a2 - 1.0) + 1.0;
     let denominator = PI * denominator.powi(2);
 
     numerator / denominator
