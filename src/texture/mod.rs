@@ -5,7 +5,7 @@ pub mod map;
 pub mod sample;
 pub mod uv;
 
-fn get_half_scaled(half_scaled_dimension: u32, buffer: &Buffer2D<u8>) -> Vec<u8> {
+fn get_half_scaled_u8(half_scaled_dimension: u32, buffer: &Buffer2D<u8>) -> Vec<u8> {
     let mut result: Vec<u8> = vec![];
 
     let bytes_per_pixel = (buffer.data.len() as u32 / buffer.width / buffer.height) as usize;

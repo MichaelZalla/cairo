@@ -13,7 +13,7 @@ use crate::{
     serde::PostDeserialize,
 };
 
-use super::get_half_scaled;
+use super::get_half_scaled_u8;
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct TextureBuffer<T: Default + Debug + Copy + PartialEq = u8>(pub Buffer2D<T>);
@@ -327,7 +327,7 @@ impl TextureMap {
 
             let last = self.levels.last().unwrap();
 
-            let bytes = get_half_scaled(dimension, &last.0);
+            let bytes = get_half_scaled_u8(dimension, &last.0);
 
             self.levels.push(TextureBuffer(Buffer2D::from_data(
                 dimension, dimension, bytes,
