@@ -189,20 +189,23 @@ impl PointLight {
 
             point_contribution = self.intensities * attenuation * 0.0_f32.max(likeness);
 
-            // Calculate specular light intensity
-            let incoming_ray = fragment_to_point_light_tangent_space * -1.0;
+            let reflected_ray = {
+                // Calculate specular light intensity
+                let incoming_ray = fragment_to_point_light_tangent_space * -1.0;
 
-            // Project the incoming ray forward through the fragment/surface
-            let absorbed_ray = tangent_space_info.fragment_position + incoming_ray;
+                // Project the incoming ray forward through the fragment/surface
+                let absorbed_ray = tangent_space_info.fragment_position + incoming_ray;
 
-            // Project the incoming light ray onto the surface normal (i.e.,
-            // scaling the normal up or down)
-            let w = tangent_space_info.normal * incoming_ray.dot(tangent_space_info.normal);
+                // Project the incoming light ray onto the surface normal (i.e.,
+                // scaling the normal up or down)
+                let w = *normal * incoming_ray.dot(*normal);
 
-            // Combine the absorbed ray with the scaled normal to find the
-            // reflected ray vector.
-            let u = w * 2.0;
-            let reflected_ray = u - absorbed_ray;
+                // Combine the absorbed ray with the scaled normal to find the
+                // reflected ray vector.
+                let u = w * 2.0;
+
+                u - absorbed_ray
+            };
 
             // Get the reflected ray's direction from the surface
             let reflected_ray_normal = reflected_ray.as_normal();
