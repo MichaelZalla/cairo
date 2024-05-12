@@ -441,7 +441,7 @@ fn make_cubemap(
     let cubemap_size = {
         let framebuffer = framebuffer_rc.borrow();
 
-        assert_eq!(framebuffer.width, framebuffer.height);
+        debug_assert_eq!(framebuffer.width, framebuffer.height);
 
         framebuffer.width
     };
@@ -541,26 +541,10 @@ fn integrate_brdf(normal_likeness_to_view_direction: f32, roughness: f32) -> Vec
                 roughness,
             );
 
-            debug_assert!(
-                normal_likeness_to_biased_sample_direction != 0.0
-                    && normal_likeness_to_view_direction != 0.0,
-                "{}, {}, {}",
-                normal_likeness_to_view_direction,
-                roughness,
-                normal_likeness_to_biased_sample_direction
-            );
-
             let g_vis = (g * view_likeness_to_biased_sample_direction)
                 / (normal_likeness_to_biased_sample_direction * normal_likeness_to_view_direction);
 
             let fc = (1.0 - view_likeness_to_biased_sample_direction).powi(5);
-
-            debug_assert!(
-                !fc.is_nan(),
-                "{:?}, {:?}",
-                normal_likeness_to_view_direction,
-                roughness
-            );
 
             accumulated_scale += (1.0 - fc) * g_vis;
             accumulated_bias += fc * g_vis;
