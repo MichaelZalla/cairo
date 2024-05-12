@@ -20,11 +20,11 @@ use cairo::{
     },
 };
 
-use cubemap::bake_diffuse_irradiance_for_hdri;
+use bake::bake_diffuse_irradiance_for_hdri;
 
-pub mod cubemap;
+pub mod bake;
 pub mod scene;
-pub mod shader;
+pub mod shaders;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {

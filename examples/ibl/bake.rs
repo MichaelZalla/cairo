@@ -25,9 +25,11 @@ use uuid::Uuid;
 
 use crate::{
     scene,
-    shader::{
-        HdrCubemapConvolutionFragmentShader, HdrEquirectangularProjectionFragmentShader,
-        HdrEquirectangularProjectionVertexShader,
+    shaders::{
+        diffuse::HdrDiffuseIrradianceFragmentShader,
+        equirectangular::{
+            HdrEquirectangularProjectionFragmentShader, HdrEquirectangularProjectionVertexShader,
+        },
     },
 };
 
@@ -190,7 +192,7 @@ fn render_irradiance_to_cubemap(
     {
         // Setup
 
-        pipeline.set_fragment_shader(HdrCubemapConvolutionFragmentShader);
+        pipeline.set_fragment_shader(HdrDiffuseIrradianceFragmentShader);
 
         pipeline.bind_framebuffer(Some(framebuffer_rc));
 
