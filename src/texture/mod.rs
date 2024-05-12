@@ -1,4 +1,4 @@
-use crate::buffer::Buffer2D;
+use crate::{buffer::Buffer2D, vec::vec3::Vec3};
 
 pub mod cubemap;
 pub mod map;
@@ -69,6 +69,18 @@ fn get_half_scaled_u8(half_scaled_dimension: u32, buffer: &Buffer2D<u8>) -> Vec<
             }
         }
     }
+
+    result
+}
+
+fn get_half_scaled_vec3(half_scaled_dimension: u32, _buffer: &Buffer2D<Vec3>) -> Vec<Vec3> {
+    let mut result: Vec<Vec3> = vec![];
+
+    let half_scaled_pixel_count = (half_scaled_dimension * half_scaled_dimension) as usize;
+
+    result.resize(half_scaled_pixel_count, Vec3::ones() * 255.0);
+
+    // @TODO Downscale Vec3 samples to new dimensions.
 
     result
 }

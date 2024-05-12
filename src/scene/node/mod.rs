@@ -178,6 +178,35 @@ impl SceneNode {
         Ok(())
     }
 
+    pub fn find<P>(&self, predicate: &mut P) -> Result<Option<Handle>, String>
+    where
+        P: Fn(&SceneNode) -> bool,
+    {
+        let mut last_matching_node_handle: Option<Handle> = None;
+
+        let mut check_predicate = |_depth: usize,
+                                   _current_world_transform: Mat4,
+                                   node: &SceneNode|
+         -> Result<(), String> {
+            if predicate(node) {
+                last_matching_node_handle = node.handle;
+            }
+
+            Ok(())
+        };
+
+        let result = self.visit(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            None,
+            &mut check_predicate,
+        );
+
+        match result {
+            Ok(_) => Ok(last_matching_node_handle),
+            Err(err) => Err(err),
+        }
+    }
+
     pub fn visit<C>(
         &self,
         global_method: SceneNodeGlobalTraversalMethod,

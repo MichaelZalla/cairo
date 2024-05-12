@@ -24,6 +24,7 @@ pub mod matrix;
 pub mod mesh;
 pub mod physics;
 pub mod pipeline;
+pub mod random;
 pub mod resource;
 pub mod scene;
 pub mod serde;

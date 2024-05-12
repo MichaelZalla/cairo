@@ -24,7 +24,7 @@ use cairo::{
     },
 };
 
-use bake::bake_diffuse_irradiance_for_hdri;
+use bake::bake_diffuse_and_specular_from_hdri;
 
 pub mod bake;
 pub mod scene;
@@ -87,20 +87,27 @@ fn main() -> Result<(), String> {
     {
         let resources = (*spheres_scene_context.resources).borrow_mut();
 
-        let mut skybox_hdr = resources.cubemap_vec3.borrow_mut();
+        let mut cubemap_vec3 = resources.cubemap_vec3.borrow_mut();
 
         for hdr_path in hdr_paths {
-            let bake_result = bake_diffuse_irradiance_for_hdri(hdr_path).unwrap();
+            let bake_result = bake_diffuse_and_specular_from_hdri(hdr_path).unwrap();
 
-            let radiance_cubemap_handle = skybox_hdr
-                .borrow_mut()
-                .insert(Uuid::new_v4(), bake_result.radiance.to_owned());
+            let radiance_cubemap_handle =
+                cubemap_vec3.insert(Uuid::new_v4(), bake_result.radiance.to_owned());
 
-            let irradiance_cubemap_handle = skybox_hdr
-                .borrow_mut()
-                .insert(Uuid::new_v4(), bake_result.diffuse_irradiance.to_owned());
+            let irradiance_cubemap_handle =
+                cubemap_vec3.insert(Uuid::new_v4(), bake_result.diffuse_irradiance.to_owned());
 
-            radiance_irradiance_handles.push((radiance_cubemap_handle, irradiance_cubemap_handle));
+            let specular_prefiltered_environment_cubemap_handle = cubemap_vec3.insert(
+                Uuid::new_v4(),
+                bake_result.specular_prefiltered_environment.to_owned(),
+            );
+
+            radiance_irradiance_handles.push((
+                radiance_cubemap_handle,
+                irradiance_cubemap_handle,
+                specular_prefiltered_environment_cubemap_handle,
+            ));
         }
     }
 
@@ -246,13 +253,21 @@ fn main() -> Result<(), String> {
 fn set_ibl_map_handles(
     shader_context: &mut ShaderContext,
     scene: &mut SceneGraph,
-    handles: &(Handle, Handle),
+    handles: &(Handle, Handle, Handle),
 ) {
-    let (radiance_cubemap_handle, irradiance_cubemap_handle) = handles;
+    let (
+        radiance_cubemap_handle,
+        irradiance_cubemap_handle,
+        specular_prefiltered_environment_cubemap_handle,
+    ) = handles;
 
     shader_context.set_active_ambient_radiance_map(Some(*radiance_cubemap_handle));
 
     shader_context.set_active_ambient_diffuse_irradiance_map(Some(*irradiance_cubemap_handle));
+
+    shader_context.set_active_ambient_specular_prefiltered_environment_map(Some(
+        *specular_prefiltered_environment_cubemap_handle,
+    ));
 
     // Set the irradiance map as our scene's ambient diffuse light map.
 

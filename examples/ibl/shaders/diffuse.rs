@@ -22,12 +22,9 @@ pub const HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
 
                 let normal = sample.world_pos.as_normal();
 
-                // return Color::from_vec3(map.sample(&Vec4::new(normal, 1.0)));
-
                 let mut irradiance = Vec3::new();
 
                 static SAMPLE_DELTA: f32 = 0.05;
-                // static SAMPLE_DELTA: f32 = 0.25;
 
                 let mut sample_count: usize = 0;
 

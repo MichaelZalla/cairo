@@ -8,12 +8,14 @@ use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
+use crate::vec::vec3::Vec3;
 use crate::{
     app::context::ApplicationRenderingContext, buffer::Buffer2D, debug_print,
     serde::PostDeserialize,
 };
 
 use super::get_half_scaled_u8;
+use super::get_half_scaled_vec3;
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct TextureBuffer<T: Default + Debug + Copy + PartialEq = u8>(pub Buffer2D<T>);
@@ -328,6 +330,31 @@ impl TextureMap {
             let last = self.levels.last().unwrap();
 
             let bytes = get_half_scaled_u8(dimension, &last.0);
+
+            self.levels.push(TextureBuffer(Buffer2D::from_data(
+                dimension, dimension, bytes,
+            )));
+        }
+
+        self.is_mipmapped = true;
+
+        Ok(())
+    }
+}
+
+impl TextureMap<Vec3> {
+    pub fn generate_mipmaps(&mut self) -> Result<(), String> {
+        self.validate_for_mipmapping()?;
+
+        let levels = (self.width as f32).log2() + 1.0;
+
+        // Generate each level of our mipmapped texture
+        for level_index in 1..levels as usize {
+            let dimension = self.width / 2_u32.pow(level_index as u32);
+
+            let last = self.levels.last().unwrap();
+
+            let bytes = get_half_scaled_vec3(dimension, &last.0);
 
             self.levels.push(TextureBuffer(Buffer2D::from_data(
                 dimension, dimension, bytes,

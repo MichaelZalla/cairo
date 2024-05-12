@@ -138,6 +138,14 @@ impl ops::DivAssign<Vec3> for Vec3 {
     }
 }
 
+impl ops::DivAssign<f32> for Vec3 {
+    fn div_assign(&mut self, rhs: f32) {
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
+    }
+}
+
 impl ops::MulAssign<f32> for Vec3 {
     fn mul_assign(&mut self, rhs: f32) {
         self.x *= rhs;
@@ -159,11 +167,11 @@ impl Vec3 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
 
-    pub fn dot(self, rhs: Vec3) -> f32 {
+    pub fn dot(self, rhs: Self) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
-    pub fn cross(self, rhs: Vec3) -> Vec3 {
+    pub fn cross(self, rhs: Self) -> Self {
         Self {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
@@ -171,7 +179,7 @@ impl Vec3 {
         }
     }
 
-    pub fn as_normal(self) -> Vec3 {
+    pub fn as_normal(self) -> Self {
         let mag = self.mag();
 
         Self {

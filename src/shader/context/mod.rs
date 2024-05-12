@@ -17,6 +17,7 @@ pub struct ShaderContext {
     pub active_hdr_map: Option<Handle>,
     pub active_ambient_radiance_map: Option<Handle>,
     pub active_ambient_diffuse_irradiance_map: Option<Handle>,
+    pub active_ambient_specular_prefiltered_environment_map: Option<Handle>,
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
     pub point_lights: Vec<Handle>,
@@ -38,6 +39,7 @@ impl Default for ShaderContext {
             active_hdr_map: None,
             active_ambient_radiance_map: None,
             active_ambient_diffuse_irradiance_map: None,
+            active_ambient_specular_prefiltered_environment_map: None,
             ambient_light: None,
             directional_light: None,
             point_lights: vec![],
@@ -72,6 +74,7 @@ impl ShaderContext {
             active_hdr_map: None,
             active_ambient_radiance_map: None,
             active_ambient_diffuse_irradiance_map: None,
+            active_ambient_specular_prefiltered_environment_map: None,
             ambient_light,
             directional_light,
             point_lights,
@@ -173,6 +176,13 @@ impl ShaderContext {
 
     pub fn set_active_ambient_diffuse_irradiance_map(&mut self, optional_handle: Option<Handle>) {
         self.active_ambient_diffuse_irradiance_map = optional_handle;
+    }
+
+    pub fn set_active_ambient_specular_prefiltered_environment_map(
+        &mut self,
+        optional_handle: Option<Handle>,
+    ) {
+        self.active_ambient_specular_prefiltered_environment_map = optional_handle;
     }
 
     pub fn set_active_hdr_map(&mut self, optional_handle: Option<Handle>) {
