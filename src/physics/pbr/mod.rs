@@ -47,6 +47,26 @@ pub fn geometry_smith_direct(normal: &Vec3, view: &Vec3, light: &Vec3, roughness
     ggx1 * ggx2
 }
 
+fn geometry_schlick_ggx_indirect(likeness_to_view_direction: f32, roughness: f32) -> f32 {
+    let a = roughness;
+    let k = a.powi(2) / 2.0;
+
+    let numerator = likeness_to_view_direction;
+    let denominator = likeness_to_view_direction * (1.0 - k) + k;
+
+    numerator / denominator
+}
+
+pub fn geometry_smith_indirect(normal: &Vec3, view: &Vec3, light: &Vec3, roughness: f32) -> f32 {
+    let normal_dot_light = normal.dot(*light).max(0.0);
+    let ggx1 = geometry_schlick_ggx_indirect(normal_dot_light, roughness);
+
+    let normal_dot_view = normal.dot(*view).max(0.0);
+    let ggx2 = geometry_schlick_ggx_indirect(normal_dot_view, roughness);
+
+    ggx1 * ggx2
+}
+
 // Fresnel
 
 pub fn fresnel_schlick_direct(halfway_likeness_to_view: f32, f0: &Vec3) -> Vec3 {
