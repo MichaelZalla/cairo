@@ -10,8 +10,12 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::Pipeline,
-    scene::node::{
-        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    resource::handle::Handle,
+    scene::{
+        graph::SceneGraph,
+        node::{
+            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+        },
     },
     shader::context::ShaderContext,
     shaders::{
@@ -103,13 +107,21 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
-    let pipeline = Pipeline::new(
+    set_ibl_map_handles(
+        &mut shader_context_rc.borrow_mut(),
+        &mut spheres_scene_context.borrow_mut().scenes.borrow_mut()[0],
+        &radiance_irradiance_handles[0],
+    );
+
+    let mut pipeline = Pipeline::new(
         &shader_context_rc,
         spheres_scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
     let spheres_scene_context_rc = RefCell::new(spheres_scene_context);
 
@@ -123,8 +135,12 @@ fn main() -> Result<(), String> {
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
         let scene_context = spheres_scene_context_rc.borrow_mut();
+
         let resources = (*scene_context.resources).borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
+
         let mut shader_context = shader_context_rc.borrow_mut();
 
         shader_context.set_ambient_light(None);
@@ -148,7 +164,7 @@ fn main() -> Result<(), String> {
             )
         };
 
-        scenes[0].root.visit_mut(
+        scene.root.visit_mut(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),
             &mut update_scene_graph_node,
@@ -156,23 +172,24 @@ fn main() -> Result<(), String> {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
-                Keycode::Num0 => {
+                Keycode::Num0 | Keycode::Num9 => {
                     let mut current_index = current_handles_index.borrow_mut();
 
-                    *current_index = (*current_index + 1) % radiance_irradiance_handles.len();
-
-                    println!("{}", current_index);
-                }
-                Keycode::Num9 => {
-                    let mut current_index = current_handles_index.borrow_mut();
-
-                    if *current_index == 0 {
-                        *current_index = radiance_irradiance_handles.len() - 1;
+                    *current_index = if *keycode == Keycode::Num0 {
+                        (*current_index + 1) % radiance_irradiance_handles.len()
+                    } else if *current_index == 0 {
+                        radiance_irradiance_handles.len() - 1
                     } else {
-                        *current_index -= 1;
-                    }
+                        *current_index - 1
+                    };
 
                     println!("{}", current_index);
+
+                    set_ibl_map_handles(
+                        &mut shader_context,
+                        scene,
+                        &radiance_irradiance_handles[*current_index],
+                    );
                 }
                 _ => (),
             }
@@ -203,30 +220,6 @@ fn main() -> Result<(), String> {
 
         let mut pipeline = pipeline_rc.borrow_mut();
 
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
-
-        {
-            let mut shader_context = shader_context_rc.borrow_mut();
-
-            let (radiance_cubemap_handle, irradiance_cubemap_handle) =
-                radiance_irradiance_handles[*current_handles_index.borrow()];
-
-            shader_context
-                .set_active_ambient_diffuse_irradiance_map(Some(irradiance_cubemap_handle));
-
-            // Set the irradiance map as our scene's ambient diffuse light map.
-
-            for node in scene.root.children_mut().as_mut().unwrap() {
-                if node.is_type(SceneNodeType::Environment) {
-                    for child in node.children_mut().as_mut().unwrap() {
-                        if child.is_type(SceneNodeType::Skybox) {
-                            child.set_handle(Some(radiance_cubemap_handle));
-                        }
-                    }
-                }
-            }
-        }
-
         match scene.render(&resources, &mut pipeline) {
             Ok(()) => {
                 // Write out.
@@ -249,4 +242,26 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &mut render)?;
 
     Ok(())
+}
+
+fn set_ibl_map_handles(
+    shader_context: &mut ShaderContext,
+    scene: &mut SceneGraph,
+    handles: &(Handle, Handle),
+) {
+    let (radiance_cubemap_handle, irradiance_cubemap_handle) = handles;
+
+    shader_context.set_active_ambient_diffuse_irradiance_map(Some(*irradiance_cubemap_handle));
+
+    // Set the irradiance map as our scene's ambient diffuse light map.
+
+    for node in scene.root.children_mut().as_mut().unwrap() {
+        if node.is_type(SceneNodeType::Environment) {
+            for child in node.children_mut().as_mut().unwrap() {
+                if child.is_type(SceneNodeType::Skybox) {
+                    child.set_handle(Some(*radiance_cubemap_handle));
+                }
+            }
+        }
+    }
 }
