@@ -16,10 +16,7 @@ use cairo::{
     },
 };
 
-pub mod callbacks;
 pub mod scene;
-
-use callbacks::update_scene_graph_node_default;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -75,7 +72,7 @@ fn main() -> Result<(), String> {
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
         let scene_context = scene_context_rc.borrow_mut();
-        let mut scene_resources = (*(scene_context.resources)).borrow_mut();
+        let resources = (*(scene_context.resources)).borrow_mut();
 
         let mut shader_context = shader_context_rc.borrow_mut();
 
@@ -86,17 +83,13 @@ fn main() -> Result<(), String> {
                                            _current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
-            let mut framebuffer = framebuffer_rc.borrow_mut();
-
-            update_scene_graph_node_default(
-                &mut framebuffer,
-                &mut shader_context,
-                &mut scene_resources,
-                node,
-                &app.timing_info,
-                keyboard_state,
+            node.update(
+                &resources,
+                app,
                 mouse_state,
+                keyboard_state,
                 game_controller_state,
+                &mut shader_context,
             )
         };
 

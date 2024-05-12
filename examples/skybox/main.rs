@@ -197,9 +197,6 @@ fn main() -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Scene => Ok(()),
-                SceneNodeType::Environment => Ok(()),
-                SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let mesh_arena = resources.mesh.borrow();
@@ -256,65 +253,6 @@ fn main() -> Result<(), String> {
                     }
                     None => {
                         panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::Camera => match handle {
-                    Some(handle) => {
-                        let mut camera_arena = resources.camera.borrow_mut();
-
-                        match camera_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let camera = &mut entry.item;
-
-                                camera.update(
-                                    &app.timing_info,
-                                    keyboard_state,
-                                    mouse_state,
-                                    game_controller_state,
-                                );
-
-                                let camera_view_inverse_transform =
-                                    camera.get_view_inverse_transform();
-
-                                shader_context.set_view_position(Vec4::new(
-                                    camera.look_vector.get_position(),
-                                    1.0,
-                                ));
-
-                                shader_context
-                                    .set_view_inverse_transform(camera_view_inverse_transform);
-
-                                shader_context.set_projection(camera.get_projection());
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Camera from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Camera` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::AmbientLight => {
-                    match handle {
-                        Some(handle) => shader_context.set_ambient_light(Some(*handle)),
-                        None => {
-                            panic!("Encountered a `AmbientLight` node with no resource handle!")
-                        }
-                    }
-                    Ok(())
-                }
-                SceneNodeType::DirectionalLight => match handle {
-                    Some(handle) => {
-                        shader_context.set_directional_light(Some(*handle));
-
-                        Ok(())
-                    }
-                    None => {
-                        panic!("Encountered a `DirectionalLight` node with no resource handle!")
                     }
                 },
                 SceneNodeType::PointLight => match handle {
@@ -391,6 +329,14 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `SpotLight` node with no resource handle!")
                     }
                 },
+                _ => node.update(
+                    &resources,
+                    app,
+                    mouse_state,
+                    keyboard_state,
+                    game_controller_state,
+                    &mut shader_context,
+                ),
             }
         };
 

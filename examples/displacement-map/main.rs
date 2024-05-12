@@ -292,9 +292,6 @@ fn main() -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Scene => Ok(()),
-                SceneNodeType::Environment => Ok(()),
-                SceneNodeType::Skybox => Ok(()),
                 SceneNodeType::Entity => {
                     static ENTITY_ROTATION_SPEED: f32 = 0.1;
 
@@ -325,77 +322,6 @@ fn main() -> Result<(), String> {
 
                     Ok(())
                 }
-                SceneNodeType::Camera => match handle {
-                    Some(handle) => {
-                        let mut camera_arena = resources.camera.borrow_mut();
-
-                        match camera_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let camera = &mut entry.item;
-
-                                camera.update(
-                                    &app.timing_info,
-                                    keyboard_state,
-                                    mouse_state,
-                                    game_controller_state,
-                                );
-
-                                let camera_view_inverse_transform =
-                                    camera.get_view_inverse_transform();
-
-                                shader_context.set_view_position(Vec4::new(
-                                    camera.look_vector.get_position(),
-                                    1.0,
-                                ));
-
-                                shader_context
-                                    .set_view_inverse_transform(camera_view_inverse_transform);
-
-                                shader_context.set_projection(camera.get_projection());
-
-                                let framebuffer = framebuffer_rc.borrow_mut();
-
-                                if let Some(lock) = framebuffer.attachments.depth.as_ref() {
-                                    let mut depth_buffer = lock.borrow_mut();
-
-                                    depth_buffer
-                                        .set_projection_z_near(camera.get_projection_z_near());
-                                    depth_buffer
-                                        .set_projection_z_far(camera.get_projection_z_far());
-                                }
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Camera from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Camera` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::AmbientLight => match handle {
-                    Some(handle) => {
-                        shader_context.set_ambient_light(Some(*handle));
-
-                        Ok(())
-                    }
-                    None => {
-                        panic!("Encountered a `AmbientLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::DirectionalLight => match handle {
-                    Some(handle) => {
-                        shader_context.set_directional_light(Some(*handle));
-
-                        Ok(())
-                    }
-                    None => {
-                        panic!("Encountered a `DirectionalLight` node with no resource handle!")
-                    }
-                },
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {
                         let mut point_light_arena = resources.point_light.borrow_mut();
@@ -458,6 +384,14 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `SpotLight` node with no resource handle!")
                     }
                 },
+                _ => node.update(
+                    &resources,
+                    app,
+                    mouse_state,
+                    keyboard_state,
+                    game_controller_state,
+                    &mut shader_context,
+                ),
             }
         };
 
