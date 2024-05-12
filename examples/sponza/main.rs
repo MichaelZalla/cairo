@@ -123,7 +123,7 @@ fn main() -> Result<(), String> {
 
         // Assign the meshes to entities
 
-        for i in 0..atrium_meshes.len() {
+        (0..atrium_meshes.len()).for_each(|i| {
             let material_name = atrium_meshes[i].material_name.clone();
 
             let mesh_handle = resources
@@ -135,7 +135,7 @@ fn main() -> Result<(), String> {
                 .entity
                 .borrow_mut()
                 .insert(Uuid::new_v4(), Entity::new(mesh_handle, material_name));
-        }
+        });
 
         // Configure a global scene environment.
 
