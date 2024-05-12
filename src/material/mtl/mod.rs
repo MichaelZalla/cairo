@@ -240,17 +240,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_bump cube_bump.png
 
-                                line_tokens.next();
-                                line_tokens.next();
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    normal_map
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.bump_map = Some(texture_map_handle);
                             }
 
                             // Normal map
