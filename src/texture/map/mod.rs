@@ -127,6 +127,29 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         self.info.storage_format.get_buffer_samples_per_pixel()
     }
 
+    pub fn validate_for_mipmapping(&mut self) -> Result<(), String> {
+        if !self.is_loaded {
+            return Err(String::from(
+                "Called TextureMap::generate_mipmaps() on an unloaded texture.",
+            ));
+        }
+
+        if self.is_mipmapped {
+            debug_print!("Called Texture::validate_for_mipmapping() on a Texture that already has mipmapping enabled!");
+
+            return Ok(());
+        }
+
+        // Validate that this texture is suitable for mipmapping.
+        let levels = (self.width as f32).log2() + 1.0;
+
+        if self.width != self.height || levels.fract() != 0.0 {
+            return Err(String::from("Called TextureMap::validate_for_mipmapping() on a texture whose dimensions do not support mipmapping."));
+        }
+
+        Ok(())
+    }
+
     pub fn map<C>(&mut self, mut callback: C) -> Result<(), String>
     where
         C: FnMut(T, T, T) -> (T, T, T),
@@ -287,38 +310,15 @@ impl TextureMap {
         self.is_loaded = true;
 
         if self.is_mipmapped && self.levels.is_empty() {
-            self.make_mipmaps()?
+            self.generate_mipmaps()?
         }
 
         Ok(())
     }
 
-    pub fn enable_mipmapping(&mut self) -> Result<(), String> {
-        if self.is_mipmapped {
-            debug_print!("Called Texture::enable_mipmapping() on a Texture that already has mipmapping enabled!");
-            return Ok(());
-        }
+    pub fn generate_mipmaps(&mut self) -> Result<(), String> {
+        self.validate_for_mipmapping()?;
 
-        // Validate that this texture is suitable for mipmapping.
-        let levels = (self.width as f32).log2() + 1.0;
-
-        if self.width != self.height || levels.fract() != 0.0 {
-            return Err(String::from("Called TextureMap::make_mipmaps() on a texture whose dimensions do not support mipmapping."));
-        }
-
-        self.is_mipmapped = true;
-
-        if !self.is_loaded {
-            // If the texture isn't yet loaded, return.
-
-            return Ok(());
-        }
-
-        // Otherwise, generate the data for each mipmap level.
-        self.make_mipmaps()
-    }
-
-    fn make_mipmaps(&mut self) -> Result<(), String> {
         let levels = (self.width as f32).log2() + 1.0;
 
         // Generate each level of our mipmapped texture
@@ -333,6 +333,8 @@ impl TextureMap {
                 dimension, dimension, bytes,
             )));
         }
+
+        self.is_mipmapped = true;
 
         Ok(())
     }

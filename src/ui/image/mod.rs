@@ -33,8 +33,8 @@ pub fn do_image(
         item: ctx.next_id(),
     };
 
-    if !map.is_mipmapped {
-        map.enable_mipmapping().unwrap();
+    if !map.is_mipmapped && map.validate_for_mipmapping().is_ok() {
+        map.generate_mipmaps().unwrap();
     }
 
     let result = DoImageResult {};
