@@ -29,39 +29,55 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
         // Calculate ambient light contribution
 
         let ambient_light_contribution = match &context.active_ambient_diffuse_irradiance_map {
-            Some(handle) => match resources.cubemap_vec3.borrow().get(handle) {
-                Ok(entry) => {
-                    let map = &entry.item;
+            Some(diffuse_irradiance_map_handle) => {
+                match resources
+                    .cubemap_vec3
+                    .borrow()
+                    .get(diffuse_irradiance_map_handle)
+                {
+                    Ok(diffuse_irradiance_map_entry) => {
+                        let diffuse_irradiance_map = &diffuse_irradiance_map_entry.item;
 
-                    let fragment_to_view_tangent_space = sample.tangent_space_info.view_position
-                        - sample.tangent_space_info.fragment_position;
+                        // Total incoming ambient light from environment.
 
-                    let view_direction_normal = fragment_to_view_tangent_space.as_normal();
+                        let normal = sample.tangent_space_info.normal;
 
-                    let likeness = sample
-                        .tangent_space_info
-                        .normal
-                        .dot(view_direction_normal)
-                        .max(0.0);
+                        let fragment_to_view_tangent_space =
+                            sample.tangent_space_info.view_position
+                                - sample.tangent_space_info.fragment_position;
 
-                    // Rendering equation
+                        let direction_to_view_position = fragment_to_view_tangent_space.as_normal();
 
-                    let fresnel = fresnel_schlick_indirect(likeness, &f0, sample.roughness);
+                        let normal_likeness_to_view_direction =
+                            normal.dot(direction_to_view_position).max(0.0);
 
-                    // Ratio of reflected light energy.
-                    let k_s = fresnel;
+                        // Ratio of reflected light energy.
 
-                    // Ratio of refracted light energy.
-                    let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
+                        let fresnel = fresnel_schlick_indirect(
+                            normal_likeness_to_view_direction,
+                            &f0,
+                            sample.roughness,
+                        );
 
-                    let irradiance = map.sample_nearest(&Vec4::new(sample.world_normal, 1.0), None);
+                        let k_s = fresnel;
 
-                    let diffuse = irradiance * sample.albedo;
+                        // Ratio of refracted light energy (scaled by metallic).
 
-                    (k_d * diffuse) * sample.ambient_factor
+                        let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
+
+                        let irradiance = diffuse_irradiance_map
+                            .sample_nearest(&Vec4::new(sample.world_normal, 1.0), None);
+
+                        let indirect_diffuse_irradiance = irradiance * sample.albedo;
+
+                        (k_d * indirect_diffuse_irradiance) * sample.ambient_factor
+                    }
+                    Err(err) => panic!(
+                        "Failed to get CubeMap from Arena: {:?}: {}",
+                        diffuse_irradiance_map_handle, err
+                    ),
                 }
-                Err(err) => panic!("Failed to get CubeMap from Arena: {:?}: {}", handle, err),
-            },
+            }
             None => match &context.ambient_light {
                 Some(handle) => match resources.ambient_light.borrow().get(handle) {
                     Ok(entry) => {
