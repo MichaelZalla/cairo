@@ -38,7 +38,7 @@ impl<'a> Pipeline<'a> {
 
                         // Sample the cubemap using our world-space direction-offset.
 
-                        let skybox_color = skybox.sample(&normal);
+                        let skybox_color = skybox.sample_nearest(&normal);
 
                         forward_buffer.set(screen_x, screen_y, skybox_color.to_u32());
                     }
@@ -79,7 +79,7 @@ impl<'a> Pipeline<'a> {
 
                         // Sample the cubemap using our world-space direction-offset.
 
-                        let skybox_hdr_color = skybox_hdr.sample(&normal);
+                        let skybox_hdr_color = skybox_hdr.sample_nearest(&normal);
 
                         let skybox_color = self.get_tone_mapped_color_from_hdr(skybox_hdr_color);
 

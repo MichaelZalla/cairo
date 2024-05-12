@@ -188,7 +188,7 @@ impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
 }
 
 impl CubeMap<Vec3> {
-    pub fn sample(&self, direction: &Vec4) -> Vec3 {
+    pub fn sample_nearest(&self, direction: &Vec4) -> Vec3 {
         let (side, uv) = self.get_uv_for_direction(direction);
 
         let map = &self.sides[side as usize];
@@ -317,7 +317,7 @@ impl CubeMap {
         Ok(())
     }
 
-    pub fn sample(&self, direction: &Vec4) -> Color {
+    pub fn sample_nearest(&self, direction: &Vec4) -> Color {
         let (side, uv) = self.get_uv_for_direction(direction);
 
         let map = &self.sides[side as usize];

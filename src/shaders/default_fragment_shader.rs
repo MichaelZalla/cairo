@@ -54,7 +54,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                     // Ratio of refracted light energy.
                     let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
 
-                    let irradiance = map.sample(&Vec4::new(sample.world_normal, 1.0));
+                    let irradiance = map.sample_nearest(&Vec4::new(sample.world_normal, 1.0));
 
                     let diffuse = irradiance * sample.albedo;
 
