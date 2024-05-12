@@ -24,7 +24,7 @@ use cairo::{
     },
 };
 
-use bake::bake_diffuse_and_specular_from_hdri;
+use bake::{bake_diffuse_and_specular_from_hdri, brdf::generate_specular_brdf_integration_map};
 
 pub mod bake;
 pub mod scene;
@@ -77,6 +77,21 @@ fn main() -> Result<(), String> {
         }
     }
 
+    // Generate a common BRDF integration map, approximating the integral formed
+    // by our Geometry function over varying angles and roughness values.
+
+    let specular_brdf_integration_map_handle: Handle;
+
+    {
+        let resources = (*spheres_scene_context.resources).borrow_mut();
+        let mut texture_vec2 = resources.texture_vec2.borrow_mut();
+
+        let specular_brdf_integration_map = generate_specular_brdf_integration_map(512);
+
+        specular_brdf_integration_map_handle =
+            texture_vec2.insert(Uuid::new_v4(), specular_brdf_integration_map.to_owned());
+    }
+
     // For each HDR image, generate a corresponding radiance-irradiance cubemap
     // pair, and store the textures in our scene's HDR cubemap texture arena.
 
@@ -88,7 +103,6 @@ fn main() -> Result<(), String> {
         let resources = (*spheres_scene_context.resources).borrow_mut();
 
         let mut cubemap_vec3 = resources.cubemap_vec3.borrow_mut();
-        let mut texture_vec2 = resources.texture_vec2.borrow_mut();
 
         for hdr_path in hdr_paths {
             let bake_result = bake_diffuse_and_specular_from_hdri(hdr_path).unwrap();
@@ -104,27 +118,29 @@ fn main() -> Result<(), String> {
                 bake_result.specular_prefiltered_environment.to_owned(),
             );
 
-            let specular_brdf_integration_map_handle = texture_vec2.insert(
-                Uuid::new_v4(),
-                bake_result.specular_brdf_integration.to_owned(),
-            );
-
             radiance_irradiance_handles.push((
                 radiance_cubemap_handle,
                 irradiance_cubemap_handle,
                 specular_prefiltered_environment_cubemap_handle,
-                specular_brdf_integration_map_handle,
             ));
         }
     }
 
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
-    set_ibl_map_handles(
-        &mut shader_context_rc.borrow_mut(),
-        &mut spheres_scene_context.borrow_mut().scenes.borrow_mut()[0],
-        &radiance_irradiance_handles[0],
-    );
+    {
+        let mut shader_context = shader_context_rc.borrow_mut();
+
+        shader_context.set_active_ambient_specular_brdf_integration_map(Some(
+            specular_brdf_integration_map_handle,
+        ));
+
+        set_ibl_map_handles(
+            &mut shader_context,
+            &mut spheres_scene_context.borrow_mut().scenes.borrow_mut()[0],
+            &radiance_irradiance_handles[0],
+        );
+    }
 
     let mut pipeline = Pipeline::new(
         &shader_context_rc,
@@ -260,13 +276,12 @@ fn main() -> Result<(), String> {
 fn set_ibl_map_handles(
     shader_context: &mut ShaderContext,
     scene: &mut SceneGraph,
-    handles: &(Handle, Handle, Handle, Handle),
+    handles: &(Handle, Handle, Handle),
 ) {
     let (
         radiance_cubemap_handle,
         irradiance_cubemap_handle,
         specular_prefiltered_environment_cubemap_handle,
-        specular_brdf_integration_map_handle,
     ) = handles;
 
     shader_context.set_active_ambient_radiance_map(Some(*radiance_cubemap_handle));
@@ -275,10 +290,6 @@ fn set_ibl_map_handles(
 
     shader_context.set_active_ambient_specular_prefiltered_environment_map(Some(
         *specular_prefiltered_environment_cubemap_handle,
-    ));
-
-    shader_context.set_active_ambient_specular_brdf_integration_map(Some(
-        *specular_brdf_integration_map_handle,
     ));
 
     // Set the irradiance map as our scene's ambient diffuse light map.

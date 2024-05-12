@@ -19,7 +19,6 @@ use cairo::{
         map::{TextureBuffer, TextureMap},
     },
     vec::{
-        vec2::Vec2,
         vec3::{self, Vec3},
         vec4::Vec4,
     },
@@ -38,13 +37,10 @@ use crate::{
 
 pub mod brdf;
 
-use brdf::generate_specular_brdf_integration_map;
-
 pub struct HDRBakeResult {
     pub radiance: CubeMap<Vec3>,
     pub diffuse_irradiance: CubeMap<Vec3>,
     pub specular_prefiltered_environment: CubeMap<Vec3>,
-    pub specular_brdf_integration: TextureMap<Vec2>,
 }
 
 pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBakeResult, String> {
@@ -161,13 +157,10 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
         )
     };
 
-    let specular_brdf_integration = generate_specular_brdf_integration_map(512);
-
     Ok(HDRBakeResult {
         radiance,
         diffuse_irradiance,
         specular_prefiltered_environment,
-        specular_brdf_integration,
     })
 }
 
