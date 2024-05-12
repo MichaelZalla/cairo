@@ -88,7 +88,7 @@ pub const HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
         color::GREEN
     };
 
-pub const AmbientDiffuseCubemapFragmentShader: FragmentShaderFn =
+pub const HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
     |shader_context: &ShaderContext,
      resources: &SceneResources,
      sample: &GeometrySample|
