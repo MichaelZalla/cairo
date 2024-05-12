@@ -12,7 +12,7 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     texture::{
-        cubemap::{CubeMap, Side, CUBE_MAP_SIDES},
+        cubemap::{CubeMap, CUBE_MAP_SIDES},
         map::{TextureBuffer, TextureMapStorageFormat},
     },
     vec::{
@@ -252,26 +252,9 @@ fn render_scene_to_cubemap(
         Camera::from_perspective(Default::default(), vec3::FORWARD, 90.0, 1.0);
 
     for side in CUBE_MAP_SIDES {
-        let face_direction = match side {
-            Side::Front => vec3::FORWARD,
-            Side::Back => vec3::FORWARD * -1.0,
-            Side::Top => Vec3 {
-                x: -0.0,
-                y: 1.0,
-                z: 0.0001,
-            },
-            Side::Bottom => Vec3 {
-                x: -0.0,
-                y: -1.0,
-                z: 0.0001,
-            },
-            Side::Left => vec3::LEFT,
-            Side::Right => vec3::LEFT * -1.0,
-        };
-
         cubemap_face_camera
             .look_vector
-            .set_target_position(face_direction);
+            .set_target_position(side.get_direction());
 
         {
             let mut shader_context = shader_context_rc.borrow_mut();

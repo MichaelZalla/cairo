@@ -8,7 +8,11 @@ use crate::{
     color::{self, Color},
     serde::PostDeserialize,
     texture::{map::TextureBuffer, sample::sample_nearest_u8},
-    vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec2::Vec2,
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 use super::{
@@ -58,6 +62,27 @@ impl fmt::Display for Side {
         };
 
         writeln!(v, "Side (\"{}\")", repr)
+    }
+}
+
+impl Side {
+    pub fn get_direction(&self) -> Vec3 {
+        match self {
+            Side::Front => vec3::FORWARD,
+            Side::Back => vec3::FORWARD * -1.0,
+            Side::Top => Vec3 {
+                x: -0.0,
+                y: 1.0,
+                z: 0.0001,
+            },
+            Side::Bottom => Vec3 {
+                x: -0.0,
+                y: -1.0,
+                z: 0.0001,
+            },
+            Side::Left => vec3::LEFT,
+            Side::Right => vec3::LEFT * -1.0,
+        }
     }
 }
 
