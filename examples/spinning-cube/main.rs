@@ -13,9 +13,8 @@ use cairo::{
     scene::{
         context::utils::make_cube_scene,
         light::{PointLight, SpotLight},
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
     shader::context::ShaderContext,
     shaders::{
@@ -146,10 +145,15 @@ fn main() -> Result<(), String> {
 
         // Traverse the scene graph and update its nodes.
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
+        let mut update_node = |current_world_transform: Mat4,
+                               node: &mut SceneNode,
+                               resources: &SceneResources,
+                               app: &App,
+                               _mouse_state: &MouseState,
+                               _keyboard_state: &KeyboardState,
+                               _game_controller_state: &GameControllerState,
+                               shader_context: &mut ShaderContext|
+         -> Result<bool, String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
@@ -181,7 +185,7 @@ fn main() -> Result<(), String> {
 
                     node.get_transform_mut().set_rotation(rotation);
 
-                    Ok(())
+                    Ok(true)
                 }
                 SceneNodeType::PointLight => match handle {
                     Some(handle) => {
@@ -216,7 +220,7 @@ fn main() -> Result<(), String> {
 
                                 shader_context.get_point_lights_mut().push(*handle);
 
-                                Ok(())
+                                Ok(true)
                             }
                             Err(err) => panic!(
                                 "Failed to get PointLight from Arena with Handle {:?}: {}",
@@ -248,7 +252,7 @@ fn main() -> Result<(), String> {
 
                                 shader_context.get_spot_lights_mut().push(*handle);
 
-                                Ok(())
+                                Ok(true)
                             }
                             Err(err) => panic!(
                                 "Failed to get SpotLight from Arena with Handle {:?}: {}",
@@ -260,21 +264,18 @@ fn main() -> Result<(), String> {
                         panic!("Encountered a `SpotLight` node with no resource handle!")
                     }
                 },
-                _ => node.update(
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
+                _ => Ok(false),
             }
         };
 
-        scenes[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scenes[0].update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            &mut update_node,
         )?;
 
         let mut pipeline = pipeline_rc.borrow_mut();
