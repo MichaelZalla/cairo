@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::color;
-use crate::physics::pbr::{self, cook_torrance_brdf};
+use crate::physics::pbr::{self, cook_torrance_direct};
 use crate::serde::PostDeserialize;
 use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
@@ -48,7 +48,7 @@ fn contribute_pbr(
 
         let likeness_to_view_direction = normal.dot(direction_to_view_position).max(0.0);
 
-        let specular = cook_torrance_brdf(
+        let specular = cook_torrance_direct(
             sample,
             &halfway,
             &direction_to_view_position,
