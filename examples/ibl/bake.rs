@@ -1,7 +1,7 @@
 use std::{cell::RefCell, path::Path};
 
 use cairo::{
-    buffer::framebuffer::Framebuffer,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     hdr::load::load_hdr,
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
     resource::handle::Handle,
@@ -13,7 +13,7 @@ use cairo::{
     },
     texture::{
         cubemap::{CubeMap, CUBE_MAP_SIDES},
-        map::{TextureBuffer, TextureMapStorageFormat},
+        map::{TextureBuffer, TextureMap},
     },
     vec::{
         vec3::{self, Vec3},
@@ -162,8 +162,15 @@ fn render_radiance_to_cubemap(
             .set_active_hdr_map(Some(*hdr_texture_handle));
     }
 
-    let cubemap =
-        render_scene_to_cubemap(framebuffer_rc, scene_context, shader_context_rc, pipeline);
+    let mut cubemap = make_cubemap(framebuffer_rc).unwrap();
+
+    render_scene_to_cubemap(
+        &mut cubemap,
+        framebuffer_rc,
+        scene_context,
+        shader_context_rc,
+        pipeline,
+    );
 
     {
         // Cleanup
@@ -184,7 +191,7 @@ fn render_radiance_to_cubemap(
 
 fn render_irradiance_to_cubemap(
     radiance_cubemap_texture_handle: &Handle,
-    framebuffer_rc: &'static mut RefCell<Framebuffer>,
+    framebuffer_rc: &'static RefCell<Framebuffer>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
@@ -203,8 +210,15 @@ fn render_irradiance_to_cubemap(
             .set_active_ambient_radiance_map(Some(*radiance_cubemap_texture_handle));
     }
 
-    let cubemap =
-        render_scene_to_cubemap(framebuffer_rc, scene_context, shader_context_rc, pipeline);
+    let mut cubemap = make_cubemap(framebuffer_rc).unwrap();
+
+    render_scene_to_cubemap(
+        &mut cubemap,
+        framebuffer_rc,
+        scene_context,
+        shader_context_rc,
+        pipeline,
+    );
 
     {
         // Cleanup
@@ -224,28 +238,12 @@ fn render_irradiance_to_cubemap(
 }
 
 fn render_scene_to_cubemap(
+    cubemap: &mut CubeMap<Vec3>,
     framebuffer_rc: &'static RefCell<Framebuffer>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
-) -> CubeMap<Vec3> {
-    let cubemap_size = {
-        let framebuffer = framebuffer_rc.borrow();
-
-        assert_eq!(framebuffer.width, framebuffer.height);
-
-        framebuffer.width
-    };
-
-    let mut cubemap: CubeMap<Vec3> = Default::default();
-
-    for side in &mut cubemap.sides {
-        side.info.storage_format = TextureMapStorageFormat::Index8(0);
-        side.width = cubemap_size;
-        side.height = cubemap_size;
-        side.is_loaded = true;
-    }
-
+) {
     // Render each face of our cubemap.
 
     let mut cubemap_face_camera =
@@ -282,9 +280,8 @@ fn render_scene_to_cubemap(
                     Some(hdr_attachment_rc) => {
                         let hdr_buffer = hdr_attachment_rc.borrow();
 
-                        cubemap.sides[side as usize]
-                            .levels
-                            .push(TextureBuffer::<Vec3>(hdr_buffer.clone()));
+                        cubemap.sides[side as usize].levels[0] =
+                            TextureBuffer::<Vec3>(hdr_buffer.clone());
                     }
                     None => (),
                 }
@@ -292,6 +289,28 @@ fn render_scene_to_cubemap(
             Err(e) => panic!("{}", e),
         }
     }
+}
 
-    cubemap
+fn make_cubemap(framebuffer_rc: &'static RefCell<Framebuffer>) -> Result<CubeMap<Vec3>, String> {
+    let cubemap_size = {
+        let framebuffer = framebuffer_rc.borrow();
+
+        assert_eq!(framebuffer.width, framebuffer.height);
+
+        framebuffer.width
+    };
+
+    let texture_map = TextureMap::from_buffer(
+        cubemap_size,
+        cubemap_size,
+        Buffer2D::<Vec3>::new(cubemap_size, cubemap_size, None),
+    );
+
+    let mut cubemap: CubeMap<Vec3> = Default::default();
+
+    for side_index in 0..6 {
+        cubemap.sides[side_index] = texture_map.clone();
+    }
+
+    Ok(cubemap)
 }
