@@ -335,7 +335,11 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, g, b) = sample_bilinear_u8(out.uv, map, None);
+                            let (r, g, b) = if options.bilinear_active {
+                                sample_bilinear_u8(out.uv, map, None)
+                            } else {
+                                sample_nearest_u8(out.uv, map, None)
+                            };
 
                             let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
 
@@ -358,7 +362,11 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_bilinear_u8(out.uv, map, None);
+                            let (r, _g, _b) = if options.bilinear_active {
+                                sample_bilinear_u8(out.uv, map, None)
+                            } else {
+                                sample_nearest_u8(out.uv, map, None)
+                            };
 
                             out.roughness = r as f32 / 255.0;
                         }
@@ -377,7 +385,11 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         Ok(entry) => {
                             let map = &entry.item;
 
-                            let (r, _g, _b) = sample_bilinear_u8(out.uv, map, None);
+                            let (r, _g, _b) = if options.bilinear_active {
+                                sample_bilinear_u8(out.uv, map, None)
+                            } else {
+                                sample_nearest_u8(out.uv, map, None)
+                            };
 
                             out.metallic = r as f32 / 255.0;
                         }
