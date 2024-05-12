@@ -73,8 +73,16 @@ pub fn fresnel_schlick_direct(halfway_likeness_to_view: f32, f0: &Vec3) -> Vec3 
     *f0 + (vec3::ONES - *f0) * (1.0 - halfway_likeness_to_view).clamp(0.0, 1.0).powi(5)
 }
 
-pub fn fresnel_schlick_indirect(likeness: f32, f0: &Vec3, roughness: f32) -> Vec3 {
-    *f0 + (vec3::ONES * (1.0 - roughness) - *f0) * (1.0 - likeness).clamp(0.0, 1.0).powi(5)
+pub fn fresnel_schlick_indirect(normal_likeness_to_view: f32, f0: &Vec3, roughness: f32) -> Vec3 {
+    let reflectivity = vec3::ONES * (1.0 - roughness);
+
+    let min_reflectivity = Vec3 {
+        x: reflectivity.x.max(f0.x),
+        y: reflectivity.y.max(f0.y),
+        z: reflectivity.z.max(f0.z),
+    };
+
+    *f0 + (min_reflectivity - *f0) * (1.0 - normal_likeness_to_view).clamp(0.0, 1.0).powi(5)
 }
 
 // Cook-Torrance BRDF

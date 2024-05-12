@@ -82,6 +82,41 @@ pub fn sample_nearest_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>)
     sample_from_texel_u8((texel_x, texel_y), map, level_index)
 }
 
+pub fn sample_nearest_vec2(uv: Vec2, map: &TextureMap<Vec2>, level_index: Option<usize>) -> Vec2 {
+    debug_assert!(map.is_loaded);
+
+    let safe_uv = apply_wrapping_options(uv, map);
+
+    debug_assert!(
+        map.levels[0].0.data.len()
+            == (map.width * map.height * map.get_buffer_samples_per_pixel() as u32) as usize,
+        "filepath={}, levels[0].0.data.len() = {}, map.width={}, map.height={}, map.get_buffer_samples_per_pixel={}",
+        map.info.filepath,
+        map.levels[0].0.data.len(),
+        map.width,
+        map.height,
+        map.get_buffer_samples_per_pixel(),
+    );
+
+    // Determine our map dimensions, based on the level index.
+    let level_width = match level_index {
+        Some(index) => map.width / 2_u32.pow(index as u32),
+        None => map.width,
+    };
+
+    let level_height = match level_index {
+        Some(index) => map.height / 2_u32.pow(index as u32),
+        None => map.height,
+    };
+
+    // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
+
+    let texel_x = safe_uv.x * (level_width - 1) as f32;
+    let texel_y = (1.0 - safe_uv.y) * (level_height - 1) as f32;
+
+    sample_from_texel_vec2((texel_x, texel_y), map, level_index)
+}
+
 pub fn sample_nearest_vec3(uv: Vec2, map: &TextureMap<Vec3>, level_index: Option<usize>) -> Vec3 {
     debug_assert!(map.is_loaded);
 
@@ -313,6 +348,27 @@ pub fn sample_trilinear_u8(
     (color.x as u8, color.y as u8, color.z as u8)
 }
 
+pub fn sample_trilinear_vec3(
+    uv: Vec2,
+    map: &TextureMap<Vec3>,
+    near_level_index: usize,
+    far_level_index: usize,
+    alpha: f32,
+) -> Vec3 {
+    // Sample a color from both mipmaps, using bilinear sampling.
+
+    if (near_level_index == far_level_index) || alpha == 0.0 {
+        return sample_nearest_vec3(uv, map, Some(near_level_index));
+    } else if alpha >= 1.0 {
+        return sample_nearest_vec3(uv, map, Some(far_level_index));
+    }
+
+    let near = sample_nearest_vec3(uv, map, Some(near_level_index));
+    let far = sample_nearest_vec3(uv, map, Some(far_level_index));
+
+    Vec3::interpolate(near, far, alpha)
+}
+
 fn get_texel_color_index<T: Default + Debug + Copy + PartialEq>(
     texel: &(f32, f32),
     map: &TextureMap<T>,
@@ -363,6 +419,30 @@ fn sample_from_texel_u8(
     }
 
     (r, g, b)
+}
+
+fn sample_from_texel_vec2(
+    texel: (f32, f32),
+    map: &TextureMap<Vec2>,
+    level_index: Option<usize>,
+) -> Vec2 {
+    let texel_color_index = get_texel_color_index(&texel, map, &level_index);
+
+    // Determine our map width based on the level index.
+
+    let buffer = match level_index {
+        Some(index) => {
+            if index >= map.levels.len() {
+                panic!();
+            }
+            &map.levels[index]
+        }
+        None => &map.levels[0],
+    };
+
+    debug_assert!(texel_color_index < buffer.0.data.len());
+
+    buffer.0.data[texel_color_index]
 }
 
 fn sample_from_texel_vec3(

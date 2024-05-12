@@ -17,7 +17,7 @@ use crate::{
 
 use super::{
     map::{TextureMap, TextureMapStorageFormat},
-    sample::sample_nearest_vec3,
+    sample::{sample_nearest_vec3, sample_trilinear_vec3},
 };
 
 static SIDES: usize = 6;
@@ -223,6 +223,24 @@ impl CubeMap<Vec3> {
         }
 
         sample_nearest_vec3(uv, map, level_index)
+    }
+
+    pub fn sample_trilinear(
+        &self,
+        direction: &Vec4,
+        near_level_index: usize,
+        far_level_index: usize,
+        alpha: f32,
+    ) -> Vec3 {
+        let (side, uv) = self.get_uv_for_direction(direction);
+
+        let map = &self.sides[side as usize];
+
+        if !map.is_loaded {
+            return CUBEMAP_SIDE_COLORS[side as usize].to_vec3();
+        }
+
+        sample_trilinear_vec3(uv, map, near_level_index, far_level_index, alpha)
     }
 }
 

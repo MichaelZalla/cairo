@@ -59,6 +59,17 @@ impl ops::Add<Vec3> for Vec3 {
     }
 }
 
+impl ops::Add<f32> for Vec3 {
+    type Output = Vec3;
+    fn add(self, rhs: f32) -> Vec3 {
+        Vec3 {
+            x: self.x + rhs,
+            y: self.y + rhs,
+            z: self.z + rhs,
+        }
+    }
+}
+
 impl ops::AddAssign<Vec3> for Vec3 {
     fn add_assign(&mut self, rhs: Vec3) {
         self.x += rhs.x;
@@ -187,6 +198,21 @@ impl Vec3 {
             y: self.y / mag,
             z: self.z / mag,
         }
+    }
+
+    pub fn reflect(self, rhs: Self) -> Self {
+        // Project the incoming ray forward through the fragment/surface
+        let absorbed_ray = self;
+
+        // Project the incoming light ray onto the surface normal (i.e.,
+        // scaling the normal up or down)
+        let w = rhs * self.dot(rhs);
+
+        // Combine the absorbed ray with the scaled normal to find the
+        // reflected ray vector.
+        let u = w * 2.0;
+
+        u - absorbed_ray
     }
 
     pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
