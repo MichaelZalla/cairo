@@ -67,7 +67,7 @@ pub const HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
                         // sample areas in the higher hemisphere areas."
 
                         let radiance =
-                            map.sample_nearest(&Vec4::new(world_pos, 1.0))/* * theta.cos() * theta.sin()*/;
+                            map.sample_nearest(&Vec4::new(world_pos, 1.0), None)/* * theta.cos() * theta.sin()*/;
 
                         irradiance += radiance;
 
@@ -99,7 +99,7 @@ pub const HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
 
                 let normal = sample.world_pos.as_normal();
 
-                let irradiance = map.sample_nearest(&Vec4::new(normal, 1.0));
+                let irradiance = map.sample_nearest(&Vec4::new(normal, 1.0), None);
 
                 return Color::from_vec3(irradiance);
             }

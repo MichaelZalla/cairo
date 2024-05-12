@@ -89,7 +89,7 @@ pub const HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
                 let uv: Vec2 = sample_spherical_to_cartesian(sample.world_pos.as_normal());
 
-                let mut sample = sample_nearest_vec3(uv, map) / 255.0;
+                let mut sample = sample_nearest_vec3(uv, map, None) / 255.0;
 
                 sample *= HDR_EXPOSURE;
 

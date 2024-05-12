@@ -213,7 +213,7 @@ impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
 }
 
 impl CubeMap<Vec3> {
-    pub fn sample_nearest(&self, direction: &Vec4) -> Vec3 {
+    pub fn sample_nearest(&self, direction: &Vec4, level_index: Option<usize>) -> Vec3 {
         let (side, uv) = self.get_uv_for_direction(direction);
 
         let map = &self.sides[side as usize];
@@ -222,7 +222,7 @@ impl CubeMap<Vec3> {
             return CUBEMAP_SIDE_COLORS[side as usize].to_vec3();
         }
 
-        sample_nearest_vec3(uv, map)
+        sample_nearest_vec3(uv, map, level_index)
     }
 }
 
@@ -342,7 +342,7 @@ impl CubeMap {
         Ok(())
     }
 
-    pub fn sample_nearest(&self, direction: &Vec4) -> Color {
+    pub fn sample_nearest(&self, direction: &Vec4, level_index: Option<usize>) -> Color {
         let (side, uv) = self.get_uv_for_direction(direction);
 
         let map = &self.sides[side as usize];
@@ -351,7 +351,7 @@ impl CubeMap {
             return CUBEMAP_SIDE_COLORS[side as usize];
         }
 
-        let (r, g, b) = sample_nearest_u8(uv, map, None);
+        let (r, g, b) = sample_nearest_u8(uv, map, level_index);
 
         Color::rgb(r, g, b)
     }
