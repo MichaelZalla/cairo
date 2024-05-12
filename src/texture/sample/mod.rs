@@ -6,7 +6,7 @@ use crate::{
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
-use super::map::TextureMap;
+use super::map::{TextureMap, TextureMapSamplingOptions};
 
 fn apply_wrapping_options<T: Default + Debug + Copy + PartialEq>(
     uv: Vec2,
@@ -200,7 +200,13 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
     let g: f32;
     let b: f32;
 
-    let nearest_neighbors = get_neighbors(wrapped_uv_as_fractional_texel, map, level_index);
+    let nearest_neighbors = get_neighbors(
+        wrapped_uv_as_fractional_texel,
+        map.width,
+        map.height,
+        level_index,
+        &map.sampling_options,
+    );
 
     match nearest_neighbors {
         // Case: One neighbor (top-left)
@@ -478,8 +484,10 @@ type GetNeighborsResult = (
 
 pub fn get_neighbors(
     fractional_texel: Vec2,
-    map: &TextureMap,
+    map_width: u32,
+    map_height: u32,
     level_index: Option<usize>,
+    sampling_options: &TextureMapSamplingOptions,
 ) -> GetNeighborsResult {
     let fractional_x = fractional_texel.x - (fractional_texel.x as u32) as f32;
     let fractional_y = fractional_texel.y - (fractional_texel.y as u32) as f32;
@@ -534,16 +542,16 @@ pub fn get_neighbors(
 
     // Determine our map dimensions, based on the level index.
     let level_width = match level_index {
-        Some(index) => (map.width / 2_u32.pow(index as u32)) as f32,
-        None => map.width as f32,
+        Some(index) => (map_width / 2_u32.pow(index as u32)) as f32,
+        None => map_width as f32,
     };
 
     let level_height = match level_index {
-        Some(index) => (map.height / 2_u32.pow(index as u32)) as f32,
-        None => map.height as f32,
+        Some(index) => (map_height / 2_u32.pow(index as u32)) as f32,
+        None => map_height as f32,
     };
 
-    match (map.sampling_options.wrapping, level_width == 1.0) {
+    match (sampling_options.wrapping, level_width == 1.0) {
         (TextureMapWrapping::Repeat, _) | (_, true) => (
             Some((top_left.0.rem(level_width), top_left.1.rem(level_height))),
             Some((top_right.0.rem(level_width), top_right.1.rem(level_height))),
