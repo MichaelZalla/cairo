@@ -39,7 +39,7 @@ impl LookVector {
             target,
             forward: vec3::FORWARD,
             up: vec3::UP,
-            right: vec3::LEFT * -1.0,
+            right: vec3::RIGHT,
             pitch: 0.0,
             yaw: PI / 2.0,
             roll: 0.0,

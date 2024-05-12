@@ -137,7 +137,7 @@ pub fn importance_sample_ggx(x_i: Vec2, normal: &Vec3, roughness: f32) -> Vec3 {
     let up = if normal.z.abs() < 0.999 {
         vec3::UP
     } else {
-        vec3::LEFT * -1.0
+        vec3::RIGHT
     };
 
     let tangent = up.cross(*normal).as_normal();

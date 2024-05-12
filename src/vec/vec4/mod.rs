@@ -182,6 +182,6 @@ impl Vec4 {
 
 pub static UP: Vec4 = Vec4::new(vec3::UP, 1.0);
 
-pub static LEFT: Vec4 = Vec4::new(vec3::LEFT, 1.0);
+pub static RIGHT: Vec4 = Vec4::new(vec3::RIGHT, 1.0);
 
 pub static FORWARD: Vec4 = Vec4::new(vec3::FORWARD, 1.0);

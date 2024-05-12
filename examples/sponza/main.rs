@@ -153,7 +153,7 @@ fn main() -> Result<(), String> {
 
         let mut camera: Camera = Camera::from_perspective(
             camera_position,
-            camera_position + vec3::LEFT,
+            camera_position - vec3::RIGHT,
             75.0,
             aspect_ratio,
         );

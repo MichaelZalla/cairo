@@ -58,8 +58,8 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     let backward = forward * -1.0;
     let up = vec3::UP;
     let down = up * -1.0;
-    let left = vec3::LEFT;
-    let right = left * -1.0;
+    let right = vec3::RIGHT;
+    let left = right * -1.0;
 
     let vertices: Vec<Vec3> = vec![
         front_top_left,     // 0

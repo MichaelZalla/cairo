@@ -240,8 +240,8 @@ pub static UP: Vec3 = Vec3 {
     z: -0.0,
 };
 
-pub static LEFT: Vec3 = Vec3 {
-    x: -1.0,
+pub static RIGHT: Vec3 = Vec3 {
+    x: 1.0,
     y: 0.0,
     z: 0.0,
 };

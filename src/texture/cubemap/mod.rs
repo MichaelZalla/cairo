@@ -80,8 +80,8 @@ impl Side {
                 y: -1.0,
                 z: 0.0001,
             },
-            Side::Left => vec3::LEFT,
-            Side::Right => vec3::LEFT * -1.0,
+            Side::Left => vec3::RIGHT * -1.0,
+            Side::Right => vec3::RIGHT,
         }
     }
 }
