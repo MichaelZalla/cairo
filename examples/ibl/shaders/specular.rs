@@ -2,7 +2,7 @@
 
 use cairo::{
     color::{self, Color},
-    physics::pbr::importance_sample_ggx,
+    physics::pbr::sampling::importance_sample_ggx,
     random::hammersley_2d_sequence,
     scene::resources::SceneResources,
     shader::{

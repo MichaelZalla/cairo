@@ -8,6 +8,8 @@ use crate::{
     },
 };
 
+pub mod sampling;
+
 // Normal distribution function
 
 pub fn distribution_ggx(normal: &Vec3, halfway: &Vec3, roughness: f32) -> f32 {

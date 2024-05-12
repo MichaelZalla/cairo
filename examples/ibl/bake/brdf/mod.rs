@@ -1,6 +1,6 @@
 use cairo::{
     buffer::Buffer2D,
-    physics::pbr::{geometry_smith_indirect, importance_sample_ggx},
+    physics::pbr::{geometry_smith_indirect, sampling::importance_sample_ggx},
     random::hammersley_2d_sequence,
     texture::map::TextureMap,
     vec::{vec2::Vec2, vec3::Vec3},
