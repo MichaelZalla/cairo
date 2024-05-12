@@ -251,6 +251,8 @@ fn set_ibl_map_handles(
 ) {
     let (radiance_cubemap_handle, irradiance_cubemap_handle) = handles;
 
+    shader_context.set_active_ambient_radiance_map(Some(*radiance_cubemap_handle));
+
     shader_context.set_active_ambient_diffuse_irradiance_map(Some(*irradiance_cubemap_handle));
 
     // Set the irradiance map as our scene's ambient diffuse light map.

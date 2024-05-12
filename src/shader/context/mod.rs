@@ -15,6 +15,7 @@ pub struct ShaderContext {
     pub active_material: Option<String>,
     pub active_uv_test_texture_map: Option<Handle>,
     pub active_hdr_map: Option<Handle>,
+    pub active_ambient_radiance_map: Option<Handle>,
     pub active_ambient_diffuse_irradiance_map: Option<Handle>,
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
@@ -35,6 +36,7 @@ impl Default for ShaderContext {
             active_material: None,
             active_uv_test_texture_map: None,
             active_hdr_map: None,
+            active_ambient_radiance_map: None,
             active_ambient_diffuse_irradiance_map: None,
             ambient_light: None,
             directional_light: None,
@@ -68,6 +70,7 @@ impl ShaderContext {
             active_material: None,
             active_uv_test_texture_map: None,
             active_hdr_map: None,
+            active_ambient_radiance_map: None,
             active_ambient_diffuse_irradiance_map: None,
             ambient_light,
             directional_light,
@@ -162,6 +165,10 @@ impl ShaderContext {
 
     pub fn set_active_uv_test_texture_map(&mut self, optional_handle: Option<Handle>) {
         self.active_uv_test_texture_map = optional_handle;
+    }
+
+    pub fn set_active_ambient_radiance_map(&mut self, optional_handle: Option<Handle>) {
+        self.active_ambient_radiance_map = optional_handle;
     }
 
     pub fn set_active_ambient_diffuse_irradiance_map(&mut self, optional_handle: Option<Handle>) {
