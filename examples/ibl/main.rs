@@ -9,6 +9,9 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
+    physics::pbr::bake::{
+        bake_diffuse_and_specular_from_hdri, brdf::generate_specular_brdf_integration_map,
+    },
     pipeline::Pipeline,
     resource::handle::Handle,
     scene::{
@@ -24,11 +27,7 @@ use cairo::{
     },
 };
 
-use bake::{bake_diffuse_and_specular_from_hdri, brdf::generate_specular_brdf_integration_map};
-
-pub mod bake;
 pub mod scene;
-pub mod shaders;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {

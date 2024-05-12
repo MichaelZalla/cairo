@@ -6,6 +6,8 @@ use crate::{app::context::ApplicationRenderingContext, serde::PostDeserialize};
 
 use super::{graph::SceneGraph, resources::SceneResources};
 
+pub mod utils;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SceneContext {
     pub resources: Rc<RefCell<SceneResources>>,

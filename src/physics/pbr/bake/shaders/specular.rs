@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use cairo::{
+use crate::{
     color::{self, Color},
     physics::pbr::sampling::importance_sample_ggx,
     random::hammersley_2d_sequence,

@@ -2,13 +2,23 @@ use std::{cell::RefCell, path::Path};
 
 use uuid::Uuid;
 
-use cairo::{
+use crate::{
     buffer::framebuffer::Framebuffer,
     hdr::load::load_hdr,
     material::Material,
+    physics::pbr::bake::shaders::{
+        diffuse::HdrDiffuseIrradianceFragmentShader,
+        equirectangular::{
+            HdrEquirectangularProjectionFragmentShader, HdrEquirectangularProjectionVertexShader,
+        },
+        specular::HdrSpecularPrefilteredEnvironmentFragmentShader,
+    },
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
     resource::handle::Handle,
-    scene::{context::SceneContext, node::SceneNodeType},
+    scene::{
+        context::{utils::make_cube_scene, SceneContext},
+        node::SceneNodeType,
+    },
     shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
@@ -18,18 +28,8 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{
-    scene,
-    shaders::{
-        diffuse::HdrDiffuseIrradianceFragmentShader,
-        equirectangular::{
-            HdrEquirectangularProjectionFragmentShader, HdrEquirectangularProjectionVertexShader,
-        },
-        specular::HdrSpecularPrefilteredEnvironmentFragmentShader,
-    },
-};
-
 pub mod brdf;
+pub mod shaders;
 
 pub struct HDRBakeResult {
     pub radiance: CubeMap<Vec3>,
@@ -40,7 +40,7 @@ pub struct HDRBakeResult {
 pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBakeResult, String> {
     // Set up a simple cube scene, that we can use to render each side of a cubemap.
 
-    let cube_scene_context = scene::make_cube_scene(1.0).unwrap();
+    let cube_scene_context = make_cube_scene(1.0).unwrap();
 
     // Load the HDR image data into a texture.
 
