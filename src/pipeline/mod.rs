@@ -471,20 +471,6 @@ impl<'a> Pipeline<'a> {
                                 return;
                             }
 
-                            // Write to the depth attachment.
-
-                            depth_buffer.set(x, y, non_linear_z);
-
-                            if let Some(stencil_buffer_lock) =
-                                framebuffer.attachments.stencil.as_ref()
-                            {
-                                // Write to the depth attachment.
-
-                                let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
-
-                                stencil_buffer.set(x, y, 1);
-                            }
-
                             // Geometry shader.
 
                             if let Some(g_buffer) = self.g_buffer.as_mut() {
@@ -501,6 +487,20 @@ impl<'a> Pipeline<'a> {
                                     &self.geometry_shader_options,
                                     &linear_space_interpolant,
                                 ) {
+                                    // Write to the depth attachment.
+
+                                    depth_buffer.set(x, y, non_linear_z);
+
+                                    if let Some(stencil_buffer_lock) =
+                                        framebuffer.attachments.stencil.as_ref()
+                                    {
+                                        // Write to the stencil attachment.
+
+                                        let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
+
+                                        stencil_buffer.set(x, y, 1);
+                                    }
+
                                     if !self.options.do_deferred_lighting {
                                         if let Some(forward_buffer_lock) =
                                             framebuffer.attachments.forward_ldr.as_ref()
