@@ -77,21 +77,24 @@ pub fn bake_diffuse_irradiance_for_hdri(
         Default::default(),
     );
 
+    let cubemap_face_framebuffer = {
+        let mut framebuffer = Framebuffer::new(0, 0);
+
+        framebuffer.complete(0.3, 100.0);
+
+        framebuffer
+    };
+
+    let cubemap_face_framebuffer_rc = Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+
     // Generate a radiance cubemap texture from our HDR texture.
 
     let radiance_cubemap = {
-        static CUBEMAP_SIZE: u32 = 1024;
+        {
+            let mut framebuffer = cubemap_face_framebuffer_rc.borrow_mut();
 
-        let cubemap_face_framebuffer = {
-            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
-
-            framebuffer.complete(0.3, 100.0);
-
-            framebuffer
-        };
-
-        let cubemap_face_framebuffer_rc =
-            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+            framebuffer.resize(1024, 1024, true);
+        }
 
         render_radiance_to_cubemap(
             &hdr_texture_handle,
@@ -102,30 +105,30 @@ pub fn bake_diffuse_irradiance_for_hdri(
         )
     };
 
-    // Generate an (approximate) irradiance cubemap texture from our radiance
-    // cubemap texture.
+    // Insert the radiance cubemap into the appropriate resource arena,
+    // generating a handle.
 
-    let irradiance_cubemap = {
-        static CUBEMAP_SIZE: u32 = 32;
+    let radiance_cubemap_texture_handle: Handle;
 
-        let cubemap_face_framebuffer = {
-            let mut framebuffer = Framebuffer::new(CUBEMAP_SIZE, CUBEMAP_SIZE);
-
-            framebuffer.complete(0.3, 100.0);
-
-            framebuffer
-        };
-
-        let cubemap_face_framebuffer_rc =
-            Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
-
-        let radiance_cubemap_texture_handle = {
+    {
+        radiance_cubemap_texture_handle = {
             (*cube_scene_context.resources)
                 .borrow_mut()
                 .cubemap_vec3
                 .borrow_mut()
                 .insert(Uuid::new_v4(), radiance_cubemap.clone())
         };
+    }
+
+    // Generate an (approximate) irradiance cubemap texture from our radiance
+    // cubemap texture.
+
+    let irradiance_cubemap = {
+        {
+            let mut framebuffer = cubemap_face_framebuffer_rc.borrow_mut();
+
+            framebuffer.resize(32, 32, true);
+        }
 
         render_irradiance_to_cubemap(
             &radiance_cubemap_texture_handle,
