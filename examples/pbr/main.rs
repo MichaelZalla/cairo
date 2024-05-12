@@ -8,7 +8,6 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::Pipeline,
-    resource::handle::Handle,
     scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
     shader::context::ShaderContext,
     shaders::{
@@ -20,9 +19,7 @@ use cairo::{
 pub mod callbacks;
 pub mod scene;
 
-use callbacks::{
-    render_scene_graph_node_default, render_skybox_node_default, update_scene_graph_node_default,
-};
+use callbacks::update_scene_graph_node_default;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -58,13 +55,15 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let pipeline = Pipeline::new(
+    let mut pipeline = Pipeline::new(
         &shader_context_rc,
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -123,72 +122,31 @@ fn main() -> Result<(), String> {
     // App render() callback
 
     let mut render = || -> Result<Vec<u32>, String> {
-        let mut pipeline = pipeline_rc.borrow_mut();
-
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
-
-        // Begin frame
-
-        pipeline.begin_frame();
-
         // Render scene.
 
         let scene_context = scene_context_rc.borrow();
-        let scene_resources = scene_context.resources.borrow();
+        let resources = (*scene_context.resources).borrow();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
-        let scene = &scene_context.scenes.borrow()[0];
+        let mut pipeline = pipeline_rc.borrow_mut();
 
-        let mut skybox_handle: Option<Handle> = None;
-        let mut camera_handle: Option<Handle> = None;
+        match scene.render(&resources, &mut pipeline) {
+            Ok(()) => {
+                // Write out.
 
-        let mut render_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &SceneNode|
-         -> Result<(), String> {
-            render_scene_graph_node_default(
-                &mut pipeline,
-                &scene_resources,
-                node,
-                &current_world_transform,
-                &mut skybox_handle,
-                &mut camera_handle,
-            )
-        };
+                let framebuffer = framebuffer_rc.borrow();
 
-        // Traverse the scene graph and render its nodes.
+                match framebuffer.attachments.color.as_ref() {
+                    Some(color_buffer_lock) => {
+                        let color_buffer = color_buffer_lock.borrow();
 
-        scene.root.visit(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut render_scene_graph_node,
-        )?;
-
-        // Skybox pass
-
-        if let (Some(camera_handle), Some(skybox_handle)) = (camera_handle, skybox_handle) {
-            render_skybox_node_default(
-                &mut pipeline,
-                &scene_resources,
-                &skybox_handle,
-                &camera_handle,
-            );
-        }
-
-        // End frame
-
-        pipeline.end_frame();
-
-        // Write out.
-
-        let framebuffer = framebuffer_rc.borrow();
-
-        match framebuffer.attachments.color.as_ref() {
-            Some(color_buffer_lock) => {
-                let color_buffer = color_buffer_lock.borrow();
-
-                Ok(color_buffer.get_all().clone())
+                        Ok(color_buffer.get_all().clone())
+                    }
+                    None => panic!(),
+                }
             }
-            None => panic!(),
+            Err(e) => panic!("{}", e),
         }
     };
 

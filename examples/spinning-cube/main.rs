@@ -235,13 +235,15 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let pipeline = Pipeline::new(
+    let mut pipeline = Pipeline::new(
         &shader_context_rc,
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -466,83 +468,31 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our scene.
-
-        let mut pipeline = pipeline_rc.borrow_mut();
-
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
-
-        // Begin frame
-
-        pipeline.begin_frame();
-
         // Render scene.
 
         let scene_context = scene_context_rc.borrow();
-        let resources = scene_context.resources.borrow();
-        let scenes = scene_context.scenes.borrow();
+        let resources = (*scene_context.resources).borrow();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
-        let mut render_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &SceneNode|
-         -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
+        let mut pipeline = pipeline_rc.borrow_mut();
 
-            match node_type {
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mesh_arena = resources.mesh.borrow();
-                        let entity_arena = resources.entity.borrow();
+        match scene.render(&resources, &mut pipeline) {
+            Ok(()) => {
+                // Write out.
 
-                        match entity_arena.get(handle) {
-                            Ok(entry) => {
-                                let entity = &entry.item;
+                let framebuffer = framebuffer_rc.borrow();
 
-                                pipeline.render_entity(
-                                    entity,
-                                    &current_world_transform,
-                                    &mesh_arena,
-                                );
+                match framebuffer.attachments.color.as_ref() {
+                    Some(color_buffer_lock) => {
+                        let color_buffer = color_buffer_lock.borrow();
 
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
+                        Ok(color_buffer.get_all().clone())
                     }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
-                _ => Ok(()),
+                    None => panic!(),
+                }
             }
-        };
-
-        // Traverse the scene graph and render its nodes.
-
-        scenes[0].root.visit(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut render_scene_graph_node,
-        )?;
-
-        // End frame
-
-        pipeline.end_frame();
-
-        // Write out.
-
-        let framebuffer = framebuffer_rc.borrow();
-
-        match framebuffer.attachments.color.as_ref() {
-            Some(color_buffer_lock) => {
-                let color_buffer = color_buffer_lock.borrow();
-
-                Ok(color_buffer.get_all().clone())
-            }
-            None => panic!(),
+            Err(e) => panic!("{}", e),
         }
     };
 

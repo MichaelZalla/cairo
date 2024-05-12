@@ -1,9 +1,6 @@
 use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
-    matrix::Mat4,
-    pipeline::Pipeline,
-    resource::handle::Handle,
     scene::{
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
@@ -87,155 +84,15 @@ pub fn update_scene_graph_node_default(
                 panic!("Encountered a `Camera` node with no resource handle!")
             }
         },
-        SceneNodeType::Entity => {
-            node.get_transform_mut().set_rotation(Vec3 {
-                x: 0.0,
-                y: (timing_info.uptime_seconds / 2.0).sin(),
-                z: 0.0,
-            });
+        // SceneNodeType::Entity => {
+        //     node.get_transform_mut().set_rotation(Vec3 {
+        //         x: 0.0,
+        //         y: (timing_info.uptime_seconds / 2.0).sin(),
+        //         z: 0.0,
+        //     });
 
-            Ok(())
-        }
+        //     Ok(())
+        // }
         _ => Ok(()),
-    }
-}
-
-pub fn render_scene_graph_node_default(
-    pipeline: &mut Pipeline,
-    scene_resources: &SceneResources,
-    node: &SceneNode,
-    current_world_transform: &Mat4,
-    skybox_handle: &mut Option<Handle>,
-    camera_handle: &mut Option<Handle>,
-) -> Result<(), String> {
-    let (node_type, handle) = (node.get_type(), node.get_handle());
-
-    match node_type {
-        SceneNodeType::Skybox => {
-            match handle {
-                Some(handle) => {
-                    skybox_handle.replace(*handle);
-                }
-                None => {
-                    panic!("Encountered a `Skybox` node with no resource handle!")
-                }
-            }
-            Ok(())
-        }
-        SceneNodeType::Entity => match handle {
-            Some(handle) => {
-                let entity_arena = scene_resources.entity.borrow();
-
-                match entity_arena.get(handle) {
-                    Ok(entry) => {
-                        let entity = &entry.item;
-
-                        pipeline.render_entity(
-                            entity,
-                            current_world_transform,
-                            &scene_resources.mesh.borrow(),
-                        );
-
-                        Ok(())
-                    }
-                    Err(err) => panic!(
-                        "Failed to get Entity from Arena with Handle {:?}: {}",
-                        handle, err
-                    ),
-                }
-            }
-            None => {
-                panic!("Encountered a `Entity` node with no resource handle!")
-            }
-        },
-        SceneNodeType::Camera => {
-            match handle {
-                Some(handle) => {
-                    camera_handle.replace(*handle);
-                }
-                None => {
-                    panic!("Encountered a `Camera` node with no resource handle!")
-                }
-            }
-            Ok(())
-        }
-        SceneNodeType::PointLight => match handle {
-            Some(handle) => {
-                let point_light_arena = scene_resources.point_light.borrow();
-
-                match point_light_arena.get(handle) {
-                    Ok(entry) => {
-                        let point_light = &entry.item;
-
-                        pipeline.render_point_light(point_light, None, None);
-
-                        Ok(())
-                    }
-                    Err(err) => panic!(
-                        "Failed to get PointLight from Arena with Handle {:?}: {}",
-                        handle, err
-                    ),
-                }
-            }
-            None => {
-                panic!("Encountered a `PointLight` node with no resource handle!")
-            }
-        },
-        SceneNodeType::SpotLight => match handle {
-            Some(handle) => {
-                let spot_light_arena = scene_resources.spot_light.borrow();
-
-                match spot_light_arena.get(handle) {
-                    Ok(entry) => {
-                        let spot_light = &entry.item;
-
-                        // @TODO Migrate light position to node transform.
-
-                        pipeline.render_spot_light(spot_light, None, None);
-
-                        Ok(())
-                    }
-                    Err(err) => panic!(
-                        "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                        handle, err
-                    ),
-                }
-            }
-            None => {
-                panic!("Encountered a `PointLight` node with no resource handle!")
-            }
-        },
-        _ => Ok(()),
-    }
-}
-
-pub fn render_skybox_node_default(
-    pipeline: &mut Pipeline,
-    scene_resources: &SceneResources,
-    skybox_handle: &Handle,
-    camera_handle: &Handle,
-) {
-    match scene_resources.cubemap_u8.borrow().get(skybox_handle) {
-        Ok(entry) => {
-            let skybox_cube_map = &entry.item;
-
-            match scene_resources.camera.borrow().get(camera_handle) {
-                Ok(entry) => {
-                    let skybox_active_camera = &entry.item;
-
-                    pipeline.render_skybox(skybox_cube_map, skybox_active_camera);
-                }
-                Err(err) => {
-                    panic!(
-                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                        camera_handle, err
-                    )
-                }
-            }
-        }
-        Err(err) => panic!(
-            "Failed to get Entity from Arena with Handle {:?}: {}",
-            skybox_handle, err
-        ),
     }
 }

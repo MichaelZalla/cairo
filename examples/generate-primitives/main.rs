@@ -18,7 +18,6 @@ use cairo::{
     matrix::Mat4,
     mesh,
     pipeline::{zbuffer::DepthTestMethod, Pipeline},
-    resource::handle::Handle,
     scene::{
         camera::Camera,
         context::SceneContext,
@@ -74,7 +73,7 @@ fn main() -> Result<(), String> {
         app.context.ttf_context,
     ))));
 
-    font_cache_rc.borrow_mut().load(&font_info)?;
+    font_cache_rc.borrow_mut().load(font_info)?;
 
     // Debug messages
 
@@ -152,7 +151,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        point_light_decal_mat.emissive_color_map = point_light_decal_mat.alpha_map.clone();
+        point_light_decal_mat.emissive_color_map = point_light_decal_mat.alpha_map;
 
         point_light_decal_mat
             .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
@@ -169,7 +168,7 @@ fn main() -> Result<(), String> {
             ),
         ));
 
-        spot_light_decal_mat.emissive_color_map = spot_light_decal_mat.alpha_map.clone();
+        spot_light_decal_mat.emissive_color_map = spot_light_decal_mat.alpha_map;
 
         spot_light_decal_mat
             .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
@@ -494,13 +493,15 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let pipeline = Pipeline::new(
+    let mut pipeline = Pipeline::new(
         &shader_context_rc,
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -981,194 +982,44 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        let mut pipeline = pipeline_rc.borrow_mut();
-
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
-
-        // Begin frame
-
-        pipeline.begin_frame();
-
         // Render scene.
 
         let scene_context = scene_context_rc.borrow();
-        let resources = scene_context.resources.borrow();
-        let scenes = scene_context.scenes.borrow();
+        let resources = (*scene_context.resources).borrow();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
-        let mut active_camera_handle: Option<Handle> = None;
+        let mut pipeline = pipeline_rc.borrow_mut();
 
-        let mut render_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &SceneNode|
-         -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
+        match scene.render(&resources, &mut pipeline) {
+            Ok(()) => {
+                // Write out.
 
-            match node_type {
-                SceneNodeType::Scene => Ok(()),
-                SceneNodeType::Environment => Ok(()),
-                SceneNodeType::Skybox => Ok(()),
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mesh_arena = resources.mesh.borrow();
-                        let entity_arena = resources.entity.borrow();
+                let framebuffer = framebuffer_rc.borrow();
 
-                        match entity_arena.get(handle) {
-                            Ok(entry) => {
-                                let entity = &entry.item;
+                match framebuffer.attachments.color.as_ref() {
+                    Some(color_buffer_lock) => {
+                        let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                                pipeline.render_entity(
-                                    entity,
-                                    &current_world_transform,
-                                    &mesh_arena,
-                                );
+                        {
+                            let debug_messages = &mut *debug_message_buffer_rc.borrow_mut();
 
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
+                            Graphics::render_debug_messages(
+                                &mut color_buffer,
+                                font_cache_rc,
+                                font_info,
+                                (12, 12),
+                                1.0,
+                                debug_messages,
+                            );
                         }
+
+                        Ok(color_buffer.get_all().clone())
                     }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::Camera => match handle {
-                    Some(handle) => {
-                        active_camera_handle = Some(*handle);
-
-                        Ok(())
-                    }
-                    None => {
-                        panic!("Encountered a `Camera` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::AmbientLight => Ok(()),
-                SceneNodeType::DirectionalLight => Ok(()),
-                SceneNodeType::PointLight => match handle {
-                    Some(point_light_handle) => {
-                        let camera_arena = resources.camera.borrow();
-                        let point_light_arena = resources.point_light.borrow();
-
-                        match active_camera_handle {
-                            Some(camera_handle) => {
-                                match camera_arena.get(&camera_handle) {
-                                    Ok(entry) => {
-                                        let active_camera = &entry.item;
-        
-                                        match point_light_arena.get(point_light_handle) {
-                                            Ok(entry) => {
-                                                let point_light = &entry.item;
-        
-                                                pipeline.render_point_light(
-                                                    point_light,
-                                                    Some(active_camera),
-                                                    Some(&mut resources.material.borrow_mut()),
-                                                );
-        
-                                                Ok(())
-                                            }
-                                            Err(err) => panic!(
-                                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                                handle, err
-                                            ),
-                                        }
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
-                                }
-                            },
-                            None => Ok(())
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::SpotLight => match handle {
-                    Some(spot_light_handle) => {
-                        let camera_arena = resources.camera.borrow();
-                        let spot_light_arena = resources.spot_light.borrow();
-
-                        match active_camera_handle {
-                            Some(camera_handle) => {
-                                match camera_arena.get(&camera_handle) {
-                                    Ok(entry) => {
-                                        let active_camera = &entry.item;
-        
-                                        match spot_light_arena.get(spot_light_handle) {
-                                            Ok(entry) => {
-                                                let spot_light = &entry.item;
-        
-                                                pipeline.render_spot_light(
-                                                    spot_light,
-                                                    Some(active_camera),
-                                                    Some(&mut resources.material.borrow_mut()),
-                                                );
-        
-                                                Ok(())
-                                            }
-                                            Err(err) => panic!(
-                                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                                handle, err
-                                            ),
-                                        }
-                                    }
-                                    Err(err) => panic!(
-                                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
-                                }
-                            }
-                            None => Ok(())
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-            }
-        };
-
-        // Traverse the scene graph and render its nodes.
-
-        scenes[0].root.visit(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut render_scene_graph_node,
-        )?;
-
-        // End frame
-
-        pipeline.end_frame();
-
-        // Write out.
-
-        let mut framebuffer = framebuffer_rc.borrow_mut();
-
-        match framebuffer.attachments.color.as_mut() {
-            Some(color_buffer_lock) => {
-                let mut color_buffer = color_buffer_lock.borrow_mut();
-
-                let debug_messages = &mut *debug_message_buffer_rc.borrow_mut();
-
-                {
-                    Graphics::render_debug_messages(
-                        &mut color_buffer,
-                        font_cache_rc,
-                        font_info,
-                        (12, 12),
-                        1.0,
-                        debug_messages,
-                    );
+                    None => panic!(),
                 }
-
-                Ok(color_buffer.get_all().clone())
             }
-            None => panic!(),
+            Err(e) => panic!("{}", e),
         }
     };
 

@@ -237,8 +237,6 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        // Delegate the rendering to our scene.
-
         // Render scene.
 
         let scene_context = spheres_scene_context_rc.borrow();
