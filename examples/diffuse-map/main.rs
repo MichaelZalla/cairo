@@ -8,15 +8,12 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
-    entity::Entity,
+    material::Material,
     matrix::Mat4,
-    mesh::{self},
     pipeline::Pipeline,
     scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        context::utils::make_cube_scene,
+        light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -26,6 +23,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
+    texture::map::TextureMap,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -55,72 +53,48 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context: SceneContext = Default::default();
+    let scene_context = make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
 
     {
-        let resources = scene_context.resources.borrow_mut();
+        let mut resources = scene_context.resources.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        let result = mesh::obj::load::load_obj(
-            "./data/obj/cube-textured.obj",
-            &mut resources.texture_u8.borrow_mut(),
+        // Customize the cube material.
+
+        let cube_albedo_map_handle = resources.texture_u8.borrow_mut().insert(
+            Uuid::new_v4(),
+            TextureMap::new(
+                "./data/obj/cobblestone.png",
+                cairo::texture::map::TextureMapStorageFormat::RGB24,
+            ),
         );
 
-        let _cube_geometry = result.0;
-        let mut cube_meshes = result.1;
-        let mut cube_materials = result.2;
+        let mut cube_material = Material {
+            name: "cube".to_string(),
+            albedo_map: Some(cube_albedo_map_handle),
+            ..Default::default()
+        };
 
-        let cube_mesh = &mut cube_meshes[1];
+        cube_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
-        match &mut cube_materials {
-            Some(cache) => {
-                for material in cache.values_mut() {
-                    material
-                        .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
-                        .unwrap();
+        resources.material.borrow_mut().insert(cube_material);
 
-                    resources.material.borrow_mut().insert(material.to_owned());
-                }
+        let cube_entity_handle = scene
+            .root
+            .find(&mut |node| *node.get_type() == SceneNodeType::Entity)
+            .unwrap()
+            .unwrap();
+
+        match resources.entity.get_mut().get_mut(&cube_entity_handle) {
+            Ok(entry) => {
+                let cube_entity = &mut entry.item;
+
+                cube_entity.material = Some("cube".to_string());
             }
-            None => (),
+            _ => panic!(),
         }
 
-        // Configure a global scene environment.
-
-        let environment: Environment = Default::default();
-
-        // Set up a camera for our scene.
-
-        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
-
-        let mut camera: Camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -4.0,
-            },
-            Default::default(),
-            75.0,
-            aspect_ratio,
-        );
-
-        camera.movement_speed = 5.0;
-
-        // Set up some lights for our scene.
-
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.4,
-        };
-
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.3,
-            direction: Vec4 {
-                x: 0.0,
-                y: -1.0,
-                z: 0.0,
-                w: 1.0,
-            }
-            .as_normal(),
-        };
+        // Add a point light to our scene.
 
         let mut point_light = PointLight::new();
 
@@ -132,97 +106,30 @@ fn main() -> Result<(), String> {
             z: 0.0,
         };
 
-        let spot_light = SpotLight::new();
-
-        // Assign the meshes to entities
-
-        let cube_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cube_mesh.to_owned());
-
-        let cube_entity_handle = resources.entity.borrow_mut().insert(
-            Uuid::new_v4(),
-            Entity::new(cube_mesh_handle, Some("cube".to_string())),
-        );
-
-        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = resources
-            .ambient_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), ambient_light);
-
-        let directional_light_handle = resources
-            .directional_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), directional_light);
-
         let point_light_handle = resources
             .point_light
             .borrow_mut()
             .insert(Uuid::new_v4(), point_light);
+
+        scene.root.add_child(SceneNode::new(
+            SceneNodeType::PointLight,
+            Default::default(),
+            Some(point_light_handle),
+        ))?;
+
+        // Add a spot light to our scene.
+
+        let spot_light = SpotLight::new();
 
         let spot_light_handle = resources
             .spot_light
             .borrow_mut()
             .insert(Uuid::new_v4(), spot_light);
 
-        // Create a scene graph.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scenegraph = &mut scenes[0];
-
-        // Add an environment (node) to our scene.
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(environment_node)?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
+        scene.root.add_child(SceneNode::new(
             SceneNodeType::SpotLight,
             Default::default(),
             Some(spot_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(cube_entity_handle),
         ))?;
     }
 

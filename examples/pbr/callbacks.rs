@@ -7,7 +7,7 @@ use cairo::{
     },
     shader::context::ShaderContext,
     time::TimingInfo,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::vec4::Vec4,
 };
 
 pub fn update_scene_graph_node_default(

@@ -28,21 +28,16 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
         // Create resource handles from our arenas.
 
         let camera_handle = {
-            let mut camera: Camera = Camera::from_perspective(
+            let camera: Camera = Camera::from_perspective(
                 Vec3 {
-                    // x: 0.0,
-                    // y: 0.0,
-                    // z: -3.0,
-                    x: 13.5,
-                    y: 3.0,
-                    z: -16.0,
+                    x: 0.0,
+                    y: 0.0,
+                    z: -5.0,
                 },
                 vec3::FORWARD,
                 75.0,
                 camera_aspect_ratio,
             );
-
-            camera.movement_speed = 2.0;
 
             resources.camera.borrow_mut().insert(Uuid::new_v4(), camera)
         };
@@ -54,7 +49,7 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
 
         let ambient_light_handle = {
             let ambient_light = AmbientLight {
-                intensities: Vec3::ones() * 0.5,
+                intensities: Vec3::ones() * 0.15,
             };
 
             resources
@@ -65,7 +60,7 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
 
         let directional_light_handle = {
             let directional_light = DirectionalLight {
-                intensities: Vec3::ones() * 0.5,
+                intensities: Vec3::ones() * 0.15,
                 direction: Vec4 {
                     x: 0.25,
                     y: -1.0,

@@ -21,6 +21,21 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
         let resources = scene_context.resources.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
+        // Move the camera backwards.
+
+        {
+            for option in resources.camera.borrow_mut().entries.as_mut_slice() {
+                if let Some(entry) = option {
+                    let camera = &mut entry.item;
+
+                    camera.look_vector.set_position(Vec3 {
+                        z: -16.0,
+                        ..Default::default()
+                    });
+                }
+            }
+        }
+
         // Generate a 2x2 grid of point lights.
 
         for grid_index_x in 0..4 {

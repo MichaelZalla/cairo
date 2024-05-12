@@ -8,15 +8,11 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
-    entity::Entity,
     matrix::Mat4,
-    mesh,
     pipeline::Pipeline,
     scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        context::utils::make_cube_scene,
+        light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -54,149 +50,22 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context: SceneContext = Default::default();
+    let scene_context = make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
 
     {
         let resources = scene_context.resources.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        // Meshes
-
-        let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
-
-        // Configure a global scene environment.
-
-        let environment: Environment = Default::default();
-
-        // Set up a camera for our scene.
-
-        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
-
-        let mut camera: Camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -5.0,
-            },
-            Default::default(),
-            75.0,
-            aspect_ratio,
-        );
-
-        // Set up some lights for our scene.
-
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.1,
-        };
-
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.3,
-            direction: Vec4 {
-                x: 0.25,
-                y: -1.0,
-                z: -0.25,
-                w: 1.0,
-            }
-            .as_normal(),
-        };
+        // Add a point light to the scene.
 
         let mut point_light = PointLight::new();
 
         point_light.intensities = Vec3::ones() * 0.4;
 
-        let spot_light = SpotLight::new();
-
-        // Create resource handles from our arenas.
-
-        let cube_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cube_mesh);
-
-        let cube_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), Entity::new(cube_mesh_handle, None));
-
-        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = resources
-            .ambient_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), ambient_light);
-
-        let directional_light_handle = resources
-            .directional_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), directional_light);
-
         let point_light_handle = resources
             .point_light
             .borrow_mut()
             .insert(Uuid::new_v4(), point_light);
-
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
-
-        // Create a scene graph.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scenegraph = &mut scenes[0];
-
-        // Add an environment (node) to our scene.
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(environment_node)?;
-
-        // Add geometry nodes to our scene.
-
-        let cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(cube_entity_handle),
-        );
-
-        let cube_entity_translation = *(cube_entity_node.get_transform().translation());
-
-        scenegraph.root.add_child(cube_entity_node)?;
-
-        // Add camera and light nodes to our scene graph's root.
-
-        camera
-            .look_vector
-            .set_target_position(cube_entity_translation);
-
-        let camera_node = SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        );
-
-        scenegraph.root.add_child(camera_node)?;
 
         let mut point_light_node = SceneNode::new(
             SceneNodeType::PointLight,
@@ -210,7 +79,16 @@ fn main() -> Result<(), String> {
             z: 0.0,
         });
 
-        scenegraph.root.add_child(point_light_node)?;
+        scene.root.add_child(point_light_node)?;
+
+        // Add a spot light to the scene.
+
+        let spot_light = SpotLight::new();
+
+        let spot_light_handle = resources
+            .spot_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), spot_light);
 
         let mut spot_light_node = SceneNode::new(
             SceneNodeType::SpotLight,
@@ -224,7 +102,7 @@ fn main() -> Result<(), String> {
             z: 0.0,
         });
 
-        scenegraph.root.add_child(spot_light_node)?;
+        scene.root.add_child(spot_light_node)?;
     }
 
     let scene_context_rc = RefCell::new(scene_context);

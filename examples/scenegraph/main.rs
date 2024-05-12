@@ -12,13 +12,11 @@ use cairo::{
     entity::Entity,
     material::Material,
     matrix::Mat4,
-    mesh::{self},
+    mesh,
     pipeline::Pipeline,
     scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        context::utils::make_empty_scene,
+        light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -67,138 +65,179 @@ fn main() -> Result<(), String> {
     static BLUE_CUBE_ORIGINAL_UNIFORM_SCALE: f32 =
         GREEN_CUBE_ORIGINAL_UNIFORM_SCALE * GREEN_CUBE_ORIGINAL_UNIFORM_SCALE;
 
-    let scene_context: SceneContext = Default::default();
+    let scene_context = make_empty_scene(framebuffer_rc.borrow().width_over_height)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        // Meshes
-
-        let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
-
-        let mut red_cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
-        red_cube_mesh.object_name = Some("red_cube".to_string());
-
-        let mut green_cube_mesh = red_cube_mesh.clone();
-        green_cube_mesh.object_name = Some("green_cube".to_string());
-
-        let mut blue_cube_mesh = red_cube_mesh.clone();
-        blue_cube_mesh.object_name = Some("blue_cube".to_string());
-
-        // Checkerboard material
-
-        let mut checkerboard_material = Material::new("checkerboard".to_string());
-
-        let mut checkerboard_albedo_map = TextureMap::new(
-            "./assets/textures/checkerboard.jpg",
-            TextureMapStorageFormat::Index8(0),
-        );
-
-        checkerboard_albedo_map.load(rendering_context)?;
-
-        let checkerboard_albedo_map_handle = resources
-            .texture_u8
-            .borrow_mut()
-            .insert(Uuid::new_v4(), checkerboard_albedo_map);
-
-        checkerboard_material.albedo_map = Some(checkerboard_albedo_map_handle);
-
-        // Cube materials
-
-        let mut red_cube_material = Material::new("red".to_string());
-        red_cube_material.diffuse_color = color::RED.to_vec3() / 255.0;
-
-        let mut green_cube_material = Material::new("green".to_string());
-        green_cube_material.diffuse_color = color::GREEN.to_vec3() / 255.0;
-
-        let mut blue_cube_material = Material::new("blue".to_string());
-        blue_cube_material.diffuse_color = color::BLUE.to_vec3() / 255.0;
-
-        // Assign textures to mesh materials
-
-        plane_mesh.material_name = Some(checkerboard_material.name.clone());
-
-        red_cube_mesh.material_name = Some("red".to_string());
-        green_cube_mesh.material_name = Some("green".to_string());
-        blue_cube_mesh.material_name = Some("blue".to_string());
-
-        // Collect materials
+        // Add a textured ground plane to our scene.
 
         {
             let mut materials = resources.material.borrow_mut();
 
+            let checkerboard_material = {
+                let mut material = Material::new("checkerboard".to_string());
+
+                let mut checkerboard_albedo_map = TextureMap::new(
+                    "./assets/textures/checkerboard.jpg",
+                    TextureMapStorageFormat::Index8(0),
+                );
+
+                checkerboard_albedo_map.load(rendering_context)?;
+
+                let checkerboard_albedo_map_handle = resources
+                    .texture_u8
+                    .borrow_mut()
+                    .insert(Uuid::new_v4(), checkerboard_albedo_map);
+
+                material.albedo_map = Some(checkerboard_albedo_map_handle);
+
+                material
+            };
+
             materials.insert(checkerboard_material);
+        }
+
+        let mut plane_entity_node = {
+            let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+
+            plane_mesh.material_name = Some("checkerboard".to_string());
+
+            let plane_mesh_handle = resources
+                .mesh
+                .borrow_mut()
+                .insert(Uuid::new_v4(), plane_mesh);
+
+            let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
+
+            let plane_entity_handle = resources
+                .entity
+                .borrow_mut()
+                .insert(Uuid::new_v4(), plane_entity);
+
+            SceneNode::new(
+                SceneNodeType::Entity,
+                Default::default(),
+                Some(plane_entity_handle),
+            )
+        };
+
+        // Add some cubes to our scene.
+
+        let mut red_cube_material = Material::new("red".to_string());
+        red_cube_material.albedo = color::RED.to_vec3() / 255.0;
+
+        let mut green_cube_material = Material::new("green".to_string());
+        green_cube_material.albedo = color::GREEN.to_vec3() / 255.0;
+
+        let mut blue_cube_material = Material::new("blue".to_string());
+        blue_cube_material.albedo = color::BLUE.to_vec3() / 255.0;
+
+        {
+            let mut materials = resources.material.borrow_mut();
+
             materials.insert(red_cube_material);
             materials.insert(green_cube_material);
             materials.insert(blue_cube_material);
         }
 
-        // Assign the meshes to entities
+        // Blue cube (1x1)
 
-        let plane_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), plane_mesh);
+        let cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
 
-        let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
+        let blue_cube_entity_node = {
+            let mut mesh = cube_mesh.clone();
 
-        let red_cube_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), red_cube_mesh);
+            mesh.object_name = Some("blue_cube".to_string());
+            mesh.material_name = Some("blue".to_string());
 
-        let green_cube_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), green_cube_mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-        let blue_cube_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), blue_cube_mesh);
+            let entity = Entity::new(mesh_handle, Some("blue".to_string()));
 
-        let red_cube_entity = Entity::new(red_cube_mesh_handle, Some("red".to_string()));
-        let green_cube_entity = Entity::new(green_cube_mesh_handle, Some("green".to_string()));
-        let blue_cube_entity = Entity::new(blue_cube_mesh_handle, Some("blue".to_string()));
+            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
-        // Configure a global scene environment.
+            let mut node = SceneNode::new(
+                SceneNodeType::Entity,
+                Default::default(),
+                Some(entity_handle),
+            );
 
-        let environment: Environment = Default::default();
+            let mut scale = *(node.get_transform().scale());
+            let mut translate = *(node.get_transform().translation());
 
-        // Set up a camera for our scene.
+            scale *= 2.0 / 3.0;
+            translate.y = 4.0;
 
-        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
+            node.get_transform_mut().set_translation(translate);
+            node.get_transform_mut().set_scale(scale);
 
-        let mut camera: Camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 6.0,
-                z: -12.0,
-            },
-            Default::default(),
-            75.0,
-            aspect_ratio,
-        );
-
-        camera.movement_speed = 10.0;
-
-        // Set up some lights for our scene.
-
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.15,
+            node
         };
 
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.15,
-            direction: Vec4 {
-                x: -1.0,
-                y: -1.0,
-                z: 1.0,
-                w: 1.0,
-            },
+        // Green cube (2x2)
+
+        let mut green_cube_entity_node = {
+            let mut mesh = cube_mesh.clone();
+
+            mesh.object_name = Some("green_cube".to_string());
+            mesh.material_name = Some("green".to_string());
+
+            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+
+            let entity = Entity::new(mesh_handle, Some("green".to_string()));
+
+            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+
+            let mut node = SceneNode::new(
+                SceneNodeType::Entity,
+                Default::default(),
+                Some(entity_handle),
+            );
+
+            let mut scale = *(node.get_transform().scale());
+            let mut translate = *(node.get_transform().translation());
+
+            scale *= 2.0 / 3.0;
+            translate.y = 4.0;
+
+            node.get_transform_mut().set_translation(translate);
+            node.get_transform_mut().set_scale(scale);
+
+            node
         };
 
-        // Set up a skybox.
+        // Red cube (3x3)
+
+        let mut red_cube_entity_node = {
+            let mut mesh = cube_mesh.clone();
+
+            mesh.object_name = Some("red_cube".to_string());
+            mesh.material_name = Some("red".to_string());
+
+            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+
+            let entity = Entity::new(mesh_handle, Some("red".to_string()));
+
+            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+
+            let mut node = SceneNode::new(
+                SceneNodeType::Entity,
+                Default::default(),
+                Some(entity_handle),
+            );
+
+            let mut translate = *(node.get_transform().translation());
+
+            translate.y = 3.0;
+
+            node.get_transform_mut().set_translation(translate);
+
+            node
+        };
+
+        // Add a skybox to our scene.
 
         let mut skybox = CubeMap::new(
             [
@@ -214,95 +253,10 @@ fn main() -> Result<(), String> {
 
         skybox.load(rendering_context).unwrap();
 
-        // Set up spatial lights in our scene.
-
-        let point_light = PointLight::new();
-
-        let mut spot_light = SpotLight::new();
-
-        spot_light
-            .look_vector
-            .set_target_position(Default::default());
-
-        // Create resource handles.
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = resources
-            .ambient_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), ambient_light);
-
-        let directional_light_handle = resources
-            .directional_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), directional_light);
-
         let skybox_handle = resources
             .cubemap_u8
             .borrow_mut()
             .insert(Uuid::new_v4(), skybox);
-
-        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
-
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
-
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
-
-        let plane_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), plane_entity);
-
-        let red_cube_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), red_cube_entity);
-
-        let green_cube_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), green_cube_entity);
-
-        let blue_cube_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), blue_cube_entity);
-
-        // Create a scene graph.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scenegraph = &mut scenes[0];
-
-        // Add an environment (node) to our scene.
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
 
         let skybox_node = SceneNode::new(
             SceneNodeType::Skybox,
@@ -310,119 +264,22 @@ fn main() -> Result<(), String> {
             Some(skybox_handle),
         );
 
-        environment_node.add_child(skybox_node)?;
+        for node in scene.root.children_mut().as_mut().unwrap() {
+            if *node.get_type() == SceneNodeType::Environment {
+                node.add_child(skybox_node)?;
 
-        scenegraph.root.add_child(environment_node)?;
+                break;
+            }
+        }
 
-        // Add geometry nodes to our scene.
+        // Add a point light to our scene.
 
-        // Blue cube (1x1)
+        let point_light = PointLight::new();
 
-        let mut blue_cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(blue_cube_entity_handle),
-        );
-
-        let mut blue_cube_entity_scale = *(blue_cube_entity_node.get_transform().scale());
-        let mut blue_cube_entity_translation =
-            *(blue_cube_entity_node.get_transform().translation());
-
-        blue_cube_entity_scale *= 2.0 / 3.0;
-        blue_cube_entity_translation.y = 4.0;
-
-        blue_cube_entity_node
-            .get_transform_mut()
-            .set_translation(blue_cube_entity_translation);
-
-        blue_cube_entity_node
-            .get_transform_mut()
-            .set_scale(blue_cube_entity_scale);
-
-        // Green cube (2x2)
-
-        let mut green_cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(green_cube_entity_handle),
-        );
-
-        let mut green_cube_entity_scale = *(green_cube_entity_node.get_transform().scale());
-        let mut green_cube_entity_translation =
-            *(green_cube_entity_node.get_transform().translation());
-
-        green_cube_entity_scale *= 2.0 / 3.0;
-        green_cube_entity_translation.y = 4.0;
-
-        green_cube_entity_node
-            .get_transform_mut()
-            .set_translation(green_cube_entity_translation);
-
-        green_cube_entity_node
-            .get_transform_mut()
-            .set_scale(green_cube_entity_scale);
-
-        green_cube_entity_node.add_child(blue_cube_entity_node)?;
-
-        // Add a spot light as a child of the green cube.
-
-        let mut spot_light_node = SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        );
-
-        spot_light_node.get_transform_mut().set_translation(Vec3 {
-            x: 0.0,
-            y: 10.0,
-            z: 0.0,
-        });
-
-        green_cube_entity_node.add_child(spot_light_node)?;
-
-        // Red cube (3x3)
-
-        let mut red_cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(red_cube_entity_handle),
-        );
-
-        let mut red_cube_entity_translation = *(red_cube_entity_node.get_transform().translation());
-
-        red_cube_entity_translation.y = 3.0;
-
-        red_cube_entity_node
-            .get_transform_mut()
-            .set_translation(red_cube_entity_translation);
-
-        // Add the green cube as a child of the red cube.
-
-        red_cube_entity_node.add_child(green_cube_entity_node)?;
-
-        // Add the red cube as a child of the ground plane.
-
-        let mut plane_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(plane_entity_handle),
-        );
-
-        plane_entity_node.add_child(red_cube_entity_node)?;
-
-        // Add camera and light nodes to our scene graph's root.
-
-        camera
-            .look_vector
-            .set_target_position(red_cube_entity_translation);
-
-        let camera_node = SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        );
-
-        scenegraph.root.add_child(camera_node)?;
+        let point_light_handle = resources
+            .point_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), point_light);
 
         let point_light_node = SceneNode::new(
             SceneNodeType::PointLight,
@@ -432,7 +289,70 @@ fn main() -> Result<(), String> {
 
         plane_entity_node.add_child(point_light_node)?;
 
-        scenegraph.root.add_child(plane_entity_node)?;
+        // Add a spot light to our scene.
+
+        let mut spot_light = SpotLight::new();
+
+        spot_light
+            .look_vector
+            .set_target_position(Default::default());
+
+        let spot_light_handle = resources
+            .spot_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), spot_light);
+
+        let mut spot_light_node = SceneNode::new(
+            SceneNodeType::SpotLight,
+            Default::default(),
+            Some(spot_light_handle),
+        );
+
+        // Add a spot light as a child of the green cube.
+
+        spot_light_node.get_transform_mut().set_translation(Vec3 {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        });
+
+        green_cube_entity_node.add_child(spot_light_node)?;
+
+        // Add the blue cube as a child of the green cube.
+
+        green_cube_entity_node.add_child(blue_cube_entity_node)?;
+
+        // Add the green cube as a child of the red cube.
+
+        red_cube_entity_node.add_child(green_cube_entity_node)?;
+
+        // Add the red cube as a child of the ground plane.
+
+        plane_entity_node.add_child(red_cube_entity_node)?;
+
+        scene.root.add_child(plane_entity_node)?;
+
+        // Adjust our scene's default camera.
+
+        if let Some(camera_handle) = scene
+            .root
+            .find(&mut |node| *node.get_type() == SceneNodeType::Camera)
+            .unwrap()
+        {
+            let mut camera_arena = resources.camera.borrow_mut();
+
+            if let Ok(entry) = camera_arena.get_mut(&camera_handle) {
+                let camera = &mut entry.item;
+
+                camera.look_vector.set_position(Vec3 {
+                    x: 0.0,
+                    y: 24.0,
+                    z: -32.0,
+                });
+
+                camera.look_vector.set_target_position(Default::default());
+            }
+        }
     }
 
     let scene_context_rc = RefCell::new(scene_context);

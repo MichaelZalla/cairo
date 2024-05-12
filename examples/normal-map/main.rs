@@ -11,13 +11,11 @@ use cairo::{
     entity::Entity,
     material::Material,
     matrix::Mat4,
-    mesh::{self},
+    mesh,
     pipeline::Pipeline,
     scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        context::utils::make_empty_scene,
+        light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -59,20 +57,15 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context: SceneContext = Default::default();
+    let scene_context = make_empty_scene(framebuffer_rc.borrow().width_over_height)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        // Meshes
-
-        let brick_wall_mesh = mesh::primitive::cube::generate(4.0, 4.0, 4.0);
-
-        // Bricks material
+        // Brick wall material.
 
         let mut brick_material = Material::new("brick".to_string());
-
-        brick_material.specular_exponent = 32;
 
         brick_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
@@ -100,63 +93,35 @@ fn main() -> Result<(), String> {
 
         brick_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
-        // Assign the meshes to entities
-
-        let brick_wall_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), brick_wall_mesh);
-
-        let brick_wall_entity = Entity::new(
-            brick_wall_mesh_handle,
-            Some(brick_material.name.to_string()),
-        );
-
-        // Collect materials
-
         {
             let mut materials = resources.material.borrow_mut();
 
             materials.insert(brick_material);
         }
 
-        // Configure a global scene environment.
+        // Add a brick wall to our scene.
 
-        let environment: Environment = Default::default();
+        let brick_wall_mesh = mesh::primitive::cube::generate(1.5, 1.5, 1.5);
 
-        // Set up a camera for our scene.
+        let brick_wall_mesh_handle = resources
+            .mesh
+            .borrow_mut()
+            .insert(Uuid::new_v4(), brick_wall_mesh);
 
-        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
+        let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
 
-        let mut camera: Camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -8.0,
-            },
+        let brick_wall_entity_handle = resources
+            .entity
+            .borrow_mut()
+            .insert(Uuid::new_v4(), brick_wall_entity);
+
+        scene.root.add_child(SceneNode::new(
+            SceneNodeType::Entity,
             Default::default(),
-            75.0,
-            aspect_ratio,
-        );
+            Some(brick_wall_entity_handle),
+        ))?;
 
-        camera.movement_speed = 5.0;
-
-        // Set up some lights for our scene.
-
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.1,
-        };
-
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.15,
-            direction: Vec4 {
-                x: 0.0,
-                y: 1.0,
-                z: 1.0,
-                w: 1.0,
-            }
-            .as_normal(),
-        };
+        // Add a point light to our scene.
 
         let mut point_light = PointLight::new();
 
@@ -169,93 +134,27 @@ fn main() -> Result<(), String> {
         point_light.linear_attenuation = 0.35;
         point_light.quadratic_attenuation = 0.44;
 
-        let spot_light = SpotLight::new();
-
-        // Create resource handles from our arenas.
-
-        let brick_wall_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), brick_wall_entity);
-
-        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = resources
-            .ambient_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), ambient_light);
-
-        let directional_light_handle = resources
-            .directional_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), directional_light);
-
         let point_light_handle = resources
             .point_light
             .borrow_mut()
             .insert(Uuid::new_v4(), point_light);
+
+        scene.root.add_child(SceneNode::new(
+            SceneNodeType::PointLight,
+            Default::default(),
+            Some(point_light_handle),
+        ))?;
+
+        // Add a spot light to our scene.
+
+        let spot_light = SpotLight::new();
 
         let spot_light_handle = resources
             .spot_light
             .borrow_mut()
             .insert(Uuid::new_v4(), spot_light);
 
-        // Create a scene graph.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scenegraph = &mut scenes[0];
-
-        // Add an environment (node) to our scene.
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(environment_node)?;
-
-        // Add geometry nodes to our scene.
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(brick_wall_entity_handle),
-        ))?;
-
-        // Add camera and light nodes to our scene graph's root.
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
+        scene.root.add_child(SceneNode::new(
             SceneNodeType::SpotLight,
             Default::default(),
             Some(spot_light_handle),

@@ -8,17 +8,12 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
-    entity::Entity,
-    material::Material,
     matrix::Mat4,
-    mesh::{self},
     pipeline::Pipeline,
     resource::handle::Handle,
     scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        context::utils::make_cube_scene,
+        light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -28,10 +23,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::{
-        cubemap::CubeMap,
-        map::{TextureMap, TextureMapStorageFormat},
-    },
+    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -62,124 +54,83 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context: SceneContext = Default::default();
+    let scene_context = make_cube_scene(framebuffer_rc.borrow().width_over_height)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
+        let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        // Meshes
+        // Add a skybox to our scene.
 
-        let cube_mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+        let skybox_node = {
+            // Option 1. Skybox as a set of 6 separate textures.
 
-        // Skybox (environment) textures
+            let mut skybox: CubeMap = CubeMap::new(
+                [
+                    "examples/skybox/assets/sides/front.jpg",
+                    "examples/skybox/assets/sides/back.jpg",
+                    "examples/skybox/assets/sides/top.jpg",
+                    "examples/skybox/assets/sides/bottom.jpg",
+                    "examples/skybox/assets/sides/left.jpg",
+                    "examples/skybox/assets/sides/right.jpg",
+                ],
+                TextureMapStorageFormat::RGB24,
+            );
 
-        // Option 1. Skybox as a set of 6 separate textures.
+            // Option 2. Skybox as one horizontal cross texture.
 
-        let mut skybox = CubeMap::new(
-            [
-                "examples/skybox/assets/sides/front.jpg",
-                "examples/skybox/assets/sides/back.jpg",
-                "examples/skybox/assets/sides/top.jpg",
-                "examples/skybox/assets/sides/bottom.jpg",
-                "examples/skybox/assets/sides/left.jpg",
-                "examples/skybox/assets/sides/right.jpg",
-            ],
-            TextureMapStorageFormat::RGB24,
-        );
+            // let mut skybox: CubeMap = CubeMap::cross(
+            //     "examples/skybox/assets/cross/horizontal_cross.png",
+            //     TextureMapStorageFormat::RGB24,
+            // );
 
-        // let mut skybox = CubeMap::cross(
-        //     "examples/skybox/assets/cross/horizontal_cross.png",
-        //     // "examples/skybox/assets/cross/vertical_cross.png",
-        //     TextureMapStorageFormat::RGB24,
-        // );
+            // Option 3. Skybox as one vertical cross texture.
 
-        // Option 2. Skybox as one horizontal cross texture.
+            // let mut skybox: CubeMap = CubeMap::cross(
+            //     "examples/skybox/assets/cross/vertical_cross.png",
+            //     TextureMapStorageFormat::RGB24,
+            // );
 
-        // let mut skybox = CubeMap::from_cross("examples/skybox/assets/temple.png");
+            skybox.load(rendering_context).unwrap();
 
-        // Option 3. Skybox as one vertical cross texture.
+            let skybox_handle = resources
+                .cubemap_u8
+                .borrow_mut()
+                .insert(Uuid::new_v4(), skybox);
 
-        // let mut skybox = CubeMap::from_cross("examples/skybox/assets/vertical_cross.png");
-
-        skybox.load(rendering_context).unwrap();
-
-        // Checkerboard material
-
-        let mut checkerboard_material = Material::new("checkerboard".to_string());
-
-        let mut checkerboard_albedo_map = TextureMap::new(
-            "./assets/textures/checkerboard.jpg",
-            TextureMapStorageFormat::Index8(0),
-        );
-
-        checkerboard_albedo_map.load(rendering_context)?;
-
-        let checkerboard_albedo_map_handle = resources
-            .texture_u8
-            .borrow_mut()
-            .insert(Uuid::new_v4(), checkerboard_albedo_map);
-
-        checkerboard_material.albedo_map = Some(checkerboard_albedo_map_handle);
-
-        // Assign the meshes to entities
-
-        let cube_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cube_mesh);
-
-        let cube_entity = Entity::new(cube_mesh_handle, Some(checkerboard_material.name.clone()));
-
-        // Collect materials
-
-        resources
-            .material
-            .borrow_mut()
-            .insert(checkerboard_material);
-
-        // Configure a global scene environment.
-
-        let environment: Environment = Default::default();
-
-        // Set up a camera for our scene.
-
-        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
-
-        let mut camera: Camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 8.0,
-                z: -12.0,
-            },
-            Vec3 {
-                y: 3.0,
-                ..Default::default()
-            },
-            75.0,
-            aspect_ratio,
-        );
-
-        camera.movement_speed = 10.0;
-
-        // Set up some lights for our scene.
-
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.1,
+            SceneNode::new(
+                SceneNodeType::Skybox,
+                Default::default(),
+                Some(skybox_handle),
+            )
         };
 
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.3,
-            direction: Vec4 {
-                x: 0.25,
-                y: -1.0,
-                z: -0.25,
-                w: 1.0,
-            },
-        };
+        for node in scene.root.children_mut().as_mut().unwrap() {
+            if *node.get_type() == SceneNodeType::Environment {
+                node.add_child(skybox_node)?;
+
+                break;
+            }
+        }
+
+        // Add a point light to our scene.
 
         let mut point_light = PointLight::new();
 
         point_light.intensities = Vec3::ones() * 0.4;
+
+        let point_light_handle = resources
+            .point_light
+            .borrow_mut()
+            .insert(Uuid::new_v4(), point_light);
+
+        scene.root.add_child(SceneNode::new(
+            SceneNodeType::PointLight,
+            Default::default(),
+            Some(point_light_handle),
+        ))?;
+
+        // Add a spot light to our scene.
 
         let mut spot_light = SpotLight::new();
 
@@ -188,107 +139,12 @@ fn main() -> Result<(), String> {
             ..spot_light.look_vector.get_position()
         });
 
-        // Create resource handles from our arenas.
-
-        let cube_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cube_entity);
-
-        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = resources
-            .ambient_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), ambient_light);
-
-        let directional_light_handle = resources
-            .directional_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), directional_light);
-
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
-
         let spot_light_handle = resources
             .spot_light
             .borrow_mut()
             .insert(Uuid::new_v4(), spot_light);
 
-        let skybox_handle = resources
-            .cubemap_u8
-            .borrow_mut()
-            .insert(Uuid::new_v4(), skybox);
-
-        // Create a scene graph.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scenegraph = &mut scenes[0];
-
-        // Add an environment (node) to our scene.
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::Skybox,
-            Default::default(),
-            Some(skybox_handle),
-        ))?;
-
-        scenegraph.root.add_child(environment_node)?;
-
-        let mut cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(cube_entity_handle),
-        );
-
-        cube_entity_node.get_transform_mut().set_translation(Vec3 {
-            y: 3.0,
-            ..Default::default()
-        });
-
-        scenegraph.root.add_child(cube_entity_node)?;
-
-        // Add camera and light nodes to our scene graph's root.
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
+        scene.root.add_child(SceneNode::new(
             SceneNodeType::SpotLight,
             Default::default(),
             Some(spot_light_handle),

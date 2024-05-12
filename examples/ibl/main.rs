@@ -65,6 +65,8 @@ fn main() -> Result<(), String> {
         let scene_context = spheres_scene_context.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
+        // Add a skybox to our scene.
+
         for node in scene.root.children_mut().as_mut().unwrap() {
             if node.is_type(SceneNodeType::Environment) {
                 // No handle for now.

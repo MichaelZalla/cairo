@@ -4,109 +4,37 @@ use cairo::{
     material::Material,
     mesh::obj::load::load_obj,
     scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight},
+        context::{utils::make_empty_scene, SceneContext},
+        light::PointLight,
         node::{SceneNode, SceneNodeType},
     },
     transform::Transform3D,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::Vec3,
 };
+
 use uuid::Uuid;
 
 pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
-    let scene_context: SceneContext = Default::default();
+    let scene_context = make_empty_scene(camera_aspect_ratio)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        let environment: Environment = Default::default();
+        // Move the camera backwards.
 
-        // Create resource handles from our arenas.
+        {
+            for option in resources.camera.borrow_mut().entries.as_mut_slice() {
+                if let Some(entry) = option {
+                    let camera = &mut entry.item;
 
-        let camera_handle = {
-            let mut camera = Camera::from_perspective(
-                Vec3 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: -16.0,
-                },
-                vec3::FORWARD,
-                75.0,
-                camera_aspect_ratio,
-            );
-
-            camera.movement_speed = 2.0;
-
-            resources.camera.borrow_mut().insert(Uuid::new_v4(), camera)
-        };
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = {
-            let ambient_light = AmbientLight {
-                intensities: Vec3::ones() * 0.15,
-            };
-
-            resources
-                .ambient_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), ambient_light)
-        };
-
-        let directional_light_handle = {
-            let directional_light = DirectionalLight {
-                intensities: Vec3::ones() * 0.15,
-                direction: Vec4 {
-                    x: 0.25,
-                    y: -1.0,
-                    z: -0.25,
-                    w: 1.0,
+                    camera.look_vector.set_position(Vec3 {
+                        z: -16.0,
+                        ..Default::default()
+                    });
                 }
-                .as_normal(),
-            };
-
-            resources
-                .directional_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), directional_light)
-        };
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
-
-        scene.root.add_child(environment_node)?;
-
-        let camera_node = SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        );
-
-        scene.root.add_child(camera_node)?;
+            }
+        }
 
         // Generate a 2x2 grid of point lights.
 
@@ -119,8 +47,8 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
                 z: -3.0,
             };
 
-            light.intensities = Vec3::ones() * 15.0;
-            light.specular_intensity = 20.0;
+            light.intensities = Vec3::ones() * 1.0;
+            light.specular_intensity = 1.0;
 
             light.constant_attenuation = 1.0;
             light.linear_attenuation = 0.09;
@@ -154,8 +82,8 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
 
         // Generate a grid of mesh instances.
 
-        static GRID_ROWS: usize = 6;
-        static GRID_COLUMNS: usize = 6;
+        static GRID_ROWS: usize = 5;
+        static GRID_COLUMNS: usize = 5;
         static SPACING: f32 = 1.0;
 
         static GRID_HEIGHT: f32 = GRID_ROWS as f32 + (GRID_ROWS as f32 - 1.0) * SPACING;

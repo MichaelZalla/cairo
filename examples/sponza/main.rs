@@ -3,29 +3,18 @@ extern crate sdl2;
 use std::cell::RefCell;
 
 use sdl2::keyboard::Keycode;
-use uuid::Uuid;
 
 use cairo::{
     app::{resolution::RESOLUTION_960_BY_540, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
-    color,
     debug::message::DebugMessageBuffer,
     device::{GameControllerState, KeyboardState, MouseState},
-    entity::Entity,
     font::{cache::FontCache, FontInfo},
     graphics::Graphics,
     matrix::Mat4,
-    mesh::{self},
     pipeline::{zbuffer::DepthTestMethod, Pipeline},
-    resource::handle::Handle,
-    scene::{
-        camera::Camera,
-        context::SceneContext,
-        environment::Environment,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+    scene::node::{
+        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
     },
     shader::context::ShaderContext,
     shaders::{
@@ -39,12 +28,12 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
+
+pub mod scene;
+
+use scene::make_sponza_scene;
 
 static SPONZA_CENTER: Vec3 = Vec3 {
     x: -572.3847 + 500.0,
@@ -95,206 +84,7 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context: SceneContext = Default::default();
-
-    {
-        let resources = scene_context.resources.borrow_mut();
-
-        let result = mesh::obj::load::load_obj(
-            "./examples/sponza/assets/sponza.obj",
-            &mut resources.texture_u8.borrow_mut(),
-        );
-
-        let _atrium_geometry = result.0;
-        let atrium_meshes = result.1;
-        let mut atrium_materials = result.2;
-
-        match &mut atrium_materials {
-            Some(cache) => {
-                for material in cache.values_mut() {
-                    material
-                        .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
-
-                    resources.material.borrow_mut().insert(material.to_owned());
-                }
-            }
-            None => (),
-        }
-
-        // Assign the meshes to entities
-
-        (0..atrium_meshes.len()).for_each(|i| {
-            let material_name = atrium_meshes[i].material_name.clone();
-
-            let mesh_handle = resources
-                .mesh
-                .borrow_mut()
-                .insert(Uuid::new_v4(), atrium_meshes[i].to_owned());
-
-            resources
-                .entity
-                .borrow_mut()
-                .insert(Uuid::new_v4(), Entity::new(mesh_handle, material_name));
-        });
-
-        // Configure a global scene environment.
-
-        let environment: Environment = Default::default();
-
-        // Set up a camera for our scene.
-
-        let camera_position = Vec3 {
-            x: 1000.0,
-            y: 300.0,
-            z: 0.0,
-        };
-
-        let aspect_ratio = framebuffer_rc.borrow().width_over_height;
-
-        let mut camera: Camera = Camera::from_perspective(
-            camera_position,
-            camera_position - vec3::RIGHT,
-            75.0,
-            aspect_ratio,
-        );
-
-        camera.movement_speed = 300.0;
-
-        camera.set_projection_z_far(10000.0);
-
-        // Set up some lights for our scene.
-
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.1,
-        };
-
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.1,
-            direction: Vec4::new(vec3::UP * -1.0, 1.0).as_normal(),
-        };
-
-        let mut point_light = PointLight::new();
-
-        point_light.intensities = color::BLUE.to_vec3() / 255.0 * 15.0;
-
-        point_light.specular_intensity = 1.0;
-
-        point_light.constant_attenuation = 1.0;
-        point_light.linear_attenuation = 0.007;
-        point_light.quadratic_attenuation = 0.0002;
-
-        let mut spot_light = SpotLight::new();
-
-        spot_light.intensities = color::RED.to_vec3() / 255.0 * 15.0;
-
-        spot_light.constant_attenuation = 1.0;
-        spot_light.linear_attenuation = 0.007;
-        spot_light.quadratic_attenuation = 0.0002;
-
-        // Skybox
-
-        let mut skybox = CubeMap::cross(
-            "examples/skybox/assets/cross/horizontal_cross.png",
-            TextureMapStorageFormat::RGB24,
-        );
-
-        skybox.load(rendering_context).unwrap();
-
-        let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
-
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
-
-        let ambient_light_handle = resources
-            .ambient_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), ambient_light);
-
-        let directional_light_handle = resources
-            .directional_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), directional_light);
-
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
-
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
-
-        // Create a scene graph.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scenegraph = &mut scenes[0];
-
-        // Add an environment (node) to our scene.
-
-        let mut environment_node = SceneNode::new(
-            SceneNodeType::Environment,
-            Default::default(),
-            Some(environment_handle),
-        );
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
-
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(environment_node)?;
-
-        // Add geometry nodes to our scene.
-
-        for (index, entry) in resources.entity.borrow().entries.iter().enumerate() {
-            match entry {
-                Some(entry) => {
-                    let handle = Handle {
-                        index,
-                        uuid: entry.uuid,
-                    };
-
-                    scenegraph.root.add_child(SceneNode::new(
-                        SceneNodeType::Entity,
-                        Default::default(),
-                        Some(handle),
-                    ))?;
-                }
-                None => (),
-            }
-        }
-
-        // Add camera and light nodes to our scene graph's root.
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        scenegraph.root.add_child(SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        ))?;
-    }
+    let scene_context = make_sponza_scene(rendering_context, &framebuffer_rc.borrow())?;
 
     let scene_context_rc = RefCell::new(scene_context);
 
