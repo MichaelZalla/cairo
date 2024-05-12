@@ -1,5 +1,7 @@
 use std::{cell::RefCell, path::Path};
 
+use uuid::Uuid;
+
 use cairo::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     hdr::load::load_hdr,
@@ -21,8 +23,6 @@ use cairo::{
     },
 };
 
-use uuid::Uuid;
-
 use crate::{
     scene,
     shaders::{
@@ -33,9 +33,12 @@ use crate::{
     },
 };
 
-pub fn bake_diffuse_irradiance_for_hdri(
-    hdr_filepath: &Path,
-) -> Result<(CubeMap<Vec3>, CubeMap<Vec3>), String> {
+pub struct HDRBakeResult {
+    pub radiance: CubeMap<Vec3>,
+    pub diffuse_irradiance: CubeMap<Vec3>,
+}
+
+pub fn bake_diffuse_irradiance_for_hdri(hdr_filepath: &Path) -> Result<HDRBakeResult, String> {
     // Set up a simple cube scene, that we can use to render each side of a cubemap.
 
     let cube_scene_context = scene::make_cube_scene(1.0).unwrap();
@@ -89,7 +92,7 @@ pub fn bake_diffuse_irradiance_for_hdri(
 
     // Generate a radiance cubemap texture from our HDR texture.
 
-    let radiance_cubemap = {
+    let radiance = {
         {
             let mut framebuffer = cubemap_face_framebuffer_rc.borrow_mut();
 
@@ -116,14 +119,14 @@ pub fn bake_diffuse_irradiance_for_hdri(
                 .borrow_mut()
                 .cubemap_vec3
                 .borrow_mut()
-                .insert(Uuid::new_v4(), radiance_cubemap.clone())
+                .insert(Uuid::new_v4(), radiance.clone())
         };
     }
 
     // Generate an (approximate) irradiance cubemap texture from our radiance
     // cubemap texture.
 
-    let irradiance_cubemap = {
+    let diffuse_irradiance = {
         {
             let mut framebuffer = cubemap_face_framebuffer_rc.borrow_mut();
 
@@ -139,7 +142,10 @@ pub fn bake_diffuse_irradiance_for_hdri(
         )
     };
 
-    Ok((radiance_cubemap, irradiance_cubemap))
+    Ok(HDRBakeResult {
+        radiance,
+        diffuse_irradiance,
+    })
 }
 
 fn render_radiance_to_cubemap(

@@ -90,16 +90,15 @@ fn main() -> Result<(), String> {
         let mut skybox_hdr = resources.cubemap_vec3.borrow_mut();
 
         for hdr_path in hdr_paths {
-            let (radiance_cubemap, irradiance_cubemap) =
-                bake_diffuse_irradiance_for_hdri(hdr_path).unwrap();
+            let bake_result = bake_diffuse_irradiance_for_hdri(hdr_path).unwrap();
 
             let radiance_cubemap_handle = skybox_hdr
                 .borrow_mut()
-                .insert(Uuid::new_v4(), radiance_cubemap.clone());
+                .insert(Uuid::new_v4(), bake_result.radiance.to_owned());
 
             let irradiance_cubemap_handle = skybox_hdr
                 .borrow_mut()
-                .insert(Uuid::new_v4(), irradiance_cubemap);
+                .insert(Uuid::new_v4(), bake_result.diffuse_irradiance.to_owned());
 
             radiance_irradiance_handles.push((radiance_cubemap_handle, irradiance_cubemap_handle));
         }
