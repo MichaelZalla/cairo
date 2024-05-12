@@ -25,3 +25,4 @@ Cargo.lock
 *.svg
 *.tga
 *.tif
+*.hdr
