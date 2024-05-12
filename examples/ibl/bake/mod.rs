@@ -3,7 +3,7 @@ use std::{cell::RefCell, path::Path};
 use uuid::Uuid;
 
 use cairo::{
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::framebuffer::Framebuffer,
     hdr::load::load_hdr,
     material::Material,
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
@@ -16,7 +16,7 @@ use cairo::{
     },
     texture::{
         cubemap::{CubeMap, CUBE_MAP_SIDES},
-        map::{TextureBuffer, TextureMap},
+        map::TextureBuffer,
     },
     vec::{
         vec3::{self, Vec3},
@@ -187,7 +187,7 @@ fn render_radiance_to_cubemap(
             .set_active_hdr_map(Some(*hdr_texture_handle));
     }
 
-    let mut cubemap = make_cubemap(framebuffer_rc, false).unwrap();
+    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc, false).unwrap();
 
     render_scene_to_cubemap(
         &mut cubemap,
@@ -236,7 +236,7 @@ fn render_irradiance_to_cubemap(
             .set_active_ambient_radiance_map(Some(*radiance_cubemap_texture_handle));
     }
 
-    let mut cubemap = make_cubemap(framebuffer_rc, false).unwrap();
+    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc, false).unwrap();
 
     render_scene_to_cubemap(
         &mut cubemap,
@@ -317,7 +317,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
             .set_active_ambient_radiance_map(Some(*radiance_cubemap_texture_handle));
     }
 
-    let mut cubemap = make_cubemap(framebuffer_rc, true).unwrap();
+    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc, true).unwrap();
 
     let lods = cubemap.sides[0].levels.len();
 
@@ -427,35 +427,4 @@ fn render_scene_to_cubemap(
             Err(e) => panic!("{}", e),
         }
     }
-}
-
-fn make_cubemap(
-    framebuffer_rc: &'static RefCell<Framebuffer>,
-    generate_mipmaps: bool,
-) -> Result<CubeMap<Vec3>, String> {
-    let cubemap_size = {
-        let framebuffer = framebuffer_rc.borrow();
-
-        debug_assert_eq!(framebuffer.width, framebuffer.height);
-
-        framebuffer.width
-    };
-
-    let mut texture_map = TextureMap::from_buffer(
-        cubemap_size,
-        cubemap_size,
-        Buffer2D::<Vec3>::new(cubemap_size, cubemap_size, None),
-    );
-
-    let mut cubemap: CubeMap<Vec3> = Default::default();
-
-    if generate_mipmaps {
-        texture_map.generate_mipmaps()?;
-    }
-
-    for side_index in 0..6 {
-        cubemap.sides[side_index] = texture_map.clone();
-    }
-
-    Ok(cubemap)
 }

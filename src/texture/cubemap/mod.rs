@@ -1,10 +1,13 @@
-use std::fmt::{self, Debug};
+use std::{
+    cell::RefCell,
+    fmt::{self, Debug},
+};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
     app::context::ApplicationRenderingContext,
-    buffer::Buffer2D,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     color::{self, Color},
     serde::PostDeserialize,
     texture::{map::TextureBuffer, sample::sample_nearest_u8},
@@ -213,6 +216,37 @@ impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
 }
 
 impl CubeMap<Vec3> {
+    pub fn from_framebuffer(
+        framebuffer_rc: &'static RefCell<Framebuffer>,
+        generate_mipmaps: bool,
+    ) -> Result<Self, String> {
+        let cubemap_size = {
+            let framebuffer = framebuffer_rc.borrow();
+
+            debug_assert_eq!(framebuffer.width, framebuffer.height);
+
+            framebuffer.width
+        };
+
+        let mut texture_map = TextureMap::from_buffer(
+            cubemap_size,
+            cubemap_size,
+            Buffer2D::<Vec3>::new(cubemap_size, cubemap_size, None),
+        );
+
+        let mut cubemap: CubeMap<Vec3> = Default::default();
+
+        if generate_mipmaps {
+            texture_map.generate_mipmaps()?;
+        }
+
+        for side_index in 0..6 {
+            cubemap.sides[side_index] = texture_map.clone();
+        }
+
+        Ok(cubemap)
+    }
+
     pub fn sample_nearest(&self, direction: &Vec4, level_index: Option<usize>) -> Vec3 {
         let (side, uv) = self.get_uv_for_direction(direction);
 
