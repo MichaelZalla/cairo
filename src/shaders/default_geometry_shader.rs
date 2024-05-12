@@ -357,8 +357,8 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 }
 
                 // Roughness
-                match material.roughness_map {
-                    Some(handle) => match resources.texture_u8.borrow().get(&handle) {
+                match (material.roughness_map, options.roughness_mapping_active) {
+                    (Some(handle), true) => match resources.texture_u8.borrow().get(&handle) {
                         Ok(entry) => {
                             let map = &entry.item;
 
@@ -374,7 +374,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
                         }
                     },
-                    None => {
+                    _ => {
                         out.roughness = material.roughness;
                     }
                 }

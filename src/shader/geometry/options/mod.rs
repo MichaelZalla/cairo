@@ -8,6 +8,7 @@ pub struct GeometryShaderOptions {
     pub trilinear_active: bool,
     pub ambient_occlusion_mapping_active: bool,
     pub base_color_mapping_active: bool,
+    pub roughness_mapping_active: bool,
     pub metallic_mapping_active: bool,
     pub normal_mapping_active: bool,
     pub displacement_mapping_active: bool,
@@ -22,6 +23,7 @@ impl Default for GeometryShaderOptions {
             trilinear_active: false,
             ambient_occlusion_mapping_active: false,
             base_color_mapping_active: true,
+            roughness_mapping_active: true,
             metallic_mapping_active: true,
             normal_mapping_active: false,
             displacement_mapping_active: false,
@@ -88,6 +90,18 @@ impl GeometryShaderOptions {
                     println!(
                         "Displacement mapping: {}",
                         if self.displacement_mapping_active {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    )
+                }
+                Keycode::R { .. } => {
+                    self.roughness_mapping_active = !self.roughness_mapping_active;
+
+                    println!(
+                        "Roughness mapping: {}",
+                        if self.roughness_mapping_active {
                             "On"
                         } else {
                             "Off"
