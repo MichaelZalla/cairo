@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::color;
-use crate::physics::pbr::{self, cook_torrance_direct};
+use crate::physics::pbr::{self, brdf::cook_torrance_direct};
 use crate::serde::PostDeserialize;
 use crate::shader::geometry::sample::GeometrySample;
 use crate::transform::look_vector::LookVector;
@@ -32,7 +32,7 @@ fn contribute_pbr(
 
         let halfway_likeness_to_view = halfway.dot(direction_to_view_position);
 
-        let fresnel = pbr::fresnel_schlick_direct(halfway_likeness_to_view, f0);
+        let fresnel = pbr::brdf::fresnel_schlick_direct(halfway_likeness_to_view, f0);
 
         // Rendering equation
 

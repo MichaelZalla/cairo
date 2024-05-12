@@ -1,7 +1,7 @@
 use crate::{
     animation::lerp,
     color::Color,
-    physics::pbr::fresnel_schlick_indirect,
+    physics::pbr::brdf::fresnel_schlick_indirect,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
