@@ -93,32 +93,45 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                             // See: https://benhouston3d.com/blog/extended-wavefront-obj-mtl-for-pbr/
                             //
 
-                            // Diffuse color
+                            // Diffuse / albedo
                             "kd" => {
                                 // (r,g,b)
                                 // Example:
                                 // Kd 0.5880 0.5880 0.5880
 
-                                cache
+                                let material = cache
                                     .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .diffuse_color = next_rgb(&mut line_tokens);
+                                    .unwrap();
+
+                                let color = next_rgb(&mut line_tokens);
+
+                                material.diffuse_color = color;
+                                material.albedo = color;
                             }
 
-                            // Diffuse color map
+                            // Diffuse / albedo map
                             "map_kd" => {
                                 // [filepath]
                                 // Example:
                                 // map_Kd cube.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    diffuse_color_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.diffuse_color_map = Some(texture_map_handle);
+                                material.albedo_map = Some(texture_map_handle);
                             }
 
                             // Emissive color
@@ -294,23 +307,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Ka cube.png
 
-                                // create_and_set_material_map!(
-                                //     line_tokens,
-                                //     mtl_file_path,
-                                //     texture_arena,
-                                //     cache,
-                                //     current_material_name,
-                                //     ambient_color_map
-                                // );
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    albedo_map
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.ambient_color_map = Some(texture_map_handle);
                             }
 
                             // Specular exponent

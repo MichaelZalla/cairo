@@ -77,29 +77,28 @@ fn main() -> Result<(), String> {
 
         let mut checkerboard_material = Material::new("checkerboard".to_string());
 
-        let mut checkerboard_diffuse_map = TextureMap::new(
-            &"./assets/textures/checkerboard.jpg",
+        let mut checkerboard_albedo_map = TextureMap::new(
+            "./assets/textures/checkerboard.jpg",
             TextureMapStorageFormat::Index8(0),
         );
 
-        checkerboard_diffuse_map.load(rendering_context)?;
+        checkerboard_albedo_map.load(rendering_context)?;
 
-        let checkerboard_diffuse_map_handle = resources
+        let checkerboard_albedo_map_handle = resources
             .texture_u8
             .borrow_mut()
-            .insert(Uuid::new_v4(), checkerboard_diffuse_map);
+            .insert(Uuid::new_v4(), checkerboard_albedo_map);
 
-        checkerboard_material.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
-        checkerboard_material.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.albedo_map = Some(checkerboard_albedo_map_handle);
 
         // Lava material
 
         let mut lava_material = Material::new("container".to_string());
 
-        lava_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
+        lava_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/post-effects/assets/lava.png",
+                "./examples/post-effects/assets/lava.png",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -107,7 +106,7 @@ fn main() -> Result<(), String> {
         lava_material.emissive_color_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/post-effects/assets/lava_emissive.png",
+                "./examples/post-effects/assets/lava_emissive.png",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));

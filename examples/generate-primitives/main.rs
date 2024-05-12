@@ -95,7 +95,7 @@ fn main() -> Result<(), String> {
 
     static LIGHT_GRID_SUBDIVISIONS: usize = 1;
     static LIGHT_GRID_SIZE: f32 = 20.0;
-    static POINT_LIGHTS_COUNT: usize = (LIGHT_GRID_SUBDIVISIONS + 1).pow(2) as usize;
+    static POINT_LIGHTS_COUNT: usize = (LIGHT_GRID_SUBDIVISIONS + 1).pow(2);
 
     let scene_context: SceneContext = Default::default();
 
@@ -113,36 +113,32 @@ fn main() -> Result<(), String> {
 
         let mut checkerboard_mat = Material::new("checkerboard".to_string());
 
-        let mut checkerboard_diffuse_color_map = TextureMap::new(
-            &"./assets/textures/checkerboard.jpg",
+        let mut checkerboard_albedo_map = TextureMap::new(
+            "./assets/textures/checkerboard.jpg",
             TextureMapStorageFormat::Index8(0),
         );
 
         // Checkerboard material
 
-        checkerboard_diffuse_color_map.sampling_options.wrapping = TextureMapWrapping::Repeat;
+        checkerboard_albedo_map.sampling_options.wrapping = TextureMapWrapping::Repeat;
 
-        checkerboard_diffuse_color_map.load(rendering_context)?;
+        checkerboard_albedo_map.load(rendering_context)?;
 
-        checkerboard_diffuse_color_map.map(|r, g, b| {
+        checkerboard_albedo_map.map(|r, g, b| {
             if r < 4 && g < 4 && b < 4 {
                 return (18, 18, 18);
             }
             (r, g, b)
         })?;
 
-        let checkerboard_diffuse_map_handle = resources
+        let checkerboard_albedo_map_handle = resources
             .texture_u8
             .borrow_mut()
-            .insert(Uuid::new_v4(), checkerboard_diffuse_color_map);
+            .insert(Uuid::new_v4(), checkerboard_albedo_map);
 
         // Pump up diffuse value of the darkest pixels
 
-        checkerboard_mat.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
-
-        checkerboard_mat.specular_exponent = 8;
-
-        checkerboard_mat.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_mat.albedo_map = Some(checkerboard_albedo_map_handle);
 
         // Point light decal material
 

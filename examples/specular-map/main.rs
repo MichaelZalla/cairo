@@ -73,29 +73,28 @@ fn main() -> Result<(), String> {
 
         let mut checkerboard_material = Material::new("checkerboard".to_string());
 
-        let mut checkerboard_diffuse_map = TextureMap::new(
-            &"./assets/textures/checkerboard.jpg",
+        let mut checkerboard_albedo_map = TextureMap::new(
+            "./assets/textures/checkerboard.jpg",
             TextureMapStorageFormat::Index8(0),
         );
 
-        checkerboard_diffuse_map.load(rendering_context)?;
+        checkerboard_albedo_map.load(rendering_context)?;
 
-        let checkerboard_diffuse_map_handle = resources
+        let checkerboard_albedo_map_handle = resources
             .texture_u8
             .borrow_mut()
-            .insert(Uuid::new_v4(), checkerboard_diffuse_map);
+            .insert(Uuid::new_v4(), checkerboard_albedo_map);
 
-        checkerboard_material.diffuse_color_map = Some(checkerboard_diffuse_map_handle);
-        checkerboard_material.specular_exponent_map = Some(checkerboard_diffuse_map_handle);
+        checkerboard_material.albedo_map = Some(checkerboard_albedo_map_handle);
 
         // Metal-wrapped wooden container
 
         let mut container_material = Material::new("container".to_string());
 
-        container_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
+        container_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/specular-map/assets/container2.png",
+                "./examples/specular-map/assets/container2.png",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
@@ -103,7 +102,7 @@ fn main() -> Result<(), String> {
         container_material.specular_exponent_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/specular-map/assets/container2_specular.png",
+                "./examples/specular-map/assets/container2_specular.png",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));

@@ -74,24 +74,26 @@ fn main() -> Result<(), String> {
 
         brick_material.specular_exponent = 32;
 
-        brick_material.diffuse_color_map = Some(resources.texture_u8.borrow_mut().insert(
+        brick_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
+                "./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
                 TextureMapStorageFormat::RGB24,
             ),
         ));
+
         brick_material.specular_exponent_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
+                "./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
                 TextureMapStorageFormat::Index8(0),
             ),
         ));
+
         brick_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
             Uuid::new_v4(),
             TextureMap::new(
-                &"./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
+                "./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
                 TextureMapStorageFormat::RGB24,
             ),
         ));

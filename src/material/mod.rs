@@ -67,6 +67,7 @@ impl Material {
     pub fn new(name: String) -> Self {
         Material {
             name,
+            albedo: color::WHITE.to_vec3() / 255.0,
             diffuse_color: color::WHITE.to_vec3() / 255.0,
             specular_exponent: 8,
             ..Default::default()
