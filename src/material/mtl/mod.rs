@@ -12,25 +12,6 @@ use super::cache::MaterialCache;
 
 use super::Material;
 
-macro_rules! create_and_set_material_map {
-    ($line_tokens:ident, $file_path:ident, $texture_arena:ident, $cache:ident, $current_material_name:ident,$map_field:ident) => {
-        let mtl_relative_filepath = next_filepath(&mut $line_tokens, $file_path);
-
-        let texture_map_handle = $texture_arena.insert(
-            Uuid::new_v4(),
-            TextureMap::new(
-                &mtl_relative_filepath.as_str(),
-                TextureMapStorageFormat::RGB24,
-            ),
-        );
-
-        $cache
-            .get_mut($current_material_name.as_ref().unwrap())
-            .unwrap()
-            .$map_field = Some(texture_map_handle);
-    };
-}
-
 pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> MaterialCache {
     let mtl_file_path = Path::new(&filepath);
     let mtl_file_path_display = mtl_file_path.display();
@@ -152,14 +133,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Ke cube_emissive.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    emissive_color_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.emissive_color_map = Some(texture_map_handle);
                             }
 
                             // Dissolve (opaqueness)
@@ -182,14 +171,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_d cube_alpha.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    alpha_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.alpha_map = Some(texture_map_handle);
                             }
 
                             // Transparency
@@ -212,14 +209,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_d cube_transparency.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    transparency_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.transparency_map = Some(texture_map_handle);
                             }
 
                             // Translucency (transmission filter color)
@@ -264,14 +269,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Kn cube_normal.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    normal_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.normal_map = Some(texture_map_handle);
                             }
 
                             // Displacement (height) map
@@ -280,14 +293,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // disp cube_displacement.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    displacement_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.displacement_map = Some(texture_map_handle);
                             }
 
                             //
@@ -350,14 +371,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Ns cube_shininess.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    specular_exponent_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.specular_exponent_map = Some(texture_map_handle);
                             }
 
                             // Specular color
@@ -378,14 +407,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Ks cube_specular_color.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    specular_color_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.specular_color_map = Some(texture_map_handle);
                             }
 
                             //
@@ -412,14 +449,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Pr cube_roughness.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    roughness_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.roughness_map = Some(texture_map_handle);
                             }
 
                             // Metallic
@@ -442,14 +487,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Pr cube_metallic.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    metallic_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.metallic_map = Some(texture_map_handle);
                             }
 
                             // Sheen
@@ -472,14 +525,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // map_Pr cube_sheen.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    sheen_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::Index8(0),
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.sheen_map = Some(texture_map_handle);
                             }
 
                             // Clearcoat thickness
@@ -562,14 +623,22 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // decal cube_decal.png
 
-                                create_and_set_material_map!(
-                                    line_tokens,
-                                    mtl_file_path,
-                                    texture_arena,
-                                    cache,
-                                    current_material_name,
-                                    decal_map
+                                let mtl_relative_filepath =
+                                    next_filepath(&mut line_tokens, mtl_file_path);
+
+                                let texture_map_handle = texture_arena.insert(
+                                    Uuid::new_v4(),
+                                    TextureMap::new(
+                                        mtl_relative_filepath.as_str(),
+                                        TextureMapStorageFormat::RGB24,
+                                    ),
                                 );
+
+                                let material = cache
+                                    .get_mut(current_material_name.as_ref().unwrap())
+                                    .unwrap();
+
+                                material.decal_map = Some(texture_map_handle);
                             }
 
                             // Unrecognized prefix
