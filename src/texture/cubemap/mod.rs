@@ -37,6 +37,15 @@ pub static CUBE_MAP_SIDES: [Side; 6] = [
     Side::Right,
 ];
 
+static CUBEMAP_SIDE_COLORS: [Color; 6] = [
+    color::BLUE,
+    color::RED,
+    color::WHITE,
+    color::BLACK,
+    color::GREEN,
+    color::YELLOW,
+];
+
 impl fmt::Display for Side {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         let repr = match self {
@@ -185,16 +194,7 @@ impl CubeMap<Vec3> {
         let map = &self.sides[side as usize];
 
         if !map.is_loaded {
-            static COLORS: [Color; 6] = [
-                color::BLUE,
-                color::RED,
-                color::WHITE,
-                color::BLACK,
-                color::GREEN,
-                color::YELLOW,
-            ];
-
-            return COLORS[side as usize].to_vec3();
+            return CUBEMAP_SIDE_COLORS[side as usize].to_vec3();
         }
 
         sample_nearest_vec3(uv, map)
@@ -323,16 +323,7 @@ impl CubeMap {
         let map = &self.sides[side as usize];
 
         if !map.is_loaded {
-            static COLORS: [Color; 6] = [
-                color::BLUE,
-                color::RED,
-                color::WHITE,
-                color::BLACK,
-                color::GREEN,
-                color::YELLOW,
-            ];
-
-            return COLORS[side as usize];
+            return CUBEMAP_SIDE_COLORS[side as usize];
         }
 
         let (r, g, b) = sample_nearest_u8(uv, map, None);
