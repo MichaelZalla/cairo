@@ -9,7 +9,10 @@ use crate::{
     app::context::ApplicationRenderingContext,
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::{self, Color},
+    pipeline::Pipeline,
+    scene::{camera::Camera, context::SceneContext},
     serde::PostDeserialize,
+    shader::context::ShaderContext,
     texture::{map::TextureBuffer, sample::sample_nearest_u8},
     vec::{
         vec2::Vec2,
@@ -275,6 +278,65 @@ impl CubeMap<Vec3> {
         }
 
         sample_trilinear_vec3(uv, map, near_level_index, far_level_index, alpha)
+    }
+
+    pub fn render_scene(
+        &mut self,
+        mipmap_level: Option<usize>,
+        framebuffer_rc: &'static RefCell<Framebuffer>,
+        scene_context: &SceneContext,
+        shader_context_rc: &RefCell<ShaderContext>,
+        pipeline: &mut Pipeline,
+    ) -> Result<(), String> {
+        // Render each face of our cubemap.
+
+        let mut cubemap_face_camera =
+            Camera::from_perspective(Default::default(), vec3::FORWARD, 90.0, 1.0);
+
+        for side in CUBE_MAP_SIDES {
+            cubemap_face_camera
+                .look_vector
+                .set_target_position(side.get_direction());
+
+            {
+                let mut shader_context = shader_context_rc.borrow_mut();
+
+                shader_context.set_view_position(Vec4::new(
+                    cubemap_face_camera.look_vector.get_position(),
+                    1.0,
+                ));
+
+                shader_context
+                    .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
+
+                shader_context.set_projection(cubemap_face_camera.get_projection());
+            }
+
+            let resources = (*scene_context.resources).borrow();
+            let scene = &scene_context.scenes.borrow()[0];
+
+            match scene.render(&resources, pipeline) {
+                Ok(()) => {
+                    // Blit our framebuffer's color attachment buffer to our
+                    // cubemap face texture.
+
+                    let framebuffer = framebuffer_rc.borrow();
+
+                    match &framebuffer.attachments.forward_or_deferred_hdr {
+                        Some(hdr_attachment_rc) => {
+                            let hdr_buffer = hdr_attachment_rc.borrow();
+
+                            self.sides[side as usize].levels[mipmap_level.unwrap_or(0)] =
+                                TextureBuffer::<Vec3>(hdr_buffer.clone());
+                        }
+                        None => return Err("Called CubeMap::<Vec3>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
+                    }
+                }
+                Err(e) => return Err(e),
+            }
+        }
+
+        Ok(())
     }
 }
 

@@ -8,20 +8,14 @@ use cairo::{
     material::Material,
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
     resource::handle::Handle,
-    scene::{camera::Camera, context::SceneContext, node::SceneNodeType},
+    scene::{context::SceneContext, node::SceneNodeType},
     shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    texture::{
-        cubemap::{CubeMap, CUBE_MAP_SIDES},
-        map::TextureBuffer,
-    },
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    texture::cubemap::CubeMap,
+    vec::vec3::Vec3,
 };
 
 use crate::{
@@ -189,14 +183,15 @@ fn render_radiance_to_cubemap(
 
     let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc, false).unwrap();
 
-    render_scene_to_cubemap(
-        &mut cubemap,
-        None,
-        framebuffer_rc,
-        scene_context,
-        shader_context_rc,
-        pipeline,
-    );
+    cubemap
+        .render_scene(
+            None,
+            framebuffer_rc,
+            scene_context,
+            shader_context_rc,
+            pipeline,
+        )
+        .unwrap();
 
     {
         // Cleanup
@@ -238,14 +233,15 @@ fn render_irradiance_to_cubemap(
 
     let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc, false).unwrap();
 
-    render_scene_to_cubemap(
-        &mut cubemap,
-        None,
-        framebuffer_rc,
-        scene_context,
-        shader_context_rc,
-        pipeline,
-    );
+    cubemap
+        .render_scene(
+            None,
+            framebuffer_rc,
+            scene_context,
+            shader_context_rc,
+            pipeline,
+        )
+        .unwrap();
 
     {
         // Cleanup
@@ -347,14 +343,15 @@ fn render_specular_prefiltered_environment_to_cubemap(
             mipmap_level, mipmap_dimension, mipmap_dimension
         );
 
-        render_scene_to_cubemap(
-            &mut cubemap,
-            Some(mipmap_level),
-            framebuffer_rc,
-            scene_context,
-            shader_context_rc,
-            pipeline,
-        );
+        cubemap
+            .render_scene(
+                Some(mipmap_level),
+                framebuffer_rc,
+                scene_context,
+                shader_context_rc,
+                pipeline,
+            )
+            .unwrap();
     }
 
     {
@@ -372,59 +369,4 @@ fn render_specular_prefiltered_environment_to_cubemap(
     }
 
     cubemap
-}
-
-fn render_scene_to_cubemap(
-    cubemap: &mut CubeMap<Vec3>,
-    mipmap_level: Option<usize>,
-    framebuffer_rc: &'static RefCell<Framebuffer>,
-    scene_context: &SceneContext,
-    shader_context_rc: &RefCell<ShaderContext>,
-    pipeline: &mut Pipeline,
-) {
-    // Render each face of our cubemap.
-
-    let mut cubemap_face_camera =
-        Camera::from_perspective(Default::default(), vec3::FORWARD, 90.0, 1.0);
-
-    for side in CUBE_MAP_SIDES {
-        cubemap_face_camera
-            .look_vector
-            .set_target_position(side.get_direction());
-
-        {
-            let mut shader_context = shader_context_rc.borrow_mut();
-
-            shader_context.set_view_position(Vec4::new(
-                cubemap_face_camera.look_vector.get_position(),
-                1.0,
-            ));
-
-            shader_context
-                .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
-
-            shader_context.set_projection(cubemap_face_camera.get_projection());
-        }
-
-        let resources = (*scene_context.resources).borrow();
-        let scene = &scene_context.scenes.borrow()[0];
-
-        match scene.render(&resources, pipeline) {
-            Ok(()) => {
-                // Blit our framebuffer's color attachment buffer to our cubemap face texture.
-                let framebuffer = framebuffer_rc.borrow();
-
-                match &framebuffer.attachments.forward_or_deferred_hdr {
-                    Some(hdr_attachment_rc) => {
-                        let hdr_buffer = hdr_attachment_rc.borrow();
-
-                        cubemap.sides[side as usize].levels[mipmap_level.unwrap_or(0)] =
-                            TextureBuffer::<Vec3>(hdr_buffer.clone());
-                    }
-                    None => (),
-                }
-            }
-            Err(e) => panic!("{}", e),
-        }
-    }
 }
