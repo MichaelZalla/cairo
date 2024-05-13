@@ -10,13 +10,13 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::Pipeline,
-    resource::handle::Handle,
     scene::{
         context::utils::make_cube_scene,
         light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
+        skybox::Skybox,
     },
     shader::context::ShaderContext,
     shaders::{
@@ -63,9 +63,9 @@ fn main() -> Result<(), String> {
         // Add a skybox to our scene.
 
         let skybox_node = {
-            // Option 1. Skybox as a set of 6 separate textures.
+            // Option 1. Cubemap as a set of 6 separate textures.
 
-            let mut skybox: CubeMap = CubeMap::new(
+            let mut skybox_cubemap: CubeMap = CubeMap::new(
                 [
                     "examples/skybox/assets/sides/front.jpg",
                     "examples/skybox/assets/sides/back.jpg",
@@ -77,26 +77,33 @@ fn main() -> Result<(), String> {
                 TextureMapStorageFormat::RGB24,
             );
 
-            // Option 2. Skybox as one horizontal cross texture.
+            // Option 2. Cubemap as one horizontal cross texture.
 
-            // let mut skybox: CubeMap = CubeMap::cross(
+            // let mut skybox_cubemap: CubeMap = CubeMap::cross(
             //     "examples/skybox/assets/cross/horizontal_cross.png",
             //     TextureMapStorageFormat::RGB24,
             // );
 
-            // Option 3. Skybox as one vertical cross texture.
+            // Option 3. Cubemap as one vertical cross texture.
 
-            // let mut skybox: CubeMap = CubeMap::cross(
+            // let mut skybox_cubemap: CubeMap = CubeMap::cross(
             //     "examples/skybox/assets/cross/vertical_cross.png",
             //     TextureMapStorageFormat::RGB24,
             // );
 
-            skybox.load(rendering_context).unwrap();
+            skybox_cubemap.load(rendering_context).unwrap();
 
-            let skybox_handle = resources
+            let skybox_cubemap_handle = resources
                 .cubemap_u8
                 .borrow_mut()
-                .insert(Uuid::new_v4(), skybox);
+                .insert(Uuid::new_v4(), skybox_cubemap);
+
+            let skybox = Skybox {
+                is_hdr: false,
+                cubemap: Some(skybox_cubemap_handle),
+            };
+
+            let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
 
             SceneNode::new(
                 SceneNodeType::Skybox,
@@ -159,13 +166,15 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let pipeline = Pipeline::new(
+    let mut pipeline = Pipeline::new(
         &shader_context_rc,
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
     let pipeline_rc = RefCell::new(pipeline);
 
@@ -360,167 +369,31 @@ fn main() -> Result<(), String> {
     };
 
     let mut render = || -> Result<Vec<u32>, String> {
-        let mut pipeline = pipeline_rc.borrow_mut();
-
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
-
-        // Begin frame
-
-        pipeline.begin_frame();
-
         // Render scene.
 
         let scene_context = scene_context_rc.borrow();
-        let resources = scene_context.resources.borrow();
-        let scenes = scene_context.scenes.borrow();
+        let resources = (*scene_context.resources).borrow();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
-        let mut active_camera_handle: Option<Handle> = None;
-        let mut active_skybox_handle: Option<Handle> = None;
+        let mut pipeline = pipeline_rc.borrow_mut();
 
-        let mut render_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &SceneNode|
-         -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
+        match scene.render(&resources, &mut pipeline) {
+            Ok(()) => {
+                // Write out.
 
-            match node_type {
-                SceneNodeType::Scene => Ok(()),
-                SceneNodeType::Environment => Ok(()),
-                SceneNodeType::Skybox => {
-                    match handle {
-                        Some(handle) => {
-                            active_skybox_handle = Some(*handle);
-                        }
-                        None => {
-                            panic!("Encountered a `Skybox` node with no resource handle!")
-                        }
+                let framebuffer = framebuffer_rc.borrow();
+
+                match framebuffer.attachments.color.as_ref() {
+                    Some(color_buffer_lock) => {
+                        let color_buffer = color_buffer_lock.borrow();
+
+                        Ok(color_buffer.get_all().clone())
                     }
-
-                    Ok(())
+                    None => panic!(),
                 }
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mesh_arena = resources.mesh.borrow();
-                        let entity_arena = resources.entity.borrow();
-
-                        match entity_arena.get(handle) {
-                            Ok(entry) => {
-                                let entity = &entry.item;
-
-                                pipeline.render_entity(
-                                    entity,
-                                    &current_world_transform,
-                                    &mesh_arena,
-                                );
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::Camera => match handle {
-                    Some(handle) => {
-                        active_camera_handle = Some(*handle);
-
-                        Ok(())
-                    }
-                    None => {
-                        panic!("Encountered a `Camera` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::AmbientLight => Ok(()),
-                SceneNodeType::DirectionalLight => Ok(()),
-                SceneNodeType::PointLight => match handle {
-                    Some(handle) => {
-                        let point_light_arena = resources.point_light.borrow();
-
-                        match point_light_arena.get(handle) {
-                            Ok(entry) => {
-                                let point_light = &entry.item;
-
-                                pipeline.render_point_light(point_light, None, None);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::SpotLight => match handle {
-                    Some(handle) => {
-                        let spot_light_arena = resources.spot_light.borrow();
-
-                        match spot_light_arena.get(handle) {
-                            Ok(entry) => {
-                                let spot_light = &entry.item;
-
-                                pipeline.render_spot_light(spot_light, None, None);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
             }
-        };
-
-        // Traverse the scene graph and render its nodes.
-
-        scenes[0].root.visit(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut render_scene_graph_node,
-        )?;
-
-        // End frame
-
-        if let (Some(camera_handle), Some(skybox_handle)) =
-            (active_camera_handle, active_skybox_handle)
-        {
-            if let (Ok(camera_entry), Ok(skybox_entry)) = (
-                resources.camera.borrow().get(&camera_handle),
-                resources.cubemap_u8.borrow().get(&skybox_handle),
-            ) {
-                let camera = &camera_entry.item;
-                let skybox = &skybox_entry.item;
-
-                pipeline.render_skybox(skybox, camera);
-            }
-        }
-
-        pipeline.end_frame();
-
-        // Write out.
-
-        let framebuffer = framebuffer_rc.borrow();
-
-        match framebuffer.attachments.color.as_ref() {
-            Some(color_buffer_lock) => {
-                let color_buffer = color_buffer_lock.borrow();
-
-                Ok(color_buffer.get_all().clone())
-            }
-            None => panic!(),
+            Err(e) => panic!("{}", e),
         }
     };
 

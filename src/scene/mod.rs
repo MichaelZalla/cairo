@@ -9,6 +9,7 @@ pub mod graph;
 pub mod light;
 pub mod node;
 pub mod resources;
+pub mod skybox;
 
 pub trait Scene {
     fn update(

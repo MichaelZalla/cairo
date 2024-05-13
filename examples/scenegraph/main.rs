@@ -20,6 +20,7 @@ use cairo::{
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
+        skybox::Skybox,
     },
     shader::context::ShaderContext,
     shaders::{
@@ -239,30 +240,39 @@ fn main() -> Result<(), String> {
 
         // Add a skybox to our scene.
 
-        let mut skybox = CubeMap::new(
-            [
-                "examples/skybox/assets/sides/front.jpg",
-                "examples/skybox/assets/sides/back.jpg",
-                "examples/skybox/assets/sides/top.jpg",
-                "examples/skybox/assets/sides/bottom.jpg",
-                "examples/skybox/assets/sides/left.jpg",
-                "examples/skybox/assets/sides/right.jpg",
-            ],
-            TextureMapStorageFormat::RGB24,
-        );
+        let skybox_node = {
+            let mut skybox_cubemap = CubeMap::new(
+                [
+                    "examples/skybox/assets/sides/front.jpg",
+                    "examples/skybox/assets/sides/back.jpg",
+                    "examples/skybox/assets/sides/top.jpg",
+                    "examples/skybox/assets/sides/bottom.jpg",
+                    "examples/skybox/assets/sides/left.jpg",
+                    "examples/skybox/assets/sides/right.jpg",
+                ],
+                TextureMapStorageFormat::RGB24,
+            );
 
-        skybox.load(rendering_context).unwrap();
+            skybox_cubemap.load(rendering_context).unwrap();
 
-        let skybox_handle = resources
-            .cubemap_u8
-            .borrow_mut()
-            .insert(Uuid::new_v4(), skybox);
+            let skybox_cubemap_handle = resources
+                .cubemap_u8
+                .borrow_mut()
+                .insert(Uuid::new_v4(), skybox_cubemap);
 
-        let skybox_node = SceneNode::new(
-            SceneNodeType::Skybox,
-            Default::default(),
-            Some(skybox_handle),
-        );
+            let skybox = Skybox {
+                is_hdr: false,
+                cubemap: Some(skybox_cubemap_handle),
+            };
+
+            let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+
+            SceneNode::new(
+                SceneNodeType::Skybox,
+                Default::default(),
+                Some(skybox_handle),
+            )
+        };
 
         for node in scene.root.children_mut().as_mut().unwrap() {
             if *node.get_type() == SceneNodeType::Environment {

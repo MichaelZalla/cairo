@@ -240,12 +240,34 @@ impl SceneGraph {
         {
             if let (Ok(camera_entry), Ok(skybox_entry)) = (
                 resources.camera.borrow().get(&camera_handle),
-                resources.cubemap_vec3.borrow().get(&skybox_handle),
+                resources.skybox.borrow().get(&skybox_handle),
             ) {
                 let camera = &camera_entry.item;
-                let skybox_hdr = &skybox_entry.item;
+                let skybox = &skybox_entry.item;
 
-                pipeline.render_skybox_hdr(skybox_hdr, camera);
+                if let Some(cubemap_handle) = skybox.cubemap {
+
+                    if skybox.is_hdr {
+                        match resources.cubemap_vec3.borrow().get(&cubemap_handle) {
+                            Ok(entry) => {
+                                let cubemap = &entry.item;
+                        
+                                pipeline.render_skybox_hdr(cubemap, camera);
+                            },
+                            Err(e) => panic!("{}", e),
+                        }
+                    } else {
+                        match resources.cubemap_u8.borrow().get(&cubemap_handle) {
+                            Ok(entry) => {
+                                let cubemap = &entry.item;
+                        
+                                pipeline.render_skybox(cubemap, camera);
+                            },
+                            Err(e) => panic!("{}", e),
+                        }
+                    }
+                }
+
             }
         }
 

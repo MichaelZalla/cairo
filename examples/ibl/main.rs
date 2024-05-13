@@ -19,6 +19,8 @@ use cairo::{
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
+        resources::SceneResources,
+        skybox::Skybox,
     },
     shader::context::ShaderContext,
     shaders::{
@@ -63,15 +65,28 @@ fn main() -> Result<(), String> {
 
     {
         let scene_context = spheres_scene_context.borrow_mut();
+        let resources = (*scene_context.resources).borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
         // Add a skybox to our scene.
 
         for node in scene.root.children_mut().as_mut().unwrap() {
             if node.is_type(SceneNodeType::Environment) {
-                // No handle for now.
+                let skybox_node = {
+                    let skybox = Skybox {
+                        is_hdr: true,
+                        cubemap: None, // No handle for now.
+                    };
 
-                let skybox_node = SceneNode::new(SceneNodeType::Skybox, Default::default(), None);
+                    let skybox_handle =
+                        resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+
+                    SceneNode::new(
+                        SceneNodeType::Skybox,
+                        Default::default(),
+                        Some(skybox_handle),
+                    )
+                };
 
                 node.add_child(skybox_node)?;
             }
@@ -130,6 +145,12 @@ fn main() -> Result<(), String> {
     let shader_context_rc: RefCell<ShaderContext> = Default::default();
 
     {
+        let scene_context = spheres_scene_context.borrow_mut();
+
+        let mut resources = (*scene_context.resources).borrow_mut();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
+
         let mut shader_context = shader_context_rc.borrow_mut();
 
         shader_context.set_active_ambient_specular_brdf_integration_map(Some(
@@ -138,7 +159,8 @@ fn main() -> Result<(), String> {
 
         set_ibl_map_handles(
             &mut shader_context,
-            &mut spheres_scene_context.borrow_mut().scenes.borrow_mut()[0],
+            &mut resources,
+            scene,
             &radiance_irradiance_handles[0],
         );
     }
@@ -166,8 +188,7 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let scene_context = spheres_scene_context_rc.borrow_mut();
 
-        let resources = (*scene_context.resources).borrow();
-
+        let mut resources = (*scene_context.resources).borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
@@ -217,6 +238,7 @@ fn main() -> Result<(), String> {
 
                     set_ibl_map_handles(
                         &mut shader_context,
+                        &mut resources,
                         scene,
                         &radiance_irradiance_handles[*current_index],
                     );
@@ -274,6 +296,7 @@ fn main() -> Result<(), String> {
 
 fn set_ibl_map_handles(
     shader_context: &mut ShaderContext,
+    resources: &mut SceneResources,
     scene: &mut SceneGraph,
     handles: &(Handle, Handle, Handle),
 ) {
@@ -291,13 +314,20 @@ fn set_ibl_map_handles(
         *specular_prefiltered_environment_cubemap_handle,
     ));
 
-    // Set the irradiance map as our scene's ambient diffuse light map.
+    // Set the current radiance map as our scene's skybox texture.
 
     for node in scene.root.children_mut().as_mut().unwrap() {
         if node.is_type(SceneNodeType::Environment) {
             for child in node.children_mut().as_mut().unwrap() {
                 if child.is_type(SceneNodeType::Skybox) {
-                    child.set_handle(Some(*radiance_cubemap_handle));
+                    let skybox_handle = child.get_handle().unwrap();
+
+                    if let Ok(skybox_entry) = resources.skybox.borrow_mut().get_mut(&skybox_handle)
+                    {
+                        let skybox = &mut skybox_entry.item;
+
+                        skybox.cubemap = Some(*radiance_cubemap_handle);
+                    }
                 }
             }
         }
