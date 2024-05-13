@@ -123,42 +123,50 @@ fn main() -> Result<(), String> {
 
         // Add a point light to our scene.
 
-        let mut point_light = PointLight::new();
+        let point_light_node = {
+            let mut light = PointLight::new();
 
-        point_light.position.y = 0.0;
-        point_light.position.z = -4.0;
+            light.position.y = 0.0;
+            light.position.z = -4.0;
 
-        point_light.intensities = Vec3::ones() * 10.0;
+            light.intensities = Vec3::ones() * 10.0;
 
-        point_light.constant_attenuation = 1.0;
-        point_light.linear_attenuation = 0.35;
-        point_light.quadratic_attenuation = 0.44;
+            light.constant_attenuation = 1.0;
+            light.linear_attenuation = 0.35;
+            light.quadratic_attenuation = 0.44;
 
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
+            let point_light_handle = resources
+                .point_light
+                .borrow_mut()
+                .insert(Uuid::new_v4(), light);
 
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
+            SceneNode::new(
+                SceneNodeType::PointLight,
+                Default::default(),
+                Some(point_light_handle),
+            )
+        };
+
+        scene.root.add_child(point_light_node)?;
 
         // Add a spot light to our scene.
 
-        let spot_light = SpotLight::new();
+        let spot_light_node = {
+            let light = SpotLight::new();
 
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
+            let light_handle = resources
+                .spot_light
+                .borrow_mut()
+                .insert(Uuid::new_v4(), light);
 
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        ))?;
+            SceneNode::new(
+                SceneNodeType::SpotLight,
+                Default::default(),
+                Some(light_handle),
+            )
+        };
+
+        scene.root.add_child(spot_light_node)?;
     }
 
     let scene_context_rc = RefCell::new(scene_context);
