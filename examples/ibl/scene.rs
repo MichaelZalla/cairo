@@ -48,7 +48,6 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
             };
 
             light.intensities = Vec3::ones() * 15.0;
-            light.specular_intensity = 20.0;
 
             light.constant_attenuation = 1.0;
             light.linear_attenuation = 0.09;

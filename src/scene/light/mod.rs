@@ -124,7 +124,6 @@ impl DirectionalLight {
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct PointLight {
     pub intensities: Vec3,
-    pub specular_intensity: f32,
     pub position: Vec3,
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
@@ -147,7 +146,6 @@ impl PointLight {
     pub fn new() -> Self {
         let mut light = PointLight {
             intensities: color::WHITE.to_vec3() / 255.0,
-            specular_intensity: 0.5,
             position: Vec3 {
                 x: 0.0,
                 y: 10.0,

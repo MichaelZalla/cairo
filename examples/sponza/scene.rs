@@ -119,7 +119,7 @@ pub fn make_sponza_scene(
             };
 
             light.intensities = color::BLUE.to_vec3() / 255.0 * 5.0;
-            light.specular_intensity = 1.0;
+
             light.constant_attenuation = 1.0;
             light.linear_attenuation = 0.0014;
             light.quadratic_attenuation = 0.000007;
@@ -152,6 +152,7 @@ pub fn make_sponza_scene(
             light.look_vector.set_target_position(Default::default());
 
             light.intensities = color::RED.to_vec3() / 255.0 * 3.0;
+
             light.constant_attenuation = 1.0;
             light.linear_attenuation = 0.007;
             light.quadratic_attenuation = 0.0002;

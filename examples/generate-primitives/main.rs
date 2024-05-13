@@ -32,7 +32,6 @@ use cairo::{
             albedo_fragment_shader::AlbedoFragmentShader,
             depth_fragment_shader::DepthFragmentShader,
             normal_fragment_shader::NormalFragmentShader,
-            specular_intensity_fragment_shader::SpecularIntensityFragmentShader,
             uv_test_fragment_shader::UvTestFragmentShader,
         },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
@@ -401,7 +400,6 @@ fn main() -> Result<(), String> {
         AlbedoFragmentShader,
         DepthFragmentShader,
         NormalFragmentShader,
-        SpecularIntensityFragmentShader,
         UvTestFragmentShader,
     ];
 
@@ -833,7 +831,6 @@ fn main() -> Result<(), String> {
                     "AlbedoFragmentShader",
                     "DepthFragmentShader",
                     "NormalFragmentShader",
-                    "SpecularIntensityFragmentShader",
                     "UvTestFragmentShader",
                 ][*active_fragment_shader_index]
             ));

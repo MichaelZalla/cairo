@@ -192,7 +192,7 @@ fn main() -> Result<(), String> {
             let mut light = PointLight::new();
 
             light.intensities = Vec3::ones() * MAX_POINT_LIGHT_INTENSITY;
-            light.specular_intensity = 2.0;
+
             light.constant_attenuation = 1.0;
             light.linear_attenuation = 0.22;
             light.quadratic_attenuation = 0.2;

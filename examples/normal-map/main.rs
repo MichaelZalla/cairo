@@ -129,7 +129,7 @@ fn main() -> Result<(), String> {
         point_light.position.z = -4.0;
 
         point_light.intensities = Vec3::ones() * 10.0;
-        point_light.specular_intensity = 10.0;
+
         point_light.constant_attenuation = 1.0;
         point_light.linear_attenuation = 0.35;
         point_light.quadratic_attenuation = 0.44;
