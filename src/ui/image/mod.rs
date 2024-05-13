@@ -1,11 +1,7 @@
 use std::cell::RefMut;
 
 use crate::{
-    buffer::Buffer2D,
-    color::Color,
-    graphics::Graphics,
-    texture::{map::TextureMap, sample::sample_trilinear_u8},
-    vec::vec2::Vec2,
+    buffer::Buffer2D, color::Color, graphics::Graphics, texture::map::TextureMap, vec::vec2::Vec2,
 };
 
 use super::{
@@ -65,47 +61,18 @@ fn draw_image(
         image_top_left.0 + options.width - 1,
         image_top_left.1 + options.height - 1,
     );
+
     let image_bottom_left = (image_top_left.0, image_top_left.1 + options.height - 1);
 
     // Draw the image, with an optional (inner) border.
 
-    let mut far_level_index = 0;
-    let mut near_level_index = 0;
-
-    if !map.levels.is_empty() {
-        while map.levels[near_level_index].0.width >= options.width
-            && near_level_index < map.levels.len() - 1
-        {
-            near_level_index += 1;
-        }
-
-        far_level_index = near_level_index - 1;
-    }
-
-    let alpha = (options.width - map.levels[near_level_index].0.width) as f32
-        / (map.levels[far_level_index].0.width - map.levels[near_level_index].0.width) as f32;
-
-    for sample_y in 0..options.height {
-        for sample_x in 0..options.width {
-            let uv = Vec2 {
-                x: sample_x as f32 / options.width as f32,
-                y: 1.0 - sample_y as f32 / options.height as f32,
-                z: 0.0,
-            };
-
-            let sample = sample_trilinear_u8(uv, map, near_level_index, far_level_index, alpha);
-
-            let (screen_x, screen_y) = (cursor.x + sample_x, cursor.y + sample_y);
-
-            if screen_x < parent_buffer.width && screen_y < parent_buffer.height {
-                parent_buffer.set(
-                    screen_x,
-                    screen_y,
-                    Color::rgb(sample.0, sample.1, sample.2).to_u32(),
-                )
-            }
-        }
-    }
+    map.blit_resized(
+        cursor.y,
+        cursor.x,
+        options.width,
+        options.height,
+        parent_buffer,
+    );
 
     // Draw the optional inner border.
 
