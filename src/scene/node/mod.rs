@@ -467,6 +467,35 @@ impl SceneNode {
                     panic!("Encountered a `Camera` node with no resource handle!")
                 }
             },
+            SceneNodeType::Skybox => match handle {
+                Some(handle) => {
+                    let mut skybox_arena = resources.skybox.borrow_mut();
+
+                    match skybox_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let skybox = &mut entry.item;
+
+                            shader_context.set_active_ambient_radiance_map(skybox.radiance);
+
+                            shader_context
+                                .set_active_ambient_diffuse_irradiance_map(skybox.irradiance);
+
+                            shader_context.set_active_ambient_specular_prefiltered_environment_map(
+                                skybox.specular_prefiltered_environment,
+                            );
+
+                            Ok(())
+                        }
+                        Err(err) => panic!(
+                            "Failed to get Skybox from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `Skybox` node with no resource handle!")
+                }
+            },
             SceneNodeType::AmbientLight => match handle {
                 Some(handle) => {
                     shader_context.set_ambient_light(Some(*handle));

@@ -262,7 +262,9 @@ fn main() -> Result<(), String> {
 
             let skybox = Skybox {
                 is_hdr: false,
-                cubemap: Some(skybox_cubemap_handle),
+                radiance: Some(skybox_cubemap_handle),
+                irradiance: None,
+                specular_prefiltered_environment: None,
             };
 
             let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);

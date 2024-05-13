@@ -245,7 +245,7 @@ impl SceneGraph {
                 let camera = &camera_entry.item;
                 let skybox = &skybox_entry.item;
 
-                if let Some(cubemap_handle) = skybox.cubemap {
+                if let Some(cubemap_handle) = skybox.radiance {
 
                     if skybox.is_hdr {
                         match resources.cubemap_vec3.borrow().get(&cubemap_handle) {

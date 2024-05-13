@@ -73,9 +73,12 @@ fn main() -> Result<(), String> {
         for node in scene.root.children_mut().as_mut().unwrap() {
             if node.is_type(SceneNodeType::Environment) {
                 let skybox_node = {
+                    // No handles for now.
                     let skybox = Skybox {
                         is_hdr: true,
-                        cubemap: None, // No handle for now.
+                        radiance: None,
+                        irradiance: None,
+                        specular_prefiltered_environment: None,
                     };
 
                     let skybox_handle =
@@ -157,12 +160,7 @@ fn main() -> Result<(), String> {
             specular_brdf_integration_map_handle,
         ));
 
-        set_ibl_map_handles(
-            &mut shader_context,
-            &mut resources,
-            scene,
-            &radiance_irradiance_handles[0],
-        );
+        set_ibl_map_handles(&mut resources, scene, &radiance_irradiance_handles[0]);
     }
 
     let mut pipeline = Pipeline::new(
@@ -237,7 +235,6 @@ fn main() -> Result<(), String> {
                     println!("{}", current_index);
 
                     set_ibl_map_handles(
-                        &mut shader_context,
                         &mut resources,
                         scene,
                         &radiance_irradiance_handles[*current_index],
@@ -295,7 +292,6 @@ fn main() -> Result<(), String> {
 }
 
 fn set_ibl_map_handles(
-    shader_context: &mut ShaderContext,
     resources: &mut SceneResources,
     scene: &mut SceneGraph,
     handles: &(Handle, Handle, Handle),
@@ -306,15 +302,7 @@ fn set_ibl_map_handles(
         specular_prefiltered_environment_cubemap_handle,
     ) = handles;
 
-    shader_context.set_active_ambient_radiance_map(Some(*radiance_cubemap_handle));
-
-    shader_context.set_active_ambient_diffuse_irradiance_map(Some(*irradiance_cubemap_handle));
-
-    shader_context.set_active_ambient_specular_prefiltered_environment_map(Some(
-        *specular_prefiltered_environment_cubemap_handle,
-    ));
-
-    // Set the current radiance map as our scene's skybox texture.
+    // Updates our skybox node with the current set of IBL maps.
 
     for node in scene.root.children_mut().as_mut().unwrap() {
         if node.is_type(SceneNodeType::Environment) {
@@ -326,7 +314,10 @@ fn set_ibl_map_handles(
                     {
                         let skybox = &mut skybox_entry.item;
 
-                        skybox.cubemap = Some(*radiance_cubemap_handle);
+                        skybox.radiance = Some(*radiance_cubemap_handle);
+                        skybox.irradiance = Some(*irradiance_cubemap_handle);
+                        skybox.specular_prefiltered_environment =
+                            Some(*specular_prefiltered_environment_cubemap_handle);
                     }
                 }
             }
