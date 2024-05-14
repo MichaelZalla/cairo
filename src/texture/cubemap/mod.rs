@@ -24,7 +24,7 @@ use crate::{
 
 use super::{
     map::{TextureMap, TextureMapStorageFormat},
-    sample::{sample_nearest_vec3, sample_trilinear_vec3},
+    sample::{sample_nearest_f32, sample_nearest_vec3, sample_trilinear_vec3},
 };
 
 static SIDES: usize = 6;
@@ -48,7 +48,7 @@ pub static CUBE_MAP_SIDES: [Side; 6] = [
     Side::Right,
 ];
 
-static CUBEMAP_SIDE_COLORS: [Color; 6] = [
+pub static CUBEMAP_SIDE_COLORS: [Color; 6] = [
     // Forward
     color::GREEN,
     // Back
@@ -79,6 +79,17 @@ impl fmt::Display for Side {
 }
 
 impl Side {
+    pub fn get_index(&self) -> usize {
+        match self {
+            Side::Forward => 0,
+            Side::Backward => 1,
+            Side::Up => 2,
+            Side::Down => 3,
+            Side::Left => 4,
+            Side::Right => 5,
+        }
+    }
+
     pub fn get_direction(&self) -> Vec3 {
         match self {
             Side::Forward => vec3::FORWARD,
@@ -172,10 +183,8 @@ impl<
         }
     }
 
-    pub fn from_framebuffer(framebuffer_rc: &'static RefCell<Framebuffer>) -> Self {
+    pub fn from_framebuffer(framebuffer: &Framebuffer) -> Self {
         let cubemap_size = {
-            let framebuffer = framebuffer_rc.borrow();
-
             debug_assert_eq!(framebuffer.width, framebuffer.height);
 
             framebuffer.width
@@ -283,6 +292,20 @@ impl<
         uv.y += 0.5;
 
         (side, uv)
+    }
+}
+
+impl CubeMap<f32> {
+    pub fn sample_nearest(&self, direction: &Vec4) -> f32 {
+        let (side, uv) = self.get_uv_for_direction(direction);
+
+        let map = &self.sides[side as usize];
+
+        if !map.is_loaded {
+            return CUBEMAP_SIDE_COLORS[side as usize].to_vec3().x;
+        }
+
+        sample_nearest_f32(uv, map)
     }
 }
 

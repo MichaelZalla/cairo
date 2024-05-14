@@ -181,7 +181,7 @@ fn render_radiance_to_cubemap(
             .set_active_hdr_map(Some(*hdr_texture_handle));
     }
 
-    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc);
+    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(&framebuffer_rc.borrow());
 
     cubemap
         .render_scene(
@@ -231,7 +231,7 @@ fn render_irradiance_to_cubemap(
             .set_active_ambient_radiance_map(Some(*radiance_cubemap_texture_handle));
     }
 
-    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc);
+    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(&framebuffer_rc.borrow());
 
     cubemap
         .render_scene(
@@ -313,7 +313,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
             .set_active_ambient_radiance_map(Some(*radiance_cubemap_texture_handle));
     }
 
-    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(framebuffer_rc);
+    let mut cubemap = CubeMap::<Vec3>::from_framebuffer(&framebuffer_rc.borrow());
 
     for side in cubemap.sides.as_mut() {
         side.generate_mipmaps().unwrap();

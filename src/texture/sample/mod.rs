@@ -82,6 +82,30 @@ pub fn sample_nearest_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>)
     sample_from_texel_u8((texel_x, texel_y), map, level_index)
 }
 
+pub fn sample_nearest_f32(uv: Vec2, map: &TextureMap<f32>) -> f32 {
+    debug_assert!(map.is_loaded);
+
+    let safe_uv = apply_wrapping_options(uv, map);
+
+    debug_assert!(
+        map.levels[0].0.data.len()
+            == (map.width * map.height * map.get_buffer_samples_per_pixel() as u32) as usize,
+        "filepath={}, levels[0].0.data.len() = {}, map.width={}, map.height={}, map.get_buffer_samples_per_pixel={}",
+        map.info.filepath,
+        map.levels[0].0.data.len(),
+        map.width,
+        map.height,
+        map.get_buffer_samples_per_pixel(),
+    );
+
+    // Maps the wrapped UV coordinate to the nearest whole texel coordinate.
+
+    let texel_x = safe_uv.x * (map.levels[0].0.width - 1) as f32;
+    let texel_y = (1.0 - safe_uv.y) * (map.levels[0].0.height - 1) as f32;
+
+    sample_from_texel_f32((texel_x, texel_y), map)
+}
+
 pub fn sample_nearest_vec2(uv: Vec2, map: &TextureMap<Vec2>, level_index: Option<usize>) -> Vec2 {
     debug_assert!(map.is_loaded);
 
@@ -425,6 +449,14 @@ fn sample_from_texel_u8(
     }
 
     (r, g, b)
+}
+
+fn sample_from_texel_f32(texel: (f32, f32), map: &TextureMap<f32>) -> f32 {
+    let texel_color_index = get_texel_color_index(&texel, map, &None);
+
+    let buffer = &map.levels[0];
+
+    buffer.0.data[texel_color_index]
 }
 
 fn sample_from_texel_vec2(

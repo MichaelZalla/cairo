@@ -165,6 +165,15 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example point-shadows",
+      "command": "cargo run --example point-shadows"
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example post-effects",
       "command": "cargo run --example post-effects"
     },

@@ -2,13 +2,16 @@ use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
 
-use crate::color;
-use crate::physics::pbr::{self, brdf::cook_torrance_direct};
-use crate::serde::PostDeserialize;
-use crate::shader::geometry::sample::GeometrySample;
-use crate::transform::look_vector::LookVector;
-use crate::vec::vec3::{self, Vec3};
-use crate::vec::vec4::Vec4;
+use crate::{
+    color,
+    physics::pbr::{self, brdf::cook_torrance_direct},
+    serde::PostDeserialize,
+    shader::geometry::sample::GeometrySample,
+    texture::cubemap::CubeMap,
+    transform::look_vector::LookVector,
+    vec::vec3::{self, Vec3},
+    vec::vec4::Vec4,
+};
 
 fn contribute_pbr(
     sample: &GeometrySample,
@@ -121,13 +124,15 @@ impl DirectionalLight {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PointLight {
     pub intensities: Vec3,
     pub position: Vec3,
     pub constant_attenuation: f32,
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
+    #[serde(skip)]
+    pub shadow_map: Option<CubeMap<f32>>,
     #[serde(skip)]
     pub influence_distance: f32,
 }
@@ -154,6 +159,7 @@ impl PointLight {
             constant_attenuation: 1.0,
             linear_attenuation: 0.35,
             quadratic_attenuation: 0.44,
+            shadow_map: None,
             influence_distance: 0.0,
         };
 
@@ -238,8 +244,47 @@ impl PointLight {
         let distance_to_point_light = fragment_to_point_light.mag();
         let direction_to_point_light = fragment_to_point_light / distance_to_point_light;
 
-        contribute_pbr(sample, &self.intensities, &direction_to_point_light, f0)
-            * self.get_attentuation(distance_to_point_light)
+        // Compute an enshadowing term for this fragment/sample.
+
+        let in_shadow = self.get_shadowing(sample);
+
+        let contribution = contribute_pbr(sample, &self.intensities, &direction_to_point_light, f0)
+            * self.get_attentuation(distance_to_point_light);
+
+        contribution * (1.0 - in_shadow)
+    }
+
+    fn get_shadowing(&self, sample: &GeometrySample) -> f32 {
+        match &self.shadow_map {
+            Some(cubemap) => {
+                let light_to_fragment = sample.world_pos - self.position;
+                let light_to_fragment_direction = light_to_fragment.as_normal();
+
+                let current_depth = light_to_fragment.mag();
+
+                let closest_depth =
+                    cubemap.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0)) * 100.0;
+
+                if closest_depth == 0.0 {
+                    return 0.0;
+                }
+
+                let likeness = sample
+                    .world_normal
+                    .dot((self.position - sample.world_pos).as_normal());
+
+                let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
+
+                let is_in_shadow = (current_depth + bias) > closest_depth;
+
+                if is_in_shadow {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
+            None => 0.0,
+        }
     }
 
     #[inline]
