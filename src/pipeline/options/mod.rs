@@ -34,6 +34,7 @@ pub struct PipelineOptions {
     pub do_deferred_lighting: bool,
     pub do_bloom: bool,
     pub do_visualize_normals: bool,
+    pub do_visualize_lights: bool,
     pub face_culling_strategy: PipelineFaceCullingStrategy,
 }
 
@@ -47,6 +48,7 @@ impl Default for PipelineOptions {
             do_deferred_lighting: true,
             do_bloom: false,
             do_visualize_normals: false,
+            do_visualize_lights: false,
             face_culling_strategy: Default::default(),
         }
     }
@@ -111,11 +113,23 @@ impl PipelineOptions {
                     );
                 }
                 Keycode::Num6 { .. } => {
+                    self.do_visualize_lights = !self.do_visualize_lights;
+
+                    println!(
+                        "Visualize lights: {}",
+                        if self.do_visualize_lights {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    );
+                }
+                Keycode::Num7 { .. } => {
                     self.do_bloom = !self.do_bloom;
 
                     println!("Bloom pass: {}", if self.do_bloom { "On" } else { "Off" });
                 }
-                Keycode::Num7 { .. } => {
+                Keycode::Num8 { .. } => {
                     // Cycle culling reject settings.
 
                     self.face_culling_strategy.reject = match self.face_culling_strategy.reject {
@@ -131,7 +145,7 @@ impl PipelineOptions {
                         self.face_culling_strategy.reject
                     );
                 }
-                Keycode::Num8 { .. } => {
+                Keycode::Num9 { .. } => {
                     // Cycle window orders.
 
                     self.face_culling_strategy.winding_order =
