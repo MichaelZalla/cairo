@@ -49,12 +49,18 @@ pub static CUBE_MAP_SIDES: [Side; 6] = [
 ];
 
 static CUBEMAP_SIDE_COLORS: [Color; 6] = [
-    color::BLUE,
-    color::RED,
-    color::WHITE,
-    color::BLACK,
+    // Forward
     color::GREEN,
+    // Back
     color::YELLOW,
+    // Up
+    color::BLUE,
+    // Bottom
+    color::BLACK,
+    // Left
+    color::WHITE,
+    // Right
+    color::RED,
 ];
 
 impl fmt::Display for Side {
