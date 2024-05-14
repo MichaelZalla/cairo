@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
+    ops::{Add, Div, Mul, Sub},
 };
 
 use serde::{Deserialize, Serialize};
@@ -93,12 +94,22 @@ impl Side {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct CubeMap<T: Default + Debug + Copy + PartialEq = u8> {
+pub struct CubeMap<T: Default + Debug + Copy + PartialEq + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> = u8> {
     is_cross: bool,
     pub sides: [TextureMap<T>; 6],
 }
 
-impl<T: Default + Debug + Copy + PartialEq> PostDeserialize for CubeMap<T> {
+impl<
+        T: Default
+            + Debug
+            + Copy
+            + PartialEq
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    > PostDeserialize for CubeMap<T>
+{
     fn post_deserialize(&mut self) {
         for side in self.sides.iter_mut() {
             side.post_deserialize();
@@ -106,7 +117,17 @@ impl<T: Default + Debug + Copy + PartialEq> PostDeserialize for CubeMap<T> {
     }
 }
 
-impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
+impl<
+        T: Default
+            + Debug
+            + Copy
+            + PartialEq
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    > CubeMap<T>
+{
     pub fn new(texture_paths: [&str; 6], storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: false,
@@ -126,6 +147,30 @@ impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
             is_cross: false,
             sides,
         }
+    }
+
+    pub fn from_framebuffer(framebuffer_rc: &'static RefCell<Framebuffer>) -> Self {
+        let cubemap_size = {
+            let framebuffer = framebuffer_rc.borrow();
+
+            debug_assert_eq!(framebuffer.width, framebuffer.height);
+
+            framebuffer.width
+        };
+
+        let texture_map = TextureMap::from_buffer(
+            cubemap_size,
+            cubemap_size,
+            Buffer2D::<T>::new(cubemap_size, cubemap_size, None),
+        );
+
+        let mut cubemap: CubeMap<T> = Default::default();
+
+        for side_index in 0..6 {
+            cubemap.sides[side_index] = texture_map.clone();
+        }
+
+        cubemap
     }
 
     pub fn cross(texture_path: &str, storage_format: TextureMapStorageFormat) -> Self {
@@ -219,37 +264,6 @@ impl<T: Default + Debug + Copy + PartialEq> CubeMap<T> {
 }
 
 impl CubeMap<Vec3> {
-    pub fn from_framebuffer(
-        framebuffer_rc: &'static RefCell<Framebuffer>,
-        generate_mipmaps: bool,
-    ) -> Result<Self, String> {
-        let cubemap_size = {
-            let framebuffer = framebuffer_rc.borrow();
-
-            debug_assert_eq!(framebuffer.width, framebuffer.height);
-
-            framebuffer.width
-        };
-
-        let mut texture_map = TextureMap::from_buffer(
-            cubemap_size,
-            cubemap_size,
-            Buffer2D::<Vec3>::new(cubemap_size, cubemap_size, None),
-        );
-
-        let mut cubemap: CubeMap<Vec3> = Default::default();
-
-        if generate_mipmaps {
-            texture_map.generate_mipmaps()?;
-        }
-
-        for side_index in 0..6 {
-            cubemap.sides[side_index] = texture_map.clone();
-        }
-
-        Ok(cubemap)
-    }
-
     pub fn sample_nearest(&self, direction: &Vec4, level_index: Option<usize>) -> Vec3 {
         let (side, uv) = self.get_uv_for_direction(direction);
 
