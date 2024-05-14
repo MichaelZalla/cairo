@@ -231,8 +231,8 @@ impl<
 
             uv = Vec2 {
                 x: match side {
-                    Side::Right => direction.z,
-                    Side::Left => -direction.z,
+                    Side::Right => -direction.z,
+                    Side::Left => direction.z,
                     _ => panic!(),
                 },
                 y: direction.y,
@@ -251,8 +251,8 @@ impl<
             uv = Vec2 {
                 x: direction.x,
                 y: match side {
-                    Side::Up => direction.z,
-                    Side::Down => -direction.z,
+                    Side::Up => -direction.z,
+                    Side::Down => direction.z,
                     _ => panic!(),
                 },
                 z: 0.0,
@@ -260,17 +260,17 @@ impl<
         } else {
             // Z has the greatest magnitude
             side = if direction.z >= 0.0 {
-                Side::Backward
-            } else {
                 Side::Forward
+            } else {
+                Side::Backward
             };
 
             uv_scaling_factor = 0.5 / absolute.z;
 
             uv = Vec2 {
                 x: match side {
-                    Side::Backward => -direction.x,
                     Side::Forward => direction.x,
+                    Side::Backward => -direction.x,
                     _ => panic!(),
                 },
                 y: direction.y,
