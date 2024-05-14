@@ -31,19 +31,19 @@ static SIDES: usize = 6;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Side {
-    Front = 0,
-    Back = 1,
-    Top = 2,
-    Bottom = 3,
+    Forward = 0,
+    Backward = 1,
+    Up = 2,
+    Down = 3,
     Left = 4,
     Right = 5,
 }
 
 pub static CUBE_MAP_SIDES: [Side; 6] = [
-    Side::Front,
-    Side::Back,
-    Side::Top,
-    Side::Bottom,
+    Side::Forward,
+    Side::Backward,
+    Side::Up,
+    Side::Down,
     Side::Left,
     Side::Right,
 ];
@@ -66,10 +66,10 @@ static CUBEMAP_SIDE_COLORS: [Color; 6] = [
 impl fmt::Display for Side {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
         let repr = match self {
-            Side::Front => "Front",
-            Side::Back => "Back",
-            Side::Top => "Top",
-            Side::Bottom => "Bottom",
+            Side::Forward => "Front",
+            Side::Backward => "Back",
+            Side::Up => "Top",
+            Side::Down => "Bottom",
             Side::Left => "Left",
             Side::Right => "Right",
         };
@@ -81,14 +81,14 @@ impl fmt::Display for Side {
 impl Side {
     pub fn get_direction(&self) -> Vec3 {
         match self {
-            Side::Front => vec3::FORWARD,
-            Side::Back => vec3::FORWARD * -1.0,
-            Side::Top => Vec3 {
+            Side::Forward => vec3::FORWARD,
+            Side::Backward => vec3::FORWARD * -1.0,
+            Side::Up => Vec3 {
                 x: -0.0,
                 y: 1.0,
                 z: 0.0001,
             },
-            Side::Bottom => Vec3 {
+            Side::Down => Vec3 {
                 x: -0.0,
                 y: -1.0,
                 z: 0.0001,
@@ -100,16 +100,16 @@ impl Side {
 
     pub fn get_block_coordinate(&self, is_horizontal: bool) -> (u32, u32) {
         match self {
-            Side::Front => (1, 1),
-            Side::Back => {
+            Side::Forward => (1, 1),
+            Side::Backward => {
                 if is_horizontal {
                     (3, 1)
                 } else {
                     (1, 3)
                 }
             }
-            Side::Top => (1, 0),
-            Side::Bottom => (1, 2),
+            Side::Up => (1, 0),
+            Side::Down => (1, 2),
             Side::Left => (0, 1),
             Side::Right => (2, 1),
         }
@@ -155,10 +155,10 @@ impl<
         Self {
             is_cross: false,
             sides: [
-                TextureMap::new(texture_paths[Side::Front as usize], storage_format),
-                TextureMap::new(texture_paths[Side::Back as usize], storage_format),
-                TextureMap::new(texture_paths[Side::Top as usize], storage_format),
-                TextureMap::new(texture_paths[Side::Bottom as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Forward as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Backward as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Up as usize], storage_format),
+                TextureMap::new(texture_paths[Side::Down as usize], storage_format),
                 TextureMap::new(texture_paths[Side::Left as usize], storage_format),
                 TextureMap::new(texture_paths[Side::Right as usize], storage_format),
             ],
@@ -241,9 +241,9 @@ impl<
         } else if absolute.y >= absolute.z {
             // Y has the greatest magnitude
             side = if direction.y >= 0.0 {
-                Side::Top
+                Side::Up
             } else {
-                Side::Bottom
+                Side::Down
             };
 
             uv_scaling_factor = 0.5 / absolute.y;
@@ -260,9 +260,9 @@ impl<
         } else {
             // Z has the greatest magnitude
             side = if direction.z >= 0.0 {
-                Side::Back
+                Side::Backward
             } else {
-                Side::Front
+                Side::Forward
             };
 
             uv_scaling_factor = 0.5 / absolute.z;
@@ -401,10 +401,10 @@ impl CubeMap {
 
             for (side_index, side_map) in self.sides.iter_mut().enumerate() {
                 let side = match side_index {
-                    0 => Side::Front,
-                    1 => Side::Back,
-                    2 => Side::Top,
-                    3 => Side::Bottom,
+                    0 => Side::Forward,
+                    1 => Side::Backward,
+                    2 => Side::Up,
+                    3 => Side::Down,
                     4 => Side::Left,
                     _ => Side::Right,
                 };
@@ -441,7 +441,7 @@ impl CubeMap {
                         let mut local_x = global_x - block_pixel_coordinate.0;
                         let mut local_y = global_y - block_pixel_coordinate.1;
 
-                        if side_index == Side::Back as usize && !is_horizontal {
+                        if side_index == Side::Backward as usize && !is_horizontal {
                             // Flip back texture data
                             local_x = dimension - local_x - 1;
                             local_y = dimension - local_y - 1;
