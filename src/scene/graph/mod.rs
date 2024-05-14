@@ -137,46 +137,49 @@ impl SceneGraph {
                         panic!("Encountered a `Entity` node with no resource handle!")
                     }
                 },
-                SceneNodeType::PointLight => match handle {
-                    Some(point_light_handle) => {
-                        let camera_arena = resources.camera.borrow();
-                        let point_light_arena = resources.point_light.borrow();
+                SceneNodeType::PointLight => {
 
-                        match active_camera_handle {
-                            Some(camera_handle) => {
-                                match camera_arena.get(&camera_handle) {
-                                    Ok(entry) => {
-                                        let active_camera = &entry.item;
-        
-                                        match point_light_arena.get(point_light_handle) {
-                                            Ok(entry) => {
-                                                let point_light = &entry.item;
-        
-                                                pipeline.render_point_light(
-                                                    point_light,
-                                                    Some(active_camera),
-                                                    Some(&mut resources.material.borrow_mut()),
-                                                );
-        
-                                                Ok(())
+                    match handle {
+                        Some(point_light_handle) => {
+                            let camera_arena = resources.camera.borrow();
+                            let point_light_arena = resources.point_light.borrow();
+                            
+                            match point_light_arena.get(point_light_handle) {
+                                Ok(entry) => {
+                                    let point_light = &entry.item;
+    
+                                    match active_camera_handle {
+                                        Some(camera_handle) => {
+                                            match camera_arena.get(&camera_handle) {
+                                                Ok(entry) => {
+                                                    let active_camera = &entry.item;
+            
+                                                    pipeline.render_point_light(
+                                                        point_light,
+                                                        Some(active_camera),
+                                                        Some(&mut resources.material.borrow_mut()),
+                                                    );
+            
+                                                    Ok(())
+                                                }
+                                                Err(err) => panic!(
+                                                    "Failed to get Camera from Arena with Handle {:?}: {}",
+                                                    handle, err
+                                                ),
                                             }
-                                            Err(err) => panic!(
-                                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                                handle, err
-                                            ),
-                                        }
+                                        },
+                                        None => Ok(())
                                     }
-                                    Err(err) => panic!(
-                                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
                                 }
-                            },
-                            None => Ok(())
+                                Err(err) => panic!(
+                                    "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
                         }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
+                        None => {
+                            panic!("Encountered a `PointLight` node with no resource handle!")
+                        }
                     }
                 },
                 SceneNodeType::SpotLight => match handle {
