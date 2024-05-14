@@ -230,10 +230,10 @@ impl<
             uv_scaling_factor = 0.5 / absolute.x;
 
             uv = Vec2 {
-                x: if direction.x < 0.0 {
-                    -direction.z
-                } else {
-                    direction.z
+                x: match side {
+                    Side::Right => direction.z,
+                    Side::Left => -direction.z,
+                    _ => panic!(),
                 },
                 y: direction.y,
                 z: 0.0,
@@ -250,10 +250,10 @@ impl<
 
             uv = Vec2 {
                 x: direction.x,
-                y: if direction.y < 0.0 {
-                    -direction.z
-                } else {
-                    direction.z
+                y: match side {
+                    Side::Up => direction.z,
+                    Side::Down => -direction.z,
+                    _ => panic!(),
                 },
                 z: 0.0,
             };
@@ -268,10 +268,10 @@ impl<
             uv_scaling_factor = 0.5 / absolute.z;
 
             uv = Vec2 {
-                x: if direction.z < 0.0 {
-                    direction.x
-                } else {
-                    -direction.x
+                x: match side {
+                    Side::Backward => -direction.x,
+                    Side::Forward => direction.x,
+                    _ => panic!(),
                 },
                 y: direction.y,
                 z: 0.0,
