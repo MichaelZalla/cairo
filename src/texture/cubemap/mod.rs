@@ -97,6 +97,23 @@ impl Side {
             Side::Right => vec3::RIGHT,
         }
     }
+
+    pub fn get_block_coordinate(&self, is_horizontal: bool) -> (u32, u32) {
+        match self {
+            Side::Front => (1, 1),
+            Side::Back => {
+                if is_horizontal {
+                    (3, 1)
+                } else {
+                    (1, 3)
+                }
+            }
+            Side::Top => (1, 0),
+            Side::Bottom => (1, 2),
+            Side::Left => (0, 1),
+            Side::Right => (2, 1),
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -395,20 +412,7 @@ impl CubeMap {
                 side_map.width = dimension;
                 side_map.height = dimension;
 
-                let block_coordinate = match side {
-                    Side::Front => (1, 1),
-                    Side::Back => {
-                        if is_horizontal {
-                            (3, 1)
-                        } else {
-                            (1, 3)
-                        }
-                    }
-                    Side::Top => (1, 0),
-                    Side::Bottom => (1, 2),
-                    Side::Left => (0, 1),
-                    Side::Right => (2, 1),
-                };
+                let block_coordinate = side.get_block_coordinate(is_horizontal);
 
                 let block_pixel_coordinate = (
                     block_coordinate.0 * dimension,
