@@ -2,7 +2,7 @@ use crate::{
     color::{self, Color},
     graphics::Graphics,
     pipeline::Pipeline,
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
 impl<'a> Pipeline<'a> {
@@ -18,51 +18,15 @@ impl<'a> Pipeline<'a> {
     pub fn render_point_indicator(&mut self, position: Vec3, scale: f32) {
         // X-axis (red)
 
-        self.render_line(
-            Vec3 {
-                x: -1.0 * scale,
-                y: 0.0,
-                z: 0.0,
-            } + position,
-            Vec3 {
-                x: 1.0 * scale,
-                y: 0.0,
-                z: 0.0,
-            } + position,
-            color::RED,
-        );
+        self.render_line(position, position + vec3::RIGHT * scale, color::RED);
 
         // Y-axis (blue)
 
-        self.render_line(
-            Vec3 {
-                x: 0.0,
-                y: -1.0 * scale,
-                z: 0.0,
-            } + position,
-            Vec3 {
-                x: 0.0,
-                y: 1.0 * scale,
-                z: 0.0,
-            } + position,
-            color::BLUE,
-        );
+        self.render_line(position, position + vec3::UP * scale, color::BLUE);
 
         // Z-axis (green)
 
-        self.render_line(
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -1.0 * scale,
-            } + position,
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 1.0 * scale,
-            } + position,
-            color::GREEN,
-        );
+        self.render_line(position, position + vec3::FORWARD * scale, color::GREEN);
     }
 
     pub fn render_world_axes(&mut self, scale: f32) {
