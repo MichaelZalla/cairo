@@ -30,12 +30,11 @@ impl<'a> Pipeline<'a> {
                     do_rasterized_geometry: false,
                     do_lighting: false,
                     do_deferred_lighting: false,
-                    do_bloom: false,
-                    do_visualize_normals: false,
                     face_culling_strategy: PipelineFaceCullingStrategy {
                         reject: PipelineFaceCullingReject::None,
                         ..Default::default()
                     },
+                    ..Default::default()
                 };
 
                 self.render_entity_mesh(mesh, world_transform);
