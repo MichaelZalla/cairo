@@ -11,7 +11,7 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-pub const HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
+pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
     |shader_context: &ShaderContext,
      resources: &SceneResources,
      sample: &GeometrySample|
@@ -85,7 +85,7 @@ pub const HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
         color::GREEN
     };
 
-pub const HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
+pub static HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
     |shader_context: &ShaderContext,
      resources: &SceneResources,
      sample: &GeometrySample|

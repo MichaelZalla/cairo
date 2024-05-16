@@ -9,7 +9,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub const MetallicFragmentShader: FragmentShaderFn =
+pub static MetallicFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the metallic for this fragment.
 

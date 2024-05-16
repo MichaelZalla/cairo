@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-pub const StencilFragmentShader: FragmentShaderFn =
+pub static StencilFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the stencil value for this fragment (black or white).
 

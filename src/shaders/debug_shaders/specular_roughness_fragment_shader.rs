@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-pub const SpecularRoughnessFragmentShader: FragmentShaderFn =
+pub static SpecularRoughnessFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the specular roughness (exponent) for this fragment.
 

@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-pub const AlbedoFragmentShader: FragmentShaderFn =
+pub static AlbedoFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the diffuse color for this fragment.
 

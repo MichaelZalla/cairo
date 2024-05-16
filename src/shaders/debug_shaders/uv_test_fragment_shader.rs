@@ -10,7 +10,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub const UvTestFragmentShader: FragmentShaderFn =
+pub static UvTestFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit an RGB representation of this fragment's interpolated UV.
 

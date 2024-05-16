@@ -9,7 +9,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub const DepthFragmentShader: FragmentShaderFn =
+pub static DepthFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
 

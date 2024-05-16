@@ -11,7 +11,7 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-pub const HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
+pub static HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
     |shader_context: &ShaderContext,
      resources: &SceneResources,
      sample: &GeometrySample|

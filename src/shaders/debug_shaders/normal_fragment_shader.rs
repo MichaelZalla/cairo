@@ -9,7 +9,7 @@ use crate::{
     vec::vec4::Vec4,
 };
 
-pub const NormalFragmentShader: FragmentShaderFn =
+pub static NormalFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the world-space normal (RBG space) for this fragment.
 

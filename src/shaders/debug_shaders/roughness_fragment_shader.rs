@@ -9,7 +9,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub const RoughnessFragmentShader: FragmentShaderFn =
+pub static RoughnessFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the roughness for this fragment.
 

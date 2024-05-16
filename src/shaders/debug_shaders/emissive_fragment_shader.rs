@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-pub const EmissiveFragmentShader: FragmentShaderFn =
+pub static EmissiveFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the emissive color for this fragment.
 

@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-pub const HdrEquirectangularProjectionVertexShader: VertexShaderFn =
+pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
     |context: &ShaderContext, v: &DefaultVertexIn| -> DefaultVertexOut {
         // Object-to-world-space vertex transform
 
@@ -65,7 +65,7 @@ pub const HdrEquirectangularProjectionVertexShader: VertexShaderFn =
         out
     };
 
-pub const HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
+pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
     |shader_context: &ShaderContext,
      resources: &SceneResources,
      sample: &GeometrySample|
