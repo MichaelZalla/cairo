@@ -47,10 +47,8 @@ impl<'a> Pipeline<'a> {
 
         // World space view volume.
 
-        let near_plane_points_world_space;
-        let far_plane_points_world_space;
-
-        match camera.get_kind() {
+        let (near_plane_points_world_space, far_plane_points_world_space) = match camera.get_kind()
+        {
             CameraProjectionKind::Perspective => {
                 let fov = camera.get_field_of_view().unwrap();
                 let fov_rad = fov * PI / 180.0;
@@ -60,7 +58,7 @@ impl<'a> Pipeline<'a> {
                 let opposite_over_adjacent_y =
                     (fov_rad / 2.0).tan() / camera.get_aspect_ratio().unwrap();
 
-                near_plane_points_world_space = near_plane_points_clip_space
+                let near_plane_points_world_space = near_plane_points_clip_space
                     .map(|mut coord| {
                         coord.x *= camera.get_projection_z_near() * opposite_over_adjacent_x;
                         coord.y *= camera.get_projection_z_near() * opposite_over_adjacent_y;
@@ -69,7 +67,7 @@ impl<'a> Pipeline<'a> {
                     })
                     .map(|coord| coord.to_vec3());
 
-                far_plane_points_world_space = far_plane_points_clip_space
+                let far_plane_points_world_space = far_plane_points_clip_space
                     .map(|mut coord| {
                         coord.x *= camera.get_projection_z_far() * opposite_over_adjacent_x;
                         coord.y *= camera.get_projection_z_far() * opposite_over_adjacent_y;
@@ -77,21 +75,25 @@ impl<'a> Pipeline<'a> {
                         coord * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
+
+                (near_plane_points_world_space, far_plane_points_world_space)
             }
             CameraProjectionKind::Orthographic => {
-                near_plane_points_world_space = near_plane_points_clip_space
+                let near_plane_points_world_space = near_plane_points_clip_space
                     .map(|coord| {
                         coord * camera.get_projection_inverse() * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
 
-                far_plane_points_world_space = far_plane_points_clip_space
+                let far_plane_points_world_space = far_plane_points_clip_space
                     .map(|coord| {
                         coord * camera.get_projection_inverse() * camera.get_view_transform()
                     })
                     .map(|coord| coord.to_vec3());
+
+                (near_plane_points_world_space, far_plane_points_world_space)
             }
-        }
+        };
 
         // View volume
 
