@@ -11,7 +11,7 @@ impl<'a> Pipeline<'a> {
         far_plane_points_world_space: [Vec3; 4],
         color: Option<Color>,
     ) {
-        // Draw near plane.
+        // Draw near plane (red).
 
         for (index, _point) in near_plane_points_world_space.as_slice().iter().enumerate() {
             self.render_line(
@@ -24,7 +24,7 @@ impl<'a> Pipeline<'a> {
             );
         }
 
-        // Draw far plane.
+        // Draw far plane (blue).
 
         for (index, _point) in far_plane_points_world_space.as_slice().iter().enumerate() {
             self.render_line(

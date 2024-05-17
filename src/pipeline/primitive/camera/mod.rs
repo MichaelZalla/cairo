@@ -14,7 +14,7 @@ impl<'a> Pipeline<'a> {
         let front_top_left_clip_space = Vec4 {
             x: -1.0,
             y: 1.0,
-            z: camera.get_projection_z_near(),
+            z: 0.0,
             w: 1.0,
         };
 
@@ -41,7 +41,7 @@ impl<'a> Pipeline<'a> {
         ];
 
         let far_plane_points_clip_space = near_plane_points_clip_space.map(|mut coord| {
-            coord.z = camera.get_projection_z_far();
+            coord.z = 1.0;
             coord
         });
 
