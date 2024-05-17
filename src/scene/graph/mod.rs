@@ -2,7 +2,15 @@ use std::fmt::{Display, Error};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{app::App, device::{GameControllerState, KeyboardState, MouseState}, matrix::Mat4, pipeline::Pipeline, resource::handle::Handle, serde::PostDeserialize, shader::context::ShaderContext};
+use crate::{
+    app::App,
+    device::{GameControllerState, KeyboardState, MouseState},
+    matrix::Mat4,
+    pipeline::Pipeline,
+    resource::handle::Handle,
+    serde::PostDeserialize,
+    shader::context::ShaderContext,
+};
 
 use super::{
     node::{
@@ -37,34 +45,54 @@ impl SceneGraph {
         mouse_state: &MouseState,
         keyboard_state: &KeyboardState,
         game_controller_state: &GameControllerState,
-        update_node: &mut C, 
-    ) -> Result<(), String> where C: FnMut(Mat4, &mut SceneNode, &SceneResources,
-        &App,
-        &MouseState,
-        &KeyboardState,
-        &GameControllerState,
-        &mut ShaderContext) -> Result<bool, String>
+        update_node: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(
+            Mat4,
+            &mut SceneNode,
+            &SceneResources,
+            &App,
+            &MouseState,
+            &KeyboardState,
+            &GameControllerState,
+            &mut ShaderContext,
+        ) -> Result<bool, String>,
     {
         self.root.visit_mut(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut |_current_depth: usize,
-            current_world_transform: Mat4,
-            node: &mut SceneNode| {
-                match update_node(current_world_transform, node, resources, app, mouse_state, keyboard_state, game_controller_state, shader_context) {
+            &mut |_current_depth: usize, current_world_transform: Mat4, node: &mut SceneNode| {
+                match update_node(
+                    current_world_transform,
+                    node,
+                    resources,
+                    app,
+                    mouse_state,
+                    keyboard_state,
+                    game_controller_state,
+                    shader_context,
+                ) {
                     Ok(was_handled) => {
                         if !was_handled {
-                            return node.update(resources, app, mouse_state, keyboard_state, game_controller_state, shader_context);
+                            return node.update(
+                                resources,
+                                app,
+                                mouse_state,
+                                keyboard_state,
+                                game_controller_state,
+                                shader_context,
+                            );
                         }
 
                         Ok(())
-                    },
+                    }
                     Err(e) => Err(e),
                 }
             },
         )?;
-        
-        Ok(())    
+
+        Ok(())
     }
 
     pub fn render(
@@ -138,7 +166,6 @@ impl SceneGraph {
                     }
                 },
                 SceneNodeType::PointLight => {
-
                     if !pipeline.options.do_visualize_lights {
                         return Ok(());
                     }
@@ -147,11 +174,11 @@ impl SceneGraph {
                         Some(point_light_handle) => {
                             let camera_arena = resources.camera.borrow();
                             let point_light_arena = resources.point_light.borrow();
-                            
+
                             match point_light_arena.get(point_light_handle) {
                                 Ok(entry) => {
                                     let point_light = &entry.item;
-    
+
                                     match active_camera_handle {
                                         Some(camera_handle) => {
                                             match camera_arena.get(&camera_handle) {
@@ -171,8 +198,8 @@ impl SceneGraph {
                                                     handle, err
                                                 ),
                                             }
-                                        },
-                                        None => Ok(())
+                                        }
+                                        None => Ok(()),
                                     }
                                 }
                                 Err(err) => panic!(
@@ -185,7 +212,7 @@ impl SceneGraph {
                             panic!("Encountered a `PointLight` node with no resource handle!")
                         }
                     }
-                },
+                }
                 SceneNodeType::SpotLight => {
                     if !pipeline.options.do_visualize_lights {
                         return Ok(());
@@ -195,14 +222,13 @@ impl SceneGraph {
                         Some(spot_light_handle) => {
                             let camera_arena = resources.camera.borrow();
                             let spot_light_arena = resources.spot_light.borrow();
-    
+
                             match active_camera_handle {
-                                Some(camera_handle) => {
-                                    match camera_arena.get(&camera_handle) {
-                                        Ok(entry) => {
-                                            let active_camera = &entry.item;
-            
-                                            match spot_light_arena.get(spot_light_handle) {
+                                Some(camera_handle) => match camera_arena.get(&camera_handle) {
+                                    Ok(entry) => {
+                                        let active_camera = &entry.item;
+
+                                        match spot_light_arena.get(spot_light_handle) {
                                                 Ok(entry) => {
                                                     let spot_light = &entry.item;
             
@@ -219,21 +245,20 @@ impl SceneGraph {
                                                     handle, err
                                                 ),
                                             }
-                                        }
-                                        Err(err) => panic!(
-                                            "Failed to get Camera from Arena with Handle {:?}: {}",
-                                            handle, err
-                                        ),
                                     }
-                                }
-                                None => Ok(())
+                                    Err(err) => panic!(
+                                        "Failed to get Camera from Arena with Handle {:?}: {}",
+                                        handle, err
+                                    ),
+                                },
+                                None => Ok(()),
                             }
                         }
                         None => {
                             panic!("Encountered a `PointLight` node with no resource handle!")
                         }
                     }
-                },
+                }
                 _ => Ok(()),
             }
         };
@@ -259,28 +284,26 @@ impl SceneGraph {
                 let skybox = &skybox_entry.item;
 
                 if let Some(cubemap_handle) = skybox.radiance {
-
                     if skybox.is_hdr {
                         match resources.cubemap_vec3.borrow().get(&cubemap_handle) {
                             Ok(entry) => {
                                 let cubemap = &entry.item;
-                        
+
                                 pipeline.render_skybox_hdr(cubemap, camera);
-                            },
+                            }
                             Err(e) => panic!("{}", e),
                         }
                     } else {
                         match resources.cubemap_u8.borrow().get(&cubemap_handle) {
                             Ok(entry) => {
                                 let cubemap = &entry.item;
-                        
+
                                 pipeline.render_skybox(cubemap, camera);
-                            },
+                            }
                             Err(e) => panic!("{}", e),
                         }
                     }
                 }
-
             }
         }
 
