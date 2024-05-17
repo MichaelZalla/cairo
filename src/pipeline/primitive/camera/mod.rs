@@ -11,33 +11,33 @@ impl<'a> Pipeline<'a> {
     pub fn render_camera(&mut self, camera: &Camera) {
         // Canonical (clip space) view volume.
 
-        let front_top_left_clip_space = Vec4 {
+        let near_top_left_clip_space = Vec4 {
             x: -1.0,
             y: 1.0,
             z: 0.0,
             w: 1.0,
         };
 
-        let front_top_right_clip_space = Vec4 {
+        let near_top_right_clip_space = Vec4 {
             x: 1.0,
-            ..front_top_left_clip_space
+            ..near_top_left_clip_space
         };
 
-        let front_bottom_left_clip_space = Vec4 {
+        let near_bottom_left_clip_space = Vec4 {
             y: -1.0,
-            ..front_top_left_clip_space
+            ..near_top_left_clip_space
         };
 
-        let front_bottom_right_clip_space = Vec4 {
+        let near_bottom_right_clip_space = Vec4 {
             x: 1.0,
-            ..front_bottom_left_clip_space
+            ..near_bottom_left_clip_space
         };
 
         let near_plane_points_clip_space = [
-            front_top_left_clip_space,
-            front_top_right_clip_space,
-            front_bottom_right_clip_space,
-            front_bottom_left_clip_space,
+            near_top_left_clip_space,
+            near_top_right_clip_space,
+            near_bottom_right_clip_space,
+            near_bottom_left_clip_space,
         ];
 
         let far_plane_points_clip_space = near_plane_points_clip_space.map(|mut coord| {
