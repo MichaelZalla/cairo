@@ -56,12 +56,18 @@ impl<'a> Pipeline<'a> {
                 let opposite_over_adjacent_x = (fov_rad / 2.0).tan();
 
                 let opposite_over_adjacent_y =
-                    (fov_rad / 2.0).tan() / camera.get_aspect_ratio().unwrap();
+                    opposite_over_adjacent_x / camera.get_aspect_ratio().unwrap();
+
+                let (near, far) = (
+                    camera.get_projection_z_near(),
+                    camera.get_projection_z_far(),
+                );
 
                 let near_plane_points_world_space = near_plane_points_clip_space
                     .map(|mut coord| {
-                        coord.x *= camera.get_projection_z_near() * opposite_over_adjacent_x;
-                        coord.y *= camera.get_projection_z_near() * opposite_over_adjacent_y;
+                        coord.x *= near * opposite_over_adjacent_x;
+                        coord.y *= near * opposite_over_adjacent_y;
+                        coord.z = near;
 
                         coord * camera.get_view_transform()
                     })
@@ -69,8 +75,9 @@ impl<'a> Pipeline<'a> {
 
                 let far_plane_points_world_space = far_plane_points_clip_space
                     .map(|mut coord| {
-                        coord.x *= camera.get_projection_z_far() * opposite_over_adjacent_x;
-                        coord.y *= camera.get_projection_z_far() * opposite_over_adjacent_y;
+                        coord.x *= far * opposite_over_adjacent_x;
+                        coord.y *= far * opposite_over_adjacent_y;
+                        coord.z = far;
 
                         coord * camera.get_view_transform()
                     })
