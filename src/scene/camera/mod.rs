@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -248,6 +250,91 @@ impl Camera {
 
     pub fn get_projection_inverse(&self) -> Mat4 {
         self.projection_inverse_transform
+    }
+
+    pub fn get_world_space_frustum(&self) -> ([Vec3; 4], [Vec3; 4]) {
+        // Canonical (clip space) view volume.
+
+        static NEAR_TOP_LEFT_CLIP_SPACE: Vec4 = Vec4 {
+            x: -1.0,
+            y: 1.0,
+            z: 0.0,
+            w: 1.0,
+        };
+
+        static NEAR_TOP_RIGHT_CLIP_SPACE: Vec4 = Vec4 {
+            x: 1.0,
+            ..NEAR_TOP_LEFT_CLIP_SPACE
+        };
+
+        static NEAR_BOTTOM_LEFT_CLIP_SPACE: Vec4 = Vec4 {
+            y: -1.0,
+            ..NEAR_TOP_LEFT_CLIP_SPACE
+        };
+
+        static NEAR_BOTTOM_RIGHT_CLIP_SPACE: Vec4 = Vec4 {
+            x: 1.0,
+            ..NEAR_BOTTOM_LEFT_CLIP_SPACE
+        };
+
+        static NEAR_PLANE_POINTS_CLIP_SPACE: [Vec4; 4] = [
+            NEAR_TOP_LEFT_CLIP_SPACE,
+            NEAR_TOP_RIGHT_CLIP_SPACE,
+            NEAR_BOTTOM_RIGHT_CLIP_SPACE,
+            NEAR_BOTTOM_LEFT_CLIP_SPACE,
+        ];
+
+        let far_plane_points_clip_space = NEAR_PLANE_POINTS_CLIP_SPACE.map(|mut coord| {
+            coord.z = 1.0;
+            coord
+        });
+
+        match self.get_kind() {
+            CameraProjectionKind::Perspective => {
+                let fov = self.get_field_of_view().unwrap();
+                let fov_rad = fov * PI / 180.0;
+
+                let opposite_over_adjacent_x = (fov_rad / 2.0).tan();
+
+                let opposite_over_adjacent_y =
+                    opposite_over_adjacent_x / self.get_aspect_ratio().unwrap();
+
+                let (near, far) = (self.get_projection_z_near(), self.get_projection_z_far());
+
+                let near_plane_points_world_space = NEAR_PLANE_POINTS_CLIP_SPACE
+                    .map(|mut coord| {
+                        coord.x *= near * opposite_over_adjacent_x;
+                        coord.y *= near * opposite_over_adjacent_y;
+                        coord.z = near;
+
+                        coord * self.get_view_transform()
+                    })
+                    .map(|coord| coord.to_vec3());
+
+                let far_plane_points_world_space = far_plane_points_clip_space
+                    .map(|mut coord| {
+                        coord.x *= far * opposite_over_adjacent_x;
+                        coord.y *= far * opposite_over_adjacent_y;
+                        coord.z = far;
+
+                        coord * self.get_view_transform()
+                    })
+                    .map(|coord| coord.to_vec3());
+
+                (near_plane_points_world_space, far_plane_points_world_space)
+            }
+            CameraProjectionKind::Orthographic => {
+                let near_plane_points_world_space = NEAR_PLANE_POINTS_CLIP_SPACE
+                    .map(|coord| coord * self.get_projection_inverse() * self.get_view_transform())
+                    .map(|coord| coord.to_vec3());
+
+                let far_plane_points_world_space = far_plane_points_clip_space
+                    .map(|coord| coord * self.get_projection_inverse() * self.get_view_transform())
+                    .map(|coord| coord.to_vec3());
+
+                (near_plane_points_world_space, far_plane_points_world_space)
+            }
+        }
     }
 
     pub fn get_near_plane_pixel_world_space_position(
