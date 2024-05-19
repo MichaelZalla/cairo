@@ -4,7 +4,7 @@ use crate::{
     mesh,
     pipeline::Pipeline,
     scene::{
-        camera::Camera,
+        camera::{frustum::Frustum, Camera},
         light::{PointLight, SpotLight},
     },
     transform::Transform3D,
@@ -148,10 +148,11 @@ impl<'a> Pipeline<'a> {
 
         color.linear_to_srgb();
 
-        self.render_frustum(
-            near_plane_points_world_space,
-            far_plane_points_world_space,
-            Some(Color::from_vec3(color * 255.0)),
-        );
+        let frustum = Frustum {
+            near: near_plane_points_world_space,
+            far: far_plane_points_world_space,
+        };
+
+        self.render_frustum(&frustum, Some(Color::from_vec3(color * 255.0)));
     }
 }

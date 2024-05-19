@@ -11,6 +11,10 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
+use self::frustum::{Frustum, FAR_PLANE_POINTS_CLIP_SPACE, NEAR_PLANE_POINTS_CLIP_SPACE};
+
+pub mod frustum;
+
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum CameraProjectionKind {
     #[default]
@@ -252,44 +256,10 @@ impl Camera {
         self.projection_inverse_transform
     }
 
-    pub fn get_world_space_frustum(&self) -> ([Vec3; 4], [Vec3; 4]) {
+    pub fn get_world_space_frustum(&self) -> Frustum {
         // Canonical (clip space) view volume.
 
-        static NEAR_TOP_LEFT_CLIP_SPACE: Vec4 = Vec4 {
-            x: -1.0,
-            y: 1.0,
-            z: 0.0,
-            w: 1.0,
-        };
-
-        static NEAR_TOP_RIGHT_CLIP_SPACE: Vec4 = Vec4 {
-            x: 1.0,
-            ..NEAR_TOP_LEFT_CLIP_SPACE
-        };
-
-        static NEAR_BOTTOM_LEFT_CLIP_SPACE: Vec4 = Vec4 {
-            y: -1.0,
-            ..NEAR_TOP_LEFT_CLIP_SPACE
-        };
-
-        static NEAR_BOTTOM_RIGHT_CLIP_SPACE: Vec4 = Vec4 {
-            x: 1.0,
-            ..NEAR_BOTTOM_LEFT_CLIP_SPACE
-        };
-
-        static NEAR_PLANE_POINTS_CLIP_SPACE: [Vec4; 4] = [
-            NEAR_TOP_LEFT_CLIP_SPACE,
-            NEAR_TOP_RIGHT_CLIP_SPACE,
-            NEAR_BOTTOM_RIGHT_CLIP_SPACE,
-            NEAR_BOTTOM_LEFT_CLIP_SPACE,
-        ];
-
-        let far_plane_points_clip_space = NEAR_PLANE_POINTS_CLIP_SPACE.map(|mut coord| {
-            coord.z = 1.0;
-            coord
-        });
-
-        match self.get_kind() {
+        let (near_plane_points_world_space, far_plane_points_world_space) = match self.get_kind() {
             CameraProjectionKind::Perspective => {
                 let fov = self.get_field_of_view().unwrap();
                 let fov_rad = fov * PI / 180.0;
@@ -311,7 +281,7 @@ impl Camera {
                     })
                     .map(|coord| coord.to_vec3());
 
-                let far_plane_points_world_space = far_plane_points_clip_space
+                let far_plane_points_world_space = FAR_PLANE_POINTS_CLIP_SPACE
                     .map(|mut coord| {
                         coord.x *= far * opposite_over_adjacent_x;
                         coord.y *= far * opposite_over_adjacent_y;
@@ -328,12 +298,17 @@ impl Camera {
                     .map(|coord| coord * self.get_projection_inverse() * self.get_view_transform())
                     .map(|coord| coord.to_vec3());
 
-                let far_plane_points_world_space = far_plane_points_clip_space
+                let far_plane_points_world_space = FAR_PLANE_POINTS_CLIP_SPACE
                     .map(|coord| coord * self.get_projection_inverse() * self.get_view_transform())
                     .map(|coord| coord.to_vec3());
 
                 (near_plane_points_world_space, far_plane_points_world_space)
             }
+        };
+
+        Frustum {
+            near: near_plane_points_world_space,
+            far: far_plane_points_world_space,
         }
     }
 

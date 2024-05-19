@@ -4,23 +4,20 @@ impl<'a> Pipeline<'a> {
     pub fn render_camera(&mut self, camera: &Camera) {
         // World space view volume.
 
-        let (near_plane_points_world_space, far_plane_points_world_space) =
-            camera.get_world_space_frustum();
+        let frustum = camera.get_world_space_frustum();
 
         // View volume
 
-        self.render_frustum(
-            near_plane_points_world_space,
-            far_plane_points_world_space,
-            None,
-        );
+        self.render_frustum(&frustum, None);
 
         // Target
 
         self.render_line(
-            (near_plane_points_world_space[0] + near_plane_points_world_space[2]) / 2.0,
-            (far_plane_points_world_space[0] + far_plane_points_world_space[2]) / 2.0,
+            (frustum.near[0] + frustum.near[2]) / 2.0,
+            (frustum.far[0] + frustum.far[2]) / 2.0,
             color::WHITE,
         );
+
+        self.render_point_indicator(Default::default(), 5.0);
     }
 }
