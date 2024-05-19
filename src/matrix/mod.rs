@@ -297,9 +297,14 @@ impl Mat4 {
         }
     }
 
-    pub fn perspective_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
+    pub fn get_width_for_fov(fov: f32) -> f32 {
         let fov_rad = fov * PI / 180.0;
-        let width = 1.0 / (fov_rad / 2.0).tan();
+
+        1.0 / (fov_rad / 2.0).tan()
+    }
+
+    pub fn perspective_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
+        let width = Self::get_width_for_fov(fov);
         let height = width * aspect_ratio;
 
         let (w, h, n, f) = (width, height, near, far);
@@ -315,8 +320,7 @@ impl Mat4 {
     }
 
     pub fn perspective_inverse_for_fov(fov: f32, aspect_ratio: f32, near: f32, far: f32) -> Self {
-        let fov_rad = fov * PI / 180.0;
-        let width = 1.0 / (fov_rad / 2.0).tan();
+        let width = Self::get_width_for_fov(fov);
         let height = width * aspect_ratio;
 
         let (w, h, n, f) = (width, height, near, far);
