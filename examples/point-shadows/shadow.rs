@@ -17,7 +17,24 @@ use cairo::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-pub fn blit_cubemap_side(
+pub fn blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target: &mut Buffer2D) {
+    let shadow_map_size = shadow_map.sides[0].width;
+
+    for side in &CUBE_MAP_SIDES {
+        let (side_index, block_coordinate) =
+            (side.get_index(), side.get_block_coordinate(true));
+
+        blit_shadow_map_side(
+            side_index,
+            &shadow_map.sides[side_index],
+            block_coordinate.0 * shadow_map_size,
+            block_coordinate.1 * shadow_map_size,
+            target,
+        );
+    }
+}
+
+fn blit_shadow_map_side(
     side_index: usize,
     side: &TextureMap<f32>,
     x_offset: u32,
@@ -39,7 +56,7 @@ pub fn blit_cubemap_side(
     }
 }
 
-pub fn render_point_shadows_to_cubemap(
+fn render_point_shadows_to_cubemap(
     light: &PointLight,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
@@ -50,8 +67,8 @@ pub fn render_point_shadows_to_cubemap(
         let mut shadow_map = CubeMap::<f32>::from_framebuffer(&framebuffer_rc.borrow());
 
         for side in CUBE_MAP_SIDES {
-            let side_map =  &mut shadow_map.sides[side.get_index()];
-            
+            let side_map = &mut shadow_map.sides[side.get_index()];
+
             side_map.sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
         }
 
@@ -60,16 +77,16 @@ pub fn render_point_shadows_to_cubemap(
 
     let mut cubemap_face_camera = {
         let mut camera = Camera::from_perspective(light.position, Default::default(), 90.0, 1.0);
-        
+
         // @NOTE(mzalla) Assumes the same near and far is set for the
         // framebuffer's depth attachment.
-    
+
         camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
         camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
 
         camera
     };
-        
+
     {
         let mut shader_context = shader_context_rc.borrow_mut();
 
@@ -125,13 +142,71 @@ pub fn render_point_shadows_to_cubemap(
 
 fn blit_hdr_attachment_to_cubemap_side(
     hdr_buffer: &Buffer2D<Vec3>,
-    cubemap_side: &mut TextureMap<f32>)
-{
+    cubemap_side: &mut TextureMap<f32>,
+) {
     let buffer = &mut cubemap_side.levels[0].0;
 
     for y in 0..buffer.height {
         for x in 0..buffer.width {
             buffer.set(x, y, hdr_buffer.get(x, y).x);
+        }
+    }
+}
+
+pub fn update_point_light_shadow_maps(
+    scene_context_rc: &RefCell<SceneContext>,
+    shadow_map_pipeline_rc: &RefCell<Pipeline>,
+    shadow_map_shader_context_rc: &RefCell<ShaderContext>,
+    shadow_map_framebuffer_rc: &'static RefCell<Framebuffer>,
+) {
+    // Render point shadow map.
+
+    let mut point_light_shadow_maps: Vec<CubeMap<f32>> = vec![];
+
+    {
+        let scene_context = scene_context_rc.borrow();
+
+        let resources = (*scene_context.resources).borrow();
+        let point_light_arena = resources.point_light.borrow();
+
+        let mut point_shadow_map_pipeline = shadow_map_pipeline_rc.borrow_mut();
+
+        for entry in point_light_arena.entries.iter().flatten() {
+            let light = &entry.item;
+
+            if light.shadow_map.is_some() {
+                let shadow_map = render_point_shadows_to_cubemap(
+                    light,
+                    &scene_context,
+                    shadow_map_shader_context_rc,
+                    shadow_map_framebuffer_rc,
+                    &mut point_shadow_map_pipeline,
+                )
+                .unwrap();
+
+                point_light_shadow_maps.push(shadow_map);
+            }
+        }
+    }
+
+    {
+        let scene_context = scene_context_rc.borrow();
+
+        let resources = (*scene_context.resources).borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+
+        let mut shadow_maps_replaced: usize = 0;
+
+        for entry in point_light_arena.entries.iter_mut().flatten() {
+            let light = &mut entry.item;
+
+            if light.shadow_map.is_some() {
+                light
+                    .shadow_map
+                    .replace(point_light_shadow_maps[shadow_maps_replaced].to_owned());
+
+                shadow_maps_replaced += 1;
+            }
         }
     }
 }
