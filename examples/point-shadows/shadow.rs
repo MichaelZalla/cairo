@@ -108,13 +108,7 @@ pub fn render_point_shadows_to_cubemap(
                     Some(hdr_attachment_rc) => {
                         let hdr_attachment = hdr_attachment_rc.borrow();
 
-                        let buffer = &mut shadow_map.sides[side.get_index()].levels[0].0;
-
-                        for y in 0..buffer.height {
-                            for x in 0..buffer.width {
-                                buffer.set(x, y, hdr_attachment.get(x, y).x);
-                            }
-                        }
+                        blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]); 
                     }
                     None => return Err("Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
                 }
@@ -124,4 +118,17 @@ pub fn render_point_shadows_to_cubemap(
     }
 
     Ok(shadow_map)
+}
+
+fn blit_hdr_attachment_to_cubemap_side(
+    hdr_buffer: &Buffer2D<Vec3>,
+    cubemap_side: &mut TextureMap<f32>)
+{
+    let buffer = &mut cubemap_side.levels[0].0;
+
+    for y in 0..buffer.height {
+        for x in 0..buffer.width {
+            buffer.set(x, y, hdr_buffer.get(x, y).x);
+        }
+    }
 }
