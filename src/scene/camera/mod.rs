@@ -138,6 +138,12 @@ impl Camera {
         self.field_of_view
     }
 
+    pub fn set_field_of_view(&mut self, fov: Option<f32>) {
+        self.field_of_view = fov;
+
+        self.recompute_projections();
+    }
+
     pub fn get_aspect_ratio(&self) -> Option<f32> {
         self.aspect_ratio
     }
