@@ -85,8 +85,6 @@ pub struct Mesh {
     pub faces: Vec<Face>,
     #[serde(skip)]
     pub aabb: AABB,
-    // #[serde(skip)]
-    // pub aabb_geometry: Geometry,
 }
 
 impl PostDeserialize for Mesh {
@@ -225,7 +223,6 @@ impl Mesh {
             geometry,
             faces,
             aabb: Default::default(),
-            // aabb_geometry: Default::default(),
         };
 
         mesh.post_deserialize();

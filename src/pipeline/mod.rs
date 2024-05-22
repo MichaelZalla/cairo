@@ -3,11 +3,9 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
-    entity::Entity,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
-    resource::arena::Arena,
-    scene::resources::SceneResources,
+    scene::{camera::frustum::Frustum, resources::SceneResources},
     shader::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
@@ -19,6 +17,7 @@ use crate::{
         default_alpha_shader::DEFAULT_ALPHA_SHADER,
         default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
     },
+    vec::vec4::Vec4,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -240,77 +239,73 @@ impl<'a> Pipeline<'a> {
 
     pub fn render_entity(
         &mut self,
-        entity: &Entity,
         world_transform: &Mat4,
-        mesh_arena: &Arena<Mesh>,
-    ) {
-        match mesh_arena.get(&entity.mesh) {
-            Ok(entry) => {
-                let mesh = &entry.item;
-                let mut did_set_active_material = false;
+        clipping_camera_frustum: &Option<Frustum>,
+        entity_mesh: &Mesh,
+        entity_material_name: &Option<String>,
+    ) -> bool {
+        let mut should_cull = false;
 
-                {
-                    let mut context = self.shader_context.borrow_mut();
-
-                    match &entity.material {
-                        Some(name) => {
-                            context.set_active_material(Some(name.clone()));
-
-                            did_set_active_material = true;
-                        }
-                        None => (),
-                    }
-                }
-
-                self.render_entity_mesh(mesh, world_transform);
-
-                if did_set_active_material {
-                    // Reset the shader context's original active material.
-
-                    let mut context = self.shader_context.borrow_mut();
-
-                    context.set_active_material(None);
-                }
+        if let Some(frustum) = clipping_camera_frustum.as_ref() {
+            if self.should_cull_entity_mesh(*world_transform, frustum, entity_mesh) {
+                should_cull = true;
             }
-            Err(err) => panic!(
-                "Failed to get Mesh from Arena with Handle {:?}: {}",
-                entity.mesh, err
-            ),
         }
+
+        let mut did_set_active_material = false;
+
+        if !should_cull {
+            let mut context = self.shader_context.borrow_mut();
+
+            match &entity_material_name {
+                Some(name) => {
+                    context.set_active_material(Some(name.clone()));
+
+                    did_set_active_material = true;
+                }
+                None => (),
+            }
+        }
+
+        self.render_entity_mesh(entity_mesh, world_transform);
+
+        if did_set_active_material {
+            // Reset the shader context's original active material.
+
+            let mut context = self.shader_context.borrow_mut();
+
+            context.set_active_material(None);
+        }
+
+        !should_cull
+    }
+
+    fn should_cull_entity_mesh(
+        &self,
+        world_transform: Mat4,
+        clipping_camera_frustum: &Frustum,
+        entity_mesh: &Mesh,
+    ) -> bool {
+        // Cull the entire entity, if possible, based on its bounds.
+
+        let object_space_center = entity_mesh.aabb.center;
+
+        let sphere_position = (Vec4::new(object_space_center, 1.0) * world_transform).to_vec3();
+        let sphere_radius = 4.0;
+
+        let culling_planes = clipping_camera_frustum.get_planes();
+
+        // @TODO Need to verify sign of top plane normal and bottom plane normal.
+
+        !culling_planes[0].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
+            || !culling_planes[1].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
+            || !culling_planes[2].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
+            || !culling_planes[3].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
+            || !culling_planes[4].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
+            || !culling_planes[5].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
     }
 
     fn render_entity_mesh(&mut self, mesh: &Mesh, world_transform: &Mat4) {
-        // Cull the entire entity, if possible, based on its bounds.
-
-        // if mesh.geometry.normals.len() > 1 {
-        //     let mut keep = false;
-
-        //     for face in mesh.aabb_geometry.faces.iter() {
-        //         let object_vertices_in = self.get_vertices_in(&mesh.aabb_geometry, &face);
-
-        //         let shader_context = self.shader_context.borrow();
-
-        //         let projection_space_vertices: Vec<DefaultVertexOut> = object_vertices_in
-        //             .into_iter()
-        //             .map(|v_in| return (self.vertex_shader)(&shader_context, &v_in))
-        //             .collect();
-
-        //         let mut tri: Triangle<DefaultVertexOut> = Triangle {
-        //             v0: projection_space_vertices[0],
-        //             v1: projection_space_vertices[1],
-        //             v2: projection_space_vertices[2],
-        //         };
-
-        //         if !self.should_cull_from_homogeneous_space(&mut tri) {
-        //             keep = true;
-        //         }
-        //     }
-
-        //     if !keep {
-        //         return;
-        //     }
-        // }
-
         // Otherwise, cull individual triangles.
 
         let original_world_transform: Mat4;

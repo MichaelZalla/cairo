@@ -115,7 +115,12 @@ impl SceneGraph {
         // Render scene.
 
         let mut active_camera_handle: Option<Handle> = None;
+        let mut clipping_camera_handle: Option<Handle> = None;
         let mut active_skybox_handle: Option<Handle> = None;
+
+        let mut entities_total: u32 = 0;
+        let mut entities_drawn: u32 = 0;
+        let mut entities_culled: u32 = 0;
 
         let mut render_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,
@@ -134,6 +139,7 @@ impl SceneGraph {
 
                                 if camera.is_active {
                                     active_camera_handle.replace(*handle);
+                                    clipping_camera_handle.replace(*handle);
                                 } else if let Some(options) = &options {
                                     if options.draw_cameras {
                                         pipeline.render_camera(camera, Some(color::YELLOW));
@@ -168,18 +174,51 @@ impl SceneGraph {
                     Some(handle) => {
                         let mesh_arena = resources.mesh.borrow();
                         let entity_arena = resources.entity.borrow();
+                        let camera_arena = resources.camera.borrow();
 
                         match entity_arena.get(handle) {
                             Ok(entry) => {
                                 let entity = &entry.item;
 
-                                pipeline.render_entity(
-                                    entity,
-                                    &current_world_transform,
-                                    &mesh_arena,
-                                );
+                                match mesh_arena.get(&entity.mesh) {
+                                    Ok(entry) => {
+                                        let entity_mesh = &entry.item;
 
-                                Ok(())
+                                        let clipping_camera_frustum = match clipping_camera_handle {
+                                            Some(camera_handle) => {
+                                                match camera_arena.get(&camera_handle) {
+                                                    Ok(entry) => Some(*entry.item.get_frustum()),
+                                                    Err(err) => panic!(
+                                                        "Failed to get Camera from Arena with Handle {:?}: {}",
+                                                        entity.mesh, err
+                                                    ),
+                                                }
+                                            }
+                                            None => None,
+                                        };
+
+                                        let was_drawn = pipeline.render_entity(
+                                            &current_world_transform,
+                                            &clipping_camera_frustum,
+                                            entity_mesh,
+                                            &entity.material,
+                                        );
+
+                                        entities_total += 1;
+
+                                        if was_drawn {
+                                            entities_drawn += 1
+                                        } else {
+                                            entities_culled += 1
+                                        }
+
+                                        Ok(())
+                                    }
+                                    Err(err) => panic!(
+                                        "Failed to get Mesh from Arena with Handle {:?}: {}",
+                                        entity.mesh, err
+                                    ),
+                                }
                             }
                             Err(err) => panic!(
                                 "Failed to get Entity from Arena with Handle {:?}: {}",
