@@ -57,6 +57,17 @@ pub fn render_point_shadows_to_cubemap(
     cubemap_face_camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
     cubemap_face_camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
 
+    {
+        let mut shader_context = shader_context_rc.borrow_mut();
+
+        shader_context.set_view_position(Vec4::new(
+            cubemap_face_camera.look_vector.get_position(),
+            1.0,
+        ));
+
+        shader_context.set_projection(cubemap_face_camera.get_projection());
+    }
+
     for side in CUBE_MAP_SIDES {
         if let Side::Up = &side {
             continue;
@@ -69,15 +80,8 @@ pub fn render_point_shadows_to_cubemap(
         {
             let mut shader_context = shader_context_rc.borrow_mut();
 
-            shader_context.set_view_position(Vec4::new(
-                cubemap_face_camera.look_vector.get_position(),
-                1.0,
-            ));
-
             shader_context
                 .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
-
-            shader_context.set_projection(cubemap_face_camera.get_projection());
         }
 
         let resources = (*scene_context.resources).borrow();
