@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use cairo::{
+use crate::{
     color::Color,
     scene::{light::POINT_LIGHT_SHADOW_CAMERA_FAR, resources::SceneResources},
     shader::{

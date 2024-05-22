@@ -2,10 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI};
 
-use shaders::{
-    PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
-};
-
 use cairo::{
     app::{resolution::RESOLUTION_640_BY_320, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
@@ -25,6 +21,9 @@ use cairo::{
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
+        shadow_shaders::point_shadows::{
+            PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
+        },
     },
     texture::cubemap::CubeMap,
 };
@@ -32,7 +31,6 @@ use cairo::{
 use crate::{scene::make_cubes_scene, shadow::render_point_shadows_to_cubemap};
 
 pub mod scene;
-pub mod shaders;
 pub mod shadow;
 
 fn main() -> Result<(), String> {
