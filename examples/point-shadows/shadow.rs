@@ -4,7 +4,11 @@ use cairo::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     pipeline::Pipeline,
-    scene::{camera::Camera, context::SceneContext},
+    scene::{
+        camera::Camera,
+        context::SceneContext,
+        light::{POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
+    },
     shader::context::ShaderContext,
     texture::{
         cubemap::{CubeMap, Side, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
@@ -46,6 +50,12 @@ pub fn render_point_shadows_to_cubemap(
 
     let mut cubemap_face_camera =
         Camera::from_perspective(*point_light_position, Default::default(), 90.0, 1.0);
+
+    // @NOTE(mzalla) Assumes the same near and far is set for the framebuffer's
+    // depth attachment.
+
+    cubemap_face_camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
+    cubemap_face_camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
 
     for side in CUBE_MAP_SIDES {
         if let Side::Up = &side {
