@@ -23,6 +23,7 @@ use super::{
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SceneGraphRenderOptions {
     pub draw_lights: bool,
+    pub draw_cameras: bool,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -133,8 +134,10 @@ impl SceneGraph {
 
                                 if camera.is_active {
                                     active_camera_handle.replace(*handle);
-                                } else {
-                                    pipeline.render_camera(camera, Some(color::YELLOW));
+                                } else if let Some(options) = &options {
+                                    if options.draw_cameras {
+                                        pipeline.render_camera(camera, Some(color::YELLOW));
+                                    }
                                 }
                             }
                             Err(err) => panic!(
