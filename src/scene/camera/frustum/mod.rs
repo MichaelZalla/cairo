@@ -85,6 +85,36 @@ pub struct Frustum {
 }
 
 impl Frustum {
+    pub fn get_center(&self) -> Vec3 {
+        let near_center = {
+            let mut center: Vec3 = Default::default();
+
+            center += self.near[0];
+            center += self.near[1];
+            center += self.near[2];
+            center += self.near[3];
+
+            center /= 4.0;
+
+            center
+        };
+
+        let far_center = {
+            let mut center: Vec3 = Default::default();
+
+            center += self.far[0];
+            center += self.far[1];
+            center += self.far[2];
+            center += self.far[3];
+
+            center /= 4.0;
+
+            center
+        };
+
+        (near_center + far_center) / 2.0
+    }
+
     pub fn get_planes(&self) -> [Plane; 6] {
         let near_top_left = self.near[0];
         let near_top_right = self.near[1];

@@ -70,6 +70,7 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
                     w: 1.0,
                 }
                 .as_normal(),
+                shadow_map_cameras: None,
             };
 
             resources
