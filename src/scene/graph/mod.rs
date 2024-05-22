@@ -3,7 +3,14 @@ use std::fmt::{Display, Error};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::App, color, device::{GameControllerState, KeyboardState, MouseState}, matrix::Mat4, pipeline::Pipeline, resource::handle::Handle, serde::PostDeserialize, shader::context::ShaderContext
+    app::App,
+    color,
+    device::{GameControllerState, KeyboardState, MouseState},
+    matrix::Mat4,
+    pipeline::Pipeline,
+    resource::handle::Handle,
+    serde::PostDeserialize,
+    shader::context::ShaderContext,
 };
 
 use super::{
@@ -12,6 +19,11 @@ use super::{
     },
     resources::SceneResources,
 };
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct SceneGraphRenderOptions {
+    pub draw_lights: bool,
+}
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SceneGraph {
@@ -93,6 +105,7 @@ impl SceneGraph {
         &self,
         resources: &SceneResources,
         pipeline: &mut Pipeline,
+        options: Option<SceneGraphRenderOptions>,
     ) -> Result<(), String> {
         // Begin frame
 
@@ -176,8 +189,10 @@ impl SceneGraph {
                     }
                 },
                 SceneNodeType::PointLight => {
-                    if !pipeline.options.do_visualize_lights {
-                        return Ok(());
+                    if let Some(options) = &options {
+                        if !options.draw_lights {
+                            return Ok(());
+                        }
                     }
 
                     match handle {
@@ -224,8 +239,10 @@ impl SceneGraph {
                     }
                 }
                 SceneNodeType::SpotLight => {
-                    if !pipeline.options.do_visualize_lights {
-                        return Ok(());
+                    if let Some(options) = &options {
+                        if !options.draw_lights {
+                            return Ok(());
+                        }
                     }
 
                     match handle {

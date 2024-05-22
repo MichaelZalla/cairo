@@ -93,8 +93,6 @@ fn main() -> Result<(), String> {
             Default::default(),
         );
 
-        pipeline.options.do_visualize_lights = true;
-
         pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
         RefCell::new(pipeline)
@@ -112,7 +110,6 @@ fn main() -> Result<(), String> {
         pipeline.set_geometry_shader(PointShadowMapGeometryShader);
 
         pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Frontfaces;
-        pipeline.options.do_visualize_lights = false;
 
         pipeline.bind_framebuffer(Some(point_shadow_map_framebuffer_rc));
 
@@ -220,7 +217,7 @@ fn main() -> Result<(), String> {
 
         pipeline.bind_framebuffer(Some(&framebuffer_rc));
 
-        match scene.render(&resources, &mut pipeline) {
+        match scene.render(&resources, &mut pipeline, None) {
             Ok(()) => {
                 // Write out.
 

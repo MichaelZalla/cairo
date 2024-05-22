@@ -117,7 +117,7 @@ fn render_point_shadows_to_cubemap(
         let resources = (*scene_context.resources).borrow();
         let scene = &scene_context.scenes.borrow()[0];
 
-        match scene.render(&resources, pipeline) {
+        match scene.render(&resources, pipeline, None) {
             Ok(()) => {
                 // Blit our framebuffer's HDR attachment buffer to our cubemap's
                 // corresponding side (texture map).

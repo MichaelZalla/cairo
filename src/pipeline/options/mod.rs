@@ -34,7 +34,6 @@ pub struct PipelineOptions {
     pub do_deferred_lighting: bool,
     pub do_bloom: bool,
     pub do_visualize_normals: bool,
-    pub do_visualize_lights: bool,
     pub face_culling_strategy: PipelineFaceCullingStrategy,
 }
 
@@ -48,7 +47,6 @@ impl Default for PipelineOptions {
             do_deferred_lighting: true,
             do_bloom: false,
             do_visualize_normals: false,
-            do_visualize_lights: false,
             face_culling_strategy: Default::default(),
         }
     }
@@ -106,18 +104,6 @@ impl PipelineOptions {
                     println!(
                         "Visualize normals: {}",
                         if self.do_visualize_normals {
-                            "On"
-                        } else {
-                            "Off"
-                        }
-                    );
-                }
-                Keycode::Num6 { .. } => {
-                    self.do_visualize_lights = !self.do_visualize_lights;
-
-                    println!(
-                        "Visualize lights: {}",
-                        if self.do_visualize_lights {
                             "On"
                         } else {
                             "Off"

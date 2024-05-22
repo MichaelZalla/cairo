@@ -301,7 +301,7 @@ fn main() -> Result<(), String> {
 
         let mut pipeline = pipeline_rc.borrow_mut();
 
-        match scene.render(&resources, &mut pipeline) {
+        match scene.render(&resources, &mut pipeline, None) {
             Ok(()) => {
                 // Write out.
 

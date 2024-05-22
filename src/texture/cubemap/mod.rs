@@ -375,7 +375,7 @@ impl CubeMap<Vec3> {
             let resources = (*scene_context.resources).borrow();
             let scene = &scene_context.scenes.borrow()[0];
 
-            match scene.render(&resources, pipeline) {
+            match scene.render(&resources, pipeline, None) {
                 Ok(()) => {
                     // Blit our framebuffer's color attachment buffer to our
                     // cubemap face texture.
