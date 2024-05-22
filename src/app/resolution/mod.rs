@@ -44,6 +44,11 @@ pub static RESOLUTION_1366_BY_768: Resolution = Resolution {
     height: 768,
 };
 
+pub static RESOLUTION_1600_BY_900: Resolution = Resolution {
+    width: 1600,
+    height: 900,
+};
+
 pub static RESOLUTION_1920_BY_1080: Resolution = Resolution {
     width: 1920,
     height: 1080,
