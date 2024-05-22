@@ -443,6 +443,8 @@ impl SceneNode {
                                 game_controller_state,
                             );
 
+                            camera.recompute_world_space_frustum();
+
                             let camera_view_inverse_transform = camera.get_view_inverse_transform();
 
                             shader_context.set_view_position(Vec4::new(

@@ -100,8 +100,9 @@ impl<'a> Pipeline<'a> {
             true,
         );
 
-        let target_position =
-            light_position + light.look_vector.get_forward().as_normal() * light.influence_distance;
+        let forward = light.look_vector.get_forward().as_normal();
+
+        let target_position = light_position + forward * light.influence_distance;
 
         self.render_line(light_position, target_position, color::WHITE);
 
@@ -149,6 +150,7 @@ impl<'a> Pipeline<'a> {
         color.linear_to_srgb();
 
         let frustum = Frustum {
+            forward,
             near: near_plane_points_world_space,
             far: far_plane_points_world_space,
         };

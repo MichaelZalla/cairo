@@ -48,11 +48,14 @@ pub struct Camera {
     #[serde(skip)]
     projection_inverse_transform: Mat4,
     pub look_vector: LookVector,
+    #[serde(skip)]
+    frustum: Frustum,
 }
 
 impl PostDeserialize for Camera {
     fn post_deserialize(&mut self) {
         self.recompute_projections();
+        self.recompute_world_space_frustum();
     }
 }
 
@@ -80,6 +83,7 @@ impl Camera {
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position, target),
+            frustum: Default::default(),
         };
 
         camera.post_deserialize();
@@ -177,6 +181,10 @@ impl Camera {
         self.recompute_projections();
     }
 
+    pub fn get_frustum(&self) -> &Frustum {
+        &self.frustum
+    }
+
     fn recompute_projections(&mut self) {
         match self.kind {
             CameraProjectionKind::Perspective => {
@@ -258,7 +266,7 @@ impl Camera {
         self.projection_inverse_transform
     }
 
-    pub fn get_world_space_frustum(&self) -> Frustum {
+    pub fn recompute_world_space_frustum(&mut self) {
         // Canonical (clip space) view volume.
 
         let (near_plane_points_world_space, far_plane_points_world_space) = match self.get_kind() {
@@ -308,10 +316,11 @@ impl Camera {
             }
         };
 
-        Frustum {
+        self.frustum = Frustum {
+            forward: self.look_vector.get_forward(),
             near: near_plane_points_world_space,
             far: far_plane_points_world_space,
-        }
+        };
     }
 
     pub fn get_near_plane_pixel_world_space_position(
@@ -405,5 +414,7 @@ impl Camera {
                 }
             }
         }
+
+        self.recompute_world_space_frustum();
     }
 }

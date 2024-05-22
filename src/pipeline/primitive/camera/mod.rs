@@ -8,11 +8,11 @@ impl<'a> Pipeline<'a> {
     pub fn render_camera(&mut self, camera: &Camera, color: Option<Color>) {
         // World space view volume.
 
-        let frustum = camera.get_world_space_frustum();
+        let frustum = camera.get_frustum();
 
         // View volume
 
-        self.render_frustum(&frustum, color);
+        self.render_frustum(frustum, color);
 
         // Target
 

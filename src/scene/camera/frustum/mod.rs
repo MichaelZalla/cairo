@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::vec::{vec3::Vec3, vec4::Vec4};
 
 static NEAR_TOP_LEFT_CLIP_SPACE: Vec4 = Vec4 {
@@ -48,7 +50,9 @@ pub static FAR_PLANE_POINTS_CLIP_SPACE: [Vec4; 4] = [
     },
 ];
 
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Frustum {
+    pub forward: Vec3,
     pub near: [Vec3; 4],
     pub far: [Vec3; 4],
 }
