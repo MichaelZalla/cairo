@@ -7,7 +7,7 @@ use cairo::{
     scene::{
         camera::Camera,
         context::SceneContext,
-        light::{POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
+        light::{PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
     },
     shader::context::ShaderContext,
     texture::{
@@ -40,7 +40,7 @@ pub fn blit_cubemap_side(
 }
 
 pub fn render_point_shadows_to_cubemap(
-    point_light_position: &Vec3,
+    light: &PointLight,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     framebuffer_rc: &'static RefCell<Framebuffer>,
@@ -58,15 +58,18 @@ pub fn render_point_shadows_to_cubemap(
         shadow_map
     };
 
-    let mut cubemap_face_camera =
-        Camera::from_perspective(*point_light_position, Default::default(), 90.0, 1.0);
+    let mut cubemap_face_camera = {
+        let mut camera = Camera::from_perspective(light.position, Default::default(), 90.0, 1.0);
+        
+        // @NOTE(mzalla) Assumes the same near and far is set for the
+        // framebuffer's depth attachment.
+    
+        camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
+        camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
 
-    // @NOTE(mzalla) Assumes the same near and far is set for the framebuffer's
-    // depth attachment.
-
-    cubemap_face_camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
-    cubemap_face_camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
-
+        camera
+    };
+        
     {
         let mut shader_context = shader_context_rc.borrow_mut();
 
@@ -85,7 +88,7 @@ pub fn render_point_shadows_to_cubemap(
 
         cubemap_face_camera
             .look_vector
-            .set_target_position(*point_light_position + side.get_direction());
+            .set_target_position(light.position + side.get_direction());
 
         {
             let mut shader_context = shader_context_rc.borrow_mut();

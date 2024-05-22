@@ -219,7 +219,7 @@ fn main() -> Result<(), String> {
 
                 if light.shadow_map.is_some() {
                     let shadow_map = render_point_shadows_to_cubemap(
-                        &light.position,
+                        light,
                         &scene_context,
                         &point_shadow_map_shader_context_rc,
                         point_shadow_map_framebuffer_rc,
