@@ -124,6 +124,10 @@ impl DirectionalLight {
     }
 }
 
+pub static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 512;
+pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.3;
+pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 100.0;
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PointLight {
     pub intensities: Vec3,
@@ -262,8 +266,9 @@ impl PointLight {
 
                 let current_depth = light_to_fragment.mag();
 
-                let closest_depth =
-                    cubemap.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0)) * 100.0;
+                let closest_depth = cubemap
+                    .sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
+                    * POINT_LIGHT_SHADOW_CAMERA_FAR;
 
                 if closest_depth == 0.0 {
                     return 0.0;

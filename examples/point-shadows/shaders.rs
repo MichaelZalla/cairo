@@ -2,7 +2,7 @@
 
 use cairo::{
     color::Color,
-    scene::resources::SceneResources,
+    scene::{light::POINT_LIGHT_SHADOW_CAMERA_FAR, resources::SceneResources},
     shader::{
         context::ShaderContext,
         fragment::FragmentShaderFn,
@@ -54,7 +54,7 @@ pub static PointShadowMapFragmentShader: FragmentShaderFn =
 
         let distance_to_point_light = (sample.world_pos - context.view_position.to_vec3()).mag();
 
-        let distance_alpha = distance_to_point_light / 100.0;
+        let distance_alpha = distance_to_point_light / POINT_LIGHT_SHADOW_CAMERA_FAR;
 
         Color::from_vec3(Vec3 {
             x: distance_alpha,
@@ -79,10 +79,12 @@ pub static TestPointShadowMapFragmentShader: FragmentShaderFn =
                 let closest_depth =
                     cubemap.sample_nearest(&Vec4::new(light_to_fragment.as_normal(), 1.0));
 
+                let closest_depth_alpha = closest_depth / POINT_LIGHT_SHADOW_CAMERA_FAR;
+
                 return Color::from_vec3(Vec3 {
-                    x: closest_depth / 100.0,
-                    y: closest_depth / 100.0,
-                    z: closest_depth / 100.0,
+                    x: closest_depth_alpha,
+                    y: closest_depth_alpha,
+                    z: closest_depth_alpha,
                 });
             }
         }

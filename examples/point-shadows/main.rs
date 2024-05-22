@@ -12,8 +12,14 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
-    scene::node::{
-        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    scene::{
+        light::{
+            POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
+            POINT_LIGHT_SHADOW_MAP_SIZE,
+        },
+        node::{
+            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+        },
     },
     shader::context::ShaderContext,
     shaders::{
@@ -28,8 +34,6 @@ use crate::{scene::make_cubes_scene, shadow::render_point_shadows_to_cubemap};
 pub mod scene;
 pub mod shaders;
 pub mod shadow;
-
-static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 512;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -59,7 +63,10 @@ fn main() -> Result<(), String> {
     let mut point_shadow_map_framebuffer =
         Framebuffer::new(POINT_LIGHT_SHADOW_MAP_SIZE, POINT_LIGHT_SHADOW_MAP_SIZE);
 
-    point_shadow_map_framebuffer.complete(0.3, 100.0);
+    point_shadow_map_framebuffer.complete(
+        POINT_LIGHT_SHADOW_CAMERA_NEAR,
+        POINT_LIGHT_SHADOW_CAMERA_FAR,
+    );
 
     let point_shadow_map_framebuffer_rc =
         Box::leak(Box::new(RefCell::new(point_shadow_map_framebuffer)));
