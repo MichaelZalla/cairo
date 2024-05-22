@@ -28,7 +28,7 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
         // Create resource handles from our arenas.
 
         let camera_handle = {
-            let camera: Camera = Camera::from_perspective(
+            let mut camera: Camera = Camera::from_perspective(
                 Vec3 {
                     x: 0.0,
                     y: 0.0,
@@ -38,6 +38,8 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
                 75.0,
                 camera_aspect_ratio,
             );
+
+            camera.is_active = true;
 
             resources.camera.borrow_mut().insert(Uuid::new_v4(), camera)
         };

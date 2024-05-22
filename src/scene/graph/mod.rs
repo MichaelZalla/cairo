@@ -3,13 +3,7 @@ use std::fmt::{Display, Error};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::App,
-    device::{GameControllerState, KeyboardState, MouseState},
-    matrix::Mat4,
-    pipeline::Pipeline,
-    resource::handle::Handle,
-    serde::PostDeserialize,
-    shader::context::ShaderContext,
+    app::App, color, device::{GameControllerState, KeyboardState, MouseState}, matrix::Mat4, pipeline::Pipeline, resource::handle::Handle, serde::PostDeserialize, shader::context::ShaderContext
 };
 
 use super::{
@@ -118,7 +112,23 @@ impl SceneGraph {
             match node_type {
                 SceneNodeType::Camera => match handle {
                     Some(handle) => {
-                        active_camera_handle.replace(*handle);
+                        let camera_arena = resources.camera.borrow();
+
+                        match camera_arena.get(handle) {
+                            Ok(entry) => {
+                                let camera = &entry.item;
+
+                                if camera.is_active {
+                                    active_camera_handle.replace(*handle);
+                                } else {
+                                    pipeline.render_camera(camera, Some(color::YELLOW));
+                                }
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Camera from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
 
                         Ok(())
                     }

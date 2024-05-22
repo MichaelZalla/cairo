@@ -35,6 +35,7 @@ static DEFAULT_CAMERA_ASPECT_RATIO: f32 = 16.0 / 9.0;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Camera {
+    pub is_active: bool,
     kind: CameraProjectionKind,
     field_of_view: Option<f32>,
     aspect_ratio: Option<f32>,
@@ -68,6 +69,7 @@ impl Camera {
         let projection_z_far = 1000.0;
 
         let mut camera = Camera {
+            is_active: false,
             kind,
             field_of_view,
             aspect_ratio,

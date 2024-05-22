@@ -1,14 +1,18 @@
-use crate::{color, pipeline::Pipeline, scene::camera::Camera};
+use crate::{
+    color::{self, Color},
+    pipeline::Pipeline,
+    scene::camera::Camera,
+};
 
 impl<'a> Pipeline<'a> {
-    pub fn render_camera(&mut self, camera: &Camera) {
+    pub fn render_camera(&mut self, camera: &Camera, color: Option<Color>) {
         // World space view volume.
 
         let frustum = camera.get_world_space_frustum();
 
         // View volume
 
-        self.render_frustum(&frustum, None);
+        self.render_frustum(&frustum, color);
 
         // Target
 
