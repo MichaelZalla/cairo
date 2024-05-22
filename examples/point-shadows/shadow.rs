@@ -46,7 +46,17 @@ pub fn render_point_shadows_to_cubemap(
     framebuffer_rc: &'static RefCell<Framebuffer>,
     pipeline: &mut Pipeline,
 ) -> Result<CubeMap<f32>, String> {
-    let mut shadow_map = CubeMap::<f32>::from_framebuffer(&framebuffer_rc.borrow());
+    let mut shadow_map = {
+        let mut shadow_map = CubeMap::<f32>::from_framebuffer(&framebuffer_rc.borrow());
+
+        for side in CUBE_MAP_SIDES {
+            let side_map =  &mut shadow_map.sides[side.get_index()];
+            
+            side_map.sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
+        }
+
+        shadow_map
+    };
 
     let mut cubemap_face_camera =
         Camera::from_perspective(*point_light_position, Default::default(), 90.0, 1.0);
@@ -89,16 +99,14 @@ pub fn render_point_shadows_to_cubemap(
 
         match scene.render(&resources, pipeline) {
             Ok(()) => {
-                // Blit our framebuffer's color attachment buffer to our
-                // cubemap face texture.
+                // Blit our framebuffer's HDR attachment buffer to our cubemap's
+                // corresponding side (texture map).
 
                 let framebuffer = framebuffer_rc.borrow();
 
                 match &framebuffer.attachments.forward_or_deferred_hdr {
                     Some(hdr_attachment_rc) => {
                         let hdr_attachment = hdr_attachment_rc.borrow();
-
-                        shadow_map.sides[side.get_index()].sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
 
                         let buffer = &mut shadow_map.sides[side.get_index()].levels[0].0;
 
