@@ -1,82 +1,190 @@
-use crate::{animation::lerp, vertex::default_vertex_out::DefaultVertexOut};
+use crate::{
+    animation::lerp, scene::camera::frustum::NdcPlane, vertex::default_vertex_out::DefaultVertexOut,
+};
 
 use super::Triangle;
 
-pub(in crate::pipeline) fn clip(
+fn get_signed_distance_ratio(
+    src: &DefaultVertexOut,
+    dest: &DefaultVertexOut,
+    ndc_plane: NdcPlane,
+) -> f32 {
+    let (d1, d2) = match ndc_plane {
+        NdcPlane::Near => (
+            src.position.z + src.position.w,
+            dest.position.z + dest.position.w,
+        ),
+        NdcPlane::Far => (
+            src.position.z - src.position.w,
+            dest.position.z - dest.position.w,
+        ),
+        NdcPlane::Left => (
+            src.position.x + src.position.w,
+            dest.position.x + dest.position.w,
+        ),
+        NdcPlane::Right => (
+            src.position.x - src.position.w,
+            dest.position.x - dest.position.w,
+        ),
+        NdcPlane::Top => (
+            src.position.y - src.position.w,
+            dest.position.y - dest.position.w,
+        ),
+        NdcPlane::Bottom => (
+            src.position.y + src.position.w,
+            dest.position.y + dest.position.w,
+        ),
+    };
+
+    d1 / (d1 - d2)
+}
+
+pub(in crate::pipeline) fn clip_by_all_planes(
     triangle: &Triangle<DefaultVertexOut>,
 ) -> Vec<Triangle<DefaultVertexOut>> {
-    // Clip triangles that intersect the front of our view frustum
+    let mut clipped_triangles = vec![*triangle];
 
-    if triangle.v0.position.z < 0.0 {
-        if triangle.v1.position.z < 0.0 {
-            // Clip 2 (0 and 1)
+    clipped_triangles = clip_triangles_by_plane(NdcPlane::Near, clipped_triangles);
+    clipped_triangles = clip_triangles_by_plane(NdcPlane::Far, clipped_triangles);
+    clipped_triangles = clip_triangles_by_plane(NdcPlane::Left, clipped_triangles);
+    clipped_triangles = clip_triangles_by_plane(NdcPlane::Right, clipped_triangles);
+    clipped_triangles = clip_triangles_by_plane(NdcPlane::Top, clipped_triangles);
+    clipped_triangles = clip_triangles_by_plane(NdcPlane::Bottom, clipped_triangles);
 
-            clip2(triangle.v0, triangle.v1, triangle.v2)
-        } else if triangle.v2.position.z < 0.0 {
-            // Clip 2 (0 and 2)
-            clip1(triangle.v0, triangle.v2, triangle.v1)
-        } else {
-            // Clip 1 (0)
-            clip1(triangle.v0, triangle.v1, triangle.v2)
+    clipped_triangles
+}
+
+pub(in crate::pipeline) fn clip_triangles_by_plane(
+    ndc_plane: NdcPlane,
+    triangles: Vec<Triangle<DefaultVertexOut>>,
+) -> Vec<Triangle<DefaultVertexOut>> {
+    let mut all_clipped = vec![];
+
+    for triangle in triangles {
+        for clipped in clip_triangle_by_plane(ndc_plane, triangle) {
+            all_clipped.push(clipped);
         }
-    } else if triangle.v1.position.z < 0.0 {
-        if triangle.v2.position.z < 0.0 {
-            // Clip 2
-            clip2(triangle.v1, triangle.v2, triangle.v0)
-        } else {
-            // Clip 1
-            clip1(triangle.v1, triangle.v0, triangle.v2)
-        }
-    } else if triangle.v2.position.z < 0.0 {
-        // Clip 1
-        clip1(triangle.v2, triangle.v0, triangle.v1)
-    } else {
-        vec![*triangle]
     }
+
+    all_clipped
 }
 
-fn clip1(
-    v0: DefaultVertexOut,
-    v1: DefaultVertexOut,
-    v2: DefaultVertexOut,
+pub(in crate::pipeline) fn clip_triangle_by_plane(
+    ndc_plane: NdcPlane,
+    triangle: Triangle<DefaultVertexOut>,
 ) -> Vec<Triangle<DefaultVertexOut>> {
-    let a_alpha = -(v0.position.z) / (v1.position.z - v0.position.z);
-    let b_alpha = -(v0.position.z) / (v2.position.z - v0.position.z);
+    // Clip triangles against the near plane (z=0).
 
-    let a_prime = lerp(v0, v1, a_alpha);
-    let b_prime = lerp(v0, v2, b_alpha);
+    let mut vertices_inside_plane = vec![];
+    let mut indices_inside_plane = vec![];
 
-    let triangle1 = Triangle {
-        v0: a_prime,
-        v1,
-        v2,
-    };
+    let mut vertices_outside_plane = vec![];
+    let mut indices_outside_plane = vec![];
 
-    let triangle2 = Triangle {
-        v0: b_prime,
-        v1: a_prime,
-        v2,
-    };
+    for index in 0..3 {
+        let v = if index == 0 {
+            &triangle.v0
+        } else if index == 1 {
+            &triangle.v1
+        } else {
+            &triangle.v2
+        };
 
-    vec![triangle1, triangle2]
-}
+        let is_inside_plane = match ndc_plane {
+            NdcPlane::Near => v.position.z > -v.position.w,
+            NdcPlane::Far => v.position.z < v.position.w,
+            NdcPlane::Left => v.position.x > -v.position.w,
+            NdcPlane::Right => v.position.x < v.position.w,
+            NdcPlane::Bottom => v.position.y > -v.position.w,
+            NdcPlane::Top => v.position.y < v.position.w,
+        };
 
-fn clip2(
-    v0: DefaultVertexOut,
-    v1: DefaultVertexOut,
-    v2: DefaultVertexOut,
-) -> Vec<Triangle<DefaultVertexOut>> {
-    let a_alpha = -(v0.position.z) / (v2.position.z - v0.position.z);
-    let b_alpha = -(v1.position.z) / (v2.position.z - v1.position.z);
+        if is_inside_plane {
+            indices_inside_plane.push(index);
+            vertices_inside_plane.push(v);
+        } else {
+            indices_outside_plane.push(index);
+            vertices_outside_plane.push(v);
+        }
+    }
 
-    let a_prime = lerp(v0, v2, a_alpha);
-    let b_prime = lerp(v1, v2, b_alpha);
+    if vertices_inside_plane.len() == 3 {
+        vec![triangle]
+    } else if vertices_outside_plane.len() == 2 {
+        // Two points lie outside of the plane; clip 2.
 
-    let triangle = Triangle {
-        v0: a_prime,
-        v1: b_prime,
-        v2,
-    };
+        let a = vertices_inside_plane[0];
+        let b = vertices_outside_plane[0];
+        let c = vertices_outside_plane[1];
 
-    vec![triangle]
+        let a_index = indices_inside_plane[0];
+        let b_index = indices_outside_plane[0];
+
+        let b_alpha = get_signed_distance_ratio(b, a, ndc_plane);
+        let b_prime = lerp(*b, *a, b_alpha);
+
+        let c_alpha = get_signed_distance_ratio(c, a, ndc_plane);
+        let c_prime = lerp(*c, *a, c_alpha);
+
+        if (a_index + 1) % 3 == b_index {
+            vec![Triangle {
+                v0: *a,
+                v1: b_prime,
+                v2: c_prime,
+            }]
+        } else {
+            vec![Triangle {
+                v0: *a,
+                v1: c_prime,
+                v2: b_prime,
+            }]
+        }
+    } else if vertices_outside_plane.len() == 1 {
+        // One point lies outside of the plane; clip 1.
+
+        let a = vertices_inside_plane[0];
+        let b = vertices_outside_plane[0];
+        let c = vertices_inside_plane[1];
+
+        let a_index = indices_inside_plane[0];
+        let b_index = indices_outside_plane[0];
+
+        let ab_alpha = get_signed_distance_ratio(b, a, ndc_plane);
+        let cb_alpha = get_signed_distance_ratio(b, c, ndc_plane);
+
+        let a_prime = lerp(*b, *a, ab_alpha);
+        let c_prime = lerp(*b, *c, cb_alpha);
+
+        if (a_index + 1) % 3 == b_index {
+            vec![
+                Triangle {
+                    v0: *a,
+                    v1: a_prime,
+                    v2: c_prime,
+                },
+                Triangle {
+                    v0: *a,
+                    v1: c_prime,
+                    v2: *c,
+                },
+            ]
+        } else {
+            vec![
+                Triangle {
+                    v0: *a,
+                    v1: *c,
+                    v2: c_prime,
+                },
+                Triangle {
+                    v0: *a,
+                    v1: c_prime,
+                    v2: a_prime,
+                },
+            ]
+        }
+    } else {
+        // Triangle is entirely outside of the plane.
+
+        vec![]
+    }
 }

@@ -51,6 +51,17 @@ pub static FAR_PLANE_POINTS_CLIP_SPACE: [Vec4; 4] = [
 ];
 
 #[derive(Default, Debug, Copy, Clone)]
+pub enum NdcPlane {
+    #[default]
+    Near,
+    Far,
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
 pub struct Plane {
     point: Vec3,
     normal: Vec3,

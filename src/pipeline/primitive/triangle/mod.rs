@@ -5,15 +5,13 @@ use crate::{
         options::{PipelineFaceCullingReject, PipelineFaceCullingWindingOrder},
         Pipeline,
     },
-    // scene::resources::SceneResources,
-    // shader::{self, context::ShaderContext},
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
 pub(in crate::pipeline) mod clip;
 
-use clip::clip;
+use self::clip::clip_by_all_planes;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Triangle<T> {
@@ -251,7 +249,7 @@ impl<'a> Pipeline<'a> {
             return;
         }
 
-        let clipped_triangles = clip(triangle);
+        let clipped_triangles = clip_by_all_planes(triangle);
 
         for clipped in &clipped_triangles {
             self.post_process_triangle_vertices(clipped);
