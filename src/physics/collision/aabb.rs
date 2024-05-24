@@ -55,20 +55,6 @@ impl AABB {
         AABB::cube(center, half_extent)
     }
 
-    pub fn contains_point(&self, p: Vec3) -> bool {
-        if p.x < self.left
-            || p.x > self.right
-            || p.y < self.bottom
-            || p.y > self.top
-            || p.z < self.near
-            || p.z > self.far
-        {
-            return false;
-        }
-
-        true
-    }
-
     pub fn intersects(&self, rhs: &Self) -> bool {
         if self.right < rhs.left
             || self.left > rhs.right
