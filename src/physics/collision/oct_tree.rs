@@ -48,7 +48,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
     }
 
     fn subdivide(&mut self) {
-        let child_half_dimension = self.bounds.half_dimension / 2.0;
+        let child_half_extent = self.bounds.half_extent / 2.0;
 
         let left_top_near_center = Vec3::interpolate(
             self.bounds.center,
@@ -132,33 +132,21 @@ impl<T: Copy + Display> OctTreeNode<T> {
 
         self.children = vec![
             // Left top near
-            OctTreeNode::new(self, AABB::new(left_top_near_center, child_half_dimension)),
+            OctTreeNode::new(self, AABB::new(left_top_near_center, child_half_extent)),
             // Right top near
-            OctTreeNode::new(self, AABB::new(right_top_near_center, child_half_dimension)),
+            OctTreeNode::new(self, AABB::new(right_top_near_center, child_half_extent)),
             // Left bottom near
-            OctTreeNode::new(
-                self,
-                AABB::new(left_bottom_near_center, child_half_dimension),
-            ),
+            OctTreeNode::new(self, AABB::new(left_bottom_near_center, child_half_extent)),
             // Right bottom near
-            OctTreeNode::new(
-                self,
-                AABB::new(right_bottom_near_center, child_half_dimension),
-            ),
+            OctTreeNode::new(self, AABB::new(right_bottom_near_center, child_half_extent)),
             // Left top far
-            OctTreeNode::new(self, AABB::new(left_top_far_center, child_half_dimension)),
+            OctTreeNode::new(self, AABB::new(left_top_far_center, child_half_extent)),
             // Right top far
-            OctTreeNode::new(self, AABB::new(right_top_far_center, child_half_dimension)),
+            OctTreeNode::new(self, AABB::new(right_top_far_center, child_half_extent)),
             // Left bottom far
-            OctTreeNode::new(
-                self,
-                AABB::new(left_bottom_far_center, child_half_dimension),
-            ),
+            OctTreeNode::new(self, AABB::new(left_bottom_far_center, child_half_extent)),
             // Right bottom far
-            OctTreeNode::new(
-                self,
-                AABB::new(right_bottom_far_center, child_half_dimension),
-            ),
+            OctTreeNode::new(self, AABB::new(right_bottom_far_center, child_half_extent)),
         ];
     }
 }

@@ -72,7 +72,7 @@ impl Geometry {
                 y: y_min + height / 2.0,
                 z: z_min + depth / 2.0,
             },
-            half_dimension: (x_max - x_min) / 2.0,
+            half_extent: (x_max - x_min) / 2.0,
             left: x_min,
             right: x_max,
             top: y_max,

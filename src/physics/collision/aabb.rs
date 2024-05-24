@@ -7,7 +7,7 @@ use crate::vec::vec3::Vec3;
 #[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
 pub struct AABB {
     pub center: Vec3,
-    pub half_dimension: f32,
+    pub half_extent: f32,
     pub left: f32,
     pub right: f32,
     pub top: f32,
@@ -17,16 +17,16 @@ pub struct AABB {
 }
 
 impl AABB {
-    pub fn new(center: Vec3, half_dimension: f32) -> Self {
+    pub fn new(center: Vec3, half_extent: f32) -> Self {
         AABB {
             center,
-            half_dimension,
-            left: center.x - half_dimension,
-            right: center.x + half_dimension,
-            top: center.y + half_dimension,
-            bottom: center.y - half_dimension,
-            near: center.z + half_dimension,
-            far: center.z - half_dimension,
+            half_extent,
+            left: center.x - half_extent,
+            right: center.x + half_extent,
+            top: center.y + half_extent,
+            bottom: center.y - half_extent,
+            near: center.z + half_extent,
+            far: center.z - half_extent,
         }
     }
 
@@ -50,10 +50,9 @@ impl AABB {
         };
 
         let largest_dimension = (max_x - min_x).max(max_y - min_y).max(max_z - min_z);
+        let half_extent = largest_dimension / 2.0;
 
-        let half_dimension = largest_dimension / 2.0;
-
-        AABB::new(center, half_dimension)
+        AABB::new(center, half_extent)
     }
 
     pub fn contains_point(&self, p: Vec3) -> bool {
