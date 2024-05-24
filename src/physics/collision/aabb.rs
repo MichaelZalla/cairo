@@ -17,7 +17,7 @@ pub struct AABB {
 }
 
 impl AABB {
-    pub fn new(center: Vec3, half_extent: f32) -> Self {
+    pub fn cube(center: Vec3, half_extent: f32) -> Self {
         AABB {
             center,
             half_extent,
@@ -52,7 +52,7 @@ impl AABB {
         let largest_dimension = (max_x - min_x).max(max_y - min_y).max(max_z - min_z);
         let half_extent = largest_dimension / 2.0;
 
-        AABB::new(center, half_extent)
+        AABB::cube(center, half_extent)
     }
 
     pub fn contains_point(&self, p: Vec3) -> bool {
