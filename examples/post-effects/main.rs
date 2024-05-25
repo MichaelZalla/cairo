@@ -19,6 +19,7 @@ use cairo::{
     matrix::Mat4,
     mesh,
     pipeline::Pipeline,
+    render::Renderer,
     scene::{
         context::utils::make_empty_scene,
         light::{PointLight, SpotLight},

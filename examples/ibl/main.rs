@@ -13,6 +13,7 @@ use cairo::{
         bake_diffuse_and_specular_from_hdri, brdf::generate_specular_brdf_integration_map,
     },
     pipeline::Pipeline,
+    render::Renderer,
     resource::handle::Handle,
     scene::{
         graph::SceneGraph,

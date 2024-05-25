@@ -8,6 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::Pipeline,
+    render::Renderer,
     scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
     shader::context::ShaderContext,
     shaders::{

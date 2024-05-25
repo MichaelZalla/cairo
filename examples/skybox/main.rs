@@ -10,6 +10,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::Pipeline,
+    render::Renderer,
     scene::{
         context::utils::make_cube_scene,
         light::{PointLight, SpotLight},
