@@ -24,6 +24,7 @@ use cairo::{
 };
 use uuid::Uuid;
 
+#[allow(clippy::too_many_arguments)]
 pub fn draw_sample_panel_contents(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &mut UILayoutContext,
@@ -40,7 +41,7 @@ pub fn draw_sample_panel_contents(
     // Draw a bordered button.
 
     let button_options = ButtonOptions {
-        label: format!("Bordered button").to_string(),
+        label: "Bordered button".to_string(),
         with_border: true,
         ..Default::default()
     };
@@ -65,7 +66,7 @@ pub fn draw_sample_panel_contents(
         parent_buffer,
         mouse_state,
         &ButtonOptions {
-            label: format!("Borderless button").to_string(),
+            label: "Borderless button".to_string(),
             with_border: false,
             ..button_options
         },
@@ -148,7 +149,6 @@ pub fn draw_sample_panel_contents(
             text: format!("FPS: {:.*}", 0, timing_info.frames_per_second),
             color: color::RED,
             cache: false,
-            ..text_options
         },
     );
 
@@ -166,7 +166,6 @@ pub fn draw_sample_panel_contents(
             text: format!("Uptime: {:.*}", 2, timing_info.uptime_seconds),
             cache: false,
             color: color::GREEN,
-            ..text_options
         },
     );
 
