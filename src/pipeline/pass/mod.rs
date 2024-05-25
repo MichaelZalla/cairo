@@ -7,7 +7,7 @@ use super::Pipeline;
 
 impl<'a> Pipeline<'a> {
     pub(in crate::pipeline) fn do_deferred_lighting_pass(&mut self) {
-        if let Some(rc) = self.framebuffer {
+        if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
             if let Some(deferred_buffer_lock) =
@@ -42,7 +42,7 @@ impl<'a> Pipeline<'a> {
     }
 
     pub(in crate::pipeline) fn do_bloom_pass(&mut self) {
-        match self.framebuffer {
+        match &self.framebuffer {
             Some(rc) => {
                 let mut framebuffer = rc.borrow_mut();
 

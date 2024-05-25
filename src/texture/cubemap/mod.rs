@@ -2,6 +2,7 @@ use std::{
     cell::RefCell,
     fmt::{self, Debug},
     ops::{Add, Div, Mul, Sub},
+    rc::Rc,
 };
 
 use serde::{Deserialize, Serialize};
@@ -343,7 +344,7 @@ impl CubeMap<Vec3> {
     pub fn render_scene(
         &mut self,
         mipmap_level: Option<usize>,
-        framebuffer_rc: &'static RefCell<Framebuffer>,
+        framebuffer_rc: Rc<RefCell<Framebuffer>>,
         scene_context: &SceneContext,
         shader_context_rc: &RefCell<ShaderContext>,
         pipeline: &mut Pipeline,

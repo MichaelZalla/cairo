@@ -3,7 +3,7 @@ extern crate sdl2;
 use std::{
     cell::{RefCell, RefMut},
     collections::HashMap,
-    env,
+    env, rc::Rc,
 };
 
 use sdl2::keyboard::Keycode;
@@ -72,7 +72,7 @@ fn main() -> Result<(), String> {
         window_info.window_resolution.height,
     );
 
-    let framebuffer_rc = RefCell::new(framebuffer);
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     framebuffer_rc
         .borrow_mut()

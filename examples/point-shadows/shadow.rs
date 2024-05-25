@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -60,7 +60,7 @@ fn render_point_shadows_to_cubemap(
     light: &PointLight,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
-    framebuffer_rc: &'static RefCell<Framebuffer>,
+    framebuffer_rc: Rc<RefCell<Framebuffer>>,
     pipeline: &mut Pipeline,
 ) -> Result<CubeMap<f32>, String> {
     let mut shadow_map = {
@@ -157,7 +157,7 @@ pub fn update_point_light_shadow_maps(
     scene_context_rc: &RefCell<SceneContext>,
     shadow_map_pipeline_rc: &RefCell<Pipeline>,
     shadow_map_shader_context_rc: &RefCell<ShaderContext>,
-    shadow_map_framebuffer_rc: &'static RefCell<Framebuffer>,
+    shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
 ) {
     // Render point shadow map.
 
@@ -179,7 +179,7 @@ pub fn update_point_light_shadow_maps(
                     light,
                     &scene_context,
                     shadow_map_shader_context_rc,
-                    shadow_map_framebuffer_rc,
+                    shadow_map_framebuffer_rc.clone(),
                     &mut point_shadow_map_pipeline,
                 )
                 .unwrap();

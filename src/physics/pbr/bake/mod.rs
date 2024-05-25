@@ -1,4 +1,4 @@
-use std::{cell::RefCell, path::Path};
+use std::{cell::RefCell, path::Path, rc::Rc};
 
 use uuid::Uuid;
 
@@ -87,7 +87,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
         framebuffer
     };
 
-    let cubemap_face_framebuffer_rc = Box::leak(Box::new(RefCell::new(cubemap_face_framebuffer)));
+    let cubemap_face_framebuffer_rc = Rc::new(RefCell::new(cubemap_face_framebuffer));
 
     // Generate a radiance cubemap texture from our HDR texture.
 
@@ -100,7 +100,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
         render_radiance_to_cubemap(
             &hdr_texture_handle,
-            cubemap_face_framebuffer_rc,
+            cubemap_face_framebuffer_rc.clone(),
             &cube_scene_context,
             &shader_context_rc,
             &mut pipeline,
@@ -134,7 +134,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
         render_irradiance_to_cubemap(
             &radiance_cubemap_texture_handle,
-            cubemap_face_framebuffer_rc,
+            cubemap_face_framebuffer_rc.clone(),
             &cube_scene_context,
             &shader_context_rc,
             &mut pipeline,
@@ -144,7 +144,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
     let specular_prefiltered_environment = {
         render_specular_prefiltered_environment_to_cubemap(
             &radiance_cubemap_texture_handle,
-            cubemap_face_framebuffer_rc,
+            cubemap_face_framebuffer_rc.clone(),
             &cube_scene_context,
             &shader_context_rc,
             &mut pipeline,
@@ -160,7 +160,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
 fn render_radiance_to_cubemap(
     hdr_texture_handle: &Handle,
-    framebuffer_rc: &'static RefCell<Framebuffer>,
+    framebuffer_rc: Rc<RefCell<Framebuffer>>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
@@ -172,7 +172,7 @@ fn render_radiance_to_cubemap(
 
         pipeline.set_fragment_shader(HdrEquirectangularProjectionFragmentShader);
 
-        pipeline.bind_framebuffer(Some(framebuffer_rc));
+        pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
         pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
 
@@ -212,7 +212,7 @@ fn render_radiance_to_cubemap(
 
 fn render_irradiance_to_cubemap(
     radiance_cubemap_texture_handle: &Handle,
-    framebuffer_rc: &'static RefCell<Framebuffer>,
+    framebuffer_rc: Rc<RefCell<Framebuffer>>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
@@ -222,7 +222,7 @@ fn render_irradiance_to_cubemap(
 
         pipeline.set_fragment_shader(HdrDiffuseIrradianceFragmentShader);
 
-        pipeline.bind_framebuffer(Some(framebuffer_rc));
+        pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
         pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
 
@@ -262,7 +262,7 @@ fn render_irradiance_to_cubemap(
 
 fn render_specular_prefiltered_environment_to_cubemap(
     radiance_cubemap_texture_handle: &Handle,
-    framebuffer_rc: &'static RefCell<Framebuffer>,
+    framebuffer_rc: Rc<RefCell<Framebuffer>>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     pipeline: &mut Pipeline,
@@ -339,7 +339,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
                 .borrow_mut()
                 .resize(mipmap_dimension, mipmap_dimension, true);
 
-            pipeline.bind_framebuffer(Some(framebuffer_rc));
+            pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
         }
 
         println!(
@@ -350,7 +350,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
         cubemap
             .render_scene(
                 Some(mipmap_level),
-                framebuffer_rc,
+                framebuffer_rc.clone(),
                 scene_context,
                 shader_context_rc,
                 pipeline,

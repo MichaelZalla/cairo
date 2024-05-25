@@ -91,7 +91,7 @@ impl<'a> Pipeline<'a> {
             return;
         }
 
-        match self.framebuffer {
+        match &self.framebuffer {
             Some(rc) => {
                 let framebuffer = rc.borrow_mut();
 

@@ -45,7 +45,7 @@ struct PipelineViewport {
 
 pub struct Pipeline<'a> {
     pub options: PipelineOptions,
-    framebuffer: Option<&'a RefCell<Framebuffer>>,
+    framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: PipelineViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
@@ -104,14 +104,15 @@ impl<'a> Pipeline<'a> {
         self.fragment_shader = shader;
     }
 
-    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<&'a RefCell<Framebuffer>>) {
-        match framebuffer_option {
+    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<Rc<RefCell<Framebuffer>>>) {
+        match &framebuffer_option {
             Some(framebuffer_rc) => {
-                let framebuffer = framebuffer_rc.borrow();
+                let refcell = &**framebuffer_rc;
+                let framebuffer = refcell.borrow();
 
                 match framebuffer.validate() {
                     Ok(()) => {
-                        self.framebuffer = framebuffer_option;
+                        self.framebuffer = framebuffer_option.clone();
 
                         self.viewport.width = framebuffer.width;
                         self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
@@ -165,7 +166,7 @@ impl<'a> Pipeline<'a> {
     }
 
     pub fn begin_frame(&mut self) {
-        if let Some(rc) = self.framebuffer {
+        if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
             framebuffer.clear();
@@ -195,7 +196,7 @@ impl<'a> Pipeline<'a> {
 
         // Blit deferred (HDR) framebuffer to the (final) color framebuffer.
 
-        if let Some(rc) = self.framebuffer {
+        if let Some(rc) = &self.framebuffer {
             let framebuffer = rc.borrow_mut();
 
             if self.options.do_rasterized_geometry {
@@ -446,7 +447,7 @@ impl<'a> Pipeline<'a> {
         // shader_context: &ShaderContext,
         // scene_resources: &SceneResources,
     ) {
-        match self.framebuffer {
+        match &self.framebuffer {
             Some(rc) => {
                 let framebuffer = rc.borrow_mut();
 

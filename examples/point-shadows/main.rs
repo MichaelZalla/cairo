@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{resolution::RESOLUTION_640_BY_320, App, AppWindowInfo},
@@ -51,7 +51,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rc = RefCell::new(framebuffer);
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     // Point shadow map framebuffer
 
@@ -63,14 +63,13 @@ fn main() -> Result<(), String> {
         POINT_LIGHT_SHADOW_CAMERA_FAR,
     );
 
-    let point_shadow_map_framebuffer_rc =
-        Box::leak(Box::new(RefCell::new(point_shadow_map_framebuffer)));
+    let point_shadow_map_framebuffer_rc = Rc::new(RefCell::new(point_shadow_map_framebuffer));
 
     // Scene context
 
     let scene_context = make_cubes_scene(
         framebuffer_rc.borrow().width_over_height,
-        point_shadow_map_framebuffer_rc,
+        point_shadow_map_framebuffer_rc.clone(),
     )
     .unwrap();
 
@@ -93,7 +92,7 @@ fn main() -> Result<(), String> {
             Default::default(),
         );
 
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
+        pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
         RefCell::new(pipeline)
     };
@@ -111,7 +110,7 @@ fn main() -> Result<(), String> {
 
         pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Frontfaces;
 
-        pipeline.bind_framebuffer(Some(point_shadow_map_framebuffer_rc));
+        pipeline.bind_framebuffer(Some(point_shadow_map_framebuffer_rc.clone()));
 
         RefCell::new(pipeline)
     };
@@ -202,7 +201,7 @@ fn main() -> Result<(), String> {
             &scene_context_rc,
             &point_shadow_map_pipeline_rc,
             &point_shadow_map_shader_context_rc,
-            point_shadow_map_framebuffer_rc,
+            point_shadow_map_framebuffer_rc.clone(),
         );
 
         // Render scene.
@@ -215,7 +214,7 @@ fn main() -> Result<(), String> {
 
         let mut pipeline = pipeline_rc.borrow_mut();
 
-        pipeline.bind_framebuffer(Some(&framebuffer_rc));
+        pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
         match scene.render(&resources, &mut pipeline, None) {
             Ok(()) => {

@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -86,7 +86,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rc = RefCell::new(framebuffer);
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     // Scene context
 
@@ -415,7 +415,7 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.bind_framebuffer(Some(&framebuffer_rc));
+    pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let pipeline_rc = RefCell::new(pipeline);
 

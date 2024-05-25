@@ -1,6 +1,6 @@
 #![allow(clippy::result_unit_err)]
 
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     buffer::framebuffer::Framebuffer,
@@ -20,7 +20,7 @@ use uuid::Uuid;
 
 pub fn make_cubes_scene(
     camera_aspect_ratio: f32,
-    point_shadow_map_framebuffer_rc: &'static RefCell<Framebuffer>,
+    point_shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
 ) -> Result<SceneContext, ()> {
     let scene_context = make_empty_scene(camera_aspect_ratio).unwrap();
 

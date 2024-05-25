@@ -54,7 +54,7 @@ impl<'a> Pipeline<'a> {
             }
         }
 
-        if let Some(framebuffer_rc) = self.framebuffer {
+        if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
             if let Some(forward_buffer_lock) = &framebuffer.attachments.forward_ldr {
