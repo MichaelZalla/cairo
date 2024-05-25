@@ -49,6 +49,23 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example immediate-ui",
+      "windows": {
+        "command": "cargo run --example immediate-ui C:/Windows/Fonts/vgasys.fon"
+      },
+      "osx": {
+        "command": "cargo run --example immediate-ui /System/Library/Fonts/Monaco.ttf"
+      },
+      "linux": {
+        "command": "cargo run --example immediate-ui"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example immediate-ui-old",
       "windows": {
         "command": "cargo run --example immediate-ui-old C:/Windows/Fonts/vgasys.fon"
