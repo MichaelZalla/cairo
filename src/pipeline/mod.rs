@@ -132,43 +132,8 @@ impl Renderer for Pipeline {
             }
         }
     }
-}
 
-impl Pipeline {
-    pub fn new(
-        shader_context: Rc<RefCell<ShaderContext>>,
-        scene_resources: Rc<RefCell<SceneResources>>,
-        vertex_shader: VertexShaderFn,
-        fragment_shader: FragmentShaderFn,
-        options: PipelineOptions,
-    ) -> Self {
-        let alpha_shader = DEFAULT_ALPHA_SHADER;
-
-        let geometry_shader = DEFAULT_GEOMETRY_SHADER;
-
-        let geometry_shader_options: GeometryShaderOptions = Default::default();
-
-        let framebuffer = None;
-
-        let viewport: PipelineViewport = Default::default();
-
-        Pipeline {
-            framebuffer,
-            viewport,
-            g_buffer: None,
-            bloom_buffer: None,
-            shader_context,
-            scene_resources,
-            vertex_shader,
-            alpha_shader,
-            geometry_shader,
-            geometry_shader_options,
-            fragment_shader,
-            options,
-        }
-    }
-
-    pub fn begin_frame(&mut self) {
+    fn begin_frame(&mut self) {
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
@@ -186,7 +151,7 @@ impl Pipeline {
         }
     }
 
-    pub fn end_frame(&mut self) {
+    fn end_frame(&mut self) {
         if self.options.do_rasterized_geometry && self.options.do_deferred_lighting {
             self.do_deferred_lighting_pass();
 
@@ -239,6 +204,41 @@ impl Pipeline {
                     }
                 }
             }
+        }
+    }
+}
+
+impl Pipeline {
+    pub fn new(
+        shader_context: Rc<RefCell<ShaderContext>>,
+        scene_resources: Rc<RefCell<SceneResources>>,
+        vertex_shader: VertexShaderFn,
+        fragment_shader: FragmentShaderFn,
+        options: PipelineOptions,
+    ) -> Self {
+        let alpha_shader = DEFAULT_ALPHA_SHADER;
+
+        let geometry_shader = DEFAULT_GEOMETRY_SHADER;
+
+        let geometry_shader_options: GeometryShaderOptions = Default::default();
+
+        let framebuffer = None;
+
+        let viewport: PipelineViewport = Default::default();
+
+        Pipeline {
+            framebuffer,
+            viewport,
+            g_buffer: None,
+            bloom_buffer: None,
+            shader_context,
+            scene_resources,
+            vertex_shader,
+            alpha_shader,
+            geometry_shader,
+            geometry_shader_options,
+            fragment_shader,
+            options,
         }
     }
 

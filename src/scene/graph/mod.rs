@@ -8,6 +8,7 @@ use crate::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::Pipeline,
+    render::Renderer,
     resource::handle::Handle,
     serde::PostDeserialize,
     shader::context::ShaderContext,
