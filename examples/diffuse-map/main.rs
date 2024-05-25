@@ -11,7 +11,6 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     pipeline::Pipeline,
-    render::Renderer,
     scene::{
         context::utils::make_cube_scene,
         light::{PointLight, SpotLight},

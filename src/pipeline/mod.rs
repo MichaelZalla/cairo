@@ -68,79 +68,6 @@ pub struct Pipeline {
 }
 
 impl Renderer for Pipeline {
-    fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
-        self.vertex_shader = shader;
-    }
-
-    fn set_geometry_shader(&mut self, shader: GeometryShaderFn) {
-        self.geometry_shader = shader;
-    }
-
-    fn set_fragment_shader(&mut self, shader: FragmentShaderFn) {
-        self.fragment_shader = shader;
-    }
-
-    fn bind_framebuffer(&mut self, framebuffer_option: Option<Rc<RefCell<Framebuffer>>>) {
-        match &framebuffer_option {
-            Some(framebuffer_rc) => {
-                let refcell = &**framebuffer_rc;
-                let framebuffer = refcell.borrow();
-
-                match framebuffer.validate() {
-                    Ok(()) => {
-                        self.framebuffer = framebuffer_option.clone();
-
-                        self.viewport.width = framebuffer.width;
-                        self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
-                        self.viewport.height = framebuffer.height;
-                        self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
-
-                        let should_reallocate_g_buffer = match &self.g_buffer {
-                            Some(g_buffer) => {
-                                g_buffer.buffer.width != framebuffer.width
-                                    || g_buffer.buffer.height != framebuffer.height
-                            }
-                            None => true,
-                        };
-
-                        let should_reallocate_bloom_buffer = match &self.bloom_buffer {
-                            Some(bloom_buffer) => {
-                                bloom_buffer.width != framebuffer.width
-                                    || bloom_buffer.height != framebuffer.height
-                            }
-                            None => true,
-                        };
-
-                        if should_reallocate_g_buffer {
-                            // Re-allocate a G-buffer.
-
-                            self.g_buffer =
-                                Some(GBuffer::new(framebuffer.width, framebuffer.height));
-                        }
-
-                        if should_reallocate_bloom_buffer {
-                            // Re-allocate a bloom buffer.
-
-                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
-                                framebuffer.width,
-                                framebuffer.height,
-                                None,
-                            ));
-                        }
-                    }
-                    Err(err) => {
-                        panic!("Called Pipeline::bind_framebuffer() with an invalid Framebuffer! (Err: {})", err);
-                    }
-                }
-            }
-            None => {
-                self.framebuffer = None;
-                self.g_buffer = None;
-                self.bloom_buffer = None;
-            }
-        }
-    }
-
     fn begin_frame(&mut self) {
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
@@ -341,6 +268,79 @@ impl Pipeline {
             geometry_shader_options,
             fragment_shader,
             options,
+        }
+    }
+
+    pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
+        self.vertex_shader = shader;
+    }
+
+    pub fn set_geometry_shader(&mut self, shader: GeometryShaderFn) {
+        self.geometry_shader = shader;
+    }
+
+    pub fn set_fragment_shader(&mut self, shader: FragmentShaderFn) {
+        self.fragment_shader = shader;
+    }
+
+    pub fn bind_framebuffer(&mut self, framebuffer_option: Option<Rc<RefCell<Framebuffer>>>) {
+        match &framebuffer_option {
+            Some(framebuffer_rc) => {
+                let refcell = &**framebuffer_rc;
+                let framebuffer = refcell.borrow();
+
+                match framebuffer.validate() {
+                    Ok(()) => {
+                        self.framebuffer = framebuffer_option.clone();
+
+                        self.viewport.width = framebuffer.width;
+                        self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
+                        self.viewport.height = framebuffer.height;
+                        self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
+
+                        let should_reallocate_g_buffer = match &self.g_buffer {
+                            Some(g_buffer) => {
+                                g_buffer.buffer.width != framebuffer.width
+                                    || g_buffer.buffer.height != framebuffer.height
+                            }
+                            None => true,
+                        };
+
+                        let should_reallocate_bloom_buffer = match &self.bloom_buffer {
+                            Some(bloom_buffer) => {
+                                bloom_buffer.width != framebuffer.width
+                                    || bloom_buffer.height != framebuffer.height
+                            }
+                            None => true,
+                        };
+
+                        if should_reallocate_g_buffer {
+                            // Re-allocate a G-buffer.
+
+                            self.g_buffer =
+                                Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                        }
+
+                        if should_reallocate_bloom_buffer {
+                            // Re-allocate a bloom buffer.
+
+                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
+                                framebuffer.width,
+                                framebuffer.height,
+                                None,
+                            ));
+                        }
+                    }
+                    Err(err) => {
+                        panic!("Called Pipeline::bind_framebuffer() with an invalid Framebuffer! (Err: {})", err);
+                    }
+                }
+            }
+            None => {
+                self.framebuffer = None;
+                self.g_buffer = None;
+                self.bloom_buffer = None;
+            }
         }
     }
 

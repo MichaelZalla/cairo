@@ -1,7 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
-
 use crate::{
-    buffer::framebuffer::Framebuffer,
     color::Color,
     entity::Entity,
     material::cache::MaterialCache,
@@ -12,20 +9,11 @@ use crate::{
         camera::{frustum::Frustum, Camera},
         light::{PointLight, SpotLight},
     },
-    shader::{fragment::FragmentShaderFn, geometry::GeometryShaderFn, vertex::VertexShaderFn},
     texture::cubemap::CubeMap,
     vec::vec3::Vec3,
 };
 
 pub trait Renderer {
-    fn set_vertex_shader(&mut self, shader: VertexShaderFn);
-
-    fn set_geometry_shader(&mut self, shader: GeometryShaderFn);
-
-    fn set_fragment_shader(&mut self, shader: FragmentShaderFn);
-
-    fn bind_framebuffer(&mut self, framebuffer_option: Option<Rc<RefCell<Framebuffer>>>);
-
     fn begin_frame(&mut self);
 
     fn end_frame(&mut self);

@@ -18,7 +18,6 @@ use cairo::{
     matrix::Mat4,
     mesh,
     pipeline::{zbuffer::DepthTestMethod, Pipeline},
-    render::Renderer,
     scene::{
         camera::Camera,
         context::utils::make_empty_scene,
