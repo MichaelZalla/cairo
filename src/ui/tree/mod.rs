@@ -1,10 +1,18 @@
 use std::{cell::RefCell, rc::Rc};
 
+use crate::ui::{UI2DAxis, UISize};
+
 use self::node::{Node, NodeLocalTraversalMethod};
 
 use super::UIWidget;
 
 pub mod node;
+
+fn println_indent(depth: usize, msg: String) {
+    let indent = 2 * (depth + 1);
+
+    println!("{:indent$}{}", ">", msg);
+}
 
 pub struct UIWidgetTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
@@ -25,10 +33,113 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
-        let local_traversal_method = NodeLocalTraversalMethod::PreOrder;
+        println!("\nPerforming auto-layout pass:");
 
-        self.visit_dfs_mut(&local_traversal_method, &mut |depth, node| {
-            println!("Visiting node {} at depth {}!", node.data.id, depth);
+        // For each axis...
+
+        // 1. Calculate "standalone" sizes.
+
+        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, node| {
+            let widget = &mut node.data;
+
+            println_indent(
+                depth,
+                format!("Calculating standalone size for node {}.", widget.id),
+            );
+
+            for (index, size) in widget.semantic_sizes.iter().enumerate() {
+                let axis = if index == 0 { UI2DAxis::X } else { UI2DAxis::Y };
+
+                match size.size {
+                    UISize::Pixels(pixels) => {
+                        println_indent(depth, format!("Pixel size for axis {}: {}", axis, pixels));
+                        widget.computed_size[index] = pixels as f32;
+                    }
+                    UISize::TextContent => match axis {
+                        UI2DAxis::X => {
+                            println_indent(
+                                depth,
+                                "Assuming horizontal text size to be 50.0".to_string(),
+                            );
+
+                            widget.computed_size[index] = 50.0;
+                        }
+                        UI2DAxis::Y => {
+                            println_indent(
+                                depth,
+                                "Assuming vertical text size to be 18.0".to_string(),
+                            );
+
+                            widget.computed_size[index] = 10.0;
+                        }
+                    },
+                    _ => println_indent(depth, "Skipping widget...".to_string()),
+                }
+            }
+
+            Ok(())
+        })?;
+
+        // 2. Calculate upward-dependent sizes with a pre-order traversal.
+
+        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, node| {
+            let widget = &mut node.data;
+
+            println_indent(
+                depth,
+                format!(
+                    "Calculating upward-dependent size for (child) node {}.",
+                    widget.id,
+                ),
+            );
+
+            Ok(())
+        })?;
+
+        // 3. Calculate downward-dependent sizes with a post-order traversal.
+
+        self.visit_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, node| {
+            let widget = &mut node.data;
+
+            println_indent(
+                depth,
+                format!(
+                    "Calculating downward-dependent size for (parent) node {}.",
+                    widget.id,
+                ),
+            );
+
+            Ok(())
+        })?;
+
+        // 4. Solve any violations (children extending beyond parent) with a pre-order traversal.
+
+        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, node| {
+            let widget = &mut node.data;
+
+            println_indent(
+                depth,
+                format!(
+                    "Solving child layout violations for (parent) node {}.",
+                    widget.id,
+                ),
+            );
+
+            Ok(())
+        })?;
+
+        // 5. Compute the relative positions of each child with a pre-order traversal.
+
+        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, node| {
+            let widget = &mut node.data;
+
+            println_indent(
+                depth,
+                format!(
+                    "Computing the relative (in-parent) position of (child) node {}.",
+                    widget.id,
+                ),
+            );
 
             Ok(())
         })

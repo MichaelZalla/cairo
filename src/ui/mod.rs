@@ -1,3 +1,5 @@
+use core::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::vec::vec2::Vec2;
@@ -27,6 +29,19 @@ pub enum UI2DAxis {
     #[default]
     X,
     Y,
+}
+
+impl fmt::Display for UI2DAxis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "UI2DAxis-{}",
+            match self {
+                UI2DAxis::X => "X",
+                UI2DAxis::Y => "Y",
+            }
+        )
+    }
 }
 
 const UI_2D_AXIS_COUNT: usize = 2;

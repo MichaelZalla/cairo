@@ -47,7 +47,35 @@ fn main() -> Result<(), String> {
 
     let root_widget_node = Node::<UIWidget>::new(root_widget);
 
-    let widget_tree = UIWidgetTree::new(root_widget_node);
+    let mut widget_tree = UIWidgetTree::new(root_widget_node);
+
+    widget_tree.push(UIWidget::new(
+        "root_child1".to_string(),
+        [
+            UISizeWithStrictness {
+                size: UISize::Pixels(120),
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::Pixels(200),
+                strictness: 1.0,
+            },
+        ],
+    ));
+
+    widget_tree.push(UIWidget::new(
+        "root_child1_child1".to_string(),
+        [
+            UISizeWithStrictness {
+                size: UISize::Pixels(80),
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::Pixels(50),
+                strictness: 1.0,
+            },
+        ],
+    ));
 
     let ui_context_rc = RefCell::new(UIContext { tree: widget_tree });
 
