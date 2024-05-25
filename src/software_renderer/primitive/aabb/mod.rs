@@ -3,7 +3,7 @@ use crate::{
     entity::Entity,
     matrix::Mat4,
     mesh::Mesh,
-    pipeline::Pipeline,
+    software_renderer::SoftwareRenderer,
     render::{
         culling::{FaceCullingReject, FaceCullingStrategy},
         options::RenderOptions,
@@ -11,8 +11,8 @@ use crate::{
     resource::arena::Arena,
 };
 
-impl Pipeline {
-    pub(in crate::pipeline) fn _render_entity_aabb(
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn _render_entity_aabb(
         &mut self,
         entity: &Entity,
         world_transform: &Mat4,

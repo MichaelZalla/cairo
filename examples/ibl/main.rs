@@ -12,7 +12,6 @@ use cairo::{
     physics::pbr::bake::{
         bake_diffuse_and_specular_from_hdri, brdf::generate_specular_brdf_integration_map,
     },
-    pipeline::Pipeline,
     resource::handle::Handle,
     scene::{
         graph::SceneGraph,
@@ -27,6 +26,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
+    software_renderer::SoftwareRenderer,
 };
 
 pub mod scene;
@@ -163,7 +163,7 @@ fn main() -> Result<(), String> {
         set_ibl_map_handles(&mut resources, scene, &radiance_irradiance_handles[0]);
     }
 
-    let mut pipeline = Pipeline::new(
+    let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
         spheres_scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
@@ -171,11 +171,11 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let spheres_scene_context_rc = RefCell::new(spheres_scene_context);
 
-    let pipeline_rc = RefCell::new(pipeline);
+    let renderer_rc = RefCell::new(renderer);
 
     // App update and render callbacks
 
@@ -244,13 +244,13 @@ fn main() -> Result<(), String> {
             }
         }
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        pipeline
+        renderer
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        pipeline
+        renderer
             .shader_options
             .update(keyboard_state, mouse_state, game_controller_state);
 
@@ -265,9 +265,9 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        match scene.render(&resources, &mut pipeline, None) {
+        match scene.render(&resources, &mut renderer, None) {
             Ok(()) => {
                 // Write out.
 

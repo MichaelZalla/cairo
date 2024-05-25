@@ -7,7 +7,7 @@ use crate::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
-    pipeline::Pipeline,
+    software_renderer::SoftwareRenderer,
     render::Renderer,
     resource::handle::Handle,
     serde::PostDeserialize,
@@ -106,12 +106,12 @@ impl SceneGraph {
     pub fn render(
         &self,
         resources: &SceneResources,
-        pipeline: &mut Pipeline,
+        renderer: &mut SoftwareRenderer,
         options: Option<SceneGraphRenderOptions>,
     ) -> Result<(), String> {
         // Begin frame
 
-        pipeline.begin_frame();
+        renderer.begin_frame();
 
         // Render scene.
 
@@ -143,7 +143,7 @@ impl SceneGraph {
                                     clipping_camera_handle.replace(*handle);
                                 } else if let Some(options) = &options {
                                     if options.draw_cameras {
-                                        pipeline.render_camera(camera, Some(color::YELLOW));
+                                        renderer.render_camera(camera, Some(color::YELLOW));
                                     }
                                 }
                             }
@@ -198,7 +198,7 @@ impl SceneGraph {
                                             None => None,
                                         };
 
-                                        let was_drawn = pipeline.render_entity(
+                                        let was_drawn = renderer.render_entity(
                                             &current_world_transform,
                                             &clipping_camera_frustum,
                                             entity_mesh,
@@ -253,7 +253,7 @@ impl SceneGraph {
                                                 Ok(entry) => {
                                                     let active_camera = &entry.item;
             
-                                                    pipeline.render_point_light(
+                                                    renderer.render_point_light(
                                                         point_light,
                                                         Some(active_camera),
                                                         Some(&mut resources.material.borrow_mut()),
@@ -303,7 +303,7 @@ impl SceneGraph {
                                                 Ok(entry) => {
                                                     let spot_light = &entry.item;
             
-                                                    pipeline.render_spot_light(
+                                                    renderer.render_spot_light(
                                                         spot_light,
                                                         Some(active_camera),
                                                         Some(&mut materials),
@@ -360,7 +360,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let cubemap = &entry.item;
 
-                                pipeline.render_skybox_hdr(cubemap, camera);
+                                renderer.render_skybox_hdr(cubemap, camera);
                             }
                             Err(e) => panic!("{}", e),
                         }
@@ -369,7 +369,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let cubemap = &entry.item;
 
-                                pipeline.render_skybox(cubemap, camera);
+                                renderer.render_skybox(cubemap, camera);
                             }
                             Err(e) => panic!("{}", e),
                         }
@@ -378,7 +378,7 @@ impl SceneGraph {
             }
         }
 
-        pipeline.end_frame();
+        renderer.end_frame();
 
         Ok(())
     }

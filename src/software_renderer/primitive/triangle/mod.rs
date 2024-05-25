@@ -1,16 +1,16 @@
 use crate::{
     color,
     mesh::Face,
-    pipeline::Pipeline,
     render::{
         culling::{FaceCullingReject, FaceCullingWindingOrder},
         Renderer,
     },
+    software_renderer::SoftwareRenderer,
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
-pub(in crate::pipeline) mod clip;
+pub(in crate::software_renderer) mod clip;
 
 use self::clip::clip_by_all_planes;
 
@@ -21,8 +21,8 @@ pub struct Triangle<T> {
     pub v2: T,
 }
 
-impl Pipeline {
-    pub(in crate::pipeline) fn process_triangles(
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn process_triangles(
         &mut self,
         faces: &Vec<Face>,
         projection_space_vertices: Vec<DefaultVertexOut>,
@@ -75,7 +75,7 @@ impl Pipeline {
         }
     }
 
-    pub(in crate::pipeline) fn should_cull_from_homogeneous_space(
+    pub(in crate::software_renderer) fn should_cull_from_homogeneous_space(
         &mut self,
         triangle: &Triangle<DefaultVertexOut>,
     ) -> bool {

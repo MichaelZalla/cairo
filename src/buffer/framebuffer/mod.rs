@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
 use crate::{
-    pipeline::zbuffer::{self, ZBuffer},
+    software_renderer::zbuffer::{self, ZBuffer},
     vec::vec3::Vec3,
 };
 

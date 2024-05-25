@@ -11,10 +11,10 @@ use crate::{
     app::context::ApplicationRenderingContext,
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::{self, Color},
-    pipeline::Pipeline,
     scene::{camera::Camera, context::SceneContext},
     serde::PostDeserialize,
     shader::context::ShaderContext,
+    software_renderer::SoftwareRenderer,
     texture::{map::TextureBuffer, sample::sample_nearest_u8},
     vec::{
         vec2::Vec2,
@@ -347,7 +347,7 @@ impl CubeMap<Vec3> {
         framebuffer_rc: Rc<RefCell<Framebuffer>>,
         scene_context: &SceneContext,
         shader_context_rc: &RefCell<ShaderContext>,
-        pipeline: &mut Pipeline,
+        renderer: &mut SoftwareRenderer,
     ) -> Result<(), String> {
         // Render each face of our cubemap.
 
@@ -376,7 +376,7 @@ impl CubeMap<Vec3> {
             let resources = (*scene_context.resources).borrow();
             let scene = &scene_context.scenes.borrow()[0];
 
-            match scene.render(&resources, pipeline, None) {
+            match scene.render(&resources, renderer, None) {
                 Ok(()) => {
                     // Blit our framebuffer's color attachment buffer to our
                     // cubemap face texture.

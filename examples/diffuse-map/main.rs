@@ -10,7 +10,6 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     material::Material,
     matrix::Mat4,
-    pipeline::Pipeline,
     scene::{
         context::utils::make_cube_scene,
         light::{PointLight, SpotLight},
@@ -23,6 +22,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
+    software_renderer::SoftwareRenderer,
     texture::map::TextureMap,
     vec::vec3::Vec3,
 };
@@ -139,9 +139,9 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
-    // Pipeline
+    // Renderer
 
-    let mut pipeline = Pipeline::new(
+    let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
@@ -149,11 +149,11 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    pipeline.shader_options.normal_mapping_active = true;
+    renderer.shader_options.normal_mapping_active = true;
 
-    let pipeline_rc = RefCell::new(pipeline);
+    let renderer_rc = RefCell::new(renderer);
 
     // App update and render callbacks
 
@@ -228,13 +228,13 @@ fn main() -> Result<(), String> {
             &mut update_scene_graph_node,
         )?;
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        pipeline
+        renderer
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        pipeline
+        renderer
             .shader_options
             .update(keyboard_state, mouse_state, game_controller_state);
 
@@ -249,9 +249,9 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        match scene.render(&resources, &mut pipeline, None) {
+        match scene.render(&resources, &mut renderer, None) {
             Ok(()) => {
                 // Write out.
 

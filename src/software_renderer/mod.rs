@@ -42,7 +42,7 @@ mod pass;
 mod primitive;
 pub mod zbuffer;
 
-pub struct Pipeline {
+pub struct SoftwareRenderer {
     pub options: RenderOptions,
     pub shader_options: RenderShaderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
@@ -57,7 +57,7 @@ pub struct Pipeline {
     fragment_shader: FragmentShaderFn,
 }
 
-impl Renderer for Pipeline {
+impl Renderer for SoftwareRenderer {
     fn begin_frame(&mut self) {
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
@@ -227,7 +227,7 @@ impl Renderer for Pipeline {
     }
 }
 
-impl Pipeline {
+impl SoftwareRenderer {
     pub fn new(
         shader_context: Rc<RefCell<ShaderContext>>,
         scene_resources: Rc<RefCell<SceneResources>>,
@@ -245,7 +245,7 @@ impl Pipeline {
 
         let viewport: RenderViewport = Default::default();
 
-        Pipeline {
+        SoftwareRenderer {
             framebuffer,
             viewport,
             g_buffer: None,
@@ -322,7 +322,7 @@ impl Pipeline {
                         }
                     }
                     Err(err) => {
-                        panic!("Called Pipeline::bind_framebuffer() with an invalid Framebuffer! (Err: {})", err);
+                        panic!("Called Renderer::bind_framebuffer() with an invalid Framebuffer! (Err: {})", err);
                     }
                 }
             }

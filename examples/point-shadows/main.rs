@@ -7,7 +7,6 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
-    pipeline::Pipeline,
     render::culling::FaceCullingReject,
     scene::{
         light::{
@@ -26,6 +25,7 @@ use cairo::{
             PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
         },
     },
+    software_renderer::SoftwareRenderer,
 };
 
 use crate::{scene::make_cubes_scene, shadow::update_point_light_shadow_maps};
@@ -82,10 +82,10 @@ fn main() -> Result<(), String> {
 
     let point_shadow_map_shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
-    // Pipeline
+    // Renderer
 
-    let pipeline_rc = {
-        let mut pipeline = Pipeline::new(
+    let renderer_rc = {
+        let mut renderer = SoftwareRenderer::new(
             shader_context_rc.clone(),
             scene_context_rc.borrow().resources.clone(),
             DEFAULT_VERTEX_SHADER,
@@ -93,13 +93,13 @@ fn main() -> Result<(), String> {
             Default::default(),
         );
 
-        pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
+        renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        RefCell::new(pipeline)
+        RefCell::new(renderer)
     };
 
-    let point_shadow_map_pipeline_rc = {
-        let mut pipeline = Pipeline::new(
+    let point_shadow_map_renderer_rc = {
+        let mut renderer = SoftwareRenderer::new(
             point_shadow_map_shader_context_rc.clone(),
             scene_context_rc.borrow().resources.clone(),
             PointShadowMapVertexShader,
@@ -107,13 +107,13 @@ fn main() -> Result<(), String> {
             Default::default(),
         );
 
-        pipeline.set_geometry_shader(PointShadowMapGeometryShader);
+        renderer.set_geometry_shader(PointShadowMapGeometryShader);
 
-        pipeline.options.face_culling_strategy.reject = FaceCullingReject::Frontfaces;
+        renderer.options.face_culling_strategy.reject = FaceCullingReject::Frontfaces;
 
-        pipeline.bind_framebuffer(Some(point_shadow_map_framebuffer_rc.clone()));
+        renderer.bind_framebuffer(Some(point_shadow_map_framebuffer_rc.clone()));
 
-        RefCell::new(pipeline)
+        RefCell::new(renderer)
     };
 
     // App update and render callbacks
@@ -182,13 +182,13 @@ fn main() -> Result<(), String> {
             &mut update_scene_graph_node,
         )?;
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        pipeline
+        renderer
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
-        pipeline
+        renderer
             .shader_options
             .update(keyboard_state, mouse_state, game_controller_state);
 
@@ -200,7 +200,7 @@ fn main() -> Result<(), String> {
 
         update_point_light_shadow_maps(
             &scene_context_rc,
-            &point_shadow_map_pipeline_rc,
+            &point_shadow_map_renderer_rc,
             &point_shadow_map_shader_context_rc,
             point_shadow_map_framebuffer_rc.clone(),
         );
@@ -213,11 +213,11 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
+        renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        match scene.render(&resources, &mut pipeline, None) {
+        match scene.render(&resources, &mut renderer, None) {
             Ok(()) => {
                 // Write out.
 

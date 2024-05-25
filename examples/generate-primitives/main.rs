@@ -17,7 +17,6 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh,
-    pipeline::{zbuffer::DepthTestMethod, Pipeline},
     scene::{
         camera::Camera,
         context::utils::make_empty_scene,
@@ -37,6 +36,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
+    software_renderer::{zbuffer::DepthTestMethod, SoftwareRenderer},
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
     vec::vec3::Vec3,
 };
@@ -405,9 +405,9 @@ fn main() -> Result<(), String> {
 
     let active_fragment_shader_index_rc: RefCell<usize> = Default::default();
 
-    // Pipeline
+    // Renderer
 
-    let mut pipeline = Pipeline::new(
+    let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
@@ -415,9 +415,9 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    let pipeline_rc = RefCell::new(pipeline);
+    let renderer_rc = RefCell::new(renderer);
 
     let looking_at_point_light_rc = RefCell::new(false);
 
@@ -428,7 +428,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
@@ -461,9 +461,9 @@ fn main() -> Result<(), String> {
                         *active_fragment_shader_index = 0;
                     }
 
-                    // let mut pipeline = pipeline_rc.borrow_mut();
+                    // let mut renderer = renderer_rc.borrow_mut();
 
-                    pipeline.set_fragment_shader(fragment_shaders[*active_fragment_shader_index]);
+                    renderer.set_fragment_shader(fragment_shaders[*active_fragment_shader_index]);
                 }
                 Keycode::L { .. } => {
                     let mut looking_at_point_light = looking_at_point_light_rc.borrow_mut();
@@ -715,13 +715,13 @@ fn main() -> Result<(), String> {
             &mut update_scene_graph_node,
         )?;
 
-        pipeline
+        renderer
             .options
             .update(keyboard_state, mouse_state, game_controller_state);
 
         debug_message_buffer.write(format!(
             "Wireframe: {}",
-            if pipeline.options.do_wireframe {
+            if renderer.options.do_wireframe {
                 "On"
             } else {
                 "Off"
@@ -730,22 +730,22 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Rasterized geometry: {}",
-            if pipeline.options.do_rasterized_geometry {
+            if renderer.options.do_rasterized_geometry {
                 "On"
             } else {
                 "Off"
             }
         ));
 
-        if pipeline.options.do_rasterized_geometry {
+        if renderer.options.do_rasterized_geometry {
             debug_message_buffer.write(format!(
                 "Culling reject mask: {:?}",
-                pipeline.options.face_culling_strategy.reject
+                renderer.options.face_culling_strategy.reject
             ));
 
             debug_message_buffer.write(format!(
                 "Culling window order: {:?}",
-                pipeline.options.face_culling_strategy.winding_order
+                renderer.options.face_culling_strategy.winding_order
             ));
 
             {
@@ -761,18 +761,16 @@ fn main() -> Result<(), String> {
 
             debug_message_buffer.write(format!(
                 "Lighting: {}",
-                if pipeline.options.do_lighting {
+                if renderer.options.do_lighting {
                     "On"
                 } else {
                     "Off"
                 }
             ));
 
-            pipeline.shader_options.update(
-                keyboard_state,
-                mouse_state,
-                game_controller_state,
-            );
+            renderer
+                .shader_options
+                .update(keyboard_state, mouse_state, game_controller_state);
 
             //
 
@@ -817,7 +815,7 @@ fn main() -> Result<(), String> {
                             *active_fragment_shader_index = 0;
                         }
 
-                        pipeline
+                        renderer
                             .set_fragment_shader(fragment_shaders[*active_fragment_shader_index]);
                     }
                     _ => {}
@@ -838,7 +836,7 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Visualize normals: {}",
-            if pipeline.options.do_visualize_normals {
+            if renderer.options.do_visualize_normals {
                 "On"
             } else {
                 "Off"
@@ -861,9 +859,9 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut pipeline = pipeline_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
-        match scene.render(&resources, &mut pipeline, None) {
+        match scene.render(&resources, &mut renderer, None) {
             Ok(()) => {
                 // Write out.
 

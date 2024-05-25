@@ -3,10 +3,10 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-use super::Pipeline;
+use super::SoftwareRenderer;
 
-impl Pipeline {
-    pub(in crate::pipeline) fn do_deferred_lighting_pass(&mut self) {
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn do_deferred_lighting_pass(&mut self) {
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
@@ -41,7 +41,7 @@ impl Pipeline {
         }
     }
 
-    pub(in crate::pipeline) fn do_bloom_pass(&mut self) {
+    pub(in crate::software_renderer) fn do_bloom_pass(&mut self) {
         match &self.framebuffer {
             Some(rc) => {
                 let mut framebuffer = rc.borrow_mut();

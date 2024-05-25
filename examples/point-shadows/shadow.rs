@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use cairo::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
-    pipeline::Pipeline,
+    software_renderer::SoftwareRenderer,
     scene::{
         camera::Camera,
         context::SceneContext,
@@ -61,7 +61,7 @@ fn render_point_shadows_to_cubemap(
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     framebuffer_rc: Rc<RefCell<Framebuffer>>,
-    pipeline: &mut Pipeline,
+    renderer: &mut SoftwareRenderer,
 ) -> Result<CubeMap<f32>, String> {
     let mut shadow_map = {
         let mut shadow_map = CubeMap::<f32>::from_framebuffer(&framebuffer_rc.borrow());
@@ -117,7 +117,7 @@ fn render_point_shadows_to_cubemap(
         let resources = (*scene_context.resources).borrow();
         let scene = &scene_context.scenes.borrow()[0];
 
-        match scene.render(&resources, pipeline, None) {
+        match scene.render(&resources, renderer, None) {
             Ok(()) => {
                 // Blit our framebuffer's HDR attachment buffer to our cubemap's
                 // corresponding side (texture map).
@@ -155,7 +155,7 @@ fn blit_hdr_attachment_to_cubemap_side(
 
 pub fn update_point_light_shadow_maps(
     scene_context_rc: &RefCell<SceneContext>,
-    shadow_map_pipeline_rc: &RefCell<Pipeline>,
+    shadow_map_renderer_rc: &RefCell<SoftwareRenderer>,
     shadow_map_shader_context_rc: &RefCell<ShaderContext>,
     shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
 ) {
@@ -169,7 +169,7 @@ pub fn update_point_light_shadow_maps(
         let resources = (*scene_context.resources).borrow();
         let point_light_arena = resources.point_light.borrow();
 
-        let mut point_shadow_map_pipeline = shadow_map_pipeline_rc.borrow_mut();
+        let mut point_shadow_map_renderer = shadow_map_renderer_rc.borrow_mut();
 
         for entry in point_light_arena.entries.iter().flatten() {
             let light = &entry.item;
@@ -180,7 +180,7 @@ pub fn update_point_light_shadow_maps(
                     &scene_context,
                     shadow_map_shader_context_rc,
                     shadow_map_framebuffer_rc.clone(),
-                    &mut point_shadow_map_pipeline,
+                    &mut point_shadow_map_renderer,
                 )
                 .unwrap();
 

@@ -1,10 +1,10 @@
 use crate::{
-    matrix::Mat4, mesh::Mesh, physics::collision::aabb::AABB, pipeline::Pipeline,
-    scene::camera::frustum::Frustum, vec::vec4::Vec4,
+    matrix::Mat4, mesh::Mesh, physics::collision::aabb::AABB, scene::camera::frustum::Frustum,
+    software_renderer::SoftwareRenderer, vec::vec4::Vec4,
 };
 
-impl Pipeline {
-    pub(in crate::pipeline) fn _render_entity(
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn _render_entity(
         &mut self,
         world_transform: &Mat4,
         clipping_camera_frustum: &Option<Frustum>,

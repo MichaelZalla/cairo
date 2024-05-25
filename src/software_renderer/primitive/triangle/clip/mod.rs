@@ -39,7 +39,7 @@ fn get_signed_distance_ratio(
     d1 / (d1 - d2)
 }
 
-pub(in crate::pipeline) fn clip_by_all_planes(
+pub(in crate::software_renderer) fn clip_by_all_planes(
     triangle: &Triangle<DefaultVertexOut>,
 ) -> Vec<Triangle<DefaultVertexOut>> {
     let mut clipped_triangles = vec![*triangle];
@@ -54,7 +54,7 @@ pub(in crate::pipeline) fn clip_by_all_planes(
     clipped_triangles
 }
 
-pub(in crate::pipeline) fn clip_triangles_by_plane(
+pub(in crate::software_renderer) fn clip_triangles_by_plane(
     ndc_plane: NdcPlane,
     triangles: Vec<Triangle<DefaultVertexOut>>,
 ) -> Vec<Triangle<DefaultVertexOut>> {
@@ -69,7 +69,7 @@ pub(in crate::pipeline) fn clip_triangles_by_plane(
     all_clipped
 }
 
-pub(in crate::pipeline) fn clip_triangle_by_plane(
+pub(in crate::software_renderer) fn clip_triangle_by_plane(
     ndc_plane: NdcPlane,
     triangle: Triangle<DefaultVertexOut>,
 ) -> Vec<Triangle<DefaultVertexOut>> {

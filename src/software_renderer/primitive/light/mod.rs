@@ -2,17 +2,17 @@ use crate::{
     color::{self, Color},
     material::cache::MaterialCache,
     mesh,
-    pipeline::Pipeline,
     render::Renderer,
     scene::{
         camera::{frustum::Frustum, Camera},
         light::{PointLight, SpotLight},
     },
+    software_renderer::SoftwareRenderer,
     transform::Transform3D,
     vec::vec3::Vec3,
 };
 
-impl Pipeline {
+impl SoftwareRenderer {
     fn render_light(
         &mut self,
         light_position: Vec3,
@@ -68,7 +68,7 @@ impl Pipeline {
         }
     }
 
-    pub(in crate::pipeline) fn _render_point_light(
+    pub(in crate::software_renderer) fn _render_point_light(
         &mut self,
         light: &PointLight,
         camera: Option<&Camera>,
@@ -84,7 +84,7 @@ impl Pipeline {
         );
     }
 
-    pub(in crate::pipeline) fn _render_spot_light(
+    pub(in crate::software_renderer) fn _render_spot_light(
         &mut self,
         light: &SpotLight,
         camera: Option<&Camera>,

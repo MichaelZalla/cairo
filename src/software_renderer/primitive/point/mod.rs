@@ -1,10 +1,10 @@
 use crate::{
-    color::Color, material::cache::MaterialCache, mesh, pipeline::Pipeline, scene::camera::Camera,
-    transform::Transform3D, vec::vec3::Vec3,
+    color::Color, material::cache::MaterialCache, mesh, scene::camera::Camera,
+    software_renderer::SoftwareRenderer, transform::Transform3D, vec::vec3::Vec3,
 };
 
-impl Pipeline {
-    pub(in crate::pipeline) fn _render_point(
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn _render_point(
         &mut self,
         point_world_space: Vec3,
         color: Color,

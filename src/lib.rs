@@ -23,7 +23,7 @@ pub mod material;
 pub mod matrix;
 pub mod mesh;
 pub mod physics;
-pub mod pipeline;
+pub mod software_renderer;
 pub mod random;
 pub mod render;
 pub mod resource;

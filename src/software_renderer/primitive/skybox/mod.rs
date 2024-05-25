@@ -1,12 +1,16 @@
 use crate::{
-    pipeline::{zbuffer, Pipeline},
     scene::camera::Camera,
+    software_renderer::{zbuffer, SoftwareRenderer},
     texture::cubemap::CubeMap,
     vec::vec3::Vec3,
 };
 
-impl Pipeline {
-    pub(in crate::pipeline) fn _render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn _render_skybox(
+        &mut self,
+        skybox: &CubeMap,
+        camera: &Camera,
+    ) {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
@@ -47,7 +51,7 @@ impl Pipeline {
         }
     }
 
-    pub(in crate::pipeline) fn _render_skybox_hdr(
+    pub(in crate::software_renderer) fn _render_skybox_hdr(
         &mut self,
         skybox_hdr: &CubeMap<Vec3>,
         camera: &Camera,

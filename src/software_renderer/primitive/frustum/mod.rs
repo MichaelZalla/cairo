@@ -1,12 +1,12 @@
 use crate::{
     color::{self, Color},
-    pipeline::Pipeline,
+    software_renderer::SoftwareRenderer,
     render::Renderer,
     scene::camera::frustum::Frustum,
 };
 
-impl Pipeline {
-    pub(in crate::pipeline) fn _render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
+impl SoftwareRenderer {
+    pub(in crate::software_renderer) fn _render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
         // Draw near plane (red).
 
         for (index, _point) in frustum.near.as_slice().iter().enumerate() {
