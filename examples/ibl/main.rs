@@ -145,7 +145,7 @@ fn main() -> Result<(), String> {
         }
     }
 
-    let shader_context_rc: RefCell<ShaderContext> = Default::default();
+    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
     {
         let scene_context = spheres_scene_context.borrow_mut();
@@ -154,7 +154,7 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut shader_context = shader_context_rc.borrow_mut();
+        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.set_active_ambient_specular_brdf_integration_map(Some(
             specular_brdf_integration_map_handle,
@@ -164,7 +164,7 @@ fn main() -> Result<(), String> {
     }
 
     let mut pipeline = Pipeline::new(
-        &shader_context_rc,
+        shader_context_rc.clone(),
         spheres_scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
@@ -190,7 +190,7 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut shader_context = shader_context_rc.borrow_mut();
+        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.set_ambient_light(None);
         shader_context.set_directional_light(None);

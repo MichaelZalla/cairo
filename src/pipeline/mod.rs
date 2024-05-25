@@ -43,13 +43,13 @@ struct PipelineViewport {
     pub height_over_2: f32,
 }
 
-pub struct Pipeline<'a> {
+pub struct Pipeline {
     pub options: PipelineOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: PipelineViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
-    pub shader_context: &'a RefCell<ShaderContext>,
+    pub shader_context: Rc<RefCell<ShaderContext>>,
     pub scene_resources: Rc<RefCell<SceneResources>>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
@@ -58,9 +58,9 @@ pub struct Pipeline<'a> {
     fragment_shader: FragmentShaderFn,
 }
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub fn new(
-        shader_context: &'a RefCell<ShaderContext>,
+        shader_context: Rc<RefCell<ShaderContext>>,
         scene_resources: Rc<RefCell<SceneResources>>,
         vertex_shader: VertexShaderFn,
         fragment_shader: FragmentShaderFn,

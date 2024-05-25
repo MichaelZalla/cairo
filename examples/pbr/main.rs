@@ -46,14 +46,12 @@ fn main() -> Result<(), String> {
 
     // ShaderContext
 
-    let shader_context: ShaderContext = Default::default();
-
-    let shader_context_rc = RefCell::new(shader_context);
+    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
     // Pipeline
 
     let mut pipeline = Pipeline::new(
-        &shader_context_rc,
+        shader_context_rc.clone(),
         scene_context_rc.borrow().resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
@@ -74,7 +72,7 @@ fn main() -> Result<(), String> {
         let scene_context = scene_context_rc.borrow_mut();
         let resources = (*(scene_context.resources)).borrow_mut();
 
-        let mut shader_context = shader_context_rc.borrow_mut();
+        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.get_point_lights_mut().clear();
         shader_context.get_spot_lights_mut().clear();

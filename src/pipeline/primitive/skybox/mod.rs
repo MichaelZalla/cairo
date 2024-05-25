@@ -5,7 +5,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();

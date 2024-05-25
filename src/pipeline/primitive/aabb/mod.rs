@@ -10,7 +10,7 @@ use crate::{
     resource::arena::Arena,
 };
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub fn render_entity_aabb(
         &mut self,
         entity: &Entity,

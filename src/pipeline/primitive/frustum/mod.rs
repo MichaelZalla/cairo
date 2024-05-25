@@ -4,7 +4,7 @@ use crate::{
     scene::camera::frustum::Frustum,
 };
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
         // Draw near plane (red).
 

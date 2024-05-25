@@ -20,7 +20,7 @@ pub struct Triangle<T> {
     pub v2: T,
 }
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub(in crate::pipeline) fn process_triangles(
         &mut self,
         faces: &Vec<Face>,

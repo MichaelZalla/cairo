@@ -11,7 +11,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     fn render_light(
         &mut self,
         light_position: Vec3,

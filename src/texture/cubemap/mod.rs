@@ -360,7 +360,7 @@ impl CubeMap<Vec3> {
                 .set_target_position(side.get_direction());
 
             {
-                let mut shader_context = shader_context_rc.borrow_mut();
+                let mut shader_context = (*shader_context_rc).borrow_mut();
 
                 shader_context.set_view_position(Vec4::new(
                     cubemap_face_camera.look_vector.get_position(),

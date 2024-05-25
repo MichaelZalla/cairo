@@ -5,7 +5,7 @@ use crate::{
 
 use super::Pipeline;
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub(in crate::pipeline) fn do_deferred_lighting_pass(&mut self) {
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();

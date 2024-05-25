@@ -3,7 +3,7 @@ use crate::{
     transform::Transform3D, vec::vec3::Vec3,
 };
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub fn render_point(
         &mut self,
         point_world_space: Vec3,
@@ -13,9 +13,13 @@ impl<'a> Pipeline<'a> {
         material_name: Option<String>,
         scale: Option<f32>,
     ) {
-        let shader_context = self.shader_context.borrow();
+        let point_ndc_space: Vec3;
 
-        let point_ndc_space = shader_context.to_ndc_space(point_world_space);
+        {
+            let shader_context = (*self.shader_context).borrow();
+
+            point_ndc_space = shader_context.to_ndc_space(point_world_space);
+        }
 
         let x = (point_ndc_space.x * self.viewport.width as f32) as u32;
         let y = (point_ndc_space.y * self.viewport.height as f32) as u32;

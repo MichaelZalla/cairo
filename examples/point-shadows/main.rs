@@ -77,15 +77,15 @@ fn main() -> Result<(), String> {
 
     // Shader context
 
-    let shader_context_rc: RefCell<ShaderContext> = Default::default();
+    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
-    let point_shadow_map_shader_context_rc: RefCell<ShaderContext> = Default::default();
+    let point_shadow_map_shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
     // Pipeline
 
     let pipeline_rc = {
         let mut pipeline = Pipeline::new(
-            &shader_context_rc,
+            shader_context_rc.clone(),
             scene_context_rc.borrow().resources.clone(),
             DEFAULT_VERTEX_SHADER,
             DEFAULT_FRAGMENT_SHADER,
@@ -99,7 +99,7 @@ fn main() -> Result<(), String> {
 
     let point_shadow_map_pipeline_rc = {
         let mut pipeline = Pipeline::new(
-            &point_shadow_map_shader_context_rc,
+            point_shadow_map_shader_context_rc.clone(),
             scene_context_rc.borrow().resources.clone(),
             PointShadowMapVertexShader,
             PointShadowMapFragmentShader,
@@ -125,7 +125,7 @@ fn main() -> Result<(), String> {
         let scene_context = scene_context_rc.borrow_mut();
         let resources = scene_context.resources.borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
-        let mut shader_context = shader_context_rc.borrow_mut();
+        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.set_ambient_light(None);
         shader_context.set_directional_light(None);

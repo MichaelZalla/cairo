@@ -69,10 +69,10 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     // Set up a pipeline for rendering our cubemaps.
 
-    let shader_context_rc: RefCell<ShaderContext> = Default::default();
+    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
     let mut pipeline = Pipeline::new(
-        &shader_context_rc,
+        shader_context_rc.clone(),
         cube_scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,

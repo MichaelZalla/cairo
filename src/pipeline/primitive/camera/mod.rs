@@ -4,7 +4,7 @@ use crate::{
     scene::camera::Camera,
 };
 
-impl<'a> Pipeline<'a> {
+impl Pipeline {
     pub fn render_camera(&mut self, camera: &Camera, color: Option<Color>) {
         // World space view volume.
 
