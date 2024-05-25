@@ -1,4 +1,5 @@
 use crate::{
+    matrix::Mat4,
     scene::camera::Camera,
     software_renderer::{zbuffer, SoftwareRenderer},
     texture::cubemap::CubeMap,
@@ -10,6 +11,7 @@ impl SoftwareRenderer {
         &mut self,
         skybox: &CubeMap,
         camera: &Camera,
+        skybox_rotation: Option<Mat4>,
     ) {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
@@ -38,7 +40,11 @@ impl SoftwareRenderer {
                                 self.viewport.height,
                             );
 
-                        let normal = pixel_coordinate_world_space.as_normal();
+                        let mut normal = pixel_coordinate_world_space.as_normal();
+
+                        if let Some(transform) = skybox_rotation {
+                            normal *= transform;
+                        }
 
                         // Sample the cubemap using our world-space direction-offset.
 
@@ -55,6 +61,7 @@ impl SoftwareRenderer {
         &mut self,
         skybox_hdr: &CubeMap<Vec3>,
         camera: &Camera,
+        skybox_rotation: Option<Mat4>,
     ) {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
@@ -83,7 +90,11 @@ impl SoftwareRenderer {
                                 self.viewport.height,
                             );
 
-                        let normal = pixel_coordinate_world_space.as_normal();
+                        let mut normal = pixel_coordinate_world_space.as_normal();
+
+                        if let Some(transform) = skybox_rotation {
+                            normal *= transform;
+                        }
 
                         // Sample the cubemap using our world-space direction-offset.
 

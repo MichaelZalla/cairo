@@ -395,6 +395,17 @@ impl MulAssign<Mat4> for Vec4 {
     }
 }
 
+impl MulAssign<&Mat4> for Vec4 {
+    fn mul_assign(&mut self, rhs: &Mat4) {
+        let result = *self * *rhs;
+
+        self.x = result.x;
+        self.y = result.y;
+        self.z = result.z;
+        self.w = result.w;
+    }
+}
+
 impl Mul<Mat4> for Vec4 {
     type Output = Vec4;
     fn mul(self, rhs: Mat4) -> Self {

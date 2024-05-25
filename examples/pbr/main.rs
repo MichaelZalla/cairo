@@ -78,10 +78,11 @@ fn main() -> Result<(), String> {
         shader_context.get_spot_lights_mut().clear();
 
         let mut update_scene_graph_node = |_current_depth: usize,
-                                           _current_world_transform: Mat4,
+                                           current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
             node.update(
+                &current_world_transform,
                 &resources,
                 app,
                 mouse_state,

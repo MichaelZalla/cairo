@@ -577,6 +577,7 @@ fn main() -> Result<(), String> {
                     }
                 },
                 _ => node.update(
+                    &current_world_transform,
                     &resources,
                     app,
                     mouse_state,

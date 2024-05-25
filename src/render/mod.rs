@@ -74,7 +74,12 @@ pub trait Renderer {
         entity_material_name: &Option<String>,
     ) -> bool;
 
-    fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera);
+    fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera, skybox_rotation: Option<Mat4>);
 
-    fn render_skybox_hdr(&mut self, skybox_hdr: &CubeMap<Vec3>, camera: &Camera);
+    fn render_skybox_hdr(
+        &mut self,
+        skybox_hdr: &CubeMap<Vec3>,
+        camera: &Camera,
+        skybox_rotation: Option<Mat4>,
+    );
 }

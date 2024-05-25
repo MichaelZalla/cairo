@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, path::Path, rc::Rc};
+use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, path::Path, rc::Rc};
 
 use uuid::Uuid;
 
@@ -27,6 +27,7 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
+    vec::vec3::Vec3,
 };
 
 pub mod scene;
@@ -199,17 +200,39 @@ fn main() -> Result<(), String> {
         // Traverse the scene graph and update its nodes.
 
         let mut update_scene_graph_node = |_current_depth: usize,
-                                           _current_world_transform: Mat4,
+                                           current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
-            node.update(
-                &resources,
-                app,
-                mouse_state,
-                keyboard_state,
-                game_controller_state,
-                &mut shader_context,
-            )
+            match node.get_type() {
+                SceneNodeType::Skybox => {
+                    let uptime = app.timing_info.uptime_seconds;
+
+                    node.get_transform_mut().set_rotation(Vec3 {
+                        x: 0.0,
+                        y: uptime % (2.0 * PI) / 3.0,
+                        z: 0.0,
+                    });
+
+                    node.update(
+                        &current_world_transform,
+                        &resources,
+                        app,
+                        mouse_state,
+                        keyboard_state,
+                        game_controller_state,
+                        &mut shader_context,
+                    )
+                }
+                _ => node.update(
+                    &current_world_transform,
+                    &resources,
+                    app,
+                    mouse_state,
+                    keyboard_state,
+                    game_controller_state,
+                    &mut shader_context,
+                ),
+            }
         };
 
         scene.root.visit_mut(

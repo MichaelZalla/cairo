@@ -19,6 +19,7 @@ pub struct ShaderContext {
     pub ambient_diffuse_irradiance_map: Option<Handle>,
     pub ambient_specular_prefiltered_environment_map: Option<Handle>,
     pub ambient_specular_brdf_integration_map: Option<Handle>,
+    pub skybox_transform: Option<Mat4>,
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
     pub point_lights: Vec<Handle>,
@@ -42,6 +43,7 @@ impl Default for ShaderContext {
             ambient_diffuse_irradiance_map: None,
             ambient_specular_prefiltered_environment_map: None,
             ambient_specular_brdf_integration_map: None,
+            skybox_transform: None,
             ambient_light: None,
             directional_light: None,
             point_lights: vec![],
@@ -78,6 +80,7 @@ impl ShaderContext {
             ambient_diffuse_irradiance_map: None,
             ambient_specular_prefiltered_environment_map: None,
             ambient_specular_brdf_integration_map: None,
+            skybox_transform: None,
             ambient_light,
             directional_light,
             point_lights,
@@ -194,5 +197,9 @@ impl ShaderContext {
 
     pub fn set_active_hdr_map(&mut self, optional_handle: Option<Handle>) {
         self.active_hdr_map = optional_handle;
+    }
+
+    pub fn set_skybox_transform(&mut self, optional_transform: Option<Mat4>) {
+        self.skybox_transform = optional_transform;
     }
 }

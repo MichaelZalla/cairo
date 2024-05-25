@@ -56,7 +56,7 @@ impl SceneGraph {
     ) -> Result<(), String>
     where
         C: FnMut(
-            Mat4,
+            &Mat4,
             &mut SceneNode,
             &SceneResources,
             &App,
@@ -71,7 +71,7 @@ impl SceneGraph {
             Some(SceneNodeLocalTraversalMethod::PostOrder),
             &mut |_current_depth: usize, current_world_transform: Mat4, node: &mut SceneNode| {
                 match update_node(
-                    current_world_transform,
+                    &current_world_transform,
                     node,
                     resources,
                     app,
@@ -83,6 +83,7 @@ impl SceneGraph {
                     Ok(was_handled) => {
                         if !was_handled {
                             return node.update(
+                                &current_world_transform,
                                 resources,
                                 app,
                                 mouse_state,
@@ -119,6 +120,7 @@ impl SceneGraph {
         let mut active_camera_handle: Option<Handle> = None;
         let mut clipping_camera_handle: Option<Handle> = None;
         let mut active_skybox_handle: Option<Handle> = None;
+        let mut active_skybox_transform: Option<Mat4> = None;
 
         let mut entities_total: u32 = 0;
         let mut entities_drawn: u32 = 0;
@@ -164,6 +166,7 @@ impl SceneGraph {
                     match handle {
                         Some(handle) => {
                             active_skybox_handle.replace(*handle);
+                            active_skybox_transform.replace(current_world_transform);
                         }
                         None => {
                             panic!("Encountered a `Skybox` node with no resource handle!")
@@ -345,8 +348,8 @@ impl SceneGraph {
 
         // End frame
 
-        if let (Some(camera_handle), Some(skybox_handle)) =
-            (active_camera_handle, active_skybox_handle)
+        if let (Some(camera_handle), Some(skybox_handle), Some(skybox_transform)) =
+            (active_camera_handle, active_skybox_handle, active_skybox_transform)
         {
             if let (Ok(camera_entry), Ok(skybox_entry)) = (
                 resources.camera.borrow().get(&camera_handle),
@@ -361,7 +364,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let cubemap = &entry.item;
 
-                                renderer.render_skybox_hdr(cubemap, camera);
+                                renderer.render_skybox_hdr(cubemap, camera, Some(skybox_transform));
                             }
                             Err(e) => panic!("{}", e),
                         }
@@ -370,7 +373,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let cubemap = &entry.item;
 
-                                renderer.render_skybox(cubemap, camera);
+                                renderer.render_skybox(cubemap, camera, Some(skybox_transform));
                             }
                             Err(e) => panic!("{}", e),
                         }

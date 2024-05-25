@@ -145,7 +145,7 @@ fn main() -> Result<(), String> {
 
         // Traverse the scene graph and update its nodes.
 
-        let mut update_node = |current_world_transform: Mat4,
+        let mut update_node = |current_world_transform: &Mat4,
                                node: &mut SceneNode,
                                resources: &SceneResources,
                                app: &App,
@@ -210,7 +210,7 @@ fn main() -> Result<(), String> {
                                 let orbital_radius: f32 = 3.0;
 
                                 point_light.position = (Vec4::new(Default::default(), 1.0)
-                                    * current_world_transform
+                                    * *current_world_transform
                                     * Mat4::translation(Vec3 {
                                         x: orbital_radius * uptime.sin(),
                                         y: 3.0,
@@ -241,12 +241,12 @@ fn main() -> Result<(), String> {
                                 let spot_light = &mut entry.item;
 
                                 spot_light.look_vector.set_position(
-                                    (Vec4::new(Default::default(), 1.0) * current_world_transform)
+                                    (Vec4::new(Default::default(), 1.0) * *current_world_transform)
                                         .to_vec3(),
                                 );
 
                                 spot_light.look_vector.set_target_position(
-                                    (Vec4::new(vec3::UP * -1.0, 1.0) * current_world_transform)
+                                    (Vec4::new(vec3::UP * -1.0, 1.0) * *current_world_transform)
                                         .to_vec3(),
                                 );
 

@@ -418,6 +418,7 @@ impl SceneNode {
 
     pub fn update(
         &mut self,
+        current_world_transform: &Mat4,
         resources: &SceneResources,
         app: &App,
         mouse_state: &MouseState,
@@ -484,6 +485,8 @@ impl SceneNode {
                             shader_context.set_ambient_specular_prefiltered_environment_map(
                                 skybox.specular_prefiltered_environment,
                             );
+
+                            shader_context.set_skybox_transform(Some(*current_world_transform));
 
                             Ok(())
                         }

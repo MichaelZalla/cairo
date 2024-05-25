@@ -175,7 +175,7 @@ fn main() -> Result<(), String> {
         // Traverse the scene graph and update its nodes.
 
         let mut update_scene_graph_node = |_current_depth: usize,
-                                           _current_world_transform: Mat4,
+                                           current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
             let (node_type, _handle) = (node.get_type(), node.get_handle());
@@ -212,6 +212,7 @@ fn main() -> Result<(), String> {
                     Ok(())
                 }
                 _ => node.update(
+                    &current_world_transform,
                     &resources,
                     app,
                     mouse_state,

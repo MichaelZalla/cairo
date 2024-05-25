@@ -178,8 +178,16 @@ fn contribute_ambient_ibl(
 ) -> Vec3 {
     // Total incoming ambient light from environment.
 
-    let irradiance =
-        diffuse_irradiance_map.sample_nearest(&Vec4::new(sample.world_normal, 1.0), None);
+    let cubemap_rotation_transform = if let Some(transform) = context.skybox_transform {
+        transform
+    } else {
+        Default::default()
+    };
+
+    let irradiance = diffuse_irradiance_map.sample_nearest(
+        &(Vec4::new(sample.world_normal, 1.0) * cubemap_rotation_transform),
+        None,
+    );
 
     let normal = sample.tangent_space_info.normal;
 
@@ -216,7 +224,7 @@ fn contribute_ambient_ibl(
             specular_prefiltered_environment_lod - (specular_prefiltered_environment_lod.floor());
 
         specular_prefiltered_environment_map.sample_trilinear(
-            &Vec4::new(reflected_ray_direction, 1.0),
+            &(Vec4::new(reflected_ray_direction, 1.0) * cubemap_rotation_transform),
             near_level_index,
             far_level_index,
             alpha,
