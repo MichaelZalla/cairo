@@ -13,7 +13,8 @@ use crate::{
         },
         specular::HdrSpecularPrefilteredEnvironmentFragmentShader,
     },
-    pipeline::{options::PipelineFaceCullingReject, Pipeline},
+    pipeline::Pipeline,
+    render::culling::FaceCullingReject,
     resource::handle::Handle,
     scene::{
         context::{utils::make_cube_scene, SceneContext},
@@ -174,7 +175,7 @@ fn render_radiance_to_cubemap(
 
         pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::None;
 
         shader_context_rc
             .borrow_mut()
@@ -202,7 +203,7 @@ fn render_radiance_to_cubemap(
 
         pipeline.bind_framebuffer(None);
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::Backfaces;
 
         shader_context_rc.borrow_mut().set_active_hdr_map(None);
     }
@@ -224,7 +225,7 @@ fn render_irradiance_to_cubemap(
 
         pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::None;
 
         shader_context_rc
             .borrow_mut()
@@ -250,7 +251,7 @@ fn render_irradiance_to_cubemap(
 
         pipeline.bind_framebuffer(None);
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::Backfaces;
 
         shader_context_rc
             .borrow_mut()
@@ -306,7 +307,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         pipeline.set_fragment_shader(HdrSpecularPrefilteredEnvironmentFragmentShader);
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::None;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::None;
 
         shader_context_rc
             .borrow_mut()
@@ -365,7 +366,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         pipeline.bind_framebuffer(None);
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Backfaces;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::Backfaces;
 
         shader_context_rc
             .borrow_mut()

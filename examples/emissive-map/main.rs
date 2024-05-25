@@ -12,7 +12,8 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh,
-    pipeline::{options::PipelineOptions, Pipeline},
+    pipeline::Pipeline,
+    render::options::RenderOptions,
     scene::{
         context::utils::make_empty_scene,
         light::{PointLight, SpotLight},
@@ -236,7 +237,7 @@ fn main() -> Result<(), String> {
 
     // Pipeline
 
-    let pipeline_options = PipelineOptions {
+    let pipeline_options = RenderOptions {
         do_bloom: true,
         ..Default::default()
     };

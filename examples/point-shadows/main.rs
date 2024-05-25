@@ -7,7 +7,8 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
-    pipeline::{options::PipelineFaceCullingReject, Pipeline},
+    pipeline::Pipeline,
+    render::culling::FaceCullingReject,
     scene::{
         light::{
             POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
@@ -108,7 +109,7 @@ fn main() -> Result<(), String> {
 
         pipeline.set_geometry_shader(PointShadowMapGeometryShader);
 
-        pipeline.options.face_culling_strategy.reject = PipelineFaceCullingReject::Frontfaces;
+        pipeline.options.face_culling_strategy.reject = FaceCullingReject::Frontfaces;
 
         pipeline.bind_framebuffer(Some(point_shadow_map_framebuffer_rc.clone()));
 

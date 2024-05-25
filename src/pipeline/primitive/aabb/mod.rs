@@ -3,9 +3,10 @@ use crate::{
     entity::Entity,
     matrix::Mat4,
     mesh::Mesh,
-    pipeline::{
-        options::{PipelineFaceCullingReject, PipelineFaceCullingStrategy, PipelineOptions},
-        Pipeline,
+    pipeline::Pipeline,
+    render::{
+        culling::{FaceCullingReject, FaceCullingStrategy},
+        options::RenderOptions,
     },
     resource::arena::Arena,
 };
@@ -24,14 +25,14 @@ impl Pipeline {
 
                 let original_options = self.options;
 
-                self.options = PipelineOptions {
+                self.options = RenderOptions {
                     wireframe_color: color,
                     do_wireframe: true,
                     do_rasterized_geometry: false,
                     do_lighting: false,
                     do_deferred_lighting: false,
-                    face_culling_strategy: PipelineFaceCullingStrategy {
-                        reject: PipelineFaceCullingReject::None,
+                    face_culling_strategy: FaceCullingStrategy {
+                        reject: FaceCullingReject::None,
                         ..Default::default()
                     },
                     ..Default::default()

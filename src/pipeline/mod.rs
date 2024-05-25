@@ -7,7 +7,7 @@ use crate::{
     material::cache::MaterialCache,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
-    render::Renderer,
+    render::{options::RenderOptions, Renderer},
     resource::arena::Arena,
     scene::{
         camera::{frustum::Frustum, Camera},
@@ -29,12 +29,11 @@ use crate::{
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
-use self::{gbuffer::GBuffer, options::PipelineOptions};
+use self::gbuffer::GBuffer;
 
 use super::{mesh::Mesh, vec::vec3::Vec3};
 
 mod gbuffer;
-pub mod options;
 mod pass;
 mod primitive;
 pub mod zbuffer;
@@ -48,7 +47,7 @@ struct PipelineViewport {
 }
 
 pub struct Pipeline {
-    pub options: PipelineOptions,
+    pub options: RenderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: PipelineViewport,
     g_buffer: Option<GBuffer>,
@@ -238,7 +237,7 @@ impl Pipeline {
         scene_resources: Rc<RefCell<SceneResources>>,
         vertex_shader: VertexShaderFn,
         fragment_shader: FragmentShaderFn,
-        options: PipelineOptions,
+        options: RenderOptions,
     ) -> Self {
         let alpha_shader = DEFAULT_ALPHA_SHADER;
 

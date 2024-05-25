@@ -1,11 +1,11 @@
 use crate::{
     color,
     mesh::Face,
-    pipeline::{
-        options::{PipelineFaceCullingReject, PipelineFaceCullingWindingOrder},
-        Pipeline,
+    pipeline::Pipeline,
+    render::{
+        culling::{FaceCullingReject, FaceCullingWindingOrder},
+        Renderer,
     },
-    render::Renderer,
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::default_vertex_out::DefaultVertexOut,
 };
@@ -39,26 +39,26 @@ impl Pipeline {
             let mut v2 = projection_space_vertices[face_index * 3 + 2];
 
             match self.options.face_culling_strategy.winding_order {
-                PipelineFaceCullingWindingOrder::Clockwise => {
+                FaceCullingWindingOrder::Clockwise => {
                     (v0, v1, v2) = (v2, v1, v0);
                 }
-                PipelineFaceCullingWindingOrder::CounterClockwise => {
+                FaceCullingWindingOrder::CounterClockwise => {
                     // Use default (counter-clockwise) ordering.
                 }
             }
 
             match self.options.face_culling_strategy.reject {
-                PipelineFaceCullingReject::None => {
+                FaceCullingReject::None => {
                     // Render all faces.
                 }
-                PipelineFaceCullingReject::Backfaces => {
+                FaceCullingReject::Backfaces => {
                     // Reject backfaces.
 
                     if self.is_backface(v0.position, v1.position, v2.position) {
                         continue;
                     }
                 }
-                PipelineFaceCullingReject::Frontfaces => {
+                FaceCullingReject::Frontfaces => {
                     // Reject frontfaces.
 
                     if !self.is_backface(v0.position, v1.position, v2.position) {

@@ -3,30 +3,13 @@ use sdl2::keyboard::Keycode;
 use crate::{
     color::{self, Color},
     device::{GameControllerState, KeyboardState, MouseState},
+    render::culling::{FaceCullingReject, FaceCullingWindingOrder},
 };
 
-#[derive(Default, Debug, Copy, Clone)]
-pub enum PipelineFaceCullingWindingOrder {
-    Clockwise,
-    #[default]
-    CounterClockwise,
-}
-
-#[derive(Default, Debug, Copy, Clone)]
-pub enum PipelineFaceCullingReject {
-    None,
-    #[default]
-    Backfaces,
-    Frontfaces,
-}
-#[derive(Default, Debug, Copy, Clone)]
-pub struct PipelineFaceCullingStrategy {
-    pub reject: PipelineFaceCullingReject,
-    pub winding_order: PipelineFaceCullingWindingOrder,
-}
+use super::culling::FaceCullingStrategy;
 
 #[derive(Debug, Copy, Clone)]
-pub struct PipelineOptions {
+pub struct RenderOptions {
     pub wireframe_color: Color,
     pub do_wireframe: bool,
     pub do_rasterized_geometry: bool,
@@ -34,10 +17,10 @@ pub struct PipelineOptions {
     pub do_deferred_lighting: bool,
     pub do_bloom: bool,
     pub do_visualize_normals: bool,
-    pub face_culling_strategy: PipelineFaceCullingStrategy,
+    pub face_culling_strategy: FaceCullingStrategy,
 }
 
-impl Default for PipelineOptions {
+impl Default for RenderOptions {
     fn default() -> Self {
         Self {
             wireframe_color: color::WHITE,
@@ -52,7 +35,7 @@ impl Default for PipelineOptions {
     }
 }
 
-impl PipelineOptions {
+impl RenderOptions {
     pub fn update(
         &mut self,
         keyboard_state: &KeyboardState,
@@ -119,11 +102,9 @@ impl PipelineOptions {
                     // Cycle culling reject settings.
 
                     self.face_culling_strategy.reject = match self.face_culling_strategy.reject {
-                        PipelineFaceCullingReject::None => PipelineFaceCullingReject::Backfaces,
-                        PipelineFaceCullingReject::Backfaces => {
-                            PipelineFaceCullingReject::Frontfaces
-                        }
-                        PipelineFaceCullingReject::Frontfaces => PipelineFaceCullingReject::None,
+                        FaceCullingReject::None => FaceCullingReject::Backfaces,
+                        FaceCullingReject::Backfaces => FaceCullingReject::Frontfaces,
+                        FaceCullingReject::Frontfaces => FaceCullingReject::None,
                     };
 
                     println!(
@@ -136,11 +117,11 @@ impl PipelineOptions {
 
                     self.face_culling_strategy.winding_order =
                         match self.face_culling_strategy.winding_order {
-                            PipelineFaceCullingWindingOrder::Clockwise => {
-                                PipelineFaceCullingWindingOrder::CounterClockwise
+                            FaceCullingWindingOrder::Clockwise => {
+                                FaceCullingWindingOrder::CounterClockwise
                             }
-                            PipelineFaceCullingWindingOrder::CounterClockwise => {
-                                PipelineFaceCullingWindingOrder::Clockwise
+                            FaceCullingWindingOrder::CounterClockwise => {
+                                FaceCullingWindingOrder::Clockwise
                             }
                         };
 
