@@ -26,6 +26,7 @@ use crate::{
         default_alpha_shader::DEFAULT_ALPHA_SHADER,
         default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
     },
+    texture::cubemap::CubeMap,
     vec::vec4::Vec4,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -214,6 +215,25 @@ impl Renderer for Pipeline {
         }
     }
 
+    fn render_point(
+        &mut self,
+        point_world_space: Vec3,
+        color: Color,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+        material_name: Option<String>,
+        scale: Option<f32>,
+    ) {
+        self._render_point(
+            point_world_space,
+            color,
+            camera,
+            material_cache,
+            material_name,
+            scale,
+        )
+    }
+
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
         self._render_line(start_world_space, end_world_space, color)
     }
@@ -279,6 +299,14 @@ impl Renderer for Pipeline {
             entity_mesh,
             entity_material_name,
         )
+    }
+
+    fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
+        self._render_skybox(skybox, camera)
+    }
+
+    fn render_skybox_hdr(&mut self, skybox_hdr: &CubeMap<Vec3>, camera: &Camera) {
+        self._render_skybox_hdr(skybox_hdr, camera)
     }
 }
 

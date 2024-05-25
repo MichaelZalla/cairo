@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl Pipeline {
-    pub fn render_point(
+    pub(in crate::pipeline) fn _render_point(
         &mut self,
         point_world_space: Vec3,
         color: Color,

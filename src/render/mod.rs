@@ -13,6 +13,7 @@ use crate::{
         light::{PointLight, SpotLight},
     },
     shader::{fragment::FragmentShaderFn, geometry::GeometryShaderFn, vertex::VertexShaderFn},
+    texture::cubemap::CubeMap,
     vec::vec3::Vec3,
 };
 
@@ -28,6 +29,16 @@ pub trait Renderer {
     fn begin_frame(&mut self);
 
     fn end_frame(&mut self);
+
+    fn render_point(
+        &mut self,
+        point_world_space: Vec3,
+        color: Color,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+        material_name: Option<String>,
+        scale: Option<f32>,
+    );
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color);
 
@@ -70,4 +81,8 @@ pub trait Renderer {
         entity_mesh: &Mesh,
         entity_material_name: &Option<String>,
     ) -> bool;
+
+    fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera);
+
+    fn render_skybox_hdr(&mut self, skybox_hdr: &CubeMap<Vec3>, camera: &Camera);
 }

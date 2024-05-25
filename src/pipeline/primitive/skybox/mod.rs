@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl Pipeline {
-    pub fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
+    pub(in crate::pipeline) fn _render_skybox(&mut self, skybox: &CubeMap, camera: &Camera) {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
@@ -47,7 +47,11 @@ impl Pipeline {
         }
     }
 
-    pub fn render_skybox_hdr(&mut self, skybox_hdr: &CubeMap<Vec3>, camera: &Camera) {
+    pub(in crate::pipeline) fn _render_skybox_hdr(
+        &mut self,
+        skybox_hdr: &CubeMap<Vec3>,
+        camera: &Camera,
+    ) {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
