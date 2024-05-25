@@ -15,6 +15,7 @@ use crate::{
 
 pub mod culling;
 pub mod options;
+pub mod viewport;
 
 pub trait Renderer {
     fn begin_frame(&mut self);

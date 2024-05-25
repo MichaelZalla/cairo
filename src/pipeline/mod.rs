@@ -7,7 +7,7 @@ use crate::{
     material::cache::MaterialCache,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
-    render::{options::RenderOptions, Renderer},
+    render::{options::RenderOptions, viewport::RenderViewport, Renderer},
     resource::arena::Arena,
     scene::{
         camera::{frustum::Frustum, Camera},
@@ -38,18 +38,10 @@ mod pass;
 mod primitive;
 pub mod zbuffer;
 
-#[derive(Default, Debug, Copy, Clone)]
-struct PipelineViewport {
-    pub width: u32,
-    pub width_over_2: f32,
-    pub height: u32,
-    pub height_over_2: f32,
-}
-
 pub struct Pipeline {
     pub options: RenderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
-    viewport: PipelineViewport,
+    viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
@@ -247,7 +239,7 @@ impl Pipeline {
 
         let framebuffer = None;
 
-        let viewport: PipelineViewport = Default::default();
+        let viewport: RenderViewport = Default::default();
 
         Pipeline {
             framebuffer,
