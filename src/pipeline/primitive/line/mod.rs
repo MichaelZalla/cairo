@@ -2,11 +2,17 @@ use crate::{
     color::{self, Color},
     graphics::Graphics,
     pipeline::Pipeline,
+    render::Renderer,
     vec::vec3::{self, Vec3},
 };
 
 impl Pipeline {
-    pub fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
+    pub(in crate::pipeline) fn _render_line(
+        &mut self,
+        start_world_space: Vec3,
+        end_world_space: Vec3,
+        color: Color,
+    ) {
         let start_ndc_space: Vec3;
         let end_ndc_space: Vec3;
 
@@ -20,7 +26,7 @@ impl Pipeline {
         self.render_line_from_ndc_space_vertices(&start_ndc_space, &end_ndc_space, color);
     }
 
-    pub fn render_point_indicator(&mut self, position: Vec3, scale: f32) {
+    pub(in crate::pipeline) fn _render_point_indicator(&mut self, position: Vec3, scale: f32) {
         // X-axis (red)
 
         self.render_line(position, position + vec3::RIGHT * scale, color::RED);
@@ -34,11 +40,11 @@ impl Pipeline {
         self.render_line(position, position + vec3::FORWARD * scale, color::GREEN);
     }
 
-    pub fn render_world_axes(&mut self, scale: f32) {
+    pub(in crate::pipeline) fn _render_world_axes(&mut self, scale: f32) {
         self.render_point_indicator(Default::default(), scale)
     }
 
-    pub fn render_ground_plane(&mut self, scale: f32) {
+    pub(in crate::pipeline) fn _render_ground_plane(&mut self, scale: f32) {
         for i in -10..10 + 1 {
             // X-axis parallels
 

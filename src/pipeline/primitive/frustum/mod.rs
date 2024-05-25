@@ -1,6 +1,7 @@
 use crate::{
     color::{self, Color},
     pipeline::Pipeline,
+    render::Renderer,
     scene::camera::frustum::Frustum,
 };
 

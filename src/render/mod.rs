@@ -13,6 +13,7 @@ use crate::{
         light::{PointLight, SpotLight},
     },
     shader::{fragment::FragmentShaderFn, geometry::GeometryShaderFn, vertex::VertexShaderFn},
+    vec::vec3::Vec3,
 };
 
 pub trait Renderer {
@@ -27,6 +28,14 @@ pub trait Renderer {
     fn begin_frame(&mut self);
 
     fn end_frame(&mut self);
+
+    fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color);
+
+    fn render_point_indicator(&mut self, position: Vec3, scale: f32);
+
+    fn render_world_axes(&mut self, scale: f32);
+
+    fn render_ground_plane(&mut self, scale: f32);
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>);
 

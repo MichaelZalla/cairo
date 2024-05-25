@@ -214,6 +214,22 @@ impl Renderer for Pipeline {
         }
     }
 
+    fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
+        self._render_line(start_world_space, end_world_space, color)
+    }
+
+    fn render_point_indicator(&mut self, position: Vec3, scale: f32) {
+        self._render_point_indicator(position, scale)
+    }
+
+    fn render_world_axes(&mut self, scale: f32) {
+        self._render_world_axes(scale)
+    }
+
+    fn render_ground_plane(&mut self, scale: f32) {
+        self._render_ground_plane(scale)
+    }
+
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
         self._render_frustum(frustum, color)
     }

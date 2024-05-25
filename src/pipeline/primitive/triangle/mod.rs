@@ -5,6 +5,7 @@ use crate::{
         options::{PipelineFaceCullingReject, PipelineFaceCullingWindingOrder},
         Pipeline,
     },
+    render::Renderer,
     vec::{vec3::Vec3, vec4::Vec4},
     vertex::default_vertex_out::DefaultVertexOut,
 };

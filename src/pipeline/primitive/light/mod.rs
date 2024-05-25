@@ -3,6 +3,7 @@ use crate::{
     material::cache::MaterialCache,
     mesh,
     pipeline::Pipeline,
+    render::Renderer,
     scene::{
         camera::{frustum::Frustum, Camera},
         light::{PointLight, SpotLight},
