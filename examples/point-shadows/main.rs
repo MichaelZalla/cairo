@@ -68,13 +68,13 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context = make_cubes_scene(
-        framebuffer_rc.borrow().width_over_height,
-        point_shadow_map_framebuffer_rc.clone(),
-    )
-    .unwrap();
-
-    let scene_context_rc = RefCell::new(scene_context);
+    let scene_context = Rc::new(
+        make_cubes_scene(
+            framebuffer_rc.borrow().width_over_height,
+            point_shadow_map_framebuffer_rc.clone(),
+        )
+        .unwrap(),
+    );
 
     // Shader context
 
@@ -87,7 +87,7 @@ fn main() -> Result<(), String> {
     let renderer_rc = {
         let mut renderer = SoftwareRenderer::new(
             shader_context_rc.clone(),
-            scene_context_rc.borrow().resources.clone(),
+            scene_context.resources.clone(),
             DEFAULT_VERTEX_SHADER,
             DEFAULT_FRAGMENT_SHADER,
             Default::default(),
@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
     let point_shadow_map_renderer_rc = {
         let mut renderer = SoftwareRenderer::new(
             point_shadow_map_shader_context_rc.clone(),
-            scene_context_rc.borrow().resources.clone(),
+            scene_context.resources.clone(),
             PointShadowMapVertexShader,
             PointShadowMapFragmentShader,
             Default::default(),
@@ -123,7 +123,6 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let scene_context = scene_context_rc.borrow_mut();
         let resources = scene_context.resources.borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
@@ -201,15 +200,13 @@ fn main() -> Result<(), String> {
         // Render point shadow map.
 
         update_point_light_shadow_maps(
-            &scene_context_rc,
+            &scene_context,
             &point_shadow_map_renderer_rc,
             &point_shadow_map_shader_context_rc,
             point_shadow_map_framebuffer_rc.clone(),
         );
 
         // Render scene.
-
-        let scene_context = scene_context_rc.borrow();
 
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();

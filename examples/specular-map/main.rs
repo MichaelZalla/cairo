@@ -238,8 +238,6 @@ fn main() -> Result<(), String> {
         scene.root.add_child(spot_light_node)?;
     }
 
-    let scene_context_rc = RefCell::new(scene_context);
-
     // Shader context
 
     let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
@@ -248,7 +246,7 @@ fn main() -> Result<(), String> {
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        scene_context_rc.borrow().resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -267,7 +265,6 @@ fn main() -> Result<(), String> {
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
-        let scene_context = scene_context_rc.borrow_mut();
         let resources = scene_context.resources.borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
@@ -453,7 +450,6 @@ fn main() -> Result<(), String> {
     let mut render = || -> Result<Vec<u32>, String> {
         // Render scene.
 
-        let scene_context = scene_context_rc.borrow();
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];

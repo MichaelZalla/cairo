@@ -148,7 +148,7 @@ fn blit_hdr_attachment_to_cubemap_side(
 }
 
 pub fn update_point_light_shadow_maps(
-    scene_context_rc: &RefCell<SceneContext>,
+    scene_context: &Rc<SceneContext>,
     shadow_map_renderer_rc: &RefCell<dyn Renderer>,
     shadow_map_shader_context_rc: &RefCell<ShaderContext>,
     shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
@@ -158,8 +158,6 @@ pub fn update_point_light_shadow_maps(
     let mut point_light_shadow_maps: Vec<(Handle, CubeMap<f32>)> = vec![];
 
     {
-        let scene_context = scene_context_rc.borrow();
-
         let resources = (*scene_context.resources).borrow();
         let point_light_arena = resources.point_light.borrow();
 
@@ -171,7 +169,7 @@ pub fn update_point_light_shadow_maps(
             if let Some(handle) = light.shadow_map {
                 let shadow_map = render_point_shadows_to_cubemap(
                     light,
-                    &scene_context,
+                    scene_context,
                     shadow_map_shader_context_rc,
                     shadow_map_framebuffer_rc.clone(),
                     shadow_map_renderer_rc,
@@ -184,7 +182,6 @@ pub fn update_point_light_shadow_maps(
     }
 
     {
-        let scene_context = scene_context_rc.borrow();
         let resources = (*scene_context.resources).borrow_mut();
         let mut cubemap_f32_arena = resources.cubemap_f32.borrow_mut();
 
