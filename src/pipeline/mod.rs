@@ -6,6 +6,7 @@ use crate::{
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
     physics::collision::aabb::AABB,
+    render::Renderer,
     scene::{camera::frustum::Frustum, resources::SceneResources},
     shader::{
         alpha::AlphaShaderFn,
@@ -58,6 +59,20 @@ pub struct Pipeline {
     fragment_shader: FragmentShaderFn,
 }
 
+impl Renderer for Pipeline {
+    fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
+        self.vertex_shader = shader;
+    }
+
+    fn set_geometry_shader(&mut self, shader: GeometryShaderFn) {
+        self.geometry_shader = shader;
+    }
+
+    fn set_fragment_shader(&mut self, shader: FragmentShaderFn) {
+        self.fragment_shader = shader;
+    }
+}
+
 impl Pipeline {
     pub fn new(
         shader_context: Rc<RefCell<ShaderContext>>,
@@ -90,18 +105,6 @@ impl Pipeline {
             fragment_shader,
             options,
         }
-    }
-
-    pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {
-        self.vertex_shader = shader;
-    }
-
-    pub fn set_geometry_shader(&mut self, shader: GeometryShaderFn) {
-        self.geometry_shader = shader;
-    }
-
-    pub fn set_fragment_shader(&mut self, shader: FragmentShaderFn) {
-        self.fragment_shader = shader;
     }
 
     pub fn bind_framebuffer(&mut self, framebuffer_option: Option<Rc<RefCell<Framebuffer>>>) {

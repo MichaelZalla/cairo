@@ -14,6 +14,7 @@ use crate::{
         specular::HdrSpecularPrefilteredEnvironmentFragmentShader,
     },
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
+    render::Renderer,
     resource::handle::Handle,
     scene::{
         context::{utils::make_cube_scene, SceneContext},

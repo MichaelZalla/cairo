@@ -13,6 +13,7 @@ use cairo::{
     graphics::Graphics,
     matrix::Mat4,
     pipeline::{zbuffer::DepthTestMethod, Pipeline},
+    render::Renderer,
     scene::node::{
         SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
     },

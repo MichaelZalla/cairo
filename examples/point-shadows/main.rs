@@ -8,6 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
     pipeline::{options::PipelineFaceCullingReject, Pipeline},
+    render::Renderer,
     scene::{
         light::{
             POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
