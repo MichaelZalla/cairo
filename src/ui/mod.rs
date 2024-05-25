@@ -1,4 +1,8 @@
-#[derive(Default, Debug, Copy, Clone)]
+use serde::{Deserialize, Serialize};
+
+use crate::vec::vec2::Vec2;
+
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum UISize {
     #[default]
     Null,
@@ -8,7 +12,7 @@ pub enum UISize {
     ChildrenSum,
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct UISizeWithStrictness {
     size: UISize,
     strictness: f32,
@@ -21,9 +25,26 @@ pub enum UI2DAxis {
     Y,
 }
 
-#[derive(Default, Debug, Clone)]
+const UI_2D_AXIS_COUNT: usize = 2;
+
+// An immediate-mode data structure, doubling as a cache entry for persistent
+// UIWidgets across frames; computed fields from the previous frame as used to
+// interpret user inputs, while computed fields from the current frame are used
+// for widget rendering.
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct UIWidget {
-    semantic_sizes: [UISizeWithStrictness; 2],
+    // Auto-layout inputs
+    semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
+
+    // Auto-layout outputs
+    #[serde(skip)]
+    computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
+
+    #[serde(skip)]
+    computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
+
+    #[serde(skip)]
+    rect: (Vec2, Vec2), // On-screen rectangle coordinates, in pixels.
 }
 
 #[derive(Default, Debug, Clone)]
