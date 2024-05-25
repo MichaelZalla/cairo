@@ -5,7 +5,10 @@ use cairo::{
     buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
-    ui::{UISize, UISizeWithStrictness, UIWidget, UIWidgetNode, UIWidgetTree},
+    ui::{
+        tree::{node::Node, UIWidgetTree},
+        UIContext, UISize, UISizeWithStrictness, UIWidget,
+    },
 };
 
 fn main() -> Result<(), String> {
@@ -40,9 +43,11 @@ fn main() -> Result<(), String> {
         ],
     );
 
-    let root_widget_node = UIWidgetNode::new(root_widget);
+    let root_widget_node = Node::<UIWidget>::new(root_widget);
 
-    let _widget_tree = UIWidgetTree::new(root_widget_node);
+    let widget_tree = UIWidgetTree::new(root_widget_node);
+
+    let _ui_context = UIContext { tree: widget_tree };
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,
