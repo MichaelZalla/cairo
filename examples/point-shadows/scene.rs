@@ -153,9 +153,12 @@ pub fn make_cubes_scene(
 
                 light.intensities = (color.to_vec3() / 255.0) * 10.0;
 
-                light.shadow_map = Some(CubeMap::<f32>::from_framebuffer(
-                    &point_shadow_map_framebuffer_rc.borrow(),
-                ));
+                let shadow_map_handle = resources.cubemap_f32.borrow_mut().insert(
+                    Uuid::new_v4(),
+                    CubeMap::<f32>::from_framebuffer(&point_shadow_map_framebuffer_rc.borrow()),
+                );
+
+                light.shadow_map = Some(shadow_map_handle);
 
                 light.constant_attenuation = 1.0;
                 light.linear_attenuation = 0.09;

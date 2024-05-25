@@ -6,6 +6,7 @@ use crate::{
     color,
     matrix::Mat4,
     physics::pbr::{self, brdf::cook_torrance_direct},
+    resource::handle::Handle,
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
     texture::cubemap::CubeMap,
@@ -240,7 +241,7 @@ pub struct PointLight {
     pub linear_attenuation: f32,
     pub quadratic_attenuation: f32,
     #[serde(skip)]
-    pub shadow_map: Option<CubeMap<f32>>,
+    pub shadow_map: Option<Handle>,
     #[serde(skip)]
     pub influence_distance: f32,
 }
@@ -342,7 +343,12 @@ impl PointLight {
         point_contribution + specular_contribution
     }
 
-    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+    pub fn contribute_pbr(
+        &self,
+        sample: &GeometrySample,
+        f0: &Vec3,
+        shadow_map: Option<&CubeMap<f32>>,
+    ) -> Vec3 {
         let tangent_space_info = sample.tangent_space_info;
 
         let point_light_position =
@@ -354,7 +360,11 @@ impl PointLight {
 
         // Compute an enshadowing term for this fragment/sample.
 
-        let in_shadow = self.get_shadowing(sample);
+        let in_shadow = if let Some(map) = shadow_map {
+            self.get_shadowing(sample, map)
+        } else {
+            0.0
+        };
 
         let contribution = contribute_pbr(sample, &self.intensities, &direction_to_point_light, f0)
             * self.get_attentuation(distance_to_point_light);
@@ -362,37 +372,31 @@ impl PointLight {
         contribution * (1.0 - in_shadow)
     }
 
-    fn get_shadowing(&self, sample: &GeometrySample) -> f32 {
-        match &self.shadow_map {
-            Some(cubemap) => {
-                let light_to_fragment = sample.world_pos - self.position;
-                let light_to_fragment_direction = light_to_fragment.as_normal();
+    fn get_shadowing(&self, sample: &GeometrySample, shadow_map: &CubeMap<f32>) -> f32 {
+        let light_to_fragment = sample.world_pos - self.position;
+        let light_to_fragment_direction = light_to_fragment.as_normal();
 
-                let current_depth = light_to_fragment.mag();
+        let current_depth = light_to_fragment.mag();
 
-                let closest_depth = cubemap
-                    .sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
-                    * POINT_LIGHT_SHADOW_CAMERA_FAR;
+        let closest_depth = shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
+            * POINT_LIGHT_SHADOW_CAMERA_FAR;
 
-                if closest_depth == 0.0 {
-                    return 0.0;
-                }
+        if closest_depth == 0.0 {
+            return 0.0;
+        }
 
-                let likeness = sample
-                    .world_normal
-                    .dot((self.position - sample.world_pos).as_normal());
+        let likeness = sample
+            .world_normal
+            .dot((self.position - sample.world_pos).as_normal());
 
-                let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
+        let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
 
-                let is_in_shadow = (current_depth + bias) > closest_depth;
+        let is_in_shadow = (current_depth + bias) > closest_depth;
 
-                if is_in_shadow {
-                    1.0
-                } else {
-                    0.0
-                }
-            }
-            None => 0.0,
+        if is_in_shadow {
+            1.0
+        } else {
+            0.0
         }
     }
 

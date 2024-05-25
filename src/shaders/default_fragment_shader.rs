@@ -193,7 +193,18 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn = |context: &ShaderContext,
             Ok(entry) => {
                 let light = &entry.item;
 
-                point_light_contribution += light.contribute_pbr(sample, &f0);
+                if let Some(handle) = light.shadow_map {
+                    if let Ok(entry) = resources.cubemap_f32.borrow().get(&handle) {
+                        let shadow_map = &entry.item;
+
+                        point_light_contribution +=
+                            light.contribute_pbr(sample, &f0, Some(shadow_map));
+                    } else {
+                        point_light_contribution += light.contribute_pbr(sample, &f0, None);
+                    }
+                } else {
+                    point_light_contribution += light.contribute_pbr(sample, &f0, None);
+                }
             }
             Err(err) => panic!("Failed to get PointLight from Arena: {:?}: {}", handle, err),
         }

@@ -35,6 +35,7 @@ pub struct SceneResources {
     pub texture_vec2: RefCell<Arena<TextureMap<Vec2>>>,
     pub texture_vec3: RefCell<Arena<TextureMap<Vec3>>>,
     pub cubemap_u8: RefCell<Arena<CubeMap>>,
+    pub cubemap_f32: RefCell<Arena<CubeMap<f32>>>,
     pub cubemap_vec3: RefCell<Arena<CubeMap<Vec3>>>,
 }
 
@@ -54,6 +55,7 @@ impl PostDeserialize for SceneResources {
         self.texture_vec2.borrow_mut().post_deserialize();
         self.texture_vec3.borrow_mut().post_deserialize();
         self.cubemap_u8.borrow_mut().post_deserialize();
+        self.cubemap_f32.borrow_mut().post_deserialize();
         self.cubemap_vec3.borrow_mut().post_deserialize();
     }
 }
@@ -75,6 +77,7 @@ impl Default for SceneResources {
             texture_vec2: RefCell::new(Arena::<_>::new()),
             texture_vec3: RefCell::new(Arena::<_>::new()),
             cubemap_u8: RefCell::new(Arena::<_>::new()),
+            cubemap_f32: RefCell::new(Arena::<_>::new()),
             cubemap_vec3: RefCell::new(Arena::<_>::new()),
         }
     }

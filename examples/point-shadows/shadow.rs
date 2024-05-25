@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
-    buffer::{framebuffer::Framebuffer, Buffer2D}, color::Color, render::Renderer, scene::{
+    buffer::{framebuffer::Framebuffer, Buffer2D}, color::Color, render::Renderer, resource::handle::Handle, scene::{
         camera::Camera,
         context::SceneContext,
         light::{PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
@@ -155,7 +155,7 @@ pub fn update_point_light_shadow_maps(
 ) {
     // Render point shadow map.
 
-    let mut point_light_shadow_maps: Vec<CubeMap<f32>> = vec![];
+    let mut point_light_shadow_maps: Vec<(Handle, CubeMap<f32>)> = vec![];
 
     {
         let scene_context = scene_context_rc.borrow();
@@ -168,7 +168,7 @@ pub fn update_point_light_shadow_maps(
         for entry in point_light_arena.entries.iter().flatten() {
             let light = &entry.item;
 
-            if light.shadow_map.is_some() {
+            if let Some(handle) = light.shadow_map {
                 let shadow_map = render_point_shadows_to_cubemap(
                     light,
                     &scene_context,
@@ -177,29 +177,20 @@ pub fn update_point_light_shadow_maps(
                     shadow_map_renderer_rc,
                 )
                 .unwrap();
-
-                point_light_shadow_maps.push(shadow_map);
+    
+                point_light_shadow_maps.push((handle, shadow_map));
             }
         }
     }
 
     {
         let scene_context = scene_context_rc.borrow();
-
         let resources = (*scene_context.resources).borrow_mut();
-        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut cubemap_f32_arena = resources.cubemap_f32.borrow_mut();
 
-        let mut shadow_maps_replaced: usize = 0;
-
-        for entry in point_light_arena.entries.iter_mut().flatten() {
-            let light = &mut entry.item;
-
-            if light.shadow_map.is_some() {
-                light
-                    .shadow_map
-                    .replace(point_light_shadow_maps[shadow_maps_replaced].to_owned());
-
-                shadow_maps_replaced += 1;
+        for (handle, cubemap) in &point_light_shadow_maps {
+            if let Ok(entry) = cubemap_f32_arena.get_mut(handle) {
+                entry.item = cubemap.to_owned();
             }
         }
     }

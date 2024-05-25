@@ -74,19 +74,23 @@ pub static TestPointShadowMapFragmentShader: FragmentShaderFn =
         if let Ok(entry) = resources.point_light.borrow().get(&handle) {
             let point_light = &entry.item;
 
-            if let Some(cubemap) = &point_light.shadow_map {
-                let light_to_fragment = sample.world_pos - point_light.position;
+            if let Some(handle) = &point_light.shadow_map {
+                if let Ok(entry) = resources.cubemap_f32.borrow().get(handle) {
+                    let cubemap = &entry.item;
 
-                let closest_depth =
-                    cubemap.sample_nearest(&Vec4::new(light_to_fragment.as_normal(), 1.0));
+                    let light_to_fragment = sample.world_pos - point_light.position;
 
-                let closest_depth_alpha = closest_depth / POINT_LIGHT_SHADOW_CAMERA_FAR;
+                    let closest_depth =
+                        cubemap.sample_nearest(&Vec4::new(light_to_fragment.as_normal(), 1.0));
 
-                return Color::from_vec3(Vec3 {
-                    x: closest_depth_alpha,
-                    y: closest_depth_alpha,
-                    z: closest_depth_alpha,
-                });
+                    let closest_depth_alpha = closest_depth / POINT_LIGHT_SHADOW_CAMERA_FAR;
+
+                    return Color::from_vec3(Vec3 {
+                        x: closest_depth_alpha,
+                        y: closest_depth_alpha,
+                        z: closest_depth_alpha,
+                    });
+                }
             }
         }
 
