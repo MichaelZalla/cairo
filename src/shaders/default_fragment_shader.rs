@@ -6,7 +6,7 @@ use crate::{
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
-    texture::sample::sample_nearest_vec2,
+    texture::{cubemap::CubeMap, map::TextureMap, sample::sample_nearest_vec2},
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
@@ -14,228 +14,237 @@ use crate::{
     },
 };
 
-pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn = |context: &ShaderContext,
-                                                        resources: &SceneResources,
-                                                        sample: &GeometrySample|
- -> Color {
-    // Surface reflection at zero incidence.
-    #[allow(non_upper_case_globals)]
-    static f0_dielectic: Vec3 = Vec3 {
-        x: 0.04,
-        y: 0.04,
-        z: 0.04,
-    };
+pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
+    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
+        // Surface reflection at zero incidence.
+        #[allow(non_upper_case_globals)]
+        static f0_dielectic: Vec3 = Vec3 {
+            x: 0.04,
+            y: 0.04,
+            z: 0.04,
+        };
 
-    let f0_metal = sample.albedo;
+        let f0_metal = sample.albedo;
 
-    let f0 = lerp(f0_dielectic, f0_metal, sample.metallic);
+        let f0 = lerp(f0_dielectic, f0_metal, sample.metallic);
 
-    // Calculate ambient light contribution
+        // Calculate ambient light contribution
 
-    let ambient_light_contribution = match (
-        &context.active_ambient_diffuse_irradiance_map,
-        &context.active_ambient_specular_prefiltered_environment_map,
-        &context.active_ambient_specular_brdf_integration_map,
-    ) {
-        (
-            Some(diffuse_irradiance_map_handle),
-            Some(specular_prefiltered_environment_map_handle),
-            Some(specular_brdf_integration_map_handle),
-        ) => {
-            match (
-                resources
-                    .cubemap_vec3
-                    .borrow()
-                    .get(diffuse_irradiance_map_handle),
-                resources
-                    .cubemap_vec3
-                    .borrow()
-                    .get(specular_prefiltered_environment_map_handle),
-                resources
-                    .texture_vec2
-                    .borrow()
-                    .get(specular_brdf_integration_map_handle),
-            ) {
-                (
-                    Ok(diffuse_irradiance_map_entry),
-                    Ok(specular_prefiltered_environment_map_entry),
-                    Ok(specular_brdf_integration_map_entry),
-                ) => {
-                    let diffuse_irradiance_map = &diffuse_irradiance_map_entry.item;
+        let ambient_light_contribution = match (
+            &context.active_ambient_diffuse_irradiance_map,
+            &context.active_ambient_specular_prefiltered_environment_map,
+            &context.active_ambient_specular_brdf_integration_map,
+        ) {
+            (
+                Some(diffuse_irradiance_map_handle),
+                Some(specular_prefiltered_environment_map_handle),
+                Some(specular_brdf_integration_map_handle),
+            ) => {
+                match (
+                    resources
+                        .cubemap_vec3
+                        .borrow()
+                        .get(diffuse_irradiance_map_handle),
+                    resources
+                        .cubemap_vec3
+                        .borrow()
+                        .get(specular_prefiltered_environment_map_handle),
+                    resources
+                        .texture_vec2
+                        .borrow()
+                        .get(specular_brdf_integration_map_handle),
+                ) {
+                    (
+                        Ok(diffuse_irradiance_map_entry),
+                        Ok(specular_prefiltered_environment_map_entry),
+                        Ok(specular_brdf_integration_map_entry),
+                    ) => {
+                        let diffuse_irradiance_map = &diffuse_irradiance_map_entry.item;
 
-                    let specular_prefiltered_environment_map =
-                        &specular_prefiltered_environment_map_entry.item;
+                        let specular_prefiltered_environment_map =
+                            &specular_prefiltered_environment_map_entry.item;
 
-                    let specular_brdf_integration_map = &specular_brdf_integration_map_entry.item;
+                        let specular_brdf_integration_map =
+                            &specular_brdf_integration_map_entry.item;
 
-                    // Total incoming ambient light from environment.
-
-                    let irradiance = diffuse_irradiance_map
-                        .sample_nearest(&Vec4::new(sample.world_normal, 1.0), None);
-
-                    let normal = sample.tangent_space_info.normal;
-
-                    let fragment_to_view_tangent_space = sample.tangent_space_info.view_position
-                        - sample.tangent_space_info.fragment_position;
-
-                    let direction_to_view_position = fragment_to_view_tangent_space.as_normal();
-
-                    let normal_likeness_to_view_direction =
-                        normal.dot(direction_to_view_position).max(0.0);
-
-                    // Ratio of reflected light energy.
-
-                    let fresnel = fresnel_schlick_indirect(
-                        normal_likeness_to_view_direction,
-                        &f0,
-                        sample.roughness,
-                    );
-
-                    let specular_prefiltered_environment_irradiance = {
-                        static MAX_LOD_FOR_PREFILTERED_ENVIRONMENT_MAP: f32 = 4.0;
-
-                        let specular_prefiltered_environment_lod: f32 =
-                            sample.roughness * MAX_LOD_FOR_PREFILTERED_ENVIRONMENT_MAP;
-
-                        let normal_world_space = sample.world_normal;
-
-                        let view_position_world_space = context.view_position;
-
-                        let fragment_to_view =
-                            view_position_world_space.to_vec3() - sample.world_pos;
-
-                        let reflected_ray_direction =
-                            (fragment_to_view.as_normal()).reflect(normal_world_space);
-
-                        let near_level_index =
-                            specular_prefiltered_environment_lod.floor() as usize;
-
-                        let far_level_index = near_level_index + 1;
-
-                        let alpha = specular_prefiltered_environment_lod
-                            - (specular_prefiltered_environment_lod.floor());
-
-                        specular_prefiltered_environment_map.sample_trilinear(
-                            &Vec4::new(reflected_ray_direction, 1.0),
-                            near_level_index,
-                            far_level_index,
-                            alpha,
+                        contribute_ambient_ibl(
+                            context,
+                            diffuse_irradiance_map,
+                            specular_prefiltered_environment_map,
+                            specular_brdf_integration_map,
+                            sample,
+                            &f0,
                         )
-                    };
-
-                    let specular_brdf_response = {
-                        let uv = Vec2 {
-                            x: normal_likeness_to_view_direction,
-                            y: 1.0 - sample.roughness,
-                            z: 0.0,
-                        };
-
-                        sample_nearest_vec2(uv, specular_brdf_integration_map, None)
-                    };
-
-                    let indirect_specular_irradiance = specular_prefiltered_environment_irradiance
-                        * (fresnel * specular_brdf_response.x + specular_brdf_response.y);
-
-                    let specular = indirect_specular_irradiance;
-
-                    let k_s = fresnel;
-
-                    // Ratio of refracted light energy (scaled by metallic).
-
-                    let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
-
-                    let indirect_diffuse_irradiance = irradiance * sample.albedo;
-
-                    (k_d * indirect_diffuse_irradiance + specular) * sample.ambient_factor
+                    }
+                    _ => panic!("Failed to get CubeMap from Arena."),
                 }
-                _ => panic!("Failed to get CubeMap from Arena."),
             }
-        }
-        _ => match &context.ambient_light {
-            Some(handle) => match resources.ambient_light.borrow().get(handle) {
+            _ => match &context.ambient_light {
+                Some(handle) => match resources.ambient_light.borrow().get(handle) {
+                    Ok(entry) => {
+                        let light = &entry.item;
+
+                        light.contribute_pbr(sample)
+                    }
+                    Err(err) => panic!(
+                        "Failed to get AmbientLight from Arena: {:?}: {}",
+                        handle, err
+                    ),
+                },
+                None => Default::default(),
+            },
+        };
+
+        // Calculate directional light contribution
+
+        let directional_light_contribution = match &context.directional_light {
+            Some(handle) => match resources.directional_light.borrow().get(handle) {
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    light.contribute_pbr(sample)
+                    light.contribute_pbr(sample, &f0)
                 }
                 Err(err) => panic!(
-                    "Failed to get AmbientLight from Arena: {:?}: {}",
+                    "Failed to get DirectionalLight from Arena: {:?}: {}",
                     handle, err
                 ),
             },
             None => Default::default(),
-        },
-    };
+        };
 
-    // Calculate directional light contribution
+        // Calculate point light contributions (including specular)
 
-    let directional_light_contribution = match &context.directional_light {
-        Some(handle) => match resources.directional_light.borrow().get(handle) {
-            Ok(entry) => {
-                let light = &entry.item;
+        let mut point_light_contribution: Vec3 = Default::default();
 
-                light.contribute_pbr(sample, &f0)
-            }
-            Err(err) => panic!(
-                "Failed to get DirectionalLight from Arena: {:?}: {}",
-                handle, err
-            ),
-        },
-        None => Default::default(),
-    };
+        for handle in &context.point_lights {
+            match resources.point_light.borrow().get(handle) {
+                Ok(entry) => {
+                    let light = &entry.item;
 
-    // Calculate point light contributions (including specular)
+                    if let Some(handle) = light.shadow_map {
+                        if let Ok(entry) = resources.cubemap_f32.borrow().get(&handle) {
+                            let shadow_map = &entry.item;
 
-    let mut point_light_contribution: Vec3 = Default::default();
-
-    for handle in &context.point_lights {
-        match resources.point_light.borrow().get(handle) {
-            Ok(entry) => {
-                let light = &entry.item;
-
-                if let Some(handle) = light.shadow_map {
-                    if let Ok(entry) = resources.cubemap_f32.borrow().get(&handle) {
-                        let shadow_map = &entry.item;
-
-                        point_light_contribution +=
-                            light.contribute_pbr(sample, &f0, Some(shadow_map));
+                            point_light_contribution +=
+                                light.contribute_pbr(sample, &f0, Some(shadow_map));
+                        } else {
+                            point_light_contribution += light.contribute_pbr(sample, &f0, None);
+                        }
                     } else {
                         point_light_contribution += light.contribute_pbr(sample, &f0, None);
                     }
-                } else {
-                    point_light_contribution += light.contribute_pbr(sample, &f0, None);
                 }
+                Err(err) => panic!("Failed to get PointLight from Arena: {:?}: {}", handle, err),
             }
-            Err(err) => panic!("Failed to get PointLight from Arena: {:?}: {}", handle, err),
         }
-    }
 
-    // Calculate spot light contributions (including specular).
+        // Calculate spot light contributions (including specular).
 
-    let mut spot_light_contribution: Vec3 = Default::default();
+        let mut spot_light_contribution: Vec3 = Default::default();
 
-    for handle in &context.spot_lights {
-        match resources.spot_light.borrow().get(handle) {
-            Ok(entry) => {
-                let light = &entry.item;
+        for handle in &context.spot_lights {
+            match resources.spot_light.borrow().get(handle) {
+                Ok(entry) => {
+                    let light = &entry.item;
 
-                spot_light_contribution += light.contribute_pbr(sample, &f0);
+                    spot_light_contribution += light.contribute_pbr(sample, &f0);
+                }
+                Err(err) => panic!("Failed to get SpotLight from Arena: {:?}: {}", handle, err),
             }
-            Err(err) => panic!("Failed to get SpotLight from Arena: {:?}: {}", handle, err),
         }
-    }
 
-    // Calculate emissive light contribution
+        // Calculate emissive light contribution
 
-    let emissive_light_contribution: Vec3 = sample.emissive_color;
+        let emissive_light_contribution: Vec3 = sample.emissive_color;
 
-    // Combine light intensities
+        // Combine light intensities
 
-    let total_contribution = ambient_light_contribution
-        + directional_light_contribution
-        + point_light_contribution
-        + spot_light_contribution
-        + emissive_light_contribution;
+        let total_contribution = ambient_light_contribution
+            + directional_light_contribution
+            + point_light_contribution
+            + spot_light_contribution
+            + emissive_light_contribution;
 
-    Color::from_vec3(total_contribution)
-};
+        Color::from_vec3(total_contribution)
+    };
+
+fn contribute_ambient_ibl(
+    context: &ShaderContext,
+    diffuse_irradiance_map: &CubeMap<Vec3>,
+    specular_prefiltered_environment_map: &CubeMap<Vec3>,
+    specular_brdf_integration_map: &TextureMap<Vec2>,
+    sample: &GeometrySample,
+    f0: &Vec3,
+) -> Vec3 {
+    // Total incoming ambient light from environment.
+
+    let irradiance =
+        diffuse_irradiance_map.sample_nearest(&Vec4::new(sample.world_normal, 1.0), None);
+
+    let normal = sample.tangent_space_info.normal;
+
+    let fragment_to_view_tangent_space =
+        sample.tangent_space_info.view_position - sample.tangent_space_info.fragment_position;
+
+    let direction_to_view_position = fragment_to_view_tangent_space.as_normal();
+
+    let normal_likeness_to_view_direction = normal.dot(direction_to_view_position).max(0.0);
+
+    // Ratio of reflected light energy.
+
+    let fresnel = fresnel_schlick_indirect(normal_likeness_to_view_direction, f0, sample.roughness);
+
+    let specular_prefiltered_environment_irradiance = {
+        static MAX_LOD_FOR_PREFILTERED_ENVIRONMENT_MAP: f32 = 4.0;
+
+        let specular_prefiltered_environment_lod: f32 =
+            sample.roughness * MAX_LOD_FOR_PREFILTERED_ENVIRONMENT_MAP;
+
+        let normal_world_space = sample.world_normal;
+
+        let view_position_world_space = context.view_position;
+
+        let fragment_to_view = view_position_world_space.to_vec3() - sample.world_pos;
+
+        let reflected_ray_direction = (fragment_to_view.as_normal()).reflect(normal_world_space);
+
+        let near_level_index = specular_prefiltered_environment_lod.floor() as usize;
+
+        let far_level_index = near_level_index + 1;
+
+        let alpha =
+            specular_prefiltered_environment_lod - (specular_prefiltered_environment_lod.floor());
+
+        specular_prefiltered_environment_map.sample_trilinear(
+            &Vec4::new(reflected_ray_direction, 1.0),
+            near_level_index,
+            far_level_index,
+            alpha,
+        )
+    };
+
+    let specular_brdf_response = {
+        let uv = Vec2 {
+            x: normal_likeness_to_view_direction,
+            y: 1.0 - sample.roughness,
+            z: 0.0,
+        };
+
+        sample_nearest_vec2(uv, specular_brdf_integration_map, None)
+    };
+
+    let indirect_specular_irradiance = specular_prefiltered_environment_irradiance
+        * (fresnel * specular_brdf_response.x + specular_brdf_response.y);
+
+    let specular = indirect_specular_irradiance;
+
+    let k_s = fresnel;
+
+    // Ratio of refracted light energy (scaled by metallic).
+
+    let k_d = (vec3::ONES - k_s) * (1.0 - sample.metallic);
+
+    let indirect_diffuse_irradiance = irradiance * sample.albedo;
+
+    (k_d * indirect_diffuse_irradiance + specular) * sample.ambient_factor
+}
