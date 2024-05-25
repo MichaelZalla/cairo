@@ -34,5 +34,6 @@ pub mod software_renderer;
 pub mod texture;
 pub mod time;
 pub mod transform;
+pub mod ui;
 pub mod vec;
 pub mod vertex;
