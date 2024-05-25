@@ -256,19 +256,21 @@ impl<'a> Pipeline<'a> {
         let mut did_set_active_material = false;
 
         if !should_cull {
-            let mut context = self.shader_context.borrow_mut();
+            {
+                let mut context = self.shader_context.borrow_mut();
 
-            match &entity_material_name {
-                Some(name) => {
-                    context.set_active_material(Some(name.clone()));
+                match &entity_material_name {
+                    Some(name) => {
+                        context.set_active_material(Some(name.clone()));
 
-                    did_set_active_material = true;
+                        did_set_active_material = true;
+                    }
+                    None => (),
                 }
-                None => (),
             }
-        }
 
-        self.render_entity_mesh(entity_mesh, world_transform);
+            self.render_entity_mesh(entity_mesh, world_transform);
+        }
 
         if did_set_active_material {
             // Reset the shader context's original active material.
