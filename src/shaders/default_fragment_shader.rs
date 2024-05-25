@@ -31,9 +31,9 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
         // Calculate ambient light contribution
 
         let ambient_light_contribution = match (
-            &context.active_ambient_diffuse_irradiance_map,
-            &context.active_ambient_specular_prefiltered_environment_map,
-            &context.active_ambient_specular_brdf_integration_map,
+            &context.ambient_diffuse_irradiance_map,
+            &context.ambient_specular_prefiltered_environment_map,
+            &context.ambient_specular_brdf_integration_map,
         ) {
             (
                 Some(diffuse_irradiance_map_handle),

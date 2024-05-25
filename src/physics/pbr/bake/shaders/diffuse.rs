@@ -16,7 +16,7 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
      resources: &SceneResources,
      sample: &GeometrySample|
      -> Color {
-        if let Some(handle) = shader_context.active_ambient_radiance_map {
+        if let Some(handle) = shader_context.ambient_radiance_map {
             if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
@@ -90,7 +90,7 @@ pub static HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
      resources: &SceneResources,
      sample: &GeometrySample|
      -> Color {
-        if let Some(handle) = shader_context.active_ambient_diffuse_irradiance_map {
+        if let Some(handle) = shader_context.ambient_diffuse_irradiance_map {
             if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 

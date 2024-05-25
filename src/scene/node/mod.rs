@@ -477,12 +477,11 @@ impl SceneNode {
                         Ok(entry) => {
                             let skybox = &mut entry.item;
 
-                            shader_context.set_active_ambient_radiance_map(skybox.radiance);
+                            shader_context.set_ambient_radiance_map(skybox.radiance);
 
-                            shader_context
-                                .set_active_ambient_diffuse_irradiance_map(skybox.irradiance);
+                            shader_context.set_ambient_diffuse_irradiance_map(skybox.irradiance);
 
-                            shader_context.set_active_ambient_specular_prefiltered_environment_map(
+                            shader_context.set_ambient_specular_prefiltered_environment_map(
                                 skybox.specular_prefiltered_environment,
                             );
 

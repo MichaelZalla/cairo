@@ -156,9 +156,8 @@ fn main() -> Result<(), String> {
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.set_active_ambient_specular_brdf_integration_map(Some(
-            specular_brdf_integration_map_handle,
-        ));
+        shader_context
+            .set_ambient_specular_brdf_integration_map(Some(specular_brdf_integration_map_handle));
 
         set_ibl_map_handles(&mut resources, scene, &radiance_irradiance_handles[0]);
     }
