@@ -67,7 +67,7 @@ impl Pipeline {
         }
     }
 
-    pub fn render_point_light(
+    pub(in crate::pipeline) fn _render_point_light(
         &mut self,
         light: &PointLight,
         camera: Option<&Camera>,
@@ -83,7 +83,7 @@ impl Pipeline {
         );
     }
 
-    pub fn render_spot_light(
+    pub(in crate::pipeline) fn _render_spot_light(
         &mut self,
         light: &SpotLight,
         camera: Option<&Camera>,
@@ -155,6 +155,6 @@ impl Pipeline {
             far: far_plane_points_world_space,
         };
 
-        self.render_frustum(&frustum, Some(Color::from_vec3(color * 255.0)));
+        self._render_frustum(&frustum, Some(Color::from_vec3(color * 255.0)));
     }
 }

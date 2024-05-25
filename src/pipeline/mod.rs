@@ -3,11 +3,18 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
+    entity::Entity,
+    material::cache::MaterialCache,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
     physics::collision::aabb::AABB,
     render::Renderer,
-    scene::{camera::frustum::Frustum, resources::SceneResources},
+    resource::arena::Arena,
+    scene::{
+        camera::{frustum::Frustum, Camera},
+        light::{PointLight, SpotLight},
+        resources::SceneResources,
+    },
     shader::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
@@ -205,6 +212,42 @@ impl Renderer for Pipeline {
                 }
             }
         }
+    }
+
+    fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
+        self._render_frustum(frustum, color)
+    }
+
+    fn render_camera(&mut self, camera: &Camera, color: Option<Color>) {
+        self._render_camera(camera, color)
+    }
+
+    fn render_point_light(
+        &mut self,
+        light: &PointLight,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+    ) {
+        self._render_point_light(light, camera, material_cache)
+    }
+
+    fn render_spot_light(
+        &mut self,
+        light: &SpotLight,
+        camera: Option<&Camera>,
+        material_cache: Option<&mut MaterialCache>,
+    ) {
+        self._render_spot_light(light, camera, material_cache)
+    }
+
+    fn render_entity_aabb(
+        &mut self,
+        entity: &Entity,
+        world_transform: &Mat4,
+        mesh_arena: &Arena<Mesh>,
+        color: Color,
+    ) {
+        self._render_entity_aabb(entity, world_transform, mesh_arena, color)
     }
 
     fn render_entity(

@@ -11,7 +11,7 @@ use crate::{
 };
 
 impl Pipeline {
-    pub fn render_entity_aabb(
+    pub(in crate::pipeline) fn _render_entity_aabb(
         &mut self,
         entity: &Entity,
         world_transform: &Mat4,

@@ -1,11 +1,12 @@
 use crate::{
     color::{self, Color},
     pipeline::Pipeline,
+    render::Renderer,
     scene::camera::Camera,
 };
 
 impl Pipeline {
-    pub fn render_camera(&mut self, camera: &Camera, color: Option<Color>) {
+    pub(in crate::pipeline) fn _render_camera(&mut self, camera: &Camera, color: Option<Color>) {
         // World space view volume.
 
         let frustum = camera.get_frustum();

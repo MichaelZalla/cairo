@@ -5,7 +5,7 @@ use crate::{
 };
 
 impl Pipeline {
-    pub fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
+    pub(in crate::pipeline) fn _render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
         // Draw near plane (red).
 
         for (index, _point) in frustum.near.as_slice().iter().enumerate() {

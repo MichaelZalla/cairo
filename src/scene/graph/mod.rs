@@ -291,6 +291,7 @@ impl SceneGraph {
                     match handle {
                         Some(spot_light_handle) => {
                             let camera_arena = resources.camera.borrow();
+                            let mut materials = resources.material.borrow_mut();
                             let spot_light_arena = resources.spot_light.borrow();
 
                             match active_camera_handle {
@@ -305,7 +306,7 @@ impl SceneGraph {
                                                     pipeline.render_spot_light(
                                                         spot_light,
                                                         Some(active_camera),
-                                                        Some(&mut resources.material.borrow_mut()),
+                                                        Some(&mut materials),
                                                     );
             
                                                     Ok(())
