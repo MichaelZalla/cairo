@@ -8,6 +8,8 @@ use crate::{
 
 use super::culling::FaceCullingStrategy;
 
+pub mod shader;
+
 #[derive(Debug, Copy, Clone)]
 pub struct RenderOptions {
     pub wireframe_color: Color,

@@ -3,7 +3,7 @@ use crate::device::{GameControllerState, KeyboardState, MouseState};
 use sdl2::keyboard::Keycode;
 
 #[derive(Debug)]
-pub struct GeometryShaderOptions {
+pub struct RenderShaderOptions {
     pub bilinear_active: bool,
     pub trilinear_active: bool,
     pub ambient_occlusion_mapping_active: bool,
@@ -16,7 +16,7 @@ pub struct GeometryShaderOptions {
     pub emissive_color_mapping_active: bool,
 }
 
-impl Default for GeometryShaderOptions {
+impl Default for RenderShaderOptions {
     fn default() -> Self {
         Self {
             bilinear_active: false,
@@ -33,7 +33,7 @@ impl Default for GeometryShaderOptions {
     }
 }
 
-impl GeometryShaderOptions {
+impl RenderShaderOptions {
     pub fn update(
         &mut self,
         keyboard_state: &KeyboardState,

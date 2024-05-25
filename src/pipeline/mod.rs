@@ -7,7 +7,11 @@ use crate::{
     material::cache::MaterialCache,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
-    render::{options::RenderOptions, viewport::RenderViewport, Renderer},
+    render::{
+        options::{shader::RenderShaderOptions, RenderOptions},
+        viewport::RenderViewport,
+        Renderer,
+    },
     resource::arena::Arena,
     scene::{
         camera::{frustum::Frustum, Camera},
@@ -18,7 +22,7 @@ use crate::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
         fragment::FragmentShaderFn,
-        geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
+        geometry::{sample::GeometrySample, GeometryShaderFn},
         vertex::VertexShaderFn,
     },
     shaders::{
@@ -40,7 +44,7 @@ pub mod zbuffer;
 
 pub struct Pipeline {
     pub options: RenderOptions,
-    pub geometry_shader_options: GeometryShaderOptions,
+    pub shader_options: RenderShaderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
@@ -235,7 +239,7 @@ impl Pipeline {
 
         let geometry_shader = DEFAULT_GEOMETRY_SHADER;
 
-        let geometry_shader_options: GeometryShaderOptions = Default::default();
+        let shader_options: RenderShaderOptions = Default::default();
 
         let framebuffer = None;
 
@@ -251,7 +255,7 @@ impl Pipeline {
             vertex_shader,
             alpha_shader,
             geometry_shader,
-            geometry_shader_options,
+            shader_options,
             fragment_shader,
             options,
         }
@@ -448,7 +452,7 @@ impl Pipeline {
                                 if let Some(sample) = (self.geometry_shader)(
                                     &shader_context,
                                     &scene_resources,
-                                    &self.geometry_shader_options,
+                                    &self.shader_options,
                                     &linear_space_interpolant,
                                 ) {
                                     // Write to the depth attachment.

@@ -253,7 +253,7 @@ fn main() -> Result<(), String> {
     pipeline.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     pipeline
-        .geometry_shader_options
+        .shader_options
         .emissive_color_mapping_active = true;
 
     let pipeline_rc = RefCell::new(pipeline);
@@ -442,7 +442,7 @@ fn main() -> Result<(), String> {
             .update(keyboard_state, mouse_state, game_controller_state);
 
         pipeline
-            .geometry_shader_options
+            .shader_options
             .update(keyboard_state, mouse_state, game_controller_state);
 
         Ok(())

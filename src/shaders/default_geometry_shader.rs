@@ -1,9 +1,10 @@
 use crate::{
     color::Color,
+    render::options::shader::RenderShaderOptions,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext,
-        geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
+        geometry::{sample::GeometrySample, GeometryShaderFn},
     },
     texture::sample::{sample_bilinear_u8, sample_nearest_u8},
     vec::{
@@ -16,7 +17,7 @@ use crate::{
 
 pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                                         resources: &SceneResources,
-                                                        options: &GeometryShaderOptions,
+                                                        options: &RenderShaderOptions,
                                                         interpolant: &DefaultVertexOut|
  -> Option<GeometrySample> {
     let mut out = GeometrySample {

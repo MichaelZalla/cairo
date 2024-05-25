@@ -2,11 +2,12 @@
 
 use crate::{
     color::Color,
+    render::options::shader::RenderShaderOptions,
     scene::{light::POINT_LIGHT_SHADOW_CAMERA_FAR, resources::SceneResources},
     shader::{
         context::ShaderContext,
         fragment::FragmentShaderFn,
-        geometry::{options::GeometryShaderOptions, sample::GeometrySample, GeometryShaderFn},
+        geometry::{sample::GeometrySample, GeometryShaderFn},
         vertex::VertexShaderFn,
     },
     vec::{
@@ -37,7 +38,7 @@ pub static PointShadowMapVertexShader: VertexShaderFn =
 
 pub static PointShadowMapGeometryShader: GeometryShaderFn = |_context: &ShaderContext,
                                                              _resources: &SceneResources,
-                                                             _options: &GeometryShaderOptions,
+                                                             _options: &RenderShaderOptions,
                                                              interpolant: &DefaultVertexOut|
  -> Option<GeometrySample> {
     Some(GeometrySample {

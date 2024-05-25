@@ -251,7 +251,7 @@ fn main() -> Result<(), String> {
             .update(keyboard_state, mouse_state, game_controller_state);
 
         pipeline
-            .geometry_shader_options
+            .shader_options
             .update(keyboard_state, mouse_state, game_controller_state);
 
         Ok(())

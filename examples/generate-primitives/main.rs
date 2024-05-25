@@ -768,7 +768,7 @@ fn main() -> Result<(), String> {
                 }
             ));
 
-            pipeline.geometry_shader_options.update(
+            pipeline.shader_options.update(
                 keyboard_state,
                 mouse_state,
                 game_controller_state,
