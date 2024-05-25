@@ -344,37 +344,6 @@ impl Pipeline {
         }
     }
 
-    fn should_cull_aabb(
-        &self,
-        world_transform: Mat4,
-        clipping_camera_frustum: &Frustum,
-        aabb: &AABB,
-    ) -> bool {
-        // Cull the entire entity, if possible, based on its bounds.
-
-        let bounding_sphere_position = (Vec4::new(aabb.center, 1.0) * world_transform).to_vec3();
-
-        let bounding_sphere_radius = aabb.max_half_extent;
-
-        // @TODO Generate planes once per frame, not once per entity draw.
-        let culling_planes = clipping_camera_frustum.get_planes();
-
-        // @TODO Need to verify sign of top plane normal and bottom plane normal.
-
-        !culling_planes[0]
-            .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
-            || !culling_planes[1]
-                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
-            || !culling_planes[2]
-                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
-            || !culling_planes[3]
-                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
-            || !culling_planes[4]
-                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
-            || !culling_planes[5]
-                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
-    }
-
     fn render_entity_mesh(&mut self, mesh: &Mesh, world_transform: &Mat4) {
         // Otherwise, cull individual triangles.
 
@@ -404,69 +373,13 @@ impl Pipeline {
         self.process_object_space_vertices(geometry, faces);
     }
 
-    fn get_vertices_in(&self, geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
-        let (v0, v1, v2) = (
-            geometry.vertices[face.vertices[0]],
-            geometry.vertices[face.vertices[1]],
-            geometry.vertices[face.vertices[2]],
-        );
-
-        let (normal0, normal1, normal2) = (
-            geometry.normals[face.normals[0]],
-            geometry.normals[face.normals[1]],
-            geometry.normals[face.normals[2]],
-        );
-
-        let (uv0, uv1, uv2) = (
-            geometry.uvs[face.uvs[0]],
-            geometry.uvs[face.uvs[1]],
-            geometry.uvs[face.uvs[2]],
-        );
-
-        let (tangent0, tangent1, tangent2) = (face.tangents[0], face.tangents[1], face.tangents[2]);
-
-        let (bitangent0, bitangent1, bitangent2) =
-            (face.bitangents[0], face.bitangents[1], face.bitangents[2]);
-
-        static WHITE: Vec3 = Vec3::ones();
-
-        let v0_in = DefaultVertexIn {
-            position: v0,
-            normal: normal0,
-            uv: uv0,
-            tangent: tangent0,
-            bitangent: bitangent0,
-            color: WHITE,
-        };
-
-        let v1_in = DefaultVertexIn {
-            position: v1,
-            normal: normal1,
-            uv: uv1,
-            tangent: tangent1,
-            bitangent: bitangent1,
-            color: WHITE,
-        };
-
-        let v2_in = DefaultVertexIn {
-            position: v2,
-            normal: normal2,
-            uv: uv2,
-            tangent: tangent2,
-            bitangent: bitangent2,
-            color: WHITE,
-        };
-
-        [v0_in, v1_in, v2_in]
-    }
-
     fn process_object_space_vertices(&mut self, geometry: &Geometry, faces: &Vec<Face>) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
         let mut vertices_in: Vec<DefaultVertexIn> = Vec::with_capacity(faces.len() * 3);
 
         for face in faces {
-            let [v0_in, v1_in, v2_in] = self.get_vertices_in(geometry, face);
+            let [v0_in, v1_in, v2_in] = get_vertices_in(geometry, face);
 
             vertices_in.push(v0_in);
             vertices_in.push(v1_in);
@@ -639,4 +552,60 @@ impl Pipeline {
 
         Color::from_vec3(color_tone_mapped_vec3 * 255.0)
     }
+}
+
+fn get_vertices_in(geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
+    let (v0, v1, v2) = (
+        geometry.vertices[face.vertices[0]],
+        geometry.vertices[face.vertices[1]],
+        geometry.vertices[face.vertices[2]],
+    );
+
+    let (normal0, normal1, normal2) = (
+        geometry.normals[face.normals[0]],
+        geometry.normals[face.normals[1]],
+        geometry.normals[face.normals[2]],
+    );
+
+    let (uv0, uv1, uv2) = (
+        geometry.uvs[face.uvs[0]],
+        geometry.uvs[face.uvs[1]],
+        geometry.uvs[face.uvs[2]],
+    );
+
+    let (tangent0, tangent1, tangent2) = (face.tangents[0], face.tangents[1], face.tangents[2]);
+
+    let (bitangent0, bitangent1, bitangent2) =
+        (face.bitangents[0], face.bitangents[1], face.bitangents[2]);
+
+    static WHITE: Vec3 = Vec3::ones();
+
+    let v0_in = DefaultVertexIn {
+        position: v0,
+        normal: normal0,
+        uv: uv0,
+        tangent: tangent0,
+        bitangent: bitangent0,
+        color: WHITE,
+    };
+
+    let v1_in = DefaultVertexIn {
+        position: v1,
+        normal: normal1,
+        uv: uv1,
+        tangent: tangent1,
+        bitangent: bitangent1,
+        color: WHITE,
+    };
+
+    let v2_in = DefaultVertexIn {
+        position: v2,
+        normal: normal2,
+        uv: uv2,
+        tangent: tangent2,
+        bitangent: bitangent2,
+        color: WHITE,
+    };
+
+    [v0_in, v1_in, v2_in]
 }
