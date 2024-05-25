@@ -93,9 +93,9 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
     }
 
     let geometry = Geometry {
-        vertices,
-        uvs,
-        normals,
+        vertices: vertices.into_boxed_slice(),
+        uvs: uvs.into_boxed_slice(),
+        normals: normals.into_boxed_slice(),
     };
 
     let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);

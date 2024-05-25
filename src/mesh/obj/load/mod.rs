@@ -12,6 +12,7 @@ use crate::{
     },
     resource::arena::Arena,
     texture::map::TextureMap,
+    vec::{vec2::Vec2, vec3::Vec3},
 };
 
 pub struct LoadObjResult(pub Rc<Geometry>, pub Vec<Mesh>, pub Option<MaterialCache>);
@@ -56,11 +57,9 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
     let mut group_name: Option<String> = None;
     let mut material_name: Option<String> = None;
 
-    let mut geometry = Geometry {
-        vertices: vec![],
-        normals: vec![],
-        uvs: vec![],
-    };
+    let mut vertices: Vec<Vec3> = vec![];
+    let mut normals: Vec<Vec3> = vec![];
+    let mut uvs: Vec<Vec2> = vec![];
 
     let mut partial_faces: Vec<PartialFace> = vec![];
     let mut partial_meshes: Vec<PartialMesh> = vec![];
@@ -96,7 +95,7 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
                             "v" => {
                                 let vertex = parse_vertex(&mut line_tokens).unwrap();
 
-                                geometry.vertices.push(vertex);
+                                vertices.push(vertex);
 
                                 counts.vertex += 1;
                             }
@@ -104,7 +103,7 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
                             "vt" => {
                                 let uv = parse_vertex_uv(&mut line_tokens).unwrap();
 
-                                geometry.uvs.push(uv);
+                                uvs.push(uv);
 
                                 counts.uv += 1;
                             }
@@ -112,7 +111,7 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
                             "vn" => {
                                 let normal = parse_vertex_normal(&mut line_tokens).unwrap();
 
-                                geometry.normals.push(normal);
+                                normals.push(normal);
 
                                 counts.normal += 1;
                             }
@@ -202,6 +201,12 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
             }
         }
     }
+
+    let geometry = Geometry {
+        vertices: vertices.into_boxed_slice(),
+        normals: normals.into_boxed_slice(),
+        uvs: uvs.into_boxed_slice(),
+    };
 
     let geometry_rc = Rc::new(geometry);
 

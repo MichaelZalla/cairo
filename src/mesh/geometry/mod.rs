@@ -6,9 +6,9 @@ use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Geometry {
-    pub vertices: Vec<Vec3>,
-    pub normals: Vec<Vec3>,
-    pub uvs: Vec<Vec2>,
+    pub vertices: Box<[Vec3]>,
+    pub normals: Box<[Vec3]>,
+    pub uvs: Box<[Vec2]>,
 }
 
 impl fmt::Display for Geometry {
