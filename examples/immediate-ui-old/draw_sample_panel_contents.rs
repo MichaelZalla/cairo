@@ -1,28 +1,30 @@
 use std::{cell::RefMut, collections::HashMap};
 
+use uuid::Uuid;
+
 use cairo::{
     buffer::Buffer2D,
     color::{self, Color},
     device::{KeyboardState, MouseState},
     texture::map::TextureMap,
     time::TimingInfo,
-    ui::{
-        button::{do_button, ButtonOptions},
-        checkbox::{do_checkbox, CheckboxOptions},
-        context::{UIContext, UIID},
-        dropdown::{do_dropdown, DropdownOptions},
-        image::{do_image, ImageOptions},
-        layout::{
-            item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
-            UILayoutContext,
-        },
-        separator::{do_separator, SeparatorOptions},
-        slider::{do_slider, NumberSliderOptions},
-        text::{do_text, TextOptions},
-        textbox::{do_textbox, TextboxOptions},
-    },
 };
-use uuid::Uuid;
+
+use super::ui::{
+    button::{do_button, ButtonOptions},
+    checkbox::{do_checkbox, CheckboxOptions},
+    context::{UIContext, UIID},
+    dropdown::{do_dropdown, DropdownOptions},
+    image::{do_image, ImageOptions},
+    layout::{
+        item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
+        UILayoutContext,
+    },
+    separator::{do_separator, SeparatorOptions},
+    slider::{do_slider, NumberSliderOptions},
+    text::{do_text, TextOptions},
+    textbox::{do_textbox, TextboxOptions},
+};
 
 #[allow(clippy::too_many_arguments)]
 pub fn draw_sample_panel_contents(

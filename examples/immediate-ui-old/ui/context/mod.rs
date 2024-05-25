@@ -3,7 +3,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use crate::{
+use cairo::{
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
 };

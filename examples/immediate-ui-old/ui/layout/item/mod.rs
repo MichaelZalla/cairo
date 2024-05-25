@@ -8,6 +8,7 @@ pub enum ItemLayoutHorizontalAlignment {
     Right,
 }
 
+#[allow(dead_code)]
 #[derive(Default, Copy, Clone, Debug)]
 pub enum ItemTextAlignment {
     #[default]

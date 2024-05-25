@@ -1,6 +1,6 @@
 use std::cell::RefMut;
 
-use crate::{buffer::Buffer2D, color::Color, graphics::Graphics};
+use cairo::{buffer::Buffer2D, color::Color, graphics::Graphics};
 
 use super::{
     context::UIContext,

@@ -49,15 +49,15 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example immediate-ui",
+      "label": "Rust: cargo run --example immediate-ui-old",
       "windows": {
-        "command": "cargo run --example immediate-ui C:/Windows/Fonts/vgasys.fon"
+        "command": "cargo run --example immediate-ui-old C:/Windows/Fonts/vgasys.fon"
       },
       "osx": {
-        "command": "cargo run --example immediate-ui /System/Library/Fonts/Monaco.ttf"
+        "command": "cargo run --example immediate-ui-old /System/Library/Fonts/Monaco.ttf"
       },
       "linux": {
-        "command": "cargo run --example immediate-ui"
+        "command": "cargo run --example immediate-ui-old"
       }
     },
     {

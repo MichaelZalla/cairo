@@ -2,7 +2,7 @@ use std::cell::RefMut;
 
 use sdl2::mouse::MouseButton;
 
-use crate::device::{MouseEventKind, MouseState};
+use cairo::device::{MouseEventKind, MouseState};
 
 use self::{
     context::{UIContext, UIID},

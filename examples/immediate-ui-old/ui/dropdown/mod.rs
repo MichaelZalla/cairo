@@ -1,6 +1,6 @@
 use std::{cell::RefMut, collections::hash_map::Entry};
 
-use crate::{
+use cairo::{
     buffer::Buffer2D,
     color,
     device::{MouseEventKind, MouseState},

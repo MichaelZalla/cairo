@@ -2,7 +2,7 @@ use std::{cell::RefMut, collections::hash_map::Entry};
 
 use sdl2::mouse::MouseButton;
 
-use crate::{
+use cairo::{
     buffer::Buffer2D,
     device::MouseState,
     graphics::{
@@ -22,6 +22,7 @@ use super::{
 
 static NUMBER_SLIDER_WIDTH: u32 = 200;
 static NUMBER_SLIDER_LABEL_PADDING: u32 = 8;
+#[allow(dead_code)]
 static NUMBER_SLIDER_TEXT_PADDING: u32 = 4;
 
 #[derive(Default, Debug)]

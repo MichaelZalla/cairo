@@ -1,6 +1,6 @@
 use std::cell::RefMut;
 
-use crate::{
+use cairo::{
     buffer::Buffer2D, color::Color, graphics::Graphics, texture::map::TextureMap, vec::vec2::Vec2,
 };
 

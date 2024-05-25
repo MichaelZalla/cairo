@@ -1,4 +1,4 @@
-use crate::color::{self, Color};
+use cairo::color::{self, Color};
 
 #[derive(Default, Debug)]
 pub struct UITheme {

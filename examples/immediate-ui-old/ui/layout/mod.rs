@@ -1,4 +1,4 @@
-use crate::{buffer::Buffer2D, color, graphics::Graphics};
+use cairo::{buffer::Buffer2D, color, graphics::Graphics};
 
 pub mod item;
 
@@ -119,7 +119,7 @@ impl UILayoutContext {
         }
     }
 
-    pub fn draw_debug_bounds(&self, parent_buffer: &mut Buffer2D) {
+    pub fn _draw_debug_bounds(&self, parent_buffer: &mut Buffer2D) {
         // Outer bounds (outside padding)
 
         Graphics::rectangle(

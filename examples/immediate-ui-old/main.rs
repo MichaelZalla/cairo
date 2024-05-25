@@ -6,6 +6,8 @@ use std::{
     env, rc::Rc,
 };
 
+use uuid::Uuid;
+
 use sdl2::keyboard::Keycode;
 
 use cairo::{
@@ -17,16 +19,17 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     texture::map::{TextureMap, TextureMapStorageFormat},
-    ui::{
-        context::{UIContext, UIID},
-        layout::{
-            UILayoutContext, UILayoutDirection, UILayoutExtent,
-        },
-        panel::{do_panel, PanelOptions, PanelTitlebarOptions},
-    },
 };
 
-use uuid::Uuid;
+mod ui;
+
+use ui::{
+    context::{UIContext, UIID},
+    layout::{
+        UILayoutContext, UILayoutDirection, UILayoutExtent,
+    },
+    panel::{do_panel, PanelOptions, PanelTitlebarOptions},
+};
 
 mod draw_sample_panel_contents;
 
@@ -38,7 +41,7 @@ fn main() -> Result<(), String> {
     let resolution = RESOLUTIONS_16X9[current_resolution_index];
 
     let mut window_info = AppWindowInfo {
-        title: "examples/immediate-ui".to_string(),
+        title: "examples/immediate-ui-old".to_string(),
         window_resolution: resolution,
         canvas_resolution: resolution,
         ..Default::default()
@@ -55,7 +58,7 @@ fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        println!("Usage: cargo run --example immediate-ui /path/to/your-font.fon");
+        println!("Usage: cargo run --example immediate-ui-old /path/to/your-font.fon");
 
         return Ok(());
     }
@@ -152,7 +155,7 @@ fn main() -> Result<(), String> {
     let mut checkboxes_model = HashMap::<String, bool>::new();
 
     let mut wojak_texture = TextureMap::new(
-        "./examples/immediate-ui/assets/wojak.png",
+        "./examples/immediate-ui-old/assets/wojak.png",
         TextureMapStorageFormat::Index8(0),
     );
 

@@ -2,7 +2,7 @@ use std::{cell::RefMut, collections::hash_map::Entry, f32::consts::PI};
 
 use sdl2::keyboard::Keycode;
 
-use crate::{
+use cairo::{
     buffer::Buffer2D,
     device::{keycode::get_alpha_numeric, KeyboardState, MouseState},
     graphics::{

@@ -3,7 +3,7 @@ use std::cell::RefMut;
 use sdl2::mouse::MouseButton;
 use uuid::Uuid;
 
-use crate::{
+use cairo::{
     buffer::Buffer2D,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     graphics::Graphics,
@@ -281,7 +281,7 @@ fn draw_panel_title_bar(
         return false;
     }
 
-    static CLOSE_BUTTON_SIZE: u32 = 14;
+    // static CLOSE_BUTTON_SIZE: u32 = 14;
 
     let panel_titlebar_close_button_options = ButtonOptions {
         layout_options: ItemLayoutOptions {
