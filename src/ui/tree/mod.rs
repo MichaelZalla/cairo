@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use self::node::Node;
+use self::node::{Node, NodeLocalTraversalMethod};
 
 use super::UIWidget;
 
@@ -8,7 +8,7 @@ pub mod node;
 
 pub struct UIWidgetTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
-    root: Rc<RefCell<Node<'a, UIWidget>>>,
+    pub root: Rc<RefCell<Node<'a, UIWidget>>>,
 }
 
 impl<'a> UIWidgetTree<'a> {
@@ -23,9 +23,30 @@ impl<'a> UIWidgetTree<'a> {
             current: Some(root_rc),
         }
     }
-}
 
-impl<'a> UIWidgetTree<'a> {
+    pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
+        let local_traversal_method = NodeLocalTraversalMethod::PreOrder;
+
+        self.visit_dfs_mut(&local_traversal_method, &mut |depth, node| {
+            println!("Visiting node {} at depth {}!", node.data.id, depth);
+
+            Ok(())
+        })
+    }
+
+    fn visit_dfs_mut<C>(
+        &mut self,
+        method: &NodeLocalTraversalMethod,
+        visit_action: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(usize, &mut Node<'a, UIWidget>) -> Result<(), String>,
+    {
+        self.root
+            .borrow_mut()
+            .visit_dfs_mut(method, 0, visit_action)
+    }
+
     pub fn push(&mut self, widget: UIWidget) {
         let new_child_node_rc: Rc<RefCell<Node<'a, UIWidget>>>;
 

@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+use std::cell::RefCell;
+
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
@@ -47,7 +49,7 @@ fn main() -> Result<(), String> {
 
     let widget_tree = UIWidgetTree::new(root_widget_node);
 
-    let _ui_context = UIContext { tree: widget_tree };
+    let ui_context_rc = RefCell::new(UIContext { tree: widget_tree });
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,
@@ -58,11 +60,13 @@ fn main() -> Result<(), String> {
     let mut render = || -> Result<Vec<u32>, String> {
         let fill_value = color::BLACK.to_u32();
 
-        // Clears pixel buffer
         framebuffer.clear(Some(fill_value));
 
-        // @TODO Write some pixel data to the pixel buffer,
-        //       based on some borrowed state.
+        {
+            let mut context = ui_context_rc.borrow_mut();
+
+            context.tree.do_autolayout_pass().unwrap();
+        }
 
         return Ok(framebuffer.get_all().clone());
     };
