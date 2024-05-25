@@ -107,7 +107,11 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         });
     }
 
-    let geometry = Geometry::new(vertices, uvs, normals);
+    let geometry = Geometry {
+        vertices,
+        uvs,
+        normals,
+    };
 
     let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 

@@ -19,13 +19,3 @@ impl fmt::Display for Geometry {
         writeln!(v, "  > Normals: {}", self.normals.len())
     }
 }
-
-impl Geometry {
-    pub fn new(vertices: Vec<Vec3>, uvs: Vec<Vec2>, normals: Vec<Vec3>) -> Self {
-        Geometry {
-            vertices,
-            normals,
-            uvs,
-        }
-    }
-}

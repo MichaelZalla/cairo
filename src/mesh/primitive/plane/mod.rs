@@ -92,7 +92,11 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
         }
     }
 
-    let geometry = Geometry::new(vertices, uvs, normals);
+    let geometry = Geometry {
+        vertices,
+        uvs,
+        normals,
+    };
 
     let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 

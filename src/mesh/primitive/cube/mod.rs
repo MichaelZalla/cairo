@@ -230,7 +230,11 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     partial_faces.push(right_face_1);
     partial_faces.push(right_face_2);
 
-    let geometry = Geometry::new(vertices, uvs, normals);
+    let geometry = Geometry {
+        vertices,
+        uvs,
+        normals,
+    };
 
     let mut mesh = Mesh::new(Rc::new(geometry), partial_faces, None);
 

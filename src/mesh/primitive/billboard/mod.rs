@@ -65,7 +65,11 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
         },
     ];
 
-    let geometry = Geometry::new(vertices, uvs, normals);
+    let geometry = Geometry {
+        vertices,
+        uvs,
+        normals,
+    };
 
     let mut mesh = Mesh::new(Rc::new(geometry), faces, None);
 
