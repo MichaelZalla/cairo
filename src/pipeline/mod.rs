@@ -7,7 +7,6 @@ use crate::{
     material::cache::MaterialCache,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
-    physics::collision::aabb::AABB,
     render::Renderer,
     resource::arena::Arena,
     scene::{
@@ -27,7 +26,6 @@ use crate::{
         default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
     },
     texture::cubemap::CubeMap,
-    vec::vec4::Vec4,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -40,9 +38,6 @@ pub mod options;
 mod pass;
 mod primitive;
 pub mod zbuffer;
-
-static DEFAULT_PROJECTION_Z_NEAR: f32 = 0.3;
-static DEFAULT_PROJECTION_Z_FAR: f32 = 1000.0;
 
 #[derive(Default, Debug, Copy, Clone)]
 struct PipelineViewport {
