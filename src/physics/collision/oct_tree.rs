@@ -48,7 +48,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
     }
 
     fn subdivide(&mut self) {
-        let child_half_extent = self.bounds.half_extent / 2.0;
+        let child_half_extent = (self.bounds.right - self.bounds.left) / 2.0;
 
         let left_top_near_center = Vec3::interpolate(
             self.bounds.center,

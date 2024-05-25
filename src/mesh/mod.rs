@@ -89,7 +89,7 @@ pub struct Mesh {
 
 impl PostDeserialize for Mesh {
     fn post_deserialize(&mut self) {
-        self.aabb = self.geometry.make_object_space_bounding_box();
+        self.aabb = self.make_object_space_bounding_box();
     }
 }
 
@@ -297,5 +297,9 @@ impl Mesh {
         }
 
         Ok(())
+    }
+
+    fn make_object_space_bounding_box(&self) -> AABB {
+        AABB::from_mesh(self)
     }
 }

@@ -2,57 +2,74 @@ use std::fmt::{self};
 
 use serde::{Deserialize, Serialize};
 
-use crate::vec::vec3::Vec3;
+use crate::{
+    mesh::Mesh,
+    vec::vec3::{self, Vec3},
+};
 
 #[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
 pub struct AABB {
     pub center: Vec3,
-    pub half_extent: f32,
     pub left: f32,
     pub right: f32,
     pub top: f32,
     pub bottom: f32,
     pub near: f32,
     pub far: f32,
+    pub max_half_extent: f32,
 }
 
 impl AABB {
     pub fn cube(center: Vec3, half_extent: f32) -> Self {
         AABB {
             center,
-            half_extent,
             left: center.x - half_extent,
             right: center.x + half_extent,
             top: center.y + half_extent,
             bottom: center.y - half_extent,
             near: center.z + half_extent,
             far: center.z - half_extent,
+            max_half_extent: half_extent,
         }
     }
 
-    pub fn new_from_triangle(v0: &Vec3, v1: &Vec3, v2: &Vec3) -> Self {
-        let min_x = v0.x.min(v1.x).min(v2.x);
-
-        let max_x = v0.x.max(v1.x).max(v2.x);
-
-        let min_y = v0.y.min(v1.y).min(v2.y);
-
-        let max_y = v0.y.max(v1.y).max(v2.y);
-
-        let min_z = v0.z.min(v1.z).min(v2.z);
-
-        let max_z = v0.z.max(v1.z).max(v2.z);
+    fn from_min_max(min: Vec3, max: Vec3) -> Self {
+        let half_extents = Vec3 {
+            x: (max.x - min.x),
+            y: (max.y - min.y),
+            z: (max.z - min.z),
+        } / 2.0;
 
         let center = Vec3 {
-            x: min_x + (max_x - min_x) / 2.0,
-            y: min_y + (max_y - min_y) / 2.0,
-            z: min_z + (max_z - min_z) / 2.0,
-        };
+            x: min.x,
+            y: min.y,
+            z: min.z,
+        } + half_extents;
 
-        let largest_dimension = (max_x - min_x).max(max_y - min_y).max(max_z - min_z);
-        let half_extent = largest_dimension / 2.0;
+        let max_half_extent = half_extents.x.max(half_extents.y).max(half_extents.z);
 
-        AABB::cube(center, half_extent)
+        AABB {
+            center,
+            left: min.x,
+            right: max.x,
+            top: max.y,
+            bottom: min.y,
+            near: max.z,
+            far: min.z,
+            max_half_extent,
+        }
+    }
+
+    pub fn from_mesh(mesh: &Mesh) -> Self {
+        let (min, max) = get_min_max_for_mesh(mesh);
+
+        AABB::from_min_max(min, max)
+    }
+
+    pub fn new_from_triangle(v0: &Vec3, v1: &Vec3, v2: &Vec3) -> Self {
+        let (min, max) = get_min_max_for_vec3(&[v0, v1, v2]);
+
+        AABB::from_min_max(min, max)
     }
 
     pub fn intersects(&self, rhs: &Self) -> bool {
@@ -78,4 +95,62 @@ impl fmt::Display for AABB {
             self.center, self.left, self.right, self.bottom, self.top, self.near, self.far
         )
     }
+}
+
+fn get_min_max_for_vec3(points_ref: &[&Vec3]) -> (Vec3, Vec3) {
+    let mut min = vec3::MAX;
+    let mut max = vec3::MIN;
+
+    for v in points_ref {
+        if v.x < min.x {
+            min.x = v.x;
+        } else if v.x > max.x {
+            max.x = v.x;
+        }
+
+        if v.y < min.y {
+            min.y = v.y;
+        } else if v.y > max.y {
+            max.y = v.y;
+        }
+
+        if v.z < min.z {
+            min.z = v.z;
+        } else if v.z > max.z {
+            max.z = v.z;
+        }
+    }
+
+    (min, max)
+}
+
+fn get_min_max_for_mesh(mesh: &Mesh) -> (Vec3, Vec3) {
+    let mut min = vec3::MAX;
+    let mut max = vec3::MIN;
+
+    for face in &mesh.faces {
+        for vertex_index in &face.vertices {
+            let v = &mesh.geometry.vertices[*vertex_index];
+
+            if v.x < min.x {
+                min.x = v.x;
+            } else if v.x > max.x {
+                max.x = v.x;
+            }
+
+            if v.y < min.y {
+                min.y = v.y;
+            } else if v.y > max.y {
+                max.y = v.y;
+            }
+
+            if v.z < min.z {
+                min.z = v.z;
+            } else if v.z > max.z {
+                max.z = v.z;
+            }
+        }
+    }
+
+    (min, max)
 }

@@ -232,6 +232,18 @@ impl Vec3 {
     }
 }
 
+pub static MIN: Vec3 = Vec3 {
+    x: f32::MIN,
+    y: f32::MIN,
+    z: f32::MIN,
+};
+
+pub static MAX: Vec3 = Vec3 {
+    x: f32::MAX,
+    y: f32::MAX,
+    z: f32::MAX,
+};
+
 pub static ONES: Vec3 = Vec3::ones();
 
 pub static UP: Vec3 = Vec3 {

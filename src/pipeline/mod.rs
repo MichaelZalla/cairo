@@ -5,6 +5,7 @@ use crate::{
     color::Color,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
+    physics::collision::aabb::AABB,
     scene::{camera::frustum::Frustum, resources::SceneResources},
     shader::{
         alpha::AlphaShaderFn,
@@ -247,7 +248,7 @@ impl<'a> Pipeline<'a> {
         let mut should_cull = false;
 
         if let Some(frustum) = clipping_camera_frustum.as_ref() {
-            if self.should_cull_entity_mesh(*world_transform, frustum, entity_mesh) {
+            if self.should_cull_aabb(*world_transform, frustum, &entity_mesh.aabb) {
                 should_cull = true;
             }
         }
@@ -280,29 +281,35 @@ impl<'a> Pipeline<'a> {
         !should_cull
     }
 
-    fn should_cull_entity_mesh(
+    fn should_cull_aabb(
         &self,
         world_transform: Mat4,
         clipping_camera_frustum: &Frustum,
-        entity_mesh: &Mesh,
+        aabb: &AABB,
     ) -> bool {
         // Cull the entire entity, if possible, based on its bounds.
 
-        let object_space_center = entity_mesh.aabb.center;
+        let bounding_sphere_position = (Vec4::new(aabb.center, 1.0) * world_transform).to_vec3();
 
-        let sphere_position = (Vec4::new(object_space_center, 1.0) * world_transform).to_vec3();
-        let sphere_radius = 4.0;
+        let bounding_sphere_radius = aabb.max_half_extent;
 
+        // @TODO Generate planes once per frame, not once per entity draw.
         let culling_planes = clipping_camera_frustum.get_planes();
 
         // @TODO Need to verify sign of top plane normal and bottom plane normal.
 
-        !culling_planes[0].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
-            || !culling_planes[1].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
-            || !culling_planes[2].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
-            || !culling_planes[3].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
-            || !culling_planes[4].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
-            || !culling_planes[5].is_sphere_on_or_in_front_of(sphere_position, sphere_radius)
+        !culling_planes[0]
+            .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
+            || !culling_planes[1]
+                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
+            || !culling_planes[2]
+                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
+            || !culling_planes[3]
+                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
+            || !culling_planes[4]
+                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
+            || !culling_planes[5]
+                .is_sphere_on_or_in_front_of(bounding_sphere_position, bounding_sphere_radius)
     }
 
     fn render_entity_mesh(&mut self, mesh: &Mesh, world_transform: &Mat4) {
