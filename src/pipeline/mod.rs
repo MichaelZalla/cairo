@@ -40,15 +40,15 @@ pub mod zbuffer;
 
 pub struct Pipeline {
     pub options: RenderOptions,
+    pub geometry_shader_options: GeometryShaderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
-    pub shader_context: Rc<RefCell<ShaderContext>>,
-    pub scene_resources: Rc<RefCell<SceneResources>>,
+    shader_context: Rc<RefCell<ShaderContext>>,
+    scene_resources: Rc<RefCell<SceneResources>>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
-    pub geometry_shader_options: GeometryShaderOptions,
     geometry_shader: GeometryShaderFn,
     fragment_shader: FragmentShaderFn,
 }
