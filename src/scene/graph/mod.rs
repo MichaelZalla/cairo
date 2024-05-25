@@ -1,4 +1,4 @@
-use std::fmt::{Display, Error};
+use std::{cell::RefCell, fmt::{Display, Error}};
 
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,6 @@ use crate::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     matrix::Mat4,
-    software_renderer::SoftwareRenderer,
     render::Renderer,
     resource::handle::Handle,
     serde::PostDeserialize,
@@ -106,9 +105,11 @@ impl SceneGraph {
     pub fn render(
         &self,
         resources: &SceneResources,
-        renderer: &mut SoftwareRenderer,
+        renderer_rc: &RefCell<dyn Renderer>,
         options: Option<SceneGraphRenderOptions>,
     ) -> Result<(), String> {
+        let mut renderer = renderer_rc.borrow_mut();
+
         // Begin frame
 
         renderer.begin_frame();

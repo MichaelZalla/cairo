@@ -213,11 +213,13 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut renderer = renderer_rc.borrow_mut();
+        {
+            let mut renderer = renderer_rc.borrow_mut();
 
-        renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
+            renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
+        }
 
-        match scene.render(&resources, &mut renderer, None) {
+        match scene.render(&resources, &renderer_rc, None) {
             Ok(()) => {
                 // Write out.
 

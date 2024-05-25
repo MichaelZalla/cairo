@@ -378,9 +378,7 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut renderer = renderer_rc.borrow_mut();
-
-        match scene.render(&resources, &mut renderer, None) {
+        match scene.render(&resources, &renderer_rc, None) {
             Ok(()) => {
                 // Write out.
 

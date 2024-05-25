@@ -72,13 +72,15 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
-    let mut renderer = SoftwareRenderer::new(
+    let renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
         cube_scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    let renderer_rc = RefCell::new(renderer);
 
     let cubemap_face_framebuffer = {
         let mut framebuffer = Framebuffer::new(0, 0);
@@ -104,7 +106,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
             cubemap_face_framebuffer_rc.clone(),
             &cube_scene_context,
             &shader_context_rc,
-            &mut renderer,
+            &renderer_rc,
         )
     };
 
@@ -138,7 +140,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
             cubemap_face_framebuffer_rc.clone(),
             &cube_scene_context,
             &shader_context_rc,
-            &mut renderer,
+            &renderer_rc,
         )
     };
 
@@ -148,7 +150,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
             cubemap_face_framebuffer_rc.clone(),
             &cube_scene_context,
             &shader_context_rc,
-            &mut renderer,
+            &renderer_rc,
         )
     };
 
@@ -164,10 +166,12 @@ fn render_radiance_to_cubemap(
     framebuffer_rc: Rc<RefCell<Framebuffer>>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
-    renderer: &mut SoftwareRenderer,
+    renderer_rc: &RefCell<SoftwareRenderer>,
 ) -> CubeMap<Vec3> {
     {
         // Setup
+
+        let mut renderer = renderer_rc.borrow_mut();
 
         renderer.set_vertex_shader(HdrEquirectangularProjectionVertexShader);
 
@@ -190,12 +194,14 @@ fn render_radiance_to_cubemap(
             framebuffer_rc,
             scene_context,
             shader_context_rc,
-            renderer,
+            renderer_rc,
         )
         .unwrap();
 
     {
         // Cleanup
+
+        let mut renderer = renderer_rc.borrow_mut();
 
         renderer.set_vertex_shader(DEFAULT_VERTEX_SHADER);
 
@@ -216,10 +222,12 @@ fn render_irradiance_to_cubemap(
     framebuffer_rc: Rc<RefCell<Framebuffer>>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
-    renderer: &mut SoftwareRenderer,
+    renderer_rc: &RefCell<SoftwareRenderer>,
 ) -> CubeMap<Vec3> {
     {
         // Setup
+
+        let mut renderer = renderer_rc.borrow_mut();
 
         renderer.set_fragment_shader(HdrDiffuseIrradianceFragmentShader);
 
@@ -240,12 +248,14 @@ fn render_irradiance_to_cubemap(
             framebuffer_rc,
             scene_context,
             shader_context_rc,
-            renderer,
+            renderer_rc,
         )
         .unwrap();
 
     {
         // Cleanup
+
+        let mut renderer = renderer_rc.borrow_mut();
 
         renderer.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
 
@@ -266,7 +276,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
     framebuffer_rc: Rc<RefCell<Framebuffer>>,
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
-    renderer: &mut SoftwareRenderer,
+    renderer_rc: &RefCell<SoftwareRenderer>,
 ) -> CubeMap<Vec3> {
     let material_name = "specular_roughness".to_string();
 
@@ -305,6 +315,8 @@ fn render_specular_prefiltered_environment_to_cubemap(
         // framebuffer_rc.borrow_mut().resize(32, 32, true);
         framebuffer_rc.borrow_mut().resize(128, 128, true);
 
+        let mut renderer = renderer_rc.borrow_mut();
+
         renderer.set_fragment_shader(HdrSpecularPrefilteredEnvironmentFragmentShader);
 
         renderer.options.face_culling_strategy.reject = FaceCullingReject::None;
@@ -340,6 +352,8 @@ fn render_specular_prefiltered_environment_to_cubemap(
                 .borrow_mut()
                 .resize(mipmap_dimension, mipmap_dimension, true);
 
+            let mut renderer = renderer_rc.borrow_mut();
+
             renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
         }
 
@@ -354,13 +368,15 @@ fn render_specular_prefiltered_environment_to_cubemap(
                 framebuffer_rc.clone(),
                 scene_context,
                 shader_context_rc,
-                renderer,
+                renderer_rc,
             )
             .unwrap();
     }
 
     {
         // Cleanup
+
+        let mut renderer = renderer_rc.borrow_mut();
 
         renderer.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
 

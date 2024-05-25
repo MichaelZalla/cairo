@@ -1,20 +1,14 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
-    buffer::{framebuffer::Framebuffer, Buffer2D},
-    color::Color,
-    software_renderer::SoftwareRenderer,
-    scene::{
+    buffer::{framebuffer::Framebuffer, Buffer2D}, color::Color, render::Renderer, scene::{
         camera::Camera,
         context::SceneContext,
         light::{PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
-    },
-    shader::context::ShaderContext,
-    texture::{
+    }, shader::context::ShaderContext, texture::{
         cubemap::{CubeMap, Side, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
         map::{TextureMap, TextureMapWrapping},
-    },
-    vec::{vec3::Vec3, vec4::Vec4},
+    }, vec::{vec3::Vec3, vec4::Vec4}
 };
 
 pub fn blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target: &mut Buffer2D) {
@@ -61,7 +55,7 @@ fn render_point_shadows_to_cubemap(
     scene_context: &SceneContext,
     shader_context_rc: &RefCell<ShaderContext>,
     framebuffer_rc: Rc<RefCell<Framebuffer>>,
-    renderer: &mut SoftwareRenderer,
+    shadow_map_renderer_rc: &RefCell<dyn Renderer>,
 ) -> Result<CubeMap<f32>, String> {
     let mut shadow_map = {
         let mut shadow_map = CubeMap::<f32>::from_framebuffer(&framebuffer_rc.borrow());
@@ -116,8 +110,8 @@ fn render_point_shadows_to_cubemap(
 
         let resources = (*scene_context.resources).borrow();
         let scene = &scene_context.scenes.borrow()[0];
-
-        match scene.render(&resources, renderer, None) {
+        
+        match scene.render(&resources, shadow_map_renderer_rc, None) {
             Ok(()) => {
                 // Blit our framebuffer's HDR attachment buffer to our cubemap's
                 // corresponding side (texture map).
@@ -155,7 +149,7 @@ fn blit_hdr_attachment_to_cubemap_side(
 
 pub fn update_point_light_shadow_maps(
     scene_context_rc: &RefCell<SceneContext>,
-    shadow_map_renderer_rc: &RefCell<SoftwareRenderer>,
+    shadow_map_renderer_rc: &RefCell<dyn Renderer>,
     shadow_map_shader_context_rc: &RefCell<ShaderContext>,
     shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
 ) {
@@ -169,7 +163,7 @@ pub fn update_point_light_shadow_maps(
         let resources = (*scene_context.resources).borrow();
         let point_light_arena = resources.point_light.borrow();
 
-        let mut point_shadow_map_renderer = shadow_map_renderer_rc.borrow_mut();
+        // let mut point_shadow_map_renderer = shadow_map_renderer_rc.borrow_mut();
 
         for entry in point_light_arena.entries.iter().flatten() {
             let light = &entry.item;
@@ -180,7 +174,7 @@ pub fn update_point_light_shadow_maps(
                     &scene_context,
                     shadow_map_shader_context_rc,
                     shadow_map_framebuffer_rc.clone(),
-                    &mut point_shadow_map_renderer,
+                    shadow_map_renderer_rc,
                 )
                 .unwrap();
 
