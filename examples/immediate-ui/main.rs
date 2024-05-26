@@ -6,7 +6,6 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
     color,
-    debug::println_indent,
     device::{GameControllerState, KeyboardState, MouseState},
     ui::{
         tree::UIWidgetTree,

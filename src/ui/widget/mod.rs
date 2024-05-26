@@ -103,7 +103,7 @@ impl UIWidget {
     pub fn render(
         &self,
         depth: usize,
-        frame_index: u32,
+        _frame_index: u32,
         target: &mut Buffer2D,
     ) -> Result<(), String> {
         let (x, y) = self.get_pixel_coordinates();

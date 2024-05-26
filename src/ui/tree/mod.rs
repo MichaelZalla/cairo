@@ -1,7 +1,12 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
-    animation::lerp, buffer::Buffer2D, debug::println_indent, debug_print, ui::{widget::ScreenExtent, UI2DAxis, UISize},
+    animation::lerp,
+    buffer::Buffer2D,
+    debug::println_indent,
+    debug_print,
+    ui::{widget::ScreenExtent, UI2DAxis, UISize},
+    visit_dfs, visit_dfs_mut,
 };
 
 use self::node::{Node, NodeLocalTraversalMethod};
@@ -9,11 +14,14 @@ use self::node::{Node, NodeLocalTraversalMethod};
 use super::widget::{key::UIKey, UIWidget};
 
 pub mod node;
+pub mod traversal;
 
 #[derive(Default, Debug, Clone)]
 pub struct UIWidgetTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
     pub root: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
+    pub dropdown_menus_root: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
+    pub tooltips_root: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
     cache: RefCell<HashMap<UIKey, UIWidget>>,
 }
 
@@ -23,17 +31,28 @@ impl<'a> UIWidgetTree<'a> {
         let root_node_rc = Rc::new(RefCell::new(root_node));
 
         Self {
-            root: Some(root_node_rc.clone()),
-            current: Some(root_node_rc),
+            current: Some(root_node_rc.clone()),
+            root: Some(root_node_rc),
+            dropdown_menus_root: None,
+            tooltips_root: None,
             cache: Default::default(),
         }
     }
+
+    visit_dfs!(visit_root_dfs, self, root);
+    visit_dfs_mut!(visit_root_dfs_mut, self, root);
+
+    visit_dfs!(visit_dropdown_menus_root_dfs, self, dropdown_menus_root);
+    visit_dfs_mut!(visit_dropdown_menus_root_dfs_mut, self, dropdown_menus_root);
+
+    visit_dfs!(visit_tooltips_root_dfs, self, tooltips_root);
+    visit_dfs_mut!(visit_tooltips_root_dfs_mut, self, tooltips_root);
 
     pub fn clear(&mut self) {
         // @NOTE(mzalla) Does not drop cache entries, only tree structure!
 
         self.current = None;
-        
+
         self.root = None;
     }
 
@@ -46,7 +65,7 @@ impl<'a> UIWidgetTree<'a> {
 
         debug_print!(">\n> (Standalone sizes pass...)\n>");
 
-        self.visit_dfs_mut(
+        self.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &mut node.data;
@@ -108,7 +127,7 @@ impl<'a> UIWidgetTree<'a> {
 
         debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
 
-        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, parent_data, node| {
+        self.visit_root_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, parent_data, node| {
             let widget = &mut node.data;
 
             if node.parent.is_none() {
@@ -183,7 +202,7 @@ impl<'a> UIWidgetTree<'a> {
 
         debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
 
-        self.visit_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, _parent_data, node| {
+        self.visit_root_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, _parent_data, node| {
             let widget = &mut node.data;
 
             if node.children.is_empty() {
@@ -246,7 +265,7 @@ impl<'a> UIWidgetTree<'a> {
 
         debug_print!(">\n> (Violations pass...)\n>");
 
-        self.visit_dfs_mut(
+        self.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &mut node.data;
@@ -340,7 +359,7 @@ impl<'a> UIWidgetTree<'a> {
 
         debug_print!(">\n> (Relative positioning pass...)\n>");
 
-        self.visit_dfs_mut(
+        self.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, parent_data, node| {
                 let widget = &mut node.data;
@@ -393,7 +412,7 @@ impl<'a> UIWidgetTree<'a> {
     fn debug_computed_sizes(&self) -> Result<(), String> {
         debug_print!("\nResults:\n");
 
-        self.visit_dfs(
+        self.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
@@ -418,11 +437,11 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     pub fn render(&mut self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
-        self.visit_dfs(
+        self.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
-                
+
                 let mut cache = self.cache.borrow_mut();
 
                 let render_result = widget.render(depth, frame_index, target);
@@ -435,12 +454,11 @@ impl<'a> UIWidgetTree<'a> {
                     // cached_widget.computed_size = widget.computed_size;
                     // cached_widget.computed_relative_position = widget.computed_relative_position;
                     cached_widget.global_bounds = widget.global_bounds;
-                    
+
                     cached_widget.hot_transition = widget.hot_transition;
                     cached_widget.active_transition = widget.active_transition;
-                    
+
                     cached_widget.last_read_at_frame = frame_index;
-                    
                 } else {
                     cache.insert(widget.key.clone(), widget.clone());
                 }
@@ -451,45 +469,11 @@ impl<'a> UIWidgetTree<'a> {
 
         {
             let mut cache = self.cache.borrow_mut();
-            
-            cache.retain(|_key, widget: &mut UIWidget| {
-                widget.last_read_at_frame == frame_index
-            });
+
+            cache.retain(|_key, widget: &mut UIWidget| widget.last_read_at_frame == frame_index);
         }
 
         Ok(())
-    }
-
-    pub fn visit_dfs<C>(
-        &self,
-        method: &NodeLocalTraversalMethod,
-        visit_action: &mut C,
-    ) -> Result<(), String>
-    where
-        C: FnMut(usize, Option<&UIWidget>, &Node<'a, UIWidget>) -> Result<(), String>,
-    {
-        if let Some(root) = &self.root {
-            root.borrow().visit_dfs(method, 0, None, visit_action)
-        } else {
-            Ok(())
-        }
-    }
-
-    pub fn visit_dfs_mut<C>(
-        &mut self,
-        method: &NodeLocalTraversalMethod,
-        visit_action: &mut C,
-    ) -> Result<(), String>
-    where
-        C: FnMut(usize, Option<&UIWidget>, &mut Node<'a, UIWidget>) -> Result<(), String>,
-    {
-        if let Some(root) = &self.root {
-            root
-            .borrow_mut()
-            .visit_dfs_mut(method, 0, None, visit_action)
-        } else {
-            Ok(())
-        }
     }
 
     pub fn push(&mut self, widget: UIWidget) -> Result<(), String> {
@@ -535,7 +519,7 @@ impl<'a> UIWidgetTree<'a> {
 
         Ok(())
     }
-    
+
     pub fn push_parent(&mut self, widget: UIWidget) -> Result<(), String> {
         self.push(widget)?;
 
@@ -545,16 +529,16 @@ impl<'a> UIWidgetTree<'a> {
 
         {
             let current_node_rc = self.current.as_ref().unwrap();
-    
+
             let current_node = current_node_rc.borrow();
-    
+
             if current_node.children.is_empty() {
                 // We just added the root node (and set `self.current`).
                 new_current = self.root.clone();
             } else {
                 // We just added some other node as a child of `self.current`.
                 let new_child_rc = current_node.children.last().unwrap();
-    
+
                 new_current = Some(new_child_rc.clone());
             }
         }
@@ -594,24 +578,5 @@ impl<'a> UIWidgetTree<'a> {
             }
             _ => Err("Called UIWidgetTree::pop_parent() on an empty tree!".to_string()),
         }
-    }
-}
-
-fn get_child_index(parent: &Node<UIWidget>, child: &Node<UIWidget>) -> Option<usize> {
-    let mut child_index: isize = -1;
-
-    for (i, other_child) in parent.children.iter().enumerate() {
-        let lhs = (*other_child).borrow();
-        let rhs = child;
-
-        if lhs.data.id == rhs.data.id {
-            child_index = i as isize;
-        }
-    }
-
-    if child_index > -1 {
-        Some(child_index as usize)
-    } else {
-        None
     }
 }
