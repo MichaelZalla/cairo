@@ -125,7 +125,7 @@ impl App {
             &MouseState,
             &GameControllerState,
         ) -> Result<(), String>,
-        R: FnMut() -> Result<Vec<u32>, String>,
+        R: FnMut(u32) -> Result<Vec<u32>, String>,
     {
         let timer_subsystem = self.context.sdl_context.timer()?;
 
@@ -142,7 +142,8 @@ impl App {
 
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
 
-        let mut current_tick: u32 = 0;
+        let mut frames_rendered: u32 = 0;
+
         let mut last_update_tick = timer_subsystem.performance_counter();
 
         // Main event loop
@@ -340,7 +341,7 @@ impl App {
                 .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
 
-                    match render() {
+                    match render(self.timing_info.current_frame_index) {
                         Ok(pixels_as_u32_slice) => unsafe {
                             let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
                                 pixels_as_u32_slice.as_ptr() as *const u8,
@@ -398,7 +399,7 @@ impl App {
             let unused_seconds = unused_ticks as f64 / ticks_per_second as f64;
             let _unused_milliseconds = unused_seconds * 1000.0;
 
-            if current_tick % 50 == 0 {
+            if frames_rendered % 50 == 0 {
                 debug_print!("frames_per_second={}", self.timing_info.frames_per_second);
                 debug_print!("unused_seconds={}", unused_seconds);
                 debug_print!("unused_milliseconds={}", unused_milliseconds);
@@ -410,7 +411,10 @@ impl App {
 
             timer_subsystem.delay(self.timing_info.unused_milliseconds.floor() as u32);
 
-            current_tick += 1;
+            // @NOTE(mzalla) Will overflow, and that's okay.
+            frames_rendered += 1;
+
+            self.timing_info.current_frame_index = frames_rendered;
         }
 
         Ok(())

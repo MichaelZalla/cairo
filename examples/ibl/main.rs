@@ -279,7 +279,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = || -> Result<Vec<u32>, String> {
+    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
         // Render scene.
 
         let scene_context = spheres_scene_context_rc.borrow();

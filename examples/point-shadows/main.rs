@@ -196,7 +196,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = || -> Result<Vec<u32>, String> {
+    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
         // Render point shadow map.
 
         update_point_light_shadow_maps(

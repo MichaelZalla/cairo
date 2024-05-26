@@ -66,7 +66,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = || -> Result<Vec<u32>, String> {
+    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
         // Clears pixel buffer
         let fill_value = color::BLACK.to_u32();
 

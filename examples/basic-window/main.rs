@@ -29,7 +29,7 @@ fn main() -> Result<(), String> {
                       _game_controller_state: &GameControllerState|
      -> Result<(), String> { Ok(()) };
 
-    let mut render = || -> Result<Vec<u32>, String> {
+    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
         let fill_value = color::BLACK.to_u32();
 
         // Clears pixel buffer

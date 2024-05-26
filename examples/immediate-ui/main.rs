@@ -35,7 +35,7 @@ fn main() -> Result<(), String> {
                       _game_controller_state: &GameControllerState|
      -> Result<(), String> { Ok(()) };
 
-    let mut render = || -> Result<Vec<u32>, String> {
+    let mut render = |frame_index: u32| -> Result<Vec<u32>, String> {
         let fill_value = color::BLACK.to_u32();
 
         framebuffer.clear(Some(fill_value));
@@ -158,7 +158,7 @@ fn main() -> Result<(), String> {
 
         widget_tree.do_autolayout_pass().unwrap();
 
-        widget_tree.render(&mut framebuffer).unwrap();
+        widget_tree.render(frame_index, &mut framebuffer).unwrap();
 
         return Ok(framebuffer.get_all().clone());
     };

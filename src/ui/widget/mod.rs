@@ -100,7 +100,12 @@ impl UIWidget {
         (self.computed_size[0] as u32, self.computed_size[1] as u32)
     }
 
-    pub fn render(&self, depth: usize, target: &mut Buffer2D) -> Result<(), String> {
+    pub fn render(
+        &self,
+        depth: usize,
+        frame_index: u32,
+        target: &mut Buffer2D,
+    ) -> Result<(), String> {
         let (x, y) = self.get_pixel_coordinates();
         let (width, height) = self.get_computed_pixel_size();
 

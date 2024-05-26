@@ -318,7 +318,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = || -> Result<Vec<u32>, String> {
+    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
         match framebuffer_rc.borrow_mut().attachments.color.as_ref() {
             Some(rc) => {
                 let color_buffer = rc.borrow();

@@ -407,13 +407,13 @@ impl<'a> UIWidgetTree<'a> {
         Ok(())
     }
 
-    pub fn render(&self, target: &mut Buffer2D) -> Result<(), String> {
+    pub fn render(&self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
         self.visit_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
 
-                widget.render(depth, target)
+                widget.render(depth, frame_index, target)
             },
         )
     }
