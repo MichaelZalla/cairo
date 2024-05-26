@@ -1,15 +1,21 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
+use sdl2::mouse::MouseButton;
+
 use crate::{
     animation::lerp,
     buffer::Buffer2D,
     debug::println_indent,
     debug_print,
+    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     ui::{extent::ScreenExtent, UI2DAxis, UISize},
     visit_dfs, visit_dfs_mut,
 };
 
-use super::{context::GLOBAL_UI_CONTEXT, ui_box::{self, key::UIKey, UIBox}};
+use super::{
+    context::GLOBAL_UI_CONTEXT,
+    ui_box::{self, key::UIKey, UIBox},
+};
 
 use self::node::{Node, NodeLocalTraversalMethod};
 
@@ -48,6 +54,89 @@ impl<'a> UIBoxTree<'a> {
         self.current = None;
 
         self.root = None;
+    }
+
+    pub fn do_user_inputs_pass(
+        &mut self,
+        _keyboard_state: &mut KeyboardState,
+        mouse_state: &mut MouseState,
+        _game_controller_state: &mut GameControllerState,
+    ) -> Result<(), String> {
+        debug_print!("\nUser inputs pass:\n");
+
+        self.visit_root_dfs_mut(
+            &NodeLocalTraversalMethod::PostOrder,
+            &mut |_depth, _parent_data, node| {
+                let ui_box = &mut node.data;
+                
+                // Apply the latest user inputs, based on this node's previous layout
+                // (from the previous frame).
+
+                ui_box.hot = if !ui_box.key.is_null() {
+                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                        let cache = ctx.cache.borrow();
+
+                        if let Some(ui_box_previous_frame) = cache.get(&ui_box.key) {
+                            // Check if our global mouse coordinates overlap this node's bounds.
+
+                            ui_box_previous_frame.global_bounds.contains(
+                                mouse_state.position.0 as u32,
+                                mouse_state.position.1 as u32,
+                            )
+                        } else {
+                            // We weren't rendered in previous frames, so we can't be hot yet.
+
+                            false
+                        }
+                    })
+                } else {
+                    // This node has no key (e.g., spacer, etc). Can't be hot.
+
+                    false
+                };
+
+                ui_box.active = if !ui_box.key.is_null() {
+                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                        let cache = ctx.cache.borrow();
+
+                        if let Some(ui_box_previous_frame) = cache.get(&ui_box.key) {
+                            if ui_box_previous_frame.active {
+                                mouse_state.buttons_down.contains(&MouseButton::Left)
+                            } else if ui_box.hot {
+                                if let Some(event) = mouse_state.button_event {
+                                    let matches = matches!(
+                                        (event.button, event.kind),
+                                        (MouseButton::Left, MouseEventKind::Down)
+                                    );
+
+                                    if matches {
+                                        mouse_state.button_event.take();
+                                    }
+
+                                    matches
+                                } else {
+                                    false
+                                }
+                            } else {
+                                // We weren't previously active, and we aren't hot.
+
+                                false
+                            }
+                        } else {
+                            // We weren't rendered in previous frames, so we can't be active yet.
+
+                            false
+                        }
+                    })
+                } else {
+                    // This node has no key (e.g., spacer, etc). Can't be active.
+
+                    false
+                };
+
+                Ok(())
+            },
+        )
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {

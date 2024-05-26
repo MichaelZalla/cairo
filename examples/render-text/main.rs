@@ -54,9 +54,9 @@ fn main() -> Result<(), String> {
     let mouse_y = RefCell::new(0);
 
     let mut update = |app: &mut App,
-                      _keyboard_state: &KeyboardState,
-                      mouse_state: &MouseState,
-                      _game_controller_state: &GameControllerState|
+                      _keyboard_state: &mut KeyboardState,
+                      mouse_state: &mut MouseState,
+                      _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         *now_seconds.borrow_mut() += app.timing_info.seconds_since_last_update;
 

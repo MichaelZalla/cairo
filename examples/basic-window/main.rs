@@ -24,9 +24,9 @@ fn main() -> Result<(), String> {
     );
 
     let mut update = |_app: &mut App,
-                      _keyboard_state: &KeyboardState,
-                      _mouse_state: &MouseState,
-                      _game_controller_state: &GameControllerState|
+                      _keyboard_state: &mut KeyboardState,
+                      _mouse_state: &mut MouseState,
+                      _game_controller_state: &mut GameControllerState|
      -> Result<(), String> { Ok(()) };
 
     let mut render = |_frame_index| -> Result<Vec<u32>, String> {

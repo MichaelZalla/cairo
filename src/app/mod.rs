@@ -121,9 +121,9 @@ impl App {
     where
         U: FnMut(
             &mut Self,
-            &KeyboardState,
-            &MouseState,
-            &GameControllerState,
+            &mut KeyboardState,
+            &mut MouseState,
+            &mut GameControllerState,
         ) -> Result<(), String>,
         R: FnMut(u32) -> Result<Vec<u32>, String>,
     {
@@ -326,9 +326,9 @@ impl App {
 
             update(
                 &mut self,
-                &keyboard_state,
-                &mouse_state,
-                &game_controller.state,
+                &mut keyboard_state,
+                &mut mouse_state,
+                &mut game_controller.state,
             )?;
 
             last_update_tick = timer_subsystem.performance_counter();

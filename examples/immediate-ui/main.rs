@@ -32,9 +32,9 @@ fn main() -> Result<(), String> {
     );
 
     let mut update = |app: &mut App,
-                      keyboard_state: &KeyboardState,
-                      mouse_state: &MouseState,
-                      game_controller_state: &GameControllerState|
+                      keyboard_state: &mut KeyboardState,
+                      mouse_state: &mut MouseState,
+                      game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
 
@@ -66,9 +66,6 @@ fn main() -> Result<(), String> {
                                 strictness: 1.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.push_parent(UIBox::new(
@@ -88,9 +85,6 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -106,9 +100,6 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -124,9 +115,6 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.pop_parent()?;
@@ -150,9 +138,6 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -168,9 +153,6 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -186,14 +168,13 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
                     ))?;
 
                     tree.pop_parent()?;
 
                     // `Current` is now back at the root...
+
+                    tree.do_user_inputs_pass(keyboard_state, mouse_state, game_controller_state)?;
 
                     tree.do_autolayout_pass()
                 })

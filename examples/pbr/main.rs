@@ -63,9 +63,9 @@ fn main() -> Result<(), String> {
     // App update() callback
 
     let mut update = |app: &mut App,
-                      keyboard_state: &KeyboardState,
-                      mouse_state: &MouseState,
-                      game_controller_state: &GameControllerState|
+                      keyboard_state: &mut KeyboardState,
+                      mouse_state: &mut MouseState,
+                      game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let resources = (*(scene_context.resources)).borrow_mut();
 

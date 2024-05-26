@@ -166,9 +166,9 @@ fn main() -> Result<(), String> {
     let layout_direction_rc = RefCell::new(layout_direction);
 
     let mut update = |app: &mut App,
-                      keyboard_state: &KeyboardState,
-                      mouse_state: &MouseState,
-                      game_controller_state: &GameControllerState|
+                      keyboard_state: &mut KeyboardState,
+                      mouse_state: &mut MouseState,
+                      game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         if let Some(rc) = framebuffer_rc.borrow_mut().attachments.color.as_mut() {
             let mut color_buffer = rc.borrow_mut();
