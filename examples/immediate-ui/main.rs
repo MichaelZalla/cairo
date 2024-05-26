@@ -1,6 +1,7 @@
 extern crate sdl2;
 
 use cairo::{
+    animation::lerp,
     app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
     buffer::Buffer2D,
     color,
@@ -30,12 +31,15 @@ fn main() -> Result<(), String> {
         None,
     );
 
-    let mut update = |_app: &mut App,
+    let mut update = |app: &mut App,
                       keyboard_state: &KeyboardState,
                       mouse_state: &MouseState,
                       game_controller_state: &GameControllerState|
      -> Result<(), String> {
+        let uptime = app.timing_info.uptime_seconds;
+
         // Recreate the UI tree.
+
         let mut result = Ok(());
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
@@ -50,11 +54,15 @@ fn main() -> Result<(), String> {
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
                         [
                             UISizeWithStrictness {
-                                size: UISize::Pixels(512),
+                                size: UISize::Pixels(
+                                    lerp(512.0, 768.0, uptime.sin() / 2.0 + 1.0) as u32
+                                ),
                                 strictness: 1.0,
                             },
                             UISizeWithStrictness {
-                                size: UISize::ChildrenSum,
+                                size: UISize::Pixels(
+                                    lerp(378.0, 512.0, uptime.sin() / 2.0 + 1.0) as u32
+                                ),
                                 strictness: 1.0,
                             },
                         ],
@@ -68,12 +76,16 @@ fn main() -> Result<(), String> {
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
                         [
                             UISizeWithStrictness {
-                                size: UISize::Pixels(128),
-                                strictness: 1.0,
+                                size: UISize::Pixels(
+                                    lerp(128.0, 256.0, uptime.sin() / 2.0 + 1.0) as u32
+                                ),
+                                strictness: 0.0,
                             },
                             UISizeWithStrictness {
-                                size: UISize::Pixels(256),
-                                strictness: 1.0,
+                                size: UISize::Pixels(
+                                    lerp(256.0, 512.0, uptime.sin() / 2.0 + 1.0) as u32
+                                ),
+                                strictness: 0.0,
                             },
                         ],
                         keyboard_state,
@@ -126,12 +138,16 @@ fn main() -> Result<(), String> {
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
                         [
                             UISizeWithStrictness {
-                                size: UISize::Pixels(128),
-                                strictness: 1.0,
+                                size: UISize::Pixels(
+                                    lerp(128.0, 256.0, uptime.sin() / 2.0 + 1.0) as u32
+                                ),
+                                strictness: 0.0,
                             },
                             UISizeWithStrictness {
-                                size: UISize::Pixels(256),
-                                strictness: 1.0,
+                                size: UISize::Pixels(
+                                    lerp(256.0, 512.0, uptime.sin() / 2.0 + 1.0) as u32
+                                ),
+                                strictness: 0.0,
                             },
                         ],
                         keyboard_state,
