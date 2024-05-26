@@ -50,11 +50,11 @@ pub struct UIWidget {
     #[serde(skip)]
     pub global_bounds: ScreenExtent, // On-screen rectangle coordinates, in pixels.
     #[serde(skip)]
-    hot_transition: f32,
+    pub hot_transition: f32,
     #[serde(skip)]
-    active_transition: f32,
+    pub active_transition: f32,
     #[serde(skip)]
-    last_read_at_frame: usize,
+    pub last_read_at_frame: u32,
 }
 
 impl UIWidget {

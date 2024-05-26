@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     animation::lerp, buffer::Buffer2D, debug::println_indent, debug_print, ui::{widget::ScreenExtent, UI2DAxis, UISize},
@@ -6,7 +6,7 @@ use crate::{
 
 use self::node::{Node, NodeLocalTraversalMethod};
 
-use super::widget::UIWidget;
+use super::widget::{key::UIKey, UIWidget};
 
 pub mod node;
 
@@ -14,6 +14,7 @@ pub mod node;
 pub struct UIWidgetTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
     pub root: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
+    cache: RefCell<HashMap<UIKey, UIWidget>>,
 }
 
 impl<'a> UIWidgetTree<'a> {
@@ -24,7 +25,16 @@ impl<'a> UIWidgetTree<'a> {
         Self {
             root: Some(root_node_rc.clone()),
             current: Some(root_node_rc),
+            cache: Default::default(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        // @NOTE(mzalla) Does not drop cache entries, only tree structure!
+
+        self.current = None;
+        
+        self.root = None;
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
@@ -407,15 +417,47 @@ impl<'a> UIWidgetTree<'a> {
         Ok(())
     }
 
-    pub fn render(&self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
+    pub fn render(&mut self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
         self.visit_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
+                
+                let mut cache = self.cache.borrow_mut();
 
-                widget.render(depth, frame_index, target)
+                let render_result = widget.render(depth, frame_index, target);
+
+                // Update this node's entry in our persistent cache.
+
+                if cache.contains_key(&widget.key) {
+                    let cached_widget = cache.get_mut(&widget.key).unwrap();
+
+                    // cached_widget.computed_size = widget.computed_size;
+                    // cached_widget.computed_relative_position = widget.computed_relative_position;
+                    cached_widget.global_bounds = widget.global_bounds;
+                    
+                    cached_widget.hot_transition = widget.hot_transition;
+                    cached_widget.active_transition = widget.active_transition;
+                    
+                    cached_widget.last_read_at_frame = frame_index;
+                    
+                } else {
+                    cache.insert(widget.key.clone(), widget.clone());
+                }
+
+                render_result
             },
-        )
+        )?;
+
+        {
+            let mut cache = self.cache.borrow_mut();
+            
+            cache.retain(|_key, widget: &mut UIWidget| {
+                widget.last_read_at_frame == frame_index
+            });
+        }
+
+        Ok(())
     }
 
     pub fn visit_dfs<C>(

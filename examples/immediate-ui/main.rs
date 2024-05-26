@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+use std::cell::RefCell;
+
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
@@ -29,6 +31,8 @@ fn main() -> Result<(), String> {
         None,
     );
 
+    let widget_tree_rc: RefCell<UIWidgetTree> = Default::default();
+
     let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,
                       _mouse_state: &MouseState,
@@ -42,7 +46,9 @@ fn main() -> Result<(), String> {
 
         // (Re)create UI widget tree
 
-        let mut widget_tree: UIWidgetTree = Default::default();
+        let mut widget_tree = widget_tree_rc.borrow_mut();
+
+        widget_tree.clear();
 
         widget_tree.push_parent(UIWidget::new(
             "Root__root".to_string(),
