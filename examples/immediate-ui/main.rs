@@ -6,6 +6,7 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
     color,
+    debug::println_indent,
     device::{GameControllerState, KeyboardState, MouseState},
     ui::{
         tree::{
@@ -56,11 +57,11 @@ fn main() -> Result<(), String> {
         "root_child1".to_string(),
         [
             UISizeWithStrictness {
-                size: UISize::Pixels(120),
+                size: UISize::ChildrenSum,
                 strictness: 1.0,
             },
             UISizeWithStrictness {
-                size: UISize::Pixels(200),
+                size: UISize::ChildrenSum,
                 strictness: 1.0,
             },
         ],
@@ -70,11 +71,42 @@ fn main() -> Result<(), String> {
         "root_child1_child1".to_string(),
         [
             UISizeWithStrictness {
-                size: UISize::PercentOfParent(0.5),
+                size: UISize::Pixels(256),
                 strictness: 1.0,
             },
             UISizeWithStrictness {
-                size: UISize::PercentOfParent(1.0),
+                size: UISize::Pixels(512),
+                strictness: 1.0,
+            },
+        ],
+    ));
+
+    widget_tree.pop_current()?;
+    widget_tree.pop_current()?;
+
+    widget_tree.push(UIWidget::new(
+        "root_child2".to_string(),
+        [
+            UISizeWithStrictness {
+                size: UISize::ChildrenSum,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::ChildrenSum,
+                strictness: 1.0,
+            },
+        ],
+    ));
+
+    widget_tree.push(UIWidget::new(
+        "root_child2_child1".to_string(),
+        [
+            UISizeWithStrictness {
+                size: UISize::Pixels(128),
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::Pixels(256),
                 strictness: 1.0,
             },
         ],
@@ -86,20 +118,24 @@ fn main() -> Result<(), String> {
         let context = ui_context_rc.borrow_mut();
 
         context.tree.visit_dfs(
-            &NodeLocalTraversalMethod::PostOrder,
-            &mut |_depth: usize, parent_data, node| {
-                println!(
-                    "Node: {}, parent: {}",
-                    node.data.id,
-                    match parent_data {
-                        Some(data) => {
-                            data.id.to_string()
-                        }
-                        None => {
-                            "None".to_string()
-                        }
-                    },
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |depth: usize, parent_data, node| {
+                println_indent(
+                    depth,
+                    format!(
+                        "{}, parent: {}",
+                        node.data.id,
+                        match parent_data {
+                            Some(data) => {
+                                data.id.to_string()
+                            }
+                            None => {
+                                "None".to_string()
+                            }
+                        },
+                    ),
                 );
+
                 Ok(())
             },
         )?;

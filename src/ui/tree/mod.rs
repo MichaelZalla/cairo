@@ -1,18 +1,15 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::ui::{UI2DAxis, UISize};
+use crate::{
+    debug::println_indent,
+    ui::{UI2DAxis, UISize},
+};
 
 use self::node::{Node, NodeLocalTraversalMethod};
 
 use super::UIWidget;
 
 pub mod node;
-
-fn println_indent(depth: usize, msg: String) {
-    let indent = 2 * (depth + 1);
-
-    println!("{:indent$}{}", ">", msg);
-}
 
 pub struct UIWidgetTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
@@ -33,75 +30,90 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
-        println!("\nPerforming auto-layout pass:");
+        println!("\nAuto-layout pass:\n");
 
         // For each axis...
 
         // 1. Calculate "standalone" sizes.
 
-        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, _parent_data, node| {
-            let widget = &mut node.data;
+        println!(">\n> (Standalone sizes pass...)\n>");
 
-            println_indent(
-                depth,
-                format!("Calculating standalone size for node {}.", widget.id),
-            );
+        self.visit_dfs_mut(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |depth, _parent_data, node| {
+                let widget = &mut node.data;
 
-            for (axis_index, size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
-                let axis = if axis_index == 0 {
-                    UI2DAxis::X
-                } else {
-                    UI2DAxis::Y
-                };
+                for (axis_index, size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
+                    let axis = if axis_index == 0 {
+                        UI2DAxis::X
+                    } else {
+                        UI2DAxis::Y
+                    };
 
-                match size_with_strictness.size {
-                    UISize::Pixels(pixels) => {
-                        println_indent(depth, format!("Pixel size for axis {}: {}", axis, pixels));
-                        widget.computed_size[axis_index] = pixels as f32;
-                    }
-                    UISize::TextContent => match axis {
-                        UI2DAxis::X => {
+                    match size_with_strictness.size {
+                        UISize::Pixels(pixels) => {
                             println_indent(
                                 depth,
-                                "Assuming horizontal text size to be 50.0".to_string(),
+                                format!("{}: Pixel size for axis {}: {}", widget.id, axis, pixels),
                             );
-
-                            widget.computed_size[axis_index] = 50.0;
+                            widget.computed_size[axis_index] = pixels as f32;
                         }
-                        UI2DAxis::Y => {
-                            println_indent(
-                                depth,
-                                "Assuming vertical text size to be 18.0".to_string(),
-                            );
+                        UISize::TextContent => match axis {
+                            UI2DAxis::X => {
+                                println_indent(
+                                    depth,
+                                    format!(
+                                        "{}: Assuming horizontal text size to be 50.0",
+                                        widget.id
+                                    ),
+                                );
 
-                            widget.computed_size[axis_index] = 10.0;
-                        }
-                    },
-                    _ => println_indent(
-                        depth,
-                        format!(
-                            "Widget {} uses {} size for {} axis. Skipping...",
-                            widget.id, size_with_strictness.size, axis
+                                widget.computed_size[axis_index] = 50.0;
+                            }
+                            UI2DAxis::Y => {
+                                println_indent(
+                                    depth,
+                                    format!(
+                                        "{}: Assuming vertical text size to be 18.0",
+                                        widget.id
+                                    ),
+                                );
+
+                                widget.computed_size[axis_index] = 10.0;
+                            }
+                        },
+                        _ => println_indent(
+                            depth,
+                            format!(
+                                "{}: Uses {} size for {} axis. Skipping.",
+                                widget.id, size_with_strictness.size, axis
+                            ),
                         ),
-                    ),
+                    }
                 }
-            }
 
-            Ok(())
-        })?;
+                Ok(())
+            },
+        )?;
 
         // 2. Calculate upward-dependent sizes with a pre-order traversal.
+
+        println!(">\n> (Upward-dependent sizes pass...)\n>");
 
         self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, parent_data, node| {
             let widget = &mut node.data;
 
-            println_indent(
-                depth,
-                format!(
-                    "Calculating upward-dependent size for (child) node {}.",
-                    widget.id,
-                ),
-            );
+            if node.parent.is_none() {
+                println_indent(
+                    depth,
+                    format!(
+                        "{}: Skipping (root node).",
+                        widget.id,
+                    ),
+                );
+                
+                return Ok(());
+            }
 
             for (axis_index, size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
                 let axis = if axis_index == 0 { UI2DAxis::X } else { UI2DAxis::Y };
@@ -113,23 +125,21 @@ impl<'a> UIWidgetTree<'a> {
 
                             match parent_size_for_axis {
                                 UISize::ChildrenSum => {
-                                    println_indent(
-                                        depth,
-                                        format!(
-                                            "Widget {} uses {} size for {} axis, but parent uses downward-dependent {} size for same axis. Skipping...",
-                                            widget.id, size_with_strictness.size, axis,
-                                            parent_size_for_axis
-                                        ),
+                                    panic!(
+                                        "{}: Uses {} size for {} axis, but parent uses downward-dependent {} size for same axis.",
+                                        widget.id, size_with_strictness.size, axis,
+                                        parent_size_for_axis
                                     );
                                 },
-                                UISize::Null => panic!("Parent node has {} size for axis {}!", parent_size_for_axis, axis),
+                                UISize::Null => panic!("{}: Parent node has {} size for axis {}!", widget.id, parent_size_for_axis, axis),
                                 UISize::Pixels(_) | UISize::TextContent | UISize::PercentOfParent(_) => {
                                     widget.computed_size[axis_index] = data.computed_size[axis_index] * percentage;
 
                                     println_indent(
                                         depth,
                                         format!(
-                                            "{} axis: Computed widget size {} as {} percent of parent size {}",
+                                            "{}: ({} axis) Computed size {} as {} percent of parent size {}",
+                                            widget.id,
                                             axis,
                                             widget.computed_size[axis_index], 
                                             percentage * 100.0,
@@ -141,8 +151,8 @@ impl<'a> UIWidgetTree<'a> {
                         }
                         None => {
                             panic!(
-                                "Node uses {} size for {} axis, but node has no parent!",
-                                size_with_strictness.size, axis
+                                "{}: Uses {} size for {} axis, but node has no parent!",
+                                widget.id, size_with_strictness.size, axis
                             );
                         }
                     },
@@ -150,7 +160,7 @@ impl<'a> UIWidgetTree<'a> {
                         println_indent(
                             depth,
                             format!(
-                                "Widget {} uses {} size for {} axis. Skipping...",
+                                "{}: Uses {} size for {} axis. Skipping.",
                                 widget.id, size_with_strictness.size, axis
                             ),
                         );
@@ -163,16 +173,22 @@ impl<'a> UIWidgetTree<'a> {
 
         // 3. Calculate downward-dependent sizes with a post-order traversal.
 
+        println!(">\n> (Downward-dependent sizes pass...)\n>");
+
         self.visit_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, _parent_data, node| {
             let widget = &mut node.data;
 
-            println_indent(
-                depth,
-                format!(
-                    "Calculating downward-dependent size for (parent) node {}.",
-                    widget.id,
-                ),
-            );
+            if node.children.is_empty() {
+                println_indent(
+                    depth,
+                    format!(
+                        "{}: Skipping (leaf node).",
+                        widget.id,
+                    ),
+                );
+                
+                return Ok(());
+            }
 
             for (axis_index, size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
                 let axis = if axis_index == 0 { UI2DAxis::X } else { UI2DAxis::Y };
@@ -194,7 +210,8 @@ impl<'a> UIWidgetTree<'a> {
                         println_indent(
                             depth,
                             format!(
-                                "{} axis: Computed widget size {} as the sum of its children's sizes.",
+                                "{}: ({} axis) Computed widget size {} as the sum of its children's sizes.",
+                                widget.id,
                                 axis,
                                 widget.computed_size[axis_index], 
                             ),
@@ -204,7 +221,7 @@ impl<'a> UIWidgetTree<'a> {
                         println_indent(
                             depth,
                             format!(
-                                "Widget {} uses {} size for {} axis. Skipping...",
+                                "{}: Uses {} size for {} axis. Skipping.",
                                 widget.id, size_with_strictness.size, axis
                             ),
                         );
@@ -217,35 +234,81 @@ impl<'a> UIWidgetTree<'a> {
 
         // 4. Solve any violations (children extending beyond parent) with a pre-order traversal.
 
-        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, _parent_data, node| {
-            let widget = &mut node.data;
+        println!(">\n> (Violations pass...)\n>");
 
-            println_indent(
-                depth,
-                format!(
-                    "Solving child layout violations for (parent) node {}.",
-                    widget.id,
-                ),
-            );
+        self.visit_dfs_mut(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |depth, _parent_data, node| {
+                let widget = &mut node.data;
 
-            Ok(())
-        })?;
+                if node.children.is_empty() {
+                    println_indent(
+                        depth,
+                        format!(
+                            "{}: Skipping (leaf node).",
+                            widget.id,
+                        ),
+                    );
+                    
+                    return Ok(());
+                }
+
+                println_indent(
+                    depth,
+                    format!("{}: Solving child layout violations.", widget.id,),
+                );
+
+                Ok(())
+            },
+        )?;
 
         // 5. Compute the relative positions of each child with a pre-order traversal.
 
-        self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, _parent_data, node| {
-            let widget = &mut node.data;
+        println!(">\n> (Relative positioning pass...)\n>");
 
-            println_indent(
-                depth,
-                format!(
-                    "Computing the relative (in-parent) position of (child) node {}.",
-                    widget.id,
-                ),
-            );
+        self.visit_dfs_mut(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |depth, _parent_data, node| {
+                let widget = &mut node.data;
 
-            Ok(())
-        })
+                println_indent(
+                    depth,
+                    format!("{}: Computing relative (in-parent) position.", widget.id,),
+                );
+
+                Ok(())
+            },
+        )?;
+
+        // Check our results.
+
+        self.debug_computed_sizes()
+    }
+
+    fn debug_computed_sizes(&self) -> Result<(), String> {
+
+        println!("\nResults:\n");
+       
+        self.visit_dfs(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |depth, _parent_data, node| {
+                let widget = &node.data;
+
+                println_indent(
+                    depth,
+                    format!(
+                        "{}: Computed size: {}x{}.",
+                        widget.id, widget.computed_size[0], widget.computed_size[1]
+                    ),
+                );
+
+                Ok(())
+            },
+        )?;
+
+        panic!();
+
+        Ok(())
     }
 
     pub fn visit_dfs<C>(
@@ -256,9 +319,7 @@ impl<'a> UIWidgetTree<'a> {
     where
         C: FnMut(usize, Option<&UIWidget>, &Node<'a, UIWidget>) -> Result<(), String>,
     {
-        self.root
-            .borrow()
-            .visit_dfs(method, 0, None, visit_action)
+        self.root.borrow().visit_dfs(method, 0, None, visit_action)
     }
 
     pub fn visit_dfs_mut<C>(
@@ -292,6 +353,38 @@ impl<'a> UIWidgetTree<'a> {
         }
 
         self.current = Some(new_child_node_rc.clone());
+    }
+
+    pub fn pop_current(&mut self) -> Result<(), String> {
+        let (current_node_rc, parent_node_rc) = {
+            match &self.current {
+                Some(current_node_rc) => {
+                    let current_node = current_node_rc.borrow();
+
+                    match &current_node.parent {
+                        Some(parent_node_rc) => {
+                            (Some(current_node_rc.clone()), Some(parent_node_rc.clone()))
+                        }
+                        None => (Some(current_node_rc.clone()), None),
+                    }
+                }
+                None => (None, None),
+            }
+        };
+
+        match (&current_node_rc, &parent_node_rc) {
+            (Some(_current_node_rc), Some(parent_node_rc)) => {
+                // Set `self.current` to parent.
+
+                self.current = Some(parent_node_rc.clone());
+
+                Ok(())
+            }
+            (Some(_child_node_rc), None) => {
+                Err("Called UIWidgetTree::pop() on the root of the tree!".to_string())
+            }
+            _ => Err("Called UIWidgetTree::pop() on an empty tree!".to_string()),
+        }
     }
 
     pub fn pop(&mut self) -> Option<Rc<RefCell<Node<'a, UIWidget>>>> {
