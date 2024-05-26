@@ -74,7 +74,7 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push_parent(UIWidget::new(
+        widget_tree.push(UIWidget::new(
             "RootChild1Child1__root_child1_child1".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -89,9 +89,7 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.pop_parent()?;
-
-        widget_tree.push_parent(UIWidget::new(
+        widget_tree.push(UIWidget::new(
             "RootChild1Child2__root_child1_child2".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -107,7 +105,8 @@ fn main() -> Result<(), String> {
         ))?;
 
         widget_tree.pop_parent()?;
-        widget_tree.pop_parent()?;
+
+        // `Current` is now back at the root...
 
         widget_tree.push_parent(UIWidget::new(
             "RootChild2__root_child2".to_string(),
@@ -124,8 +123,23 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push_parent(UIWidget::new(
+        widget_tree.push(UIWidget::new(
             "RootChild2Child1__root_child2_child1".to_string(),
+            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            [
+                UISizeWithStrictness {
+                    size: UISize::Pixels(1000),
+                    strictness: 0.0,
+                },
+                UISizeWithStrictness {
+                    size: UISize::Pixels(1000),
+                    strictness: 0.0,
+                },
+            ],
+        ))?;
+
+        widget_tree.push(UIWidget::new(
+            "RootChild2Child2__root_child2_child2".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
@@ -141,20 +155,7 @@ fn main() -> Result<(), String> {
 
         widget_tree.pop_parent()?;
 
-        widget_tree.push_parent(UIWidget::new(
-            "RootChild2Child2__root_child2_child2".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-            ],
-        ))?;
+        // `Current` is now back at the root...
 
         widget_tree.do_autolayout_pass().unwrap();
 

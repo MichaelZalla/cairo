@@ -451,6 +451,34 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     pub fn push_parent(&mut self, widget: UIWidget) -> Result<(), String> {
+        self.push(widget)?;
+
+        debug_assert!(self.current.is_some());
+
+        let new_current;
+
+        {
+            let current_node_rc = self.current.as_ref().unwrap();
+    
+            let current_node = current_node_rc.borrow();
+    
+            if current_node.children.is_empty() {
+                // We just added the root node (and set `self.current`).
+                new_current = self.root.clone();
+            } else {
+                // We just added some other node as a child of `self.current`.
+                let new_child_rc = current_node.children.last().unwrap();
+    
+                new_current = Some(new_child_rc.clone());
+            }
+        }
+
+        self.current = new_current;
+
+        Ok(())
+    }
+
+    pub fn push(&mut self, widget: UIWidget) -> Result<(), String> {
         let new_child_node_rc: Rc<RefCell<Node<'a, UIWidget>>>;
 
         if let Some(current_node_rc) = &self.current {
@@ -482,15 +510,14 @@ impl<'a> UIWidgetTree<'a> {
 
             current_node.children.push(new_child_node_rc.clone());
         } else {
-            assert!(self.root.is_none());
+            debug_assert!(self.root.is_none());
 
             let root_node = Node::<UIWidget>::new(widget);
             new_child_node_rc = Rc::new(RefCell::new(root_node));
 
             self.root = Some(new_child_node_rc.clone());
+            self.current = Some(new_child_node_rc);
         }
-
-        self.current = Some(new_child_node_rc.clone());
 
         Ok(())
     }
