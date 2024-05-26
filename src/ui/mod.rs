@@ -2,11 +2,10 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::vec::vec2::Vec2;
-
 use self::tree::UIWidgetTree;
 
 pub mod tree;
+pub mod widget;
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum UISize {
@@ -60,39 +59,7 @@ impl fmt::Display for UI2DAxis {
     }
 }
 
-const UI_2D_AXIS_COUNT: usize = 2;
-
-// An immediate-mode data structure, doubling as a cache entry for persistent
-// UIWidgets across frames; computed fields from the previous frame as used to
-// interpret user inputs, while computed fields from the current frame are used
-// for widget rendering.
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct UIWidget {
-    pub id: String,
-
-    // Auto-layout inputs
-    pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
-
-    // Auto-layout outputs
-    #[serde(skip)]
-    pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
-
-    #[serde(skip)]
-    pub computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
-
-    #[serde(skip)]
-    pub global_bounds: [Vec2; 2], // On-screen rectangle coordinates, in pixels.
-}
-
-impl UIWidget {
-    pub fn new(id: String, semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT]) -> Self {
-        Self {
-            id,
-            semantic_sizes,
-            ..Default::default()
-        }
-    }
-}
+pub const UI_2D_AXIS_COUNT: usize = 2;
 
 pub struct UIContext<'a> {
     pub tree: UIWidgetTree<'a>,

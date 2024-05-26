@@ -1,14 +1,12 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    animation::lerp,
-    debug::println_indent,
-    ui::{UI2DAxis, UISize}, vec::vec2::Vec2,
+    animation::lerp, buffer::Buffer2D, color::{self, Color}, debug::println_indent, graphics::Graphics, ui::{UI2DAxis, UISize}, vec::vec2::Vec2
 };
 
 use self::node::{Node, NodeLocalTraversalMethod};
 
-use super::UIWidget;
+use super::widget::UIWidget;
 
 pub mod node;
 
@@ -412,6 +410,40 @@ impl<'a> UIWidgetTree<'a> {
         )?;
 
         Ok(())
+    }
+
+    pub fn render(&self, target: &mut Buffer2D) -> Result<(), String> {
+        self.visit_dfs(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |depth, _parent_data, node| {
+                let widget = &node.data;
+
+                let (x, y) = (
+                    widget.global_bounds[0].x as u32,
+                    widget.global_bounds[0].y as u32,
+                );
+
+                let (width, height) = (
+                    widget.computed_size[0] as u32,
+                    widget.computed_size[1] as u32,
+                );
+
+                static COLOR_FOR_DEPTH: [Color; 4] =
+                    [color::YELLOW, color::BLUE, color::RED, color::GREEN];
+
+                Graphics::rectangle(
+                    target,
+                    x,
+                    y,
+                    width,
+                    height,
+                    Some(COLOR_FOR_DEPTH[depth]),
+                    Some(color::BLACK),
+                );
+
+                Ok(())
+            },
+        )
     }
 
     pub fn visit_dfs<C>(

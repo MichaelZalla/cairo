@@ -5,16 +5,16 @@ use std::cell::RefCell;
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
-    color::{self, Color},
+    color,
     debug::println_indent,
     device::{GameControllerState, KeyboardState, MouseState},
-    graphics::Graphics,
     ui::{
         tree::{
             node::{Node, NodeLocalTraversalMethod},
             UIWidgetTree,
         },
-        UIContext, UISize, UISizeWithStrictness, UIWidget,
+        widget::UIWidget,
+        UIContext, UISize, UISizeWithStrictness,
     },
 };
 
@@ -53,6 +53,8 @@ fn main() -> Result<(), String> {
     let root_widget_node = Node::<UIWidget>::new(root_widget);
 
     let mut widget_tree = UIWidgetTree::new(root_widget_node);
+
+    // @TODO(mzalla) Move these push() and pop() calls into the main render loop.
 
     widget_tree.push(UIWidget::new(
         "root_child1".to_string(),
@@ -190,37 +192,7 @@ fn main() -> Result<(), String> {
 
             context.tree.do_autolayout_pass().unwrap();
 
-            static COLOR_FOR_DEPTH: [Color; 4] =
-                [color::YELLOW, color::BLUE, color::RED, color::GREEN];
-
-            context.tree.visit_dfs(
-                &NodeLocalTraversalMethod::PreOrder,
-                &mut |depth, _parent_data, node| {
-                    let widget = &node.data;
-
-                    let (x, y) = (
-                        widget.global_bounds[0].x as u32,
-                        widget.global_bounds[0].y as u32,
-                    );
-
-                    let (width, height) = (
-                        widget.computed_size[0] as u32,
-                        widget.computed_size[1] as u32,
-                    );
-
-                    Graphics::rectangle(
-                        &mut framebuffer,
-                        x,
-                        y,
-                        width,
-                        height,
-                        Some(COLOR_FOR_DEPTH[depth]),
-                        Some(color::BLACK),
-                    );
-
-                    Ok(())
-                },
-            )?;
+            context.tree.render(&mut framebuffer).unwrap();
         }
 
         return Ok(framebuffer.get_all().clone());
