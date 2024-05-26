@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    animation::lerp, buffer::Buffer2D, debug::println_indent, debug_print, ui::{UI2DAxis, UISize}, vec::vec2::Vec2
+    animation::lerp, buffer::Buffer2D, debug::println_indent, debug_print, ui::{widget::ScreenExtent, UI2DAxis, UISize},
 };
 
 use self::node::{Node, NodeLocalTraversalMethod};
@@ -336,24 +336,21 @@ impl<'a> UIWidgetTree<'a> {
             &mut |_depth, parent_data, node| {
                 let widget = &mut node.data;
 
-                let mut top_left = Vec2 {
-                    x: widget.computed_relative_position[0],
-                    y: widget.computed_relative_position[1],
-                    z: 0.0,
+                let mut global_bounds = ScreenExtent {
+                    left: widget.computed_relative_position[0] as u32,
+                    top: widget.computed_relative_position[1] as u32,
+                    ..Default::default()
                 };
 
-                if let Some(data) = parent_data {
-                    top_left.x += data.global_bounds[0].x;
-                    top_left.y += data.global_bounds[0].y;
+                if let Some(parent) = parent_data {
+                    global_bounds.left += parent.global_bounds.left;
+                    global_bounds.top += parent.global_bounds.top;
                 }
 
-                let bottom_right = Vec2 {
-                    x: top_left.x + widget.computed_size[0],
-                    y: top_left.y + widget.computed_size[1],
-                    z: 0.0,
-                };
+                global_bounds.right = global_bounds.left + widget.computed_size[0] as u32;
+                global_bounds.bottom = global_bounds.top + widget.computed_size[1] as u32;
 
-                widget.global_bounds = [top_left, bottom_right];
+                widget.global_bounds = global_bounds;
 
                 if node.children.is_empty() {
                     return Ok(());
@@ -400,7 +397,7 @@ impl<'a> UIWidgetTree<'a> {
                     depth,
                     format!(
                         "{}: Relative position: ({},{}) | Global position: ({},{}) | Computed size: {}x{}.",
-                        widget.id, rel_position[0], rel_position[1], global_position[0].x, global_position[0].y, size[0], size[1],
+                        widget.id, rel_position[0], rel_position[1], global_position.left, global_position.top, size[0], size[1],
                     ),
                 );
 

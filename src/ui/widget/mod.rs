@@ -9,7 +9,6 @@ use crate::{
     color::{self, Color},
     debug_print,
     graphics::Graphics,
-    vec::vec2::Vec2,
 };
 
 use self::key::UIKey;
@@ -24,6 +23,14 @@ bitmask! {
         DrawFill = (1 << 0),
         DrawBorder = (1 << 1),
     }
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub struct ScreenExtent {
+    pub left: u32,
+    pub right: u32,
+    pub top: u32,
+    pub bottom: u32,
 }
 
 // An immediate-mode data structure, doubling as a cache entry for persistent
@@ -41,7 +48,7 @@ pub struct UIWidget {
     #[serde(skip)]
     pub computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
     #[serde(skip)]
-    pub global_bounds: [Vec2; 2], // On-screen rectangle coordinates, in pixels.
+    pub global_bounds: ScreenExtent, // On-screen rectangle coordinates, in pixels.
     #[serde(skip)]
     hot_transition: f32,
     #[serde(skip)]
@@ -81,14 +88,12 @@ impl UIWidget {
 
         debug_print!("Created {}", widget);
 
+        #[allow(clippy::let_and_return)]
         widget
     }
 
     pub fn get_pixel_coordinates(&self) -> (u32, u32) {
-        (
-            self.global_bounds[0].x as u32,
-            self.global_bounds[0].y as u32,
-        )
+        (self.global_bounds.left, self.global_bounds.top)
     }
 
     pub fn get_computed_pixel_size(&self) -> (u32, u32) {
