@@ -86,8 +86,10 @@ impl UIBox {
                 fill_color = Some(color);
             }
 
-            if let Some(&color) = styles.border_color.peek() {
-                border_color = Some(color);
+            if features.contains(UIBoxFeatureFlag::DrawBorder) {
+                if let Some(&color) = styles.border_color.peek() {
+                    border_color = Some(color);
+                }
             }
         });
 
@@ -132,13 +134,7 @@ impl UIBox {
             self.styles.fill_color.as_ref()
         };
 
-        let border_color = if self.active {
-            Some(&color::YELLOW)
-        } else if self.hot {
-            Some(&color::RED)
-        } else {
-            self.styles.border_color.as_ref()
-        };
+        let border_color = self.styles.border_color.as_ref();
 
         Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
 
