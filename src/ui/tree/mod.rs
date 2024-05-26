@@ -450,34 +450,6 @@ impl<'a> UIWidgetTree<'a> {
         }
     }
 
-    pub fn push_parent(&mut self, widget: UIWidget) -> Result<(), String> {
-        self.push(widget)?;
-
-        debug_assert!(self.current.is_some());
-
-        let new_current;
-
-        {
-            let current_node_rc = self.current.as_ref().unwrap();
-    
-            let current_node = current_node_rc.borrow();
-    
-            if current_node.children.is_empty() {
-                // We just added the root node (and set `self.current`).
-                new_current = self.root.clone();
-            } else {
-                // We just added some other node as a child of `self.current`.
-                let new_child_rc = current_node.children.last().unwrap();
-    
-                new_current = Some(new_child_rc.clone());
-            }
-        }
-
-        self.current = new_current;
-
-        Ok(())
-    }
-
     pub fn push(&mut self, widget: UIWidget) -> Result<(), String> {
         let new_child_node_rc: Rc<RefCell<Node<'a, UIWidget>>>;
 
@@ -521,6 +493,34 @@ impl<'a> UIWidgetTree<'a> {
 
         Ok(())
     }
+    
+    pub fn push_parent(&mut self, widget: UIWidget) -> Result<(), String> {
+        self.push(widget)?;
+
+        debug_assert!(self.current.is_some());
+
+        let new_current;
+
+        {
+            let current_node_rc = self.current.as_ref().unwrap();
+    
+            let current_node = current_node_rc.borrow();
+    
+            if current_node.children.is_empty() {
+                // We just added the root node (and set `self.current`).
+                new_current = self.root.clone();
+            } else {
+                // We just added some other node as a child of `self.current`.
+                let new_child_rc = current_node.children.last().unwrap();
+    
+                new_current = Some(new_child_rc.clone());
+            }
+        }
+
+        self.current = new_current;
+
+        Ok(())
+    }
 
     pub fn pop_parent(&mut self) -> Result<(), String> {
         let (current_node_rc, parent_node_rc) = {
@@ -552,58 +552,6 @@ impl<'a> UIWidgetTree<'a> {
             }
             _ => Err("Called UIWidgetTree::pop_parent() on an empty tree!".to_string()),
         }
-    }
-
-    pub fn pop(&mut self) -> Option<Rc<RefCell<Node<'a, UIWidget>>>> {
-        let (child_node_rc, parent_node_rc) = {
-            match &self.current {
-                Some(current_node_rc) => {
-                    let current_node = current_node_rc.borrow();
-
-                    match &current_node.parent {
-                        Some(parent_node_rc) => {
-                            (Some(current_node_rc.clone()), Some(parent_node_rc.clone()))
-                        }
-                        None => (Some(current_node_rc.clone()), None),
-                    }
-                }
-                None => (None, None),
-            }
-        };
-
-        let removed_child_node_rc = match (&child_node_rc, &parent_node_rc) {
-            (Some(child_node_rc), Some(parent_node_rc)) => {
-                let child_node = (*child_node_rc).borrow_mut();
-                let mut parent_node = (*parent_node_rc).borrow_mut();
-
-                // Remove child from parent.
-
-                if let Some(child_index) = get_child_index(&parent_node, &child_node) {
-                    let removed_child_node = parent_node.children.swap_remove(child_index);
-
-                    removed_child_node.borrow_mut().parent = None;
-                    removed_child_node.borrow_mut().children = vec![];
-
-                    removed_child_node
-                } else {
-                    panic!("Failed to find child index!");
-                }
-            }
-            (Some(_child_node_rc), None) => {
-                panic!("Called UIWidgetTree::pop() on the root of the tree!");
-            }
-            _ => {
-                panic!("Called UIWidgetTree::pop() on an empty tree!");
-            }
-        };
-
-        // Set `self.current` to parent.
-
-        self.current = parent_node_rc.clone();
-
-        // Return child.
-
-        Some(removed_child_node_rc)
     }
 }
 
