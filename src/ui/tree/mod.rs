@@ -9,7 +9,7 @@ use crate::{
     visit_dfs, visit_dfs_mut,
 };
 
-use super::ui_box::{self, key::UIKey, UIBox};
+use super::{context::GLOBAL_UI_CONTEXT, ui_box::{self, key::UIKey, UIBox}};
 
 use self::node::{Node, NodeLocalTraversalMethod};
 
@@ -20,7 +20,6 @@ pub mod traversal;
 pub struct UIBoxTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIBox>>>>,
     pub root: Option<Rc<RefCell<Node<'a, UIBox>>>>,
-    cache: RefCell<HashMap<UIKey, UIBox>>,
 }
 
 impl<'a> UIBoxTree<'a> {
@@ -31,7 +30,6 @@ impl<'a> UIBoxTree<'a> {
         Self {
             current: Some(root_node_rc.clone()),
             root: Some(root_node_rc),
-            cache: Default::default(),
         }
     }
 
@@ -433,25 +431,9 @@ impl<'a> UIBoxTree<'a> {
     }
 
     pub fn render(&mut self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
-        self.visit_root_dfs_mut(
-            &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, _parent_data, node| {
-                let mut _cache = self.cache.borrow_mut();
-
-                let _ui_box = &mut node.data;
-
-                // 1. Apply the latest user inputs, based on this node's
-                //    previous layout (from the previous frame).
-
-                Ok(())
-            },
-        )?;
-
         self.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, node| {
-                let mut cache = self.cache.borrow_mut();
-
                 let ui_box = &node.data;
 
                 // 2. Render this node for the current frame.
@@ -460,7 +442,11 @@ impl<'a> UIBoxTree<'a> {
 
                 // 3. Update this node's cache entry (prepare for rendering the next frame).
 
-                update_cache_entry(&mut cache, ui_box, frame_index);
+                GLOBAL_UI_CONTEXT.with(|ctx| {
+                    let mut cache = ctx.cache.borrow_mut();
+
+                    update_cache_entry(&mut cache, ui_box, frame_index);
+                });
 
                 // Return the rendering result.
 
@@ -470,11 +456,11 @@ impl<'a> UIBoxTree<'a> {
 
         // Prune old entries from our UI cache.
 
-        {
-            let mut cache = self.cache.borrow_mut();
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let mut cache = ctx.cache.borrow_mut();
 
             cache.retain(|_key, ui_box: &mut UIBox| ui_box.last_read_at_frame == frame_index);
-        }
+        });
 
         Ok(())
     }
@@ -588,11 +574,12 @@ fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_i
     if cache.contains_key(&ui_box.key) {
         let cached_ui_box = cache.get_mut(&ui_box.key).unwrap();
 
-        // cached_ui_box.computed_size = ui_box.computed_size;
-        // cached_ui_box.computed_relative_position = ui_box.computed_relative_position;
         cached_ui_box.global_bounds = ui_box.global_bounds;
 
+        cached_ui_box.hot = ui_box.hot;
         cached_ui_box.hot_transition = ui_box.hot_transition;
+
+        cached_ui_box.active = ui_box.active;
         cached_ui_box.active_transition = ui_box.active_transition;
 
         cached_ui_box.last_read_at_frame = frame_index;

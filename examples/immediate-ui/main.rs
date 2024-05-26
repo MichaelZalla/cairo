@@ -31,20 +31,15 @@ fn main() -> Result<(), String> {
     );
 
     let mut update = |_app: &mut App,
-                      _keyboard_state: &KeyboardState,
-                      _mouse_state: &MouseState,
-                      _game_controller_state: &GameControllerState|
-     -> Result<(), String> { Ok(()) };
-
-    let mut render = |frame_index: u32| -> Result<Vec<u32>, String> {
-        let fill_value = color::BLACK.to_u32();
-
-        framebuffer.clear(Some(fill_value));
-
+                      keyboard_state: &KeyboardState,
+                      mouse_state: &MouseState,
+                      game_controller_state: &GameControllerState|
+     -> Result<(), String> {
         // Recreate the UI tree.
+        let mut result = Ok(());
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            ctx.fill_color(color::BLUE, || {
+            result = ctx.fill_color(color::BLUE, || {
                 ctx.border_color(color::YELLOW, || {
                     let tree = &mut ctx.tree.borrow_mut();
 
@@ -63,6 +58,9 @@ fn main() -> Result<(), String> {
                                 strictness: 1.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.push_parent(UIBox::new(
@@ -78,6 +76,9 @@ fn main() -> Result<(), String> {
                                 strictness: 1.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -93,6 +94,9 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -108,6 +112,9 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.pop_parent()?;
@@ -127,6 +134,9 @@ fn main() -> Result<(), String> {
                                 strictness: 1.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -142,6 +152,9 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.push(UIBox::new(
@@ -157,6 +170,9 @@ fn main() -> Result<(), String> {
                                 strictness: 0.0,
                             },
                         ],
+                        keyboard_state,
+                        mouse_state,
+                        game_controller_state,
                     ))?;
 
                     tree.pop_parent()?;
@@ -165,9 +181,16 @@ fn main() -> Result<(), String> {
 
                     tree.do_autolayout_pass()
                 })
-            })
-            .unwrap();
+            });
         });
+
+        result
+    };
+
+    let mut render = |frame_index: u32| -> Result<Vec<u32>, String> {
+        let fill_value = color::BLACK.to_u32();
+
+        framebuffer.clear(Some(fill_value));
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let tree = &mut ctx.tree.borrow_mut();

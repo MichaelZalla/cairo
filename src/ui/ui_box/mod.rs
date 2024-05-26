@@ -4,9 +4,12 @@ use serde::{Deserialize, Serialize};
 
 use bitmask::bitmask;
 
+use sdl2::mouse::MouseButton;
+
 use crate::{
     buffer::Buffer2D,
-    debug_print,
+    color, debug_print,
+    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
     graphics::Graphics,
     ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
 };
@@ -43,7 +46,11 @@ pub struct UIBox {
     #[serde(skip)]
     pub global_bounds: ScreenExtent, // On-screen rectangle coordinates, in pixels.
     #[serde(skip)]
+    pub hot: bool,
+    #[serde(skip)]
     pub hot_transition: f32,
+    #[serde(skip)]
+    pub active: bool,
     #[serde(skip)]
     pub active_transition: f32,
     #[serde(skip)]
@@ -55,6 +62,9 @@ impl UIBox {
         mut id: String,
         features: UIBoxFeatureMask,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
+        _keyboard_state: &KeyboardState,
+        mouse_state: &MouseState,
+        _game_controller_state: &GameControllerState,
     ) -> Self {
         let id_split_str = id.split("__").collect::<Vec<&str>>();
 
@@ -70,6 +80,8 @@ impl UIBox {
 
             UIKey::from_string(id_split_strings[1].to_string())
         };
+
+        // Styles may have changed after the previous frame was rendered.
 
         let (mut fill_color, mut border_color) = (None, None);
 
@@ -90,13 +102,71 @@ impl UIBox {
             border_color,
         };
 
-        let ui_box = Self {
+        let mut ui_box = Self {
             id,
             key,
             features,
             semantic_sizes,
             styles,
             ..Default::default()
+        };
+
+        // Apply the latest user inputs, based on this node's previous layout
+        // (from the previous frame).
+
+        ui_box.hot = if !ui_box.key.is_null() {
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let cache = ctx.cache.borrow();
+
+                if let Some(ui_box_previous_frame) = cache.get(&ui_box.key) {
+                    // Check if our global mouse coordinates overlap this node's bounds.
+
+                    ui_box_previous_frame
+                        .global_bounds
+                        .contains(mouse_state.position.0 as u32, mouse_state.position.1 as u32)
+                } else {
+                    // We weren't rendered in previous frames, so we can't be hot yet.
+
+                    false
+                }
+            })
+        } else {
+            // This node has no key (e.g., spacer, etc). Can't be hot.
+
+            false
+        };
+
+        ui_box.active = if !ui_box.key.is_null() {
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let cache = ctx.cache.borrow();
+
+                if let Some(ui_box_previous_frame) = cache.get(&ui_box.key) {
+                    if ui_box_previous_frame.active {
+                        mouse_state.buttons_down.contains(&MouseButton::Left)
+                    } else if ui_box.hot {
+                        if let Some(event) = mouse_state.button_event {
+                            matches!(
+                                (event.button, event.kind),
+                                (MouseButton::Left, MouseEventKind::Down)
+                            )
+                        } else {
+                            false
+                        }
+                    } else {
+                        // We weren't previously active, and we aren't hot.
+
+                        false
+                    }
+                } else {
+                    // We weren't rendered in previous frames, so we can't be active yet.
+
+                    false
+                }
+            })
+        } else {
+            // This node has no key (e.g., spacer, etc). Can't be active.
+
+            false
         };
 
         debug_print!("Created {}", ui_box);
@@ -118,15 +188,23 @@ impl UIBox {
 
         let (width, height) = self.get_computed_pixel_size();
 
-        Graphics::rectangle(
-            target,
-            x,
-            y,
-            width,
-            height,
-            self.styles.fill_color.as_ref(),
-            self.styles.border_color.as_ref(),
-        );
+        let fill_color = if self.active {
+            Some(&color::YELLOW)
+        } else if self.hot {
+            Some(&color::RED)
+        } else {
+            self.styles.fill_color.as_ref()
+        };
+
+        let border_color = if self.active {
+            Some(&color::YELLOW)
+        } else if self.hot {
+            Some(&color::RED)
+        } else {
+            self.styles.border_color.as_ref()
+        };
+
+        Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
 
         Ok(())
     }

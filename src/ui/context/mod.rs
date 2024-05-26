@@ -1,10 +1,13 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
 use crate::color::Color;
 
-use super::tree::UIBoxTree;
+use super::{
+    tree::UIBoxTree,
+    ui_box::{key::UIKey, UIBox},
+};
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxStyleStack<T> {
@@ -40,6 +43,7 @@ pub struct UIContext<'a> {
     pub tree: RefCell<UIBoxTree<'a>>,
     pub dropdown_menus: RefCell<UIBoxTree<'a>>,
     pub tooltips: RefCell<UIBoxTree<'a>>,
+    pub cache: RefCell<HashMap<UIKey, UIBox>>,
 }
 
 macro_rules! with_style {
