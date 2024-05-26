@@ -1,8 +1,21 @@
+use core::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::vec::vec2::Vec2;
 
 use super::{UISizeWithStrictness, UI_2D_AXIS_COUNT};
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct UIKey {
+    hash: String,
+}
+
+impl fmt::Display for UIKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "UIKey(hash=\"{}\")", self.hash)
+    }
+}
 
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIWidgets across frames; computed fields from the previous frame as used to
@@ -11,27 +24,51 @@ use super::{UISizeWithStrictness, UI_2D_AXIS_COUNT};
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct UIWidget {
     pub id: String,
-
-    // Auto-layout inputs
+    pub key: UIKey,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
-
-    // Auto-layout outputs
     #[serde(skip)]
     pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
-
     #[serde(skip)]
     pub computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
-
     #[serde(skip)]
     pub global_bounds: [Vec2; 2], // On-screen rectangle coordinates, in pixels.
 }
 
 impl UIWidget {
-    pub fn new(id: String, semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT]) -> Self {
-        Self {
+    pub fn new(mut id: String, semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT]) -> Self {
+        let id_split_str = id.split("__").collect::<Vec<&str>>();
+
+        let id_split_strings = id_split_str
+            .iter()
+            .map(|s| String::from(*s))
+            .collect::<Vec<String>>();
+
+        let hash;
+
+        if id_split_strings.len() == 1 {
+            hash = "".to_string()
+        } else {
+            id = id_split_strings[0].to_string();
+            hash = id_split_strings[1].to_string();
+        };
+
+        let key = UIKey { hash };
+
+        let widget = Self {
             id,
+            key,
             semantic_sizes,
             ..Default::default()
-        }
+        };
+
+        println!("Created {}", widget);
+
+        widget
+    }
+}
+
+impl fmt::Display for UIWidget {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "UIWidget(id=\"{}\", hash={})", self.id, self.key)
     }
 }

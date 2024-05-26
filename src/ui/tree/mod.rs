@@ -1,7 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    animation::lerp, buffer::Buffer2D, color::{self, Color}, debug::println_indent, graphics::Graphics, ui::{UI2DAxis, UISize}, vec::vec2::Vec2
+    animation::lerp,
+    buffer::Buffer2D,
+    color::{self, Color},
+    debug::println_indent,
+    graphics::Graphics,
+    ui::{UI2DAxis, UISize},
+    vec::vec2::Vec2,
 };
 
 use self::node::{Node, NodeLocalTraversalMethod};
@@ -353,16 +359,14 @@ impl<'a> UIWidgetTree<'a> {
                     z: 0.0,
                 };
 
-                widget.global_bounds = [
-                    top_left,
-                    bottom_right,
-                ];
+                widget.global_bounds = [top_left, bottom_right];
 
                 if node.children.is_empty() {
                     return Ok(());
                 }
 
-                for (axis_index, _size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
+                for (axis_index, _size_with_strictness) in widget.semantic_sizes.iter().enumerate()
+                {
                     let mut cursor = 0.0;
 
                     for child_node_rc in &node.children {
@@ -394,14 +398,15 @@ impl<'a> UIWidgetTree<'a> {
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
 
-                let position = widget.computed_relative_position;
+                let rel_position = widget.computed_relative_position;
+                let global_position = widget.global_bounds;
                 let size = widget.computed_size;
 
                 println_indent(
                     depth,
                     format!(
-                        "{}: Relative position: ({},{}) | Computed size: {}x{}.",
-                        widget.id, position[0], position[1], size[0], size[1],
+                        "{}: Relative position: ({},{}) | Global position: ({},{}) | Computed size: {}x{}.",
+                        widget.id, rel_position[0], rel_position[1], global_position[0].x, global_position[0].y, size[0], size[1],
                     ),
                 );
 

@@ -37,7 +37,7 @@ fn main() -> Result<(), String> {
     // UI widget tree
 
     let root_widget = UIWidget::new(
-        "root".to_string(),
+        "Root__root".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(512),
@@ -57,7 +57,7 @@ fn main() -> Result<(), String> {
     // @TODO(mzalla) Move these push() and pop() calls into the main render loop.
 
     widget_tree.push(UIWidget::new(
-        "root_child1".to_string(),
+        "RootChild1__root_child1".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(128),
@@ -71,7 +71,7 @@ fn main() -> Result<(), String> {
     ))?;
 
     widget_tree.push(UIWidget::new(
-        "root_child1_child1".to_string(),
+        "RootChild1Child1__root_child1_child1".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
@@ -87,7 +87,7 @@ fn main() -> Result<(), String> {
     widget_tree.pop_current()?;
 
     widget_tree.push(UIWidget::new(
-        "root_child1_child2".to_string(),
+        "RootChild1Child2__root_child1_child2".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
@@ -104,7 +104,7 @@ fn main() -> Result<(), String> {
     widget_tree.pop_current()?;
 
     widget_tree.push(UIWidget::new(
-        "root_child2".to_string(),
+        "RootChild2__root_child2".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(128),
@@ -118,7 +118,7 @@ fn main() -> Result<(), String> {
     ))?;
 
     widget_tree.push(UIWidget::new(
-        "root_child2_child1".to_string(),
+        "RootChild2Child1__root_child2_child1".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
@@ -134,7 +134,7 @@ fn main() -> Result<(), String> {
     widget_tree.pop_current()?;
 
     widget_tree.push(UIWidget::new(
-        "root_child2_child2".to_string(),
+        "RootChild2Child2__root_child2_child2".to_string(),
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
