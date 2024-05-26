@@ -22,6 +22,8 @@ bitmask! {
     pub mask UIBoxFeatureMask: u32 where flags UIBoxFeatureFlag {
         DrawFill = (1 << 0),
         DrawBorder = (1 << 1),
+        Hoverable = (1 << 2),
+        Clickable = (1 << 3),
     }
 }
 

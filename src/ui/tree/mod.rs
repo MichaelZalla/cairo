@@ -7,7 +7,11 @@ use crate::{
     debug::println_indent,
     debug_print,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
-    ui::{extent::ScreenExtent, ui_box::UILayoutDirection, UI2DAxis, UISize},
+    ui::{
+        extent::ScreenExtent,
+        ui_box::{UIBoxFeatureFlag, UILayoutDirection},
+        UI2DAxis, UISize,
+    },
     visit_dfs, visit_dfs_mut,
 };
 
@@ -71,7 +75,9 @@ impl<'a> UIBoxTree<'a> {
                 // Apply the latest user inputs, based on this node's previous layout
                 // (from the previous frame).
 
-                ui_box.hot = if !ui_box.key.is_null() {
+                ui_box.hot = if ui_box.features.contains(UIBoxFeatureFlag::Hoverable)
+                    && !ui_box.key.is_null()
+                {
                     GLOBAL_UI_CONTEXT.with(|ctx| {
                         let cache = ctx.cache.borrow();
 
@@ -94,7 +100,9 @@ impl<'a> UIBoxTree<'a> {
                     false
                 };
 
-                ui_box.active = if !ui_box.key.is_null() {
+                ui_box.active = if ui_box.features.contains(UIBoxFeatureFlag::Clickable)
+                    && !ui_box.key.is_null()
+                {
                     GLOBAL_UI_CONTEXT.with(|ctx| {
                         let cache = ctx.cache.borrow();
 
