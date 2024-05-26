@@ -18,6 +18,22 @@ pub enum UISize {
     ChildrenSum,
 }
 
+impl fmt::Display for UISize {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                UISize::Null => "Null",
+                UISize::Pixels(_) => "Pixels",
+                UISize::TextContent => "TextContent",
+                UISize::PercentOfParent(_) => "PercentOfParent",
+                UISize::ChildrenSum => "ChildrenSum",
+            }
+        )
+    }
+}
+
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct UISizeWithStrictness {
     pub size: UISize,
@@ -35,7 +51,7 @@ impl fmt::Display for UI2DAxis {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "UI2DAxis-{}",
+            "{}",
             match self {
                 UI2DAxis::X => "X",
                 UI2DAxis::Y => "Y",

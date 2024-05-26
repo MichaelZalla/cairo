@@ -8,7 +8,10 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     ui::{
-        tree::{node::Node, UIWidgetTree},
+        tree::{
+            node::{Node, NodeLocalTraversalMethod},
+            UIWidgetTree,
+        },
         UIContext, UISize, UISizeWithStrictness, UIWidget,
     },
 };
@@ -35,11 +38,11 @@ fn main() -> Result<(), String> {
         "root".to_string(),
         [
             UISizeWithStrictness {
-                size: UISize::Pixels(window_info.window_resolution.width),
+                size: UISize::ChildrenSum,
                 strictness: 1.0,
             },
             UISizeWithStrictness {
-                size: UISize::Pixels(window_info.window_resolution.height),
+                size: UISize::ChildrenSum,
                 strictness: 1.0,
             },
         ],
@@ -67,17 +70,40 @@ fn main() -> Result<(), String> {
         "root_child1_child1".to_string(),
         [
             UISizeWithStrictness {
-                size: UISize::Pixels(80),
+                size: UISize::PercentOfParent(0.5),
                 strictness: 1.0,
             },
             UISizeWithStrictness {
-                size: UISize::Pixels(50),
+                size: UISize::PercentOfParent(1.0),
                 strictness: 1.0,
             },
         ],
     ));
 
     let ui_context_rc = RefCell::new(UIContext { tree: widget_tree });
+
+    {
+        let context = ui_context_rc.borrow_mut();
+
+        context.tree.visit_dfs(
+            &NodeLocalTraversalMethod::PostOrder,
+            &mut |_depth: usize, parent_data, node| {
+                println!(
+                    "Node: {}, parent: {}",
+                    node.data.id,
+                    match parent_data {
+                        Some(data) => {
+                            data.id.to_string()
+                        }
+                        None => {
+                            "None".to_string()
+                        }
+                    },
+                );
+                Ok(())
+            },
+        )?;
+    }
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,

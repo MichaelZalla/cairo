@@ -27,23 +27,63 @@ where
         }
     }
 
+    pub fn visit_dfs<C>(
+        &self,
+        method: &NodeLocalTraversalMethod,
+        current_depth: usize,
+        parent_data: Option<&T>,
+        visit_action: &mut C,
+    ) -> Result<(), String>
+    where
+        C: FnMut(usize, Option<&T>, &Self) -> Result<(), String>,
+    {
+        match method {
+            NodeLocalTraversalMethod::PreOrder => {
+                visit_action(current_depth, parent_data, self)?;
+
+                for child_rc in &self.children {
+                    let child = (*child_rc).borrow();
+
+                    child.visit_dfs(method, current_depth + 1, Some(&self.data), visit_action)?;
+                }
+
+                Ok(())
+            }
+            NodeLocalTraversalMethod::PostOrder => {
+                for child_rc in &self.children {
+                    let child = (*child_rc).borrow();
+
+                    child.visit_dfs(method, current_depth + 1, Some(&self.data), visit_action)?;
+                }
+
+                visit_action(current_depth, parent_data, self)
+            }
+        }
+    }
+
     pub fn visit_dfs_mut<C>(
         &mut self,
         method: &NodeLocalTraversalMethod,
         current_depth: usize,
+        parent_data: Option<&T>,
         visit_action: &mut C,
     ) -> Result<(), String>
     where
-        C: FnMut(usize, &mut Self) -> Result<(), String>,
+        C: FnMut(usize, Option<&T>, &mut Self) -> Result<(), String>,
     {
         match method {
             NodeLocalTraversalMethod::PreOrder => {
-                visit_action(current_depth, self)?;
+                visit_action(current_depth, parent_data, self)?;
 
                 for child_rc in &mut self.children {
                     let mut child = (*child_rc).borrow_mut();
 
-                    child.visit_dfs_mut(method, current_depth + 1, visit_action)?;
+                    child.visit_dfs_mut(
+                        method,
+                        current_depth + 1,
+                        Some(&self.data),
+                        visit_action,
+                    )?;
                 }
 
                 Ok(())
@@ -52,10 +92,15 @@ where
                 for child_rc in &mut self.children {
                     let mut child = (*child_rc).borrow_mut();
 
-                    child.visit_dfs_mut(method, current_depth + 1, visit_action)?;
+                    child.visit_dfs_mut(
+                        method,
+                        current_depth + 1,
+                        Some(&self.data),
+                        visit_action,
+                    )?;
                 }
 
-                visit_action(current_depth, self)
+                visit_action(current_depth, parent_data, self)
             }
         }
     }
