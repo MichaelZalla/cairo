@@ -442,30 +442,19 @@ impl<'a> UIBoxTree<'a> {
             &mut |depth, _parent_data, node| {
                 let ui_box = &node.data;
 
-                let mut cache = self.cache.borrow_mut();
-
                 let render_result = ui_box.render(depth, frame_index, target);
 
                 // Update this node's entry in our persistent cache.
 
-                if cache.contains_key(&ui_box.key) {
-                    let cached_ui_box = cache.get_mut(&ui_box.key).unwrap();
+                let mut cache = self.cache.borrow_mut();
 
-                    // cached_ui_box.computed_size = ui_box.computed_size;
-                    // cached_ui_box.computed_relative_position = ui_box.computed_relative_position;
-                    cached_ui_box.global_bounds = ui_box.global_bounds;
-
-                    cached_ui_box.hot_transition = ui_box.hot_transition;
-                    cached_ui_box.active_transition = ui_box.active_transition;
-
-                    cached_ui_box.last_read_at_frame = frame_index;
-                } else {
-                    cache.insert(ui_box.key.clone(), ui_box.clone());
-                }
+                update_cache_entry(&mut cache, ui_box, frame_index);
 
                 render_result
             },
         )?;
+
+        // Prune old entries from our UI cache.
 
         {
             let mut cache = self.cache.borrow_mut();
@@ -578,5 +567,22 @@ impl<'a> UIBoxTree<'a> {
             }
             _ => Err("Called UIBoxTree::pop_parent() on an empty tree!".to_string()),
         }
+    }
+}
+
+fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_index: u32) {
+    if cache.contains_key(&ui_box.key) {
+        let cached_ui_box = cache.get_mut(&ui_box.key).unwrap();
+
+        // cached_ui_box.computed_size = ui_box.computed_size;
+        // cached_ui_box.computed_relative_position = ui_box.computed_relative_position;
+        cached_ui_box.global_bounds = ui_box.global_bounds;
+
+        cached_ui_box.hot_transition = ui_box.hot_transition;
+        cached_ui_box.active_transition = ui_box.active_transition;
+
+        cached_ui_box.last_read_at_frame = frame_index;
+    } else if !ui_box.key.is_null() {
+        cache.insert(ui_box.key.clone(), ui_box.clone());
     }
 }

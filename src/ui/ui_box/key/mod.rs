@@ -25,4 +25,8 @@ impl UIKey {
     pub fn from_string(id: String) -> Self {
         Self { hash: Some(id) }
     }
+
+    pub fn is_null(&self) -> bool {
+        self.hash.is_none()
+    }
 }
