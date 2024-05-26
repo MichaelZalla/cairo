@@ -198,7 +198,7 @@ fn main() -> Result<(), String> {
                     })?;
 
                     ctx.fill_color(color::SKY_BOX, || {
-                        tree.push(UIBox::new(
+                        tree.push_parent(UIBox::new(
                             "RootChild2Child2__root_child2_child2".to_string(),
                             UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable,
                             UILayoutDirection::TopToBottom,
@@ -215,6 +215,38 @@ fn main() -> Result<(), String> {
                         ))
                     })?;
 
+                    ctx.fill_color(color::BLACK, || {
+                        ctx.border_color(color::WHITE, || {
+                            let child_count = 8_usize;
+
+                            for i in 0..child_count {
+                                let node = UIBox::new(
+                                    format!("RootChild2Child2__root_child2_child2_child{}", i),
+                                    UIBoxFeatureFlag::DrawFill
+                                        | UIBoxFeatureFlag::DrawBorder
+                                        | UIBoxFeatureFlag::Hoverable
+                                        | UIBoxFeatureFlag::Clickable,
+                                    UILayoutDirection::TopToBottom,
+                                    [
+                                        UISizeWithStrictness {
+                                            size: UISize::PercentOfParent(1.0),
+                                            strictness: 0.0,
+                                        },
+                                        UISizeWithStrictness {
+                                            size: UISize::PercentOfParent(1.0),
+                                            strictness: 0.0,
+                                        },
+                                    ],
+                                );
+
+                                tree.push(node)?;
+                            }
+
+                            Ok(())
+                        })
+                    })?;
+
+                    tree.pop_parent()?;
                     tree.pop_parent()?;
 
                     // `Current` is now back at the root...
