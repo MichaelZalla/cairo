@@ -6,9 +6,9 @@ use bitmask::bitmask;
 
 use crate::{
     buffer::Buffer2D,
-    color::{self, Color},
     debug_print,
     graphics::Graphics,
+    ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
 };
 
 use self::key::UIKey;
@@ -35,6 +35,7 @@ pub struct UIBox {
     pub key: UIKey,
     pub features: UIBoxFeatureMask,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
+    pub styles: UIBoxStyles,
     #[serde(skip)]
     pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
     #[serde(skip)]
@@ -70,11 +71,31 @@ impl UIBox {
             UIKey::from_string(id_split_strings[1].to_string())
         };
 
+        let (mut fill_color, mut border_color) = (None, None);
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let styles = ctx.styles.borrow();
+
+            if let Some(&color) = styles.fill_color.peek() {
+                fill_color = Some(color);
+            }
+
+            if let Some(&color) = styles.border_color.peek() {
+                border_color = Some(color);
+            }
+        });
+
+        let styles = UIBoxStyles {
+            fill_color,
+            border_color,
+        };
+
         let ui_box = Self {
             id,
             key,
             features,
             semantic_sizes,
+            styles,
             ..Default::default()
         };
 
@@ -92,29 +113,20 @@ impl UIBox {
         (self.computed_size[0] as u32, self.computed_size[1] as u32)
     }
 
-    pub fn render(
-        &self,
-        depth: usize,
-        _frame_index: u32,
-        target: &mut Buffer2D,
-    ) -> Result<(), String> {
+    pub fn render(&self, target: &mut Buffer2D) -> Result<(), String> {
         let (x, y) = self.get_pixel_coordinates();
+
         let (width, height) = self.get_computed_pixel_size();
 
-        static COLOR_FOR_DEPTH: [Color; 4] = [color::YELLOW, color::BLUE, color::RED, color::GREEN];
-
-        let fill_color = if self.features.contains(UIBoxFeatureFlag::DrawFill) {
-            Some(&COLOR_FOR_DEPTH[depth])
-        } else {
-            None
-        };
-        let border_color = if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
-            Some(&color::BLACK)
-        } else {
-            None
-        };
-
-        Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
+        Graphics::rectangle(
+            target,
+            x,
+            y,
+            width,
+            height,
+            self.styles.fill_color.as_ref(),
+            self.styles.border_color.as_ref(),
+        );
 
         Ok(())
     }

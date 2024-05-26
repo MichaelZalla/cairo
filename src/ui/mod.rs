@@ -2,6 +2,7 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
+pub mod context;
 pub mod extent;
 pub mod tree;
 pub mod ui_box;

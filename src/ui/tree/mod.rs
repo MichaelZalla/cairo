@@ -20,8 +20,6 @@ pub mod traversal;
 pub struct UIBoxTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIBox>>>>,
     pub root: Option<Rc<RefCell<Node<'a, UIBox>>>>,
-    pub dropdown_menus_root: Option<Rc<RefCell<Node<'a, UIBox>>>>,
-    pub tooltips_root: Option<Rc<RefCell<Node<'a, UIBox>>>>,
     cache: RefCell<HashMap<UIKey, UIBox>>,
 }
 
@@ -33,8 +31,6 @@ impl<'a> UIBoxTree<'a> {
         Self {
             current: Some(root_node_rc.clone()),
             root: Some(root_node_rc),
-            dropdown_menus_root: None,
-            tooltips_root: None,
             cache: Default::default(),
         }
     }
@@ -42,11 +38,11 @@ impl<'a> UIBoxTree<'a> {
     visit_dfs!(visit_root_dfs, self, root);
     visit_dfs_mut!(visit_root_dfs_mut, self, root);
 
-    visit_dfs!(visit_dropdown_menus_root_dfs, self, dropdown_menus_root);
-    visit_dfs_mut!(visit_dropdown_menus_root_dfs_mut, self, dropdown_menus_root);
+    // visit_dfs!(visit_dropdown_menus_root_dfs, self, dropdown_menus_root);
+    // visit_dfs_mut!(visit_dropdown_menus_root_dfs_mut, self, dropdown_menus_root);
 
-    visit_dfs!(visit_tooltips_root_dfs, self, tooltips_root);
-    visit_dfs_mut!(visit_tooltips_root_dfs_mut, self, tooltips_root);
+    // visit_dfs!(visit_tooltips_root_dfs, self, tooltips_root);
+    // visit_dfs_mut!(visit_tooltips_root_dfs_mut, self, tooltips_root);
 
     pub fn clear(&mut self) {
         // @NOTE(mzalla) Does not drop cache entries, only tree structure!
@@ -437,18 +433,36 @@ impl<'a> UIBoxTree<'a> {
     }
 
     pub fn render(&mut self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
+        self.visit_root_dfs_mut(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |_depth, _parent_data, node| {
+                let mut _cache = self.cache.borrow_mut();
+
+                let _ui_box = &mut node.data;
+
+                // 1. Apply the latest user inputs, based on this node's
+                //    previous layout (from the previous frame).
+
+                Ok(())
+            },
+        )?;
+
         self.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |depth, _parent_data, node| {
-                let ui_box = &node.data;
-
-                let render_result = ui_box.render(depth, frame_index, target);
-
-                // Update this node's entry in our persistent cache.
-
+            &mut |_depth, _parent_data, node| {
                 let mut cache = self.cache.borrow_mut();
 
+                let ui_box = &node.data;
+
+                // 2. Render this node for the current frame.
+
+                let render_result = ui_box.render(target);
+
+                // 3. Update this node's cache entry (prepare for rendering the next frame).
+
                 update_cache_entry(&mut cache, ui_box, frame_index);
+
+                // Return the rendering result.
 
                 render_result
             },

@@ -1,14 +1,12 @@
 extern crate sdl2;
 
-use std::cell::RefCell;
-
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
     buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     ui::{
-        tree::UIBoxTree,
+        context::GLOBAL_UI_CONTEXT,
         ui_box::{UIBox, UIBoxFeatureFlag},
         UISize, UISizeWithStrictness,
     },
@@ -17,6 +15,8 @@ use cairo::{
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/immediate-ui".to_string(),
+        window_resolution: RESOLUTION_1600_BY_900,
+        canvas_resolution: RESOLUTION_1600_BY_900,
         ..Default::default()
     };
 
@@ -29,8 +29,6 @@ fn main() -> Result<(), String> {
         window_info.window_resolution.height,
         None,
     );
-
-    let ui_box_tree_rc: RefCell<UIBoxTree> = Default::default();
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,
@@ -45,128 +43,139 @@ fn main() -> Result<(), String> {
 
         // Recreate the UI tree.
 
-        let mut tree = ui_box_tree_rc.borrow_mut();
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            ctx.fill_color(color::BLUE, || {
+                ctx.border_color(color::YELLOW, || {
+                    let tree = &mut ctx.tree.borrow_mut();
 
-        tree.clear();
+                    tree.clear();
 
-        tree.push_parent(UIBox::new(
-            "Root__root".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(512),
-                    strictness: 1.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::ChildrenSum,
-                    strictness: 1.0,
-                },
-            ],
-        ))?;
+                    tree.push_parent(UIBox::new(
+                        "Root__root".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(512),
+                                strictness: 1.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::ChildrenSum,
+                                strictness: 1.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.push_parent(UIBox::new(
-            "RootChild1__root_child1".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(128),
-                    strictness: 1.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(256),
-                    strictness: 1.0,
-                },
-            ],
-        ))?;
+                    tree.push_parent(UIBox::new(
+                        "RootChild1__root_child1".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(128),
+                                strictness: 1.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(256),
+                                strictness: 1.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.push(UIBox::new(
-            "RootChild1Child1__root_child1_child1".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-            ],
-        ))?;
+                    tree.push(UIBox::new(
+                        "RootChild1Child1__root_child1_child1".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.push(UIBox::new(
-            "RootChild1Child2__root_child1_child2".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-            ],
-        ))?;
+                    tree.push(UIBox::new(
+                        "RootChild1Child2__root_child1_child2".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.pop_parent()?;
+                    tree.pop_parent()?;
 
-        // `Current` is now back at the root...
+                    // `Current` is now back at the root...
 
-        tree.push_parent(UIBox::new(
-            "RootChild2__root_child2".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(128),
-                    strictness: 1.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(256),
-                    strictness: 1.0,
-                },
-            ],
-        ))?;
+                    tree.push_parent(UIBox::new(
+                        "RootChild2__root_child2".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(128),
+                                strictness: 1.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(256),
+                                strictness: 1.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.push(UIBox::new(
-            "RootChild2Child1__root_child2_child1".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-            ],
-        ))?;
+                    tree.push(UIBox::new(
+                        "RootChild2Child1__root_child2_child1".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.push(UIBox::new(
-            "RootChild2Child2__root_child2_child2".to_string(),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::Pixels(1000),
-                    strictness: 0.0,
-                },
-            ],
-        ))?;
+                    tree.push(UIBox::new(
+                        "RootChild2Child2__root_child2_child2".to_string(),
+                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(1000),
+                                strictness: 0.0,
+                            },
+                        ],
+                    ))?;
 
-        tree.pop_parent()?;
+                    tree.pop_parent()?;
 
-        // `Current` is now back at the root...
+                    // `Current` is now back at the root...
 
-        tree.do_autolayout_pass().unwrap();
+                    tree.do_autolayout_pass()
+                })
+            })
+            .unwrap();
+        });
 
-        tree.render(frame_index, &mut framebuffer).unwrap();
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let tree = &mut ctx.tree.borrow_mut();
 
-        return Ok(framebuffer.get_all().clone());
+            tree.render(frame_index, &mut framebuffer).unwrap();
+        });
+
+        Ok(framebuffer.get_all().clone())
     };
 
     app.run(&mut update, &mut render)?;

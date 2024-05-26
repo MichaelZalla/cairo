@@ -1,10 +1,12 @@
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
 use crate::vec::{vec3::Vec3, vec4::Vec4};
 
 pub mod blend;
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
