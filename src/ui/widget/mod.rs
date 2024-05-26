@@ -4,7 +4,13 @@ use serde::{Deserialize, Serialize};
 
 use bitmask::bitmask;
 
-use crate::vec::vec2::Vec2;
+use crate::{
+    buffer::Buffer2D,
+    color::{self, Color},
+    debug_print,
+    graphics::Graphics,
+    vec::vec2::Vec2,
+};
 
 use super::{UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
@@ -24,6 +30,12 @@ impl fmt::Display for UIKey {
                 "None".to_string()
             }
         )
+    }
+}
+
+impl UIKey {
+    pub fn from_string(id: String) -> Self {
+        Self { hash: Some(id) }
     }
 }
 
@@ -51,6 +63,12 @@ pub struct UIWidget {
     pub computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
     #[serde(skip)]
     pub global_bounds: [Vec2; 2], // On-screen rectangle coordinates, in pixels.
+    #[serde(skip)]
+    hot_transition: f32,
+    #[serde(skip)]
+    active_transition: f32,
+    #[serde(skip)]
+    last_read_at_frame: usize,
 }
 
 impl UIWidget {
@@ -66,16 +84,13 @@ impl UIWidget {
             .map(|s| String::from(*s))
             .collect::<Vec<String>>();
 
-        let hash;
-
-        if id_split_strings.len() == 1 {
-            hash = None;
+        let key = if id_split_strings.len() == 1 {
+            Default::default()
         } else {
             id = id_split_strings[0].to_string();
-            hash = Some(id_split_strings[1].to_string());
-        };
 
-        let key = UIKey { hash };
+            UIKey::from_string(id_split_strings[1].to_string())
+        };
 
         let widget = Self {
             id,
@@ -85,7 +100,7 @@ impl UIWidget {
             ..Default::default()
         };
 
-        println!("Created {}", widget);
+        debug_print!("Created {}", widget);
 
         widget
     }
@@ -99,6 +114,28 @@ impl UIWidget {
 
     pub fn get_computed_pixel_size(&self) -> (u32, u32) {
         (self.computed_size[0] as u32, self.computed_size[1] as u32)
+    }
+
+    pub fn render(&self, depth: usize, target: &mut Buffer2D) -> Result<(), String> {
+        let (x, y) = self.get_pixel_coordinates();
+        let (width, height) = self.get_computed_pixel_size();
+
+        static COLOR_FOR_DEPTH: [Color; 4] = [color::YELLOW, color::BLUE, color::RED, color::GREEN];
+
+        let fill_color = if self.features.contains(UIWidgetFeatureFlag::DrawFill) {
+            Some(COLOR_FOR_DEPTH[depth])
+        } else {
+            None
+        };
+        let border_color = if self.features.contains(UIWidgetFeatureFlag::DrawBorder) {
+            Some(color::BLACK)
+        } else {
+            None
+        };
+
+        Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
+
+        Ok(())
     }
 }
 

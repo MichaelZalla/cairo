@@ -1,13 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    animation::lerp,
-    buffer::Buffer2D,
-    color::{self, Color},
-    debug::println_indent,
-    graphics::Graphics,
-    ui::{widget::UIWidgetFeatureFlag, UI2DAxis, UISize},
-    vec::vec2::Vec2,
+    animation::lerp, buffer::Buffer2D, debug::println_indent, debug_print, ui::{UI2DAxis, UISize}, vec::vec2::Vec2
 };
 
 use self::node::{Node, NodeLocalTraversalMethod};
@@ -35,13 +29,13 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
-        println!("\nAuto-layout pass:\n");
+        debug_print!("\nAuto-layout pass:\n");
 
         // For each axis...
 
         // 1. Calculate "standalone" sizes.
 
-        println!(">\n> (Standalone sizes pass...)\n>");
+        debug_print!(">\n> (Standalone sizes pass...)\n>");
 
         self.visit_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
@@ -103,7 +97,7 @@ impl<'a> UIWidgetTree<'a> {
 
         // 2. Calculate upward-dependent sizes with a pre-order traversal.
 
-        println!(">\n> (Upward-dependent sizes pass...)\n>");
+        debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
 
         self.visit_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, parent_data, node| {
             let widget = &mut node.data;
@@ -178,7 +172,7 @@ impl<'a> UIWidgetTree<'a> {
 
         // 3. Calculate downward-dependent sizes with a post-order traversal.
 
-        println!(">\n> (Downward-dependent sizes pass...)\n>");
+        debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
 
         self.visit_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, _parent_data, node| {
             let widget = &mut node.data;
@@ -241,7 +235,7 @@ impl<'a> UIWidgetTree<'a> {
 
         // 4. Solve any violations (children extending beyond parent) with a pre-order traversal.
 
-        println!(">\n> (Violations pass...)\n>");
+        debug_print!(">\n> (Violations pass...)\n>");
 
         self.visit_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
@@ -335,7 +329,7 @@ impl<'a> UIWidgetTree<'a> {
 
         // 5. Compute the relative positions of each child with a pre-order traversal.
 
-        println!(">\n> (Relative positioning pass...)\n>");
+        debug_print!(">\n> (Relative positioning pass...)\n>");
 
         self.visit_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
@@ -391,7 +385,7 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     fn debug_computed_sizes(&self) -> Result<(), String> {
-        println!("\nResults:\n");
+        debug_print!("\nResults:\n");
 
         self.visit_dfs(
             &NodeLocalTraversalMethod::PreOrder,
@@ -423,34 +417,7 @@ impl<'a> UIWidgetTree<'a> {
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
 
-                let (x, y) = widget.get_pixel_coordinates();
-                let (width, height) = widget.get_computed_pixel_size();
-
-                static COLOR_FOR_DEPTH: [Color; 4] =
-                    [color::YELLOW, color::BLUE, color::RED, color::GREEN];
-
-                let fill_color = if widget.features.contains(UIWidgetFeatureFlag::DrawFill) {
-                    Some(COLOR_FOR_DEPTH[depth])
-                } else {
-                    None
-                };
-                let border_color = if widget.features.contains(UIWidgetFeatureFlag::DrawBorder) {
-                    Some(color::BLACK)
-                } else {
-                    None
-                };
-
-                Graphics::rectangle(
-                    target,
-                    x,
-                    y,
-                    width,
-                    height,
-                    fill_color,
-                    border_color,
-                );
-
-                Ok(())
+                widget.render(depth, target)
             },
         )
     }
