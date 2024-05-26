@@ -13,35 +13,27 @@ use crate::{
 
 use self::key::UIKey;
 
-use super::{UISizeWithStrictness, UI_2D_AXIS_COUNT};
+use super::{extent::ScreenExtent, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
 pub mod key;
 
 bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
-    pub mask UIWidgetFeatureMask: u32 where flags UIWidgetFeatureFlag {
+    pub mask UIBoxFeatureMask: u32 where flags UIBoxFeatureFlag {
         DrawFill = (1 << 0),
         DrawBorder = (1 << 1),
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
-pub struct ScreenExtent {
-    pub left: u32,
-    pub right: u32,
-    pub top: u32,
-    pub bottom: u32,
-}
-
 // An immediate-mode data structure, doubling as a cache entry for persistent
-// UIWidgets across frames; computed fields from the previous frame as used to
+// UIBox's across frames; computed fields from the previous frame as used to
 // interpret user inputs, while computed fields from the current frame are used
-// for widget rendering.
+// for box rendering.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct UIWidget {
+pub struct UIBox {
     pub id: String,
     pub key: UIKey,
-    pub features: UIWidgetFeatureMask,
+    pub features: UIBoxFeatureMask,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     #[serde(skip)]
     pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
@@ -57,10 +49,10 @@ pub struct UIWidget {
     pub last_read_at_frame: u32,
 }
 
-impl UIWidget {
+impl UIBox {
     pub fn new(
         mut id: String,
-        features: UIWidgetFeatureMask,
+        features: UIBoxFeatureMask,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     ) -> Self {
         let id_split_str = id.split("__").collect::<Vec<&str>>();
@@ -78,7 +70,7 @@ impl UIWidget {
             UIKey::from_string(id_split_strings[1].to_string())
         };
 
-        let widget = Self {
+        let ui_box = Self {
             id,
             key,
             features,
@@ -86,10 +78,10 @@ impl UIWidget {
             ..Default::default()
         };
 
-        debug_print!("Created {}", widget);
+        debug_print!("Created {}", ui_box);
 
         #[allow(clippy::let_and_return)]
-        widget
+        ui_box
     }
 
     pub fn get_pixel_coordinates(&self) -> (u32, u32) {
@@ -111,12 +103,12 @@ impl UIWidget {
 
         static COLOR_FOR_DEPTH: [Color; 4] = [color::YELLOW, color::BLUE, color::RED, color::GREEN];
 
-        let fill_color = if self.features.contains(UIWidgetFeatureFlag::DrawFill) {
+        let fill_color = if self.features.contains(UIBoxFeatureFlag::DrawFill) {
             Some(COLOR_FOR_DEPTH[depth])
         } else {
             None
         };
-        let border_color = if self.features.contains(UIWidgetFeatureFlag::DrawBorder) {
+        let border_color = if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
             Some(color::BLACK)
         } else {
             None
@@ -128,8 +120,8 @@ impl UIWidget {
     }
 }
 
-impl fmt::Display for UIWidget {
+impl fmt::Display for UIBox {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "UIWidget(id=\"{}\", hash={})", self.id, self.key)
+        write!(f, "UIBox(id=\"{}\", hash={})", self.id, self.key)
     }
 }

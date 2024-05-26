@@ -1,27 +1,28 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::ui::widget::UIWidget;
-
-use super::node::{Node, NodeLocalTraversalMethod};
+use super::{
+    node::{Node, NodeLocalTraversalMethod},
+    ui_box::UIBox,
+};
 
 pub(crate) fn visit_dfs_for_root<'a, C>(
-    root: &Rc<RefCell<Node<'a, UIWidget>>>,
+    root: &Rc<RefCell<Node<'a, UIBox>>>,
     method: &NodeLocalTraversalMethod,
     visit_action: &mut C,
 ) -> Result<(), String>
 where
-    C: FnMut(usize, Option<&UIWidget>, &Node<'a, UIWidget>) -> Result<(), String>,
+    C: FnMut(usize, Option<&UIBox>, &Node<'a, UIBox>) -> Result<(), String>,
 {
     root.borrow().visit_dfs(method, 0, None, visit_action)
 }
 
 pub(crate) fn visit_dfs_mut_for_root<'a, C>(
-    root: &Rc<RefCell<Node<'a, UIWidget>>>,
+    root: &Rc<RefCell<Node<'a, UIBox>>>,
     method: &NodeLocalTraversalMethod,
     visit_action: &mut C,
 ) -> Result<(), String>
 where
-    C: FnMut(usize, Option<&UIWidget>, &mut Node<'a, UIWidget>) -> Result<(), String>,
+    C: FnMut(usize, Option<&UIBox>, &mut Node<'a, UIBox>) -> Result<(), String>,
 {
     root.borrow_mut()
         .visit_dfs_mut(method, 0, None, visit_action)
@@ -36,7 +37,7 @@ macro_rules! visit_dfs {
             visit_action: &mut C,
         ) -> Result<(), String>
         where
-            C: FnMut(usize, Option<&UIWidget>, &Node<'a, UIWidget>) -> Result<(), String>,
+            C: FnMut(usize, Option<&UIBox>, &Node<'a, UIBox>) -> Result<(), String>,
         {
             if let Some(root) = &self.$root {
                 $crate::ui::tree::traversal::visit_dfs_for_root(root, method, visit_action)
@@ -56,7 +57,7 @@ macro_rules! visit_dfs_mut {
             visit_action: &mut C,
         ) -> Result<(), String>
         where
-            C: FnMut(usize, Option<&UIWidget>, &mut Node<'a, UIWidget>) -> Result<(), String>,
+            C: FnMut(usize, Option<&UIBox>, &mut Node<'a, UIBox>) -> Result<(), String>,
         {
             if let Some(root) = &self.$root {
                 $crate::ui::tree::traversal::visit_dfs_mut_for_root(root, method, visit_action)

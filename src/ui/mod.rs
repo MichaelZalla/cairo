@@ -2,10 +2,9 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use self::tree::UIWidgetTree;
-
+pub mod extent;
 pub mod tree;
-pub mod widget;
+pub mod ui_box;
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum UISize {
@@ -60,9 +59,3 @@ impl fmt::Display for UI2DAxis {
 }
 
 pub const UI_2D_AXIS_COUNT: usize = 2;
-
-pub struct UIContext<'a> {
-    pub tree: UIWidgetTree<'a>,
-}
-
-impl<'a> UIContext<'a> {}

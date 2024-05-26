@@ -8,8 +8,8 @@ use cairo::{
     color,
     device::{GameControllerState, KeyboardState, MouseState},
     ui::{
-        tree::UIWidgetTree,
-        widget::{UIWidget, UIWidgetFeatureFlag},
+        tree::UIBoxTree,
+        ui_box::{UIBox, UIBoxFeatureFlag},
         UISize, UISizeWithStrictness,
     },
 };
@@ -30,7 +30,7 @@ fn main() -> Result<(), String> {
         None,
     );
 
-    let widget_tree_rc: RefCell<UIWidgetTree> = Default::default();
+    let ui_box_tree_rc: RefCell<UIBoxTree> = Default::default();
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &KeyboardState,
@@ -43,15 +43,15 @@ fn main() -> Result<(), String> {
 
         framebuffer.clear(Some(fill_value));
 
-        // (Re)create UI widget tree
+        // Recreate the UI tree.
 
-        let mut widget_tree = widget_tree_rc.borrow_mut();
+        let mut tree = ui_box_tree_rc.borrow_mut();
 
-        widget_tree.clear();
+        tree.clear();
 
-        widget_tree.push_parent(UIWidget::new(
+        tree.push_parent(UIBox::new(
             "Root__root".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(512),
@@ -64,9 +64,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push_parent(UIWidget::new(
+        tree.push_parent(UIBox::new(
             "RootChild1__root_child1".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(128),
@@ -79,9 +79,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        tree.push(UIBox::new(
             "RootChild1Child1__root_child1_child1".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(1000),
@@ -94,9 +94,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        tree.push(UIBox::new(
             "RootChild1Child2__root_child1_child2".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(1000),
@@ -109,13 +109,13 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.pop_parent()?;
+        tree.pop_parent()?;
 
         // `Current` is now back at the root...
 
-        widget_tree.push_parent(UIWidget::new(
+        tree.push_parent(UIBox::new(
             "RootChild2__root_child2".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(128),
@@ -128,9 +128,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        tree.push(UIBox::new(
             "RootChild2Child1__root_child2_child1".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(1000),
@@ -143,9 +143,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        tree.push(UIBox::new(
             "RootChild2Child2__root_child2_child2".to_string(),
-            UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
+            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
             [
                 UISizeWithStrictness {
                     size: UISize::Pixels(1000),
@@ -158,13 +158,13 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.pop_parent()?;
+        tree.pop_parent()?;
 
         // `Current` is now back at the root...
 
-        widget_tree.do_autolayout_pass().unwrap();
+        tree.do_autolayout_pass().unwrap();
 
-        widget_tree.render(frame_index, &mut framebuffer).unwrap();
+        tree.render(frame_index, &mut framebuffer).unwrap();
 
         return Ok(framebuffer.get_all().clone());
     };
