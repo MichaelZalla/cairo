@@ -1,8 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
+    animation::lerp,
     debug::println_indent,
-    ui::{UI2DAxis, UISize},
+    ui::{UI2DAxis, UISize}, vec::vec2::Vec2,
 };
 
 use self::node::{Node, NodeLocalTraversalMethod};
@@ -195,15 +196,17 @@ impl<'a> UIWidgetTree<'a> {
 
                 match size_with_strictness.size {
                     UISize::ChildrenSum => {
-                        //
+                        let sum = {
+                            let mut sum = 0.0;
+                            
+                            for child_node in &node.children {
+                                let child_widget = &child_node.borrow().data;
+    
+                                sum += child_widget.computed_size[axis_index];
+                            }
 
-                        let mut sum = 0.0;
-
-                        for child_node in &node.children {
-                            let child_widget = &child_node.borrow().data;
-
-                            sum += child_widget.computed_size[axis_index];
-                        }
+                            sum
+                        };
 
                         widget.computed_size[axis_index] = sum;
 
@@ -242,21 +245,85 @@ impl<'a> UIWidgetTree<'a> {
                 let widget = &mut node.data;
 
                 if node.children.is_empty() {
-                    println_indent(
-                        depth,
-                        format!(
-                            "{}: Skipping (leaf node).",
-                            widget.id,
-                        ),
-                    );
-                    
+                    println_indent(depth, format!("{}: Skipping (leaf node).", widget.id,));
+
                     return Ok(());
                 }
 
-                println_indent(
-                    depth,
-                    format!("{}: Solving child layout violations.", widget.id,),
-                );
+                for (axis_index, size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
+                    // let axis = if axis_index == 0 { UI2DAxis::X } else { UI2DAxis::Y };
+
+                    match size_with_strictness.size {
+                        UISize::Null | UISize::TextContent => panic!(),
+                        UISize::ChildrenSum => {
+                            println_indent(
+                                depth,
+                                format!(
+                                    "{}: Uses {} size. Skipping.",
+                                    widget.id, widget.semantic_sizes[axis_index].size,
+                                ),
+                            );
+                        }
+                        UISize::Pixels(_) | UISize::PercentOfParent(_) => {
+                            let computed_size_along_axis = widget.computed_size[axis_index];
+
+                            let sum_of_child_sizes_along_axis = {
+                                let mut sum = 0.0;
+
+                                for child_node in &node.children {
+                                    let child_widget = &child_node.borrow().data;
+
+                                    sum += child_widget.computed_size[axis_index];
+                                }
+
+                                sum
+                            };
+
+                            if computed_size_along_axis < sum_of_child_sizes_along_axis {
+                                println_indent(
+                                    depth,
+                                    format!(
+                                        "{}: Detected size violation of children ({} < {}).",
+                                        widget.id,
+                                        computed_size_along_axis,
+                                        sum_of_child_sizes_along_axis
+                                    ),
+                                );
+
+                                // Scale down each of this widget's children,
+                                // according to the severity of the violation,
+                                // as well as each child widget's strictness
+                                // parameter.
+
+                                let alpha =
+                                    computed_size_along_axis / sum_of_child_sizes_along_axis;
+
+                                for child in &node.children {
+                                    let child_widget = &mut child.borrow_mut().data;
+
+                                    let strictness =
+                                        child_widget.semantic_sizes[axis_index].strictness;
+                                    let old_child_size = child_widget.computed_size[axis_index];
+                                    let new_child_size =
+                                        old_child_size * lerp(alpha, 1.0, strictness);
+
+                                    println_indent(
+                                        depth + 1,
+                                        format!(
+                                            "{}: Scaling down from {} to {} (strictness: {}).",
+                                            child_widget.id,
+                                            old_child_size,
+                                            new_child_size,
+                                            strictness,
+                                        ),
+                                    );
+
+                                    child_widget.computed_size[axis_index] = new_child_size;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Ok(())
             },
@@ -268,13 +335,49 @@ impl<'a> UIWidgetTree<'a> {
 
         self.visit_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |depth, _parent_data, node| {
+            &mut |_depth, parent_data, node| {
                 let widget = &mut node.data;
 
-                println_indent(
-                    depth,
-                    format!("{}: Computing relative (in-parent) position.", widget.id,),
-                );
+                let mut top_left = Vec2 {
+                    x: widget.computed_relative_position[0],
+                    y: widget.computed_relative_position[1],
+                    z: 0.0,
+                };
+
+                if let Some(data) = parent_data {
+                    top_left.x += data.global_bounds[0].x;
+                    top_left.y += data.global_bounds[0].y;
+                }
+
+                let bottom_right = Vec2 {
+                    x: top_left.x + widget.computed_size[0],
+                    y: top_left.y + widget.computed_size[1],
+                    z: 0.0,
+                };
+
+                widget.global_bounds = [
+                    top_left,
+                    bottom_right,
+                ];
+
+                if node.children.is_empty() {
+                    return Ok(());
+                }
+
+                for (axis_index, _size_with_strictness) in widget.semantic_sizes.iter().enumerate() {
+                    let mut cursor = 0.0;
+
+                    for child_node_rc in &node.children {
+                        let mut child_node = (*child_node_rc).borrow_mut();
+                        let child_widget = &mut child_node.data;
+
+                        child_widget.computed_relative_position[axis_index] = cursor;
+
+                        if axis_index == 1 {
+                            cursor += child_widget.computed_size[axis_index];
+                        }
+                    }
+                }
 
                 Ok(())
             },
@@ -286,27 +389,27 @@ impl<'a> UIWidgetTree<'a> {
     }
 
     fn debug_computed_sizes(&self) -> Result<(), String> {
-
         println!("\nResults:\n");
-       
+
         self.visit_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
 
+                let position = widget.computed_relative_position;
+                let size = widget.computed_size;
+
                 println_indent(
                     depth,
                     format!(
-                        "{}: Computed size: {}x{}.",
-                        widget.id, widget.computed_size[0], widget.computed_size[1]
+                        "{}: Relative position: ({},{}) | Computed size: {}x{}.",
+                        widget.id, position[0], position[1], size[0], size[1],
                     ),
                 );
 
                 Ok(())
             },
         )?;
-
-        panic!();
 
         Ok(())
     }
@@ -335,11 +438,29 @@ impl<'a> UIWidgetTree<'a> {
             .visit_dfs_mut(method, 0, None, visit_action)
     }
 
-    pub fn push(&mut self, widget: UIWidget) {
+    pub fn push(&mut self, widget: UIWidget) -> Result<(), String> {
         let new_child_node_rc: Rc<RefCell<Node<'a, UIWidget>>>;
 
         if let Some(current_node_rc) = &self.current {
             let mut current_node = (*current_node_rc).borrow_mut();
+
+            if let UISize::TextContent = &current_node.data.semantic_sizes[0].size {
+                return Err(
+                    "Called UIWidgetTree::push() when current node uses TextContent size!"
+                        .to_string(),
+                );
+            }
+
+            if let UISize::ChildrenSum = &current_node.data.semantic_sizes[0].size {
+                if let UISize::ChildrenSum = &current_node.data.semantic_sizes[1].size {
+                    if !current_node.children.is_empty() {
+                        return Err(
+                            "Called UIWidgetTree::push() when current node uses ChildrenSum size on both axes, and already has a child!"
+                        .to_string(),
+                        );
+                    }
+                }
+            }
 
             let mut new_child_node = Node::<'a, UIWidget>::new(widget);
 
@@ -353,6 +474,8 @@ impl<'a> UIWidgetTree<'a> {
         }
 
         self.current = Some(new_child_node_rc.clone());
+
+        Ok(())
     }
 
     pub fn pop_current(&mut self) -> Result<(), String> {

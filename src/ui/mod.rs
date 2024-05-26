@@ -75,13 +75,13 @@ pub struct UIWidget {
 
     // Auto-layout outputs
     #[serde(skip)]
-    computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
+    pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
 
     #[serde(skip)]
-    computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
+    pub computed_size: [f32; UI_2D_AXIS_COUNT], // Size in pixels.
 
     #[serde(skip)]
-    rect: [Vec2; 2], // On-screen rectangle coordinates, in pixels.
+    pub global_bounds: [Vec2; 2], // On-screen rectangle coordinates, in pixels.
 }
 
 impl UIWidget {
