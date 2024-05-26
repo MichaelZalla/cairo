@@ -6,7 +6,7 @@ use crate::{
     color::{self, Color},
     debug::println_indent,
     graphics::Graphics,
-    ui::{UI2DAxis, UISize},
+    ui::{widget::UIWidgetFeatureFlag, UI2DAxis, UISize},
     vec::vec2::Vec2,
 };
 
@@ -423,18 +423,22 @@ impl<'a> UIWidgetTree<'a> {
             &mut |depth, _parent_data, node| {
                 let widget = &node.data;
 
-                let (x, y) = (
-                    widget.global_bounds[0].x as u32,
-                    widget.global_bounds[0].y as u32,
-                );
-
-                let (width, height) = (
-                    widget.computed_size[0] as u32,
-                    widget.computed_size[1] as u32,
-                );
+                let (x, y) = widget.get_pixel_coordinates();
+                let (width, height) = widget.get_computed_pixel_size();
 
                 static COLOR_FOR_DEPTH: [Color; 4] =
                     [color::YELLOW, color::BLUE, color::RED, color::GREEN];
+
+                let fill_color = if widget.features.contains(UIWidgetFeatureFlag::DrawFill) {
+                    Some(COLOR_FOR_DEPTH[depth])
+                } else {
+                    None
+                };
+                let border_color = if widget.features.contains(UIWidgetFeatureFlag::DrawBorder) {
+                    Some(color::BLACK)
+                } else {
+                    None
+                };
 
                 Graphics::rectangle(
                     target,
@@ -442,8 +446,8 @@ impl<'a> UIWidgetTree<'a> {
                     y,
                     width,
                     height,
-                    Some(COLOR_FOR_DEPTH[depth]),
-                    Some(color::BLACK),
+                    fill_color,
+                    border_color,
                 );
 
                 Ok(())

@@ -13,7 +13,7 @@ use cairo::{
             node::{Node, NodeLocalTraversalMethod},
             UIWidgetTree,
         },
-        widget::UIWidget,
+        widget::{UIWidget, UIWidgetFeatureFlag},
         UIContext, UISize, UISizeWithStrictness,
     },
 };
@@ -38,6 +38,7 @@ fn main() -> Result<(), String> {
 
     let root_widget = UIWidget::new(
         "Root__root".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(512),
@@ -58,6 +59,7 @@ fn main() -> Result<(), String> {
 
     widget_tree.push(UIWidget::new(
         "RootChild1__root_child1".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(128),
@@ -72,6 +74,7 @@ fn main() -> Result<(), String> {
 
     widget_tree.push(UIWidget::new(
         "RootChild1Child1__root_child1_child1".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
@@ -88,6 +91,7 @@ fn main() -> Result<(), String> {
 
     widget_tree.push(UIWidget::new(
         "RootChild1Child2__root_child1_child2".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
@@ -105,6 +109,7 @@ fn main() -> Result<(), String> {
 
     widget_tree.push(UIWidget::new(
         "RootChild2__root_child2".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(128),
@@ -119,6 +124,7 @@ fn main() -> Result<(), String> {
 
     widget_tree.push(UIWidget::new(
         "RootChild2Child1__root_child2_child1".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
@@ -135,6 +141,7 @@ fn main() -> Result<(), String> {
 
     widget_tree.push(UIWidget::new(
         "RootChild2Child2__root_child2_child2".to_string(),
+        UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
         [
             UISizeWithStrictness {
                 size: UISize::Pixels(1000),
