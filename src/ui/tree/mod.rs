@@ -450,7 +450,7 @@ impl<'a> UIWidgetTree<'a> {
         }
     }
 
-    pub fn push(&mut self, widget: UIWidget) -> Result<(), String> {
+    pub fn push_parent(&mut self, widget: UIWidget) -> Result<(), String> {
         let new_child_node_rc: Rc<RefCell<Node<'a, UIWidget>>>;
 
         if let Some(current_node_rc) = &self.current {
@@ -458,7 +458,7 @@ impl<'a> UIWidgetTree<'a> {
 
             if let UISize::TextContent = &current_node.data.semantic_sizes[0].size {
                 return Err(
-                    "Called UIWidgetTree::push() when current node uses TextContent size!"
+                    "Called UIWidgetTree::push_parent() when current node uses TextContent size!"
                         .to_string(),
                 );
             }
@@ -467,7 +467,7 @@ impl<'a> UIWidgetTree<'a> {
                 if let UISize::ChildrenSum = &current_node.data.semantic_sizes[1].size {
                     if !current_node.children.is_empty() {
                         return Err(
-                            "Called UIWidgetTree::push() when current node uses ChildrenSum size on both axes, and already has a child!"
+                            "Called UIWidgetTree::push_parent() when current node uses ChildrenSum size on both axes, and already has a child!"
                         .to_string(),
                         );
                     }
@@ -495,7 +495,7 @@ impl<'a> UIWidgetTree<'a> {
         Ok(())
     }
 
-    pub fn pop_current(&mut self) -> Result<(), String> {
+    pub fn pop_parent(&mut self) -> Result<(), String> {
         let (current_node_rc, parent_node_rc) = {
             match &self.current {
                 Some(current_node_rc) => {
@@ -521,9 +521,9 @@ impl<'a> UIWidgetTree<'a> {
                 Ok(())
             }
             (Some(_child_node_rc), None) => {
-                Err("Called UIWidgetTree::pop() on the root of the tree!".to_string())
+                Err("Called UIWidgetTree::pop_parent() on the root of the tree!".to_string())
             }
-            _ => Err("Called UIWidgetTree::pop() on an empty tree!".to_string()),
+            _ => Err("Called UIWidgetTree::pop_parent() on an empty tree!".to_string()),
         }
     }
 

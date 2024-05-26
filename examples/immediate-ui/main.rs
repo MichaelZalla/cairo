@@ -44,7 +44,7 @@ fn main() -> Result<(), String> {
 
         let mut widget_tree: UIWidgetTree = Default::default();
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "Root__root".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -59,7 +59,7 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "RootChild1__root_child1".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -74,7 +74,7 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "RootChild1Child1__root_child1_child1".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -89,9 +89,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.pop_current()?;
+        widget_tree.pop_parent()?;
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "RootChild1Child2__root_child1_child2".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -106,10 +106,10 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.pop_current()?;
-        widget_tree.pop_current()?;
+        widget_tree.pop_parent()?;
+        widget_tree.pop_parent()?;
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "RootChild2__root_child2".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -124,7 +124,7 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "RootChild2Child1__root_child2_child1".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
@@ -139,9 +139,9 @@ fn main() -> Result<(), String> {
             ],
         ))?;
 
-        widget_tree.pop_current()?;
+        widget_tree.pop_parent()?;
 
-        widget_tree.push(UIWidget::new(
+        widget_tree.push_parent(UIWidget::new(
             "RootChild2Child2__root_child2_child2".to_string(),
             UIWidgetFeatureFlag::DrawFill | UIWidgetFeatureFlag::DrawBorder,
             [
