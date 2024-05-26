@@ -3,12 +3,11 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use sdl2::mouse::MouseButton;
 
 use crate::{
-    animation::lerp,
     buffer::Buffer2D,
     debug::println_indent,
     debug_print,
     device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
-    ui::{extent::ScreenExtent, UI2DAxis, UISize},
+    ui::{extent::ScreenExtent, ui_box::UILayoutDirection, UI2DAxis, UISize},
     visit_dfs, visit_dfs_mut,
 };
 
@@ -68,7 +67,7 @@ impl<'a> UIBoxTree<'a> {
             &NodeLocalTraversalMethod::PostOrder,
             &mut |_depth, _parent_data, node| {
                 let ui_box = &mut node.data;
-                
+
                 // Apply the latest user inputs, based on this node's previous layout
                 // (from the previous frame).
 
@@ -360,8 +359,6 @@ impl<'a> UIBoxTree<'a> {
                 }
 
                 for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
-                    // let axis = if axis_index == 0 { UI2DAxis::X } else { UI2DAxis::Y };
-
                     match size_with_strictness.size {
                         UISize::Null | UISize::TextContent => panic!(),
                         UISize::ChildrenSum => {
@@ -376,51 +373,96 @@ impl<'a> UIBoxTree<'a> {
                         UISize::Pixels(_) | UISize::PercentOfParent(_) => {
                             let computed_size_along_axis = ui_box.computed_size[axis_index];
 
-                            let sum_of_child_sizes_along_axis = {
-                                let mut sum = 0.0;
+                            let size_of_children_along_axis = {
+                                let child_sizes_along_axis = node
+                                    .children
+                                    .iter()
+                                    .map(|c| c.borrow().data.computed_size[axis_index]);
 
-                                for child_node in &node.children {
-                                    let child_ui_box = &child_node.borrow().data;
-
-                                    sum += child_ui_box.computed_size[axis_index];
+                                match (ui_box.layout_direction, UI2DAxis::from_usize(axis_index)) {
+                                    (UILayoutDirection::LeftToRight, UI2DAxis::X)
+                                    | (UILayoutDirection::TopToBottom, UI2DAxis::Y) => {
+                                        child_sizes_along_axis.into_iter().sum()
+                                    }
+                                    _ => child_sizes_along_axis
+                                        .into_iter()
+                                        .max_by(|a, b| a.partial_cmp(b).unwrap())
+                                        .unwrap(),
                                 }
-
-                                sum
                             };
 
-                            if computed_size_along_axis < sum_of_child_sizes_along_axis {
+                            if computed_size_along_axis < size_of_children_along_axis {
                                 println_indent(
                                     depth,
                                     format!(
                                         "{}: Detected size violation of children ({} < {}).",
                                         ui_box.id,
                                         computed_size_along_axis,
-                                        sum_of_child_sizes_along_axis
+                                        size_of_children_along_axis
                                     ),
                                 );
+
+                                // Need to account for strictness of children
+                                // relative to each other, i.e., if one child's
+                                // size is fixed in pixels, it will not give up
+                                // it's "fair share" of space; its siblings must
+                                // overcompensate, then.
 
                                 // Scale down each of this box's children,
                                 // according to the severity of the violation,
                                 // as well as each child box's strictness
                                 // parameter.
 
-                                let alpha =
-                                    computed_size_along_axis / sum_of_child_sizes_along_axis;
+                                let size_reserved_for_strict_children: f32 = match (ui_box.layout_direction, UI2DAxis::from_usize(axis_index)) {
+                                    (UILayoutDirection::LeftToRight, UI2DAxis::X)
+                                    | (UILayoutDirection::TopToBottom, UI2DAxis::Y) => {
+                                        node
+                                    .children
+                                    .iter()
+                                    .map(|child| {
+                                        let child_ui_box = &child.borrow().data;
+
+                                        let child_strictness =
+                                            child_ui_box.semantic_sizes[axis_index].strictness;
+
+                                        if child_strictness == 1.0 {
+                                            child_ui_box.computed_size[axis_index]
+                                        } else {
+                                            0.0
+                                        }
+                                    })
+                                    .sum()
+                                    }
+                                    _ => {
+                                        0.0
+                                    },
+                                };  
+
+                                let alpha_adjusted_for_size_reserved =
+                                    (computed_size_along_axis - size_reserved_for_strict_children) / (size_of_children_along_axis - size_reserved_for_strict_children);
 
                                 for child in &node.children {
                                     let child_ui_box = &mut child.borrow_mut().data;
 
+                                    let old_child_size = child_ui_box.computed_size[axis_index];
+
                                     let strictness =
                                         child_ui_box.semantic_sizes[axis_index].strictness;
-                                    let old_child_size = child_ui_box.computed_size[axis_index];
-                                    let new_child_size =
-                                        old_child_size * lerp(alpha, 1.0, strictness);
+
+                                    let new_child_size = if strictness == 1.0 {
+                                        old_child_size
+                                    } else if strictness == 0.0 {
+                                        old_child_size * alpha_adjusted_for_size_reserved
+                                    } else {
+                                        panic!()
+                                    };
 
                                     println_indent(
                                         depth + 1,
                                         format!(
-                                            "{}: Scaling down from {} to {} (strictness: {}).",
+                                            "{}: ({} axis) Scaling down from {} to {} (strictness: {}).",
                                             child_ui_box.id,
+                                            UI2DAxis::from_usize(axis_index),
                                             old_child_size,
                                             new_child_size,
                                             strictness,
@@ -477,8 +519,12 @@ impl<'a> UIBoxTree<'a> {
 
                         child_ui_box.computed_relative_position[axis_index] = cursor;
 
-                        if axis_index == 1 {
-                            cursor += child_ui_box.computed_size[axis_index];
+                        match (ui_box.layout_direction, UI2DAxis::from_usize(axis_index)) {
+                            (UILayoutDirection::LeftToRight, UI2DAxis::X)
+                            | (UILayoutDirection::TopToBottom, UI2DAxis::Y) => {
+                                cursor += child_ui_box.computed_size[axis_index];
+                            }
+                            _ => {}
                         }
                     }
                 }

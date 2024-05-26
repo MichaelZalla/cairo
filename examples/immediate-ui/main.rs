@@ -8,7 +8,7 @@ use cairo::{
     device::{GameControllerState, KeyboardState, MouseState},
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        ui_box::{UIBox, UIBoxFeatureFlag},
+        ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };
@@ -52,6 +52,7 @@ fn main() -> Result<(), String> {
                     tree.push_parent(UIBox::new(
                         "Root__root".to_string(),
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        UILayoutDirection::TopToBottom,
                         [
                             UISizeWithStrictness {
                                 size: UISize::Pixels(
@@ -68,54 +69,77 @@ fn main() -> Result<(), String> {
                         ],
                     ))?;
 
-                    tree.push_parent(UIBox::new(
-                        "RootChild1__root_child1".to_string(),
-                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-                        [
-                            UISizeWithStrictness {
-                                size: UISize::Pixels(
-                                    lerp(128.0, 256.0, uptime.sin() / 2.0 + 1.0) as u32
-                                ),
-                                strictness: 0.0,
-                            },
-                            UISizeWithStrictness {
-                                size: UISize::Pixels(
-                                    lerp(256.0, 512.0, uptime.sin() / 2.0 + 1.0) as u32
-                                ),
-                                strictness: 0.0,
-                            },
-                        ],
-                    ))?;
+                    ctx.fill_color(color::GREEN, || {
+                        tree.push_parent(UIBox::new(
+                            "RootChild1__root_child1".to_string(),
+                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                            UILayoutDirection::TopToBottom,
+                            [
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(128),
+                                    strictness: 1.0,
+                                },
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(128),
+                                    strictness: 1.0,
+                                },
+                            ],
+                        ))
+                    })?;
 
-                    tree.push(UIBox::new(
-                        "RootChild1Child1__root_child1_child1".to_string(),
-                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-                        [
-                            UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
-                                strictness: 0.0,
-                            },
-                            UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
-                                strictness: 0.0,
-                            },
-                        ],
-                    ))?;
+                    ctx.fill_color(color::ORANGE, || {
+                        tree.push(UIBox::new(
+                            "RootChild1Child1__root_child1_child1".to_string(),
+                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                            UILayoutDirection::TopToBottom,
+                            [
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(1000),
+                                    strictness: 0.0,
+                                },
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(1000),
+                                    strictness: 0.0,
+                                },
+                            ],
+                        ))
+                    })?;
 
-                    tree.push(UIBox::new(
-                        "RootChild1Child2__root_child1_child2".to_string(),
-                        UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
-                        [
-                            UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
-                                strictness: 0.0,
-                            },
-                            UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
-                                strictness: 0.0,
-                            },
-                        ],
-                    ))?;
+                    ctx.fill_color(color::BLACK, || {
+                        tree.push(UIBox::new(
+                            "RootChild1Child1__root_child1_spacer1".to_string(),
+                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                            UILayoutDirection::TopToBottom,
+                            [
+                                UISizeWithStrictness {
+                                    size: UISize::PercentOfParent(1.0),
+                                    strictness: 1.0,
+                                },
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(6),
+                                    strictness: 1.0,
+                                },
+                            ],
+                        ))
+                    })?;
+
+                    ctx.fill_color(color::SKY_BOX, || {
+                        tree.push(UIBox::new(
+                            "RootChild1Child2__root_child1_child2".to_string(),
+                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                            UILayoutDirection::TopToBottom,
+                            [
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(1000),
+                                    strictness: 0.0,
+                                },
+                                UISizeWithStrictness {
+                                    size: UISize::Pixels(1000),
+                                    strictness: 0.0,
+                                },
+                            ],
+                        ))
+                    })?;
 
                     tree.pop_parent()?;
 
@@ -124,17 +148,14 @@ fn main() -> Result<(), String> {
                     tree.push_parent(UIBox::new(
                         "RootChild2__root_child2".to_string(),
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        UILayoutDirection::LeftToRight,
                         [
                             UISizeWithStrictness {
-                                size: UISize::Pixels(
-                                    lerp(128.0, 256.0, uptime.sin() / 2.0 + 1.0) as u32
-                                ),
+                                size: UISize::PercentOfParent(0.66),
                                 strictness: 0.0,
                             },
                             UISizeWithStrictness {
-                                size: UISize::Pixels(
-                                    lerp(256.0, 512.0, uptime.sin() / 2.0 + 1.0) as u32
-                                ),
+                                size: UISize::PercentOfParent(1.0),
                                 strictness: 0.0,
                             },
                         ],
@@ -143,13 +164,14 @@ fn main() -> Result<(), String> {
                     tree.push(UIBox::new(
                         "RootChild2Child1__root_child2_child1".to_string(),
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        UILayoutDirection::TopToBottom,
                         [
                             UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
+                                size: UISize::PercentOfParent(1.0),
                                 strictness: 0.0,
                             },
                             UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
+                                size: UISize::PercentOfParent(1.0),
                                 strictness: 0.0,
                             },
                         ],
@@ -158,13 +180,14 @@ fn main() -> Result<(), String> {
                     tree.push(UIBox::new(
                         "RootChild2Child2__root_child2_child2".to_string(),
                         UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                        UILayoutDirection::TopToBottom,
                         [
                             UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
+                                size: UISize::PercentOfParent(1.0),
                                 strictness: 0.0,
                             },
                             UISizeWithStrictness {
-                                size: UISize::Pixels(1000),
+                                size: UISize::PercentOfParent(1.0),
                                 strictness: 0.0,
                             },
                         ],

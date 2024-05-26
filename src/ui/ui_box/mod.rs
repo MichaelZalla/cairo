@@ -25,6 +25,13 @@ bitmask! {
     }
 }
 
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+pub enum UILayoutDirection {
+    #[default]
+    TopToBottom,
+    LeftToRight,
+}
+
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
 // interpret user inputs, while computed fields from the current frame are used
@@ -34,6 +41,7 @@ pub struct UIBox {
     pub id: String,
     pub key: UIKey,
     pub features: UIBoxFeatureMask,
+    pub layout_direction: UILayoutDirection,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     pub styles: UIBoxStyles,
     #[serde(skip)]
@@ -58,6 +66,7 @@ impl UIBox {
     pub fn new(
         mut id: String,
         features: UIBoxFeatureMask,
+        layout_direction: UILayoutDirection,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     ) -> Self {
         let id_split_str = id.split("__").collect::<Vec<&str>>();
@@ -102,6 +111,7 @@ impl UIBox {
             id,
             key,
             features,
+            layout_direction,
             semantic_sizes,
             styles,
             ..Default::default()
