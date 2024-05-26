@@ -105,7 +105,7 @@ impl SoftwareRenderer {
 
         let target_position = light_position + forward * light.influence_distance;
 
-        self.render_line(light_position, target_position, color::WHITE);
+        self.render_line(light_position, target_position, &color::WHITE);
 
         // Draw sides for cutoff angles.
 
@@ -156,6 +156,6 @@ impl SoftwareRenderer {
             far: far_plane_points_world_space,
         };
 
-        self._render_frustum(&frustum, Some(Color::from_vec3(color * 255.0)));
+        self._render_frustum(&frustum, Some(&Color::from_vec3(color * 255.0)));
     }
 }

@@ -1,12 +1,16 @@
 use crate::{
     color::{self, Color},
-    software_renderer::SoftwareRenderer,
     render::Renderer,
     scene::camera::frustum::Frustum,
+    software_renderer::SoftwareRenderer,
 };
 
 impl SoftwareRenderer {
-    pub(in crate::software_renderer) fn _render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
+    pub(in crate::software_renderer) fn _render_frustum(
+        &mut self,
+        frustum: &Frustum,
+        color: Option<&Color>,
+    ) {
         // Draw near plane (red).
 
         for (index, _point) in frustum.near.as_slice().iter().enumerate() {
@@ -15,7 +19,7 @@ impl SoftwareRenderer {
                 frustum.near[if index == 3 { 0 } else { index + 1 }],
                 match color {
                     Some(color) => color,
-                    None => color::RED,
+                    None => &color::RED,
                 },
             );
         }
@@ -28,7 +32,7 @@ impl SoftwareRenderer {
                 frustum.far[if index == 3 { 0 } else { index + 1 }],
                 match color {
                     Some(color) => color,
-                    None => color::BLUE,
+                    None => &color::BLUE,
                 },
             );
         }
@@ -41,7 +45,7 @@ impl SoftwareRenderer {
                 frustum.far[i],
                 match color {
                     Some(color) => color,
-                    None => color::YELLOW,
+                    None => &color::YELLOW,
                 },
             );
         }

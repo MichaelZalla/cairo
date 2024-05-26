@@ -154,7 +154,7 @@ fn draw_button(
             cursor.y + layout_offset_y,
             texture.width + BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL * 2,
             texture.height + BORDERED_BUTTON_LABEL_PADDING_VERTICAL * 2,
-            Some(theme.button_background),
+            Some(&theme.button_background),
             None,
         )
     }

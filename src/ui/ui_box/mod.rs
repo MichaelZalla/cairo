@@ -104,12 +104,12 @@ impl UIBox {
         static COLOR_FOR_DEPTH: [Color; 4] = [color::YELLOW, color::BLUE, color::RED, color::GREEN];
 
         let fill_color = if self.features.contains(UIBoxFeatureFlag::DrawFill) {
-            Some(COLOR_FOR_DEPTH[depth])
+            Some(&COLOR_FOR_DEPTH[depth])
         } else {
             None
         };
         let border_color = if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
-            Some(color::BLACK)
+            Some(&color::BLACK)
         } else {
             None
         };

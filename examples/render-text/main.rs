@@ -90,7 +90,7 @@ fn main() -> Result<(), String> {
         let x = *mouse_x.borrow();
         let y = *mouse_y.borrow();
 
-        Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, color::YELLOW);
+        Graphics::crosshair(&mut framebuffer, x, y, 24, 2, 6, true, &color::YELLOW);
 
         let framebuffer_height = framebuffer.height;
 

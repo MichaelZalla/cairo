@@ -158,7 +158,7 @@ impl SoftwareRenderer {
                 self.render_line(
                     projection_space_vertices[i].world_pos,
                     projection_space_vertices[if i == 2 { 0 } else { i + 1 }].world_pos,
-                    color::WHITE,
+                    &color::WHITE,
                 );
             }
         }
@@ -170,19 +170,19 @@ impl SoftwareRenderer {
                 self.render_line(
                     vertex.world_pos,
                     vertex.world_pos + vertex.normal.to_vec3() * NORMALS_SCALE,
-                    color::BLUE,
+                    &color::BLUE,
                 );
 
                 self.render_line(
                     vertex.world_pos,
                     vertex.world_pos + vertex.tangent.to_vec3() * NORMALS_SCALE,
-                    color::RED,
+                    &color::RED,
                 );
 
                 self.render_line(
                     vertex.world_pos,
                     vertex.world_pos + vertex.bitangent.to_vec3() * NORMALS_SCALE,
-                    color::GREEN,
+                    &color::GREEN,
                 );
             }
         }

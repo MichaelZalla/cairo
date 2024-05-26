@@ -259,7 +259,7 @@ fn draw_slider(
         slider_top_left.1,
         NUMBER_SLIDER_WIDTH,
         slider_height,
-        Some(theme.input_background),
+        Some(&theme.input_background),
         None,
     );
 
@@ -282,7 +282,7 @@ fn draw_slider(
                             slider_top_left.1 + 1,
                             width,
                             slider_height - 2,
-                            Some(theme.input_background_slider_alpha),
+                            Some(&theme.input_background_slider_alpha),
                             None,
                         );
                     }

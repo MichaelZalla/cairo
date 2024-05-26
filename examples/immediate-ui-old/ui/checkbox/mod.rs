@@ -178,7 +178,7 @@ fn draw_checkbox(
         checkbox_y,
         checkbox_size,
         checkbox_size,
-        Some(theme.checkbox_background),
+        Some(&theme.checkbox_background),
         None,
     );
 
@@ -199,7 +199,7 @@ fn draw_checkbox(
             checkbox_top_left.1 as i32,
             checkbox_bottom_right.0 as i32,
             checkbox_bottom_right.1 as i32,
-            theme.text,
+            &theme.text,
         );
         Graphics::line(
             parent_buffer,
@@ -207,7 +207,7 @@ fn draw_checkbox(
             checkbox_top_right.1 as i32,
             checkbox_bottom_left.0 as i32,
             checkbox_bottom_left.1 as i32,
-            theme.text,
+            &theme.text,
         );
     }
 

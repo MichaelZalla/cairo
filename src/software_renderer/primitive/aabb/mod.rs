@@ -3,12 +3,12 @@ use crate::{
     entity::Entity,
     matrix::Mat4,
     mesh::Mesh,
-    software_renderer::SoftwareRenderer,
     render::{
         culling::{FaceCullingReject, FaceCullingStrategy},
         options::RenderOptions,
     },
     resource::arena::Arena,
+    software_renderer::SoftwareRenderer,
 };
 
 impl SoftwareRenderer {
@@ -17,7 +17,7 @@ impl SoftwareRenderer {
         entity: &Entity,
         world_transform: &Mat4,
         mesh_arena: &Arena<Mesh>,
-        color: Color,
+        color: &Color,
     ) {
         match mesh_arena.get(&entity.mesh) {
             Ok(entry) => {
@@ -26,7 +26,7 @@ impl SoftwareRenderer {
                 let original_options = self.options;
 
                 self.options = RenderOptions {
-                    wireframe_color: color,
+                    wireframe_color: *color,
                     do_wireframe: true,
                     do_rasterized_geometry: false,
                     do_lighting: false,
