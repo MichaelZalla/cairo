@@ -10,21 +10,20 @@ use super::widget::UIWidget;
 
 pub mod node;
 
+#[derive(Default, Debug, Clone)]
 pub struct UIWidgetTree<'a> {
     current: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
-    pub root: Rc<RefCell<Node<'a, UIWidget>>>,
+    pub root: Option<Rc<RefCell<Node<'a, UIWidget>>>>,
 }
 
 impl<'a> UIWidgetTree<'a> {
-    pub fn new(mut root: Node<'a, UIWidget>) -> Self {
-        root.parent = None;
-        root.children = vec![];
-
-        let root_rc = Rc::new(RefCell::new(root));
+    pub fn with_root(root_widget: UIWidget) -> Self {
+        let root_node = Node::<UIWidget>::new(root_widget);
+        let root_node_rc = Rc::new(RefCell::new(root_node));
 
         Self {
-            root: root_rc.clone(),
-            current: Some(root_rc),
+            root: Some(root_node_rc.clone()),
+            current: Some(root_node_rc),
         }
     }
 
@@ -427,7 +426,11 @@ impl<'a> UIWidgetTree<'a> {
     where
         C: FnMut(usize, Option<&UIWidget>, &Node<'a, UIWidget>) -> Result<(), String>,
     {
-        self.root.borrow().visit_dfs(method, 0, None, visit_action)
+        if let Some(root) = &self.root {
+            root.borrow().visit_dfs(method, 0, None, visit_action)
+        } else {
+            Ok(())
+        }
     }
 
     pub fn visit_dfs_mut<C>(
@@ -438,9 +441,13 @@ impl<'a> UIWidgetTree<'a> {
     where
         C: FnMut(usize, Option<&UIWidget>, &mut Node<'a, UIWidget>) -> Result<(), String>,
     {
-        self.root
+        if let Some(root) = &self.root {
+            root
             .borrow_mut()
             .visit_dfs_mut(method, 0, None, visit_action)
+        } else {
+            Ok(())
+        }
     }
 
     pub fn push(&mut self, widget: UIWidget) -> Result<(), String> {
@@ -475,7 +482,12 @@ impl<'a> UIWidgetTree<'a> {
 
             current_node.children.push(new_child_node_rc.clone());
         } else {
-            panic!("Called UIWidgetTree::push() on a tree with no `current` value!");
+            assert!(self.root.is_none());
+
+            let root_node = Node::<UIWidget>::new(widget);
+            new_child_node_rc = Rc::new(RefCell::new(root_node));
+
+            self.root = Some(new_child_node_rc.clone());
         }
 
         self.current = Some(new_child_node_rc.clone());
