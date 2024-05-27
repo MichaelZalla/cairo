@@ -4,7 +4,11 @@ use cairo::ui::{
     UISize, UISizeWithStrictness,
 };
 
-pub fn build_editor_main_menu_bar(tree: &mut UIBoxTree) -> Result<(), String> {
+static MENU_BAR_ITEMS: [&str; 6] = ["Project", "Scene", "Edit", "Debug", "Help", "About"];
+
+static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button 4", "Button 5"];
+
+pub fn build_main_menu_bar(tree: &mut UIBoxTree) -> Result<(), String> {
     tree.push_parent(UIBox::new(
         "MainMenuBar__main_menu_bar".to_string(),
         UIBoxFeatureMask::none(),
@@ -90,8 +94,6 @@ pub fn build_editor_main_menu_bar(tree: &mut UIBoxTree) -> Result<(), String> {
             },
         ],
     ))?;
-
-    static MENU_BAR_ITEMS: [&str; 6] = ["Project", "Scene", "Edit", "Debug", "Help", "About"];
 
     for (item_index, item_label) in MENU_BAR_ITEMS.iter().enumerate() {
         // Inter-item spacer.
@@ -189,6 +191,97 @@ pub fn build_editor_main_menu_bar(tree: &mut UIBoxTree) -> Result<(), String> {
     tree.pop_parent()?;
 
     // Back to 'Root'.
+
+    tree.pop_parent()
+}
+
+pub fn build_toolbar(tree: &mut UIBoxTree) -> Result<(), String> {
+    tree.push_parent(UIBox::new(
+        "Toolbar__toolbar".to_string(),
+        UIBoxFeatureMask::none(),
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::ChildrenSum,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    // Toolbar buttons list
+
+    tree.push_parent(UIBox::new(
+        "ToolbarItemList__toolbar_item_list".to_string(),
+        UIBoxFeatureMask::none(),
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::ChildrenSum,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::ChildrenSum,
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    for (button_index, button_label) in TOOLBAR_BUTTONS.iter().enumerate() {
+        // Inter-item spacer.
+
+        if button_index != 0 {
+            tree.push(UIBox::new(
+                "".to_string(),
+                UIBoxFeatureMask::none(),
+                UILayoutDirection::LeftToRight,
+                [
+                    UISizeWithStrictness {
+                        size: UISize::Pixels(8),
+                        strictness: 1.0,
+                    },
+                    UISizeWithStrictness {
+                        size: UISize::MaxOfSiblings,
+                        strictness: 1.0,
+                    },
+                ],
+            ))?;
+        }
+
+        // Button.
+
+        let mut button_ui_box = UIBox::new(
+            format!(
+                "ToolbarItemList_Item{}__toolbar_item_list_item{}",
+                button_index, button_index
+            ),
+            UIBoxFeatureFlag::DrawFill
+                | UIBoxFeatureFlag::DrawBorder
+                | UIBoxFeatureFlag::DrawText
+                | UIBoxFeatureFlag::Hoverable
+                | UIBoxFeatureFlag::Clickable,
+            UILayoutDirection::LeftToRight,
+            [
+                UISizeWithStrictness {
+                    size: UISize::TextContent,
+                    strictness: 1.0,
+                },
+                UISizeWithStrictness {
+                    size: UISize::Pixels(64),
+                    strictness: 1.0,
+                },
+            ],
+        );
+
+        button_ui_box.text_content = Some(button_label.to_string());
+
+        tree.push(button_ui_box)?;
+    }
+
+    tree.pop_parent()?;
 
     tree.pop_parent()
 }

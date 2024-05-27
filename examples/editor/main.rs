@@ -103,7 +103,8 @@ fn main() -> Result<(), String> {
                     ],
                 ))?;
 
-                editor_ui::build_editor_main_menu_bar(tree)
+                editor_ui::build_main_menu_bar(tree)?;
+                editor_ui::build_toolbar(tree)
             })?;
 
             // `Current` is now back at the root...
