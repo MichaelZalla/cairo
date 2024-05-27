@@ -16,7 +16,7 @@ use cairo::{
     },
 };
 
-pub mod editor_ui;
+pub mod editor;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -103,9 +103,9 @@ fn main() -> Result<(), String> {
                     ],
                 ))?;
 
-                editor_ui::build_main_menu_bar(tree)?;
-                editor_ui::build_toolbar(tree)?;
-                editor_ui::build_main_panel(tree)
+                editor::ui::build_main_menu_bar(tree)?;
+                editor::ui::build_toolbar(tree)?;
+                editor::ui::build_main_panel(tree)
             })?;
 
             // `Current` is now back at the root...
