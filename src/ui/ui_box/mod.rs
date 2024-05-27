@@ -45,6 +45,8 @@ pub static UI_BOX_ACTIVE_COLOR: Color = color::YELLOW;
 
 pub static UI_BOX_TRANSITION_RATE: f32 = 15.0;
 
+static UI_BOX_DEBUG_AUTOLAYOUT: bool = true;
+
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
 // interpret user inputs, while computed fields from the current frame are used
@@ -297,7 +299,11 @@ impl UIBox {
             self.styles.fill_color
         };
 
-        let border_color = self.styles.border_color.as_ref();
+        let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
+            Some(&color::RED)
+        } else {
+            self.styles.border_color.as_ref()
+        };
 
         Graphics::rectangle(
             target,
