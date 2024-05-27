@@ -285,3 +285,279 @@ pub fn build_toolbar(tree: &mut UIBoxTree) -> Result<(), String> {
 
     tree.pop_parent()
 }
+
+pub fn build_main_panel(tree: &mut UIBoxTree) -> Result<(), String> {
+    tree.push_parent(UIBox::new(
+        "Main__main".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    // Main > Left (Scene, 3DViewport, Game, Assets/Console).
+
+    tree.push_parent(UIBox::new(
+        "Main_Left__main_left".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::TopToBottom,
+        [
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    // Main > Left > Top (Outline, 3D Viewport, Game).
+
+    tree.push_parent(UIBox::new(
+        "Main_Left_Top__main_left_top".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    // Main > Left > Top > Left (Outline).
+
+    tree.push_parent(UIBox::new(
+        "Main_Left_Top_Left__main_left_top_left".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::TopToBottom,
+        [
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    let mut button_ui_box = UIBox::new(
+        "Main_Left_Left_TextLabel__main_left_left_text_label".to_string(),
+        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawText,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+        ],
+    );
+
+    button_ui_box.text_content = Some("Outline panel".to_string());
+
+    tree.push(button_ui_box)?;
+
+    // Back to Main > Left > Top.
+
+    tree.pop_parent()?;
+
+    // Main > Left > Top > Middle (3D Viewport).
+
+    tree.push_parent(UIBox::new(
+        "Main_Left_Top_Middle__main_left_top_middle".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::TopToBottom,
+        [
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    let mut button_ui_box = UIBox::new(
+        "Main_Left_Middle_TextLabel__main_left_middle_text_label".to_string(),
+        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawText,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+        ],
+    );
+
+    button_ui_box.text_content = Some("3D Viewport panel".to_string());
+
+    tree.push(button_ui_box)?;
+
+    // Back to Main > Left > Top.
+
+    tree.pop_parent()?;
+
+    // Main > Left > Top > Right (Game Viewport).
+
+    tree.push_parent(UIBox::new(
+        "Main_Left_Top_Right__main_left_top_right".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::TopToBottom,
+        [
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    let mut button_ui_box = UIBox::new(
+        "Main_Left_Right_TextLabel__main_left_right_text_label".to_string(),
+        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawText,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+        ],
+    );
+
+    button_ui_box.text_content = Some("Game Viewport panel".to_string());
+
+    tree.push(button_ui_box)?;
+
+    // Back to Main > Left > Top.
+
+    tree.pop_parent()?;
+
+    // Back to Main > Left.
+
+    tree.pop_parent()?;
+
+    // Main > Left > Bottom (Assets, Console).
+
+    tree.push_parent(UIBox::new(
+        "Main_Left_Bottom__main_left_bottom".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::Pixels(325),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    let mut button_ui_box = UIBox::new(
+        "Main_Left_Bottom_TextLabel__main_left_bottom_text_label".to_string(),
+        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawText,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+        ],
+    );
+
+    button_ui_box.text_content = Some("Console panel".to_string());
+
+    tree.push(button_ui_box)?;
+
+    // Back to Main > Left.
+
+    tree.pop_parent()?;
+
+    // Back to Main > Left.
+
+    tree.pop_parent()?;
+
+    // Main > Right (Inspector).
+
+    tree.push_parent(UIBox::new(
+        "Main_Right__main_right".to_string(),
+        UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UILayoutDirection::TopToBottom,
+        [
+            UISizeWithStrictness {
+                size: UISize::Pixels(375),
+                strictness: 0.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::PercentOfParent(1.0),
+                strictness: 1.0,
+            },
+        ],
+    ))?;
+
+    let mut button_ui_box = UIBox::new(
+        "Main_Right_TextLabel__main_right_text_label".to_string(),
+        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawText,
+        UILayoutDirection::LeftToRight,
+        [
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+        ],
+    );
+
+    button_ui_box.text_content = Some("Inspector panel".to_string());
+
+    tree.push(button_ui_box)?;
+
+    // Back to Main.
+
+    tree.pop_parent()?;
+
+    // Back to Root.
+
+    tree.pop_parent()
+}
