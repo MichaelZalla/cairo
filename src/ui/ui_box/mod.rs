@@ -35,9 +35,22 @@ bitmask! {
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum UILayoutDirection {
-    #[default]
     TopToBottom,
+    #[default]
     LeftToRight,
+}
+
+impl fmt::Display for UILayoutDirection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                UILayoutDirection::TopToBottom => "TopToBottom",
+                UILayoutDirection::LeftToRight => "LeftToRight",
+            }
+        )
+    }
 }
 
 pub static UI_BOX_HOT_COLOR: Color = color::RED;
@@ -58,6 +71,7 @@ pub struct UIBox {
     pub features: UIBoxFeatureMask,
     pub text_content: Option<String>,
     pub layout_direction: UILayoutDirection,
+    pub parent_layout_direction: UILayoutDirection,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     pub styles: UIBoxStyles,
     #[serde(skip)]

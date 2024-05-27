@@ -64,7 +64,8 @@ fn main() -> Result<(), String> {
 
                     tree.clear();
 
-                    let alpha = uptime.sin() / 2.0 + 0.5;
+                    let alpha_x = uptime.sin() / 2.0 + 0.5;
+                    let alpha_y = uptime.cos() / 2.0 + 0.5;
 
                     ctx.fill_color(color::WHITE, || {
                         tree.push_parent(UIBox::new(
@@ -74,18 +75,18 @@ fn main() -> Result<(), String> {
                             [
                                 UISizeWithStrictness {
                                     size: UISize::Pixels(lerp(
-                                        window_info.window_resolution.width as f32 / 2.0,
+                                        window_info.window_resolution.width as f32 * 0.66,
                                         window_info.window_resolution.width as f32,
-                                        alpha,
+                                        alpha_x,
                                     )
                                         as u32),
                                     strictness: 1.0,
                                 },
                                 UISizeWithStrictness {
                                     size: UISize::Pixels(lerp(
-                                        window_info.window_resolution.height as f32 / 2.0,
+                                        window_info.window_resolution.height as f32 * 0.66,
                                         window_info.window_resolution.height as f32,
-                                        alpha,
+                                        alpha_y,
                                     )
                                         as u32),
                                     strictness: 1.0,
@@ -141,11 +142,11 @@ fn main() -> Result<(), String> {
                             UILayoutDirection::TopToBottom,
                             [
                                 UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
+                                    size: UISize::Pixels(6),
                                     strictness: 1.0,
                                 },
                                 UISizeWithStrictness {
-                                    size: UISize::Pixels(6),
+                                    size: UISize::PercentOfParent(1.0),
                                     strictness: 1.0,
                                 },
                             ],
@@ -183,7 +184,7 @@ fn main() -> Result<(), String> {
                             UILayoutDirection::LeftToRight,
                             [
                                 UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(0.66),
+                                    size: UISize::PercentOfParent(1.0),
                                     strictness: 0.0,
                                 },
                                 UISizeWithStrictness {
@@ -203,7 +204,7 @@ fn main() -> Result<(), String> {
                             UILayoutDirection::TopToBottom,
                             [
                                 UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
+                                    size: UISize::PercentOfParent(1.0 / 3.0),
                                     strictness: 0.0,
                                 },
                                 UISizeWithStrictness {
@@ -221,7 +222,7 @@ fn main() -> Result<(), String> {
                             UILayoutDirection::TopToBottom,
                             [
                                 UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
+                                    size: UISize::PercentOfParent(2.0 / 3.0),
                                     strictness: 0.0,
                                 },
                                 UISizeWithStrictness {
@@ -271,7 +272,6 @@ fn main() -> Result<(), String> {
 
                                 let mut text_ui_box = UIBox::new(
                                     format!("RootChild2Child2Child{}Text__root_child2_child2_child{}_text", i, i),
-                                    
                                         UIBoxFeatureFlag::DrawText
                                         | UIBoxFeatureFlag::Hoverable
                                         | UIBoxFeatureFlag::Clickable,

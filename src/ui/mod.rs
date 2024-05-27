@@ -42,16 +42,16 @@ pub struct UISizeWithStrictness {
 #[derive(Default, Debug, Copy, Clone)]
 pub enum UI2DAxis {
     #[default]
-    X,
-    Y,
+    Primary,
+    Secondary,
 }
 
 impl UI2DAxis {
     pub fn from_usize(i: usize) -> Self {
         if i == 0 {
-            Self::X
+            Self::Primary
         } else if i == 1 {
-            Self::Y
+            Self::Secondary
         } else {
             panic!()
         }
@@ -64,8 +64,8 @@ impl fmt::Display for UI2DAxis {
             f,
             "{}",
             match self {
-                UI2DAxis::X => "X",
-                UI2DAxis::Y => "Y",
+                UI2DAxis::Primary => "Primary",
+                UI2DAxis::Secondary => "Secondary",
             }
         )
     }
