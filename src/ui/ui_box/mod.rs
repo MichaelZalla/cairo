@@ -7,14 +7,12 @@ use bitmask::bitmask;
 use sdl2::mouse::MouseButton;
 
 use crate::{
-    animation::lerp,
     buffer::Buffer2D,
     color::{self, Color},
     debug_print,
     device::{MouseEventKind, MouseState},
     graphics::{text::TextOperation, Graphics},
     ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
-    vec::vec3::Vec3,
 };
 
 use self::key::UIKey;
@@ -286,24 +284,16 @@ impl UIBox {
                 None => Default::default(),
             };
 
-            let with_hot = lerp_color_linear(UI_BOX_HOT_COLOR, end, self.hot_transition);
+            let with_hot = UI_BOX_HOT_COLOR.lerp_linear(end, self.hot_transition);
 
-            Some(lerp_color_linear(
-                UI_BOX_ACTIVE_COLOR,
-                with_hot,
-                self.active_transition,
-            ))
+            Some(UI_BOX_ACTIVE_COLOR.lerp_linear(with_hot, self.active_transition))
         } else if self.hot_transition < 0.999 {
             let end = match self.styles.fill_color {
                 Some(color) => color,
                 None => Default::default(),
             };
 
-            Some(lerp_color_linear(
-                UI_BOX_HOT_COLOR,
-                end,
-                self.hot_transition,
-            ))
+            Some(UI_BOX_HOT_COLOR.lerp_linear(end, self.hot_transition))
         } else {
             self.styles.fill_color
         };
@@ -352,24 +342,4 @@ impl fmt::Display for UIBox {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "UIBox(id=\"{}\", hash={})", self.id, self.key)
     }
-}
-
-fn lerp_color_linear(start: Color, end: Color, alpha: f32) -> Color {
-    let start_vec3 = {
-        let mut c = start.to_vec3();
-        c.srgb_to_linear();
-        c
-    };
-
-    let end_vec3: Vec3 = {
-        let mut c = end.to_vec3();
-        c.srgb_to_linear();
-        c
-    };
-
-    let mut mixed = lerp(start_vec3, end_vec3, alpha);
-
-    mixed.linear_to_srgb();
-
-    Color::from_vec3(mixed)
 }

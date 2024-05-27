@@ -2,7 +2,10 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::vec::{vec3::Vec3, vec4::Vec4};
+use crate::{
+    animation::lerp,
+    vec::{vec3::Vec3, vec4::Vec4},
+};
 
 pub mod blend;
 
@@ -104,5 +107,25 @@ impl Color {
             z: self.b,
             w: self.a,
         }
+    }
+
+    pub fn lerp_linear(&self, rhs: Color, alpha: f32) -> Color {
+        let start_vec3 = {
+            let mut c = self.to_vec3();
+            c.srgb_to_linear();
+            c
+        };
+
+        let end_vec3: Vec3 = {
+            let mut c = rhs.to_vec3();
+            c.srgb_to_linear();
+            c
+        };
+
+        let mut mixed = lerp(start_vec3, end_vec3, alpha);
+
+        mixed.linear_to_srgb();
+
+        Self::from_vec3(mixed)
     }
 }
