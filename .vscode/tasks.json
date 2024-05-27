@@ -64,6 +64,24 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo run --example editor",
+      "windows": {
+        "command": "cargo run --example editor C:/Windows/Fonts/vgasys.fon"
+      },
+      "osx": {
+        "command": "cargo run --example editor /System/Library/Fonts/Monaco.ttf"
+      },
+      "linux": {
+        "command": "cargo run --example editor"
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
         "kind": "build"
       },
       "label": "Rust: cargo run --example immediate-ui-old",
