@@ -15,6 +15,7 @@ pub enum UISize {
     TextContent,
     PercentOfParent(f32),
     ChildrenSum,
+    MaxOfSiblings,
 }
 
 impl fmt::Display for UISize {
@@ -28,6 +29,7 @@ impl fmt::Display for UISize {
                 UISize::TextContent => "TextContent",
                 UISize::PercentOfParent(_) => "PercentOfParent",
                 UISize::ChildrenSum => "ChildrenSum",
+                UISize::MaxOfSiblings => "MaxOfSiblings",
             }
         )
     }

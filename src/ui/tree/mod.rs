@@ -166,7 +166,59 @@ impl<'a> UIBoxTree<'a> {
             },
         )?;
 
-        // 2. Calculate upward-dependent sizes with a pre-order traversal.
+        // 2. Calculate sibling-dependent sizes with pre-order traversal.
+
+        debug_print!(">\n> (Sibling-dependent pass...)\n>");
+
+        self.visit_root_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |_depth, parent_data, node| {
+            let ui_box = &mut node.data;
+
+            let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
+
+            for (axis_index, _size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
+                let axis = UI2DAxis::from_usize(axis_index);
+                
+                let is_horizontal_axis = match (axis, parent_layout_direction) {
+                    (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
+                    (UI2DAxis::Primary, UILayoutDirection::TopToBottom) | (UI2DAxis::Secondary, UILayoutDirection::LeftToRight) => false
+                };
+
+                let screen_axis_index = if is_horizontal_axis { 0 } else { 1 };
+
+                if node.children.is_empty() {
+                    return Ok(());
+                }
+
+                let child_sizes_along_axis = node
+                    .children
+                    .iter()
+                    .map(|c| c.borrow().data.computed_size[screen_axis_index]);
+
+                let max = child_sizes_along_axis
+                    .into_iter()
+                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap();
+
+                for child in &mut node.children {
+                    let child_ui_box = &mut child.borrow_mut().data;
+
+                    let corresponding_child_axis = match (ui_box.layout_direction, is_horizontal_axis) {
+                        (UILayoutDirection::TopToBottom, true) | (UILayoutDirection::LeftToRight, false) => 1,
+                        (UILayoutDirection::TopToBottom, false) | (UILayoutDirection::LeftToRight, true) => 0,
+                    };
+
+                    let child_size_along_corresponding_child_axis = child_ui_box.semantic_sizes[corresponding_child_axis];
+    
+                    if matches!(child_size_along_corresponding_child_axis.size, UISize::MaxOfSiblings) {
+                        child_ui_box.computed_size[screen_axis_index] = max;
+                    }
+                }
+            }
+
+            Ok(())
+        })?;
+
+        // 3. Calculate upward-dependent sizes with a pre-order traversal.
 
         debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
 
@@ -218,7 +270,7 @@ impl<'a> UIBoxTree<'a> {
                                     );
                                 },
                                 UISize::Null => panic!("{}: Parent node has `Null` size for screen axis {}!", ui_box.id, if screen_axis_index == 0 { "X" } else { "Y" }),
-                                UISize::Pixels(_) | UISize::TextContent | UISize::PercentOfParent(_) => {
+                                UISize::Pixels(_) | UISize::TextContent | UISize::PercentOfParent(_) | UISize::MaxOfSiblings => {
                                     ui_box.computed_size[screen_axis_index] = parent.computed_size[screen_axis_index] * percentage;
 
                                     println_indent(
@@ -257,7 +309,7 @@ impl<'a> UIBoxTree<'a> {
             Ok(())
         })?;
 
-        // 3. Calculate downward-dependent sizes with a post-order traversal.
+        // 4. Calculate downward-dependent sizes with a post-order traversal.
 
         debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
 
@@ -336,7 +388,7 @@ impl<'a> UIBoxTree<'a> {
             Ok(())
         })?;
 
-        // 4. Solve any violations (children extending beyond parent) with a pre-order traversal.
+        // 5. Solve any violations (children extending beyond parent) with a pre-order traversal.
 
         debug_print!(">\n> (Violations pass...)\n>");
 
@@ -374,7 +426,7 @@ impl<'a> UIBoxTree<'a> {
                                 ),
                             );
                         }
-                        UISize::Pixels(_) | UISize::PercentOfParent(_) => {
+                        UISize::Pixels(_) | UISize::PercentOfParent(_) | UISize::MaxOfSiblings => {
                             let computed_size_along_axis = ui_box.computed_size[screen_axis_index];
 
                             let size_of_children_along_axis = {
@@ -486,7 +538,7 @@ impl<'a> UIBoxTree<'a> {
             },
         )?;
 
-        // 5. Compute the relative positions of each child with a pre-order traversal.
+        // 6. Compute the relative positions of each child with a pre-order traversal.
 
         debug_print!(">\n> (Relative positioning pass...)\n>");
 
