@@ -8,10 +8,7 @@ use crate::{
     graphics::text::cache::TextCache,
 };
 
-use super::{
-    tree::UIBoxTree,
-    ui_box::{key::UIKey, UIBox},
-};
+use super::ui_box::{key::UIKey, tree::UIBoxTree, UIBox};
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxStyleStack<T> {

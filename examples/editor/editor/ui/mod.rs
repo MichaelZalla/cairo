@@ -1,6 +1,5 @@
 use cairo::ui::{
-    tree::UIBoxTree,
-    ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 

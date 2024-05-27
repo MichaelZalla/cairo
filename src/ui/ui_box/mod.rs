@@ -21,6 +21,7 @@ use self::key::UIKey;
 use super::{extent::ScreenExtent, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
 pub mod key;
+pub mod tree;
 
 bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
