@@ -50,12 +50,17 @@ pub fn do_slider(
         item: ctx.next_id(),
     };
 
-    cache_text(
-        ctx.font_cache,
-        ctx.text_cache,
-        &ctx.font_info,
-        &options.label,
-    );
+    {
+        let mut font_cache = ctx.font_cache.borrow_mut();
+        let mut text_cache = ctx.text_cache.borrow_mut();
+
+        cache_text(
+            &mut font_cache,
+            &mut text_cache,
+            &ctx.font_info,
+            &options.label,
+        );
+    }
 
     let label_texture_width: u32;
     let label_texture_height: u32;

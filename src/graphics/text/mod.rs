@@ -1,5 +1,3 @@
-use std::{borrow::BorrowMut, cell::RefCell};
-
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
 use crate::{
@@ -25,11 +23,11 @@ pub struct TextOperation<'a> {
 }
 
 impl Graphics {
-    pub fn text<'a>(
+    pub fn text(
         dest_buffer: &mut Buffer2D,
-        font_cache_rc: &'a RefCell<FontCache>,
-        text_cache_rc: Option<&'a RefCell<TextCache<'a>>>,
-        font_info: &'a FontInfo,
+        font_cache: &mut FontCache,
+        text_cache: Option<&mut TextCache>,
+        font_info: &FontInfo,
         op: &TextOperation,
     ) -> Result<(), String> {
         // Generate a texture for this text operation.
@@ -39,19 +37,15 @@ impl Graphics {
             text: op.text.clone(),
         };
 
-        match text_cache_rc {
-            Some(lock) => {
-                cache_text(font_cache_rc, lock, font_info, op.text);
-
-                let text_cache = lock.borrow_mut();
+        match text_cache {
+            Some(text_cache) => {
+                cache_text(font_cache, text_cache, font_info, op.text);
 
                 let cached_texture = text_cache.get(&text_cache_key).unwrap();
 
                 Graphics::blit_text_from_mask(cached_texture, op, dest_buffer, None);
             }
             None => {
-                let mut font_cache = font_cache_rc.borrow_mut();
-
                 let font = font_cache.load(font_info).unwrap();
 
                 let (_label_width, _label_height, texture) =
@@ -106,17 +100,17 @@ impl Graphics {
         }
     }
 
-    pub fn render_debug_messages<'a>(
+    pub fn render_debug_messages(
         dest_buffer: &mut Buffer2D,
-        font_cache: &'a RefCell<FontCache>,
-        font_info: &'a FontInfo,
+        font_cache: &mut FontCache,
+        font_info: &FontInfo,
         position: (u32, u32),
         padding_ems: f32,
-        debug_messages: &mut DebugMessageBuffer,
+        mut debug_messages: &mut DebugMessageBuffer,
     ) {
         let mut y_offset = position.1;
 
-        for msg in debug_messages.borrow_mut() {
+        for msg in &mut debug_messages {
             let op = TextOperation {
                 text: &msg,
                 x: position.0,

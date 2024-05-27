@@ -464,7 +464,7 @@ fn main() -> Result<(), String> {
                         {
                             Graphics::render_debug_messages(
                                 &mut color_buffer,
-                                font_cache_rc,
+                                font_cache_rc.get_mut(),
                                 font_info,
                                 (12, 12),
                                 1.0,

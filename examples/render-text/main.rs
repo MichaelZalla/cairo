@@ -36,7 +36,7 @@ fn main() -> Result<(), String> {
         point_size: 16,
     };
 
-    let font_cache_rc = RefCell::new(FontCache::new(app.context.ttf_context));
+    let mut font_cache_rc = RefCell::new(FontCache::new(app.context.ttf_context));
 
     let _text_cache_rc = RefCell::new(TextCache::new());
 
@@ -76,7 +76,7 @@ fn main() -> Result<(), String> {
 
         Graphics::text(
             &mut framebuffer,
-            &font_cache_rc,
+            font_cache_rc.get_mut(),
             None,
             &font_info,
             &TextOperation {
@@ -96,7 +96,7 @@ fn main() -> Result<(), String> {
 
         Graphics::text(
             &mut framebuffer,
-            &font_cache_rc,
+            font_cache_rc.get_mut(),
             None,
             &font_info,
             &TextOperation {

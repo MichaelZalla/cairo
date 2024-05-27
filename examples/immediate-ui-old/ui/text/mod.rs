@@ -41,12 +41,17 @@ pub fn do_text(
 
     match options.cache {
         true => {
-            cache_text(
-                ctx.font_cache,
-                ctx.text_cache,
-                &ctx.font_info,
-                &options.text,
-            );
+            {
+                let mut font_cache = ctx.font_cache.borrow_mut();
+                let mut text_cache = ctx.text_cache.borrow_mut();
+
+                cache_text(
+                    &mut font_cache,
+                    &mut text_cache,
+                    &ctx.font_info,
+                    &options.text,
+                );
+            }
 
             let text_cache_key = TextCacheKey {
                 font_info: ctx.font_info.clone(),

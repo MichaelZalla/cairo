@@ -2,7 +2,11 @@ use std::{cell::RefCell, collections::HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::color::Color;
+use crate::{
+    color::Color,
+    font::{cache::FontCache, FontInfo},
+    graphics::text::cache::TextCache,
+};
 
 use super::{
     tree::UIBoxTree,
@@ -37,8 +41,11 @@ pub struct UIBoxStylesMap<T: Default + Clone> {
 pub type UIBoxStyles = UIBoxStylesMap<Option<Color>>;
 pub type UIBoxStylesContext = UIBoxStylesMap<UIBoxStyleStack<Color>>;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug)]
 pub struct UIContext<'a> {
+    pub font_cache: RefCell<Option<FontCache<'a>>>,
+    pub font_info: RefCell<FontInfo>,
+    pub text_cache: RefCell<TextCache>,
     pub styles: RefCell<UIBoxStylesContext>,
     pub tree: RefCell<UIBoxTree<'a>>,
     pub dropdown_menus: RefCell<UIBoxTree<'a>>,

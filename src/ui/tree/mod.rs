@@ -5,11 +5,8 @@ use crate::{
     debug::println_indent,
     debug_print,
     device::{GameControllerState, KeyboardState, MouseState},
-    ui::{
-        extent::ScreenExtent,
-        ui_box::UILayoutDirection,
-        UI2DAxis, UISize,
-    },
+    graphics::text::cache::cache_text,
+    ui::{extent::ScreenExtent, ui_box::UILayoutDirection, UI2DAxis, UISize},
     visit_dfs, visit_dfs_mut,
 };
 
@@ -111,28 +108,44 @@ impl<'a> UIBoxTree<'a> {
                             );
                             ui_box.computed_size[axis_index] = pixels as f32;
                         }
-                        UISize::TextContent => match axis {
-                            UI2DAxis::X => {
-                                println_indent(
-                                    depth,
-                                    format!(
-                                        "{}: Assuming horizontal text size to be 50.0",
-                                        ui_box.id
-                                    ),
-                                );
+                        UISize::TextContent => {
+                            let (texture_width, texture_height) = GLOBAL_UI_CONTEXT.with(|ctx| {
+                                let font_info = ctx.font_info.borrow();
+                                let mut text_cache = ctx.text_cache.borrow_mut();
+                                let mut font_cache_rc = ctx.font_cache.borrow_mut();
+                                let font_cache = font_cache_rc.as_mut().expect("Found a UIBox with `DrawText` feature enabled when `GLOBAL_UI_CONTEXT.font_cache` is `None`!");
 
-                                ui_box.computed_size[axis_index] = 50.0;
-                            }
-                            UI2DAxis::Y => {
-                                println_indent(
-                                    depth,
-                                    format!(
-                                        "{}: Assuming vertical text size to be 18.0",
-                                        ui_box.id
-                                    ),
-                                );
+                                let text_content = ui_box.text_content.as_ref().expect("Found a UIBox with `DrawText` feature enabled, with no `text_content` set!");
+                
+                                cache_text(font_cache, &mut text_cache, &font_info, text_content)
+                            });
 
-                                ui_box.computed_size[axis_index] = 10.0;
+                            match axis {
+                                UI2DAxis::X => {
+                                    ui_box.computed_size[axis_index] = texture_width as f32;
+    
+                                    println_indent(
+                                        depth,
+                                        format!(
+                                            "{}: Rendered text has width {}px.",
+                                            ui_box.id,
+                                            texture_width
+                                        ),
+                                    );
+                                    
+                                }
+                                UI2DAxis::Y => {
+                                    ui_box.computed_size[axis_index] = texture_height as f32;
+                                    
+                                    println_indent(
+                                        depth,
+                                        format!(
+                                            "{}: Rendered text has height {}px.",
+                                            ui_box.id,
+                                            texture_height
+                                        ),
+                                    );
+                                }
                             }
                         },
                         _ => println_indent(

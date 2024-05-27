@@ -6,6 +6,7 @@ use cairo::{
     buffer::Buffer2D,
     color,
     device::{GameControllerState, KeyboardState, MouseState},
+    font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,
         ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
@@ -22,6 +23,19 @@ fn main() -> Result<(), String> {
     };
 
     let app = App::new(&mut window_info);
+
+    GLOBAL_UI_CONTEXT.with(|ctx| {
+        ctx.font_cache
+            .borrow_mut()
+            .replace(FontCache::new(app.context.ttf_context));
+
+        {
+            let mut font_info = ctx.font_info.borrow_mut();
+
+            font_info.filepath = "C:/Windows/Fonts/vgasys.fon".to_string();
+            font_info.point_size = 16;
+        }
+    });
 
     // Set up our app
 
@@ -50,6 +64,8 @@ fn main() -> Result<(), String> {
 
                     tree.clear();
 
+                    let alpha = uptime.sin() / 2.0 + 0.5;
+
                     ctx.fill_color(color::WHITE, || {
                         tree.push_parent(UIBox::new(
                             "Root__root".to_string(),
@@ -58,18 +74,18 @@ fn main() -> Result<(), String> {
                             [
                                 UISizeWithStrictness {
                                     size: UISize::Pixels(lerp(
-                                        512.0,
-                                        768.0,
-                                        uptime.sin() / 2.0 + 1.0,
+                                        window_info.window_resolution.width as f32 / 2.0,
+                                        window_info.window_resolution.width as f32,
+                                        alpha,
                                     )
                                         as u32),
                                     strictness: 1.0,
                                 },
                                 UISizeWithStrictness {
                                     size: UISize::Pixels(lerp(
-                                        378.0,
-                                        512.0,
-                                        uptime.sin() / 2.0 + 1.0,
+                                        window_info.window_resolution.height as f32 / 2.0,
+                                        window_info.window_resolution.height as f32,
+                                        alpha,
                                     )
                                         as u32),
                                     strictness: 1.0,
@@ -120,7 +136,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::BLACK, || {
                         tree.push(UIBox::new(
-                            "RootChild1Child1__root_child1_spacer1".to_string(),
+                            "RootChild1Spacer1__root_child1_spacer1".to_string(),
                             UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
                             UILayoutDirection::TopToBottom,
                             [
@@ -221,13 +237,10 @@ fn main() -> Result<(), String> {
                             let child_count = 8_usize;
 
                             for i in 0..child_count {
-                                let node = UIBox::new(
-                                    format!("RootChild2Child2__root_child2_child2_child{}", i),
-                                    UIBoxFeatureFlag::DrawFill
-                                        | UIBoxFeatureFlag::DrawBorder
-                                        | UIBoxFeatureFlag::Hoverable
-                                        | UIBoxFeatureFlag::Clickable,
-                                    UILayoutDirection::TopToBottom,
+                                tree.push_parent(UIBox::new(
+                                    format!("RootChild2Child2Child{}__root_child2_child2_child{}", i, i),
+                                    UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable,
+                                    UILayoutDirection::LeftToRight,
                                     [
                                         UISizeWithStrictness {
                                             size: UISize::PercentOfParent(1.0),
@@ -238,9 +251,64 @@ fn main() -> Result<(), String> {
                                             strictness: 0.0,
                                         },
                                     ],
+                                ))?;
+
+                                tree.push(UIBox::new(
+                                    format!("RootChild2Child2Child{}SpacerBefore__root_child2_child2_child{}_spacer_before", i, i),
+                                    UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                                    UILayoutDirection::TopToBottom,
+                                    [
+                                        UISizeWithStrictness {
+                                            size: UISize::PercentOfParent(1.0),
+                                            strictness: 0.0,
+                                        },
+                                        UISizeWithStrictness {
+                                            size: UISize::Pixels(1),
+                                            strictness: 1.0,
+                                        },
+                                    ],
+                                ))?;
+
+                                let mut text_ui_box = UIBox::new(
+                                    format!("RootChild2Child2Child{}Text__root_child2_child2_child{}_text", i, i),
+                                    
+                                        UIBoxFeatureFlag::DrawText
+                                        | UIBoxFeatureFlag::Hoverable
+                                        | UIBoxFeatureFlag::Clickable,
+                                    UILayoutDirection::TopToBottom,
+                                    [
+                                        UISizeWithStrictness {
+                                            size: UISize::TextContent,
+                                            strictness: 1.0,
+                                        },
+                                        UISizeWithStrictness {
+                                            size: UISize::TextContent,
+                                            strictness: 1.0,
+                                        },
+                                    ],
                                 );
 
-                                tree.push(node)?;
+                                text_ui_box.text_content = Some(format!("Label {}", i));
+
+                                tree.push(text_ui_box)?;
+
+                                tree.push(UIBox::new(
+                                    format!("RootChild2Child2Child{}SpacerAfter__root_child2_child2_child{}_spacer_after", i, i),
+                                    UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                                    UILayoutDirection::TopToBottom,
+                                    [
+                                        UISizeWithStrictness {
+                                            size: UISize::PercentOfParent(1.0),
+                                            strictness: 0.0,
+                                        },
+                                        UISizeWithStrictness {
+                                            size: UISize::Pixels(1),
+                                            strictness: 1.0,
+                                        },
+                                    ],
+                                ))?;
+
+                                tree.pop_parent()?;
                             }
 
                             Ok(())

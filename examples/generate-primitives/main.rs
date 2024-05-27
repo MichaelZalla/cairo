@@ -869,10 +869,11 @@ fn main() -> Result<(), String> {
 
                         {
                             let debug_messages = &mut *debug_message_buffer_rc.borrow_mut();
+                            let mut font_cache = font_cache_rc.borrow_mut();
 
                             Graphics::render_debug_messages(
                                 &mut color_buffer,
-                                font_cache_rc,
+                                &mut font_cache,
                                 font_info,
                                 (12, 12),
                                 1.0,

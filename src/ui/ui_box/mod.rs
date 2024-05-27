@@ -12,7 +12,7 @@ use crate::{
     color::{self, Color},
     debug_print,
     device::{MouseEventKind, MouseState},
-    graphics::Graphics,
+    graphics::{text::TextOperation, Graphics},
     ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
     vec::vec3::Vec3,
 };
@@ -28,8 +28,9 @@ bitmask! {
     pub mask UIBoxFeatureMask: u32 where flags UIBoxFeatureFlag {
         DrawFill = (1 << 0),
         DrawBorder = (1 << 1),
-        Hoverable = (1 << 2),
-        Clickable = (1 << 3),
+        DrawText = (1 << 2),
+        Hoverable = (1 << 3),
+        Clickable = (1 << 4),
     }
 }
 
@@ -54,6 +55,7 @@ pub struct UIBox {
     pub id: String,
     pub key: UIKey,
     pub features: UIBoxFeatureMask,
+    pub text_content: Option<String>,
     pub layout_direction: UILayoutDirection,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     pub styles: UIBoxStyles,
@@ -317,6 +319,30 @@ impl UIBox {
             fill_color.as_ref(),
             border_color,
         );
+
+        if self.features.contains(UIBoxFeatureFlag::DrawText) {
+            let text_content = self.text_content.as_ref().expect("Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!");
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let mut text_cache = ctx.text_cache.borrow_mut();
+                let font_info = ctx.font_info.borrow();
+                let mut font_cache_rc = ctx.font_cache.borrow_mut();
+                let font_cache = font_cache_rc.as_mut().expect("Found a UIBox with `DrawText` feature enabled when `GLOBAL_UI_CONTEXT.font_cache` is `None`!");
+
+                Graphics::text(
+                    target,
+                    font_cache,
+                    Some(&mut text_cache),
+                    &font_info,
+                    &TextOperation {
+                        text: text_content,
+                        x,
+                        y,
+                        color: color::WHITE
+                    }
+                ).unwrap();
+            });
+        }
 
         Ok(())
     }
