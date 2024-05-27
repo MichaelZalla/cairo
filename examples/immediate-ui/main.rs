@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+use std::env;
+
 use cairo::{
     animation::lerp,
     app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
@@ -24,6 +26,15 @@ fn main() -> Result<(), String> {
 
     let app = App::new(&mut window_info);
 
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        println!("Usage: cargo run --example immediate-ui /path/to/your-font.fon");
+        return Ok(());
+    }
+
+    let font_filepath = args[1].to_string();
+
     GLOBAL_UI_CONTEXT.with(|ctx| {
         ctx.font_cache
             .borrow_mut()
@@ -32,8 +43,8 @@ fn main() -> Result<(), String> {
         {
             let mut font_info = ctx.font_info.borrow_mut();
 
-            font_info.filepath = "C:/Windows/Fonts/vgasys.fon".to_string();
-            font_info.point_size = 16;
+            font_info.filepath = font_filepath;
+            font_info.point_size = 14;
         }
     });
 
