@@ -4,11 +4,17 @@ use serde::{Deserialize, Serialize};
 
 use bitmask::bitmask;
 
+use sdl2::mouse::MouseButton;
+
 use crate::{
+    animation::lerp,
     buffer::Buffer2D,
-    color, debug_print,
+    color::{self, Color},
+    debug_print,
+    device::{MouseEventKind, MouseState},
     graphics::Graphics,
     ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
+    vec::vec3::Vec3,
 };
 
 use self::key::UIKey;
@@ -33,6 +39,11 @@ pub enum UILayoutDirection {
     TopToBottom,
     LeftToRight,
 }
+
+pub static UI_BOX_HOT_COLOR: Color = color::RED;
+pub static UI_BOX_ACTIVE_COLOR: Color = color::YELLOW;
+
+pub static UI_BOX_TRANSITION_RATE: f32 = 15.0;
 
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
@@ -116,6 +127,8 @@ impl UIBox {
             layout_direction,
             semantic_sizes,
             styles,
+            hot_transition: 1.0,
+            active_transition: 1.0,
             ..Default::default()
         };
 
@@ -133,22 +146,177 @@ impl UIBox {
         (self.computed_size[0] as u32, self.computed_size[1] as u32)
     }
 
+    pub fn update_hot_state(
+        &mut self,
+        seconds_since_last_update: f32,
+        mouse_state: &mut MouseState,
+    ) {
+        self.hot = if self.features.contains(UIBoxFeatureFlag::Hoverable) && !self.key.is_null() {
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let cache = ctx.cache.borrow();
+
+                if let Some(ui_box_previous_frame) = cache.get(&self.key) {
+                    // Check if our global mouse coordinates overlap this node's bounds.
+
+                    let is_hot = ui_box_previous_frame
+                        .global_bounds
+                        .contains(mouse_state.position.0 as u32, mouse_state.position.1 as u32);
+
+                    if is_hot {
+                        // Resets hot animation transition (alpha) to zero.
+
+                        self.hot_transition = 0.0;
+                    } else {
+                        // Updates hot animation transition alpha along a exponential curve.
+
+                        let current_alpha = ui_box_previous_frame.hot_transition;
+
+                        self.hot_transition = current_alpha
+                            + (1.0 - current_alpha)
+                                * seconds_since_last_update
+                                * UI_BOX_TRANSITION_RATE;
+                    }
+
+                    is_hot
+                } else {
+                    // We weren't rendered in previous frames, so we can't be hot yet.
+
+                    false
+                }
+            })
+        } else {
+            // This node has no key (e.g., spacer, etc). Can't be hot.
+
+            false
+        };
+    }
+
+    pub fn update_active_state(
+        &mut self,
+        seconds_since_last_update: f32,
+        mouse_state: &mut MouseState,
+    ) {
+        self.active = if self.features.contains(UIBoxFeatureFlag::Clickable) && !self.key.is_null()
+        {
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let cache = ctx.cache.borrow();
+
+                if let Some(ui_box_previous_frame) = cache.get(&self.key) {
+                    // Current active state will depend on our prior active
+                    // state, if one exists.
+
+                    let was_active = ui_box_previous_frame.active;
+
+                    let is_active = if was_active {
+                        // If we were active in the previous frame, we can only
+                        // become inactive if the user released the left mouse
+                        // button.
+
+                        if let Some(event) = &mouse_state.button_event {
+                            !matches!(
+                                (event.button, event.kind),
+                                (MouseButton::Left, MouseEventKind::Up)
+                            )
+                        } else {
+                            // Otherwise, we remain active in this frame.
+
+                            true
+                        }
+                    } else {
+                        // If we weren't active in the previous frame, we can
+                        // become active if the user presses their left mouse
+                        // button while we are the hot element.
+
+                        if let Some(event) = &mouse_state.button_event {
+                            let did_transition_to_active = self.hot
+                                && matches!(
+                                    (event.button, event.kind),
+                                    (MouseButton::Left, MouseEventKind::Down)
+                                );
+
+                            if did_transition_to_active {
+                                mouse_state.button_event.take();
+                            }
+
+                            did_transition_to_active
+                        } else {
+                            false
+                        }
+                    };
+
+                    if is_active {
+                        // Resets active animation transition (alpha) to zero.
+
+                        self.active_transition = 0.0;
+                    } else {
+                        // Updates active animation transition alpha along a exponential curve.
+
+                        let current_alpha = ui_box_previous_frame.active_transition;
+
+                        self.active_transition = current_alpha
+                            + (1.0 - current_alpha)
+                                * seconds_since_last_update
+                                * UI_BOX_TRANSITION_RATE;
+                    }
+
+                    is_active
+                } else {
+                    // We weren't rendered in previous frames, so we can't be active yet.
+
+                    false
+                }
+            })
+        } else {
+            // This node has no key (e.g., spacer, etc). Can't be active.
+
+            false
+        };
+    }
+
     pub fn render(&self, target: &mut Buffer2D) -> Result<(), String> {
         let (x, y) = self.get_pixel_coordinates();
 
         let (width, height) = self.get_computed_pixel_size();
 
-        let fill_color = if self.active {
-            Some(&color::YELLOW)
-        } else if self.hot {
-            Some(&color::RED)
+        let fill_color = if self.active_transition < 0.999 {
+            let end = match self.styles.fill_color {
+                Some(color) => color,
+                None => Default::default(),
+            };
+
+            let with_hot = lerp_color_linear(UI_BOX_HOT_COLOR, end, self.hot_transition);
+
+            Some(lerp_color_linear(
+                UI_BOX_ACTIVE_COLOR,
+                with_hot,
+                self.active_transition,
+            ))
+        } else if self.hot_transition < 0.999 {
+            let end = match self.styles.fill_color {
+                Some(color) => color,
+                None => Default::default(),
+            };
+
+            Some(lerp_color_linear(
+                UI_BOX_HOT_COLOR,
+                end,
+                self.hot_transition,
+            ))
         } else {
-            self.styles.fill_color.as_ref()
+            self.styles.fill_color
         };
 
         let border_color = self.styles.border_color.as_ref();
 
-        Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
+        Graphics::rectangle(
+            target,
+            x,
+            y,
+            width,
+            height,
+            fill_color.as_ref(),
+            border_color,
+        );
 
         Ok(())
     }
@@ -158,4 +326,24 @@ impl fmt::Display for UIBox {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "UIBox(id=\"{}\", hash={})", self.id, self.key)
     }
+}
+
+fn lerp_color_linear(start: Color, end: Color, alpha: f32) -> Color {
+    let start_vec3 = {
+        let mut c = start.to_vec3();
+        c.srgb_to_linear();
+        c
+    };
+
+    let end_vec3: Vec3 = {
+        let mut c = end.to_vec3();
+        c.srgb_to_linear();
+        c
+    };
+
+    let mut mixed = lerp(start_vec3, end_vec3, alpha);
+
+    mixed.linear_to_srgb();
+
+    Color::from_vec3(mixed)
 }

@@ -1,15 +1,13 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use sdl2::mouse::MouseButton;
-
 use crate::{
     buffer::Buffer2D,
     debug::println_indent,
     debug_print,
-    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
+    device::{GameControllerState, KeyboardState, MouseState},
     ui::{
         extent::ScreenExtent,
-        ui_box::{UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::UILayoutDirection,
         UI2DAxis, UISize,
     },
     visit_dfs, visit_dfs_mut,
@@ -61,6 +59,7 @@ impl<'a> UIBoxTree<'a> {
 
     pub fn do_user_inputs_pass(
         &mut self,
+        seconds_since_last_update: f32,
         _keyboard_state: &mut KeyboardState,
         mouse_state: &mut MouseState,
         _game_controller_state: &mut GameControllerState,
@@ -75,71 +74,8 @@ impl<'a> UIBoxTree<'a> {
                 // Apply the latest user inputs, based on this node's previous layout
                 // (from the previous frame).
 
-                ui_box.hot = if ui_box.features.contains(UIBoxFeatureFlag::Hoverable)
-                    && !ui_box.key.is_null()
-                {
-                    GLOBAL_UI_CONTEXT.with(|ctx| {
-                        let cache = ctx.cache.borrow();
-
-                        if let Some(ui_box_previous_frame) = cache.get(&ui_box.key) {
-                            // Check if our global mouse coordinates overlap this node's bounds.
-
-                            ui_box_previous_frame.global_bounds.contains(
-                                mouse_state.position.0 as u32,
-                                mouse_state.position.1 as u32,
-                            )
-                        } else {
-                            // We weren't rendered in previous frames, so we can't be hot yet.
-
-                            false
-                        }
-                    })
-                } else {
-                    // This node has no key (e.g., spacer, etc). Can't be hot.
-
-                    false
-                };
-
-                ui_box.active = if ui_box.features.contains(UIBoxFeatureFlag::Clickable)
-                    && !ui_box.key.is_null()
-                {
-                    GLOBAL_UI_CONTEXT.with(|ctx| {
-                        let cache = ctx.cache.borrow();
-
-                        if let Some(ui_box_previous_frame) = cache.get(&ui_box.key) {
-                            if ui_box_previous_frame.active {
-                                mouse_state.buttons_down.contains(&MouseButton::Left)
-                            } else if ui_box.hot {
-                                if let Some(event) = mouse_state.button_event {
-                                    let matches = matches!(
-                                        (event.button, event.kind),
-                                        (MouseButton::Left, MouseEventKind::Down)
-                                    );
-
-                                    if matches {
-                                        mouse_state.button_event.take();
-                                    }
-
-                                    matches
-                                } else {
-                                    false
-                                }
-                            } else {
-                                // We weren't previously active, and we aren't hot.
-
-                                false
-                            }
-                        } else {
-                            // We weren't rendered in previous frames, so we can't be active yet.
-
-                            false
-                        }
-                    })
-                } else {
-                    // This node has no key (e.g., spacer, etc). Can't be active.
-
-                    false
-                };
+                ui_box.update_hot_state(seconds_since_last_update, mouse_state);
+                ui_box.update_active_state(seconds_since_last_update, mouse_state);
 
                 Ok(())
             },
