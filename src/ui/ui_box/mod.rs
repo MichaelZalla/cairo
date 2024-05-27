@@ -7,6 +7,7 @@ use bitmask::bitmask;
 use sdl2::mouse::MouseButton;
 
 use crate::{
+    animation::exponential,
     buffer::Buffer2D,
     color::{self, Color},
     debug_print,
@@ -169,12 +170,11 @@ impl UIBox {
                     } else {
                         // Updates hot animation transition alpha along a exponential curve.
 
-                        let current_alpha = ui_box_previous_frame.hot_transition;
-
-                        self.hot_transition = current_alpha
-                            + (1.0 - current_alpha)
-                                * seconds_since_last_update
-                                * UI_BOX_TRANSITION_RATE;
+                        self.hot_transition = exponential(
+                            ui_box_previous_frame.hot_transition,
+                            1.0,
+                            seconds_since_last_update * UI_BOX_TRANSITION_RATE,
+                        );
                     }
 
                     is_hot
@@ -251,12 +251,11 @@ impl UIBox {
                     } else {
                         // Updates active animation transition alpha along a exponential curve.
 
-                        let current_alpha = ui_box_previous_frame.active_transition;
-
-                        self.active_transition = current_alpha
-                            + (1.0 - current_alpha)
-                                * seconds_since_last_update
-                                * UI_BOX_TRANSITION_RATE;
+                        exponential(
+                            ui_box_previous_frame.active_transition,
+                            1.0,
+                            seconds_since_last_update * UI_BOX_TRANSITION_RATE,
+                        );
                     }
 
                     is_active
