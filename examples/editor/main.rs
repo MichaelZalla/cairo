@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::env;
+use std::{cell::RefCell, env};
 
 use cairo::{
     animation::lerp,
@@ -58,6 +58,12 @@ fn main() -> Result<(), String> {
         None,
     );
 
+    // Main panel tree.
+
+    let main_panel_tree = editor::panel::build_panel_tree()?;
+
+    let main_panel_tree_rc = RefCell::new(main_panel_tree);
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -69,55 +75,64 @@ fn main() -> Result<(), String> {
         // Recreate the UI tree.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            let tree = &mut ctx.tree.borrow_mut();
+            {
+                let tree = &mut ctx.tree.borrow_mut();
 
-            tree.clear();
+                tree.clear();
 
-            println!("\nRebuilding tree...\n");
+                // println!("\nRebuilding tree...\n");
 
-            let alpha_x = uptime.sin() / 2.0 + 0.5;
-            let alpha_y = uptime.cos() / 2.0 + 0.5;
+                let alpha_x = uptime.sin() / 2.0 + 0.5;
+                let alpha_y = uptime.cos() / 2.0 + 0.5;
 
-            ctx.fill_color(color::WHITE, || {
-                tree.push_parent(UIBox::new(
-                    "Root__root".to_string(),
-                    UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
-                    UILayoutDirection::TopToBottom,
-                    [
-                        UISizeWithStrictness {
-                            size: UISize::Pixels(lerp(
-                                window_info.window_resolution.width as f32 * 0.66,
-                                window_info.window_resolution.width as f32,
-                                alpha_x,
-                            ) as u32),
-                            strictness: 1.0,
-                        },
-                        UISizeWithStrictness {
-                            size: UISize::Pixels(lerp(
-                                window_info.window_resolution.height as f32 * 0.66,
-                                window_info.window_resolution.height as f32,
-                                alpha_y,
-                            ) as u32),
-                            strictness: 1.0,
-                        },
-                    ],
-                ))?;
+                ctx.fill_color(color::WHITE, || {
+                    tree.push_parent(UIBox::new(
+                        "Root__root".to_string(),
+                        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                        UILayoutDirection::TopToBottom,
+                        [
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(lerp(
+                                    window_info.window_resolution.width as f32 * 0.66,
+                                    window_info.window_resolution.width as f32,
+                                    alpha_x,
+                                ) as u32),
+                                strictness: 1.0,
+                            },
+                            UISizeWithStrictness {
+                                size: UISize::Pixels(lerp(
+                                    window_info.window_resolution.height as f32 * 0.66,
+                                    window_info.window_resolution.height as f32,
+                                    alpha_y,
+                                ) as u32),
+                                strictness: 1.0,
+                            },
+                        ],
+                    ))?;
 
-                editor::ui::build_main_menu_bar(tree)?;
-                editor::ui::build_toolbar(tree)?;
-                editor::ui::build_main_panel(tree)
-            })?;
+                    editor::ui::build_main_menu_bar_ui(tree)?;
+                    editor::ui::build_toolbar_ui(tree)
+                })?;
+            }
 
-            // `Current` is now back at the root...
+            let mut main_panel_tree = main_panel_tree_rc.borrow_mut();
 
-            tree.do_user_inputs_pass(
-                seconds_since_last_update,
-                keyboard_state,
-                mouse_state,
-                game_controller_state,
-            )?;
+            main_panel_tree.render(ctx)?;
 
-            tree.do_autolayout_pass()
+            {
+                let tree = &mut ctx.tree.borrow_mut();
+
+                // `Current` is now back at the root...
+
+                tree.do_user_inputs_pass(
+                    seconds_since_last_update,
+                    keyboard_state,
+                    mouse_state,
+                    game_controller_state,
+                )?;
+
+                tree.do_autolayout_pass()
+            }
         })
     };
 
