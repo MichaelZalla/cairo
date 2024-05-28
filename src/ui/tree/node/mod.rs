@@ -62,15 +62,17 @@ where
         }
     }
 
-    pub fn visit_dfs_mut<C>(
+    pub fn visit_dfs_mut<C, D>(
         &mut self,
         method: &NodeLocalTraversalMethod,
         current_depth: usize,
         parent_data: Option<&T>,
         visit_action: &mut C,
+        cleanup_action: &mut D,
     ) -> Result<(), String>
     where
         C: FnMut(usize, Option<&T>, &mut Self) -> Result<(), String>,
+        D: FnMut(),
     {
         match method {
             NodeLocalTraversalMethod::PreOrder => {
@@ -84,7 +86,12 @@ where
                         current_depth + 1,
                         Some(&self.data),
                         visit_action,
+                        cleanup_action,
                     )?;
+                }
+
+                if !&self.children.is_empty() {
+                    cleanup_action();
                 }
 
                 Ok(())
@@ -98,6 +105,7 @@ where
                         current_depth + 1,
                         Some(&self.data),
                         visit_action,
+                        cleanup_action,
                     )?;
                 }
 
