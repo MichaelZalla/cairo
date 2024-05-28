@@ -1,6 +1,9 @@
 use cairo::ui::{
     context::UIContext,
-    ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+    ui_box::{
+        utils::{button_box, container_box, greedy_box, spacer_box, text_box},
+        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+    },
     UISize, UISizeWithStrictness,
 };
 
@@ -11,11 +14,10 @@ static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button
 pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
     let mut tree = ctx.tree.borrow_mut();
 
-    tree.push_parent(UIBox::new(
+    tree.push_parent(container_box(
         "MainMenuBar__main_menu_bar".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
-        [
+        Some([
             UISizeWithStrictness {
                 size: UISize::ChildrenSum,
                 strictness: 1.0,
@@ -24,7 +26,7 @@ pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
                 size: UISize::PercentOfParent(1.0),
                 strictness: 1.0,
             },
-        ],
+        ]),
     ))?;
 
     // Icon
@@ -45,11 +47,10 @@ pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
         ],
     ))?;
 
-    tree.push_parent(UIBox::new(
+    tree.push_parent(container_box(
         "MainMenuBarMenu__main_menu_bar_menu".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::TopToBottom,
-        [
+        Some([
             UISizeWithStrictness {
                 size: UISize::PercentOfParent(1.0),
                 strictness: 0.0,
@@ -58,112 +59,49 @@ pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
                 size: UISize::MaxOfSiblings,
                 strictness: 1.0,
             },
-        ],
+        ]),
     ))?;
 
     // Top spacer
 
-    tree.push(UIBox::new(
+    tree.push(greedy_box(
         "MainMenuBarMenuTopSpacer__main_menu_bar_menu_top_spacer".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
-        [
-            UISizeWithStrictness {
-                size: UISize::PercentOfParent(1.0),
-                strictness: 0.0,
-            },
-            UISizeWithStrictness {
-                size: UISize::PercentOfParent(1.0),
-                strictness: 0.0,
-            },
-        ],
     ))?;
 
     // Menu item list
 
-    tree.push_parent(UIBox::new(
+    tree.push_parent(container_box(
         "MainMenuBarMenuItemList__main_menu_bar_menu_item_list".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
-        [
-            UISizeWithStrictness {
-                size: UISize::ChildrenSum,
-                strictness: 1.0,
-            },
-            UISizeWithStrictness {
-                size: UISize::ChildrenSum,
-                strictness: 1.0,
-            },
-        ],
+        None,
     ))?;
 
     for (item_index, item_label) in MENU_BAR_ITEMS.iter().enumerate() {
         // Inter-item spacer.
 
-        tree.push(UIBox::new(
-            "MainMenuBarMenuItemList_Spacer__menu_bar_menu_spacer".to_string(),
-            UIBoxFeatureMask::none(),
-            UILayoutDirection::LeftToRight,
-            [
-                UISizeWithStrictness {
-                    size: UISize::Pixels(8),
-                    strictness: 1.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::MaxOfSiblings,
-                    strictness: 1.0,
-                },
-            ],
-        ))?;
+        tree.push(spacer_box(8))?;
 
         // Menu bar item (container)
 
-        tree.push_parent(UIBox::new(
+        tree.push_parent(container_box(
             format!(
                 "MainMenuBarMenuItemList_MenuItem{}__menu_bar_menu_item_{}",
                 item_index, item_index
             ),
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
             UILayoutDirection::LeftToRight,
-            [
-                UISizeWithStrictness {
-                    size: UISize::ChildrenSum,
-                    strictness: 1.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::ChildrenSum,
-                    strictness: 1.0,
-                },
-            ],
+            None,
         ))?;
 
         // Menu bar text
 
-        let mut text_ui_box = UIBox::new(
+        tree.push(text_box(
             format!(
                 "MainMenuBarMenuItemList_MenuItem{}_Text__menu_bar_menu_item_{}_text",
                 item_index, item_index
             ),
-            UIBoxFeatureFlag::DrawFill
-                | UIBoxFeatureFlag::DrawText
-                | UIBoxFeatureFlag::Hoverable
-                | UIBoxFeatureFlag::Clickable,
-            UILayoutDirection::LeftToRight,
-            [
-                UISizeWithStrictness {
-                    size: UISize::TextContent,
-                    strictness: 1.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::TextContent,
-                    strictness: 1.0,
-                },
-            ],
-        );
-
-        text_ui_box.text_content = Some(item_label.to_string());
-
-        tree.push(text_ui_box)?;
+            item_label.to_string(),
+        ))?;
 
         tree.pop_parent()?;
     }
@@ -172,20 +110,9 @@ pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
 
     // Bottom spacer
 
-    tree.push(UIBox::new(
+    tree.push(greedy_box(
         "MainMenuBarMenuBottomSpacer__main_menu_bar_menu_bottomspacer".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
-        [
-            UISizeWithStrictness {
-                size: UISize::PercentOfParent(1.0),
-                strictness: 0.0,
-            },
-            UISizeWithStrictness {
-                size: UISize::PercentOfParent(1.0),
-                strictness: 1.0,
-            },
-        ],
     ))?;
 
     // Back to 'MainMenuBar'.
@@ -200,11 +127,10 @@ pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
 pub fn build_toolbar_ui(ctx: &UIContext) -> Result<(), String> {
     let mut tree = ctx.tree.borrow_mut();
 
-    tree.push_parent(UIBox::new(
+    tree.push_parent(container_box(
         "Toolbar__toolbar".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
-        [
+        Some([
             UISizeWithStrictness {
                 size: UISize::ChildrenSum,
                 strictness: 1.0,
@@ -213,61 +139,32 @@ pub fn build_toolbar_ui(ctx: &UIContext) -> Result<(), String> {
                 size: UISize::PercentOfParent(1.0),
                 strictness: 1.0,
             },
-        ],
+        ]),
     ))?;
 
     // Toolbar buttons list
 
-    tree.push_parent(UIBox::new(
+    tree.push_parent(container_box(
         "ToolbarItemList__toolbar_item_list".to_string(),
-        UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
-        [
-            UISizeWithStrictness {
-                size: UISize::ChildrenSum,
-                strictness: 1.0,
-            },
-            UISizeWithStrictness {
-                size: UISize::ChildrenSum,
-                strictness: 1.0,
-            },
-        ],
+        None,
     ))?;
 
     for (button_index, button_label) in TOOLBAR_BUTTONS.iter().enumerate() {
         // Inter-item spacer.
 
         if button_index != 0 {
-            tree.push(UIBox::new(
-                "".to_string(),
-                UIBoxFeatureMask::none(),
-                UILayoutDirection::LeftToRight,
-                [
-                    UISizeWithStrictness {
-                        size: UISize::Pixels(8),
-                        strictness: 1.0,
-                    },
-                    UISizeWithStrictness {
-                        size: UISize::MaxOfSiblings,
-                        strictness: 1.0,
-                    },
-                ],
-            ))?;
+            tree.push(spacer_box(8))?;
         }
 
         // Button.
 
-        let mut button_ui_box = UIBox::new(
+        tree.push(button_box(
             format!(
                 "ToolbarItemList_Item{}__toolbar_item_list_item{}",
                 button_index, button_index
             ),
-            UIBoxFeatureFlag::DrawFill
-                | UIBoxFeatureFlag::DrawBorder
-                | UIBoxFeatureFlag::DrawText
-                | UIBoxFeatureFlag::Hoverable
-                | UIBoxFeatureFlag::Clickable,
-            UILayoutDirection::LeftToRight,
+            button_label.to_string(),
             [
                 UISizeWithStrictness {
                     size: UISize::TextContent,
@@ -278,11 +175,7 @@ pub fn build_toolbar_ui(ctx: &UIContext) -> Result<(), String> {
                     strictness: 1.0,
                 },
             ],
-        );
-
-        button_ui_box.text_content = Some(button_label.to_string());
-
-        tree.push(button_ui_box)?;
+        ))?;
     }
 
     tree.pop_parent()?;

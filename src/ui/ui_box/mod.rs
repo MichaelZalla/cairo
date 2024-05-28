@@ -24,6 +24,7 @@ use super::{extent::ScreenExtent, tree::node::Node, UISizeWithStrictness, UI_2D_
 
 pub mod key;
 pub mod tree;
+pub mod utils;
 
 bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
@@ -442,7 +443,7 @@ impl UIBox {
                         text: text_content,
                         x,
                         y,
-                        color: color::WHITE
+                        color: color::BLACK
                     }
                 ).unwrap();
             });
