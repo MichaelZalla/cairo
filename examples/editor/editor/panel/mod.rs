@@ -83,8 +83,10 @@ impl EditorPanel {
 
         let text_content = self.panel_type.map(|panel_type| format!("{}", panel_type));
 
-        let mut ui_box_feature_flags =
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable;
+        let mut ui_box_feature_flags = UIBoxFeatureFlag::DrawFill
+            | UIBoxFeatureFlag::DrawChildDividers
+            | UIBoxFeatureFlag::Hoverable
+            | UIBoxFeatureFlag::Clickable;
 
         if text_content.is_some() {
             ui_box_feature_flags |= UIBoxFeatureFlag::DrawText

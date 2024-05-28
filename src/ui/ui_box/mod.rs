@@ -1,4 +1,5 @@
 use core::fmt;
+use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +20,7 @@ use crate::{
 
 use self::key::UIKey;
 
-use super::{extent::ScreenExtent, UISizeWithStrictness, UI_2D_AXIS_COUNT};
+use super::{extent::ScreenExtent, tree::node::Node, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
 pub mod key;
 pub mod tree;
@@ -32,6 +33,7 @@ bitmask! {
         DrawText = (1 << 2),
         Hoverable = (1 << 3),
         Clickable = (1 << 4),
+        DrawChildDividers = (1 << 5),
     }
 }
 
@@ -381,7 +383,7 @@ impl UIBox {
         });
     }
 
-    pub fn render(&self, target: &mut Buffer2D) -> Result<(), String> {
+    pub fn render_preorder(&self, target: &mut Buffer2D) -> Result<(), String> {
         let (x, y) = self.get_pixel_coordinates();
 
         let (width, height) = self.get_computed_pixel_size();
@@ -407,7 +409,7 @@ impl UIBox {
         };
 
         let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
-            Some(&color::RED)
+            Some(&color::BLUE)
         } else {
             self.styles.border_color.as_ref()
         };
@@ -444,6 +446,62 @@ impl UIBox {
                     }
                 ).unwrap();
             });
+        }
+
+        Ok(())
+    }
+
+    pub fn render_postorder(
+        &self,
+        children: &Vec<Rc<RefCell<Node<UIBox>>>>,
+        target: &mut Buffer2D,
+    ) -> Result<(), String> {
+        if self.features.contains(UIBoxFeatureFlag::DrawChildDividers) && !children.is_empty() {
+            let divider_color = match self.styles.border_color {
+                Some(color) => color,
+                None => Default::default(),
+            };
+
+            for (child_index, child) in children.iter().enumerate() {
+                if child_index == 0 {
+                    continue;
+                }
+
+                let child_node = &*child.borrow();
+                let child_ui_box = &child_node.data;
+
+                let (x1, y1, x2, y2) = match self.layout_direction {
+                    UILayoutDirection::TopToBottom => {
+                        // Draw a horizontal line across the top of this child.
+
+                        (
+                            child_ui_box.global_bounds.left,
+                            child_ui_box.global_bounds.top,
+                            child_ui_box.global_bounds.right,
+                            child_ui_box.global_bounds.top,
+                        )
+                    }
+                    UILayoutDirection::LeftToRight => {
+                        // Draw a vertical line along the left of this child.
+
+                        (
+                            child_ui_box.global_bounds.left,
+                            child_ui_box.global_bounds.top,
+                            child_ui_box.global_bounds.left,
+                            child_ui_box.global_bounds.bottom,
+                        )
+                    }
+                };
+
+                Graphics::line(
+                    target,
+                    x1 as i32,
+                    y1 as i32,
+                    x2 as i32,
+                    y2 as i32,
+                    &divider_color,
+                );
+            }
         }
 
         Ok(())

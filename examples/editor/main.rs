@@ -88,12 +88,14 @@ fn main() -> Result<(), String> {
                 ctx.fill_color(color::WHITE, || {
                     tree.push_parent(UIBox::new(
                         "Root__root".to_string(),
-                        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+                        UIBoxFeatureMask::none()
+                            | UIBoxFeatureFlag::DrawFill
+                            | UIBoxFeatureFlag::DrawChildDividers,
                         UILayoutDirection::TopToBottom,
                         [
                             UISizeWithStrictness {
                                 size: UISize::Pixels(lerp(
-                                    window_info.window_resolution.width as f32 * 0.66,
+                                    window_info.window_resolution.width as f32 * 0.925,
                                     window_info.window_resolution.width as f32,
                                     alpha_x,
                                 ) as u32),
@@ -101,7 +103,7 @@ fn main() -> Result<(), String> {
                             },
                             UISizeWithStrictness {
                                 size: UISize::Pixels(lerp(
-                                    window_info.window_resolution.height as f32 * 0.66,
+                                    window_info.window_resolution.height as f32 * 0.925,
                                     window_info.window_resolution.height as f32,
                                     alpha_y,
                                 ) as u32),

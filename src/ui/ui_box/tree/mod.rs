@@ -125,7 +125,11 @@ impl<'a> UIBoxTree<'a> {
 
                 let mut focused_transition_info = self.focused_transition.borrow_mut();
 
-                ui_box.update_focused_state(&new_focus_id, &mut focused_transition_info, seconds_since_last_update);
+                ui_box.update_focused_state(
+                    &new_focus_id,
+                    &mut focused_transition_info,
+                    seconds_since_last_update,
+                );
 
                 Ok(())
             },
@@ -747,7 +751,7 @@ impl<'a> UIBoxTree<'a> {
 
                 Ok(())
             },
-            &mut || {}
+            &mut || {},
         )?;
 
         // Check our results.
@@ -787,11 +791,22 @@ impl<'a> UIBoxTree<'a> {
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, node| {
                 let ui_box: &UIBox = &node.data;
+                
+                // Render this node for the current frame (preorder).
+
+                ui_box.render_preorder(target)
+            },
+        )?;
+        
+        self.tree.visit_root_dfs(
+            &NodeLocalTraversalMethod::PostOrder,
+            &mut |_depth, _parent_data, node| {
+                let ui_box: &UIBox = &node.data;
                 let children = &node.children;
 
                 // 2. Render this node for the current frame.
 
-                let render_result = ui_box.render(target);
+                let render_result = ui_box.render_postorder(children, target);
 
                 // 3. Update this node's cache entry (prepare for rendering the next frame).
 
@@ -809,14 +824,26 @@ impl<'a> UIBoxTree<'a> {
 
         let focused_rect = self.focused_transition.borrow().current_rect;
 
-        let (x,y,width,height) = (
-            focused_rect.left,
-            focused_rect.top,
-            focused_rect.right - focused_rect.left,
-            focused_rect.bottom - focused_rect.top,
-        );
-
-        Graphics::rectangle(target, x, y, width, height, None, Some(&color::RED));
+        if focused_rect.left != focused_rect.right {
+            let (x, y, width, height) = (
+                focused_rect.left,
+                focused_rect.top,
+                focused_rect.right - focused_rect.left,
+                focused_rect.bottom - focused_rect.top,
+            );
+    
+            Graphics::rectangle(target, x, y, width, height, None, Some(&color::RED));
+            
+            Graphics::rectangle(
+                target,
+                x + 1,
+                y + 1,
+                width - 2,
+                height - 2,
+                None,
+                Some(&color::RED),
+            );
+        }
 
         // Prune old entries from our UI cache.
 

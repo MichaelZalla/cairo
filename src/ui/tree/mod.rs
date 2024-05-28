@@ -25,7 +25,7 @@ impl<'a, T: Default + Clone + fmt::Display + Serialize + Deserialize<'a>> fmt::D
             &mut |depth, _parent_data, node| {
                 let indent = 2 * (depth + 1);
 
-                write!(f, "{:indent$}{}\n", ">", node.data).unwrap();
+                writeln!(f, "{:indent$}{}", ">", node.data).unwrap();
 
                 Ok(())
             },
