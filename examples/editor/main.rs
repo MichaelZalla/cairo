@@ -76,9 +76,9 @@ fn main() -> Result<(), String> {
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             {
-                let tree = &mut ctx.tree.borrow_mut();
+                ctx.clear_for_next_frame();
 
-                tree.clear();
+                let tree = &mut ctx.tree.borrow_mut();
 
                 // println!("\nRebuilding tree...\n");
 

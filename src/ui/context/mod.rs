@@ -78,6 +78,12 @@ macro_rules! with_style {
 impl<'a> UIContext<'a> {
     with_style!(fill_color);
     with_style!(border_color);
+
+    pub fn clear_for_next_frame(&self) {
+        self.tree.borrow_mut().clear();
+        self.dropdown_menus.borrow_mut().clear();
+        self.tooltips.borrow_mut().clear();
+    }
 }
 
 thread_local! {
