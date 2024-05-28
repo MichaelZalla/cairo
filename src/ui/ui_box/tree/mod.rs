@@ -1,19 +1,14 @@
 use core::fmt;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
-    buffer::Buffer2D,
-    debug::println_indent,
-    debug_print,
-    device::{GameControllerState, KeyboardState, MouseState},
-    graphics::text::cache::cache_text,
-    ui::{
+    buffer::Buffer2D, color, debug::println_indent, debug_print, device::{GameControllerState, KeyboardState, MouseState}, graphics::{text::cache::cache_text, Graphics}, ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
         tree::{node::NodeLocalTraversalMethod, Tree},
         ui_box::UILayoutDirection,
         UI2DAxis, UISize,
-    },
+    }
 };
 
 use super::{key::UIKey, UIBox};
@@ -25,8 +20,16 @@ impl<'a> fmt::Display for UIBoxTree<'a> {
 }
 
 #[derive(Default, Debug, Clone)]
+pub struct FocusedTransitionInfo {
+    pub transition: f32,
+    pub from_rect: ScreenExtent,
+    pub current_rect: ScreenExtent,
+}
+
+#[derive(Default, Debug, Clone)]
 pub struct UIBoxTree<'a> {
     tree: Tree<'a, UIBox>,
+    pub focused_transition: RefCell<FocusedTransitionInfo>,
 }
 
 impl<'a> UIBoxTree<'a> {
@@ -88,6 +91,8 @@ impl<'a> UIBoxTree<'a> {
 
         debug_print!("\nUser inputs pass:\n");
 
+        let new_focus_id_rc: RefCell<Option<String>> = Default::default();
+
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PostOrder,
             &mut |_depth, _parent_data, node| {
@@ -97,12 +102,37 @@ impl<'a> UIBoxTree<'a> {
                 // (from the previous frame).
 
                 ui_box.update_hot_state(seconds_since_last_update, mouse_state);
-                ui_box.update_active_state(seconds_since_last_update, mouse_state);
+
+                let was_just_focused = ui_box
+                    .update_active_state(seconds_since_last_update, mouse_state)
+                    && !ui_box.focused;
+
+                if was_just_focused {
+                    *new_focus_id_rc.borrow_mut() = Some(ui_box.id.clone());
+                }
 
                 Ok(())
             },
-            &mut || {}
-        )
+            &mut || {},
+        )?;
+
+        let new_focus_id = new_focus_id_rc.borrow();
+
+        self.tree.visit_root_dfs_mut(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |_depth, _parent, node| {
+                let ui_box = &mut node.data;
+
+                let mut focused_transition_info = self.focused_transition.borrow_mut();
+
+                ui_box.update_focused_state(&new_focus_id, &mut focused_transition_info, seconds_since_last_update);
+
+                Ok(())
+            },
+            &mut || {},
+        )?;
+
+        Ok(())
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
@@ -262,7 +292,7 @@ impl<'a> UIBoxTree<'a> {
 
                 Ok(())
             },
-            &mut || {}
+            &mut || {},
         )?;
 
         // 3. Calculate upward-dependent sizes with a pre-order traversal.
@@ -757,6 +787,7 @@ impl<'a> UIBoxTree<'a> {
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, node| {
                 let ui_box: &UIBox = &node.data;
+                let children = &node.children;
 
                 // 2. Render this node for the current frame.
 
@@ -775,6 +806,17 @@ impl<'a> UIBoxTree<'a> {
                 render_result
             },
         )?;
+
+        let focused_rect = self.focused_transition.borrow().current_rect;
+
+        let (x,y,width,height) = (
+            focused_rect.left,
+            focused_rect.top,
+            focused_rect.right - focused_rect.left,
+            focused_rect.bottom - focused_rect.top,
+        );
+
+        Graphics::rectangle(target, x, y, width, height, None, Some(&color::RED));
 
         // Prune old entries from our UI cache.
 
@@ -799,6 +841,8 @@ fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_i
 
         cached_ui_box.active = ui_box.active;
         cached_ui_box.active_transition = ui_box.active_transition;
+
+        cached_ui_box.focused = ui_box.focused;
 
         cached_ui_box.last_read_at_frame = frame_index;
     } else if !ui_box.key.is_null() {

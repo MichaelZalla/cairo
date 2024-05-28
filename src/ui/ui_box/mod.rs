@@ -5,9 +5,10 @@ use serde::{Deserialize, Serialize};
 use bitmask::bitmask;
 
 use sdl2::mouse::MouseButton;
+use tree::FocusedTransitionInfo;
 
 use crate::{
-    animation::exponential,
+    animation::{exponential, lerp},
     buffer::Buffer2D,
     color::{self, Color},
     debug_print,
@@ -57,9 +58,11 @@ impl fmt::Display for UILayoutDirection {
 pub static UI_BOX_HOT_COLOR: Color = color::RED;
 pub static UI_BOX_ACTIVE_COLOR: Color = color::YELLOW;
 
-pub static UI_BOX_TRANSITION_RATE: f32 = 15.0;
+pub static UI_BOX_HOT_TRANSITION_RATE: f32 = 15.0;
+pub static UI_BOX_ACTIVE_TRANSITION_RATE: f32 = 15.0;
+pub static UI_BOX_FOCUSED_TRANSITION_RATE: f32 = 5.0;
 
-static UI_BOX_DEBUG_AUTOLAYOUT: bool = true;
+static UI_BOX_DEBUG_AUTOLAYOUT: bool = false;
 
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
@@ -89,6 +92,8 @@ pub struct UIBox {
     pub active: bool,
     #[serde(skip)]
     pub active_transition: f32,
+    #[serde(skip)]
+    pub focused: bool,
     #[serde(skip)]
     pub last_read_at_frame: u32,
 }
@@ -190,7 +195,7 @@ impl UIBox {
                         self.hot_transition = exponential(
                             ui_box_previous_frame.hot_transition,
                             1.0,
-                            seconds_since_last_update * UI_BOX_TRANSITION_RATE,
+                            seconds_since_last_update * UI_BOX_HOT_TRANSITION_RATE,
                         );
                     }
 
@@ -212,7 +217,9 @@ impl UIBox {
         &mut self,
         seconds_since_last_update: f32,
         mouse_state: &mut MouseState,
-    ) {
+    ) -> bool {
+        let mut did_transition_to_active = false;
+
         self.active = if self.features.contains(UIBoxFeatureFlag::Clickable) && !self.key.is_null()
         {
             GLOBAL_UI_CONTEXT.with(|ctx| {
@@ -245,7 +252,7 @@ impl UIBox {
                         // button while we are the hot element.
 
                         if let Some(event) = &mouse_state.button_event {
-                            let did_transition_to_active = self.hot
+                            did_transition_to_active = self.hot
                                 && matches!(
                                     (event.button, event.kind),
                                     (MouseButton::Left, MouseEventKind::Down)
@@ -271,7 +278,7 @@ impl UIBox {
                         exponential(
                             ui_box_previous_frame.active_transition,
                             1.0,
-                            seconds_since_last_update * UI_BOX_TRANSITION_RATE,
+                            seconds_since_last_update * UI_BOX_ACTIVE_TRANSITION_RATE,
                         );
                     }
 
@@ -287,6 +294,91 @@ impl UIBox {
 
             false
         };
+
+        did_transition_to_active
+    }
+
+    pub fn update_focused_state(
+        &mut self,
+        new_focus_id: &Option<String>,
+        focused_transition_info: &mut FocusedTransitionInfo,
+        seconds_since_last_update: f32,
+    ) {
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let cache = ctx.cache.borrow();
+
+            if let Some(ui_box_previous_frame) = cache.get(&self.key) {
+                match new_focus_id {
+                    Some(id) => {
+                        if self.id == *id {
+                            if !ui_box_previous_frame.focused {
+                                self.focused = true;
+
+                                focused_transition_info.transition = 0.0;
+                            }
+                        } else {
+                            if ui_box_previous_frame.focused {
+                                println!("Old focus: {}", id);
+
+                                focused_transition_info.from_rect =
+                                    ui_box_previous_frame.global_bounds;
+                            }
+
+                            self.focused = false;
+                        }
+                    }
+                    None => {
+                        // Current active state will depend on our prior active
+                        // state, if one exists.
+
+                        let was_focused = ui_box_previous_frame.focused;
+
+                        self.focused = was_focused;
+
+                        if self.focused {
+                            focused_transition_info.transition = exponential(
+                                focused_transition_info.transition,
+                                1.0,
+                                seconds_since_last_update * UI_BOX_FOCUSED_TRANSITION_RATE,
+                            );
+
+                            focused_transition_info.current_rect.left = lerp(
+                                focused_transition_info.from_rect.left as f32,
+                                ui_box_previous_frame.global_bounds.left as f32,
+                                focused_transition_info.transition,
+                            )
+                                as u32;
+
+                            focused_transition_info.current_rect.top = lerp(
+                                focused_transition_info.from_rect.top as f32,
+                                ui_box_previous_frame.global_bounds.top as f32,
+                                focused_transition_info.transition,
+                            )
+                                as u32;
+
+                            focused_transition_info.current_rect.right = lerp(
+                                focused_transition_info.from_rect.right as f32,
+                                ui_box_previous_frame.global_bounds.right as f32,
+                                focused_transition_info.transition,
+                            )
+                                as u32;
+
+                            focused_transition_info.current_rect.bottom = lerp(
+                                focused_transition_info.from_rect.bottom as f32,
+                                ui_box_previous_frame.global_bounds.bottom as f32,
+                                focused_transition_info.transition,
+                            )
+                                as u32;
+
+                            if focused_transition_info.transition > 0.999 {
+                                focused_transition_info.from_rect =
+                                    ui_box_previous_frame.global_bounds;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     pub fn render(&self, target: &mut Buffer2D) -> Result<(), String> {
