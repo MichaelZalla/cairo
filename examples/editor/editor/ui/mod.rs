@@ -1,5 +1,6 @@
 use cairo::ui::{
-    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+    context::UIContext,
+    ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 
@@ -7,7 +8,9 @@ static MENU_BAR_ITEMS: [&str; 6] = ["Project", "Scene", "Edit", "Debug", "Help",
 
 static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button 4", "Button 5"];
 
-pub fn build_main_menu_bar_ui(tree: &mut UIBoxTree) -> Result<(), String> {
+pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
+    let mut tree = ctx.tree.borrow_mut();
+
     tree.push_parent(UIBox::new(
         "MainMenuBar__main_menu_bar".to_string(),
         UIBoxFeatureMask::none(),
@@ -32,11 +35,11 @@ pub fn build_main_menu_bar_ui(tree: &mut UIBoxTree) -> Result<(), String> {
         UILayoutDirection::LeftToRight,
         [
             UISizeWithStrictness {
-                size: UISize::Pixels(36),
+                size: UISize::Pixels(24),
                 strictness: 1.0,
             },
             UISizeWithStrictness {
-                size: UISize::Pixels(36),
+                size: UISize::Pixels(24),
                 strictness: 1.0,
             },
         ],
@@ -194,7 +197,9 @@ pub fn build_main_menu_bar_ui(tree: &mut UIBoxTree) -> Result<(), String> {
     tree.pop_parent()
 }
 
-pub fn build_toolbar_ui(tree: &mut UIBoxTree) -> Result<(), String> {
+pub fn build_toolbar_ui(ctx: &UIContext) -> Result<(), String> {
+    let mut tree = ctx.tree.borrow_mut();
+
     tree.push_parent(UIBox::new(
         "Toolbar__toolbar".to_string(),
         UIBoxFeatureMask::none(),
@@ -269,7 +274,7 @@ pub fn build_toolbar_ui(tree: &mut UIBoxTree) -> Result<(), String> {
                     strictness: 1.0,
                 },
                 UISizeWithStrictness {
-                    size: UISize::Pixels(64),
+                    size: UISize::Pixels(45),
                     strictness: 1.0,
                 },
             ],

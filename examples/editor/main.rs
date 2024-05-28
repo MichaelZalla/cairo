@@ -108,12 +108,16 @@ fn main() -> Result<(), String> {
                                 strictness: 1.0,
                             },
                         ],
-                    ))?;
-
-                    editor::ui::build_main_menu_bar_ui(tree)?;
-                    editor::ui::build_toolbar_ui(tree)
+                    ))
                 })?;
             }
+
+            ctx.fill_color(color::WHITE, || {
+                ctx.border_color(color::BLACK, || {
+                    editor::ui::build_main_menu_bar_ui(ctx)?;
+                    editor::ui::build_toolbar_ui(ctx)
+                })
+            })?;
 
             let mut main_panel_tree = main_panel_tree_rc.borrow_mut();
 

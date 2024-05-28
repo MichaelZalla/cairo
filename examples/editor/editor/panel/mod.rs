@@ -19,6 +19,7 @@ pub enum EditorPanelType {
     AssetBrowser,
     Console,
     Inspector,
+    FileSystem,
 }
 
 impl fmt::Display for EditorPanelType {
@@ -32,6 +33,7 @@ impl fmt::Display for EditorPanelType {
                 EditorPanelType::AssetBrowser => "AssetBrowser",
                 EditorPanelType::Console => "Console",
                 EditorPanelType::Inspector => "Inspector",
+                EditorPanelType::FileSystem => "FileSystem",
             }
         )
     }
@@ -54,10 +56,14 @@ impl fmt::Display for EditorPanel {
 }
 
 impl EditorPanel {
-    pub fn new(panel_type: Option<EditorPanelType>, layout_direction: UILayoutDirection) -> Self {
+    pub fn new(
+        alpha_split: f32,
+        panel_type: Option<EditorPanelType>,
+        layout_direction: UILayoutDirection,
+    ) -> Self {
         Self {
             path: "".to_string(),
-            alpha_split: 1.0,
+            alpha_split,
             panel_type,
             layout_direction,
         }
@@ -118,55 +124,55 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
 
     tree.push_parent(
         "Left",
-        EditorPanel::new(None, UILayoutDirection::TopToBottom),
+        EditorPanel::new(0.33, None, UILayoutDirection::TopToBottom),
     )?;
 
-    // Main > Left > Top (Outline, 3D Viewport, Game).
+    // Main > Left > Top (Scene).
 
-    tree.push_parent(
+    tree.push(
         "Top",
-        EditorPanel::new(None, UILayoutDirection::LeftToRight),
-    )?;
-
-    // Main > Left > Top > Left (Outline).
-
-    tree.push(
-        "Left",
         EditorPanel::new(
+            0.5,
             Some(EditorPanelType::Outline),
-            UILayoutDirection::TopToBottom,
+            UILayoutDirection::LeftToRight,
         ),
     )?;
 
-    // Main > Left > Top > Middle (3D Viewport).
-
-    tree.push(
-        "Middle",
-        EditorPanel::new(
-            Some(EditorPanelType::Viewport3D),
-            UILayoutDirection::TopToBottom,
-        ),
-    )?;
-
-    // Main > Left > Top > Right (Game Viewport).
-
-    tree.push(
-        "Right",
-        EditorPanel::new(
-            Some(EditorPanelType::Viewport3D),
-            UILayoutDirection::TopToBottom,
-        ),
-    )?;
-
-    // Back to Main > Left.
-
-    tree.pop_parent()?;
-
-    // Main > Left > Bottom (Assets, Console).
+    // Main > Left > Bottom (FileSystem).
 
     tree.push(
         "Bottom",
         EditorPanel::new(
+            0.5,
+            Some(EditorPanelType::FileSystem),
+            UILayoutDirection::LeftToRight,
+        ),
+    )?;
+
+    // Back to Main.
+
+    tree.pop_parent()?;
+
+    // Main > Middle (3D Viewport, Console).
+
+    tree.push_parent(
+        "Middle",
+        EditorPanel::new(0.66, None, UILayoutDirection::TopToBottom),
+    )?;
+
+    tree.push(
+        "Top",
+        EditorPanel::new(
+            0.7,
+            Some(EditorPanelType::Viewport3D),
+            UILayoutDirection::TopToBottom,
+        ),
+    )?;
+
+    tree.push(
+        "Bottom",
+        EditorPanel::new(
+            0.3,
             Some(EditorPanelType::Console),
             UILayoutDirection::LeftToRight,
         ),
@@ -181,6 +187,7 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
     tree.push_parent(
         "Right",
         EditorPanel::new(
+            0.33,
             Some(EditorPanelType::Inspector),
             UILayoutDirection::TopToBottom,
         ),

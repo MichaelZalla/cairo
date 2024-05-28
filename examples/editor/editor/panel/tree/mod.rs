@@ -1,4 +1,7 @@
-use cairo::ui::{context::UIContext, tree::Tree};
+use cairo::{
+    color,
+    ui::{context::UIContext, tree::Tree, ui_box::UIBox},
+};
 
 use super::EditorPanel;
 
@@ -26,17 +29,6 @@ impl<'a> EditorPanelTree<'a> {
 
         self.tree.push(panel)?;
 
-        // Reconcile child widths.
-
-        if let Some(current_node_rc) = self.tree.get_current() {
-            let current_node = &mut current_node_rc.borrow_mut();
-            let current_node_child_count = current_node.children.len();
-
-            for child in &mut current_node.children {
-                child.borrow_mut().data.alpha_split = 1.0 / current_node_child_count as f32;
-            }
-        }
-
         Ok(())
     }
 
@@ -60,7 +52,15 @@ impl<'a> EditorPanelTree<'a> {
             &mut |_depth, _parent_data, node| {
                 let panel = &node.data;
 
-                let panel_ui_box = panel.render();
+                let mut panel_ui_box: UIBox = Default::default();
+
+                ui_context.fill_color(color::WHITE, || {
+                    ui_context.border_color(color::BLACK, || {
+                        panel_ui_box = panel.render();
+
+                        Ok(())
+                    })
+                })?;
 
                 let mut ui_box_tree = ui_context.tree.borrow_mut();
 
