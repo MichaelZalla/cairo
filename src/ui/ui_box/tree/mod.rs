@@ -40,7 +40,11 @@ pub struct UIBoxTree<'a> {
 
 impl<'a> UIBoxTree<'a> {
     pub fn clear(&mut self) {
-        self.tree.clear()
+        self.tree.clear();
+
+        // Resets "next" focused key for this UI tree.
+
+        self.next_focused_key.borrow_mut().take();
     }
 
     pub fn push(&mut self, mut ui_box: UIBox) -> Result<(), String> {
@@ -94,10 +98,6 @@ impl<'a> UIBoxTree<'a> {
             let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
             
             let mut next_focused_key = self.next_focused_key.borrow_mut();
-            
-            // Resets "next" focused key.
-
-            *next_focused_key = None;
 
             self.tree
                 .visit_root_dfs_mut(
