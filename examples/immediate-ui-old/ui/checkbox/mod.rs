@@ -2,7 +2,7 @@ use std::{cell::RefMut, collections::hash_map::Entry};
 
 use cairo::{
     buffer::Buffer2D,
-    device::MouseState,
+    device::mouse::MouseState,
     graphics::{
         text::{
             cache::{cache_text, TextCacheKey},

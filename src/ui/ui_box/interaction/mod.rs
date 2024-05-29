@@ -1,6 +1,6 @@
 use sdl2::mouse::MouseButton;
 
-use crate::{device::MouseEventKind, ui::context::UIInputEvents};
+use crate::{device::mouse::MouseEventKind, ui::context::UIInputEvents};
 
 use super::UIBox;
 

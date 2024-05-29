@@ -4,7 +4,7 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::Buffer2D,
     color,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
 };
 
 fn main() -> Result<(), String> {

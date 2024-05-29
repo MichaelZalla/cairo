@@ -8,7 +8,7 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     effect::Effect,
     effects::{
         dilation_effect::DilationEffect, grayscale_effect::GrayscaleEffect,

@@ -7,7 +7,7 @@ use cairo::{
     app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
     buffer::Buffer2D,
     color,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,

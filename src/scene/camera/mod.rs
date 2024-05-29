@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     serde::PostDeserialize,
     time::TimingInfo,

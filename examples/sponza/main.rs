@@ -8,7 +8,7 @@ use cairo::{
     app::{resolution::RESOLUTION_960_BY_540, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::Graphics,
     matrix::Mat4,

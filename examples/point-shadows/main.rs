@@ -5,7 +5,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 use cairo::{
     app::{resolution::RESOLUTION_640_BY_320, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     render::culling::FaceCullingReject,
     scene::{

@@ -5,7 +5,11 @@ use uuid::Uuid;
 
 use cairo::{
     buffer::Buffer2D,
-    device::{GameControllerState, KeyboardState, MouseEventKind, MouseState},
+    device::{
+        game_controller::GameControllerState,
+        keyboard::KeyboardState,
+        mouse::{MouseEventKind, MouseState},
+    },
     graphics::Graphics,
 };
 

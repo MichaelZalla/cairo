@@ -13,7 +13,7 @@ use crate::{
     buffer::Buffer2D,
     color::{self, Color},
     debug_print,
-    device::{MouseEventKind, MouseState},
+    device::mouse::{MouseEventKind, MouseState},
     graphics::{text::TextOperation, Graphics},
     ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
 };

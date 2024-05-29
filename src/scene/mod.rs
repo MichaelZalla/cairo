@@ -1,6 +1,8 @@
 use crate::app::App;
 
-use super::device::{GameControllerState, KeyboardState, MouseState};
+use super::device::{
+    game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState,
+};
 
 pub mod camera;
 pub mod context;

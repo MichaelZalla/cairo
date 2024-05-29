@@ -2,7 +2,7 @@ use sdl2::keyboard::Keycode;
 
 use crate::{
     color::{self, Color},
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     render::culling::{FaceCullingReject, FaceCullingWindingOrder},
 };
 

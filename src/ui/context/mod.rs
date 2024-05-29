@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     color::Color,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
 };

@@ -1,4 +1,6 @@
-use crate::device::{GameControllerState, KeyboardState, MouseState};
+use crate::device::{
+    game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState,
+};
 
 use sdl2::keyboard::Keycode;
 

@@ -6,15 +6,16 @@ use sdl2::mouse::MouseButton;
 use sdl2::{event::Event, render::Texture};
 
 use crate::{
-    debug_print,
     device::{
-        GameController, GameControllerState, KeyboardState, MouseEvent, MouseEventKind, MouseState,
+        game_controller::{GameController, GameControllerState},
+        keyboard::KeyboardState,
+        mouse::{MouseEvent, MouseEventKind, MouseState},
     },
-    time::TimingInfo,
+    {debug_print, time::TimingInfo},
 };
 
-use self::context::{make_application_context, make_backbuffer, ApplicationContext};
-use self::resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
+use context::{make_application_context, make_backbuffer, ApplicationContext};
+use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
 
 pub mod context;
 pub mod resolution;

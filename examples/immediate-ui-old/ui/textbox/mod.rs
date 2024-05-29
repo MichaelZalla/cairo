@@ -4,7 +4,10 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     buffer::Buffer2D,
-    device::{keycode::get_alpha_numeric, KeyboardState, MouseState},
+    device::{
+        keyboard::{keycode::get_alpha_numeric, KeyboardState},
+        mouse::MouseState,
+    },
     graphics::{
         text::{
             cache::{cache_text, TextCacheKey},

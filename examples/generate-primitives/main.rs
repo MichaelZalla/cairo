@@ -10,7 +10,7 @@ use cairo::{
     app::{resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     entity::Entity,
     font::{cache::FontCache, FontInfo},
     graphics::Graphics,

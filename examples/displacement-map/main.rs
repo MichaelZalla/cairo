@@ -7,7 +7,7 @@ use uuid::Uuid;
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     entity::Entity,
     material::Material,
     matrix::Mat4,

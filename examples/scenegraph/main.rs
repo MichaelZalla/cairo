@@ -8,7 +8,7 @@ use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     color,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     entity::Entity,
     material::Material,
     matrix::Mat4,

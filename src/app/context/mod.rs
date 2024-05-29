@@ -7,7 +7,7 @@ use sdl2::{
     Sdl,
 };
 
-use crate::{app::AppWindowInfo, debug_print, device::GameController};
+use crate::{app::AppWindowInfo, debug_print, device::game_controller::GameController};
 
 use super::resolution::Resolution;
 

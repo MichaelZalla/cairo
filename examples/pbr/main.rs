@@ -5,7 +5,7 @@ use scene::make_sphere_grid_scene;
 use cairo::{
     app::{resolution::RESOLUTION_1280_BY_720, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
     shader::context::ShaderContext,

@@ -16,7 +16,7 @@ use cairo::{
         framebuffer::{Framebuffer, FramebufferAttachmentKind},
         Buffer2D,
     },
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
     texture::map::{TextureMap, TextureMapStorageFormat},
 };

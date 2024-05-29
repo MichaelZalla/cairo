@@ -5,7 +5,7 @@ use uuid::Uuid;
 use cairo::{
     buffer::Buffer2D,
     color::{self, Color},
-    device::{KeyboardState, MouseState},
+    device::{keyboard::KeyboardState, mouse::MouseState},
     texture::map::TextureMap,
     time::TimingInfo,
 };

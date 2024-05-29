@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sdl2::keyboard::Keycode;
 
 use crate::{
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     serde::PostDeserialize,
     time::TimingInfo,
     vec::{

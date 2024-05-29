@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::App,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     resource::handle::Handle,
     serde::PostDeserialize,

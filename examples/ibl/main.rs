@@ -7,7 +7,7 @@ use sdl2::keyboard::Keycode;
 use cairo::{
     app::{App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
-    device::{GameControllerState, KeyboardState, MouseState},
+    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     physics::pbr::bake::{
         bake_diffuse_and_specular_from_hdri, brdf::generate_specular_brdf_integration_map,
