@@ -35,6 +35,7 @@ pub struct FocusedTransitionInfo {
 pub struct UIBoxTree<'a> {
     tree: Tree<'a, UIBox>,
     pub focused_transition: RefCell<FocusedTransitionInfo>,
+    pub next_focused_key: RefCell<Option<UIKey>>,
 }
 
 impl<'a> UIBoxTree<'a> {
@@ -91,8 +92,12 @@ impl<'a> UIBoxTree<'a> {
             let mut input_events = ctx.input_events.borrow_mut();
 
             let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
+            
+            let mut next_focused_key = self.next_focused_key.borrow_mut();
+            
+            // Resets "next" focused key.
 
-            let new_focus_id_rc: RefCell<Option<String>> = Default::default();
+            *next_focused_key = None;
 
             self.tree
                 .visit_root_dfs_mut(
@@ -111,7 +116,7 @@ impl<'a> UIBoxTree<'a> {
                         ) && !ui_box.focused;
 
                         if was_just_focused {
-                            *new_focus_id_rc.borrow_mut() = Some(ui_box.id.clone());
+                            next_focused_key.replace(ui_box.key.clone());
                         }
 
                         Ok(())
@@ -119,8 +124,6 @@ impl<'a> UIBoxTree<'a> {
                     &mut || {},
                 )
                 .unwrap();
-
-            let new_focus_id = new_focus_id_rc.borrow();
 
             self.tree
                 .visit_root_dfs_mut(
@@ -131,7 +134,7 @@ impl<'a> UIBoxTree<'a> {
                         let mut focused_transition_info = self.focused_transition.borrow_mut();
 
                         ui_box.update_focused_state(
-                            &new_focus_id,
+                            &next_focused_key,
                             &mut focused_transition_info,
                             seconds_since_last_update,
                         );

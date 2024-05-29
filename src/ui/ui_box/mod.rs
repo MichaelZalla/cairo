@@ -303,7 +303,7 @@ impl UIBox {
 
     pub fn update_focused_state(
         &mut self,
-        new_focus_id: &Option<String>,
+        new_focused_key: &Option<UIKey>,
         focused_transition_info: &mut FocusedTransitionInfo,
         seconds_since_last_update: f32,
     ) {
@@ -311,9 +311,9 @@ impl UIBox {
             let cache = ctx.cache.borrow();
 
             if let Some(ui_box_previous_frame) = cache.get(&self.key) {
-                match new_focus_id {
-                    Some(id) => {
-                        if self.id == *id {
+                match new_focused_key {
+                    Some(key) => {
+                        if self.key == *key {
                             if !ui_box_previous_frame.focused {
                                 self.focused = true;
 
@@ -321,8 +321,6 @@ impl UIBox {
                             }
                         } else {
                             if ui_box_previous_frame.focused {
-                                println!("Old focus: {}", id);
-
                                 focused_transition_info.from_rect =
                                     ui_box_previous_frame.global_bounds;
                             }
