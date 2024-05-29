@@ -1,6 +1,10 @@
 use cairo::{
     color,
-    ui::{context::UIContext, tree::Tree, ui_box::UIBox},
+    ui::{
+        context::UIContext,
+        tree::Tree,
+        ui_box::{interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox},
+    },
 };
 
 use super::EditorPanel;
@@ -49,8 +53,10 @@ impl<'a> EditorPanelTree<'a> {
     pub fn render(&mut self, ui_context: &UIContext<'static>) -> Result<(), String> {
         self.tree.visit_root_dfs_mut(
             &cairo::ui::tree::node::NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, _parent_data, node| {
-                let panel = &node.data;
+            &mut |_depth, _parent_data, panel_tree_node| {
+                let panel = &panel_tree_node.data;
+
+                let is_leaf = panel_tree_node.children.is_empty();
 
                 let mut panel_ui_box: UIBox = Default::default();
 
@@ -64,11 +70,17 @@ impl<'a> EditorPanelTree<'a> {
 
                 let mut ui_box_tree = ui_context.tree.borrow_mut();
 
-                if node.children.is_empty() {
-                    ui_box_tree.push(panel_ui_box)?;
+                if is_leaf {
+                    let id = panel_ui_box.id.clone();
+
+                    let interaction_result = ui_box_tree.push_parent(panel_ui_box)?;
+
+                    render_debug_interaction_result(&mut ui_box_tree, id, &interaction_result)?;
+
+                    ui_box_tree.pop_parent()?;
                 } else {
                     ui_box_tree.push_parent(panel_ui_box)?;
-                }
+                };
 
                 Ok(())
             },
@@ -79,4 +91,66 @@ impl<'a> EditorPanelTree<'a> {
             },
         )
     }
+}
+
+fn render_debug_interaction_result(
+    ui_box_tree: &mut UIBoxTree,
+    id: String,
+    interaction_result: &UIBoxInteraction,
+) -> Result<(), String> {
+    // Push some text describing this leaf panel's interaction.
+
+    let mouse_result = &interaction_result.mouse_interaction_in_bounds;
+
+    ui_box_tree.push(text_box(
+        format!("{}_is_hovering", id),
+        format!("is_hovering: {}", mouse_result.is_hovering),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_was_left_pressed", id),
+        format!("was_left_pressed: {}", mouse_result.was_left_pressed),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_is_left_down", id),
+        format!("is_left_down: {}", mouse_result.is_left_down),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_was_left_released", id),
+        format!("was_left_released: {}", mouse_result.was_left_released),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_was_middle_pressed", id),
+        format!("was_middle_pressed: {}", mouse_result.was_middle_pressed),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_is_middle_down", id),
+        format!("is_middle_down: {}", mouse_result.is_middle_down),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_was_middle_released", id),
+        format!("was_middle_released: {}", mouse_result.was_middle_released),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_was_right_pressed", id),
+        format!("was_right_pressed: {}", mouse_result.was_right_pressed),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_is_right_down", id),
+        format!("is_right_down: {}", mouse_result.is_right_down),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        format!("{}_was_right_released", id),
+        format!("was_right_released: {}", mouse_result.was_right_released),
+    ))?;
+
+    Ok(())
 }

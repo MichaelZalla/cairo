@@ -136,7 +136,7 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
         EditorPanel::new(
             0.5,
             Some(EditorPanelType::Outline),
-            UILayoutDirection::LeftToRight,
+            UILayoutDirection::TopToBottom,
         ),
     )?;
 
@@ -147,7 +147,7 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
         EditorPanel::new(
             0.5,
             Some(EditorPanelType::FileSystem),
-            UILayoutDirection::LeftToRight,
+            UILayoutDirection::TopToBottom,
         ),
     )?;
 
@@ -176,7 +176,7 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
         EditorPanel::new(
             0.3,
             Some(EditorPanelType::Console),
-            UILayoutDirection::LeftToRight,
+            UILayoutDirection::TopToBottom,
         ),
     )?;
 
