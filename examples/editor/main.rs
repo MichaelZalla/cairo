@@ -147,11 +147,7 @@ fn main() -> Result<(), String> {
             {
                 let tree = &mut ctx.tree.borrow_mut();
 
-                // `Current` is now back at the root...
-
-                tree.do_active_focused_pass()?;
-
-                tree.do_autolayout_pass()
+                tree.commit_frame()
             }
         })
     };
@@ -164,7 +160,7 @@ fn main() -> Result<(), String> {
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let tree = &mut ctx.tree.borrow_mut();
 
-            tree.render(frame_index, &mut framebuffer).unwrap();
+            tree.render_frame(frame_index, &mut framebuffer).unwrap();
         });
 
         Ok(framebuffer.get_all().clone())

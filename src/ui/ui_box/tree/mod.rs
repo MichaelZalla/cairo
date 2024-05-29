@@ -816,7 +816,13 @@ impl<'a> UIBoxTree<'a> {
         Ok(())
     }
 
-    pub fn render(&mut self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
+    pub fn commit_frame(&mut self) -> Result<(), String> {
+        self.do_active_focused_pass()?;
+
+        self.do_autolayout_pass()
+    }
+
+    pub fn render_frame(&mut self, frame_index: u32, target: &mut Buffer2D) -> Result<(), String> {
         self.tree.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, node| {
