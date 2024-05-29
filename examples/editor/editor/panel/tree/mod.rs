@@ -1,14 +1,4 @@
-use cairo::{
-    color,
-    ui::{
-        context::UIContext,
-        tree::Tree,
-        ui_box::{
-            interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
-            UIBoxFeatureFlag,
-        },
-    },
-};
+use cairo::ui::{context::UIContext, tree::Tree, ui_box::UIBoxFeatureFlag};
 
 use super::EditorPanel;
 
@@ -59,30 +49,21 @@ impl<'a> EditorPanelTree<'a> {
             &mut |_depth, _parent_data, panel_tree_node| {
                 let panel = &panel_tree_node.data;
 
-                let is_leaf = panel_tree_node.children.is_empty();
-
-                let mut panel_ui_box: UIBox = Default::default();
-
-                ui_context.fill_color(color::WHITE, || {
-                    ui_context.border_color(color::BLACK, || {
-                        panel_ui_box = panel.render();
-
-                        Ok(())
-                    })
-                })?;
+                let is_leaf_panel = panel_tree_node.children.is_empty();
 
                 let mut ui_box_tree = ui_context.tree.borrow_mut();
 
-                if is_leaf {
-                    let id = panel_ui_box.id.clone();
+                let panel_box = panel.make_panel_box(ui_context)?;
 
-                    let interaction_result = ui_box_tree.push_parent(panel_ui_box)?;
+                if is_leaf_panel {
+                    let panel_interaction_result = ui_box_tree.push_parent(panel_box)?;
 
-                    render_debug_interaction_result(&mut ui_box_tree, id, &interaction_result)?;
+                    panel
+                        .render_leaf_panel_contents(&mut ui_box_tree, &panel_interaction_result)?;
 
                     ui_box_tree.pop_parent()?;
                 } else {
-                    ui_box_tree.push_parent(panel_ui_box)?;
+                    ui_box_tree.push_parent(panel_box)?;
                 };
 
                 Ok(())
@@ -102,66 +83,4 @@ impl<'a> EditorPanelTree<'a> {
             },
         )
     }
-}
-
-fn render_debug_interaction_result(
-    ui_box_tree: &mut UIBoxTree,
-    id: String,
-    interaction_result: &UIBoxInteraction,
-) -> Result<(), String> {
-    // Push some text describing this leaf panel's interaction.
-
-    let mouse_result = &interaction_result.mouse_interaction_in_bounds;
-
-    ui_box_tree.push(text_box(
-        format!("{}_is_hovering", id),
-        format!("is_hovering: {}", mouse_result.is_hovering),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_was_left_pressed", id),
-        format!("was_left_pressed: {}", mouse_result.was_left_pressed),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_is_left_down", id),
-        format!("is_left_down: {}", mouse_result.is_left_down),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_was_left_released", id),
-        format!("was_left_released: {}", mouse_result.was_left_released),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_was_middle_pressed", id),
-        format!("was_middle_pressed: {}", mouse_result.was_middle_pressed),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_is_middle_down", id),
-        format!("is_middle_down: {}", mouse_result.is_middle_down),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_was_middle_released", id),
-        format!("was_middle_released: {}", mouse_result.was_middle_released),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_was_right_pressed", id),
-        format!("was_right_pressed: {}", mouse_result.was_right_pressed),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_is_right_down", id),
-        format!("is_right_down: {}", mouse_result.is_right_down),
-    ))?;
-
-    ui_box_tree.push(text_box(
-        format!("{}_was_right_released", id),
-        format!("was_right_released: {}", mouse_result.was_right_released),
-    ))?;
-
-    Ok(())
 }

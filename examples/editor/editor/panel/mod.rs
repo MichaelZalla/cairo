@@ -2,9 +2,16 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use cairo::ui::{
-    ui_box::{UIBox, UIBoxFeatureFlag, UILayoutDirection},
-    UISize, UISizeWithStrictness,
+use cairo::{
+    color,
+    ui::{
+        context::UIContext,
+        ui_box::{
+            interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
+            UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+        },
+        UISize, UISizeWithStrictness,
+    },
 };
 
 use tree::EditorPanelTree;
@@ -69,7 +76,7 @@ impl EditorPanel {
         }
     }
 
-    pub fn render(&self) -> UIBox {
+    fn get_panel_ui_box_id_and_hash(&self) -> (String, String) {
         let panel_path = &self.path;
         let panel_path_cloned = panel_path.clone();
         let panel_path_components = panel_path_cloned.split(' ').collect::<Vec<&str>>();
@@ -81,35 +88,115 @@ impl EditorPanel {
             .collect::<Vec<String>>()
             .join("_");
 
-        let text_content = self.panel_type.map(|panel_type| format!("{}", panel_type));
+        (panel_ui_box_id, panel_ui_box_key_hash)
+    }
 
-        let mut ui_box_feature_flags =
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable;
+    pub fn make_panel_box(&self, ui_context: &UIContext<'static>) -> Result<UIBox, String> {
+        let (panel_ui_box_id, panel_ui_box_key_hash) = self.get_panel_ui_box_id_and_hash();
 
-        if text_content.is_some() {
-            ui_box_feature_flags |= UIBoxFeatureFlag::DrawText
+        let ui_box_feature_flags = UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill;
+
+        let mut panel_ui_box: UIBox = Default::default();
+
+        ui_context.fill_color(color::WHITE, || {
+            ui_context.border_color(color::BLACK, || {
+                panel_ui_box = UIBox::new(
+                    format!("{}__{}", panel_ui_box_id, panel_ui_box_key_hash),
+                    ui_box_feature_flags,
+                    self.layout_direction,
+                    [
+                        UISizeWithStrictness {
+                            size: UISize::PercentOfParent(self.alpha_split),
+                            strictness: 0.0,
+                        },
+                        UISizeWithStrictness {
+                            size: UISize::PercentOfParent(1.0),
+                            strictness: 1.0,
+                        },
+                    ],
+                );
+
+                Ok(())
+            })
+        })?;
+
+        Ok(panel_ui_box)
+    }
+
+    pub fn render_leaf_panel_contents(
+        &self,
+        ui_box_tree: &mut UIBoxTree,
+        panel_interaction_result: &UIBoxInteraction,
+    ) -> Result<(), String> {
+        if let Some(text_content) = self.panel_type.map(|panel_type| format!("{}", panel_type)) {
+            ui_box_tree.push(text_box(String::new(), text_content))?;
         }
 
-        let mut panel_ui_box = UIBox::new(
-            format!("{}__{}", panel_ui_box_id, panel_ui_box_key_hash),
-            ui_box_feature_flags,
-            self.layout_direction,
-            [
-                UISizeWithStrictness {
-                    size: UISize::PercentOfParent(self.alpha_split),
-                    strictness: 0.0,
-                },
-                UISizeWithStrictness {
-                    size: UISize::PercentOfParent(1.0),
-                    strictness: 1.0,
-                },
-            ],
-        );
+        render_debug_interaction_result(ui_box_tree, panel_interaction_result)?;
 
-        panel_ui_box.text_content = text_content;
-
-        panel_ui_box
+        Ok(())
     }
+}
+
+fn render_debug_interaction_result(
+    ui_box_tree: &mut UIBoxTree,
+    interaction_result: &UIBoxInteraction,
+) -> Result<(), String> {
+    // Push some text describing this leaf panel's interaction.
+
+    let mouse_result = &interaction_result.mouse_interaction_in_bounds;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("is_hovering: {}", mouse_result.is_hovering),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("was_left_pressed: {}", mouse_result.was_left_pressed),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("is_left_down: {}", mouse_result.is_left_down),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("was_left_released: {}", mouse_result.was_left_released),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("was_middle_pressed: {}", mouse_result.was_middle_pressed),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("is_middle_down: {}", mouse_result.is_middle_down),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("was_middle_released: {}", mouse_result.was_middle_released),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("was_right_pressed: {}", mouse_result.was_right_pressed),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("is_right_down: {}", mouse_result.is_right_down),
+    ))?;
+
+    ui_box_tree.push(text_box(
+        String::new(),
+        format!("was_right_released: {}", mouse_result.was_right_released),
+    ))?;
+
+    Ok(())
 }
 
 pub fn build_main_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
