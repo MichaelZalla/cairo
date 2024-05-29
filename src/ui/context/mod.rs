@@ -79,6 +79,7 @@ macro_rules! with_style_applied {
 impl<'a> UIContext<'a> {
     with_style_applied!(fill_color);
     with_style_applied!(border_color);
+    with_style_applied!(text_color);
 
     pub fn clear_for_next_frame(&self) {
         self.tree.borrow_mut().clear();

@@ -3,9 +3,9 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 
 use cairo::{
-    color,
+    color::{self, Color},
     ui::{
-        context::UIContext,
+        context::{UIContext, GLOBAL_UI_CONTEXT},
         ui_box::{
             interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
             UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
@@ -146,55 +146,62 @@ fn render_debug_interaction_result(
 
     let mouse_result = &interaction_result.mouse_interaction_in_bounds;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("is_hovering: {}", mouse_result.is_hovering),
-    ))?;
+    GLOBAL_UI_CONTEXT.with(|ctx| {
+        ctx.text_color(Color::rgb(165, 165, 165), || {
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("is_hovering: {}", mouse_result.is_hovering),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("was_left_pressed: {}", mouse_result.was_left_pressed),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("was_left_pressed: {}", mouse_result.was_left_pressed),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("is_left_down: {}", mouse_result.is_left_down),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("is_left_down: {}", mouse_result.is_left_down),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("was_left_released: {}", mouse_result.was_left_released),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("was_left_released: {}", mouse_result.was_left_released),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("was_middle_pressed: {}", mouse_result.was_middle_pressed),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("was_middle_pressed: {}", mouse_result.was_middle_pressed),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("is_middle_down: {}", mouse_result.is_middle_down),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("is_middle_down: {}", mouse_result.is_middle_down),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("was_middle_released: {}", mouse_result.was_middle_released),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("was_middle_released: {}", mouse_result.was_middle_released),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("was_right_pressed: {}", mouse_result.was_right_pressed),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("was_right_pressed: {}", mouse_result.was_right_pressed),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("is_right_down: {}", mouse_result.is_right_down),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("is_right_down: {}", mouse_result.is_right_down),
+            ))?;
 
-    ui_box_tree.push(text_box(
-        String::new(),
-        format!("was_right_released: {}", mouse_result.was_right_released),
-    ))?;
+            ui_box_tree.push(text_box(
+                String::new(),
+                format!("was_right_released: {}", mouse_result.was_right_released),
+            ))?;
+
+            Ok(())
+        })
+        .unwrap();
+    });
 
     Ok(())
 }

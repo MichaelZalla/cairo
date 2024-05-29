@@ -6,6 +6,7 @@ use crate::color::Color;
 pub struct UIBoxStylesMap<T: Default + Clone> {
     pub fill_color: T,
     pub border_color: T,
+    pub text_color: T,
 }
 
 pub type UIBoxStyles = UIBoxStylesMap<Option<Color>>;

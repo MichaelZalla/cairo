@@ -129,7 +129,7 @@ impl UIBox {
 
         // Styles may have changed after the previous frame was rendered.
 
-        let (mut fill_color, mut border_color) = (None, None);
+        let (mut fill_color, mut border_color, mut text_color) = (None, None, None);
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let styles = ctx.styles.borrow();
@@ -143,11 +143,18 @@ impl UIBox {
                     border_color = Some(color);
                 }
             }
+
+            if features.contains(UIBoxFeatureFlag::DrawText) {
+                if let Some(&color) = styles.text_color.peek() {
+                    text_color = Some(color);
+                }
+            }
         });
 
         let styles = UIBoxStyles {
             fill_color,
             border_color,
+            text_color,
         };
 
         let ui_box = Self {
@@ -454,6 +461,11 @@ impl UIBox {
         if self.features.contains(UIBoxFeatureFlag::DrawText) {
             let text_content = self.text_content.as_ref().expect("Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!");
 
+            let text_color = match self.styles.text_color {
+                Some(color) => color,
+                None => Default::default(),
+            };
+
             GLOBAL_UI_CONTEXT.with(|ctx| {
                 let mut text_cache = ctx.text_cache.borrow_mut();
                 let font_info = ctx.font_info.borrow();
@@ -469,7 +481,7 @@ impl UIBox {
                         text: text_content,
                         x,
                         y,
-                        color: color::BLACK
+                        color: text_color
                     }
                 ).unwrap();
             });
