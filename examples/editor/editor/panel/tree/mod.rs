@@ -3,7 +3,10 @@ use cairo::{
     ui::{
         context::UIContext,
         tree::Tree,
-        ui_box::{interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox},
+        ui_box::{
+            interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
+            UIBoxFeatureFlag,
+        },
     },
 };
 
@@ -86,6 +89,14 @@ impl<'a> EditorPanelTree<'a> {
             },
             &mut || {
                 let mut ui_box_tree = ui_context.tree.borrow_mut();
+
+                if let Some(rc) = ui_box_tree.get_current() {
+                    let mut ui_box_node = (*rc).borrow_mut();
+
+                    if !ui_box_node.children.is_empty() {
+                        ui_box_node.data.features |= UIBoxFeatureFlag::DrawChildDividers;
+                    }
+                }
 
                 ui_box_tree.pop_parent().unwrap();
             },

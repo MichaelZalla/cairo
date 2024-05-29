@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     buffer::Buffer2D,
@@ -10,7 +10,10 @@ use crate::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        tree::{node::NodeLocalTraversalMethod, Tree},
+        tree::{
+            node::{Node, NodeLocalTraversalMethod},
+            Tree,
+        },
         ui_box::UILayoutDirection,
         UI2DAxis, UISize,
     },
@@ -39,6 +42,10 @@ pub struct UIBoxTree<'a> {
 }
 
 impl<'a> UIBoxTree<'a> {
+    pub fn get_current(&self) -> Option<&Rc<RefCell<Node<'a, UIBox>>>> {
+        self.tree.get_current()
+    }
+
     pub fn clear(&mut self) {
         self.tree.clear();
 
