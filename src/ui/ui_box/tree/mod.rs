@@ -2,13 +2,18 @@ use core::fmt;
 use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
-    buffer::Buffer2D, color, debug::println_indent, debug_print, device::{GameControllerState, KeyboardState, MouseState}, graphics::{text::cache::cache_text, Graphics}, ui::{
+    buffer::Buffer2D,
+    color,
+    debug::println_indent,
+    debug_print,
+    graphics::{text::cache::cache_text, Graphics},
+    ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
         tree::{node::NodeLocalTraversalMethod, Tree},
         ui_box::UILayoutDirection,
         UI2DAxis, UISize,
-    }
+    },
 };
 
 use super::{key::UIKey, UIBox};
@@ -75,66 +80,68 @@ impl<'a> UIBoxTree<'a> {
         self.tree.pop_parent()
     }
 
-    pub fn do_user_inputs_pass(
-        &mut self,
-        seconds_since_last_update: f32,
-        _keyboard_state: &mut KeyboardState,
-        mouse_state: &mut MouseState,
-        _game_controller_state: &mut GameControllerState,
-    ) -> Result<(), String> {
+    pub fn do_hot_active_hover_pass(&mut self) -> Result<(), String> {
         // @TODO This stuff needs to happen in MakeWidget() calls! Immediately
         // return the user interaction result from each call, as we're building
         // this frame's UI tree.
 
-        // @TODO Maybe bind this frame's SSLU and user inputs to
-        // GLOBAL_UI_CONTEXT?
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            debug_print!("\nUser inputs pass:\n");
 
-        debug_print!("\nUser inputs pass:\n");
+            let mut input_events = ctx.input_events.borrow_mut();
 
-        let new_focus_id_rc: RefCell<Option<String>> = Default::default();
+            let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
 
-        self.tree.visit_root_dfs_mut(
-            &NodeLocalTraversalMethod::PostOrder,
-            &mut |_depth, _parent_data, node| {
-                let ui_box: &mut UIBox = &mut node.data;
+            let new_focus_id_rc: RefCell<Option<String>> = Default::default();
 
-                // Apply the latest user inputs, based on this node's previous layout
-                // (from the previous frame).
+            self.tree
+                .visit_root_dfs_mut(
+                    &NodeLocalTraversalMethod::PostOrder,
+                    &mut |_depth, _parent_data, node| {
+                        let ui_box: &mut UIBox = &mut node.data;
 
-                ui_box.update_hot_state(seconds_since_last_update, mouse_state);
+                        // Apply the latest user inputs, based on this node's previous layout
+                        // (from the previous frame).
 
-                let was_just_focused = ui_box
-                    .update_active_state(seconds_since_last_update, mouse_state)
-                    && !ui_box.focused;
+                        ui_box.update_hot_state(seconds_since_last_update, &mut input_events.mouse);
 
-                if was_just_focused {
-                    *new_focus_id_rc.borrow_mut() = Some(ui_box.id.clone());
-                }
+                        let was_just_focused = ui_box.update_active_state(
+                            seconds_since_last_update,
+                            &mut input_events.mouse,
+                        ) && !ui_box.focused;
 
-                Ok(())
-            },
-            &mut || {},
-        )?;
+                        if was_just_focused {
+                            *new_focus_id_rc.borrow_mut() = Some(ui_box.id.clone());
+                        }
 
-        let new_focus_id = new_focus_id_rc.borrow();
+                        Ok(())
+                    },
+                    &mut || {},
+                )
+                .unwrap();
 
-        self.tree.visit_root_dfs_mut(
-            &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, _parent, node| {
-                let ui_box = &mut node.data;
+            let new_focus_id = new_focus_id_rc.borrow();
 
-                let mut focused_transition_info = self.focused_transition.borrow_mut();
+            self.tree
+                .visit_root_dfs_mut(
+                    &NodeLocalTraversalMethod::PreOrder,
+                    &mut |_depth, _parent, node| {
+                        let ui_box = &mut node.data;
 
-                ui_box.update_focused_state(
-                    &new_focus_id,
-                    &mut focused_transition_info,
-                    seconds_since_last_update,
-                );
+                        let mut focused_transition_info = self.focused_transition.borrow_mut();
 
-                Ok(())
-            },
-            &mut || {},
-        )?;
+                        ui_box.update_focused_state(
+                            &new_focus_id,
+                            &mut focused_transition_info,
+                            seconds_since_last_update,
+                        );
+
+                        Ok(())
+                    },
+                    &mut || {},
+                )
+                .unwrap();
+        });
 
         Ok(())
     }
@@ -791,13 +798,13 @@ impl<'a> UIBoxTree<'a> {
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, node| {
                 let ui_box: &UIBox = &node.data;
-                
+
                 // Render this node for the current frame (preorder).
 
                 ui_box.render_preorder(target)
             },
         )?;
-        
+
         self.tree.visit_root_dfs(
             &NodeLocalTraversalMethod::PostOrder,
             &mut |_depth, _parent_data, node| {
@@ -831,9 +838,9 @@ impl<'a> UIBoxTree<'a> {
                 focused_rect.right - focused_rect.left,
                 focused_rect.bottom - focused_rect.top,
             );
-    
+
             Graphics::rectangle(target, x, y, width, height, None, Some(&color::RED));
-            
+
             Graphics::rectangle(
                 target,
                 x + 1,

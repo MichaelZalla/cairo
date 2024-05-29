@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     color::Color,
+    device::{GameControllerState, KeyboardState, MouseState},
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
 };
@@ -38,6 +39,13 @@ pub struct UIBoxStylesMap<T: Default + Clone> {
 pub type UIBoxStyles = UIBoxStylesMap<Option<Color>>;
 pub type UIBoxStylesContext = UIBoxStylesMap<UIBoxStyleStack<Color>>;
 
+#[derive(Default, Debug, Clone)]
+pub struct UIInputEvents {
+    pub mouse: MouseState,
+    pub keyboard: KeyboardState,
+    pub game_controller: GameControllerState,
+}
+
 #[derive(Default, Debug)]
 pub struct UIContext<'a> {
     pub font_cache: RefCell<Option<FontCache<'a>>>,
@@ -48,6 +56,8 @@ pub struct UIContext<'a> {
     pub dropdown_menus: RefCell<UIBoxTree<'a>>,
     pub tooltips: RefCell<UIBoxTree<'a>>,
     pub cache: RefCell<HashMap<UIKey, UIBox>>,
+    pub input_events: RefCell<UIInputEvents>,
+    pub seconds_since_last_update: RefCell<f32>,
 }
 
 macro_rules! with_style {

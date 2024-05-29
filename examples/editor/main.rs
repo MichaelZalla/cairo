@@ -70,13 +70,30 @@ fn main() -> Result<(), String> {
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
-        let seconds_since_last_update = app.timing_info.seconds_since_last_update;
 
         // Recreate the UI tree.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             {
                 ctx.clear_for_next_frame();
+
+                // Bind the latest user input events.
+
+                {
+                    let mut input_events = ctx.input_events.borrow_mut();
+
+                    input_events.keyboard = keyboard_state.clone();
+                    input_events.mouse = mouse_state.clone();
+                    input_events.game_controller = *game_controller_state;
+                }
+
+                // Bind delta time.
+
+                {
+                    let mut seconds_since_last_update = ctx.seconds_since_last_update.borrow_mut();
+
+                    *seconds_since_last_update = app.timing_info.seconds_since_last_update;
+                }
 
                 let tree = &mut ctx.tree.borrow_mut();
 
@@ -130,12 +147,7 @@ fn main() -> Result<(), String> {
 
                 // `Current` is now back at the root...
 
-                tree.do_user_inputs_pass(
-                    seconds_since_last_update,
-                    keyboard_state,
-                    mouse_state,
-                    game_controller_state,
-                )?;
+                tree.do_hot_active_hover_pass()?;
 
                 tree.do_autolayout_pass()
             }

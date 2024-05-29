@@ -57,12 +57,12 @@ fn main() -> Result<(), String> {
     );
 
     let mut update = |app: &mut App,
-                      keyboard_state: &mut KeyboardState,
-                      mouse_state: &mut MouseState,
-                      game_controller_state: &mut GameControllerState|
+                      _keyboard_state: &mut KeyboardState,
+                      _mouse_state: &mut MouseState,
+                      _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
-        let seconds_since_last_update = app.timing_info.seconds_since_last_update;
+        let _seconds_since_last_update = app.timing_info.seconds_since_last_update;
 
         // Recreate the UI tree.
 
@@ -331,12 +331,7 @@ fn main() -> Result<(), String> {
 
                     // `Current` is now back at the root...
 
-                    tree.do_user_inputs_pass(
-                        seconds_since_last_update,
-                        keyboard_state,
-                        mouse_state,
-                        game_controller_state,
-                    )?;
+                    tree.do_hot_active_hover_pass()?;
 
                     tree.do_autolayout_pass()
                 })

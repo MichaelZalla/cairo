@@ -62,7 +62,7 @@ impl Default for MouseState {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct KeyboardState {
     pub keys_pressed: Vec<Keycode>,
 }
@@ -74,6 +74,30 @@ pub struct GameController {
     pub state: GameControllerState,
     handle: Option<sdl2::controller::GameController>,
     haptic: Option<sdl2::haptic::Haptic>,
+}
+
+impl fmt::Debug for GameController {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("GameController")
+            .field("id", &self.id)
+            .field("name", &self.name)
+            .field("state", &self.state)
+            .field("handle", &"Unknown")
+            .field("haptic", &"Unknown")
+            .finish()
+    }
+}
+
+impl Clone for GameController {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            name: self.name.clone(),
+            state: self.state,
+            handle: None,
+            haptic: None,
+        }
+    }
 }
 
 impl GameController {
@@ -203,7 +227,7 @@ impl GameController {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerStateButtons {
     pub a: bool,
     pub b: bool,
@@ -222,17 +246,17 @@ pub struct GameControllerStateButtons {
     pub dpad_right: bool,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerStateTrigger {
     pub activation: i16,
 }
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerStateTriggers {
     pub left: GameControllerStateTrigger,
     pub right: GameControllerStateTrigger,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerStateJoystickPosition {
     pub x: i16,
     pub y: i16,
@@ -248,17 +272,17 @@ impl fmt::Display for GameControllerStateJoystickPosition {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerStateJoystick {
     pub position: GameControllerStateJoystickPosition,
 }
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerStateJoysticks {
     pub left: GameControllerStateJoystick,
     pub right: GameControllerStateJoystick,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct GameControllerState {
     pub is_initialized: bool,
     pub axis_dead_zone: i16,

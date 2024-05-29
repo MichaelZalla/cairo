@@ -299,7 +299,7 @@ impl App {
 
             prev_mouse_buttons_down = mouse_buttons_down;
 
-            prev_game_controller_state = game_controller.state.clone();
+            prev_game_controller_state = game_controller.state;
 
             // Cache input device states
 
