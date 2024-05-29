@@ -69,6 +69,7 @@ pub fn button_box(id: String, label: String, semantic_sizes: [UISizeWithStrictne
         id,
         UIBoxFeatureFlag::DrawFill
             | UIBoxFeatureFlag::DrawBorder
+            | UIBoxFeatureFlag::EmbossAndDeboss
             | UIBoxFeatureFlag::DrawText
             | UIBoxFeatureFlag::Hoverable
             | UIBoxFeatureFlag::Clickable,

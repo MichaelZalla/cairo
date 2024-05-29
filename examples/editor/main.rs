@@ -7,6 +7,7 @@ use cairo::{
     app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
     buffer::Buffer2D,
     color,
+    color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::cache::FontCache,
     ui::{
@@ -17,6 +18,8 @@ use cairo::{
 };
 
 pub mod editor;
+
+static EDITOR_UI_FILL_COLOR: Color = Color::rgb(230, 230, 230);
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -102,7 +105,7 @@ fn main() -> Result<(), String> {
                 let alpha_x = uptime.sin() / 2.0 + 0.5;
                 let alpha_y = uptime.cos() / 2.0 + 0.5;
 
-                ctx.fill_color(color::WHITE, || {
+                ctx.fill_color(EDITOR_UI_FILL_COLOR, || {
                     tree.push_parent(UIBox::new(
                         "Root__root".to_string(),
                         UIBoxFeatureMask::none()
@@ -133,7 +136,7 @@ fn main() -> Result<(), String> {
                 })?;
             }
 
-            ctx.fill_color(color::WHITE, || {
+            ctx.fill_color(EDITOR_UI_FILL_COLOR, || {
                 ctx.border_color(color::BLACK, || {
                     editor::ui::build_main_menu_bar_ui(ctx)?;
                     editor::ui::build_toolbar_ui(ctx)
