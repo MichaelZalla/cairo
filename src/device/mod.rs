@@ -34,6 +34,7 @@ impl Default for MouseEvent {
 #[derive(Clone, Debug)]
 pub struct MouseState {
     pub buttons_down: HashSet<MouseButton>,
+    pub prev_buttons_down: HashSet<MouseButton>,
     pub button_event: Option<MouseEvent>,
     pub position: (i32, i32),
     pub relative_motion: (i32, i32),
@@ -49,6 +50,7 @@ impl Default for MouseState {
     fn default() -> Self {
         Self {
             buttons_down: Default::default(),
+            prev_buttons_down: Default::default(),
             button_event: None,
             position: (0, 0),
             ndc_position: (0.0, 0.0),

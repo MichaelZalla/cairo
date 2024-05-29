@@ -251,15 +251,17 @@ impl App {
 
             // Read any mouse click signals
 
-            let mouse_buttons_down: HashSet<MouseButton> =
+            let next_mouse_buttons_down: HashSet<MouseButton> =
                 current_mouse_state.pressed_mouse_buttons().collect();
 
-            mouse_state.buttons_down = mouse_buttons_down.clone();
+            mouse_state.prev_buttons_down = prev_mouse_buttons_down.clone();
+
+            mouse_state.buttons_down = next_mouse_buttons_down.clone();
 
             // Get the difference between the old and new signals
 
-            let old_mouse_clicks = &prev_mouse_buttons_down - &mouse_buttons_down;
-            let new_mouse_clicks = &mouse_buttons_down - &prev_mouse_buttons_down;
+            let old_mouse_clicks = &prev_mouse_buttons_down - &next_mouse_buttons_down;
+            let new_mouse_clicks = &next_mouse_buttons_down - &prev_mouse_buttons_down;
 
             // Use the difference to construct any button-click event(s)
 
@@ -297,7 +299,7 @@ impl App {
                 }
             }
 
-            prev_mouse_buttons_down = mouse_buttons_down;
+            prev_mouse_buttons_down = next_mouse_buttons_down;
 
             prev_game_controller_state = game_controller.state;
 
