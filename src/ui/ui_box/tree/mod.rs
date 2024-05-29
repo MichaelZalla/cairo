@@ -69,16 +69,16 @@ impl<'a> UIBoxTree<'a> {
         let interaction_result = GLOBAL_UI_CONTEXT.with(|ctx| {
             let cache = ctx.cache.borrow();
             
-            let mut input_events = ctx.input_events.borrow_mut();
+            let input_events = ctx.input_events.borrow();
             
             let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
 
             let interaction_result =  match cache.get(&ui_box.key) {
                 Some(ui_box_previous_frame) => {
-                    ui_box.get_interaction_result(&mut input_events, Some(ui_box_previous_frame))
+                    UIBoxInteraction::from_user_inputs( Some(ui_box_previous_frame), &input_events)
                 },
                 None => {
-                    ui_box.get_interaction_result(&mut input_events, None)
+                    UIBoxInteraction::from_user_inputs( None, &input_events)
                 },
             };
 

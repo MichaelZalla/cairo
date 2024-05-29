@@ -18,13 +18,12 @@ use crate::{
     ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
 };
 
-use self::key::UIKey;
+use interaction::UIBoxInteraction;
+use key::UIKey;
 
-use super::{
-    context::UIInputEvents, extent::ScreenExtent, tree::node::Node, UISizeWithStrictness,
-    UI_2D_AXIS_COUNT,
-};
+use super::{extent::ScreenExtent, tree::node::Node, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
+pub mod interaction;
 pub mod key;
 pub mod tree;
 pub mod utils;
@@ -69,11 +68,6 @@ pub static UI_BOX_ACTIVE_TRANSITION_RATE: f32 = 15.0;
 pub static UI_BOX_FOCUSED_TRANSITION_RATE: f32 = 5.0;
 
 static UI_BOX_DEBUG_AUTOLAYOUT: bool = false;
-
-#[derive(Default, Debug, Clone)]
-pub struct UIBoxInteraction {
-    is_hovering: bool,
-}
 
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
@@ -180,22 +174,6 @@ impl UIBox {
         (self.computed_size[0] as u32, self.computed_size[1] as u32)
     }
 
-    pub fn get_interaction_result(
-        &self,
-        input_events: &mut UIInputEvents,
-        self_previous_frame: Option<&UIBox>,
-    ) -> UIBoxInteraction {
-        let is_hovering = match self_previous_frame {
-            Some(self_prev) => self_prev.global_bounds.contains(
-                input_events.mouse.position.0 as u32,
-                input_events.mouse.position.1 as u32,
-            ),
-            None => false,
-        };
-
-        UIBoxInteraction { is_hovering }
-    }
-
     pub fn update_hot_state(
         &mut self,
         seconds_since_last_update: f32,
@@ -208,7 +186,7 @@ impl UIBox {
                 if let Some(ui_box_previous_frame) = cache.get(&self.key) {
                     // Check if our global mouse coordinates overlap this node's bounds.
 
-                    let is_hot = interaction_result.is_hovering;
+                    let is_hot = interaction_result.mouse_interaction_in_bounds.is_hovering;
 
                     if is_hot {
                         // Resets hot animation transition (alpha) to zero.
