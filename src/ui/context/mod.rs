@@ -1,7 +1,5 @@
 use std::{cell::RefCell, collections::HashMap};
 
-use serde::{Deserialize, Serialize};
-
 use crate::{
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -9,7 +7,7 @@ use crate::{
     graphics::text::cache::TextCache,
 };
 
-use super::ui_box::{key::UIKey, tree::UIBoxTree, UIBox};
+use super::ui_box::{key::UIKey, styles::UIBoxStylesMap, tree::UIBoxTree, UIBox};
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxStyleStack<T> {
@@ -30,13 +28,6 @@ impl<T> UIBoxStyleStack<T> {
     }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct UIBoxStylesMap<T: Default + Clone> {
-    pub fill_color: T,
-    pub border_color: T,
-}
-
-pub type UIBoxStyles = UIBoxStylesMap<Option<Color>>;
 pub type UIBoxStylesContext = UIBoxStylesMap<UIBoxStyleStack<Color>>;
 
 #[derive(Default, Debug, Clone)]

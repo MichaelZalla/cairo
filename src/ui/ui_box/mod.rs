@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use bitmask::bitmask;
 
 use sdl2::mouse::MouseButton;
-use tree::FocusedTransitionInfo;
 
 use crate::{
     animation::{exponential, lerp},
@@ -15,16 +14,19 @@ use crate::{
     debug_print,
     device::mouse::{MouseEventKind, MouseState},
     graphics::{text::TextOperation, Graphics},
-    ui::context::{UIBoxStyles, GLOBAL_UI_CONTEXT},
+    ui::context::GLOBAL_UI_CONTEXT,
 };
 
 use interaction::UIBoxInteraction;
 use key::UIKey;
+use styles::UIBoxStyles;
+use tree::FocusedTransitionInfo;
 
 use super::{extent::ScreenExtent, tree::node::Node, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
 pub mod interaction;
 pub mod key;
+pub mod styles;
 pub mod tree;
 pub mod utils;
 
