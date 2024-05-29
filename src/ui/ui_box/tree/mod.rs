@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-use super::{key::UIKey, UIBox};
+use super::{key::UIKey, UIBox, UIBoxInteraction};
 
 impl<'a> fmt::Display for UIBoxTree<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -47,7 +47,7 @@ impl<'a> UIBoxTree<'a> {
         self.next_focused_key.borrow_mut().take();
     }
 
-    pub fn push(&mut self, mut ui_box: UIBox) -> Result<(), String> {
+    pub fn push(&mut self, mut ui_box: UIBox) -> Result<UIBoxInteraction, String> {
         // Validations.
 
         if let Some(current_node_rc) = self.tree.get_current() {
@@ -66,30 +66,41 @@ impl<'a> UIBoxTree<'a> {
             ui_box.parent_layout_direction = UILayoutDirection::default();
         }
 
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            let mut input_events = ctx.input_events.borrow_mut();
-    
-            let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
+        let interaction_result = GLOBAL_UI_CONTEXT.with(|ctx| {
+            let cache = ctx.cache.borrow();
             
+            let mut input_events = ctx.input_events.borrow_mut();
+            
+            let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
+
+            let interaction_result =  match cache.get(&ui_box.key) {
+                Some(ui_box_previous_frame) => {
+                    ui_box.get_interaction_result(&mut input_events, Some(ui_box_previous_frame))
+                },
+                None => {
+                    ui_box.get_interaction_result(&mut input_events, None)
+                },
+            };
+
             // Updates hot state for this node, based on the node's previous
             // layout (from the prior frame).
     
-            ui_box.update_hot_state(seconds_since_last_update, &mut input_events.mouse);
+            ui_box.update_hot_state(seconds_since_last_update, &interaction_result);
+
+            interaction_result
         });
 
-        // println!("Pushing node {}.", ui_box.id);
+        self.tree.push(ui_box)?;
 
-        self.tree.push(ui_box)
+        Ok(interaction_result)
     }
 
-    pub fn push_parent(&mut self, ui_box: UIBox) -> Result<(), String> {
-        // println!("Pushing parent {}.", ui_box.id);
-
-        self.push(ui_box)?;
+    pub fn push_parent(&mut self, ui_box: UIBox) -> Result<UIBoxInteraction, String> {
+        let interaction_result = self.push(ui_box)?;
 
         self.tree.push_parent_post();
 
-        Ok(())
+        Ok(interaction_result)
     }
 
     pub fn pop_parent(&mut self) -> Result<(), String> {

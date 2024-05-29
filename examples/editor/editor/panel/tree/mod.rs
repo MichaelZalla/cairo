@@ -65,10 +65,12 @@ impl<'a> EditorPanelTree<'a> {
                 let mut ui_box_tree = ui_context.tree.borrow_mut();
 
                 if node.children.is_empty() {
-                    ui_box_tree.push(panel_ui_box)
+                    ui_box_tree.push(panel_ui_box)?;
                 } else {
-                    ui_box_tree.push_parent(panel_ui_box)
+                    ui_box_tree.push_parent(panel_ui_box)?;
                 }
+
+                Ok(())
             },
             &mut || {
                 let mut ui_box_tree = ui_context.tree.borrow_mut();

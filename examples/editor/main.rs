@@ -127,7 +127,9 @@ fn main() -> Result<(), String> {
                                 strictness: 1.0,
                             },
                         ],
-                    ))
+                    ))?;
+
+                    Ok(())
                 })?;
             }
 

@@ -103,7 +103,9 @@ fn main() -> Result<(), String> {
                                     strictness: 1.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::GREEN, || {
@@ -123,7 +125,9 @@ fn main() -> Result<(), String> {
                                     strictness: 1.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::ORANGE, || {
@@ -143,7 +147,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::BLACK, || {
@@ -161,7 +167,9 @@ fn main() -> Result<(), String> {
                                     strictness: 1.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::SKY_BOX, || {
@@ -181,7 +189,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     tree.pop_parent()?;
@@ -203,7 +213,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::ORANGE, || {
@@ -223,7 +235,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::SKY_BOX, || {
@@ -241,7 +255,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        ))
+                        )).unwrap();
+
+                        Ok(())
                     })?;
 
                     ctx.fill_color(color::BLACK, || {
@@ -332,7 +348,7 @@ fn main() -> Result<(), String> {
                     // `Current` is now back at the root...
 
                     tree.do_active_focused_pass()?;
-                    
+
                     tree.do_autolayout_pass()
                 })
             });
