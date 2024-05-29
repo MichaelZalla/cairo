@@ -63,7 +63,7 @@ fn main() -> Result<(), String> {
 
     // Panel tree.
 
-    let main_panel_tree = editor::panel::build_panel_tree()?;
+    let main_panel_tree = editor::panel::build_main_panel_tree()?;
 
     let main_panel_tree_rc = RefCell::new(main_panel_tree);
 

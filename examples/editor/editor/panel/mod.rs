@@ -112,7 +112,7 @@ impl EditorPanel {
     }
 }
 
-pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
+pub fn build_main_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
     let mut tree = EditorPanelTree::with_root(EditorPanel {
         path: "root".to_string(),
         alpha_split: 1.0,
