@@ -331,8 +331,8 @@ fn main() -> Result<(), String> {
 
                     // `Current` is now back at the root...
 
-                    tree.do_hot_active_hover_pass()?;
-
+                    tree.do_active_focused_pass()?;
+                    
                     tree.do_autolayout_pass()
                 })
             });

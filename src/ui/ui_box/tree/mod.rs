@@ -66,6 +66,17 @@ impl<'a> UIBoxTree<'a> {
             ui_box.parent_layout_direction = UILayoutDirection::default();
         }
 
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let mut input_events = ctx.input_events.borrow_mut();
+    
+            let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
+            
+            // Updates hot state for this node, based on the node's previous
+            // layout (from the prior frame).
+    
+            ui_box.update_hot_state(seconds_since_last_update, &mut input_events.mouse);
+        });
+
         // println!("Pushing node {}.", ui_box.id);
 
         self.tree.push(ui_box)
@@ -85,7 +96,7 @@ impl<'a> UIBoxTree<'a> {
         self.tree.pop_parent()
     }
 
-    pub fn do_hot_active_hover_pass(&mut self) -> Result<(), String> {
+    pub fn do_active_focused_pass(&mut self) -> Result<(), String> {
         // @TODO This stuff needs to happen in MakeWidget() calls! Immediately
         // return the user interaction result from each call, as we're building
         // this frame's UI tree.
@@ -107,8 +118,6 @@ impl<'a> UIBoxTree<'a> {
 
                         // Apply the latest user inputs, based on this node's previous layout
                         // (from the previous frame).
-
-                        ui_box.update_hot_state(seconds_since_last_update, &mut input_events.mouse);
 
                         let was_just_focused = ui_box.update_active_state(
                             seconds_since_last_update,
