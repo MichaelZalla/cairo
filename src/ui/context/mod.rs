@@ -60,7 +60,7 @@ pub struct UIContext<'a> {
     pub seconds_since_last_update: RefCell<f32>,
 }
 
-macro_rules! with_style {
+macro_rules! with_style_applied {
     ($style: ident) => {
         pub fn $style<C>(&self, $style: Color, callback: C) -> Result<(), String>
         where
@@ -86,8 +86,8 @@ macro_rules! with_style {
 }
 
 impl<'a> UIContext<'a> {
-    with_style!(fill_color);
-    with_style!(border_color);
+    with_style_applied!(fill_color);
+    with_style_applied!(border_color);
 
     pub fn clear_for_next_frame(&self) {
         self.tree.borrow_mut().clear();
