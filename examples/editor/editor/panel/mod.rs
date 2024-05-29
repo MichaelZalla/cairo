@@ -114,20 +114,20 @@ impl EditorPanel {
 
 pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
     let mut tree = EditorPanelTree::with_root(EditorPanel {
-        path: "main".to_string(),
+        path: "root".to_string(),
         alpha_split: 1.0,
         panel_type: Some(EditorPanelType::Outline),
         layout_direction: UILayoutDirection::LeftToRight,
     });
 
-    // Main > Left.
+    // Root > Left.
 
     tree.push_parent(
         "Left",
         EditorPanel::new(0.33, None, UILayoutDirection::TopToBottom),
     )?;
 
-    // Main > Left > Top (Scene).
+    // Root > Left > Top (Scene).
 
     tree.push(
         "Top",
@@ -138,7 +138,7 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
         ),
     )?;
 
-    // Main > Left > Bottom (FileSystem).
+    // Root > Left > Bottom (FileSystem).
 
     tree.push(
         "Bottom",
@@ -149,11 +149,11 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
         ),
     )?;
 
-    // Back to Main.
+    // Back to root.
 
     tree.pop_parent()?;
 
-    // Main > Middle (3D Viewport, Console).
+    // Root > Middle (3D Viewport, Console).
 
     tree.push_parent(
         "Middle",
@@ -178,11 +178,11 @@ pub fn build_panel_tree<'a>() -> Result<EditorPanelTree<'a>, String> {
         ),
     )?;
 
-    // Back to Main.
+    // Back to root.
 
     tree.pop_parent()?;
 
-    // Main > Right (Inspector).
+    // Root > Right (Inspector).
 
     tree.push_parent(
         "Right",

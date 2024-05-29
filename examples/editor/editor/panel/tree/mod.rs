@@ -31,7 +31,7 @@ impl<'a> EditorPanelTree<'a> {
 
             panel.path = format!("{} {}", current_panel.path, id);
         } else {
-            panel.path = "Main".to_string();
+            panel.path = "Root".to_string();
         }
 
         self.tree.push(panel)?;

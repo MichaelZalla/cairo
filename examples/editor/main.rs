@@ -61,7 +61,7 @@ fn main() -> Result<(), String> {
         None,
     );
 
-    // Main panel tree.
+    // Panel tree.
 
     let main_panel_tree = editor::panel::build_panel_tree()?;
 
