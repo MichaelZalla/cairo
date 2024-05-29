@@ -68,23 +68,21 @@ impl<'a> UIBoxTree<'a> {
 
         let interaction_result = GLOBAL_UI_CONTEXT.with(|ctx| {
             let cache = ctx.cache.borrow();
-            
+
             let input_events = ctx.input_events.borrow();
-            
+
             let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
 
-            let interaction_result =  match cache.get(&ui_box.key) {
+            let interaction_result = match cache.get(&ui_box.key) {
                 Some(ui_box_previous_frame) => {
-                    UIBoxInteraction::from_user_inputs( Some(ui_box_previous_frame), &input_events)
-                },
-                None => {
-                    UIBoxInteraction::from_user_inputs( None, &input_events)
-                },
+                    UIBoxInteraction::from_user_inputs(Some(ui_box_previous_frame), &input_events)
+                }
+                None => UIBoxInteraction::from_user_inputs(None, &input_events),
             };
 
             // Updates hot state for this node, based on the node's previous
             // layout (from the prior frame).
-    
+
             ui_box.update_hot_state(seconds_since_last_update, &interaction_result);
 
             interaction_result
@@ -118,7 +116,7 @@ impl<'a> UIBoxTree<'a> {
             let mut input_events = ctx.input_events.borrow_mut();
 
             let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
-            
+
             let mut next_focused_key = self.next_focused_key.borrow_mut();
 
             self.tree
