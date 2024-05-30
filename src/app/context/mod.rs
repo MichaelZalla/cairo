@@ -153,20 +153,17 @@ pub fn get_application_rendering_context(
     window: Window,
     vertical_sync: bool,
 ) -> Result<ApplicationRenderingContext, String> {
+    let mut canvas_builder = window.into_canvas();
+
     if vertical_sync {
-        match window.into_canvas().present_vsync().build() {
-            Ok(canvas) => Ok(ApplicationRenderingContext {
-                canvas: RefCell::new(canvas),
-            }),
-            Err(e) => Err(e.to_string()),
-        }
-    } else {
-        match window.into_canvas().build() {
-            Ok(canvas) => Ok(ApplicationRenderingContext {
-                canvas: RefCell::new(canvas),
-            }),
-            Err(e) => Err(e.to_string()),
-        }
+        canvas_builder = canvas_builder.present_vsync();
+    }
+
+    match canvas_builder.build() {
+        Ok(canvas) => Ok(ApplicationRenderingContext {
+            canvas: RefCell::new(canvas),
+        }),
+        Err(e) => Err(e.to_string()),
     }
 }
 
