@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{cell::RefCell, rc::Rc};
 
-use serde::{Deserialize, Serialize};
+use serde::{self, Deserialize, Serialize};
 
 use crate::{visit_dfs, visit_dfs_mut};
 
@@ -10,10 +10,12 @@ use self::node::{Node, NodeLocalTraversalMethod};
 pub mod node;
 pub mod traversal;
 
-#[derive(Default, Debug, Clone)]
-pub struct Tree<'a, T: Default + Clone + fmt::Display + Serialize + Deserialize<'a>> {
-    current: Option<Rc<RefCell<Node<'a, T>>>>,
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct Tree<'a, T: Default + Clone + fmt::Display> {
+    #[serde(flatten)]
     pub root: Option<Rc<RefCell<Node<'a, T>>>>,
+    #[serde(skip)]
+    current: Option<Rc<RefCell<Node<'a, T>>>>,
 }
 
 impl<'a, T: Default + Clone + fmt::Display + Serialize + Deserialize<'a>> fmt::Display

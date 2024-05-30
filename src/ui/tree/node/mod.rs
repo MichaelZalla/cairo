@@ -12,12 +12,13 @@ pub enum NodeLocalTraversalMethod {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Node<'a, T> {
     pub data: T,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<Rc<RefCell<Node<'a, T>>>>,
     #[serde(skip)]
     pub parent: Option<Rc<RefCell<Node<'a, T>>>>,
 }
 
-impl<'a, T> Node<'a, T>
+impl<'a, T: Serialize + Deserialize<'a>> Node<'a, T>
 where
     T: Default + Clone + Serialize + Deserialize<'a>,
 {

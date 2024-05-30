@@ -1,9 +1,11 @@
 use cairo::ui::{context::UIContext, tree::Tree, ui_box::UIBoxFeatureFlag};
+use serde::{Deserialize, Serialize};
 
 use super::EditorPanel;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct EditorPanelTree<'a> {
+    #[serde(flatten)]
     tree: Tree<'a, EditorPanel>,
 }
 

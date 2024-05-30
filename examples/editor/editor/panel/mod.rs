@@ -51,6 +51,7 @@ pub struct EditorPanel {
     pub path: String,
     // For this panel.
     pub alpha_split: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub panel_type: Option<EditorPanelType>,
     // For child panels.
     pub layout_direction: UILayoutDirection,
