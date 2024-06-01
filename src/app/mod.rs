@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::ptr;
 
+use sdl2::event::WindowEvent;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::render::Canvas;
@@ -154,6 +155,84 @@ impl App {
             for event in events {
                 match event {
                     Event::Quit { .. } => break 'main,
+
+                    Event::AppTerminating {
+                        timestamp: _timestamp,
+                    } => {
+                        println!("App terminating...")
+                    }
+
+                    Event::AppLowMemory {
+                        timestamp: _timestamp,
+                    } => {
+                        println!("App low memory!")
+                    }
+
+                    Event::AppWillEnterBackground {
+                        timestamp: _timestamp,
+                    } => {
+                        println!("App will enter background...")
+                    }
+
+                    Event::AppDidEnterBackground {
+                        timestamp: _timestamp,
+                    } => {
+                        println!("App did enter background...")
+                    }
+
+                    Event::AppWillEnterForeground {
+                        timestamp: _timestamp,
+                    } => {
+                        println!("App will enter foreground...")
+                    }
+
+                    Event::AppDidEnterForeground {
+                        timestamp: _timestamp,
+                    } => {
+                        println!("App did enter foreground...")
+                    }
+
+                    Event::Window {
+                        timestamp: _timestamp,
+                        window_id,
+                        win_event,
+                    } => match &win_event {
+                        WindowEvent::None => {
+                            println!("(Window {}) {:?}", window_id, &win_event);
+                        }
+                        WindowEvent::Shown | WindowEvent::Hidden => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::Exposed => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::Minimized | WindowEvent::Maximized => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::Restored => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::Moved(_, _) => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::Resized(width, height)
+                        | WindowEvent::SizeChanged(width, height) => {
+                            println!(
+                                "(Window {}) {:?} ({}x{})",
+                                window_id, &win_event, width, height
+                            )
+                        }
+                        WindowEvent::Enter | WindowEvent::Leave => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::FocusGained | WindowEvent::FocusLost => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        WindowEvent::Close => {
+                            println!("(Window {}) {:?}", window_id, &win_event)
+                        }
+                        _ => (),
+                    },
 
                     Event::MouseMotion { xrel, yrel, .. } => {
                         mouse_state.relative_motion.0 = xrel;
