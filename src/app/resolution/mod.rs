@@ -14,6 +14,11 @@ pub static RESOLUTION_640_BY_320: Resolution = Resolution {
     height: 320,
 };
 
+pub static RESOLUTION_640_BY_480: Resolution = Resolution {
+    width: 640,
+    height: 480,
+};
+
 pub static RESOLUTION_800_BY_450: Resolution = Resolution {
     width: 800,
     height: 450,
