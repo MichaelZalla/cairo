@@ -11,7 +11,7 @@ use cairo::{
     font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+        ui_box::{utils::text_box, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };
@@ -297,27 +297,7 @@ fn main() -> Result<(), String> {
                                     ],
                                 ))?;
 
-                                let mut text_ui_box = UIBox::new(
-                                    format!("RootChild2Child2Child{}Text__root_child2_child2_child{}_text", i, i),
-                                        UIBoxFeatureFlag::DrawText
-                                        | UIBoxFeatureFlag::Hoverable
-                                        | UIBoxFeatureFlag::Clickable,
-                                    UILayoutDirection::TopToBottom,
-                                    [
-                                        UISizeWithStrictness {
-                                            size: UISize::TextContent,
-                                            strictness: 1.0,
-                                        },
-                                        UISizeWithStrictness {
-                                            size: UISize::TextContent,
-                                            strictness: 1.0,
-                                        },
-                                    ],
-                                );
-
-                                text_ui_box.text_content = Some(format!("Label {}", i));
-
-                                tree.push(text_ui_box)?;
+                                tree.push(text_box(format!("RootChild2Child2Child{}Text__root_child2_child2_child{}_text", i, i), format!("Label {}", i)))?;
 
                                 tree.push(UIBox::new(
                                     format!("RootChild2Child2Child{}SpacerAfter__root_child2_child2_child{}_spacer_after", i, i),
