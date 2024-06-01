@@ -388,7 +388,7 @@ impl App {
 
             // Render current scene to the window canvas.
 
-            self.render_and_present(self.timing_info.current_frame_index, render);
+            self.render_and_present(self.timing_info.current_frame_index, render)?;
 
             frame_end = timer_subsystem.performance_counter();
 
