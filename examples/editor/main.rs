@@ -2,13 +2,18 @@ extern crate sdl2;
 
 use std::{cell::RefCell, env};
 
+use sdl2::mouse::Cursor;
+
 use cairo::{
     animation::lerp,
     app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
     buffer::Buffer2D,
-    color,
-    color::Color,
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    color::{self, Color},
+    device::{
+        game_controller::GameControllerState,
+        keyboard::KeyboardState,
+        mouse::{self, cursor::MouseCursorKind, MouseState},
+    },
     font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,
@@ -64,8 +69,12 @@ fn main() -> Result<(), String> {
     // Panel tree.
 
     let main_panel_tree = editor::panel::build_main_panel_tree()?;
-
     let main_panel_tree_rc = RefCell::new(main_panel_tree);
+
+    // SDL will reset the cursor if we don't retain the result from
+    // Cursor::set().
+
+    let set_cursor_result_rc: RefCell<Option<Cursor>> = Default::default();
 
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
@@ -161,9 +170,23 @@ fn main() -> Result<(), String> {
         framebuffer.clear(Some(fill_value));
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
+            {
+                // Reset cursor for this frame.
+
+                *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
+            }
+
             let tree = &mut ctx.tree.borrow_mut();
 
+            // Render the current frame's UI tree to `framebuffer`.
+
             tree.render_frame(frame_index, &mut framebuffer).unwrap();
+
+            {
+                let kind = &ctx.cursor_kind.borrow();
+
+                *set_cursor_result_rc.borrow_mut() = Some(mouse::cursor::set_cursor(kind).unwrap());
+            }
         });
 
         Ok(framebuffer.get_all().clone())

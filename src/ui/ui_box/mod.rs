@@ -11,7 +11,7 @@ use crate::{
     buffer::Buffer2D,
     color::{self, Color},
     debug_print,
-    device::mouse::{MouseEventKind, MouseState},
+    device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
     graphics::{text::TextOperation, Graphics},
     ui::context::GLOBAL_UI_CONTEXT,
 };
@@ -69,6 +69,8 @@ pub static UI_BOX_ACTIVE_COLOR: Color = color::YELLOW;
 pub static UI_BOX_HOT_TRANSITION_RATE: f32 = 15.0;
 pub static UI_BOX_ACTIVE_TRANSITION_RATE: f32 = 15.0;
 pub static UI_BOX_FOCUSED_TRANSITION_RATE: f32 = 5.0;
+
+pub static UI_DIVIDER_CURSOR_SNAP_EPSILON: i32 = 3;
 
 static UI_BOX_DEBUG_AUTOLAYOUT: bool = false;
 
@@ -515,32 +517,54 @@ impl UIBox {
                         // Draw a horizontal line across the top of this child.
 
                         (
-                            child_ui_box.global_bounds.left,
-                            child_ui_box.global_bounds.top,
-                            child_ui_box.global_bounds.right,
-                            child_ui_box.global_bounds.top,
+                            child_ui_box.global_bounds.left as i32,
+                            child_ui_box.global_bounds.top as i32,
+                            child_ui_box.global_bounds.right as i32,
+                            child_ui_box.global_bounds.top as i32,
                         )
                     }
                     UILayoutDirection::LeftToRight => {
                         // Draw a vertical line along the left of this child.
 
                         (
-                            child_ui_box.global_bounds.left,
-                            child_ui_box.global_bounds.top,
-                            child_ui_box.global_bounds.left,
-                            child_ui_box.global_bounds.bottom,
+                            child_ui_box.global_bounds.left as i32,
+                            child_ui_box.global_bounds.top as i32,
+                            child_ui_box.global_bounds.left as i32,
+                            child_ui_box.global_bounds.bottom as i32,
                         )
                     }
                 };
 
-                Graphics::line(
-                    target,
-                    x1 as i32,
-                    y1 as i32,
-                    x2 as i32,
-                    y2 as i32,
-                    &divider_color,
-                );
+                Graphics::line(target, x1, y1, x2, y2, &divider_color);
+
+                // Set cursor if nearby.
+
+                GLOBAL_UI_CONTEXT.with(|ctx| {
+                    let mouse_position = ctx.input_events.borrow().mouse.position;
+
+                    let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
+
+                    match self.layout_direction {
+                        UILayoutDirection::TopToBottom => {
+                            if (mouse_y - y1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
+                                && (x1..x2 + 1).contains(&mouse_x)
+                            {
+                                GLOBAL_UI_CONTEXT.with(|ctx| {
+                                    *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragUpDown;
+                                });
+                            }
+                        }
+                        UILayoutDirection::LeftToRight => {
+                            if (mouse_x - x1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
+                                && (y1..y2 + 1).contains(&mouse_y)
+                            {
+                                GLOBAL_UI_CONTEXT.with(|ctx| {
+                                    *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragLeftRight;
+                                });
+                            }
+                        }
+                    }
+                });
             }
         }
 
