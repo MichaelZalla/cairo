@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use serde::{self, Deserialize, Serialize};
 
@@ -18,9 +18,7 @@ pub struct Tree<'a, T> {
     current: Option<Rc<RefCell<Node<'a, T>>>>,
 }
 
-impl<'a, T: Default + Clone + fmt::Display + Serialize + Deserialize<'a>> fmt::Display
-    for Tree<'a, T>
-{
+impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Display for Tree<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
@@ -38,7 +36,7 @@ impl<'a, T: Default + Clone + fmt::Display + Serialize + Deserialize<'a>> fmt::D
     }
 }
 
-impl<'a, T: Default + Clone + fmt::Display + Serialize + Deserialize<'a>> Tree<'a, T> {
+impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> Tree<'a, T> {
     pub fn get_current(&self) -> Option<&Rc<RefCell<Node<'a, T>>>> {
         self.current.as_ref()
     }

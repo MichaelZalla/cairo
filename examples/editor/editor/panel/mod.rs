@@ -35,7 +35,7 @@ impl fmt::Display for EditorPanelType {
     }
 }
 
-pub fn build_main_panel_tree<'a>() -> Result<PanelTree<'a, EditorPanelType>, String> {
+pub fn build_main_window_panel_tree<'a>() -> Result<PanelTree<'a, EditorPanelType>, String> {
     let mut tree = PanelTree::with_root(Panel {
         path: "root".to_string(),
         alpha_split: 1.0,

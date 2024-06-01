@@ -7,6 +7,7 @@ pub mod extent;
 pub mod panel;
 pub mod tree;
 pub mod ui_box;
+pub mod window;
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum UISize {

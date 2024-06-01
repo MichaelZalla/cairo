@@ -11,7 +11,7 @@ use crate::{
     graphics::text::cache::TextCache,
 };
 
-use super::ui_box::{key::UIKey, styles::UIBoxStylesMap, tree::UIBoxTree, UIBox};
+use super::ui_box::{key::UIKey, styles::UIBoxStylesMap, UIBox};
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxStyleStack<T> {
@@ -47,9 +47,6 @@ pub struct UIContext<'a> {
     pub font_info: RefCell<FontInfo>,
     pub text_cache: RefCell<TextCache>,
     pub styles: RefCell<UIBoxStylesContext>,
-    pub tree: RefCell<UIBoxTree<'a>>,
-    pub dropdown_menus: RefCell<UIBoxTree<'a>>,
-    pub tooltips: RefCell<UIBoxTree<'a>>,
     pub cache: RefCell<HashMap<UIKey, UIBox>>,
     pub input_events: RefCell<UIInputEvents>,
     pub seconds_since_last_update: RefCell<f32>,
@@ -85,12 +82,6 @@ impl<'a> UIContext<'a> {
     with_style_applied!(fill_color);
     with_style_applied!(border_color);
     with_style_applied!(text_color);
-
-    pub fn clear_for_next_frame(&self) {
-        self.tree.borrow_mut().clear();
-        self.dropdown_menus.borrow_mut().clear();
-        self.tooltips.borrow_mut().clear();
-    }
 }
 
 thread_local! {

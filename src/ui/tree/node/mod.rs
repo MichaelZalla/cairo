@@ -18,7 +18,7 @@ pub struct Node<'a, T> {
     pub parent: Option<Rc<RefCell<Node<'a, T>>>>,
 }
 
-impl<'a, T: Serialize + Deserialize<'a>> Node<'a, T>
+impl<'a, T> Node<'a, T>
 where
     T: Default + Clone + Serialize + Deserialize<'a>,
 {

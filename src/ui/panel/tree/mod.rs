@@ -6,6 +6,7 @@ use crate::ui::{
     context::UIContext,
     tree::{node::NodeLocalTraversalMethod, Tree},
     ui_box::UIBoxFeatureFlag,
+    window::Window,
 };
 
 use super::Panel;
@@ -58,7 +59,13 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> PanelTree<'
         self.tree.pop_parent()
     }
 
-    pub fn render(&mut self, ui_context: &UIContext<'static>) -> Result<(), String> {
+    pub fn render(
+        &mut self,
+        ui_context: &UIContext<'static>,
+        window: &Window<T>,
+    ) -> Result<(), String> {
+        let base_tree = &window.ui_trees.base;
+
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, panel_tree_node| {
@@ -66,7 +73,7 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> PanelTree<'
 
                 let is_leaf_panel = panel_tree_node.children.is_empty();
 
-                let mut ui_box_tree = ui_context.tree.borrow_mut();
+                let mut ui_box_tree = base_tree.borrow_mut();
 
                 let panel_box = panel.make_panel_box(ui_context)?;
 
@@ -84,7 +91,7 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> PanelTree<'
                 Ok(())
             },
             &mut || {
-                let mut ui_box_tree = ui_context.tree.borrow_mut();
+                let mut ui_box_tree = base_tree.borrow_mut();
 
                 if let Some(rc) = ui_box_tree.get_current() {
                     let mut ui_box_node = (*rc).borrow_mut();

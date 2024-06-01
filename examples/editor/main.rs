@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env};
+use std::{cell::RefCell, env, rc::Rc};
 
 use sdl2::mouse::Cursor;
 
@@ -19,8 +19,8 @@ use cairo::{
     font::cache::FontCache,
     ui::{
         context::{UIContext, GLOBAL_UI_CONTEXT},
-        panel::tree::PanelTree,
         ui_box::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+        window::{Window, WindowList},
         UISize, UISizeWithStrictness,
     },
 };
@@ -53,10 +53,33 @@ fn main() -> Result<(), String> {
 
     let current_frame_index_rc = RefCell::new(0_u32);
 
-    // Initial panel tree.
+    // Initial main window.
 
-    let main_panel_tree = editor::panel::build_main_panel_tree()?;
-    let main_panel_tree_rc = RefCell::new(main_panel_tree);
+    let window_list = {
+        let mut list: WindowList<EditorPanelType> = Default::default();
+
+        let main_window = Window {
+            docked: true,
+            active: true,
+            focused: true,
+            size: (
+                window_info.window_resolution.width,
+                window_info.window_resolution.height,
+            ),
+            ..Default::default()
+        };
+
+        // Initial panel tree.
+
+        *main_window.panel_tree.borrow_mut() =
+            editor::panel::build_main_window_panel_tree().unwrap();
+
+        list.push(main_window);
+
+        list
+    };
+
+    let window_list_rc = Rc::new(RefCell::new(window_list));
 
     // SDL will reset the cursor if we don't retain the result from
     // Cursor::set().
@@ -67,13 +90,14 @@ fn main() -> Result<(), String> {
     // function is called when either (1) the main loop executes, or (2) the
     // user is actively resizing the main application window.
 
-    let render_ui_box_tree_to_framebuffer = |_frame_index: Option<u32>,
-                                             new_resolution: Option<Resolution>|
+    let render_main_ui_window_to_framebuffer = |_frame_index: Option<u32>,
+                                                new_resolution: Option<Resolution>|
      -> Result<Vec<u32>, String> {
         let frame_index = current_frame_index_rc.borrow();
+
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
-        // Check if our application window was just resized.
+        let mut window_list = (*window_list_rc).borrow_mut();
 
         if let Some(resolution) = new_resolution {
             // Resize our framebuffer to match the window's new resolution.
@@ -82,23 +106,29 @@ fn main() -> Result<(), String> {
 
             // Rebuild the UI tree based on the new window (root) resolution.
 
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                rebuild_ui_tree(
-                    ctx,
-                    &resolution,
-                    0.0,
-                    &main_panel_tree_rc,
-                    &mut Default::default(),
-                    &mut Default::default(),
-                    &mut Default::default(),
-                )
-                .unwrap();
-            });
+            for window in window_list.iter_mut() {
+                if window.docked {
+                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                        rebuild_ui_tree_for_window(
+                            ctx,
+                            window,
+                            &resolution,
+                            0.0,
+                            &mut Default::default(),
+                            &mut Default::default(),
+                            &mut Default::default(),
+                        )
+                        .unwrap();
+                    });
+                }
+            }
 
             // println!("Rebuilt UI tree based on the new resolution.");
         }
 
         framebuffer.clear(Some(color::BLACK.to_u32()));
+
+        // Check if our application window was just resized.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             {
@@ -107,11 +137,15 @@ fn main() -> Result<(), String> {
                 *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
             }
 
-            let tree = &mut ctx.tree.borrow_mut();
+            for window in window_list.iter() {
+                let base_ui_tree = &mut window.ui_trees.base.borrow_mut();
 
-            // Render the current frame's UI tree to `framebuffer`.
+                // Render the current frame's UI tree to `framebuffer`.
 
-            tree.render_frame(*frame_index, &mut framebuffer).unwrap();
+                base_ui_tree
+                    .render_frame(*frame_index, &mut framebuffer)
+                    .unwrap();
+            }
 
             {
                 let kind = &ctx.cursor_kind.borrow();
@@ -123,7 +157,7 @@ fn main() -> Result<(), String> {
         Ok(framebuffer.get_all().clone())
     };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_ui_box_tree_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_main_ui_window_to_framebuffer);
 
     // Set the global font info, based on the font filepath that was passed to
     // our program.
@@ -156,20 +190,24 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let resolution = &(*app.window_info).borrow().window_resolution;
 
-        // Rebuild the UI tree based on the latest user inputs.
+        let mut window_list = window_list_rc.borrow_mut();
 
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            rebuild_ui_tree(
-                ctx,
-                resolution,
-                app.timing_info.seconds_since_last_update,
-                &main_panel_tree_rc,
-                keyboard_state,
-                mouse_state,
-                game_controller_state,
-            )
-            .unwrap();
-        });
+        for window in window_list.iter_mut() {
+            // Rebuild the UI tree based on the latest user inputs.
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                rebuild_ui_tree_for_window(
+                    ctx,
+                    window,
+                    resolution,
+                    app.timing_info.seconds_since_last_update,
+                    keyboard_state,
+                    mouse_state,
+                    game_controller_state,
+                )
+                .unwrap();
+            });
+        }
 
         Ok(())
     };
@@ -183,7 +221,7 @@ fn main() -> Result<(), String> {
             *current_frame_index = index;
         }
 
-        render_ui_box_tree_to_framebuffer(frame_index, new_resolution)
+        render_main_ui_window_to_framebuffer(frame_index, new_resolution)
     };
 
     app.run(&mut update, &render)?;
@@ -191,17 +229,19 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn rebuild_ui_tree(
+fn rebuild_ui_tree_for_window(
     ctx: &UIContext<'static>,
+    window: &mut Window<EditorPanelType>,
     resolution: &Resolution,
     seconds: f32,
-    panel_tree: &RefCell<PanelTree<EditorPanelType>>,
     keyboard_state: &mut KeyboardState,
     mouse_state: &mut MouseState,
     game_controller_state: &mut GameControllerState,
 ) -> Result<(), String> {
+    window.ui_trees.clear();
+
     {
-        ctx.clear_for_next_frame();
+        let ui_box_tree = &mut window.ui_trees.base.borrow_mut();
 
         // Bind the latest user input events.
 
@@ -223,6 +263,11 @@ fn rebuild_ui_tree(
 
         // Rebuilds the UI tree root based on the current window resolution.
 
+        if window.docked {
+            window.size.0 = resolution.width;
+            window.size.1 = resolution.height;
+        }
+
         let root_ui_box = UIBox::new(
             "Root__root".to_string(),
             UIBoxFeatureMask::none()
@@ -231,19 +276,17 @@ fn rebuild_ui_tree(
             UILayoutDirection::TopToBottom,
             [
                 UISizeWithStrictness {
-                    size: UISize::Pixels(resolution.width),
+                    size: UISize::Pixels(window.size.0),
                     strictness: 1.0,
                 },
                 UISizeWithStrictness {
-                    size: UISize::Pixels(resolution.height),
+                    size: UISize::Pixels(window.size.1),
                     strictness: 1.0,
                 },
             ],
         );
 
         ctx.fill_color(EDITOR_UI_FILL_COLOR, || {
-            let ui_box_tree = &mut ctx.tree.borrow_mut();
-
             ui_box_tree.push_parent(root_ui_box)?;
 
             Ok(())
@@ -252,29 +295,33 @@ fn rebuild_ui_tree(
 
     ctx.fill_color(EDITOR_UI_FILL_COLOR, || {
         ctx.border_color(color::BLACK, || {
+            let ui_box_tree = &mut window.ui_trees.base.borrow_mut();
+
             // Builds the main menu bar.
 
-            editor::ui::build_main_menu_bar_ui(ctx)?;
+            editor::ui::build_main_menu_bar_ui(ctx, ui_box_tree)?;
 
             // Builds the toolbar.
 
-            editor::ui::build_toolbar_ui(ctx)
+            editor::ui::build_toolbar_ui(ctx, ui_box_tree)
         })
     })?;
 
-    {
-        // Builds UI from the current editor panel tree.
-
-        let mut panel_tree = panel_tree.borrow_mut();
-
-        panel_tree.render(ctx).unwrap();
-    }
+    // Builds UI from the current editor panel tree.
 
     {
-        // Commit this UI tree for the current frame.
+        let panel_tree = &mut window.panel_tree.borrow_mut();
 
-        let ui_box_tree = &mut ctx.tree.borrow_mut();
-
-        ui_box_tree.commit_frame()
+        panel_tree.render(ctx, window).unwrap();
     }
+
+    // Commit this UI tree for the current frame.
+
+    {
+        let ui_box_tree = &mut window.ui_trees.base.borrow_mut();
+
+        ui_box_tree.commit_frame()?;
+    }
+
+    Ok(())
 }

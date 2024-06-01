@@ -1,6 +1,7 @@
 use cairo::ui::{
     context::UIContext,
     ui_box::{
+        tree::UIBoxTree,
         utils::{button_box, container_box, greedy_box, spacer_box, text_box},
         UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
@@ -11,9 +12,7 @@ static MENU_BAR_ITEMS: [&str; 6] = ["Project", "Scene", "Edit", "Debug", "Help",
 
 static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button 4", "Button 5"];
 
-pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
-    let mut tree = ctx.tree.borrow_mut();
-
+pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), String> {
     tree.push_parent(container_box(
         "MainMenuBar__main_menu_bar".to_string(),
         UILayoutDirection::LeftToRight,
@@ -124,9 +123,7 @@ pub fn build_main_menu_bar_ui(ctx: &UIContext) -> Result<(), String> {
     tree.pop_parent()
 }
 
-pub fn build_toolbar_ui(ctx: &UIContext) -> Result<(), String> {
-    let mut tree = ctx.tree.borrow_mut();
-
+pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), String> {
     tree.push_parent(container_box(
         "Toolbar__toolbar".to_string(),
         UILayoutDirection::LeftToRight,

@@ -14,7 +14,10 @@ use cairo::{
     font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        ui_box::{utils::text_box, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+        ui_box::{
+            tree::UIBoxTree, utils::text_box, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask,
+            UILayoutDirection,
+        },
         UISize, UISizeWithStrictness,
     },
 };
@@ -65,6 +68,8 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
+    let ui_box_tree_rc = RefCell::new(UIBoxTree::default());
+
     let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,
                       _mouse_state: &mut MouseState,
@@ -80,7 +85,7 @@ fn main() -> Result<(), String> {
         GLOBAL_UI_CONTEXT.with(|ctx| {
             result = ctx.fill_color(color::BLUE, || {
                 ctx.border_color(color::YELLOW, || {
-                    let tree = &mut ctx.tree.borrow_mut();
+                    let mut tree = ui_box_tree_rc.borrow_mut();
 
                     tree.clear();
 
@@ -353,12 +358,10 @@ fn main() -> Result<(), String> {
 
         framebuffer.clear(Some(fill_value));
 
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            let tree = &mut ctx.tree.borrow_mut();
+        let mut tree = ui_box_tree_rc.borrow_mut();
 
-            tree.render_frame(frame_index.unwrap(), &mut framebuffer)
-                .unwrap();
-        });
+        tree.render_frame(frame_index.unwrap(), &mut framebuffer)
+            .unwrap();
 
         Ok(framebuffer.get_all().clone())
     };

@@ -1,4 +1,6 @@
-#[derive(Default, Debug, Copy, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ScreenExtent {
     pub left: u32,
     pub right: u32,
