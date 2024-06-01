@@ -5,7 +5,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    app::{resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
+    app::{resize_canvas, resize_window, resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -142,11 +142,19 @@ fn main() -> Result<(), String> {
                     *current_resolution_index =
                         (*current_resolution_index + 1) % RESOLUTIONS_16X9.len();
 
+                    let mut canvas_window = app.context.rendering_context.canvas.borrow_mut();
+                    let window_info = &mut app.window_info;
                     let new_resolution = RESOLUTIONS_16X9[*current_resolution_index];
 
-                    app.resize_window(new_resolution).unwrap();
+                    resize_window(&mut canvas_window, window_info, new_resolution).unwrap();
 
-                    app.resize_canvas(new_resolution).unwrap();
+                    resize_canvas(
+                        &mut canvas_window,
+                        window_info,
+                        &mut app.window_canvas,
+                        new_resolution,
+                    )
+                    .unwrap();
 
                     // Resize the framebuffer to match.
                     let mut framebuffer = framebuffer_rc.borrow_mut();

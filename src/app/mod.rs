@@ -3,6 +3,8 @@ use std::ptr;
 
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
 use sdl2::{event::Event, render::Texture};
 
 use crate::{
@@ -76,96 +78,6 @@ impl App {
             window_canvas,
             timing_info,
         }
-    }
-
-    pub fn resize_window(&mut self, new_resolution: Resolution) -> Result<(), String> {
-        let mut canvas = self.context.rendering_context.canvas.borrow_mut();
-
-        match canvas
-            .window_mut()
-            .set_size(new_resolution.width, new_resolution.height)
-        {
-            Ok(_) => {
-                // Update window info.
-
-                self.window_info.window_resolution = new_resolution;
-
-                Ok(())
-            }
-            Err(e) => Err(format!("Failed to resize app window: {}", e)),
-        }
-    }
-
-    pub fn resize_canvas(&mut self, new_resolution: Resolution) -> Result<(), String> {
-        let canvas = self.context.rendering_context.canvas.borrow_mut();
-
-        // Re-allocates a window canvas.
-
-        let texture_creator = canvas.texture_creator();
-
-        match make_window_canvas(new_resolution, &texture_creator, None) {
-            Ok(texture) => {
-                self.window_canvas = texture;
-
-                self.window_info.canvas_resolution = new_resolution;
-
-                Ok(())
-            }
-            Err(e) => Err(format!(
-                "Failed to reallocate window canvas in App::resize_canvas(): {}",
-                e
-            )),
-        }
-    }
-
-    fn render_and_present<R>(
-        &mut self,
-        current_frame_index: u32,
-        render: &mut R,
-    ) -> Result<(), String>
-    where
-        R: FnMut(u32) -> Result<Vec<u32>, String>,
-    {
-        let render_result = render(current_frame_index);
-
-        let canvas_window = &mut self.context.rendering_context.canvas.borrow_mut();
-
-        self.window_canvas
-            .with_lock(None, |write_only_byte_array, _pitch| {
-                // Render current scene
-
-                match render_result {
-                    Ok(pixels_as_u32_slice) => unsafe {
-                        let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
-                            pixels_as_u32_slice.as_ptr() as *const u8,
-                            pixels_as_u32_slice.len() * 4,
-                        ));
-
-                        let mut index = 0;
-
-                        while index < pixels_as_u8_slice.len() {
-                            write_only_byte_array[index] = pixels_as_u8_slice[index];
-
-                            index += 1;
-                        }
-                    },
-                    Err(_e) => {
-                        // Do nothing?
-                    }
-                }
-            })
-            .unwrap();
-
-        // Flip buffers
-
-        // Note that Canvas<Window>::copy() will automatically stretch our
-        // window canvas to fit the current window size, if `dst` is `None`.
-
-        canvas_window.copy(&self.window_canvas, None, None)?;
-
-        canvas_window.present();
-
-        Ok(())
     }
 
     pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
@@ -388,7 +300,16 @@ impl App {
 
             // Render current scene to the window canvas.
 
-            self.render_and_present(self.timing_info.current_frame_index, render)?;
+            {
+                let mut canvas_window = self.context.rendering_context.canvas.borrow_mut();
+
+                render_and_present(
+                    &mut canvas_window,
+                    &mut self.window_canvas,
+                    self.timing_info.current_frame_index,
+                    render,
+                )?;
+            }
 
             frame_end = timer_subsystem.performance_counter();
 
@@ -438,4 +359,101 @@ impl App {
 
         Ok(())
     }
+}
+
+pub fn resize_window(
+    canvas: &mut Canvas<Window>,
+    window_info: &mut AppWindowInfo,
+    new_resolution: Resolution,
+) -> Result<(), String> {
+    match canvas
+        .window_mut()
+        .set_size(new_resolution.width, new_resolution.height)
+    {
+        Ok(_) => {
+            // Update window info.
+
+            window_info.window_resolution = new_resolution;
+
+            // println!("Resized application window to {}.", new_resolution);
+
+            Ok(())
+        }
+        Err(e) => Err(format!("Failed to resize app window: {}", e)),
+    }
+}
+
+pub fn resize_canvas(
+    canvas: &mut Canvas<Window>,
+    window_info: &mut AppWindowInfo,
+    window_canvas: &mut Texture,
+    new_resolution: Resolution,
+) -> Result<(), String> {
+    // Re-allocates a window canvas for this window.
+
+    let texture_creator = canvas.texture_creator();
+
+    match make_window_canvas(new_resolution, &texture_creator, None) {
+        Ok(texture) => {
+            *window_canvas = texture;
+
+            window_info.canvas_resolution = new_resolution;
+
+            // println!("Resized canvas to {}.", new_resolution);
+
+            Ok(())
+        }
+        Err(e) => Err(format!(
+            "Failed to reallocate window canvas in App::resize_canvas(): {}",
+            e
+        )),
+    }
+}
+
+fn render_and_present<R>(
+    canvas_window: &mut Canvas<Window>,
+    window_canvas: &mut Texture,
+    current_frame_index: u32,
+    render: &mut R,
+) -> Result<(), String>
+where
+    R: FnMut(u32) -> Result<Vec<u32>, String>,
+{
+    let render_result = render(current_frame_index);
+
+    window_canvas
+        .with_lock(None, |write_only_byte_array, _pitch| {
+            // Render current scene
+
+            match render_result {
+                Ok(pixels_as_u32_slice) => unsafe {
+                    let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
+                        pixels_as_u32_slice.as_ptr() as *const u8,
+                        pixels_as_u32_slice.len() * 4,
+                    ));
+
+                    let mut index = 0;
+
+                    while index < pixels_as_u8_slice.len() {
+                        write_only_byte_array[index] = pixels_as_u8_slice[index];
+                        index += 1;
+                    }
+                },
+                Err(_e) => {
+                    // Do nothing?
+                }
+            }
+        })
+        .unwrap();
+
+    // Flip buffers
+
+    // Note that Canvas<Window>::copy() will automatically stretch our
+    // window canvas to fit the current window size, if `dst` is `None`.
+
+    canvas_window.copy(window_canvas, None, None)?;
+
+    canvas_window.present();
+
+    Ok(())
 }
