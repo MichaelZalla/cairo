@@ -35,7 +35,7 @@ pub fn cache_text(
 
         entry.insert(text_texture.0.to_owned());
 
-        println!("Inserted text mask texture for '{}' into TextCache.", text);
+        println!("Cached rendered text ('{}', {}).", text, font_info);
 
         (label_width, label_height)
     } else {

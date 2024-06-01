@@ -51,6 +51,8 @@ impl Graphics {
                 let (_label_width, _label_height, texture) =
                     Graphics::make_text_mask(font.as_ref(), op.text).unwrap();
 
+                println!("Generated text mask for text '{}' (uncached).", op.text);
+
                 Graphics::blit_text_from_mask(&texture.0, op, dest_buffer, None);
             }
         }
