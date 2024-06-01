@@ -14,7 +14,7 @@ use crate::{
     {debug_print, time::TimingInfo},
 };
 
-use context::{make_application_context, make_backbuffer, ApplicationContext};
+use context::{make_application_context, make_window_canvas, ApplicationContext};
 use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
 
 pub mod context;
@@ -48,7 +48,7 @@ impl Default for AppWindowInfo {
 pub struct App {
     pub window_info: AppWindowInfo,
     pub context: ApplicationContext,
-    pub backbuffer: Texture,
+    pub window_canvas: Texture,
     pub timing_info: TimingInfo,
 }
 
@@ -67,13 +67,13 @@ impl App {
 
         let texture_creator = context.rendering_context.canvas.borrow().texture_creator();
 
-        let backbuffer =
-            make_backbuffer(window_info.canvas_resolution, &texture_creator, None).unwrap();
+        let window_canvas =
+            make_window_canvas(window_info.canvas_resolution, &texture_creator, None).unwrap();
 
         App {
             window_info: app_window_info,
             context,
-            backbuffer,
+            window_canvas,
             timing_info,
         }
     }
@@ -99,20 +99,20 @@ impl App {
     pub fn resize_canvas(&mut self, new_resolution: Resolution) -> Result<(), String> {
         let canvas = self.context.rendering_context.canvas.borrow_mut();
 
-        // Re-allocates a backbuffer.
+        // Re-allocates a window canvas.
 
         let texture_creator = canvas.texture_creator();
 
-        match make_backbuffer(new_resolution, &texture_creator, None) {
+        match make_window_canvas(new_resolution, &texture_creator, None) {
             Ok(texture) => {
-                self.backbuffer = texture;
+                self.window_canvas = texture;
 
                 self.window_info.canvas_resolution = new_resolution;
 
                 Ok(())
             }
             Err(e) => Err(format!(
-                "Failed to reallocate backbuffer in App::resize_canvas(): {}",
+                "Failed to reallocate window canvas in App::resize_canvas(): {}",
                 e
             )),
         }
@@ -336,11 +336,11 @@ impl App {
 
             last_update_tick = timer_subsystem.performance_counter();
 
-            // Render current scene to backbuffer
+            // Render current scene to the window canvas.
 
             let cw = &mut self.context.rendering_context.canvas.borrow_mut();
 
-            self.backbuffer
+            self.window_canvas
                 .with_lock(None, |write_only_byte_array, _pitch| {
                     // Render current scene
 
@@ -368,9 +368,9 @@ impl App {
             // Flip buffers
 
             // Note that Canvas<Window>::copy() will automatically stretch our
-            // backbuffer to fit the current window size, if `dst` is `None`.
+            // window canvas to fit the current window size, if `dst` is `None`.
 
-            cw.copy(&self.backbuffer, None, None)?;
+            cw.copy(&self.window_canvas, None, None)?;
 
             cw.present();
 
