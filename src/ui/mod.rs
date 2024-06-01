@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod context;
 pub mod extent;
+pub mod panel;
 pub mod tree;
 pub mod ui_box;
 

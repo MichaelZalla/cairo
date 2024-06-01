@@ -1,10 +1,13 @@
 extern crate sdl2;
 
-use std::env;
+use std::{cell::RefCell, env};
 
 use cairo::{
     animation::lerp,
-    app::{resolution::RESOLUTION_1600_BY_900, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_1600_BY_900},
+        App, AppWindowInfo,
+    },
     buffer::Buffer2D,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -24,7 +27,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     let args: Vec<String> = env::args().collect();
 
@@ -50,11 +57,13 @@ fn main() -> Result<(), String> {
 
     // Set up our app
 
-    let mut framebuffer = Buffer2D::new(
+    let framebuffer = Buffer2D::new(
         window_info.window_resolution.width,
         window_info.window_resolution.height,
         None,
     );
+
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,
@@ -337,7 +346,9 @@ fn main() -> Result<(), String> {
         result
     };
 
-    let mut render = |frame_index: u32| -> Result<Vec<u32>, String> {
+    let render = |frame_index: Option<u32>, _new_resolution| -> Result<Vec<u32>, String> {
+        let mut framebuffer = framebuffer_rc.borrow_mut();
+
         let fill_value = color::BLACK.to_u32();
 
         framebuffer.clear(Some(fill_value));
@@ -345,13 +356,14 @@ fn main() -> Result<(), String> {
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let tree = &mut ctx.tree.borrow_mut();
 
-            tree.render_frame(frame_index, &mut framebuffer).unwrap();
+            tree.render_frame(frame_index.unwrap(), &mut framebuffer)
+                .unwrap();
         });
 
         Ok(framebuffer.get_all().clone())
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

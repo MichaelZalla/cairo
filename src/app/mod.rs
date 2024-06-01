@@ -1,7 +1,9 @@
+use std::cell::RefCell;
 use std::collections::HashSet;
 use std::ptr;
+use std::rc::Rc;
 
-use sdl2::event::WindowEvent;
+use sdl2::event::{EventWatch, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::render::Canvas;
@@ -49,14 +51,17 @@ impl Default for AppWindowInfo {
 }
 
 pub struct App {
-    pub window_info: AppWindowInfo,
+    pub window_info: Rc<RefCell<AppWindowInfo>>,
     pub context: ApplicationContext,
-    pub window_canvas: Texture,
+    pub window_canvas: Rc<RefCell<Texture>>,
     pub timing_info: TimingInfo,
 }
 
 impl App {
-    pub fn new(window_info: &mut AppWindowInfo) -> Self {
+    pub fn new<'a>(
+        window_info: &mut AppWindowInfo,
+        rod: &'a impl Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
+    ) -> (Self, EventWatch<'a, impl Fn(Event) + 'a>) {
         let context = make_application_context(window_info).unwrap();
 
         let timing_info: TimingInfo = Default::default();
@@ -66,22 +71,75 @@ impl App {
             height: context.screen_height,
         };
 
-        let app_window_info = window_info.clone();
+        let window_info = window_info.clone();
+
+        let canvas_window_rc = context.rendering_context.canvas.clone();
 
         let texture_creator = context.rendering_context.canvas.borrow().texture_creator();
 
         let window_canvas =
             make_window_canvas(window_info.canvas_resolution, &texture_creator, None).unwrap();
 
-        App {
-            window_info: app_window_info,
+        let event_subsystem = context.sdl_context.event().unwrap();
+
+        let window_info_rc = Rc::new(RefCell::new(window_info));
+        let window_info_rc_clone = window_info_rc.clone();
+
+        let window_canvas_rc = Rc::new(RefCell::new(window_canvas));
+        let window_canvas_rc_clone = window_canvas_rc.clone();
+
+        let event_watch = event_subsystem.add_event_watch(move |event| {
+            if let Event::Window {
+                timestamp: _timestamp,
+                window_id: _window_id,
+                win_event,
+            } = event
+            {
+                match win_event {
+                    WindowEvent::Resized(width, height)
+                    | WindowEvent::SizeChanged(width, height) => {
+                        let mut canvas_window = (*canvas_window_rc).borrow_mut();
+                        let mut window_info = (*window_info_rc_clone).borrow_mut();
+                        let mut window_canvas = (*window_canvas_rc_clone).borrow_mut();
+
+                        let new_resolution = Resolution {
+                            width: width as u32,
+                            height: height as u32,
+                        };
+
+                        handle_window_resize_event(
+                            &mut canvas_window,
+                            &mut window_info,
+                            &mut window_canvas,
+                            new_resolution,
+                        )
+                        .unwrap();
+
+                        render_and_present(
+                            &mut canvas_window,
+                            &mut window_canvas,
+                            None,
+                            Some(new_resolution),
+                            rod,
+                        )
+                        .unwrap();
+                    }
+                    _ => (),
+                };
+            }
+        });
+
+        let app = App {
+            window_info: window_info_rc,
             context,
-            window_canvas,
+            window_canvas: window_canvas_rc,
             timing_info,
-        }
+        };
+
+        (app, event_watch)
     }
 
-    pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
+    pub fn run<U, R>(mut self, update: &mut U, render: &R) -> Result<(), String>
     where
         U: FnMut(
             &mut Self,
@@ -89,7 +147,7 @@ impl App {
             &mut MouseState,
             &mut GameControllerState,
         ) -> Result<(), String>,
-        R: FnMut(u32) -> Result<Vec<u32>, String>,
+        R: Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
     {
         let timer_subsystem = self.context.sdl_context.timer()?;
 
@@ -221,8 +279,8 @@ impl App {
                             let rendering_context = &self.context.rendering_context;
 
                             let mut canvas_window = rendering_context.canvas.borrow_mut();
-                            let window_info = &mut self.window_info;
-                            let window_canvas = &mut self.window_canvas;
+                            let window_info = &mut (*self.window_info).borrow_mut();
+                            let window_canvas = &mut (*self.window_canvas).borrow_mut();
 
                             let resolution = Resolution {
                                 width: *width as u32,
@@ -368,10 +426,15 @@ impl App {
             mouse_state.position.0 = current_mouse_state.x();
             mouse_state.position.1 = current_mouse_state.y();
 
-            mouse_state.ndc_position.0 =
-                mouse_state.position.0 as f32 / self.window_info.window_resolution.width as f32;
-            mouse_state.ndc_position.1 =
-                mouse_state.position.1 as f32 / self.window_info.window_resolution.height as f32;
+            {
+                let window_info = self.window_info.borrow();
+
+                mouse_state.ndc_position.0 =
+                    mouse_state.position.0 as f32 / window_info.window_resolution.width as f32;
+
+                mouse_state.ndc_position.1 =
+                    mouse_state.position.1 as f32 / window_info.window_resolution.height as f32;
+            }
 
             // Update current scene
 
@@ -397,10 +460,15 @@ impl App {
             {
                 let mut canvas_window = self.context.rendering_context.canvas.borrow_mut();
 
+                let mut window_canvas = self.window_canvas.borrow_mut();
+
+                let current_frame_index = self.timing_info.current_frame_index;
+
                 render_and_present(
                     &mut canvas_window,
-                    &mut self.window_canvas,
-                    self.timing_info.current_frame_index,
+                    &mut window_canvas,
+                    Some(current_frame_index),
+                    None,
                     render,
                 )?;
             }
@@ -516,16 +584,14 @@ pub fn handle_window_resize_event(
     Ok(())
 }
 
-fn render_and_present<R>(
+fn render_and_present(
     canvas_window: &mut Canvas<Window>,
     window_canvas: &mut Texture,
-    current_frame_index: u32,
-    render: &mut R,
-) -> Result<(), String>
-where
-    R: FnMut(u32) -> Result<Vec<u32>, String>,
-{
-    let render_result = render(current_frame_index);
+    current_frame_index: Option<u32>,
+    new_resolution: Option<Resolution>,
+    render: &impl Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
+) -> Result<(), String> {
+    let render_result = render(current_frame_index, new_resolution);
 
     window_canvas
         .with_lock(None, |write_only_byte_array, _pitch| {

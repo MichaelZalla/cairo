@@ -5,7 +5,10 @@ use std::{cell::RefCell, rc::Rc};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    app::{resolution::RESOLUTION_960_BY_540, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_960_BY_540},
+        App, AppWindowInfo,
+    },
     buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -49,7 +52,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -131,11 +138,13 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
+        let window_info = (*app.window_info).borrow();
+
         let mut debug_message_buffer = debug_message_buffer_rc.borrow_mut();
 
         debug_message_buffer.write(format!(
             "Resolution: {}x{}",
-            app.window_info.canvas_resolution.width, app.window_info.canvas_resolution.height
+            window_info.canvas_resolution.width, window_info.canvas_resolution.height
         ));
 
         let uptime = app.timing_info.uptime_seconds;
@@ -442,7 +451,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
+    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
         // Render scene.
 
         let resources = (*scene_context.resources).borrow();
@@ -455,6 +464,8 @@ fn main() -> Result<(), String> {
 
                 let framebuffer = framebuffer_rc.borrow();
 
+                let mut font_cache = font_cache_rc.borrow_mut();
+
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
                         let mut color_buffer = color_buffer_lock.borrow_mut();
@@ -464,7 +475,7 @@ fn main() -> Result<(), String> {
                         {
                             Graphics::render_debug_messages(
                                 &mut color_buffer,
-                                font_cache_rc.get_mut(),
+                                &mut font_cache,
                                 font_info,
                                 (12, 12),
                                 1.0,
@@ -481,7 +492,7 @@ fn main() -> Result<(), String> {
         }
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

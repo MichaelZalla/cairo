@@ -1,22 +1,37 @@
-use cairo::ui::{context::UIContext, tree::Tree, ui_box::UIBoxFeatureFlag};
+use core::fmt::{self, Display};
+
 use serde::{Deserialize, Serialize};
 
-use super::EditorPanel;
+use crate::ui::{
+    context::UIContext,
+    tree::{node::NodeLocalTraversalMethod, Tree},
+    ui_box::UIBoxFeatureFlag,
+};
+
+use super::Panel;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct EditorPanelTree<'a> {
+pub struct PanelTree<'a, T: Default> {
     #[serde(flatten)]
-    tree: Tree<'a, EditorPanel>,
+    tree: Tree<'a, Panel<T>>,
 }
 
-impl<'a> EditorPanelTree<'a> {
-    pub fn with_root(root_panel: EditorPanel) -> Self {
+impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Display
+    for PanelTree<'a, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", serde_json::to_string_pretty(&self).unwrap())
+    }
+}
+
+impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> PanelTree<'a, T> {
+    pub fn with_root(root_panel: Panel<T>) -> Self {
         Self {
-            tree: Tree::<'a, EditorPanel>::with_root(root_panel),
+            tree: Tree::<'a, Panel<T>>::with_root(root_panel),
         }
     }
 
-    pub fn push(&mut self, id: &str, mut panel: EditorPanel) -> Result<(), String> {
+    pub fn push(&mut self, id: &str, mut panel: Panel<T>) -> Result<(), String> {
         if let Some(current_node_rc) = self.tree.get_current() {
             let current_node = &current_node_rc.borrow();
             let current_panel = &current_node.data;
@@ -31,9 +46,7 @@ impl<'a> EditorPanelTree<'a> {
         Ok(())
     }
 
-    pub fn push_parent(&mut self, id: &str, panel: EditorPanel) -> Result<(), String> {
-        // println!("Pushing parent {}.", panel.path);
-
+    pub fn push_parent(&mut self, id: &str, panel: Panel<T>) -> Result<(), String> {
         self.push(id, panel)?;
 
         self.tree.push_parent_post();
@@ -47,7 +60,7 @@ impl<'a> EditorPanelTree<'a> {
 
     pub fn render(&mut self, ui_context: &UIContext<'static>) -> Result<(), String> {
         self.tree.visit_root_dfs_mut(
-            &cairo::ui::tree::node::NodeLocalTraversalMethod::PreOrder,
+            &NodeLocalTraversalMethod::PreOrder,
             &mut |_depth, _parent_data, panel_tree_node| {
                 let panel = &panel_tree_node.data;
 

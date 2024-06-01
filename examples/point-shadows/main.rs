@@ -3,7 +3,10 @@ extern crate sdl2;
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    app::{resolution::RESOLUTION_640_BY_320, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_640_BY_320},
+        App, AppWindowInfo,
+    },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
@@ -41,7 +44,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     // Default framebuffer
 
@@ -196,7 +203,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
+    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
         // Render point shadow map.
 
         update_point_light_shadow_maps(
@@ -259,7 +266,7 @@ fn main() -> Result<(), String> {
         }
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

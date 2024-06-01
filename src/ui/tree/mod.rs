@@ -11,7 +11,7 @@ pub mod node;
 pub mod traversal;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct Tree<'a, T: Default + Clone + fmt::Display> {
+pub struct Tree<'a, T> {
     #[serde(flatten)]
     pub root: Option<Rc<RefCell<Node<'a, T>>>>,
     #[serde(skip)]

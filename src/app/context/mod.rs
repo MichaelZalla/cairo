@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use sdl2::{
     render::{BlendMode, Canvas, Texture, TextureCreator},
@@ -27,7 +27,7 @@ pub struct ApplicationContext {
 }
 
 pub struct ApplicationRenderingContext {
-    pub canvas: RefCell<Canvas<Window>>,
+    pub canvas: Rc<RefCell<Canvas<Window>>>,
 }
 
 pub fn make_application_context(window_info: &AppWindowInfo) -> Result<ApplicationContext, String> {
@@ -170,7 +170,7 @@ pub fn get_application_rendering_context(
 
     match canvas_builder.build() {
         Ok(canvas) => Ok(ApplicationRenderingContext {
-            canvas: RefCell::new(canvas),
+            canvas: Rc::new(RefCell::new(canvas)),
         }),
         Err(e) => Err(e.to_string()),
     }

@@ -22,7 +22,7 @@ pub static POINT_LIGHTS_COUNT: usize = (LIGHT_GRID_SUBDIVISIONS + 1).pow(2);
 
 pub fn make_primitives_scene(
     aspect_ratio: f32,
-    rendering_context: &ApplicationRenderingContext,
+    rendering_context: Option<&ApplicationRenderingContext>,
 ) -> Result<SceneContext, String> {
     let scene_context: SceneContext = Default::default();
 
@@ -48,7 +48,9 @@ pub fn make_primitives_scene(
 
                 albedo_map.sampling_options.wrapping = TextureMapWrapping::Repeat;
 
-                albedo_map.load(rendering_context)?;
+                if let Some(ctx) = rendering_context {
+                    albedo_map.load(ctx)?
+                }
 
                 // Pump up albedo value of the darkest pixels
 
@@ -199,7 +201,9 @@ pub fn make_primitives_scene(
 
             material.emissive_color_map = material.alpha_map;
 
-            material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
+            if let Some(ctx) = rendering_context {
+                material.load_all_maps(&mut resources.texture_u8.borrow_mut(), ctx)?
+            }
 
             material
         };
@@ -253,7 +257,9 @@ pub fn make_primitives_scene(
 
             material.emissive_color_map = material.alpha_map;
 
-            material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
+            if let Some(ctx) = rendering_context {
+                material.load_all_maps(&mut resources.texture_u8.borrow_mut(), ctx)?
+            }
 
             material
         };

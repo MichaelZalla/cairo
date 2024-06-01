@@ -2,10 +2,8 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
@@ -26,6 +24,7 @@ use cairo::{
         vec4::Vec4,
     },
 };
+use uuid::Uuid;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -34,9 +33,15 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    // Render callback
 
-    // Default framebuffer
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+
+    // Pipeline framebuffer
 
     let mut framebuffer = Framebuffer::new(
         window_info.canvas_resolution.width,
@@ -289,7 +294,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
+    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
         // Render scene.
 
         let resources = (*scene_context.resources).borrow();
@@ -315,7 +320,7 @@ fn main() -> Result<(), String> {
         }
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

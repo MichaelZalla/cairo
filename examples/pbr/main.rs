@@ -3,7 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use scene::make_sphere_grid_scene;
 
 use cairo::{
-    app::{resolution::RESOLUTION_1280_BY_720, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_1280_BY_720},
+        App, AppWindowInfo,
+    },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
@@ -27,7 +30,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     let scene_context = make_sphere_grid_scene(16.0 / 9.0)?;
 
@@ -110,7 +117,7 @@ fn main() -> Result<(), String> {
 
     // App render() callback
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
+    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
         // Render scene.
 
         let resources = (*scene_context.resources).borrow();
@@ -136,7 +143,7 @@ fn main() -> Result<(), String> {
         }
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

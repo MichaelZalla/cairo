@@ -5,7 +5,7 @@ use uuid::Uuid;
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
@@ -39,7 +39,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     // Bake diffuse radiance and irradiance maps for a given HDR.
 
@@ -279,7 +283,9 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
+    let render = |_frame_index: Option<u32>,
+                  _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> {
         // Render scene.
 
         let scene_context = spheres_scene_context_rc.borrow();
@@ -306,7 +312,7 @@ fn main() -> Result<(), String> {
         }
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

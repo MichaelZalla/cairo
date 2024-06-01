@@ -3,7 +3,7 @@ extern crate sdl2;
 use std::{cell::RefCell, env};
 
 use cairo::{
-    app::{App, AppWindowInfo},
+    app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -20,7 +20,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     // Load a system font
 
@@ -36,17 +40,19 @@ fn main() -> Result<(), String> {
         point_size: 16,
     };
 
-    let mut font_cache_rc = RefCell::new(FontCache::new(app.context.ttf_context));
+    let font_cache_rc = RefCell::new(FontCache::new(app.context.ttf_context));
 
     let _text_cache_rc = RefCell::new(TextCache::new());
 
     // Set up our app
 
-    let mut framebuffer = Buffer2D::new(
+    let framebuffer = Buffer2D::new(
         window_info.window_resolution.width,
         window_info.window_resolution.height,
         None,
     );
+
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     let now_seconds = RefCell::new(0.0);
 
@@ -66,17 +72,19 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
-        // Clears pixel buffer
-        let fill_value = color::BLACK.to_u32();
+    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
+        let mut framebuffer = framebuffer_rc.borrow_mut();
+        let mut font_cache = font_cache_rc.borrow_mut();
 
-        framebuffer.clear(Some(fill_value));
+        // Clears pixel buffer
+
+        framebuffer.clear(Some(color::BLACK.to_u32()));
 
         // Render some text to our pixel buffer
 
         Graphics::text(
             &mut framebuffer,
-            font_cache_rc.get_mut(),
+            &mut font_cache,
             None,
             &font_info,
             &TextOperation {
@@ -96,7 +104,7 @@ fn main() -> Result<(), String> {
 
         Graphics::text(
             &mut framebuffer,
-            font_cache_rc.get_mut(),
+            &mut font_cache,
             None,
             &font_info,
             &TextOperation {
@@ -114,7 +122,7 @@ fn main() -> Result<(), String> {
         return Ok(framebuffer.get_all().clone());
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }

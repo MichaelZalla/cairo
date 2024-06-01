@@ -5,12 +5,15 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    app::{handle_window_resize_event, resolution::RESOLUTIONS_16X9, App, AppWindowInfo},
+    app::{
+        handle_window_resize_event,
+        resolution::{Resolution, RESOLUTIONS_16X9},
+        App, AppWindowInfo,
+    },
     buffer::framebuffer::Framebuffer,
     debug::message::DebugMessageBuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
-    graphics::Graphics,
     matrix::Mat4,
     scene::node::{
         SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
@@ -32,7 +35,7 @@ use cairo::{
 
 use scene::{make_primitives_scene, POINT_LIGHTS_COUNT};
 
-pub mod scene;
+mod scene;
 
 fn main() -> Result<(), String> {
     let current_resolution_index_rc: RefCell<usize> = RefCell::new(2);
@@ -49,7 +52,11 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let app = App::new(&mut window_info);
+    let render_scene_to_framebuffer = |_frame_index,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -60,33 +67,33 @@ fn main() -> Result<(), String> {
         point_size: 16,
     }));
 
-    let font_cache_rc = Box::leak(Box::new(RefCell::new(FontCache::new(
-        app.context.ttf_context,
-    ))));
-
-    font_cache_rc.borrow_mut().load(font_info)?;
-
     // Debug messages
 
     let debug_message_buffer_rc: RefCell<DebugMessageBuffer> = Default::default();
 
-    // Default framebuffer
+    // Main application window's framebuffer.
 
     let mut framebuffer = Framebuffer::new(
         window_info.canvas_resolution.width,
         window_info.canvas_resolution.height,
     );
 
-    let aspect_ratio = framebuffer.width_over_height;
-
     framebuffer.complete(0.3, 100.0);
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
+    // Current frame index.
+
+    let current_frame_index_rc = RefCell::new(0_u32);
+
     // Scene context
 
-    let scene_context_rc = {
-        let scene_context = make_primitives_scene(aspect_ratio, rendering_context)?;
+    let scene_context = {
+        let framebuffer = (*framebuffer_rc).borrow();
+
+        let aspect_ratio = framebuffer.width_over_height;
+
+        let scene_context = make_primitives_scene(aspect_ratio, Some(rendering_context))?;
 
         Rc::new(RefCell::new(scene_context))
     };
@@ -94,6 +101,28 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+
+    // Renderer
+
+    let mut renderer = SoftwareRenderer::new(
+        shader_context_rc.clone(),
+        (*scene_context).borrow().resources.clone(),
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
+
+    let renderer_rc = RefCell::new(renderer);
+
+    // Font cache
+
+    let font_cache_rc = Box::leak(Box::new(RefCell::new(FontCache::new(
+        app.context.ttf_context,
+    ))));
+
+    font_cache_rc.borrow_mut().load(font_info)?;
 
     // Fragment shaders
 
@@ -107,20 +136,6 @@ fn main() -> Result<(), String> {
 
     let active_fragment_shader_index_rc: RefCell<usize> = Default::default();
 
-    // Renderer
-
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        (*scene_context_rc).borrow().resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
-
-    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
-
-    let renderer_rc = RefCell::new(renderer);
-
     let looking_at_point_light_rc = RefCell::new(false);
 
     // App update and render callbacks
@@ -131,6 +146,11 @@ fn main() -> Result<(), String> {
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let mut renderer = renderer_rc.borrow_mut();
+        let scene_context = (*scene_context).borrow();
+
+        let resources = scene_context.resources.borrow_mut();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
@@ -143,13 +163,17 @@ fn main() -> Result<(), String> {
                         (*current_resolution_index + 1) % RESOLUTIONS_16X9.len();
 
                     let mut canvas_window = app.context.rendering_context.canvas.borrow_mut();
-                    let window_info = &mut app.window_info;
+
+                    let window_info = &mut (*app.window_info).borrow_mut();
+
+                    let window_canvas = &mut (*app.window_canvas).borrow_mut();
+
                     let new_resolution = RESOLUTIONS_16X9[*current_resolution_index];
 
                     handle_window_resize_event(
                         &mut canvas_window,
                         window_info,
-                        &mut app.window_canvas,
+                        window_canvas,
                         new_resolution,
                     )?;
 
@@ -183,22 +207,17 @@ fn main() -> Result<(), String> {
 
         let mut debug_message_buffer = debug_message_buffer_rc.borrow_mut();
 
-        debug_message_buffer.write(format!(
-            "Resolution: {}x{}",
-            app.window_info.canvas_resolution.width, app.window_info.canvas_resolution.height
-        ));
+        {
+            let window_info = (*app.window_info).borrow();
+
+            debug_message_buffer.write(format!("{:?}", &window_info.canvas_resolution));
+        }
 
         let uptime = app.timing_info.uptime_seconds;
 
         debug_message_buffer.write(format!("FPS: {:.*}", 0, app.timing_info.frames_per_second));
 
         debug_message_buffer.write(format!("Seconds ellapsed: {:.*}", 2, uptime));
-
-        let scene_context = (*scene_context_rc).borrow();
-
-        let resources = scene_context.resources.borrow_mut();
-        let mut scenes = scene_context.scenes.borrow_mut();
-        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.set_ambient_light(None);
         shader_context.set_directional_light(None);
@@ -459,7 +478,7 @@ fn main() -> Result<(), String> {
             ));
 
             {
-                let framebuffer = framebuffer_rc.borrow();
+                let framebuffer = (*framebuffer_rc).borrow();
 
                 let depth_buffer = framebuffer.attachments.depth.as_ref().unwrap().borrow();
 
@@ -561,10 +580,30 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let mut render = |_frame_index| -> Result<Vec<u32>, String> {
+    let render = |frame_index, new_resolution: Option<Resolution>| -> Result<Vec<u32>, String> {
+        if let Some(index) = frame_index {
+            let mut current_frame_index = current_frame_index_rc.borrow_mut();
+
+            *current_frame_index = index;
+        }
+
+        {
+            let mut framebuffer = framebuffer_rc.borrow_mut();
+
+            // Check if our application window was just resized.
+
+            if let Some(resolution) = new_resolution {
+                // Resize our framebuffer to match the window's new resolution.
+
+                framebuffer.resize(resolution.width, resolution.height, false);
+            }
+
+            framebuffer.clear();
+        }
+
         // Render scene.
 
-        let scene_context = (*scene_context_rc).borrow();
+        let scene_context = (*scene_context).borrow();
 
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
@@ -574,25 +613,25 @@ fn main() -> Result<(), String> {
             Ok(()) => {
                 // Write out.
 
-                let framebuffer = framebuffer_rc.borrow();
+                let framebuffer = framebuffer_rc.borrow_mut();
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
-                        let mut color_buffer = color_buffer_lock.borrow_mut();
+                        let color_buffer = color_buffer_lock.borrow_mut();
 
-                        {
-                            let debug_messages = &mut *debug_message_buffer_rc.borrow_mut();
-                            let mut font_cache = font_cache_rc.borrow_mut();
+                        // {
+                        //     let debug_messages = &mut *debug_message_buffer_rc.borrow_mut();
+                        //     let mut font_cache = font_cache_rc.borrow_mut();
 
-                            Graphics::render_debug_messages(
-                                &mut color_buffer,
-                                &mut font_cache,
-                                font_info,
-                                (12, 12),
-                                1.0,
-                                debug_messages,
-                            );
-                        }
+                        //     Graphics::render_debug_messages(
+                        //         &mut color_buffer,
+                        //         &mut font_cache,
+                        //         font_info,
+                        //         (12, 12),
+                        //         1.0,
+                        //         debug_messages,
+                        //     );
+                        // }
 
                         Ok(color_buffer.get_all().clone())
                     }
@@ -603,7 +642,7 @@ fn main() -> Result<(), String> {
         }
     };
 
-    app.run(&mut update, &mut render)?;
+    app.run(&mut update, &render)?;
 
     Ok(())
 }
