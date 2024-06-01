@@ -27,8 +27,12 @@ pub mod editor;
 static EDITOR_UI_FILL_COLOR: Color = Color::rgb(230, 230, 230);
 
 fn main() -> Result<(), String> {
+    let title = format!("Cairo Engine (build {})", env!("GIT_COMMIT_SHORT_HASH")).to_string();
+
+    // Initial window info.
+
     let mut window_info = AppWindowInfo {
-        title: "examples/editor".to_string(),
+        title,
         window_resolution: RESOLUTION_1600_BY_900,
         canvas_resolution: RESOLUTION_1600_BY_900,
         ..Default::default()
