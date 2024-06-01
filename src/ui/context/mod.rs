@@ -2,7 +2,11 @@ use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
     color::Color,
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    device::{
+        game_controller::GameControllerState,
+        keyboard::KeyboardState,
+        mouse::{cursor::MouseCursorKind, MouseState},
+    },
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
 };
@@ -37,7 +41,7 @@ pub struct UIInputEvents {
     pub game_controller: GameControllerState,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct UIContext<'a> {
     pub font_cache: RefCell<Option<FontCache<'a>>>,
     pub font_info: RefCell<FontInfo>,
@@ -49,6 +53,7 @@ pub struct UIContext<'a> {
     pub cache: RefCell<HashMap<UIKey, UIBox>>,
     pub input_events: RefCell<UIInputEvents>,
     pub seconds_since_last_update: RefCell<f32>,
+    pub cursor_kind: RefCell<MouseCursorKind>,
 }
 
 macro_rules! with_style_applied {

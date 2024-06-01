@@ -37,8 +37,8 @@ impl Default for AppWindowInfo {
             title: "App".to_string(),
             window_resolution: DEFAULT_WINDOW_RESOLUTION,
             canvas_resolution: DEFAULT_WINDOW_RESOLUTION,
-            full_screen: false,
             show_cursor: true,
+            full_screen: false,
             relative_mouse_mode: false,
             vertical_sync: false,
         }

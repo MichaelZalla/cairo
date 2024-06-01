@@ -2,6 +2,8 @@ use std::collections::HashSet;
 
 use sdl2::mouse::{MouseButton, MouseWheelDirection};
 
+pub mod cursor;
+
 #[derive(Default, Copy, Clone, Debug)]
 pub enum MouseEventKind {
     #[default]
