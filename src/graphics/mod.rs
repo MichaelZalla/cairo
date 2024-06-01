@@ -1,10 +1,6 @@
 use std::cmp::{max, min};
 
-use crate::{
-    buffer::Buffer2D,
-    color::Color,
-    vec::vec2::{self, Vec2},
-};
+use crate::{buffer::Buffer2D, color::Color, vec::vec2};
 
 pub mod text;
 
@@ -149,50 +145,26 @@ impl Graphics {
 
         if let Some(fill_color) = fill {
             for current_y in y..y + height {
-                Graphics::line(
-                    buffer,
-                    x as i32,
-                    current_y as i32,
-                    (x + width - 1) as i32,
-                    current_y as i32,
-                    fill_color,
-                )
+                horizontal_line_unsafe(buffer, x, x + width - 1, current_y, &fill_color.to_u32())
             }
         }
 
         // Render a border.
 
         if let Some(border_color) = border {
-            Graphics::poly_line(
-                buffer,
-                &[
-                    // Top left
-                    Vec2 {
-                        x: x as f32,
-                        y: y as f32,
-                        z: 1.0,
-                    },
-                    // Top right
-                    Vec2 {
-                        x: (x + width - 1) as f32,
-                        y: y as f32,
-                        z: 1.0,
-                    },
-                    // Bottom right
-                    Vec2 {
-                        x: (x + width - 1) as f32,
-                        y: (y + height - 1) as f32,
-                        z: 1.0,
-                    },
-                    // Bottom left
-                    Vec2 {
-                        x: x as f32,
-                        y: (y + height - 1) as f32,
-                        z: 1.0,
-                    },
-                ],
-                border_color,
-            );
+            let color_u32 = &border_color.to_u32();
+
+            // Top edge
+            horizontal_line_unsafe(buffer, x, x + width - 1, y, color_u32);
+
+            // Bottom edge
+            horizontal_line_unsafe(buffer, x, x + width - 1, y + height - 1, color_u32);
+
+            // Left edge
+            vertical_line_unsafe(buffer, x, y, y + height - 1, color_u32);
+
+            // Right edge
+            vertical_line_unsafe(buffer, x + width - 1, y, y + height - 1, color_u32);
         }
     }
 
@@ -350,5 +322,19 @@ impl Graphics {
         }
 
         None
+    }
+}
+
+// @NOTE Assumes all coordinate arguments lie inside the buffer boundary.
+fn horizontal_line_unsafe(buffer: &mut Buffer2D, x1: u32, x2: u32, y: u32, color_u32: &u32) {
+    for x in x1..x2 + 1 {
+        buffer.set(x, y, *color_u32);
+    }
+}
+
+// @NOTE Assumes all coordinate arguments lie inside the buffer boundary.
+fn vertical_line_unsafe(buffer: &mut Buffer2D, x: u32, y1: u32, y2: u32, color_u32: &u32) {
+    for y in y1..y2 + 1 {
+        buffer.set(x, y, *color_u32);
     }
 }
