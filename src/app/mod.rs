@@ -118,6 +118,56 @@ impl App {
         }
     }
 
+    fn render_and_present<R>(
+        &mut self,
+        current_frame_index: u32,
+        render: &mut R,
+    ) -> Result<(), String>
+    where
+        R: FnMut(u32) -> Result<Vec<u32>, String>,
+    {
+        let render_result = render(current_frame_index);
+
+        let canvas_window = &mut self.context.rendering_context.canvas.borrow_mut();
+
+        self.window_canvas
+            .with_lock(None, |write_only_byte_array, _pitch| {
+                // Render current scene
+
+                match render_result {
+                    Ok(pixels_as_u32_slice) => unsafe {
+                        let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
+                            pixels_as_u32_slice.as_ptr() as *const u8,
+                            pixels_as_u32_slice.len() * 4,
+                        ));
+
+                        let mut index = 0;
+
+                        while index < pixels_as_u8_slice.len() {
+                            write_only_byte_array[index] = pixels_as_u8_slice[index];
+
+                            index += 1;
+                        }
+                    },
+                    Err(_e) => {
+                        // Do nothing?
+                    }
+                }
+            })
+            .unwrap();
+
+        // Flip buffers
+
+        // Note that Canvas<Window>::copy() will automatically stretch our
+        // window canvas to fit the current window size, if `dst` is `None`.
+
+        canvas_window.copy(&self.window_canvas, None, None)?;
+
+        canvas_window.present();
+
+        Ok(())
+    }
+
     pub fn run<U, R>(mut self, update: &mut U, render: &mut R) -> Result<(), String>
     where
         U: FnMut(
@@ -338,41 +388,7 @@ impl App {
 
             // Render current scene to the window canvas.
 
-            let cw = &mut self.context.rendering_context.canvas.borrow_mut();
-
-            self.window_canvas
-                .with_lock(None, |write_only_byte_array, _pitch| {
-                    // Render current scene
-
-                    match render(self.timing_info.current_frame_index) {
-                        Ok(pixels_as_u32_slice) => unsafe {
-                            let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
-                                pixels_as_u32_slice.as_ptr() as *const u8,
-                                pixels_as_u32_slice.len() * 4,
-                            ));
-
-                            let mut index = 0;
-
-                            while index < pixels_as_u8_slice.len() {
-                                write_only_byte_array[index] = pixels_as_u8_slice[index];
-                                index += 1;
-                            }
-                        },
-                        Err(_e) => {
-                            // Do nothing?
-                        }
-                    }
-                })
-                .unwrap();
-
-            // Flip buffers
-
-            // Note that Canvas<Window>::copy() will automatically stretch our
-            // window canvas to fit the current window size, if `dst` is `None`.
-
-            cw.copy(&self.window_canvas, None, None)?;
-
-            cw.present();
+            self.render_and_present(self.timing_info.current_frame_index, render);
 
             frame_end = timer_subsystem.performance_counter();
 
