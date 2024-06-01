@@ -106,7 +106,8 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     );
 
     // window_builder.opengl();
-    // window_builder.position_centered();
+    window_builder.position_centered();
+    window_builder.resizable();
     // window_builder.borderless();
 
     if window_info.full_screen {

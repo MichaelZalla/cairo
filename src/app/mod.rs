@@ -194,42 +194,57 @@ impl App {
 
                     Event::Window {
                         timestamp: _timestamp,
-                        window_id,
+                        window_id: _window_id,
                         win_event,
                     } => match &win_event {
                         WindowEvent::None => {
-                            println!("(Window {}) {:?}", window_id, &win_event);
+                            // println!("(Window {}) {:?}", window_id, &win_event);
                         }
                         WindowEvent::Shown | WindowEvent::Hidden => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         WindowEvent::Exposed => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         WindowEvent::Minimized | WindowEvent::Maximized => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         WindowEvent::Restored => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         WindowEvent::Moved(_, _) => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
-                        WindowEvent::Resized(width, height)
-                        | WindowEvent::SizeChanged(width, height) => {
-                            println!(
-                                "(Window {}) {:?} ({}x{})",
-                                window_id, &win_event, width, height
-                            )
+                        /*WindowEvent::Resized(width, height)
+                        | */
+                        WindowEvent::SizeChanged(width, height) => {
+                            let rendering_context = &self.context.rendering_context;
+
+                            let mut canvas_window = rendering_context.canvas.borrow_mut();
+                            let window_info = &mut self.window_info;
+                            let window_canvas = &mut self.window_canvas;
+
+                            let resolution = Resolution {
+                                width: *width as u32,
+                                height: *height as u32,
+                            };
+
+                            handle_window_resize_event(
+                                &mut canvas_window,
+                                window_info,
+                                window_canvas,
+                                resolution,
+                            )?;
                         }
+                        // The cursor has entered or left the window boundary.
                         WindowEvent::Enter | WindowEvent::Leave => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         WindowEvent::FocusGained | WindowEvent::FocusLost => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         WindowEvent::Close => {
-                            println!("(Window {}) {:?}", window_id, &win_event)
+                            // println!("(Window {}) {:?}", window_id, &win_event)
                         }
                         _ => (),
                     },
@@ -440,7 +455,7 @@ impl App {
     }
 }
 
-pub fn resize_window(
+fn resize_window(
     canvas: &mut Canvas<Window>,
     window_info: &mut AppWindowInfo,
     new_resolution: Resolution,
@@ -462,7 +477,7 @@ pub fn resize_window(
     }
 }
 
-pub fn resize_canvas(
+fn resize_canvas(
     canvas: &mut Canvas<Window>,
     window_info: &mut AppWindowInfo,
     window_canvas: &mut Texture,
@@ -487,6 +502,18 @@ pub fn resize_canvas(
             e
         )),
     }
+}
+
+pub fn handle_window_resize_event(
+    canvas: &mut Canvas<Window>,
+    window_info: &mut AppWindowInfo,
+    window_canvas: &mut Texture,
+    resolution: Resolution,
+) -> Result<(), String> {
+    resize_window(canvas, window_info, resolution)?;
+    resize_canvas(canvas, window_info, window_canvas, resolution)?;
+
+    Ok(())
 }
 
 fn render_and_present<R>(
