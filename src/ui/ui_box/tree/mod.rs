@@ -187,7 +187,7 @@ impl<'a> UIBoxTree<'a> {
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, parent_data, node| {
                 let ui_box: &mut UIBox = &mut node.data;
-                
+
                 let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
 
                 for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
@@ -197,7 +197,7 @@ impl<'a> UIBoxTree<'a> {
                         (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
                         (UI2DAxis::Primary, UILayoutDirection::TopToBottom) | (UI2DAxis::Secondary, UILayoutDirection::LeftToRight) => false
                     };
-    
+
                     let screen_axis_index = if is_horizontal_axis { 0 } else { 1 };
 
                     match size_with_strictness.size {
@@ -216,7 +216,7 @@ impl<'a> UIBoxTree<'a> {
                                 let font_cache = font_cache_rc.as_mut().expect("Found a UIBox with `DrawText` feature enabled when `GLOBAL_UI_CONTEXT.font_cache` is `None`!");
 
                                 let text_content = ui_box.text_content.as_ref().expect("Found a UIBox with `DrawText` feature enabled, with no `text_content` set!");
-                
+
                                 cache_text(font_cache, &mut text_cache, &font_info, text_content)
                             });
 
@@ -225,7 +225,7 @@ impl<'a> UIBoxTree<'a> {
 
                             if is_horizontal_axis {
                                 ui_box.computed_size[0] = texture_width as f32;
-    
+
                                 println_indent(
                                     depth,
                                     format!(
@@ -236,7 +236,7 @@ impl<'a> UIBoxTree<'a> {
                                 );
                             } else {
                                 ui_box.computed_size[1] = texture_height as f32;
-                                
+
                                 println_indent(
                                     depth,
                                     format!(
@@ -351,7 +351,7 @@ impl<'a> UIBoxTree<'a> {
                         ui_box.id,
                     ),
                 );
-                
+
                 return Ok(());
             }
 
@@ -359,7 +359,7 @@ impl<'a> UIBoxTree<'a> {
 
             for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
                 let axis = UI2DAxis::from_usize(axis_index);
-                
+
                 let is_horizontal_axis = match (axis, parent_layout_direction) {
                     (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
                     (UI2DAxis::Primary, UILayoutDirection::TopToBottom) | (UI2DAxis::Secondary, UILayoutDirection::LeftToRight) => false
@@ -397,7 +397,7 @@ impl<'a> UIBoxTree<'a> {
                                             "{}: ({} axis) Computed size {} as {} percent of parent size {}",
                                             ui_box.id,
                                             axis,
-                                            ui_box.computed_size[screen_axis_index], 
+                                            ui_box.computed_size[screen_axis_index],
                                             percentage * 100.0,
                                             parent.computed_size[screen_axis_index]
                                         ),
@@ -442,7 +442,7 @@ impl<'a> UIBoxTree<'a> {
                         ui_box.id,
                     ),
                 );
-                
+
                 return Ok(());
             }
 
@@ -487,7 +487,7 @@ impl<'a> UIBoxTree<'a> {
                                 "{}: ({} axis) Computed box size {} as the sum of its children's sizes.",
                                 ui_box.id,
                                 axis,
-                                ui_box.computed_size[screen_axis_index], 
+                                ui_box.computed_size[screen_axis_index],
                             ),
                         );
                     },
@@ -547,7 +547,7 @@ impl<'a> UIBoxTree<'a> {
                         depth + 1,
                         format!("parent_layout: {}", ui_box.parent_layout_direction),
                     );
-                    
+
                     println_indent(
                         depth + 1,
                         format!("axis: {}", axis)
@@ -562,7 +562,7 @@ impl<'a> UIBoxTree<'a> {
                         depth + 1,
                         format!("screen_axis_index: {}", screen_axis_index),
                     );
-                    
+
                     println_indent(
                         depth + 1,
                         format!("is_horizontal_axis: {}", is_horizontal_axis),
@@ -605,12 +605,12 @@ impl<'a> UIBoxTree<'a> {
                                 depth + 1,
                                 format!("computed_size_along_axis: {}", computed_size_along_axis),
                             );
-                            
+
                             println_indent(
                                 depth + 1,
                                 format!("size_of_children_along_axis: {}", size_of_children_along_axis),
                             );
-                            
+
                             if computed_size_along_axis < size_of_children_along_axis {
                                 println_indent(
                                     depth,
@@ -664,12 +664,12 @@ impl<'a> UIBoxTree<'a> {
                                     depth + 1,
                                     format!("size_reserved_for_strict_children: {}", size_reserved_for_strict_children),
                                 );
-                                
+
                                 println_indent(
                                     depth + 1,
                                     format!("alpha_adjusted_for_size_reserved: {}", alpha_adjusted_for_size_reserved),
                                 );
-                                
+
                                 for child in &node.children {
                                     let child_ui_box = &mut child.borrow_mut().data;
 

@@ -1,22 +1,28 @@
 use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
-    buffer::{framebuffer::Framebuffer, Buffer2D}, color::Color, render::Renderer, resource::handle::Handle, scene::{
+    buffer::{framebuffer::Framebuffer, Buffer2D},
+    color::Color,
+    render::Renderer,
+    resource::handle::Handle,
+    scene::{
         camera::Camera,
         context::SceneContext,
         light::{PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
-    }, shader::context::ShaderContext, texture::{
+    },
+    shader::context::ShaderContext,
+    texture::{
         cubemap::{CubeMap, Side, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
         map::{TextureMap, TextureMapWrapping},
-    }, vec::{vec3::Vec3, vec4::Vec4}
+    },
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 pub fn blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target: &mut Buffer2D) {
     let shadow_map_size = shadow_map.sides[0].width;
 
     for side in &CUBE_MAP_SIDES {
-        let (side_index, block_coordinate) =
-            (side.get_index(), side.get_block_coordinate(true));
+        let (side_index, block_coordinate) = (side.get_index(), side.get_block_coordinate(true));
 
         blit_shadow_map_side(
             side_index,
@@ -110,7 +116,7 @@ fn render_point_shadows_to_cubemap(
 
         let resources = (*scene_context.resources).borrow();
         let scene = &scene_context.scenes.borrow()[0];
-        
+
         match scene.render(&resources, shadow_map_renderer_rc, None) {
             Ok(()) => {
                 // Blit our framebuffer's HDR attachment buffer to our cubemap's
@@ -122,7 +128,7 @@ fn render_point_shadows_to_cubemap(
                     Some(hdr_attachment_rc) => {
                         let hdr_attachment = hdr_attachment_rc.borrow();
 
-                        blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]); 
+                        blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]);
                     }
                     None => return Err("Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
                 }
@@ -175,7 +181,7 @@ pub fn update_point_light_shadow_maps(
                     shadow_map_renderer_rc,
                 )
                 .unwrap();
-    
+
                 point_light_shadow_maps.push((handle, shadow_map));
             }
         }

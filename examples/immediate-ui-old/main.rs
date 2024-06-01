@@ -3,7 +3,8 @@ extern crate sdl2;
 use std::{
     cell::{RefCell, RefMut},
     collections::HashMap,
-    env, rc::Rc,
+    env,
+    rc::Rc,
 };
 
 use uuid::Uuid;
@@ -25,9 +26,7 @@ mod ui;
 
 use ui::{
     context::{UIContext, UIID},
-    layout::{
-        UILayoutContext, UILayoutDirection, UILayoutExtent,
-    },
+    layout::{UILayoutContext, UILayoutDirection, UILayoutExtent},
     panel::{do_panel, PanelOptions, PanelTitlebarOptions},
 };
 
@@ -185,7 +184,7 @@ fn main() -> Result<(), String> {
                 for keycode in &keyboard_state.keys_pressed {
                     if let Keycode::L { .. } = keycode {
                         let mut layout_direction = layout_direction_rc.borrow_mut();
-                    
+
                         *layout_direction = match *layout_direction {
                             UILayoutDirection::LeftToRight => UILayoutDirection::TopToBottom,
                             UILayoutDirection::TopToBottom => UILayoutDirection::LeftToRight,
@@ -233,7 +232,7 @@ fn main() -> Result<(), String> {
                             mouse_state: &MouseState,
                             keyboard_state: &KeyboardState,
                             _game_controller_state: &GameControllerState| {
-                    
+
                             layout.direction = *layout_direction_rc.borrow();
 
                             draw_sample_panel_contents(

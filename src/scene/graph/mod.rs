@@ -1,4 +1,7 @@
-use std::{cell::RefCell, fmt::{Display, Error}};
+use std::{
+    cell::RefCell,
+    fmt::{Display, Error},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -256,13 +259,13 @@ impl SceneGraph {
                                             match camera_arena.get(&camera_handle) {
                                                 Ok(entry) => {
                                                     let active_camera = &entry.item;
-            
+
                                                     renderer.render_point_light(
                                                         point_light,
                                                         Some(active_camera),
                                                         Some(&mut resources.material.borrow_mut()),
                                                     );
-            
+
                                                     Ok(())
                                                 }
                                                 Err(err) => panic!(
@@ -306,13 +309,13 @@ impl SceneGraph {
                                         match spot_light_arena.get(spot_light_handle) {
                                                 Ok(entry) => {
                                                     let spot_light = &entry.item;
-            
+
                                                     renderer.render_spot_light(
                                                         spot_light,
                                                         Some(active_camera),
                                                         Some(&mut materials),
                                                     );
-            
+
                                                     Ok(())
                                                 }
                                                 Err(err) => panic!(
@@ -348,9 +351,11 @@ impl SceneGraph {
 
         // End frame
 
-        if let (Some(camera_handle), Some(skybox_handle), Some(skybox_transform)) =
-            (active_camera_handle, active_skybox_handle, active_skybox_transform)
-        {
+        if let (Some(camera_handle), Some(skybox_handle), Some(skybox_transform)) = (
+            active_camera_handle,
+            active_skybox_handle,
+            active_skybox_transform,
+        ) {
             if let (Ok(camera_entry), Ok(skybox_entry)) = (
                 resources.camera.borrow().get(&camera_handle),
                 resources.skybox.borrow().get(&skybox_handle),
