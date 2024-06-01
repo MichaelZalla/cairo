@@ -36,9 +36,10 @@ bitmask! {
         DrawBorder = (1 << 1),
         EmbossAndDeboss = (1 << 2),
         DrawText = (1 << 3),
-        Hoverable = (1 << 4),
-        Clickable = (1 << 5),
-        DrawChildDividers = (1 << 6),
+        SkipTextCaching = (1 << 4),
+        Hoverable = (1 << 5),
+        Clickable = (1 << 6),
+        DrawChildDividers = (1 << 7),
     }
 }
 
@@ -475,7 +476,7 @@ impl UIBox {
                 Graphics::text(
                     target,
                     font_cache,
-                    Some(&mut text_cache),
+                    if self.features.contains(UIBoxFeatureFlag::SkipTextCaching) { None } else { Some(&mut text_cache) },
                     &font_info,
                     &TextOperation {
                         text: text_content,
