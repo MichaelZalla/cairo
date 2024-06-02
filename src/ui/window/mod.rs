@@ -100,7 +100,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         }
     }
 
-    pub fn rebuild_ui_trees(
+    pub fn render_ui_trees(
         &mut self,
         ctx: &UIContext<'static>,
         resolution: &Resolution,
@@ -120,7 +120,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             }
 
             let root_ui_box = UIBox::new(
-                "Root__root".to_string(),
+                format!("{}_Root__{}_root", self.id, self.id),
                 UIBoxFeatureMask::none()
                     | UIBoxFeatureFlag::DrawFill
                     | UIBoxFeatureFlag::DrawChildDividers
@@ -142,6 +142,10 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
                 ],
             );
 
+            {
+                *ctx.global_offset.borrow_mut() = self.position;
+            }
+
             ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
                 ui_box_tree.push_parent(root_ui_box)?;
 
@@ -154,17 +158,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             }?;
         }
 
-        self.render_panel_tree_to_base_ui_tree()
-    }
-
-    fn render_panel_tree_to_base_ui_tree(&mut self) -> Result<(), String> {
-        // Builds UI from the current editor panel tree.
-
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            let panel_tree = &mut self.panel_tree.borrow_mut();
-
-            panel_tree.render(ctx, self).unwrap();
-        });
+        self.render_panel_tree_to_base_ui_tree()?;
 
         // Commit this UI tree for the current frame.
 
@@ -174,7 +168,21 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             ui_box_tree.commit_frame()?;
         }
 
+        {
+            *ctx.global_offset.borrow_mut() = (0, 0);
+        }
+
         Ok(())
+    }
+
+    fn render_panel_tree_to_base_ui_tree(&mut self) -> Result<(), String> {
+        // Builds UI from the current editor panel tree.
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let panel_tree = &mut self.panel_tree.borrow_mut();
+
+            panel_tree.render(ctx, self)
+        })
     }
 }
 

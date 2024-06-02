@@ -47,6 +47,7 @@ pub struct UIContext<'a> {
     pub font_info: RefCell<FontInfo>,
     pub text_cache: RefCell<TextCache>,
     pub styles: RefCell<UIBoxStylesContext>,
+    pub global_offset: RefCell<(u32, u32)>,
     pub cache: RefCell<HashMap<UIKey, UIBox>>,
     pub input_events: RefCell<UIInputEvents>,
     pub seconds_since_last_update: RefCell<f32>,

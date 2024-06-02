@@ -23,12 +23,13 @@ use cairo::{
         ui_box::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
             utils::text_box,
+            UIBox,
         },
         window::{Window, WindowList, WindowOptions, DEFAULT_WINDOW_FILL_COLOR},
     },
 };
 
-use editor::panel::{EditorPanelMetadataMap, EditorPanelType};
+use editor::panel::{build_floating_window_panel_tree, EditorPanelMetadataMap, EditorPanelType};
 
 pub mod editor;
 
@@ -129,7 +130,8 @@ fn main() -> Result<(), String> {
         let main_window_id = "main_window".to_string();
 
         let main_window_panel_tree =
-            editor::panel::build_main_window_panel_tree(&panel_metadata_map).unwrap();
+            editor::panel::build_main_window_panel_tree(&main_window_id, &panel_metadata_map)
+                .unwrap();
 
         let main_window = Window::new(
             main_window_id,
@@ -146,6 +148,26 @@ fn main() -> Result<(), String> {
         );
 
         list.push(main_window);
+
+        for i in 0..15 {
+            let floating_window_id = format!("floating_window_{}", i);
+
+            let floating_window_panel_tree =
+                build_floating_window_panel_tree(&floating_window_id, &panel_metadata_map.console)?;
+
+            let floating_window = Window::new(
+                floating_window_id,
+                WindowOptions {
+                    docked: false,
+                    size: (236, 178),
+                    position: (100 + i * 36, 100 + i * 36),
+                },
+                None,
+                floating_window_panel_tree,
+            );
+
+            list.push(floating_window);
+        }
 
         list
     };
@@ -177,13 +199,7 @@ fn main() -> Result<(), String> {
 
             // Rebuild the UI tree based on the new window (root) resolution.
 
-            for window in window_list.iter_mut() {
-                GLOBAL_UI_CONTEXT.with(|ctx| {
-                    window.rebuild_ui_trees(ctx, resolution).unwrap();
-                });
-            }
-
-            // println!("Rebuilt UI tree based on the new resolution.");
+            render_window_list(&mut window_list, resolution);
         }
 
         framebuffer.clear(Some(color::BLACK.to_u32()));
@@ -272,13 +288,7 @@ fn main() -> Result<(), String> {
 
         let mut window_list = window_list_rc.borrow_mut();
 
-        for window in window_list.iter_mut() {
-            // Rebuild the UI tree based on the latest user inputs.
-
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                window.rebuild_ui_trees(ctx, resolution).unwrap();
-            });
-        }
+        render_window_list(&mut window_list, resolution);
 
         Ok(())
     };
@@ -290,6 +300,14 @@ fn main() -> Result<(), String> {
             let mut current_frame_index = current_frame_index_rc.borrow_mut();
 
             *current_frame_index = index;
+
+            // Prune old entries from our UI cache.
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let mut cache = ctx.cache.borrow_mut();
+
+                cache.retain(|_key, ui_box: &mut UIBox| ui_box.last_read_at_frame == index);
+            });
         }
 
         render_window_list_to_framebuffer(frame_index, new_resolution)
@@ -298,4 +316,16 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &render)?;
 
     Ok(())
+}
+
+fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution: &Resolution) {
+    for window in window_list.iter_mut().rev() {
+        // Rebuild the UI tree based on the latest user inputs.
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            window.render_ui_trees(ctx, resolution).unwrap();
+        });
+    }
+
+    window_list.retain(|w| w.active);
 }

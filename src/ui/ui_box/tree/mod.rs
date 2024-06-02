@@ -747,6 +747,13 @@ impl<'a> UIBoxTree<'a> {
                 if let Some(parent) = parent_data {
                     global_bounds.left += parent.global_bounds.left;
                     global_bounds.top += parent.global_bounds.top;
+                } else {
+                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                        let global_offset = ctx.global_offset.borrow();
+
+                        global_bounds.left += global_offset.0;
+                        global_bounds.top += global_offset.1;
+                    });
                 }
 
                 global_bounds.right = global_bounds.left + ui_box.computed_size[0] as u32;
@@ -897,14 +904,6 @@ impl<'a> UIBoxTree<'a> {
                 Some(&color::RED),
             );
         }
-
-        // Prune old entries from our UI cache.
-
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            let mut cache = ctx.cache.borrow_mut();
-
-            cache.retain(|_key, ui_box: &mut UIBox| ui_box.last_read_at_frame == frame_index);
-        });
 
         Ok(())
     }

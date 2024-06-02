@@ -46,12 +46,26 @@ pub struct EditorPanelMetadataMap {
     pub file_system: PanelMetadata<EditorPanelType>,
 }
 
+pub fn build_floating_window_panel_tree<'a>(
+    window_id: &String,
+    panel_metadata: &PanelMetadata<EditorPanelType>,
+) -> Result<PanelTree<'a, EditorPanelType>, String> {
+    Ok(PanelTree::with_root(Panel {
+        path: format!("{}_root", window_id),
+        resizable: true,
+        alpha_split: 1.0,
+        panel_metadata: Some(panel_metadata.clone()),
+        layout_direction: UILayoutDirection::TopToBottom,
+    }))
+}
+
 pub fn build_main_window_panel_tree<'a>(
+    window_id: &String,
     panel_metadata_map: &EditorPanelMetadataMap,
 ) -> Result<PanelTree<'a, EditorPanelType>, String> {
     let mut tree = PanelTree::with_root(Panel {
-        path: "root".to_string(),
-        resizable: false,
+        path: format!("{}_root", window_id),
+        resizable: true,
         alpha_split: 1.0,
         panel_metadata: None,
         layout_direction: UILayoutDirection::LeftToRight,
