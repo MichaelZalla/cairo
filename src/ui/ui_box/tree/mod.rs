@@ -14,7 +14,7 @@ use crate::{
             node::{Node, NodeLocalTraversalMethod},
             Tree,
         },
-        ui_box::UILayoutDirection,
+        ui_box::{UIBoxFeatureFlag, UILayoutDirection},
         UI2DAxis, UISize,
     },
 };
@@ -92,7 +92,9 @@ impl<'a> UIBoxTree<'a> {
             // Updates hot state for this node, based on the node's previous
             // layout (from the prior frame).
 
-            ui_box.update_hot_state(seconds_since_last_update, &interaction_result);
+            if ui_box.features.contains(UIBoxFeatureFlag::Hoverable) {
+                ui_box.update_hot_state(seconds_since_last_update, &interaction_result);
+            }
 
             interaction_result
         });
@@ -134,6 +136,10 @@ impl<'a> UIBoxTree<'a> {
                     &mut |_depth, _parent_data, node| {
                         let ui_box: &mut UIBox = &mut node.data;
 
+                        if !ui_box.features.contains(UIBoxFeatureFlag::Clickable) {
+                            return Ok(());
+                        }
+
                         // Apply the latest user inputs, based on this node's previous layout
                         // (from the previous frame).
 
@@ -157,6 +163,10 @@ impl<'a> UIBoxTree<'a> {
                     &NodeLocalTraversalMethod::PreOrder,
                     &mut |_depth, _parent, node| {
                         let ui_box = &mut node.data;
+
+                        if !ui_box.features.contains(UIBoxFeatureFlag::Clickable) {
+                            return Ok(());
+                        }
 
                         let mut focused_transition_info = self.focused_transition.borrow_mut();
 
