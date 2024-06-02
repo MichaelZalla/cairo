@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{cell::RefCell, fmt::Display};
+use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -8,11 +8,16 @@ use crate::{app::resolution::Resolution, color::Color};
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
     panel::tree::PanelTree,
-    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+    ui_box::{
+        tree::{UIBoxTree, UIBoxTreeRenderCallback},
+        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+    },
     UISize, UISizeWithStrictness,
 };
 
 pub static DEFAULT_WINDOW_FILL_COLOR: Color = Color::rgb(230, 230, 230);
+
+pub type WindowRenderCallback = Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>;
 
 #[derive(Default, Debug, Clone)]
 pub struct WindowUITrees<'a> {
@@ -29,7 +34,7 @@ impl<'a> WindowUITrees<'a> {
     }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     pub id: String,
     pub docked: bool,
@@ -38,9 +43,33 @@ pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     pub position: (u32, u32),
     pub size: (u32, u32),
     #[serde(skip)]
+    pub render_header_callback: Option<UIBoxTreeRenderCallback>,
+    #[serde(skip)]
     pub panel_tree: RefCell<PanelTree<'a, T>>,
     #[serde(skip)]
     pub ui_trees: WindowUITrees<'a>,
+}
+
+impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Window<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Window")
+            .field("id", &self.id)
+            .field("docked", &self.docked)
+            .field("active", &self.active)
+            .field("focused", &self.focused)
+            .field("position", &self.position)
+            .field("size", &self.size)
+            .field(
+                "render_callback",
+                match self.render_header_callback {
+                    Some(_) => &"Some(Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>)",
+                    None => &"None ",
+                },
+            )
+            .field("panel_tree", &self.panel_tree)
+            .field("ui_trees", &self.ui_trees)
+            .finish()
+    }
 }
 
 impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Window<'a, T> {
@@ -86,6 +115,11 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
 
                 Ok(())
             })?;
+
+            match &self.render_header_callback {
+                Some(render) => render(ui_box_tree),
+                None => Ok(()),
+            }?;
         }
 
         self.render_panel_tree_to_base_ui_tree()

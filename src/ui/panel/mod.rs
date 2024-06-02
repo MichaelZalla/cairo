@@ -8,13 +8,43 @@ use crate::color::{self, Color};
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
     ui_box::{
-        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox, UIBoxFeatureFlag,
-        UILayoutDirection,
+        interaction::UIBoxInteraction,
+        tree::{UIBoxTree, UIBoxTreeRenderCallback},
+        utils::text_box,
+        UIBox, UIBoxFeatureFlag, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
 
 pub mod tree;
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct PanelMetadata<T> {
+    pub panel_type: T,
+    #[serde(skip)]
+    pub render_callback: Option<UIBoxTreeRenderCallback>,
+}
+
+impl<T: fmt::Debug> fmt::Debug for PanelMetadata<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PanelMetadata")
+            .field("panel_type", &self.panel_type)
+            .field(
+                "render_callback",
+                match self.render_callback {
+                    Some(_) => &"Some(Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>)",
+                    None => &"None ",
+                },
+            )
+            .finish()
+    }
+}
+
+impl<T: fmt::Debug> fmt::Display for PanelMetadata<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Panel<T> {
@@ -23,28 +53,30 @@ pub struct Panel<T> {
     pub resizable: bool,
     pub alpha_split: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub panel_type: Option<T>,
+    pub panel_metadata: Option<PanelMetadata<T>>,
     // For child panels.
     pub layout_direction: UILayoutDirection,
 }
 
-impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Display for Panel<T> {
+impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> fmt::Display
+    for Panel<T>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Panel ({})", self.path)
     }
 }
 
-impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> Panel<T> {
+impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Panel<T> {
     pub fn new(
         alpha_split: f32,
-        panel_type: Option<T>,
+        panel_metadata: Option<PanelMetadata<T>>,
         layout_direction: UILayoutDirection,
     ) -> Self {
         Self {
             path: "".to_string(),
             resizable: true,
             alpha_split,
-            panel_type,
+            panel_metadata,
             layout_direction,
         }
     }
@@ -108,17 +140,18 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> Panel<T> {
         ui_box_tree: &mut UIBoxTree,
         panel_interaction_result: &UIBoxInteraction,
     ) -> Result<(), String> {
-        if let Some(text_content) = self
-            .panel_type
-            .as_ref()
-            .map(|panel_type| format!("{}", panel_type))
-        {
-            ui_box_tree.push(text_box(String::new(), text_content))?;
+        match &self.panel_metadata {
+            Some(metadata) => match &metadata.render_callback {
+                Some(render) => render(ui_box_tree),
+                None => {
+                    let _result = ui_box_tree
+                        .push(text_box(String::new(), format!("{}", metadata.panel_type)))?;
+
+                    Ok(())
+                }
+            },
+            None => render_debug_interaction_result(ui_box_tree, panel_interaction_result),
         }
-
-        render_debug_interaction_result(ui_box_tree, panel_interaction_result)?;
-
-        Ok(())
     }
 }
 

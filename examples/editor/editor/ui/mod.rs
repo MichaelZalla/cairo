@@ -8,7 +8,9 @@ use cairo::ui::{
     UISize, UISizeWithStrictness,
 };
 
-static MENU_BAR_ITEMS: [&str; 6] = ["Project", "Scene", "Edit", "Debug", "Help", "About"];
+static MENU_BAR_ITEMS: [&str; 9] = [
+    "File", "Edit", "Select", "View", "Scene", "Render", "Tools", "Windows", "Help",
+];
 
 static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button 4", "Button 5"];
 
@@ -79,7 +81,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
     for (item_index, item_label) in MENU_BAR_ITEMS.iter().enumerate() {
         // Inter-item spacer.
 
-        tree.push(spacer_box(8))?;
+        tree.push(spacer_box(10))?;
 
         // Menu bar item (container)
 

@@ -21,11 +21,7 @@ use crate::{
 
 use super::{key::UIKey, UIBox, UIBoxInteraction};
 
-impl<'a> fmt::Display for UIBoxTree<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.tree.fmt(f)
-    }
-}
+pub type UIBoxTreeRenderCallback = Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>;
 
 #[derive(Default, Debug, Clone)]
 pub struct FocusedTransitionInfo {
@@ -39,6 +35,12 @@ pub struct UIBoxTree<'a> {
     tree: Tree<'a, UIBox>,
     pub focused_transition: RefCell<FocusedTransitionInfo>,
     pub next_focused_key: RefCell<Option<UIKey>>,
+}
+
+impl<'a> fmt::Display for UIBoxTree<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.tree.fmt(f)
+    }
 }
 
 impl<'a> UIBoxTree<'a> {

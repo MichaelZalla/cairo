@@ -10,7 +10,7 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::Buffer2D,
-    color::{self, Color},
+    color,
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
@@ -19,15 +19,18 @@ use cairo::{
     font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        window::{Window, WindowList},
+        panel::PanelMetadata,
+        ui_box::{
+            tree::{UIBoxTree, UIBoxTreeRenderCallback},
+            utils::text_box,
+        },
+        window::{Window, WindowList, DEFAULT_WINDOW_FILL_COLOR},
     },
 };
 
-use editor::panel::EditorPanelType;
+use editor::panel::{EditorPanelMetadataMap, EditorPanelType};
 
 pub mod editor;
-
-static EDITOR_UI_FILL_COLOR: Color = Color::rgb(230, 230, 230);
 
 fn main() -> Result<(), String> {
     let title = format!("Cairo Engine (build {})", env!("GIT_COMMIT_SHORT_HASH")).to_string();
@@ -51,12 +54,80 @@ fn main() -> Result<(), String> {
 
     let current_frame_index_rc = RefCell::new(0_u32);
 
+    // Panel metadata (with rendering callbacks).
+
+    let render_main_window_header: UIBoxTreeRenderCallback =
+        Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
+                    ctx.border_color(color::BLACK, || {
+                        editor::ui::build_main_menu_bar_ui(ctx, tree)?;
+                        editor::ui::build_toolbar_ui(ctx, tree)
+                    })
+                })
+            })?;
+
+            Ok(())
+        });
+
+    let panel_metadata_map = EditorPanelMetadataMap {
+        outline: PanelMetadata {
+            panel_type: EditorPanelType::Outline,
+            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+                tree.push(text_box(String::new(), "Outline".to_string()))?;
+
+                Ok(())
+            })),
+        },
+        viewport3d: PanelMetadata {
+            panel_type: EditorPanelType::Viewport3D,
+            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+                tree.push(text_box(String::new(), "Viewport3D".to_string()))?;
+
+                Ok(())
+            })),
+        },
+        asset_browser: PanelMetadata {
+            panel_type: EditorPanelType::AssetBrowser,
+            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+                tree.push(text_box(String::new(), "AssetBrowser".to_string()))?;
+
+                Ok(())
+            })),
+        },
+        console: PanelMetadata {
+            panel_type: EditorPanelType::Console,
+            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+                tree.push(text_box(String::new(), "Console".to_string()))?;
+
+                Ok(())
+            })),
+        },
+        inspector: PanelMetadata {
+            panel_type: EditorPanelType::Inspector,
+            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+                tree.push(text_box(String::new(), "Inspector".to_string()))?;
+
+                Ok(())
+            })),
+        },
+        file_system: PanelMetadata {
+            panel_type: EditorPanelType::FileSystem,
+            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
+                tree.push(text_box(String::new(), "FileSystem".to_string()))?;
+
+                Ok(())
+            })),
+        },
+    };
+
     // Initial main window.
 
     let window_list = {
         let mut list: WindowList<EditorPanelType> = Default::default();
 
-        let main_menu_panel_tree = editor::panel::build_main_window_panel_tree().unwrap();
+        let main_menu_panel_tree =
+            editor::panel::build_main_window_panel_tree(&panel_metadata_map).unwrap();
 
         let main_window = Window {
             id: "main".to_string(),
@@ -67,6 +138,7 @@ fn main() -> Result<(), String> {
                 window_info.window_resolution.width,
                 window_info.window_resolution.height,
             ),
+            render_header_callback: Some(render_main_window_header),
             panel_tree: RefCell::new(main_menu_panel_tree),
             ..Default::default()
         };
