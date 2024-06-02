@@ -12,12 +12,12 @@ use crate::ui::{
 use super::Panel;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct PanelTree<'a, T: Default> {
+pub struct PanelTree<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     #[serde(flatten)]
     tree: Tree<'a, Panel<T>>,
 }
 
-impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Display
+impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> fmt::Display
     for PanelTree<'a, T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -25,7 +25,7 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Displa
     }
 }
 
-impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> PanelTree<'a, T> {
+impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> PanelTree<'a, T> {
     pub fn with_root(root_panel: Panel<T>) -> Self {
         Self {
             tree: Tree::<'a, Panel<T>>::with_root(root_panel),
