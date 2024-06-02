@@ -129,7 +129,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
     pub fn render_ui_trees(
         &mut self,
         ctx: &UIContext<'static>,
-        resolution: &Resolution,
+        main_window_bounds: &Resolution,
     ) -> Result<WindowRenderResult, String> {
         let mut window_render_result = WindowRenderResult {
             did_deactivate: false,
@@ -147,8 +147,8 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             // Rebuilds the UI tree root based on the current window resolution.
 
             if self.docked {
-                self.size.0 = resolution.width;
-                self.size.1 = resolution.height;
+                self.size.0 = main_window_bounds.width;
+                self.size.1 = main_window_bounds.height;
             }
 
             let root_ui_box = UIBox::new(
@@ -223,7 +223,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
 
             if self.dragging {
                 if let Some(delta) = result.position_delta {
-                    self.apply_position_delta(delta);
+                    self.apply_position_delta(delta, main_window_bounds);
                 }
             }
 
@@ -237,9 +237,12 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         Ok(window_render_result)
     }
 
-    fn apply_position_delta(&mut self, delta: (i32, i32)) {
-        self.position.0 = (self.position.0 as i32 + delta.0).max(0) as u32;
-        self.position.1 = (self.position.1 as i32 + delta.1).max(0) as u32;
+    fn apply_position_delta(&mut self, delta: (i32, i32), main_window_bounds: &Resolution) {
+        let new_x = self.position.0 as i32 + delta.0;
+        let new_y = self.position.1 as i32 + delta.1;
+
+        self.position.0 = (new_x.max(0) as u32).min(main_window_bounds.width - self.size.0);
+        self.position.1 = (new_y.max(0) as u32).min(main_window_bounds.height - self.size.1);
 
         self.extent = ScreenExtent::new(self.position, self.size);
     }
