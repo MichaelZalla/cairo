@@ -26,7 +26,13 @@ impl Default for MouseEvent {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
+pub struct MouseWheelEvent {
+    pub direction: MouseWheelDirection,
+    pub delta: i32,
+}
+
+#[derive(Default, Debug, Clone)]
 pub struct MouseState {
     pub buttons_down: HashSet<MouseButton>,
     pub prev_buttons_down: HashSet<MouseButton>,
@@ -36,25 +42,5 @@ pub struct MouseState {
     pub ndc_position: (f32, f32),
     pub prev_position: (i32, i32),
     pub prev_ndc_position: (f32, f32),
-    pub wheel_did_move: bool,
-    pub wheel_y: i32,
-    pub wheel_direction: MouseWheelDirection,
-}
-
-impl Default for MouseState {
-    fn default() -> Self {
-        Self {
-            buttons_down: Default::default(),
-            prev_buttons_down: Default::default(),
-            button_event: None,
-            position: (0, 0),
-            ndc_position: (0.0, 0.0),
-            prev_position: (0, 0),
-            prev_ndc_position: (0.0, 0.0),
-            relative_motion: (0, 0),
-            wheel_did_move: false,
-            wheel_y: 0,
-            wheel_direction: MouseWheelDirection::Unknown(0),
-        }
-    }
+    pub wheel_event: Option<MouseWheelEvent>,
 }

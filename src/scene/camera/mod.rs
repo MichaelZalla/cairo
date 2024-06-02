@@ -394,7 +394,7 @@ impl Camera {
 
         // Apply field-of-view zoom based on mousewheel input.
 
-        if mouse_state.wheel_did_move {
+        if let Some(event) = &mouse_state.wheel_event {
             match self.kind {
                 CameraProjectionKind::Perspective => {
                     let mut current_field_of_view = match self.field_of_view {
@@ -405,7 +405,7 @@ impl Camera {
                         }
                     };
 
-                    current_field_of_view -= mouse_state.wheel_y as f32;
+                    current_field_of_view -= event.delta as f32;
 
                     current_field_of_view = current_field_of_view.max(1.0).min(120.0);
 
@@ -416,7 +416,7 @@ impl Camera {
                 CameraProjectionKind::Orthographic => {
                     let current_z_far = self.get_projection_z_far();
 
-                    self.set_projection_z_far(current_z_far + mouse_state.wheel_y as f32);
+                    self.set_projection_z_far(current_z_far + event.delta as f32);
                 }
             }
         }

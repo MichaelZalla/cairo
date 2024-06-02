@@ -14,7 +14,7 @@ use crate::{
     device::{
         game_controller::{GameController, GameControllerState},
         keyboard::KeyboardState,
-        mouse::{MouseEvent, MouseEventKind, MouseState},
+        mouse::{MouseEvent, MouseEventKind, MouseState, MouseWheelEvent},
     },
     {debug_print, time::TimingInfo},
 };
@@ -313,9 +313,10 @@ impl App {
                     }
 
                     Event::MouseWheel { direction, y, .. } => {
-                        mouse_state.wheel_did_move = true;
-                        mouse_state.wheel_direction = direction;
-                        mouse_state.wheel_y = y;
+                        mouse_state.wheel_event.replace(MouseWheelEvent {
+                            direction,
+                            delta: y,
+                        });
                     }
 
                     Event::KeyDown {
