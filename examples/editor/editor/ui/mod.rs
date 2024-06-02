@@ -2,7 +2,7 @@ use cairo::ui::{
     context::UIContext,
     ui_box::{
         tree::UIBoxTree,
-        utils::{button_box, container_box, greedy_box, spacer_box, text_box},
+        utils::{button_box, container_box, greedy_box, spacer_box},
         UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
@@ -94,15 +94,20 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
             None,
         ))?;
 
-        // Menu bar text
+        // Menu bar button (text)
 
-        tree.push(text_box(
+        let mut button_box = button_box(
             format!(
                 "MainMenuBarMenuItemList_MenuItem{}_Text__menu_bar_menu_item_{}_text",
                 item_index, item_index
             ),
             item_label.to_string(),
-        ))?;
+            None,
+        );
+
+        button_box.features ^= UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::EmbossAndDeboss;
+
+        tree.push(button_box)?;
 
         tree.pop_parent()?;
     }

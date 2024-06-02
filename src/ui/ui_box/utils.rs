@@ -45,7 +45,7 @@ pub fn greedy_box(id: String, layout_direction: UILayoutDirection) -> UIBox {
 pub fn text_box(id: String, label: String) -> UIBox {
     let mut text_box = UIBox::new(
         id,
-        UIBoxFeatureFlag::DrawText | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable,
+        UIBoxFeatureFlag::Null | UIBoxFeatureFlag::DrawText,
         UILayoutDirection::LeftToRight,
         [
             UISizeWithStrictness {
