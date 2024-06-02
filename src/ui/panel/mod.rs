@@ -20,6 +20,7 @@ pub mod tree;
 pub struct Panel<T> {
     pub path: String,
     // For this panel.
+    pub resizable: bool,
     pub alpha_split: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub panel_type: Option<T>,
@@ -41,6 +42,7 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> Panel<T> {
     ) -> Self {
         Self {
             path: "".to_string(),
+            resizable: true,
             alpha_split,
             panel_type,
             layout_direction,
@@ -65,8 +67,14 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> Panel<T> {
     pub fn make_panel_box(&self, ui_context: &UIContext<'static>) -> Result<UIBox, String> {
         let (panel_ui_box_id, panel_ui_box_key_hash) = self.get_panel_ui_box_id_and_hash();
 
-        let ui_box_feature_flags =
-            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable;
+        let ui_box_feature_flags = UIBoxFeatureFlag::DrawFill
+            | UIBoxFeatureFlag::Hoverable
+            | UIBoxFeatureFlag::Clickable
+            | if self.resizable {
+                UIBoxFeatureFlag::Resizable
+            } else {
+                UIBoxFeatureFlag::Null
+            };
 
         let mut panel_ui_box: UIBox = Default::default();
 

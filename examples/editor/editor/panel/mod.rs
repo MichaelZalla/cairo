@@ -38,6 +38,7 @@ impl fmt::Display for EditorPanelType {
 pub fn build_main_window_panel_tree<'a>() -> Result<PanelTree<'a, EditorPanelType>, String> {
     let mut tree = PanelTree::with_root(Panel {
         path: "root".to_string(),
+        resizable: false,
         alpha_split: 1.0,
         panel_type: Some(EditorPanelType::Outline),
         layout_direction: UILayoutDirection::LeftToRight,

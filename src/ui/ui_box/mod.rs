@@ -32,6 +32,7 @@ pub mod utils;
 bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
     pub mask UIBoxFeatureMask: u32 where flags UIBoxFeatureFlag {
+        Null = 0,
         DrawFill = (1 << 0),
         DrawBorder = (1 << 1),
         EmbossAndDeboss = (1 << 2),
@@ -40,6 +41,7 @@ bitmask! {
         Hoverable = (1 << 5),
         Clickable = (1 << 6),
         DrawChildDividers = (1 << 7),
+        Resizable = (1 << 8),
     }
 }
 
@@ -537,34 +539,37 @@ impl UIBox {
 
                 Graphics::line(target, x1, y1, x2, y2, &divider_color);
 
-                // Set cursor if nearby.
+                if self.features.contains(UIBoxFeatureFlag::Resizable) {
+                    // Set cursor if nearby.
 
-                GLOBAL_UI_CONTEXT.with(|ctx| {
-                    let mouse_position = ctx.input_events.borrow().mouse.position;
+                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                        let mouse_position = ctx.input_events.borrow().mouse.position;
 
-                    let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
+                        let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
 
-                    match self.layout_direction {
-                        UILayoutDirection::TopToBottom => {
-                            if (mouse_y - y1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
-                                && (x1..x2 + 1).contains(&mouse_x)
-                            {
-                                GLOBAL_UI_CONTEXT.with(|ctx| {
-                                    *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragUpDown;
-                                });
+                        match self.layout_direction {
+                            UILayoutDirection::TopToBottom => {
+                                if (mouse_y - y1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
+                                    && (x1..x2 + 1).contains(&mouse_x)
+                                {
+                                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                                        *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragUpDown;
+                                    });
+                                }
+                            }
+                            UILayoutDirection::LeftToRight => {
+                                if (mouse_x - x1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
+                                    && (y1..y2 + 1).contains(&mouse_y)
+                                {
+                                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                                        *ctx.cursor_kind.borrow_mut() =
+                                            MouseCursorKind::DragLeftRight;
+                                    });
+                                }
                             }
                         }
-                        UILayoutDirection::LeftToRight => {
-                            if (mouse_x - x1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
-                                && (y1..y2 + 1).contains(&mouse_y)
-                            {
-                                GLOBAL_UI_CONTEXT.with(|ctx| {
-                                    *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragLeftRight;
-                                });
-                            }
-                        }
-                    }
-                });
+                    });
+                }
             }
         }
 
