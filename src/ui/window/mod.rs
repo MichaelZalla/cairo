@@ -7,6 +7,7 @@ use crate::{app::resolution::Resolution, color::Color};
 
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
+    extent::ScreenExtent,
     panel::tree::PanelTree,
     ui_box::{
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
@@ -39,9 +40,9 @@ pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     pub id: String,
     pub docked: bool,
     pub active: bool,
-    pub focused: bool,
     pub position: (u32, u32),
     pub size: (u32, u32),
+    pub extent: ScreenExtent,
     #[serde(skip)]
     pub render_header_callback: Option<UIBoxTreeRenderCallback>,
     #[serde(skip)]
@@ -56,9 +57,9 @@ impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Win
             .field("id", &self.id)
             .field("docked", &self.docked)
             .field("active", &self.active)
-            .field("focused", &self.focused)
             .field("position", &self.position)
             .field("size", &self.size)
+            .field("extent", &self.extent)
             .field(
                 "render_callback",
                 match self.render_header_callback {
@@ -72,7 +73,33 @@ impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Win
     }
 }
 
+#[derive(Default, Debug, Copy, Clone)]
+pub struct WindowOptions {
+    pub docked: bool,
+    pub position: (u32, u32),
+    pub size: (u32, u32),
+}
+
 impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Window<'a, T> {
+    pub fn new(
+        id: String,
+        options: WindowOptions,
+        render_header_callback: Option<UIBoxTreeRenderCallback>,
+        panel_tree: PanelTree<'a, T>,
+    ) -> Self {
+        Self {
+            id,
+            docked: options.docked,
+            active: true,
+            position: options.position,
+            size: options.size,
+            extent: ScreenExtent::new(options.position, options.size),
+            render_header_callback,
+            panel_tree: RefCell::new(panel_tree),
+            ..Default::default()
+        }
+    }
+
     pub fn rebuild_ui_trees(
         &mut self,
         ctx: &UIContext<'static>,

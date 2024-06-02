@@ -9,6 +9,15 @@ pub struct ScreenExtent {
 }
 
 impl ScreenExtent {
+    pub fn new(position: (u32, u32), size: (u32, u32)) -> Self {
+        Self {
+            left: position.0,
+            right: position.0 + size.0,
+            top: position.1,
+            bottom: position.1 + size.1,
+        }
+    }
+
     pub fn contains(&self, x: u32, y: u32) -> bool {
         x >= self.left && x <= self.right && y >= self.top && y <= self.bottom
     }

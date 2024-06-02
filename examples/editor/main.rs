@@ -24,7 +24,7 @@ use cairo::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
             utils::text_box,
         },
-        window::{Window, WindowList, DEFAULT_WINDOW_FILL_COLOR},
+        window::{Window, WindowList, WindowOptions, DEFAULT_WINDOW_FILL_COLOR},
     },
 };
 
@@ -126,22 +126,24 @@ fn main() -> Result<(), String> {
     let window_list = {
         let mut list: WindowList<EditorPanelType> = Default::default();
 
-        let main_menu_panel_tree =
+        let main_window_id = "main_window".to_string();
+
+        let main_window_panel_tree =
             editor::panel::build_main_window_panel_tree(&panel_metadata_map).unwrap();
 
-        let main_window = Window {
-            id: "main".to_string(),
-            docked: true,
-            active: true,
-            focused: true,
-            size: (
-                window_info.window_resolution.width,
-                window_info.window_resolution.height,
-            ),
-            render_header_callback: Some(render_main_window_header),
-            panel_tree: RefCell::new(main_menu_panel_tree),
-            ..Default::default()
-        };
+        let main_window = Window::new(
+            main_window_id,
+            WindowOptions {
+                docked: true,
+                size: (
+                    window_info.window_resolution.width,
+                    window_info.window_resolution.height,
+                ),
+                ..Default::default()
+            },
+            Some(render_main_window_header),
+            main_window_panel_tree,
+        );
 
         list.push(main_window);
 
