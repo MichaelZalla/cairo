@@ -159,6 +159,7 @@ fn main() -> Result<(), String> {
                 floating_window_id,
                 WindowOptions {
                     docked: false,
+                    with_titlebar: true,
                     size: (236, 178),
                     position: (100 + i * 36, 100 + i * 36),
                 },

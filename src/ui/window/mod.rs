@@ -3,7 +3,10 @@ use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{app::resolution::Resolution, color::Color};
+use crate::{
+    app::resolution::Resolution,
+    color::{self, Color},
+};
 
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
@@ -11,6 +14,7 @@ use super::{
     panel::tree::PanelTree,
     ui_box::{
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
+        utils::{button_box, container_box, text_box},
         UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
@@ -43,6 +47,7 @@ pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     pub position: (u32, u32),
     pub size: (u32, u32),
     pub extent: ScreenExtent,
+    pub with_titlebar: bool,
     #[serde(skip)]
     pub render_header_callback: Option<UIBoxTreeRenderCallback>,
     #[serde(skip)]
@@ -60,6 +65,7 @@ impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Win
             .field("position", &self.position)
             .field("size", &self.size)
             .field("extent", &self.extent)
+            .field("with_titlebar", &self.with_titlebar)
             .field(
                 "render_callback",
                 match self.render_header_callback {
@@ -76,6 +82,7 @@ impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Win
 #[derive(Default, Debug, Copy, Clone)]
 pub struct WindowOptions {
     pub docked: bool,
+    pub with_titlebar: bool,
     pub position: (u32, u32),
     pub size: (u32, u32),
 }
@@ -91,6 +98,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             id,
             docked: options.docked,
             active: true,
+            with_titlebar: options.with_titlebar,
             position: options.position,
             size: options.size,
             extent: ScreenExtent::new(options.position, options.size),
@@ -149,6 +157,10 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
                 ui_box_tree.push_parent(root_ui_box)?;
 
+                if self.with_titlebar {
+                    render_titlebar(&self.id, ui_box_tree)?;
+                }
+
                 Ok(())
             })?;
 
@@ -184,6 +196,71 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             panel_tree.render(ctx, self)
         })
     }
+}
+
+fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<(), String> {
+    GLOBAL_UI_CONTEXT.with(|ctx| {
+        ctx.fill_color(color::BLACK, || {
+            ctx.text_color(color::WHITE, || {
+                tree.push_parent(container_box(
+                    format!(
+                        "{}_WindowTitleBarContainer__{}_window_titlebar_container",
+                        id, id
+                    ),
+                    UILayoutDirection::LeftToRight,
+                    Some([
+                        UISizeWithStrictness {
+                            size: UISize::ChildrenSum,
+                            strictness: 1.0,
+                        },
+                        UISizeWithStrictness {
+                            size: UISize::PercentOfParent(1.0),
+                            strictness: 1.0,
+                        },
+                    ]),
+                ))?;
+
+                // Title
+
+                tree.push(text_box(
+                    format!("{}_WindowTitleBarTitle__{}_window_titlebar_title", id, id),
+                    id.to_string(),
+                ))?;
+
+                // Spacer
+
+                tree.push(UIBox::new(
+                    "".to_string(),
+                    UIBoxFeatureMask::none(),
+                    UILayoutDirection::LeftToRight,
+                    [
+                        UISizeWithStrictness {
+                            size: UISize::PercentOfParent(1.0),
+                            strictness: 0.0,
+                        },
+                        UISizeWithStrictness {
+                            size: UISize::MaxOfSiblings,
+                            strictness: 1.0,
+                        },
+                    ],
+                ))?;
+
+                let mut close_button = button_box(
+                    format!("{}_WindowTitleBarClose__{}_window_titlebar_close", id, id),
+                    "Close".to_string(),
+                    None,
+                );
+
+                close_button.features ^= UIBoxFeatureFlag::EmbossAndDeboss;
+
+                tree.push(close_button)?;
+
+                tree.pop_parent()
+            })
+        })
+    })?;
+
+    Ok(())
 }
 
 pub type WindowList<'a, T> = Vec<Window<'a, T>>;
