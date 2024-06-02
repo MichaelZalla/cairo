@@ -87,6 +87,15 @@ pub struct WindowOptions {
     pub size: (u32, u32),
 }
 
+pub struct WindowRenderResult {
+    pub did_deactivate: bool,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub struct WindowRenderTitlebarResult {
+    pub should_close: bool,
+}
+
 impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Window<'a, T> {
     pub fn new(
         id: String,
@@ -112,8 +121,14 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         &mut self,
         ctx: &UIContext<'static>,
         resolution: &Resolution,
-    ) -> Result<(), String> {
+    ) -> Result<WindowRenderResult, String> {
+        let mut window_render_result = WindowRenderResult {
+            did_deactivate: false,
+        };
+
         self.ui_trees.clear();
+
+        let mut render_titlebar_result = None;
 
         {
             let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
@@ -158,7 +173,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
                 ui_box_tree.push_parent(root_ui_box)?;
 
                 if self.with_titlebar {
-                    render_titlebar(&self.id, ui_box_tree)?;
+                    render_titlebar_result.replace(render_titlebar(&self.id, ui_box_tree)?);
                 }
 
                 Ok(())
@@ -184,7 +199,15 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
             *ctx.global_offset.borrow_mut() = (0, 0);
         }
 
-        Ok(())
+        if let Some(result) = render_titlebar_result {
+            if result.should_close {
+                self.active = false;
+
+                window_render_result.did_deactivate = true;
+            }
+        }
+
+        Ok(window_render_result)
     }
 
     fn render_panel_tree_to_base_ui_tree(&mut self) -> Result<(), String> {
@@ -198,7 +221,11 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
     }
 }
 
-fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<(), String> {
+fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<WindowRenderTitlebarResult, String> {
+    let mut result = WindowRenderTitlebarResult {
+        should_close: false,
+    };
+
     GLOBAL_UI_CONTEXT.with(|ctx| {
         ctx.fill_color(color::BLACK, || {
             ctx.text_color(color::WHITE, || {
@@ -253,14 +280,21 @@ fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<(), String> {
 
                 close_button.features ^= UIBoxFeatureFlag::EmbossAndDeboss;
 
-                tree.push(close_button)?;
+                let close_button_interaction = tree.push(close_button)?;
+
+                if close_button_interaction
+                    .mouse_interaction_in_bounds
+                    .was_left_pressed
+                {
+                    result.should_close = true;
+                }
 
                 tree.pop_parent()
             })
         })
     })?;
 
-    Ok(())
+    Ok(result)
 }
 
 pub type WindowList<'a, T> = Vec<Window<'a, T>>;

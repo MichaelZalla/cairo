@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use std::{cell::RefCell, env, rc::Rc};
 
-use sdl2::mouse::Cursor;
+use sdl2::mouse::{Cursor, MouseButton};
 
 use cairo::{
     app::{
@@ -14,7 +14,7 @@ use cairo::{
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
-        mouse::{self, cursor::MouseCursorKind, MouseState},
+        mouse::{self, cursor::MouseCursorKind, MouseEventKind, MouseState},
     },
     font::cache::FontCache,
     ui::{
@@ -320,11 +320,46 @@ fn main() -> Result<(), String> {
 }
 
 fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution: &Resolution) {
-    for window in window_list.iter_mut().rev() {
+    let mut has_captured_mouse_event = false;
+
+    for (rev_index, window) in window_list.iter_mut().rev().enumerate() {
+        // Check if we should capture the current mouse event for this
+        // window, exclusively.
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let mouse = &ctx.input_events.borrow().mouse;
+
+            if !has_captured_mouse_event
+                && window.active
+                && window
+                    .extent
+                    .contains(mouse.position.0 as u32, mouse.position.1 as u32)
+            {
+                if let Some(event) = mouse.button_event {
+                    if matches!(
+                        (event.button, event.kind),
+                        (MouseButton::Left, MouseEventKind::Down)
+                    ) {
+                        has_captured_mouse_event = true;
+                    }
+                }
+            }
+        });
+
         // Rebuild the UI tree based on the latest user inputs.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            window.render_ui_trees(ctx, resolution).unwrap();
+            let result = window.render_ui_trees(ctx, resolution).unwrap();
+
+            if result.did_deactivate {
+                println!("Window {} deactivated.", window.id);
+            }
+
+            if has_captured_mouse_event {
+                let mut input_events = ctx.input_events.borrow_mut();
+
+                input_events.mouse.button_event.take();
+            }
         });
     }
 
