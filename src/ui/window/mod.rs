@@ -3,9 +3,12 @@ use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
+use sdl2::mouse::MouseButton;
+
 use crate::{
     app::resolution::Resolution,
     color::{self, Color},
+    device::mouse::MouseEventKind,
     mem::linked_list::LinkedList,
 };
 
@@ -44,6 +47,7 @@ impl<'a> WindowUITrees<'a> {
 pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     pub id: String,
     pub docked: bool,
+    pub dragging: bool,
     pub active: bool,
     pub position: (u32, u32),
     pub size: (u32, u32),
@@ -62,6 +66,7 @@ impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Win
         f.debug_struct("Window")
             .field("id", &self.id)
             .field("docked", &self.docked)
+            .field("dragging", &self.dragging)
             .field("active", &self.active)
             .field("position", &self.position)
             .field("size", &self.size)
@@ -94,6 +99,9 @@ pub struct WindowRenderResult {
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct WindowRenderTitlebarResult {
+    pub did_start_dragging: bool,
+    pub did_stop_dragging: bool,
+    pub position_delta: Option<(i32, i32)>,
     pub should_close: bool,
 }
 
@@ -174,7 +182,11 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
                 ui_box_tree.push_parent(root_ui_box)?;
 
                 if self.with_titlebar {
-                    render_titlebar_result.replace(render_titlebar(&self.id, ui_box_tree)?);
+                    render_titlebar_result.replace(render_titlebar(
+                        &self.id,
+                        self.dragging,
+                        ui_box_tree,
+                    )?);
                 }
 
                 Ok(())
@@ -201,6 +213,20 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         }
 
         if let Some(result) = render_titlebar_result {
+            if result.did_start_dragging {
+                self.dragging = true;
+            }
+
+            if result.did_stop_dragging {
+                self.dragging = false;
+            }
+
+            if self.dragging {
+                if let Some(delta) = result.position_delta {
+                    self.apply_position_delta(delta);
+                }
+            }
+
             if result.should_close {
                 self.active = false;
 
@@ -209,6 +235,13 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         }
 
         Ok(window_render_result)
+    }
+
+    fn apply_position_delta(&mut self, delta: (i32, i32)) {
+        self.position.0 = (self.position.0 as i32 + delta.0).max(0) as u32;
+        self.position.1 = (self.position.1 as i32 + delta.1).max(0) as u32;
+
+        self.extent = ScreenExtent::new(self.position, self.size);
     }
 
     fn render_panel_tree_to_base_ui_tree(&mut self) -> Result<(), String> {
@@ -222,15 +255,22 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
     }
 }
 
-fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<WindowRenderTitlebarResult, String> {
+fn render_titlebar(
+    id: &str,
+    was_dragging: bool,
+    tree: &mut UIBoxTree,
+) -> Result<WindowRenderTitlebarResult, String> {
     let mut result = WindowRenderTitlebarResult {
+        did_start_dragging: false,
+        did_stop_dragging: false,
+        position_delta: None,
         should_close: false,
     };
 
     GLOBAL_UI_CONTEXT.with(|ctx| {
         ctx.fill_color(color::BLACK, || {
             ctx.text_color(color::WHITE, || {
-                tree.push_parent(container_box(
+                let container_box_result = tree.push_parent(container_box(
                     format!(
                         "{}_WindowTitleBarContainer__{}_window_titlebar_container",
                         id, id
@@ -248,7 +288,32 @@ fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<WindowRenderTitleba
                     ]),
                 ))?;
 
-                // Title
+                if !was_dragging
+                    && container_box_result
+                        .mouse_interaction_in_bounds
+                        .was_left_pressed
+                {
+                    result.did_start_dragging = true;
+                } else if was_dragging {
+                    GLOBAL_UI_CONTEXT.with(|ctx| {
+                        let mouse_state = &ctx.input_events.borrow().mouse;
+
+                        let did_stop_dragging = if let Some(event) = mouse_state.button_event {
+                            matches!(
+                                (event.button, event.kind),
+                                (MouseButton::Left, MouseEventKind::Up)
+                            )
+                        } else {
+                            false
+                        };
+
+                        result.did_stop_dragging = did_stop_dragging;
+
+                        if !did_stop_dragging {
+                            result.position_delta = Some(mouse_state.relative_motion);
+                        }
+                    });
+                }
 
                 tree.push(text_box(
                     format!("{}_WindowTitleBarTitle__{}_window_titlebar_title", id, id),
