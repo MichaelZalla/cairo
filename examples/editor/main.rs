@@ -320,16 +320,20 @@ fn main() -> Result<(), String> {
 }
 
 fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution: &Resolution) {
-    let mut has_captured_mouse_event = false;
+    let window_count = window_list.len();
+
+    let mut focused_window_index = None;
 
     for (rev_index, window) in window_list.iter_mut().rev().enumerate() {
+        let mut did_focus = false;
+
         // Check if we should capture the current mouse event for this
         // window, exclusively.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let mouse = &ctx.input_events.borrow().mouse;
 
-            if !has_captured_mouse_event
+            if focused_window_index.is_none()
                 && window.active
                 && window
                     .extent
@@ -340,7 +344,9 @@ fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution:
                         (event.button, event.kind),
                         (MouseButton::Left, MouseEventKind::Down)
                     ) {
-                        has_captured_mouse_event = true;
+                        did_focus = true;
+
+                        focused_window_index.replace(window_count - 1 - rev_index);
                     }
                 }
             }
@@ -349,18 +355,22 @@ fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution:
         // Rebuild the UI tree based on the latest user inputs.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            let result = window.render_ui_trees(ctx, resolution).unwrap();
+            window.render_ui_trees(ctx, resolution).unwrap();
 
-            if result.did_deactivate {
-                println!("Window {} deactivated.", window.id);
-            }
-
-            if has_captured_mouse_event {
+            if did_focus {
                 let mut input_events = ctx.input_events.borrow_mut();
 
                 input_events.mouse.button_event.take();
             }
         });
+    }
+
+    if let Some(index) = focused_window_index {
+        if index != 0 {
+            let last_index = window_list.len() - 1;
+
+            window_list.swap(index, last_index);
+        }
     }
 
     window_list.retain(|w| w.active);
