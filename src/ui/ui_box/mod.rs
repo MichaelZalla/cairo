@@ -398,7 +398,6 @@ impl UIBox {
 
     pub fn render_preorder(&self, target: &mut Buffer2D) -> Result<(), String> {
         let (x, y) = self.get_pixel_coordinates();
-
         let (width, height) = self.get_computed_pixel_size();
 
         let end = match self.styles.fill_color {
@@ -416,52 +415,7 @@ impl UIBox {
             self.styles.fill_color
         };
 
-        let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
-            Some(&color::BLUE)
-        } else if self.styles.border_color.is_some() {
-            self.styles.border_color.as_ref()
-        } else {
-            None
-        };
-
-        Graphics::rectangle(
-            target,
-            x,
-            y,
-            width,
-            height,
-            fill_color.as_ref(),
-            border_color,
-        );
-
-        if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
-            let (mut top_left, mut bottom_right) = (color::WHITE, color::BLACK);
-
-            // Emboss-deboss.
-
-            if self.active {
-                mem::swap(&mut top_left, &mut bottom_right);
-            }
-
-            let (x1, y1, x2, y2) = (
-                x as i32,
-                y as i32,
-                (x + width - 1) as i32,
-                (y + height - 1) as i32,
-            );
-
-            // Top edge.
-            Graphics::line(target, x1, y1, x2, y1, &top_left);
-
-            // Left edge.
-            Graphics::line(target, x1, y1, x1, y2, &top_left);
-
-            // Bottom edge.
-            Graphics::line(target, x1, y2, x2, y2, &bottom_right);
-
-            // Right edge.
-            Graphics::line(target, x2, y1, x2, y2, &bottom_right);
-        }
+        Graphics::rectangle(target, x, y, width, height, fill_color.as_ref(), None);
 
         if self.features.contains(UIBoxFeatureFlag::DrawText) {
             let text_content = self.text_content.as_ref().expect("Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!");
@@ -570,6 +524,54 @@ impl UIBox {
                         }
                     });
                 }
+            }
+        }
+
+        if self.features.contains(UIBoxFeatureFlag::DrawBorder)
+            || self.features.contains(UIBoxFeatureFlag::DrawChildDividers)
+        {
+            let (x, y) = self.get_pixel_coordinates();
+            let (width, height) = self.get_computed_pixel_size();
+
+            if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
+                let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
+                    Some(&color::BLUE)
+                } else if self.styles.border_color.is_some() {
+                    self.styles.border_color.as_ref()
+                } else {
+                    None
+                };
+
+                Graphics::rectangle(target, x, y, width, height, None, border_color);
+            }
+
+            if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
+                let (mut top_left, mut bottom_right) = (color::WHITE, color::BLACK);
+
+                // Emboss-deboss.
+
+                if self.active {
+                    mem::swap(&mut top_left, &mut bottom_right);
+                }
+
+                let (x1, y1, x2, y2) = (
+                    x as i32,
+                    y as i32,
+                    (x + width - 1) as i32,
+                    (y + height - 1) as i32,
+                );
+
+                // Top edge.
+                Graphics::line(target, x1, y1, x2, y1, &top_left);
+
+                // Left edge.
+                Graphics::line(target, x1, y1, x1, y2, &top_left);
+
+                // Bottom edge.
+                Graphics::line(target, x1, y2, x2, y2, &bottom_right);
+
+                // Right edge.
+                Graphics::line(target, x2, y1, x2, y2, &bottom_right);
             }
         }
 
