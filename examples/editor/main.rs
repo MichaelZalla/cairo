@@ -161,8 +161,8 @@ fn main() -> Result<(), String> {
     // function is called when either (1) the main loop executes, or (2) the
     // user is actively resizing the main application window.
 
-    let render_main_ui_window_to_framebuffer = |_frame_index: Option<u32>,
-                                                new_resolution: Option<Resolution>|
+    let render_window_list_to_framebuffer = |_frame_index: Option<u32>,
+                                             new_resolution: Option<Resolution>|
      -> Result<Vec<u32>, String> {
         let frame_index = current_frame_index_rc.borrow();
 
@@ -217,7 +217,7 @@ fn main() -> Result<(), String> {
         Ok(framebuffer.get_all().clone())
     };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_main_ui_window_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_window_list_to_framebuffer);
 
     // Set the global font info, based on the font filepath that was passed to
     // our program.
@@ -292,7 +292,7 @@ fn main() -> Result<(), String> {
             *current_frame_index = index;
         }
 
-        render_main_ui_window_to_framebuffer(frame_index, new_resolution)
+        render_window_list_to_framebuffer(frame_index, new_resolution)
     };
 
     app.run(&mut update, &render)?;
