@@ -160,6 +160,8 @@ impl App {
         let mut frame_start: u64 = timer_subsystem.performance_counter();
         let mut frame_end: u64;
 
+        let mut prev_mouse_position = (0, 0);
+        let mut prev_mouse_ndc_position = (0.0, 0.0);
         let mut prev_mouse_buttons_down = HashSet::new();
 
         let mut prev_game_controller_state: GameControllerState = GameController::new().state;
@@ -421,8 +423,8 @@ impl App {
 
             // Cache input device states
 
-            mouse_state.prev_position = mouse_state.position;
-            mouse_state.prev_ndc_position = mouse_state.ndc_position;
+            mouse_state.prev_position = prev_mouse_position;
+            mouse_state.prev_ndc_position = prev_mouse_ndc_position;
 
             mouse_state.position.0 = current_mouse_state.x();
             mouse_state.position.1 = current_mouse_state.y();
@@ -453,6 +455,9 @@ impl App {
                 &mut mouse_state,
                 &mut game_controller.state,
             )?;
+
+            prev_mouse_position = mouse_state.position;
+            prev_mouse_ndc_position = mouse_state.ndc_position;
 
             last_update_tick = timer_subsystem.performance_counter();
 
