@@ -64,7 +64,25 @@ pub fn text_box(id: String, label: String) -> UIBox {
     text_box
 }
 
-pub fn button_box(id: String, label: String, semantic_sizes: [UISizeWithStrictness; 2]) -> UIBox {
+pub fn button_box(
+    id: String,
+    label: String,
+    semantic_sizes: Option<[UISizeWithStrictness; 2]>,
+) -> UIBox {
+    let sizes = match semantic_sizes {
+        Some(sizes) => sizes,
+        None => [
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+            UISizeWithStrictness {
+                size: UISize::TextContent,
+                strictness: 1.0,
+            },
+        ],
+    };
+
     let mut button_box = UIBox::new(
         id,
         UIBoxFeatureFlag::DrawFill
@@ -74,7 +92,7 @@ pub fn button_box(id: String, label: String, semantic_sizes: [UISizeWithStrictne
             | UIBoxFeatureFlag::Hoverable
             | UIBoxFeatureFlag::Clickable,
         UILayoutDirection::LeftToRight,
-        semantic_sizes,
+        sizes,
     );
 
     button_box.text_content = Some(label);

@@ -164,7 +164,7 @@ pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), St
                 button_index, button_index
             ),
             button_label.to_string(),
-            [
+            Some([
                 UISizeWithStrictness {
                     size: UISize::TextContent,
                     strictness: 1.0,
@@ -173,7 +173,7 @@ pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), St
                     size: UISize::Pixels(45),
                     strictness: 1.0,
                 },
-            ],
+            ]),
         ))?;
     }
 
