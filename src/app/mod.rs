@@ -14,7 +14,7 @@ use crate::{
     device::{
         game_controller::{GameController, GameControllerState},
         keyboard::KeyboardState,
-        mouse::{MouseEvent, MouseEventKind, MouseState, MouseWheelEvent},
+        mouse::{MouseDragEvent, MouseEvent, MouseEventKind, MouseState, MouseWheelEvent},
     },
     {debug_print, time::TimingInfo},
 };
@@ -437,6 +437,17 @@ impl App {
 
                 mouse_state.ndc_position.1 =
                     mouse_state.position.1 as f32 / window_info.window_resolution.height as f32;
+            }
+
+            // Drag events.
+
+            if mouse_state.buttons_down.contains(&MouseButton::Left)
+                && mouse_state.prev_buttons_down.contains(&MouseButton::Left)
+                && !(mouse_state.relative_motion.0 == 0 && mouse_state.relative_motion.1 == 0)
+            {
+                mouse_state.drag_event.replace(MouseDragEvent {
+                    delta: mouse_state.relative_motion,
+                });
             }
 
             // Update current scene
