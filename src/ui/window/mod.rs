@@ -96,7 +96,12 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
                 "Root__root".to_string(),
                 UIBoxFeatureMask::none()
                     | UIBoxFeatureFlag::DrawFill
-                    | UIBoxFeatureFlag::DrawChildDividers,
+                    | UIBoxFeatureFlag::DrawChildDividers
+                    | if self.docked {
+                        UIBoxFeatureFlag::Null
+                    } else {
+                        UIBoxFeatureFlag::DrawBorder
+                    },
                 UILayoutDirection::TopToBottom,
                 [
                     UISizeWithStrictness {

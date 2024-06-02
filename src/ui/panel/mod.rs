@@ -96,12 +96,19 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         (panel_ui_box_id, panel_ui_box_key_hash)
     }
 
-    pub fn make_panel_box(&self, ui_context: &UIContext<'static>) -> Result<UIBox, String> {
+    pub fn make_panel_box(
+        &self,
+        ui_context: &UIContext<'static>,
+        draw_border: bool,
+    ) -> Result<UIBox, String> {
         let (panel_ui_box_id, panel_ui_box_key_hash) = self.get_panel_ui_box_id_and_hash();
 
         let ui_box_feature_flags = UIBoxFeatureFlag::DrawFill
-            | UIBoxFeatureFlag::Hoverable
-            | UIBoxFeatureFlag::Clickable
+            | if draw_border {
+                UIBoxFeatureFlag::DrawBorder
+            } else {
+                UIBoxFeatureFlag::Null
+            }
             | if self.resizable {
                 UIBoxFeatureFlag::Resizable
             } else {

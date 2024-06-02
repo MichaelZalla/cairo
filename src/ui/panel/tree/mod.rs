@@ -75,7 +75,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
 
                 let mut ui_box_tree = base_tree.borrow_mut();
 
-                let panel_box = panel.make_panel_box(ui_context)?;
+                let panel_box = panel.make_panel_box(ui_context, !window.docked)?;
 
                 if is_leaf_panel {
                     let panel_interaction_result = ui_box_tree.push_parent(panel_box)?;
