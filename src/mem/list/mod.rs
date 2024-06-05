@@ -1,17 +1,17 @@
-type Link = Option<Box<Node>>;
-
 #[derive(Default, Debug, Clone)]
-pub struct Node {
-    elem: i32,
-    next: Link,
+pub struct List<T> {
+    head: Link<T>,
 }
 
+type Link<T> = Option<Box<Node<T>>>;
+
 #[derive(Default, Debug, Clone)]
-pub struct List {
-    head: Link,
+pub struct Node<T> {
+    elem: T,
+    next: Link<T>,
 }
 
-impl Drop for List {
+impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut current_link = self.head.take();
 
@@ -21,12 +21,12 @@ impl Drop for List {
     }
 }
 
-impl List {
+impl<T> List<T> {
     pub fn new() -> Self {
         Self { head: None }
     }
 
-    pub fn push(&mut self, elem: i32) {
+    pub fn push(&mut self, elem: T) {
         let node = Box::new(Node {
             elem,
             next: self.head.take(),
@@ -35,7 +35,7 @@ impl List {
         self.head = Some(node);
     }
 
-    pub fn pop(&mut self) -> Option<i32> {
+    pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|boxed_node| {
             self.head = boxed_node.next;
 
