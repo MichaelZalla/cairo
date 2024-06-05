@@ -21,6 +21,7 @@ pub mod graphics;
 pub mod hdr;
 pub mod material;
 pub mod matrix;
+pub mod mem;
 pub mod mesh;
 pub mod physics;
 pub mod random;
