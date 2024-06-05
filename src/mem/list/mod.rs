@@ -5,6 +5,10 @@ pub struct List<T> {
 
 pub struct IntoIter<T>(List<T>);
 
+pub struct Iter<'a, T> {
+    next: Option<&'a Node<T>>,
+}
+
 type Link<T> = Option<Box<Node<T>>>;
 
 #[derive(Default, Debug, Clone)]
@@ -31,13 +35,32 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.map(|boxed_node| {
+            self.next = boxed_node.next.as_deref();
+
+            &boxed_node.elem
+        })
+    }
+}
+
 impl<T> List<T> {
     pub fn new() -> Self {
         Self { head: None }
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn into_iter(self) -> IntoIter<T> {
         IntoIter(self)
+    }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.head.as_deref(),
+        }
     }
 
     pub fn peek(&self) -> Option<&T> {
@@ -135,5 +158,19 @@ mod test {
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), None);
+    }
+
+    fn iter() {
+        let mut list = List::new();
+
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        let mut iter = list.iter();
+
+        assert_eq!(iter.next(), Some(&3));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&1));
     }
 }
