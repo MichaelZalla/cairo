@@ -26,6 +26,14 @@ impl<T> List<T> {
         Self { head: None }
     }
 
+    pub fn peek(&self) -> Option<&T> {
+        self.head.as_ref().map(|boxed_node| &boxed_node.elem)
+    }
+
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        self.head.as_mut().map(|boxed_node| &mut boxed_node.elem)
+    }
+
     pub fn push(&mut self, elem: T) {
         let node = Box::new(Node {
             elem,
@@ -75,5 +83,27 @@ mod test {
         // Check list exhaustion.
         assert_eq!(list.pop(), Some(1));
         assert_eq!(list.pop(), None);
+    }
+
+    #[test]
+    fn peek() {
+        let mut list = List::new();
+
+        assert_eq!(list.peek(), None);
+        assert_eq!(list.peek_mut(), None);
+
+        for i in 0..3 {
+            list.push(i);
+        }
+
+        assert_eq!(list.peek(), Some(&2));
+        assert_eq!(list.peek_mut(), Some(&mut 2));
+
+        if let Some(value) = list.peek_mut() {
+            *value = 42
+        }
+
+        assert_eq!(list.peek(), Some(&42));
+        assert_eq!(list.pop(), Some(42));
     }
 }
