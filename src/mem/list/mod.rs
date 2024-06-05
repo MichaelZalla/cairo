@@ -1,5 +1,3 @@
-use std::mem;
-
 type Link = Option<Box<Node>>;
 
 #[derive(Default, Debug, Clone)]
@@ -15,10 +13,10 @@ pub struct List {
 
 impl Drop for List {
     fn drop(&mut self) {
-        let mut current_link = mem::replace(&mut self.head, None);
+        let mut current_link = self.head.take();
 
         while let Some(mut boxed_node) = current_link {
-            current_link = mem::replace(&mut boxed_node.next, None);
+            current_link = boxed_node.next.take();
         }
     }
 }
@@ -31,14 +29,14 @@ impl List {
     pub fn push(&mut self, elem: i32) {
         let node = Box::new(Node {
             elem,
-            next: mem::replace(&mut self.head, None),
+            next: self.head.take(),
         });
 
         self.head = Some(node);
     }
 
     pub fn pop(&mut self) -> Option<i32> {
-        match mem::replace(&mut self.head, None) {
+        match self.head.take() {
             None => None,
             Some(boxed_node) => {
                 self.head = boxed_node.next;
