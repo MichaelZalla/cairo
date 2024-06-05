@@ -1,11 +1,6 @@
 use std::mem;
 
-#[derive(Default, Debug, Clone)]
-pub enum Link {
-    #[default]
-    Empty,
-    More(Box<Node>),
-}
+type Link = Option<Box<Node>>;
 
 #[derive(Default, Debug, Clone)]
 pub struct Node {
@@ -20,32 +15,32 @@ pub struct List {
 
 impl Drop for List {
     fn drop(&mut self) {
-        let mut current_link = mem::replace(&mut self.head, Link::Empty);
+        let mut current_link = mem::replace(&mut self.head, None);
 
-        while let Link::More(mut boxed_node) = current_link {
-            current_link = mem::replace(&mut boxed_node.next, Link::Empty);
+        while let Some(mut boxed_node) = current_link {
+            current_link = mem::replace(&mut boxed_node.next, None);
         }
     }
 }
 
 impl List {
     pub fn new() -> Self {
-        Self { head: Link::Empty }
+        Self { head: None }
     }
 
     pub fn push(&mut self, elem: i32) {
         let node = Box::new(Node {
             elem,
-            next: mem::replace(&mut self.head, Link::Empty),
+            next: mem::replace(&mut self.head, None),
         });
 
-        self.head = Link::More(node);
+        self.head = Some(node);
     }
 
     pub fn pop(&mut self) -> Option<i32> {
-        match mem::replace(&mut self.head, Link::Empty) {
-            Link::Empty => None,
-            Link::More(boxed_node) => {
+        match mem::replace(&mut self.head, None) {
+            None => None,
+            Some(boxed_node) => {
                 self.head = boxed_node.next;
 
                 Some(boxed_node.elem)
