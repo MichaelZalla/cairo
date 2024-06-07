@@ -122,20 +122,29 @@ mod test {
         let mut data = [0; 10];
 
         unsafe {
-            let slice = &mut data[..];
+            let slice1_all = &mut data[..];
+            let ptr2_all = slice1_all.as_mut_ptr();
 
-            let (slice2_at_0, slice3_at_1) = slice.split_at_mut(1);
+            let ptr3_at_0 = ptr2_all;
+            let ptr4_at_1 = ptr2_all.add(1);
 
-            let ref4_at_0 = &mut slice2_at_0[0];
-            let ref5_at_1 = &mut slice3_at_1[1];
+            let ref5_at_0 = &mut *ptr3_at_0;
+            let ref6_at_1 = &mut *ptr4_at_1;
 
-            let ptr6_at_0 = ref4_at_0 as *mut i32;
-            let ptr7_at_1 = ref5_at_1 as *mut i32;
+            *ref6_at_1 += 6;
+            *ref5_at_0 += 5;
+            *ptr4_at_1 += 4;
+            *ptr3_at_0 += 3;
 
-            *ptr7_at_1 += 3;
-            *ptr6_at_0 += 3;
-            *ref5_at_1 += 2;
-            *ref4_at_0 += 1;
+            // Loop through and modify all array elements.
+            for i in 0..10 {
+                *ptr2_all.add(i) += i;
+            }
+
+            // Same loop, but "safe".
+            for (i, elem_ref) in slice1_all.iter_mut().enumerate() {
+                *elem_ref += i;
+            }
         }
 
         println!("{:?}", &data[..]);
