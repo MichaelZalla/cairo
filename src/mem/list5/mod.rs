@@ -116,4 +116,26 @@ mod test {
 
         println!("{}", data);
     }
+
+    #[test]
+    fn array_aliasing() {
+        let mut data = [0; 10];
+
+        unsafe {
+            let ref1_at_0 = &mut data[0];
+            let ptr2_at_0 = ref1_at_0 as *mut i32;
+            let _ptr3_at_1 = ptr2_at_0.add(1);
+
+            // UB:
+            //
+            //    "ERROR: Undefined Behavior: attempting a read access using
+            //    <441810> at alloc152071[0x4], but that tag does not exist in
+            //    the borrow stack for this location"
+            // *ptr3_at_1 += 3;
+            *ptr2_at_0 += 2;
+            *ref1_at_0 += 1;
+        }
+
+        println!("{:?}", &data[..]);
+    }
 }
