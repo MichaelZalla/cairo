@@ -149,4 +149,45 @@ mod test {
 
         println!("{:?}", &data[..]);
     }
+
+    #[test]
+    fn shared_refs() {
+        fn opaque_read(value: &i32) {
+            println!("{}", value);
+        }
+
+        let mut data = 10;
+
+        #[allow(invalid_reference_casting)]
+        unsafe {
+            let mut_ref1 = &mut data;
+            let ptr2 = mut_ref1 as *mut i32;
+            let shared_ref3 = &*mut_ref1;
+            let ptr4 = shared_ref3 as *const i32 as *mut i32;
+
+            // UB:
+            //
+            //   "ERROR: Undefined Behavior: attempting a write access using
+            //   <488568> at alloc168273[0x0], but that tag only grants
+            //   SharedReadOnly permission for this location"
+            //
+            // *ptr4 += 4;
+
+            opaque_read(&*ptr4);
+
+            // If this were to occur above the line below, it would be UB:
+            //
+            //  "ERROR: Undefined Behavior: trying to retag from <488567> for
+            //  SharedReadOnly permission at alloc168273[0x0], but that tag does
+            //  not exist in the borrow stack for this location"
+            //
+            opaque_read(shared_ref3);
+
+            *ptr2 += 2;
+
+            *mut_ref1 += 1;
+
+            opaque_read(&data);
+        }
+    }
 }
