@@ -55,6 +55,8 @@ impl<T> List<T> {
 
 #[cfg(test)]
 mod test {
+    use std::cell::Cell;
+
     use super::List;
 
     // #[test]
@@ -189,5 +191,22 @@ mod test {
 
             opaque_read(&data);
         }
+    }
+
+    #[test]
+    fn interior_mutability_with_cell() {
+        let mut data = Cell::new(10);
+
+        unsafe {
+            let mut_ref1 = &mut data;
+            let ptr2 = mut_ref1 as *mut Cell<i32>;
+            let shared_ref3 = &*mut_ref1;
+
+            shared_ref3.set(shared_ref3.get() + 3);
+            (*ptr2).set((*ptr2).get() + 2);
+            mut_ref1.set(mut_ref1.get() + 1);
+        }
+
+        println!("{}", data.get());
     }
 }
