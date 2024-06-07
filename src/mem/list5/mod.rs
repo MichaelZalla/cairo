@@ -55,9 +55,13 @@ impl<T> List<T> {
 
 #[cfg(test)]
 mod test {
-    use std::cell::Cell;
+    use std::cell::{Cell, UnsafeCell};
 
     use super::List;
+
+    fn opaque_read(value: &i32) {
+        println!("{}", value);
+    }
 
     // #[test]
     fn basics() {
@@ -154,10 +158,6 @@ mod test {
 
     #[test]
     fn shared_refs() {
-        fn opaque_read(value: &i32) {
-            println!("{}", value);
-        }
-
         let mut data = 10;
 
         #[allow(invalid_reference_casting)]
@@ -208,5 +208,27 @@ mod test {
         }
 
         println!("{}", data.get());
+    }
+
+    #[test]
+    fn interior_mutability_with_unsafe_cell() {
+        // Storing a T as `&UnsafeCell<T>` has the effect of disabling certain
+        // compiler optimizations that are normally done, based on the knowledge
+        // that &T is immutable. Using `UnsafeCell`, the compiler can't take any
+        // shortcuts with respect to scheduling reads and writes to that memory.
+        let mut data = UnsafeCell::new(10);
+
+        unsafe {
+            let mut_ref1 = &mut data;
+            let shared_ref2 = &*mut_ref1;
+            let ptr3 = shared_ref2.get();
+
+            *ptr3 += 3;
+            opaque_read(&*shared_ref2.get());
+            *shared_ref2.get() += 2;
+            *mut_ref1.get() += 1;
+
+            println!("{}", *data.get());
+        }
     }
 }
