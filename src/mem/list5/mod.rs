@@ -122,18 +122,20 @@ mod test {
         let mut data = [0; 10];
 
         unsafe {
-            let ref1_at_0 = &mut data[0];
-            let ptr2_at_0 = ref1_at_0 as *mut i32;
-            let _ptr3_at_1 = ptr2_at_0.add(1);
+            let slice = &mut data[..];
 
-            // UB:
-            //
-            //    "ERROR: Undefined Behavior: attempting a read access using
-            //    <441810> at alloc152071[0x4], but that tag does not exist in
-            //    the borrow stack for this location"
-            // *ptr3_at_1 += 3;
-            *ptr2_at_0 += 2;
-            *ref1_at_0 += 1;
+            let (slice2_at_0, slice3_at_1) = slice.split_at_mut(1);
+
+            let ref4_at_0 = &mut slice2_at_0[0];
+            let ref5_at_1 = &mut slice3_at_1[1];
+
+            let ptr6_at_0 = ref4_at_0 as *mut i32;
+            let ptr7_at_1 = ref5_at_1 as *mut i32;
+
+            *ptr7_at_1 += 3;
+            *ptr6_at_0 += 3;
+            *ref5_at_1 += 2;
+            *ref4_at_0 += 1;
         }
 
         println!("{:?}", &data[..]);
