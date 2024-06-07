@@ -88,26 +88,31 @@ mod test {
     }
 
     #[test]
-    fn aliasing() {
+    fn stack_aliasing() {
         let mut data = 10;
 
-        let ref1 = &mut data;
-        // Now, can't mutate through `data` until we're done with `ref`.
+        unsafe {
+            let ref1 = &mut data;
+            let ptr2 = ref1 as *mut _;
+            let ref3 = &mut *ptr2;
+            let ptr4 = ref3 as *mut _;
 
-        let ref2 = &mut *ref1;
-        // Now, can't mutate through `ref1` until we're done with `ref2`.
+            // Access the first raw pointer first. Doing this would pop `ref3`
+            // and `ptr4` off the borrow stack, and the following lines of code
+            // would be UB:
+            //
+            //    "ERROR: Undefined Behavior: attempting a read access using
+            //    <441810> at alloc152071[0x4], but that tag does not exist in
+            //    the borrow stack for this location"
+            //
+            // *ptr2 += 2;
 
-        // ERROR: cannot use `*ref1` because it was mutably borrowed use of borrowed `*ref1`
-        // *ref1 += 1;
-
-        // Last use of `ref2`.
-        *ref2 += 2;
-
-        // Last use of `ref1`.
-        *ref1 += 1;
-
-        // Okay to write to memory through `data` here.
-        data += 3;
+            // Then access things in borrow-stack-order.
+            *ptr4 += 4;
+            *ref3 += 3;
+            *ptr2 += 2;
+            *ref1 += 1;
+        }
 
         println!("{}", data);
     }
