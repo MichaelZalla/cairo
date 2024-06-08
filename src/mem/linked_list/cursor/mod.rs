@@ -265,6 +265,8 @@ mod test {
 
         let before = cursor.split_before();
 
+        check_links(&ll);
+
         assert_eq!(
             &before.into_iter().collect::<Vec<_>>(),
             &[200, 201, 202, 203, 1, 100, 101, 102, 103, 8, 2, 3, 4, 5, 6]
@@ -291,6 +293,8 @@ mod test {
 
         let after = cursor.split_after();
 
+        check_links(&ll);
+
         assert_eq!(
             after.into_iter().collect::<Vec<_>>(),
             &[102, 103, 8, 2, 3, 4, 5, 6]
@@ -300,5 +304,13 @@ mod test {
             ll.iter().cloned().collect::<Vec<_>>(),
             &[200, 201, 202, 203, 1, 100, 101]
         );
+    }
+
+    fn check_links<T: Eq + std::fmt::Debug>(list: &LinkedList<T>) {
+        let from_front: Vec<_> = list.iter().collect();
+        let from_back: Vec<_> = list.iter().rev().collect();
+        let re_reved: Vec<_> = from_back.into_iter().rev().collect();
+
+        assert_eq!(from_front, re_reved);
     }
 }
