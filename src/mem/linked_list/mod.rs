@@ -319,6 +319,9 @@ impl<T> IntoIterator for LinkedList<T> {
     }
 }
 
+unsafe impl<T: Send> Send for LinkedList<T> {}
+unsafe impl<T: Sync> Sync for LinkedList<T> {}
+
 // Traits for &'a LinkedList<T>.
 
 impl<'a, T> IntoIterator for &'a LinkedList<T> {
@@ -358,6 +361,9 @@ impl<T> ExactSizeIterator for IntoIter<T> {
 }
 
 // Traits for Iter<'a, T>.
+
+unsafe impl<'a, T: Send> Send for Iter<'a, T> {}
+unsafe impl<'a, T: Sync> Sync for Iter<'a, T> {}
 
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
@@ -405,6 +411,9 @@ impl<'a, T> ExactSizeIterator for Iter<'a, T> {
 
 // Traits for IterMut<'a, T>.
 
+unsafe impl<'a, T: Send> Send for IterMut<'a, T> {}
+unsafe impl<'a, T: Sync> Sync for IterMut<'a, T> {}
+
 impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
@@ -451,7 +460,7 @@ impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
 
 #[cfg(test)]
 mod test {
-    use super::LinkedList;
+    use super::{IntoIter, Iter, IterMut, LinkedList};
 
     fn generate_test() -> LinkedList<i32> {
         list_from(&[0, 1, 2, 3, 4, 5, 6])
@@ -459,6 +468,24 @@ mod test {
 
     fn list_from<T: Clone>(values: &[T]) -> LinkedList<T> {
         values.iter().map(|value| (*value).clone()).collect()
+    }
+
+    #[test]
+    fn assert_send_and_sync_traits() {
+        fn is_send<T: Send>() {}
+        fn is_sync<T: Sync>() {}
+
+        is_send::<LinkedList<i32>>();
+        is_sync::<LinkedList<i32>>();
+
+        is_send::<IntoIter<i32>>();
+        is_sync::<IntoIter<i32>>();
+
+        is_send::<Iter<i32>>();
+        is_sync::<Iter<i32>>();
+
+        is_send::<IterMut<i32>>();
+        is_sync::<IterMut<i32>>();
     }
 
     #[test]
