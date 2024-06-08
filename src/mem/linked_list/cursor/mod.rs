@@ -112,6 +112,119 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
+    pub fn remove_next(&mut self) -> Option<T> {
+        if !self.list.is_empty() {
+            unsafe {
+                let next = self
+                    .current
+                    .and_then(|current| (*current.as_ptr()).back)
+                    .map(|node| node.as_ptr());
+
+                if let Some(next) = next {
+                    // We have at least 1 node following `current` that we
+                    // should remove.
+
+                    // Check if we should patch the node that follows `next`.
+                    if let Some(after_next) = (*next).back {
+                        (*after_next.as_ptr()).front = self.current;
+                    } else {
+                        // We just removed the last node in the list.
+                        self.list.back = self.current;
+                    }
+
+                    (*self.current.unwrap().as_ptr()).back = (*next).back;
+
+                    let boxed_node = Box::from_raw(next);
+                    let elem = boxed_node.elem;
+
+                    Some(elem)
+                } else {
+                    // Either `current` points to the ghost node, or `current`
+                    // points to the last node in our list. In either case, we
+                    // should remove the first node from the list.
+                    let old_front = self.list.front.take().unwrap();
+
+                    let new_front = (*old_front.as_ptr()).back;
+
+                    self.list.front = new_front;
+
+                    if let Some(front) = new_front {
+                        (*front.as_ptr()).front = None;
+                    }
+
+                    self.list.len -= 1;
+
+                    // No change to cursor index.
+
+                    let boxed_node = Box::from_raw(old_front.as_ptr());
+                    let elem = boxed_node.elem;
+
+                    Some(elem)
+                }
+            }
+        } else {
+            // Our list is empty. Nothing to remove.
+
+            None
+        }
+    }
+
+    pub fn remove_prev(&mut self) -> Option<T> {
+        if !self.list.is_empty() {
+            unsafe {
+                let prev = self
+                    .current
+                    .and_then(|current| (*current.as_ptr()).front)
+                    .map(|node| node.as_ptr());
+
+                let node = if let Some(prev) = prev {
+                    // We have at least 1 node before `current` that we
+                    // should remove.
+
+                    // Check if we should patch the node that comes before `prev`.
+                    if let Some(before_prev) = (*prev).front {
+                        (*before_prev.as_ptr()).back = self.current;
+                    } else {
+                        // We just removed the first node in the list.
+                        self.list.front = self.current;
+                    }
+
+                    (*self.current.unwrap().as_ptr()).front = (*prev).front;
+
+                    *self.index.as_mut().unwrap() -= 1;
+
+                    prev
+                } else {
+                    // Either `current` points to the ghost node, or `current`
+                    // points to the first node in our list. In either case, we
+                    // should remove the last node from the list.
+                    let old_back = self.list.back.take().unwrap();
+
+                    let new_back = (*old_back.as_ptr()).front;
+
+                    self.list.back = new_back;
+
+                    if let Some(back) = new_back {
+                        (*back.as_ptr()).back = None;
+                    }
+
+                    old_back.as_ptr()
+                };
+
+                self.list.len -= 1;
+
+                let boxed_node = Box::from_raw(node);
+                let elem = boxed_node.elem;
+
+                Some(elem)
+            }
+        } else {
+            // Our list is empty. Nothing to remove.
+
+            None
+        }
+    }
+
     pub fn split_before(&mut self) -> LinkedList<T> {
         if let Some(current) = self.current {
             // Bifurcate our list.
@@ -369,6 +482,154 @@ mod test {
         );
 
         assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &Vec::<u32>::new());
+    }
+
+    #[test]
+    fn remove_empty() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+
+        {
+            let mut cursor = ll.cursor_mut();
+
+            assert_eq!(cursor.remove_next(), None);
+            assert_eq!(cursor.remove_prev(), None);
+        }
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &Vec::<u32>::new());
+    }
+
+    #[test]
+    fn remove_next_cursor_at_front() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        {
+            let mut cursor = ll.cursor_mut();
+
+            assert_eq!(cursor.remove_next(), Some(1));
+        }
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &[2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn remove_prev_cursor_at_front() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        {
+            let mut cursor = ll.cursor_mut();
+
+            assert_eq!(cursor.remove_prev(), Some(6));
+        }
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &[1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn remove_next_cursor_at_end() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+
+        assert_eq!(cursor.remove_next(), Some(1));
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &[2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn remove_prev_cursor_at_end() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+
+        assert_eq!(cursor.remove_prev(), Some(5));
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &[1, 2, 3, 4, 6]);
+    }
+
+    #[test]
+    fn remove_next_at_middle() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        assert_eq!(cursor.remove_next(), Some(2));
+
+        cursor.move_next();
+        assert_eq!(cursor.remove_next(), Some(4));
+
+        cursor.move_next();
+        assert_eq!(cursor.remove_next(), Some(6));
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &[1, 3, 5]);
+    }
+
+    #[test]
+    fn remove_prev_at_middle() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        assert_eq!(cursor.remove_prev(), Some(6));
+
+        cursor.move_next();
+        assert_eq!(cursor.remove_prev(), Some(1));
+
+        cursor.move_next();
+        assert_eq!(cursor.remove_prev(), Some(2));
+
+        check_links(&ll);
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &[3, 4, 5]);
+    }
+
+    #[test]
+    fn drain() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        for i in 0..ll.len() {
+            {
+                let mut cursor = ll.cursor_mut();
+
+                assert_eq!(cursor.remove_next(), Some((i + 1) as u32));
+            }
+
+            check_links(&ll);
+        }
     }
 
     #[test]
