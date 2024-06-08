@@ -105,6 +105,21 @@ impl<T> LinkedList<T> {
         unsafe { self.back.map(|node| &mut (*node.as_ptr()).elem) }
     }
 
+    pub fn retain<F>(&mut self, mut filter: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        let mut cursor = self.cursor_mut();
+
+        while let Some(next) = cursor.peek_next() {
+            if filter(next) {
+                cursor.move_next();
+            } else {
+                cursor.remove_next();
+            }
+        }
+    }
+
     pub fn push_front(&mut self, elem: T) {
         unsafe {
             // Box::new() could panic, but it would occur here before we
@@ -613,6 +628,36 @@ mod test {
 
         assert_eq!(n.pop_front(), Some(0));
         assert_eq!(n.pop_front(), Some(1));
+    }
+
+    #[test]
+    fn test_retain() {
+        // Keep all.
+
+        let mut ll = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        ll.retain(|_elem| true);
+
+        assert_eq!(ll.into_iter().collect::<Vec<_>>(), &[1, 2, 3, 4, 5, 6]);
+
+        // Drop all.
+
+        let mut ll = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        ll.retain(|_elem| false);
+
+        assert_eq!(ll.into_iter().collect::<Vec<_>>(), Vec::<u32>::new());
+
+        // Keep evens.
+
+        let mut ll = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        ll.retain(|elem| *elem % 2 == 0);
+
+        assert_eq!(ll.into_iter().collect::<Vec<_>>(), &[2, 4, 6]);
     }
 
     #[test]
