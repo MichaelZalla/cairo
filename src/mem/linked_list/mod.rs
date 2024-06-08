@@ -80,7 +80,19 @@ impl<T> LinkedList<T> {
     }
 
     pub fn front(&self) -> Option<&T> {
-        unsafe { self.front.map(|front| &(*front.as_ptr()).elem) }
+        unsafe { self.front.map(|node| &(*node.as_ptr()).elem) }
+    }
+
+    pub fn front_mut(&self) -> Option<&mut T> {
+        unsafe { self.front.map(|node| &mut (*node.as_ptr()).elem) }
+    }
+
+    pub fn back(&self) -> Option<&T> {
+        unsafe { self.back.map(|node| &(*node.as_ptr()).elem) }
+    }
+
+    pub fn back_mut(&self) -> Option<&mut T> {
+        unsafe { self.back.map(|node| &mut (*node.as_ptr()).elem) }
     }
 
     pub fn push_front(&mut self, elem: T) {
@@ -116,6 +128,39 @@ impl<T> LinkedList<T> {
         }
     }
 
+    pub fn push_back(&mut self, elem: T) {
+        unsafe {
+            // Box::new() could panic, but it would occur here before we
+            // (temporarily) violate our list's invariants.
+            let new_node = NonNull::new_unchecked(Box::into_raw(Box::new(Node {
+                elem,
+                front: None,
+                back: None,
+            })));
+
+            if let Some(old_back) = self.back {
+                // List is not empty.
+
+                (*old_back.as_ptr()).back = Some(new_node);
+
+                (*new_node.as_ptr()).front = Some(old_back);
+            } else {
+                // List is empty.
+
+                // Asserts could panic here, where our invariants don't all hold!
+                // debug_assert!(self.front.is_none());
+                // debug_assert!(self.back.is_none());
+                // debug_assert!(self.len == 0);
+
+                self.front = Some(new_node);
+            }
+
+            self.back = Some(new_node);
+
+            self.len += 1;
+        }
+    }
+
     pub fn pop_front(&mut self) -> Option<T> {
         unsafe {
             self.front.map(|old_front| {
@@ -138,6 +183,37 @@ impl<T> LinkedList<T> {
                     // debug_assert!(self.len == 1);
 
                     self.back = None;
+                }
+
+                self.len -= 1;
+
+                result
+            })
+        }
+    }
+
+    pub fn pop_back(&mut self) -> Option<T> {
+        unsafe {
+            self.back.map(|old_back| {
+                // List is not empty.
+
+                let boxed_node = Box::from_raw(old_back.as_ptr());
+
+                let result = boxed_node.elem;
+
+                self.back = boxed_node.front;
+
+                if let Some(back) = self.back {
+                    // Update new front's front-pointer.
+
+                    (*back.as_ptr()).back = None;
+                } else {
+                    // List has no nodes remaining.
+
+                    // Asserts could panic here, where our invariants don't all hold!
+                    // debug_assert!(self.len == 1);
+
+                    self.front = None;
                 }
 
                 self.len -= 1;
