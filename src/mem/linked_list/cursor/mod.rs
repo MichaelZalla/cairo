@@ -19,9 +19,29 @@ impl<'a, T> CursorMut<'a, T> {
         self.index
     }
 
-    pub fn current(&mut self) -> Option<&mut T> {
+    pub fn current(&mut self) -> Option<&'a mut T> {
         self.current
-            .map(|node| unsafe { &mut (*node.as_ptr()).elem })
+            .map(|mut node| unsafe { &mut node.as_mut().elem })
+    }
+
+    pub fn peek_next(&mut self) -> Option<&mut T> {
+        unsafe {
+            match self.current {
+                Some(node) => (*node.as_ptr()).back.map(|node| &mut (*node.as_ptr()).elem),
+                None => self.list.front.map(|node| &mut (*node.as_ptr()).elem),
+            }
+        }
+    }
+
+    pub fn peek_prev(&mut self) -> Option<&mut T> {
+        unsafe {
+            match self.current {
+                Some(node) => (*node.as_ptr())
+                    .front
+                    .map(|node| &mut (*node.as_ptr()).elem),
+                None => self.list.back.map(|node| &mut (*node.as_ptr()).elem),
+            }
+        }
     }
 
     pub fn move_next(&mut self) {
@@ -101,30 +121,42 @@ mod test {
 
         cursor.move_next();
         assert_eq!(cursor.current(), Some(&mut 1));
+        assert_eq!(cursor.peek_next(), Some(&mut 2));
+        assert_eq!(cursor.peek_prev(), None);
         assert_eq!(cursor.index(), Some(0));
 
         cursor.move_prev();
         assert_eq!(cursor.current(), None);
+        assert_eq!(cursor.peek_next(), Some(&mut 1));
+        assert_eq!(cursor.peek_prev(), Some(&mut 6));
         assert_eq!(cursor.index(), None);
 
         cursor.move_next();
         cursor.move_next();
         assert_eq!(cursor.current(), Some(&mut 2));
+        assert_eq!(cursor.peek_next(), Some(&mut 3));
+        assert_eq!(cursor.peek_prev(), Some(&mut 1));
         assert_eq!(cursor.index(), Some(1));
 
         let mut cursor = ll.cursor_mut();
 
         cursor.move_prev();
         assert_eq!(cursor.current(), Some(&mut 6));
+        assert_eq!(cursor.peek_next(), None);
+        assert_eq!(cursor.peek_prev(), Some(&mut 5));
         assert_eq!(cursor.index(), Some(5));
 
         cursor.move_next();
         assert_eq!(cursor.current(), None);
+        assert_eq!(cursor.peek_next(), Some(&mut 1));
+        assert_eq!(cursor.peek_prev(), Some(&mut 6));
         assert_eq!(cursor.index(), None);
 
         cursor.move_prev();
         cursor.move_prev();
         assert_eq!(cursor.current(), Some(&mut 5));
+        assert_eq!(cursor.peek_next(), Some(&mut 6));
+        assert_eq!(cursor.peek_prev(), Some(&mut 4));
         assert_eq!(cursor.index(), Some(4));
     }
 }
