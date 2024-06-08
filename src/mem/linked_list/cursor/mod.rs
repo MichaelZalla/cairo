@@ -197,6 +197,98 @@ impl<'a, T> CursorMut<'a, T> {
             mem::replace(self.list, LinkedList::new())
         }
     }
+
+    pub fn splice_before(&mut self, mut input: LinkedList<T>) {
+        unsafe {
+            if input.is_empty() {
+                // 1. Nothing to add, so our list is unchanged.
+            } else if let Some(current) = self.current {
+                // 2. Insert all nodes from `input` before `current`.
+                let input_front = input.front.take().unwrap();
+                let input_back = input.back.take().unwrap();
+
+                if let Some(prev) = (*current.as_ptr()).front {
+                    // We're appending somewhere in the middle of our list.
+
+                    (*prev.as_ptr()).back = Some(input_front);
+                    (*input_front.as_ptr()).front = Some(prev);
+                    (*input_back.as_ptr()).back = Some(current);
+                    (*current.as_ptr()).front = Some(input_back);
+                } else {
+                    // We're appending to the front of our list.
+
+                    self.list.front = Some(input_front);
+
+                    (*current.as_ptr()).front = Some(input_back);
+                    (*input_back.as_ptr()).back = Some(current);
+                }
+
+                *self.index.as_mut().unwrap() += input.len;
+            } else if let Some(back) = self.list.back {
+                // 3. Insert all nodes from `input` at the end of our list (append).
+                let input_front = input.front.take().unwrap();
+                let input_back = input.back.take().unwrap();
+
+                (*input_front.as_ptr()).front = Some(back);
+                (*back.as_ptr()).back = Some(input_front);
+
+                self.list.back = Some(input_back);
+            } else {
+                // 4. Our list is empty, so replace our list with `input`.
+                std::mem::swap(self.list, &mut input);
+            }
+
+            self.list.len += input.len;
+
+            input.len = 0;
+        }
+    }
+
+    pub fn splice_after(&mut self, mut input: LinkedList<T>) {
+        unsafe {
+            if input.is_empty() {
+                // 1. Nothing to add, so our list is unchanged.
+            } else if let Some(current) = self.current {
+                // 2. Insert all nodes from `input` after `current`.
+                let input_front = input.front.take().unwrap();
+                let input_back = input.back.take().unwrap();
+
+                if let Some(next) = (*current.as_ptr()).back {
+                    // We're appending somewhere in the middle of our list.
+
+                    (*current.as_ptr()).back = Some(input_front);
+                    (*input_front.as_ptr()).front = Some(current);
+                    (*next.as_ptr()).front = Some(input_back);
+                    (*input_back.as_ptr()).back = Some(next);
+                } else {
+                    // We're appending to the back of our list.
+
+                    self.list.back = Some(input_back);
+
+                    (*current.as_ptr()).back = Some(input_front);
+                    (*input_front.as_ptr()).front = Some(current);
+                }
+
+                // No change to cursor index.
+            } else if let Some(front) = self.list.front {
+                // 3. Insert all nodes from `input` at the beginning of our list (prepend).
+                let input_front = input.front.take().unwrap();
+                let input_back = input.back.take().unwrap();
+
+                (*input_front.as_ptr()).back = Some(front);
+                (*front.as_ptr()).front = Some(input_back);
+
+                self.list.front = Some(input_front);
+            } else {
+                // 4. Our list is empty, so replace our list with `input`.
+                std::mem::swap(self.list, &mut input);
+            }
+
+            self.list.len += input.len;
+
+            input.len = 0;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -303,6 +395,104 @@ mod test {
         assert_eq!(
             ll.iter().cloned().collect::<Vec<_>>(),
             &[200, 201, 202, 203, 1, 100, 101]
+        );
+    }
+
+    #[test]
+    fn splice_before() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+
+        cursor.splice_before(Some(7).into_iter().collect());
+
+        check_links(&ll);
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[7, 1, 2, 3, 4, 5, 6]
+        );
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        cursor.move_prev();
+
+        cursor.splice_before(Some(9).into_iter().collect());
+
+        check_links(&ll);
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[7, 1, 2, 3, 4, 5, 6, 9]
+        );
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+
+        let mut input: LinkedList<u32> = LinkedList::new();
+        input.extend([100, 101, 102, 103]);
+
+        cursor.splice_before(input);
+
+        check_links(&ll);
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[100, 101, 102, 103, 7, 1, 2, 3, 4, 5, 6, 9]
+        );
+    }
+
+    #[test]
+    fn splice_after() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+        ll.extend([1, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+
+        cursor.splice_after(Some(8).into_iter().collect());
+
+        check_links(&ll);
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[1, 8, 2, 3, 4, 5, 6]
+        );
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        cursor.move_prev();
+
+        cursor.splice_after(Some(10).into_iter().collect());
+
+        check_links(&ll);
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[10, 1, 8, 2, 3, 4, 5, 6]
+        );
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+
+        let mut input: LinkedList<u32> = LinkedList::new();
+        input.extend([100, 101, 102, 103]);
+
+        cursor.splice_after(input);
+
+        check_links(&ll);
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[10, 100, 101, 102, 103, 1, 8, 2, 3, 4, 5, 6]
         );
     }
 
