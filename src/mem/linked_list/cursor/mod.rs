@@ -1,3 +1,5 @@
+use std::{marker::PhantomData, mem};
+
 use super::{Link, LinkedList};
 
 pub struct CursorMut<'a, T> {
@@ -105,6 +107,96 @@ impl<'a, T> CursorMut<'a, T> {
             // Do nothing.
         }
     }
+
+    pub fn split_before(&mut self) -> LinkedList<T> {
+        if let Some(current) = self.current {
+            // Bifurcate our list.
+
+            unsafe {
+                let original_front = self.list.front;
+                let original_back = self.list.back;
+                let original_len = self.list.len;
+
+                let prev = (*current.as_ptr()).front;
+
+                let after_front = Some(current);
+                let after_back = original_back;
+                let after_len = original_len - self.index.unwrap();
+
+                let before_front = original_front;
+                let before_back = prev;
+                let before_len = original_len - after_len;
+
+                // panic!();
+
+                if let Some(prev) = prev {
+                    (*prev.as_ptr()).back = None;
+                    (*current.as_ptr()).front = None;
+                }
+
+                self.list.front = after_front;
+                self.list.back = after_back;
+                self.list.len = after_len;
+
+                self.index = Some(0);
+
+                LinkedList {
+                    front: before_front,
+                    back: before_back,
+                    len: before_len,
+                    _boo: PhantomData,
+                }
+            }
+        } else {
+            // Our cursor is pointing at `self.list`'s ghost node.
+            // Our result should consume the entire entire existing list.
+
+            mem::replace(self.list, LinkedList::new())
+        }
+    }
+
+    pub fn split_after(&mut self) -> LinkedList<T> {
+        if let Some(current) = self.current {
+            // Bifurcate our list.
+
+            unsafe {
+                let original_front = self.list.front;
+                let original_back = self.list.back;
+                let original_len = self.list.len;
+
+                let next = (*current.as_ptr()).back;
+
+                let before_front = original_front;
+                let before_back = Some(current);
+                let before_len = self.index.unwrap() + 1;
+
+                let after_front = next;
+                let after_back = original_back;
+                let after_len = original_len - before_len;
+
+                if let Some(next) = next {
+                    (*next.as_ptr()).front = None;
+                    (*current.as_ptr()).back = None;
+                }
+
+                self.list.front = before_front;
+                self.list.back = before_back;
+                self.list.len = before_len;
+
+                LinkedList {
+                    front: after_front,
+                    back: after_back,
+                    len: after_len,
+                    _boo: PhantomData,
+                }
+            }
+        } else {
+            // Our cursor is pointing at `self.list`'s ghost node.
+            // Our result should consume the entire entire existing list.
+
+            mem::replace(self.list, LinkedList::new())
+        }
+    }
 }
 
 #[cfg(test)]
@@ -158,5 +250,55 @@ mod test {
         assert_eq!(cursor.peek_next(), Some(&mut 6));
         assert_eq!(cursor.peek_prev(), Some(&mut 4));
         assert_eq!(cursor.index(), Some(4));
+    }
+
+    #[test]
+    fn split_before() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+
+        ll.extend([200, 201, 202, 203, 1, 100, 101, 102, 103, 8, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        cursor.move_prev();
+
+        let before = cursor.split_before();
+
+        assert_eq!(
+            &before.into_iter().collect::<Vec<_>>(),
+            &[200, 201, 202, 203, 1, 100, 101, 102, 103, 8, 2, 3, 4, 5, 6]
+        );
+
+        assert_eq!(&ll.into_iter().collect::<Vec<_>>(), &Vec::<u32>::new());
+    }
+
+    #[test]
+    fn split_after() {
+        let mut ll: LinkedList<u32> = LinkedList::new();
+
+        ll.extend([200, 201, 202, 203, 1, 100, 101, 102, 103, 8, 2, 3, 4, 5, 6]);
+
+        let mut cursor = ll.cursor_mut();
+
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+        cursor.move_next();
+
+        let after = cursor.split_after();
+
+        assert_eq!(
+            after.into_iter().collect::<Vec<_>>(),
+            &[102, 103, 8, 2, 3, 4, 5, 6]
+        );
+
+        assert_eq!(
+            ll.iter().cloned().collect::<Vec<_>>(),
+            &[200, 201, 202, 203, 1, 100, 101]
+        );
     }
 }
