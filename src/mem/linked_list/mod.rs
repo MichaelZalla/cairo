@@ -453,47 +453,307 @@ impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
 mod test {
     use super::LinkedList;
 
+    fn generate_test() -> LinkedList<i32> {
+        list_from(&[0, 1, 2, 3, 4, 5, 6])
+    }
+
+    fn list_from<T: Clone>(values: &[T]) -> LinkedList<T> {
+        values.iter().map(|value| (*value).clone()).collect()
+    }
+
     #[test]
     fn basics_front() {
-        let mut list = LinkedList::new();
+        let mut a = LinkedList::new();
 
-        assert_eq!(list.len(), 0);
-        assert_eq!(list.pop_front(), None);
-        assert_eq!(list.len(), 0);
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.pop_front(), None);
+        assert_eq!(a.len(), 0);
 
-        list.push_front(10);
-        assert_eq!(list.len(), 1);
+        a.push_front(10);
+        assert_eq!(a.len(), 1);
 
-        assert_eq!(list.pop_front(), Some(10));
-        assert_eq!(list.len(), 0);
-        assert_eq!(list.pop_front(), None);
-        assert_eq!(list.len(), 0);
+        assert_eq!(a.pop_front(), Some(10));
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.pop_front(), None);
+        assert_eq!(a.len(), 0);
 
-        list.push_front(10);
-        assert_eq!(list.len(), 1);
+        a.push_front(10);
+        assert_eq!(a.len(), 1);
 
-        list.push_front(20);
-        assert_eq!(list.len(), 2);
+        a.push_front(20);
+        assert_eq!(a.len(), 2);
 
-        list.push_front(30);
-        assert_eq!(list.len(), 3);
-        assert_eq!(list.pop_front(), Some(30));
-        assert_eq!(list.len(), 2);
+        a.push_front(30);
+        assert_eq!(a.len(), 3);
+        assert_eq!(a.pop_front(), Some(30));
+        assert_eq!(a.len(), 2);
 
-        list.push_front(40);
-        assert_eq!(list.len(), 3);
+        a.push_front(40);
+        assert_eq!(a.len(), 3);
 
-        assert_eq!(list.pop_front(), Some(40));
-        assert_eq!(list.len(), 2);
+        assert_eq!(a.pop_front(), Some(40));
+        assert_eq!(a.len(), 2);
 
-        assert_eq!(list.pop_front(), Some(20));
-        assert_eq!(list.len(), 1);
+        assert_eq!(a.pop_front(), Some(20));
+        assert_eq!(a.len(), 1);
 
-        assert_eq!(list.pop_front(), Some(10));
-        assert_eq!(list.len(), 0);
-        assert_eq!(list.pop_front(), None);
-        assert_eq!(list.len(), 0);
-        assert_eq!(list.pop_front(), None);
-        assert_eq!(list.len(), 0);
+        assert_eq!(a.pop_front(), Some(10));
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.pop_front(), None);
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.pop_front(), None);
+        assert_eq!(a.len(), 0);
+    }
+
+    #[test]
+    fn test_basic() {
+        let mut a = LinkedList::new();
+
+        assert_eq!(a.pop_front(), None);
+        assert_eq!(a.pop_back(), None);
+        assert_eq!(a.pop_front(), None);
+
+        a.push_front(1);
+        assert_eq!(a.pop_front(), Some(1));
+
+        a.push_back(2);
+        a.push_back(3);
+        assert_eq!(a.len(), 2);
+        assert_eq!(a.pop_front(), Some(2));
+        assert_eq!(a.pop_front(), Some(3));
+        assert_eq!(a.len(), 0);
+        assert_eq!(a.pop_front(), None);
+
+        a.push_back(1);
+        a.push_back(3);
+        a.push_back(5);
+        a.push_back(7);
+        assert_eq!(a.pop_front(), Some(1));
+
+        let mut n = LinkedList::new();
+        n.push_front(2);
+        n.push_front(3);
+
+        {
+            assert_eq!(n.front().unwrap(), &3);
+
+            let x = n.front_mut().unwrap();
+            assert_eq!(*x, 3);
+
+            *x = 0;
+        }
+
+        {
+            assert_eq!(n.back().unwrap(), &2);
+
+            let y = n.back_mut().unwrap();
+            assert_eq!(*y, 2);
+
+            *y = 1;
+        }
+
+        assert_eq!(n.pop_front(), Some(0));
+        assert_eq!(n.pop_front(), Some(1));
+    }
+
+    #[test]
+    fn test_iterator() {
+        let a = generate_test();
+
+        for (i, elem) in a.iter().enumerate() {
+            assert_eq!(i as i32, *elem);
+        }
+
+        let mut b = LinkedList::new();
+        assert_eq!(b.iter().next(), None);
+
+        b.push_front(4);
+
+        let mut it = b.iter();
+        assert_eq!(it.size_hint(), (1, Some(1)));
+        assert_eq!(it.next().unwrap(), &4);
+        assert_eq!(it.size_hint(), (0, Some(0)));
+        assert_eq!(it.next(), None);
+    }
+
+    #[test]
+    fn test_iterator_double_end() {
+        let mut a = LinkedList::new();
+        assert_eq!(a.iter().next(), None);
+
+        a.push_front(4);
+        a.push_front(5);
+        a.push_front(6);
+
+        let mut it = a.iter();
+        assert_eq!(it.size_hint(), (3, Some(3)));
+        assert_eq!(it.next().unwrap(), &6);
+        assert_eq!(it.size_hint(), (2, Some(2)));
+        assert_eq!(it.next_back().unwrap(), &4);
+        assert_eq!(it.size_hint(), (1, Some(1)));
+        assert_eq!(it.next_back().unwrap(), &5);
+        assert_eq!(it.next_back(), None);
+        assert_eq!(it.next(), None);
+    }
+
+    #[test]
+    fn test_rev_iter() {
+        let a = generate_test();
+
+        for (i, elt) in a.iter().rev().enumerate() {
+            assert_eq!(6 - i as i32, *elt);
+        }
+
+        let mut b = LinkedList::new();
+        assert_eq!(b.iter().next_back(), None);
+
+        b.push_front(4);
+
+        let mut it = b.iter().rev();
+        assert_eq!(it.size_hint(), (1, Some(1)));
+        assert_eq!(it.next().unwrap(), &4);
+        assert_eq!(it.size_hint(), (0, Some(0)));
+        assert_eq!(it.next(), None);
+    }
+
+    #[test]
+    fn test_mut_iter() {
+        let a = generate_test();
+        let mut len = a.len();
+
+        for (i, elt) in a.iter_mut().enumerate() {
+            assert_eq!(i as i32, *elt);
+            len -= 1;
+        }
+        assert_eq!(len, 0);
+
+        let mut b = LinkedList::new();
+        assert!(b.iter_mut().next().is_none());
+
+        b.push_front(4);
+        b.push_back(5);
+
+        let mut it = b.iter_mut();
+        assert_eq!(it.size_hint(), (2, Some(2)));
+        assert!(it.next().is_some());
+        assert!(it.next().is_some());
+        assert_eq!(it.size_hint(), (0, Some(0)));
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    fn test_iterator_mut_double_end() {
+        let mut a = LinkedList::new();
+        assert!(a.iter_mut().next_back().is_none());
+
+        a.push_front(4);
+        a.push_front(5);
+        a.push_front(6);
+
+        let mut it = a.iter_mut();
+
+        assert_eq!(it.size_hint(), (3, Some(3)));
+        assert_eq!(*it.next().unwrap(), 6);
+        assert_eq!(it.size_hint(), (2, Some(2)));
+        assert_eq!(*it.next_back().unwrap(), 4);
+        assert_eq!(it.size_hint(), (1, Some(1)));
+        assert_eq!(*it.next_back().unwrap(), 5);
+        assert!(it.next_back().is_none());
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    fn test_eq() {
+        let mut a: LinkedList<u8> = list_from(&[]);
+        let mut b = list_from(&[]);
+
+        assert!(a == b);
+
+        a.push_front(1);
+        assert!(a != b);
+
+        b.push_back(1);
+        assert!(a == b);
+
+        let a = list_from(&[2, 3, 4]);
+        let b = list_from(&[1, 2, 3]);
+        assert!(a != b);
+    }
+
+    #[test]
+    fn test_ord() {
+        let a = list_from(&[]);
+        let b = list_from(&[1, 2, 3]);
+
+        assert!(a < b);
+        assert!(b > a);
+        assert!(a <= a);
+        assert!(a >= a);
+    }
+
+    #[test]
+    #[allow(clippy::neg_cmp_op_on_partial_ord)]
+    fn test_ord_nan() {
+        let nan = f64::NAN;
+        let a = list_from(&[nan]);
+        let b = list_from(&[nan]);
+
+        assert!(!(a < b));
+        assert!(!(a > b));
+        assert!(!(a <= b));
+        assert!(!(a >= b));
+
+        let a = list_from(&[nan]);
+        let one = list_from(&[1.0f64]);
+        assert!(!(a < one));
+        assert!(!(a > one));
+        assert!(!(a <= one));
+        assert!(!(a >= one));
+
+        let a = list_from(&[1.0f64, 2.0, nan]);
+        let b = list_from(&[1.0f64, 2.0, 3.0]);
+        assert!(!(a < b));
+        assert!(!(a > b));
+        assert!(!(a <= b));
+        assert!(!(a >= b));
+
+        let a = list_from(&[1.0f64, 2.0, 4.0, 2.0]);
+        let b = list_from(&[1.0f64, 2.0, 3.0, 2.0]);
+        assert!(!(a < b));
+        assert!(a > one);
+        assert!(!(a <= one));
+        assert!(a >= one);
+    }
+
+    #[test]
+    fn test_debug() {
+        let a: LinkedList<i32> = (0..10).collect();
+        assert_eq!(format!("{:?}", a), "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
+
+        let a: LinkedList<&str> = ["just", "one", "test", "more"].iter().copied().collect();
+        assert_eq!(format!("{:?}", a), r#"["just", "one", "test", "more"]"#);
+    }
+
+    #[test]
+    fn test_hashmap() {
+        // Check that HashMap works with this as a key
+
+        let a: LinkedList<i32> = (0..10).collect();
+        let b: LinkedList<i32> = (1..11).collect();
+
+        let mut map = std::collections::HashMap::new();
+
+        assert_eq!(map.insert(a.clone(), "list1"), None);
+        assert_eq!(map.insert(b.clone(), "list2"), None);
+
+        assert_eq!(map.len(), 2);
+
+        assert_eq!(map.get(&a), Some(&"list1"));
+        assert_eq!(map.get(&b), Some(&"list2"));
+
+        assert_eq!(map.remove(&a), Some("list1"));
+        assert_eq!(map.remove(&b), Some("list2"));
+
+        assert!(map.is_empty());
     }
 }
