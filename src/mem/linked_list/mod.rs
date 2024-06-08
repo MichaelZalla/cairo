@@ -14,6 +14,13 @@ pub struct Iter<'a, T> {
     _boo: PhantomData<&'a T>,
 }
 
+pub struct IterMut<'a, T> {
+    front: Link<T>,
+    back: Link<T>,
+    len: usize,
+    _boo: PhantomData<&'a mut T>,
+}
+
 pub struct IntoIter<T> {
     list: LinkedList<T>,
 }
@@ -51,6 +58,15 @@ impl<T> LinkedList<T> {
 
     pub fn iter(&self) -> Iter<T> {
         Iter {
+            front: self.front,
+            back: self.back,
+            len: self.len,
+            _boo: PhantomData,
+        }
+    }
+
+    pub fn iter_mut(&self) -> IterMut<T> {
+        IterMut {
             front: self.front,
             back: self.back,
             len: self.len,
@@ -229,6 +245,52 @@ impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
 }
 
 impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
+// Traits for IterMut<'a, T>.
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.front.map(|node| unsafe {
+                self.len -= 1;
+
+                self.front = (*node.as_ptr()).back;
+
+                &mut (*node.as_ptr()).elem
+            })
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len, Some(self.len))
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.back.map(|node| unsafe {
+                self.len -= 1;
+
+                self.back = (*node.as_ptr()).front;
+
+                &mut (*node.as_ptr()).elem
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
     fn len(&self) -> usize {
         self.len
     }
