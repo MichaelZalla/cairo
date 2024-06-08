@@ -1,5 +1,9 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData, ptr::NonNull};
 
+use cursor::CursorMut;
+
+pub mod cursor;
+
 pub struct LinkedList<T> {
     front: Link<T>,
     back: Link<T>,
@@ -25,9 +29,9 @@ pub struct IntoIter<T> {
     list: LinkedList<T>,
 }
 
-type Link<T> = Option<NonNull<Node<T>>>;
+pub(in crate::mem::linked_list) type Link<T> = Option<NonNull<Node<T>>>;
 
-struct Node<T> {
+pub(in crate::mem::linked_list) struct Node<T> {
     elem: T,
     front: Link<T>,
     back: Link<T>,
@@ -77,6 +81,12 @@ impl<T> LinkedList<T> {
     #[allow(clippy::should_implement_trait)]
     pub fn into_iter(self) -> IntoIter<T> {
         IntoIter { list: self }
+    }
+
+    pub fn cursor_mut(&mut self) -> CursorMut<T> {
+        // When index is None, cursor points to the list's 'ghost' node.
+
+        CursorMut::new(self)
     }
 
     pub fn front(&self) -> Option<&T> {
