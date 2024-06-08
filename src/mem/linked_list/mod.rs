@@ -458,6 +458,13 @@ impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
     }
 }
 
+/// ```compile_fail
+/// use cairo::mem::linked_list::IterMut;
+///
+/// fn iter_mut_covariant<'i, 'a, T>(x: IterMut<'i, &'static T>) -> IterMut<'i, &'a T> { x }
+/// ```
+fn iter_mut_invariant() {}
+
 #[cfg(test)]
 mod test {
     use super::{IntoIter, Iter, IterMut, LinkedList};
@@ -486,6 +493,21 @@ mod test {
 
         is_send::<IterMut<i32>>();
         is_sync::<IterMut<i32>>();
+    }
+
+    #[test]
+    fn assert_covariance() {
+        fn linked_list_covariant<'a, T>(x: LinkedList<&'static T>) -> LinkedList<&'a T> {
+            x
+        }
+
+        fn iter_covariant<'i, 'a, T>(x: Iter<'i, &'static T>) -> Iter<'i, &'a T> {
+            x
+        }
+
+        fn into_iter_covariant<'a, T>(x: IntoIter<&'static T>) -> IntoIter<&'a T> {
+            x
+        }
     }
 
     #[test]
