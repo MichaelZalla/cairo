@@ -240,6 +240,12 @@ impl<T> Default for LinkedList<T> {
     }
 }
 
+impl<T: Debug> Debug for LinkedList<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list().entries(self).finish()
+    }
+}
+
 impl<T: Clone> Clone for LinkedList<T> {
     fn clone(&self) -> Self {
         let mut new_list = Self::new();
@@ -267,12 +273,6 @@ impl<T> FromIterator<T> for LinkedList<T> {
         list.extend(iter);
 
         list
-    }
-}
-
-impl<T: Debug> Debug for LinkedList<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_list().entries(self).finish()
     }
 }
 
