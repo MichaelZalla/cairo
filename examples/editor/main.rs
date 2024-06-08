@@ -147,7 +147,7 @@ fn main() -> Result<(), String> {
             main_window_panel_tree,
         );
 
-        list.push(main_window);
+        list.push_back(main_window);
 
         for i in 0..15 {
             let floating_window_id = format!("floating_window_{}", i);
@@ -167,7 +167,7 @@ fn main() -> Result<(), String> {
                 floating_window_panel_tree,
             );
 
-            list.push(floating_window);
+            list.push_back(floating_window);
         }
 
         list
@@ -320,58 +320,63 @@ fn main() -> Result<(), String> {
 }
 
 fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution: &Resolution) {
-    let window_count = window_list.len();
+    let mut focused_window = None;
 
-    let mut focused_window_index = None;
+    {
+        let mut cursor = window_list.cursor_mut();
 
-    for (rev_index, window) in window_list.iter_mut().rev().enumerate() {
-        let mut did_focus = false;
+        while let Some(window) = cursor.peek_prev() {
+            let mut did_focus = false;
 
-        // Check if we should capture the current mouse event for this
-        // window, exclusively.
+            // Check if we should capture the current mouse event for this
+            // window, exclusively.
 
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            let mouse = &ctx.input_events.borrow().mouse;
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                let mouse = &ctx.input_events.borrow().mouse;
 
-            if focused_window_index.is_none()
-                && window.active
-                && window
-                    .extent
-                    .contains(mouse.position.0 as u32, mouse.position.1 as u32)
-            {
-                if let Some(event) = mouse.button_event {
-                    if matches!(
-                        (event.button, event.kind),
-                        (MouseButton::Left, MouseEventKind::Down)
-                    ) {
-                        did_focus = true;
-
-                        focused_window_index.replace(window_count - 1 - rev_index);
+                if focused_window.is_none()
+                    && window.active
+                    && window
+                        .extent
+                        .contains(mouse.position.0 as u32, mouse.position.1 as u32)
+                {
+                    if let Some(event) = mouse.button_event {
+                        if matches!(
+                            (event.button, event.kind),
+                            (MouseButton::Left, MouseEventKind::Down)
+                        ) {
+                            did_focus = true;
+                        }
                     }
                 }
+            });
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                // Rebuild the UI tree based on the latest user inputs.
+                window.render_ui_trees(ctx, resolution).unwrap();
+            });
+
+            if did_focus && cursor.index() != Some(1) {
+                // Take the focused window out of the window list (temporarily).
+                focused_window.replace(cursor.remove_prev().unwrap());
+
+                GLOBAL_UI_CONTEXT.with(|ctx| {
+                    // Steal the mouse event used to focus the window.
+                    let mut input_events = ctx.input_events.borrow_mut();
+
+                    input_events.mouse.button_event.take();
+                });
             }
-        });
 
-        // Rebuild the UI tree based on the latest user inputs.
-
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            window.render_ui_trees(ctx, resolution).unwrap();
-
-            if did_focus {
-                let mut input_events = ctx.input_events.borrow_mut();
-
-                input_events.mouse.button_event.take();
-            }
-        });
-    }
-
-    if let Some(index) = focused_window_index {
-        if index != 0 {
-            let last_index = window_list.len() - 1;
-
-            window_list.swap(index, last_index);
+            // Advance the window cursor.
+            cursor.move_prev();
         }
     }
 
-    window_list.retain(|w| w.active);
+    if let Some(window) = focused_window {
+        // Re-insert the focused window at the end of the window list.
+        window_list.push_back(window);
+    }
+
+    window_list.retain(|window| window.active);
 }

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     app::resolution::Resolution,
     color::{self, Color},
+    mem::linked_list::LinkedList,
 };
 
 use super::{
@@ -297,4 +298,4 @@ fn render_titlebar(id: &str, tree: &mut UIBoxTree) -> Result<WindowRenderTitleba
     Ok(result)
 }
 
-pub type WindowList<'a, T> = Vec<Window<'a, T>>;
+pub type WindowList<'a, T> = LinkedList<Window<'a, T>>;
