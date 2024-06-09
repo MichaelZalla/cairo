@@ -34,6 +34,7 @@ pub struct AppWindowInfo {
     pub show_cursor: bool,
     pub relative_mouse_mode: bool,
     pub vertical_sync: bool,
+    pub resizable: bool,
 }
 
 impl Default for AppWindowInfo {
@@ -46,6 +47,7 @@ impl Default for AppWindowInfo {
             full_screen: false,
             relative_mouse_mode: false,
             vertical_sync: false,
+            resizable: false,
         }
     }
 }
@@ -61,7 +63,7 @@ impl App {
     pub fn new<'a>(
         window_info: &mut AppWindowInfo,
         rod: &'a impl Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
-    ) -> (Self, EventWatch<'a, impl Fn(Event) + 'a>) {
+    ) -> (Self, Option<EventWatch<'a, impl Fn(Event) + 'a>>) {
         let context = make_application_context(window_info).unwrap();
 
         let timing_info: TimingInfo = Default::default();
@@ -82,52 +84,59 @@ impl App {
 
         let event_subsystem = context.sdl_context.event().unwrap();
 
+        let resizable = window_info.resizable;
         let window_info_rc = Rc::new(RefCell::new(window_info));
         let window_info_rc_clone = window_info_rc.clone();
 
         let window_canvas_rc = Rc::new(RefCell::new(window_canvas));
         let window_canvas_rc_clone = window_canvas_rc.clone();
 
-        let event_watch = event_subsystem.add_event_watch(move |event| {
-            if let Event::Window {
-                timestamp: _timestamp,
-                window_id: _window_id,
-                win_event,
-            } = event
-            {
-                match win_event {
-                    WindowEvent::Resized(width, height)
-                    | WindowEvent::SizeChanged(width, height) => {
-                        let mut canvas_window = (*canvas_window_rc).borrow_mut();
-                        let mut window_info = (*window_info_rc_clone).borrow_mut();
-                        let mut window_canvas = (*window_canvas_rc_clone).borrow_mut();
+        let event_watch = if resizable {
+            let watch = event_subsystem.add_event_watch(move |event| {
+                if let Event::Window {
+                    timestamp: _timestamp,
+                    window_id: _window_id,
+                    win_event,
+                } = event
+                {
+                    match win_event {
+                        WindowEvent::Resized(width, height)
+                        | WindowEvent::SizeChanged(width, height) => {
+                            let mut canvas_window = (*canvas_window_rc).borrow_mut();
+                            let mut window_info = (*window_info_rc_clone).borrow_mut();
+                            let mut window_canvas = (*window_canvas_rc_clone).borrow_mut();
 
-                        let new_resolution = Resolution {
-                            width: width as u32,
-                            height: height as u32,
-                        };
+                            let new_resolution = Resolution {
+                                width: width as u32,
+                                height: height as u32,
+                            };
 
-                        handle_window_resize_event(
-                            &mut canvas_window,
-                            &mut window_info,
-                            &mut window_canvas,
-                            new_resolution,
-                        )
-                        .unwrap();
+                            handle_window_resize_event(
+                                &mut canvas_window,
+                                &mut window_info,
+                                &mut window_canvas,
+                                new_resolution,
+                            )
+                            .unwrap();
 
-                        render_and_present(
-                            &mut canvas_window,
-                            &mut window_canvas,
-                            None,
-                            Some(new_resolution),
-                            rod,
-                        )
-                        .unwrap();
-                    }
-                    _ => (),
+                            render_and_present(
+                                &mut canvas_window,
+                                &mut window_canvas,
+                                None,
+                                Some(new_resolution),
+                                rod,
+                            )
+                            .unwrap();
+                        }
+                        _ => (),
+                    };
                 };
-            }
-        });
+            });
+
+            Some(watch)
+        } else {
+            None
+        };
 
         let app = App {
             window_info: window_info_rc,

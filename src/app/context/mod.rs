@@ -116,10 +116,11 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
         window_info.window_resolution.height,
     );
 
-    // window_builder.opengl();
     window_builder.position_centered();
-    window_builder.resizable();
-    // window_builder.borderless();
+
+    if window_info.resizable {
+        window_builder.resizable();
+    }
 
     if window_info.full_screen {
         // Will override `canvas_resolution.width` and `canvas_resolution.height` for the current

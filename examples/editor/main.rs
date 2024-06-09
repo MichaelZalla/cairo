@@ -36,12 +36,13 @@ pub mod editor;
 fn main() -> Result<(), String> {
     let title = format!("Cairo Engine (build {})", env!("GIT_COMMIT_SHORT_HASH")).to_string();
 
-    // Initial window info.
+    // Main window info.
 
     let mut window_info = AppWindowInfo {
         title,
         window_resolution: RESOLUTION_1920_BY_1080,
         canvas_resolution: RESOLUTION_1920_BY_1080,
+        resizable: true,
         ..Default::default()
     };
 
