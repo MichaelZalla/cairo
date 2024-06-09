@@ -16,11 +16,15 @@ use crate::{
         keyboard::KeyboardState,
         mouse::{MouseDragEvent, MouseEvent, MouseEventKind, MouseState, MouseWheelEvent},
     },
+    stats::CycleCounter,
     {debug_print, time::TimingInfo},
 };
 
 use context::{make_application_context, make_window_canvas, ApplicationContext};
+use profile::AppCycleCounter;
 use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
+
+mod profile;
 
 pub mod context;
 pub mod resolution;
@@ -57,6 +61,8 @@ pub struct App {
     pub context: ApplicationContext,
     pub window_canvas: Rc<RefCell<Texture>>,
     pub timing_info: TimingInfo,
+    #[cfg(feature = "debug_cycle_counts")]
+    pub cycle_counters: [CycleCounter; AppCycleCounter::Count as usize],
 }
 
 impl App {
@@ -123,6 +129,7 @@ impl App {
                                 &mut canvas_window,
                                 &mut window_canvas,
                                 None,
+                                None,
                                 Some(new_resolution),
                                 rod,
                             )
@@ -143,9 +150,40 @@ impl App {
             context,
             window_canvas: window_canvas_rc,
             timing_info,
+            #[cfg(feature = "debug_cycle_counts")]
+            cycle_counters: [Default::default(); AppCycleCounter::Count as usize],
         };
 
         (app, event_watch)
+    }
+
+    #[cfg(feature = "debug_cycle_counts")]
+    fn reset_cycle_counters(&mut self) {
+        for counter in &mut self.cycle_counters {
+            counter.total_cycles = 0;
+            counter.hits = 0;
+        }
+    }
+
+    #[cfg(feature = "debug_cycle_counts")]
+    fn report_cycle_counters(&self) {
+        println!("Frame {}:", self.timing_info.current_frame_index);
+
+        for (index, counter) in self.cycle_counters.iter().enumerate() {
+            println!(
+                "\t{}{}{}",
+                AppCycleCounter::from(index),
+                match index {
+                    0 => "\t\t\t",
+                    1 | 2 => "\t\t",
+                    3 => "\t",
+                    _ => panic!(),
+                },
+                counter
+            );
+        }
+
+        println!();
     }
 
     pub fn run<U, R>(mut self, update: &mut U, render: &R) -> Result<(), String>
@@ -182,6 +220,13 @@ impl App {
         // Main event loop
 
         'main: loop {
+            #[cfg(feature = "debug_cycle_counts")]
+            {
+                self.reset_cycle_counters();
+
+                self.cycle_counters[AppCycleCounter::Run as usize].start();
+            }
+
             // Main loop
 
             let now = timer_subsystem.performance_counter();
@@ -475,12 +520,18 @@ impl App {
 
             self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
 
+            #[cfg(feature = "debug_cycle_counts")]
+            self.cycle_counters[AppCycleCounter::UpdateCallback as usize].start();
+
             update(
                 &mut self,
                 &mut keyboard_state,
                 &mut mouse_state,
                 &mut game_controller.state,
             )?;
+
+            #[cfg(feature = "debug_cycle_counts")]
+            self.cycle_counters[AppCycleCounter::UpdateCallback as usize].end();
 
             prev_mouse_position = mouse_state.position;
             prev_mouse_ndc_position = mouse_state.ndc_position;
@@ -494,11 +545,18 @@ impl App {
 
                 let mut window_canvas = self.window_canvas.borrow_mut();
 
+                #[cfg(feature = "debug_cycle_counts")]
+                let cycle_counters = Some(&mut self.cycle_counters);
+
+                #[cfg(not(feature = "debug_cycle_counts"))]
+                let cycle_counters = None;
+
                 let current_frame_index = self.timing_info.current_frame_index;
 
                 render_and_present(
                     &mut canvas_window,
                     &mut window_canvas,
+                    cycle_counters,
                     Some(current_frame_index),
                     None,
                     render,
@@ -549,6 +607,13 @@ impl App {
             frames_rendered += 1;
 
             self.timing_info.current_frame_index = frames_rendered;
+
+            #[cfg(feature = "debug_cycle_counts")]
+            {
+                self.cycle_counters[AppCycleCounter::Run as usize].end();
+
+                self.report_cycle_counters();
+            }
         }
 
         Ok(())
@@ -619,11 +684,21 @@ pub fn handle_window_resize_event(
 fn render_and_present(
     canvas_window: &mut Canvas<Window>,
     window_canvas: &mut Texture,
+    mut cycle_counters: Option<&mut [CycleCounter; AppCycleCounter::Count as usize]>,
     current_frame_index: Option<u32>,
     new_resolution: Option<Resolution>,
     render: &impl Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
 ) -> Result<(), String> {
+    if let Some(counters) = cycle_counters.as_mut() {
+        counters[AppCycleCounter::RenderAndPresent as usize].start();
+        counters[AppCycleCounter::RenderCallback as usize].start();
+    }
+
     let render_result = render(current_frame_index, new_resolution);
+
+    if let Some(counters) = cycle_counters.as_mut() {
+        counters[AppCycleCounter::RenderCallback as usize].end();
+    }
 
     window_canvas
         .with_lock(None, |write_only_byte_array, _pitch| {
@@ -658,6 +733,11 @@ fn render_and_present(
     canvas_window.copy(window_canvas, None, None)?;
 
     canvas_window.present();
+
+    #[cfg(feature = "debug_cycle_counts")]
+    if let Some(counters) = cycle_counters.as_mut() {
+        counters[AppCycleCounter::RenderAndPresent as usize].end();
+    }
 
     Ok(())
 }

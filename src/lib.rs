@@ -32,6 +32,7 @@ pub mod serde;
 pub mod shader;
 pub mod shaders;
 pub mod software_renderer;
+pub mod stats;
 pub mod texture;
 pub mod time;
 pub mod transform;
