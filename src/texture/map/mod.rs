@@ -210,7 +210,15 @@ impl TextureMap {
 
         let mut canvas = rendering_context.canvas.borrow_mut();
 
-        sdl2::image::init(InitFlag::JPG).unwrap();
+        match sdl2::image::init(InitFlag::JPG) {
+            Ok(_) => {
+                println!(
+                    "Initialized SDL_TTF v{}.",
+                    sdl2::image::get_linked_version()
+                );
+            }
+            Err(_) => panic!("Failed to initialize SDL_Image library from DLL."),
+        }
 
         let texture_creator = canvas.texture_creator();
 

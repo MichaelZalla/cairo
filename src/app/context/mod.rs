@@ -33,17 +33,24 @@ pub struct ApplicationRenderingContext {
 pub fn make_application_context(window_info: &AppWindowInfo) -> Result<ApplicationContext, String> {
     let sdl_context = sdl2::init()?;
 
+    println!("Initialized SDL v{}.", sdl2::version::version());
+
     sdl_context.mouse().show_cursor(window_info.show_cursor);
 
     let ttf_context: &'static Sdl2TtfContext = match sdl2::ttf::init() {
         Ok(context) => {
-            debug_print!("Initialized TTF font subsystem.\n");
+            println!("Initialized SDL2_ttf v{}.", sdl2::ttf::get_linked_version());
 
             let boxed = Box::new(context);
 
             Box::leak(boxed)
         }
-        Err(e) => return Err(format!("Error initializing TTF font subsystem: '{}'", e)),
+        Err(e) => {
+            return Err(format!(
+                "Failed to initialize SDL2_ttf library from DLL: {}",
+                e
+            ))
+        }
     };
 
     let game_controller_subsystem = sdl_context.game_controller()?;
