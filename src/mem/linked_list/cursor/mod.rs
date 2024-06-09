@@ -492,7 +492,9 @@ mod test {
             let mut cursor = ll.cursor_mut();
 
             assert_eq!(cursor.remove_next(), None);
+            assert_eq!(cursor.index(), None);
             assert_eq!(cursor.remove_prev(), None);
+            assert_eq!(cursor.index(), None);
         }
 
         check_links(&ll);
@@ -509,6 +511,7 @@ mod test {
             let mut cursor = ll.cursor_mut();
 
             assert_eq!(cursor.remove_next(), Some(1));
+            assert_eq!(cursor.index(), None);
         }
 
         check_links(&ll);
@@ -525,6 +528,7 @@ mod test {
             let mut cursor = ll.cursor_mut();
 
             assert_eq!(cursor.remove_prev(), Some(6));
+            assert_eq!(cursor.index(), None);
         }
 
         check_links(&ll);
@@ -546,7 +550,9 @@ mod test {
         cursor.move_next();
         cursor.move_next();
 
+        assert_eq!(cursor.index(), Some(5));
         assert_eq!(cursor.remove_next(), Some(1));
+        assert_eq!(cursor.index(), Some(5));
 
         check_links(&ll);
 
@@ -567,7 +573,9 @@ mod test {
         cursor.move_next();
         cursor.move_next();
 
+        assert_eq!(cursor.index(), Some(5));
         assert_eq!(cursor.remove_prev(), Some(5));
+        assert_eq!(cursor.index(), Some(4));
 
         check_links(&ll);
 
@@ -583,12 +591,15 @@ mod test {
 
         cursor.move_next();
         assert_eq!(cursor.remove_next(), Some(2));
+        assert_eq!(cursor.index(), Some(0));
 
         cursor.move_next();
         assert_eq!(cursor.remove_next(), Some(4));
+        assert_eq!(cursor.index(), Some(1));
 
         cursor.move_next();
         assert_eq!(cursor.remove_next(), Some(6));
+        assert_eq!(cursor.index(), Some(2));
 
         check_links(&ll);
 
@@ -604,12 +615,15 @@ mod test {
 
         cursor.move_next();
         assert_eq!(cursor.remove_prev(), Some(6));
+        assert_eq!(cursor.index(), Some(0));
 
         cursor.move_next();
         assert_eq!(cursor.remove_prev(), Some(1));
+        assert_eq!(cursor.index(), Some(0));
 
         cursor.move_next();
         assert_eq!(cursor.remove_prev(), Some(2));
+        assert_eq!(cursor.index(), Some(0));
 
         check_links(&ll);
 
@@ -626,6 +640,7 @@ mod test {
                 let mut cursor = ll.cursor_mut();
 
                 assert_eq!(cursor.remove_next(), Some((i + 1) as u32));
+                assert_eq!(cursor.index(), None);
             }
 
             check_links(&ll);
@@ -648,7 +663,11 @@ mod test {
         cursor.move_next();
         cursor.move_next();
 
+        assert_eq!(cursor.index(), Some(6));
+
         let after = cursor.split_after();
+
+        assert_eq!(cursor.index(), Some(6));
 
         check_links(&ll);
 
@@ -672,7 +691,11 @@ mod test {
 
         cursor.move_next();
 
+        assert_eq!(cursor.index(), Some(0));
+
         cursor.splice_before(Some(7).into_iter().collect());
+
+        assert_eq!(cursor.index(), Some(1));
 
         check_links(&ll);
 
@@ -686,7 +709,11 @@ mod test {
         cursor.move_next();
         cursor.move_prev();
 
+        assert_eq!(cursor.index(), None);
+
         cursor.splice_before(Some(9).into_iter().collect());
+
+        assert_eq!(cursor.index(), None);
 
         check_links(&ll);
 
@@ -702,7 +729,11 @@ mod test {
         let mut input: LinkedList<u32> = LinkedList::new();
         input.extend([100, 101, 102, 103]);
 
+        assert_eq!(cursor.index(), Some(0));
+
         cursor.splice_before(input);
+
+        assert_eq!(cursor.index(), Some(4));
 
         check_links(&ll);
 
@@ -721,7 +752,11 @@ mod test {
 
         cursor.move_next();
 
+        assert_eq!(cursor.index(), Some(0));
+
         cursor.splice_after(Some(8).into_iter().collect());
+
+        assert_eq!(cursor.index(), Some(0));
 
         check_links(&ll);
 
@@ -735,7 +770,11 @@ mod test {
         cursor.move_next();
         cursor.move_prev();
 
+        assert_eq!(cursor.index(), None);
+
         cursor.splice_after(Some(10).into_iter().collect());
+
+        assert_eq!(cursor.index(), None);
 
         check_links(&ll);
 
@@ -751,7 +790,11 @@ mod test {
         let mut input: LinkedList<u32> = LinkedList::new();
         input.extend([100, 101, 102, 103]);
 
+        assert_eq!(cursor.index(), Some(0));
+
         cursor.splice_after(input);
+
+        assert_eq!(cursor.index(), Some(0));
 
         check_links(&ll);
 
