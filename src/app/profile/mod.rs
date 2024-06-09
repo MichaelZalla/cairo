@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::stats::FromIndex;
+
 pub enum AppCycleCounter {
     Run,
     UpdateCallback,
@@ -14,18 +16,18 @@ impl fmt::Display for AppCycleCounter {
             f,
             "{}",
             match self {
-                AppCycleCounter::Run => "Run",
-                AppCycleCounter::UpdateCallback => "UpdateCallback",
-                AppCycleCounter::RenderCallback => "RenderCallback",
-                AppCycleCounter::RenderAndPresent => "RenderAndPresent",
+                Self::Run => "Run",
+                Self::UpdateCallback => "UpdateCallback",
+                Self::RenderCallback => "RenderCallback",
+                Self::RenderAndPresent => "RenderAndPresent",
                 _ => panic!(),
             }
         )
     }
 }
 
-impl AppCycleCounter {
-    pub fn from(index: usize) -> Self {
+impl FromIndex for AppCycleCounter {
+    fn from_index(index: usize) -> Self {
         match index {
             0 => Self::Run,
             1 => Self::UpdateCallback,
