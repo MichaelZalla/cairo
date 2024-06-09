@@ -685,6 +685,10 @@ fn render_and_present(
         counters
             .get_mut(AppCycleCounter::RenderCallback as usize)
             .end();
+
+        counters
+            .get_mut(AppCycleCounter::CopyAndPresent as usize)
+            .start();
     }
 
     window_canvas
@@ -722,6 +726,10 @@ fn render_and_present(
     canvas_window.present();
 
     if let Some(counters) = cycle_counters.as_mut() {
+        counters
+            .get_mut(AppCycleCounter::CopyAndPresent as usize)
+            .end();
+
         counters
             .get_mut(AppCycleCounter::RenderAndPresent as usize)
             .end();

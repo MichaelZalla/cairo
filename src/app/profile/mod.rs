@@ -7,6 +7,7 @@ pub enum AppCycleCounter {
     UpdateCallback,
     RenderCallback,
     RenderAndPresent,
+    CopyAndPresent,
     Count,
 }
 
@@ -20,6 +21,7 @@ impl fmt::Display for AppCycleCounter {
                 Self::UpdateCallback => "UpdateCallback",
                 Self::RenderCallback => "RenderCallback",
                 Self::RenderAndPresent => "RenderAndPresent",
+                Self::CopyAndPresent => "CopyAndPresent",
                 _ => panic!(),
             }
         )
@@ -33,6 +35,7 @@ impl FromIndex for AppCycleCounter {
             1 => Self::UpdateCallback,
             2 => Self::RenderCallback,
             3 => Self::RenderAndPresent,
+            4 => Self::CopyAndPresent,
             _ => panic!(),
         }
     }
