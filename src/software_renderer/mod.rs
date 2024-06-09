@@ -286,7 +286,7 @@ impl SoftwareRenderer {
 
                 match framebuffer.validate() {
                     Ok(()) => {
-                        self.framebuffer = framebuffer_option.clone();
+                        self.framebuffer.clone_from(&framebuffer_option);
 
                         self.viewport.width = framebuffer.width;
                         self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;

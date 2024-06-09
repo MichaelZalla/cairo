@@ -24,7 +24,7 @@ pub struct Triangle<T> {
 impl SoftwareRenderer {
     pub(in crate::software_renderer) fn process_triangles(
         &mut self,
-        faces: &Vec<Face>,
+        faces: &[Face],
         projection_space_vertices: Vec<DefaultVertexOut>,
         // shader_context: &ShaderContext,
         // scene_resources: &SceneResources,

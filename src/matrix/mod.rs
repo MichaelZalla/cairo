@@ -169,11 +169,11 @@ impl Mat4 {
         Self::scale([1.0; 4])
     }
 
-    pub fn scale(scale: [f32; 4]) -> Self {
+    pub fn scale(scales: [f32; 4]) -> Self {
         let mut result = Mat4::new();
 
-        for i in 0..4 {
-            result.elements[i][i] = scale[i];
+        for (i, scale) in scales.iter().enumerate() {
+            result.elements[i][i] = *scale;
         }
 
         result

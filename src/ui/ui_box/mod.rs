@@ -451,7 +451,7 @@ impl UIBox {
 
     pub fn render_postorder(
         &self,
-        children: &Vec<Rc<RefCell<Node<UIBox>>>>,
+        children: &[Rc<RefCell<Node<UIBox>>>],
         target: &mut Buffer2D,
     ) -> Result<(), String> {
         if self.features.contains(UIBoxFeatureFlag::DrawChildDividers) && !children.is_empty() {

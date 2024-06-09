@@ -20,7 +20,7 @@ pub struct Tree<'a, T> {
 
 impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Display for Tree<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.visit_root_dfs(
+        let visit_result = self.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
                 let indent = 2 * (depth + 1);
@@ -29,7 +29,9 @@ impl<'a, T: Default + Clone + Display + Serialize + Deserialize<'a>> fmt::Displa
 
                 Ok(())
             },
-        ) {
+        );
+
+        match visit_result {
             Ok(()) => fmt::Result::Ok(()),
             Err(_s) => fmt::Result::Err(std::fmt::Error {}),
         }

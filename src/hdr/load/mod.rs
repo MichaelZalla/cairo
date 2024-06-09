@@ -57,7 +57,7 @@ pub fn load_hdr(filepath: &Path) -> Result<Hdr, io::Error> {
                             let value_trimmed = value.trim().to_string();
 
                             if key_trimmed == "FORMAT" {
-                                format = value_trimmed.clone();
+                                format.clone_from(&value_trimmed);
                             }
 
                             headers.insert(key_trimmed, value_trimmed);

@@ -219,9 +219,11 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
             partial_mesh.material_name.to_owned(),
         );
 
-        mesh.object_name = partial_mesh.object_name.to_owned();
+        partial_mesh.object_name.clone_into(&mut mesh.object_name);
+
         mesh.object_source = Some(partial_mesh.object_source.to_owned());
-        mesh.group_name = partial_mesh.group_name.to_owned();
+
+        partial_mesh.group_name.clone_into(&mut mesh.group_name);
 
         meshes.push(mesh);
     }

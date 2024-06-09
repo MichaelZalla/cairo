@@ -25,7 +25,7 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
     let mut current_material_name: Option<String> = None;
 
-    for (_, line) in lines.enumerate() {
+    for line in lines {
         match line {
             Err(why) => println!("Error reading next line: {}", why),
             Ok(line) => {

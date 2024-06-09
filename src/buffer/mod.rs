@@ -163,7 +163,7 @@ where
         self
     }
 
-    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &Vec<T>) {
+    pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &[T]) {
         self.blit_blended(left, top, width, height, data, None, None)
     }
 
@@ -173,7 +173,7 @@ where
         top: u32,
         width: u32,
         height: u32,
-        data: &Vec<T>,
+        data: &[T],
         blend_mode: Option<BlendMode>,
         blend_mode_max_value: Option<T>,
     ) {

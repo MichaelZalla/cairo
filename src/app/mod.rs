@@ -208,7 +208,9 @@ impl App {
                 let unwrapped = controller.unwrap();
 
                 game_controller.id = unwrapped.id;
-                game_controller.name = unwrapped.name.clone();
+
+                game_controller.name.clone_from(&unwrapped.name);
+
                 game_controller.state = prev_game_controller_state;
             }
 
@@ -372,9 +374,13 @@ impl App {
             let next_mouse_buttons_down: HashSet<MouseButton> =
                 current_mouse_state.pressed_mouse_buttons().collect();
 
-            mouse_state.prev_buttons_down = prev_mouse_buttons_down.clone();
+            mouse_state
+                .prev_buttons_down
+                .clone_from(&prev_mouse_buttons_down);
 
-            mouse_state.buttons_down = next_mouse_buttons_down.clone();
+            mouse_state
+                .buttons_down
+                .clone_from(&next_mouse_buttons_down);
 
             // Get the difference between the old and new signals
 
