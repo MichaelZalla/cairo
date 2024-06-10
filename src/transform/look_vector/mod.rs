@@ -199,6 +199,10 @@ impl LookVector {
             self.set_position(self.position + self.get_forward() * camera_movement_step);
         } else if game_controller_state.buttons.dpad_down {
             self.set_position(self.position - self.get_forward() * camera_movement_step);
+        } else if game_controller_state.buttons.dpad_left {
+            self.set_position(self.position - self.get_right() * camera_movement_step);
+        } else if game_controller_state.buttons.dpad_right {
+            self.set_position(self.position + self.get_right() * camera_movement_step);
         }
 
         let left_joystick_position_normalized = Vec2 {
