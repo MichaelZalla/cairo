@@ -1,5 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
+#[cfg(feature = "debug_cycle_counts")]
+use profile::SoftwareRendererCycleCounter;
+
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
@@ -29,6 +32,7 @@ use crate::{
         default_alpha_shader::DEFAULT_ALPHA_SHADER,
         default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
     },
+    stats::CycleCounters,
     texture::cubemap::CubeMap,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
@@ -40,10 +44,13 @@ use super::{mesh::Mesh, vec::vec3::Vec3};
 mod gbuffer;
 mod pass;
 mod primitive;
+mod profile;
+
 pub mod zbuffer;
 
 pub struct SoftwareRenderer {
     pub options: RenderOptions,
+    pub cycle_counters: CycleCounters,
     pub shader_options: RenderShaderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
@@ -59,6 +66,15 @@ pub struct SoftwareRenderer {
 
 impl Renderer for SoftwareRenderer {
     fn begin_frame(&mut self) {
+        #[cfg(feature = "debug_cycle_counts")]
+        {
+            self.cycle_counters.reset();
+
+            self.cycle_counters
+                .get_mut(SoftwareRendererCycleCounter::BeginAndEndFrame as usize)
+                .start();
+        }
+
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
@@ -129,6 +145,15 @@ impl Renderer for SoftwareRenderer {
                     }
                 }
             }
+        }
+
+        #[cfg(feature = "debug_cycle_counts")]
+        {
+            self.cycle_counters
+                .get_mut(SoftwareRendererCycleCounter::BeginAndEndFrame as usize)
+                .end();
+
+            self.cycle_counters.report::<SoftwareRendererCycleCounter>();
         }
     }
 
@@ -251,6 +276,8 @@ impl SoftwareRenderer {
         let viewport: RenderViewport = Default::default();
 
         SoftwareRenderer {
+            options,
+            cycle_counters: Default::default(),
             framebuffer,
             viewport,
             g_buffer: None,
@@ -262,7 +289,6 @@ impl SoftwareRenderer {
             geometry_shader,
             shader_options,
             fragment_shader,
-            options,
         }
     }
 
