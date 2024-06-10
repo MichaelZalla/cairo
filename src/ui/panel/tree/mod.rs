@@ -68,7 +68,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, _parent_data, panel_tree_node| {
+            &mut |_depth, _sibling_index, _parent_data, panel_tree_node| {
                 let panel = &panel_tree_node.data;
 
                 let is_leaf_panel = panel_tree_node.children.is_empty();

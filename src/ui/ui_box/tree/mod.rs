@@ -133,7 +133,7 @@ impl<'a> UIBoxTree<'a> {
             self.tree
                 .visit_root_dfs_mut(
                     &NodeLocalTraversalMethod::PostOrder,
-                    &mut |_depth, _parent_data, node| {
+                    &mut |_depth, _sibling_index, _parent_data, node| {
                         let ui_box: &mut UIBox = &mut node.data;
 
                         if !ui_box.features.contains(UIBoxFeatureFlag::Clickable) {
@@ -161,7 +161,7 @@ impl<'a> UIBoxTree<'a> {
             self.tree
                 .visit_root_dfs_mut(
                     &NodeLocalTraversalMethod::PreOrder,
-                    &mut |_depth, _parent, node| {
+                    &mut |_depth, _sibling_index, _parent, node| {
                         let ui_box = &mut node.data;
 
                         if !ui_box.features.contains(UIBoxFeatureFlag::Clickable) {
@@ -197,7 +197,7 @@ impl<'a> UIBoxTree<'a> {
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |depth, parent_data, node| {
+            &mut |depth, _sibling_index, parent_data, node| {
                 let ui_box: &mut UIBox = &mut node.data;
 
                 let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
@@ -280,7 +280,7 @@ impl<'a> UIBoxTree<'a> {
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, parent_data, node| {
+            &mut |_depth, _sibling_index, parent_data, node| {
                 let ui_box: &mut UIBox = &mut node.data;
 
                 let parent_layout_direction = if let Some(parent) = parent_data {
@@ -350,7 +350,7 @@ impl<'a> UIBoxTree<'a> {
 
         debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
 
-        self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, parent_data, node| {
+        self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, _sibling_index, parent_data, node| {
             let ui_box: &mut UIBox = &mut node.data;
 
             let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
@@ -443,7 +443,7 @@ impl<'a> UIBoxTree<'a> {
 
         debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
 
-        self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, parent_data, node| {
+        self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, _sibling_index, parent_data, node| {
             let ui_box: &mut UIBox = &mut node.data;
 
             if node.children.is_empty() {
@@ -524,7 +524,7 @@ impl<'a> UIBoxTree<'a> {
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |depth, parent_data, node| {
+            &mut |depth, _sibling_index, parent_data, node| {
                 let ui_box: &mut UIBox = &mut node.data;
 
                 if node.children.is_empty() {
@@ -735,7 +735,7 @@ impl<'a> UIBoxTree<'a> {
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, parent_data, node| {
+            &mut |_depth, _sibling_index, parent_data, node| {
                 let ui_box: &mut UIBox = &mut node.data;
 
                 let mut global_bounds = ScreenExtent {

@@ -67,24 +67,26 @@ where
         &mut self,
         method: &NodeLocalTraversalMethod,
         current_depth: usize,
+        sibling_index: usize,
         parent_data: Option<&T>,
         visit_action: &mut C,
         cleanup_action: &mut D,
     ) -> Result<(), String>
     where
-        C: FnMut(usize, Option<&T>, &mut Self) -> Result<(), String>,
+        C: FnMut(usize, usize, Option<&T>, &mut Self) -> Result<(), String>,
         D: FnMut(),
     {
         match method {
             NodeLocalTraversalMethod::PreOrder => {
-                visit_action(current_depth, parent_data, self)?;
+                visit_action(current_depth, sibling_index, parent_data, self)?;
 
-                for child_rc in &mut self.children {
+                for (sibling_index, child_rc) in &mut self.children.iter_mut().enumerate() {
                     let mut child = (*child_rc).borrow_mut();
 
                     child.visit_dfs_mut(
                         method,
                         current_depth + 1,
+                        sibling_index,
                         Some(&self.data),
                         visit_action,
                         cleanup_action,
@@ -98,19 +100,20 @@ where
                 Ok(())
             }
             NodeLocalTraversalMethod::PostOrder => {
-                for child_rc in &mut self.children {
+                for (sibling_index, child_rc) in &mut self.children.iter_mut().enumerate() {
                     let mut child = (*child_rc).borrow_mut();
 
                     child.visit_dfs_mut(
                         method,
                         current_depth + 1,
+                        sibling_index,
                         Some(&self.data),
                         visit_action,
                         cleanup_action,
                     )?;
                 }
 
-                visit_action(current_depth, parent_data, self)
+                visit_action(current_depth, sibling_index, parent_data, self)
             }
         }
     }
