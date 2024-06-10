@@ -2,16 +2,12 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     scene::{
-        context::utils::make_cube_scene,
-        light::{PointLight, SpotLight},
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -26,6 +22,10 @@ use cairo::{
         vec4::Vec4,
     },
 };
+
+use scene::make_spinning_cube_scene;
+
+mod scene;
 
 #[allow(clippy::too_many_arguments)]
 fn update_node(
@@ -151,14 +151,6 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    // Render callback
-
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
-
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
-
     // Pipeline framebuffer
 
     let mut framebuffer = Framebuffer::new(
@@ -172,61 +164,9 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context =
-        Rc::new(make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap());
-
-    {
-        let resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
-
-        // Add a point light to the scene.
-
-        let mut point_light = PointLight::new();
-
-        point_light.intensities = Vec3::ones() * 0.4;
-
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
-
-        let mut point_light_node = SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        );
-
-        point_light_node.get_transform_mut().set_translation(Vec3 {
-            x: 0.0,
-            y: 5.0,
-            z: 0.0,
-        });
-
-        scene.root.add_child(point_light_node)?;
-
-        // Add a spot light to the scene.
-
-        let spot_light = SpotLight::new();
-
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
-
-        let mut spot_light_node = SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        );
-
-        spot_light_node.get_transform_mut().set_translation(Vec3 {
-            x: 0.0,
-            y: 5.0,
-            z: 0.0,
-        });
-
-        scene.root.add_child(spot_light_node)?;
-    }
+    let scene_context = make_spinning_cube_scene(
+        window_info.canvas_resolution.width as f32 / window_info.canvas_resolution.height as f32,
+    )?;
 
     // Shader context
 
@@ -245,6 +185,14 @@ fn main() -> Result<(), String> {
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let renderer_rc = RefCell::new(renderer);
+
+    // Render callback
+
+    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
+                                       _new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> { Ok(vec![]) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
     // App update and render callbacks
 
