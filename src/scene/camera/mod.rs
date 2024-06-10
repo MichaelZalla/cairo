@@ -1,3 +1,4 @@
+use core::fmt;
 use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,19 @@ pub enum CameraProjectionKind {
     #[default]
     Perspective,
     Orthographic,
+}
+
+impl fmt::Display for CameraProjectionKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "CameraProjectionKind ({})",
+            match self {
+                CameraProjectionKind::Perspective => "Perspective",
+                CameraProjectionKind::Orthographic => "Orthographic",
+            }
+        )
+    }
 }
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
@@ -56,6 +70,26 @@ impl PostDeserialize for Camera {
     fn post_deserialize(&mut self) {
         self.recompute_projections();
         self.recompute_world_space_frustum();
+    }
+}
+
+impl fmt::Display for Camera {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Camera (kind={}, fov={}, aspect_ratio={}, z_near={}, z_far={})",
+            self.kind,
+            match self.field_of_view {
+                Some(fov) => fov.to_string(),
+                None => "n/a".to_string(),
+            },
+            match self.aspect_ratio {
+                Some(ratio) => ratio.to_string(),
+                None => "n/a".to_string(),
+            },
+            self.projection_z_near,
+            self.projection_z_far
+        )
     }
 }
 

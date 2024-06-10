@@ -1,3 +1,5 @@
+use core::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
@@ -6,6 +8,16 @@ pub struct ScreenExtent {
     pub right: u32,
     pub top: u32,
     pub bottom: u32,
+}
+
+impl fmt::Display for ScreenExtent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "({},{}) -> ({},{})",
+            self.left, self.top, self.right, self.bottom
+        )
+    }
 }
 
 impl ScreenExtent {

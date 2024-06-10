@@ -1,3 +1,4 @@
+use core::fmt;
 use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
@@ -29,6 +30,16 @@ pub struct LookVector {
 impl PostDeserialize for LookVector {
     fn post_deserialize(&mut self) {
         self.set_target_position(self.target);
+    }
+}
+
+impl fmt::Display for LookVector {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "LookVector (position={}, forward={})",
+            self.position, self.forward
+        )
     }
 }
 

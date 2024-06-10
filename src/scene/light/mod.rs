@@ -1,3 +1,4 @@
+use core::fmt;
 use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
@@ -84,6 +85,12 @@ impl PostDeserialize for AmbientLight {
     }
 }
 
+impl fmt::Display for AmbientLight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "AmbientLight (intensities={})", self.intensities)
+    }
+}
+
 impl AmbientLight {
     pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
         self.intensities * sample.ambient_factor
@@ -106,6 +113,16 @@ pub struct DirectionalLight {
 impl PostDeserialize for DirectionalLight {
     fn post_deserialize(&mut self) {
         // Nothing to do.
+    }
+}
+
+impl fmt::Display for DirectionalLight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "DirectionalLight (intensities={}, direction={})",
+            self.intensities, self.direction
+        )
     }
 }
 
@@ -253,6 +270,16 @@ impl PostDeserialize for PointLight {
             self.linear_attenuation,
             self.constant_attenuation,
         );
+    }
+}
+
+impl fmt::Display for PointLight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "PointLight (intensities={}, position={})",
+            self.intensities, self.position
+        )
     }
 }
 
@@ -432,6 +459,16 @@ impl PostDeserialize for SpotLight {
             self.linear_attenuation,
             self.constant_attenuation,
         );
+    }
+}
+
+impl fmt::Display for SpotLight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SpotLight (intensities={}, look_vector={})",
+            self.intensities, self.look_vector
+        )
     }
 }
 

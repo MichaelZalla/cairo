@@ -1,7 +1,15 @@
+use core::fmt;
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Resolution {
     pub width: u32,
     pub height: u32,
+}
+
+impl fmt::Display for Resolution {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Resolution ({}x{})", self.width, self.height)
+    }
 }
 
 pub static RESOLUTION_320_BY_180: Resolution = Resolution {
