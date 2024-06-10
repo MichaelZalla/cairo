@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{cell::RefCell, fmt::Display, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -44,7 +44,7 @@ impl<'a> WindowUITrees<'a> {
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
-pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
+pub struct Window<'a> {
     pub id: String,
     pub docked: bool,
     pub dragging: bool,
@@ -56,12 +56,12 @@ pub struct Window<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
     #[serde(skip)]
     pub render_header_callback: Option<UIBoxTreeRenderCallback>,
     #[serde(skip)]
-    pub panel_tree: RefCell<PanelTree<'a, T>>,
+    pub panel_tree: RefCell<PanelTree<'a>>,
     #[serde(skip)]
     pub ui_trees: WindowUITrees<'a>,
 }
 
-impl<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> fmt::Debug for Window<'a, T> {
+impl<'a> fmt::Debug for Window<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Window")
             .field("id", &self.id)
@@ -105,12 +105,12 @@ pub struct WindowRenderTitlebarResult {
     pub should_close: bool,
 }
 
-impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Window<'a, T> {
+impl<'a> Window<'a> {
     pub fn new(
         id: String,
         options: WindowOptions,
         render_header_callback: Option<UIBoxTreeRenderCallback>,
-        panel_tree: PanelTree<'a, T>,
+        panel_tree: PanelTree<'a>,
     ) -> Self {
         Self {
             id,
@@ -366,4 +366,4 @@ fn render_titlebar(
     Ok(result)
 }
 
-pub type WindowList<'a, T> = LinkedList<Window<'a, T>>;
+pub type WindowList<'a> = LinkedList<Window<'a>>;

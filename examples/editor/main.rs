@@ -2,6 +2,8 @@ extern crate sdl2;
 
 use std::{cell::RefCell, env, rc::Rc};
 
+use uuid::Uuid;
+
 use sdl2::mouse::{Cursor, MouseButton};
 
 use cairo::{
@@ -17,21 +19,29 @@ use cairo::{
         mouse::{self, cursor::MouseCursorKind, MouseEventKind, MouseState},
     },
     font::cache::FontCache,
+    resource::handle::Handle,
+    scene::context::SceneContext,
     ui::{
         context::GLOBAL_UI_CONTEXT,
         panel::PanelInstanceData,
         ui_box::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
-            utils::text_box,
             UIBox,
         },
         window::{Window, WindowList, WindowOptions, DEFAULT_WINDOW_FILL_COLOR},
     },
 };
 
-use editor::panel::{build_floating_window_panel_tree, EditorPanelMetadataMap, EditorPanelType};
+use editor::panel::{
+    build_floating_window_panel_tree, EditorPanelRenderCallbacks, PanelInstance,
+    EDITOR_PANEL_ARENAS,
+};
 
 pub mod editor;
+
+thread_local! {
+    pub static EDITOR_SCENE_CONTEXT: SceneContext = Default::default();
+}
 
 fn main() -> Result<(), String> {
     let title = format!("Cairo Engine (build {})", env!("GIT_COMMIT_SHORT_HASH")).to_string();
@@ -56,7 +66,7 @@ fn main() -> Result<(), String> {
 
     let current_frame_index_rc = RefCell::new(0_u32);
 
-    // Panel metadata (with rendering callbacks).
+    // Panel rendering callbacks.
 
     let render_main_window_header: UIBoxTreeRenderCallback =
         Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
@@ -72,103 +82,185 @@ fn main() -> Result<(), String> {
             Ok(())
         });
 
-    let panel_metadata_map = EditorPanelMetadataMap {
-        outline: PanelInstanceData {
-            panel_type: EditorPanelType::Outline,
-            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
-                tree.push(text_box(String::new(), "Outline".to_string()))?;
+    let panel_metadata_map = EditorPanelRenderCallbacks {
+        outline: Rc::new(
+            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                EDITOR_PANEL_ARENAS.with(|arenas| {
+                    let mut outline_arena = arenas.outline.borrow_mut();
+
+                    if let Ok(entry) = outline_arena.get_mut(panel_instance) {
+                        let panel = &mut entry.item;
+
+                        panel.render(tree).unwrap();
+                    }
+                });
 
                 Ok(())
-            })),
-        },
-        viewport3d: PanelInstanceData {
-            panel_type: EditorPanelType::Viewport3D,
-            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
-                tree.push(text_box(String::new(), "Viewport3D".to_string()))?;
+            },
+        ),
+        viewport_3d: Rc::new(
+            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                EDITOR_PANEL_ARENAS.with(|arenas| {
+                    let mut viewport_3d_arena = arenas.viewport_3d.borrow_mut();
+
+                    if let Ok(entry) = viewport_3d_arena.get_mut(panel_instance) {
+                        let panel = &mut entry.item;
+
+                        panel.render(tree).unwrap();
+                    }
+                });
 
                 Ok(())
-            })),
-        },
-        asset_browser: PanelInstanceData {
-            panel_type: EditorPanelType::AssetBrowser,
-            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
-                tree.push(text_box(String::new(), "AssetBrowser".to_string()))?;
+            },
+        ),
+        asset_browser: Rc::new(
+            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                EDITOR_PANEL_ARENAS.with(|arenas| {
+                    let mut asset_browser_arena = arenas.asset_browser.borrow_mut();
+
+                    if let Ok(entry) = asset_browser_arena.get_mut(panel_instance) {
+                        let panel = &mut entry.item;
+
+                        panel.render(tree).unwrap();
+                    }
+                });
 
                 Ok(())
-            })),
-        },
-        console: PanelInstanceData {
-            panel_type: EditorPanelType::Console,
-            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
-                tree.push(text_box(String::new(), "Console".to_string()))?;
+            },
+        ),
+        console: Rc::new(
+            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                EDITOR_PANEL_ARENAS.with(|arenas| {
+                    let mut console_arena = arenas.console.borrow_mut();
+
+                    if let Ok(entry) = console_arena.get_mut(panel_instance) {
+                        let panel = &mut entry.item;
+
+                        panel.render(tree).unwrap();
+                    }
+                });
 
                 Ok(())
-            })),
-        },
-        inspector: PanelInstanceData {
-            panel_type: EditorPanelType::Inspector,
-            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
-                tree.push(text_box(String::new(), "Inspector".to_string()))?;
+            },
+        ),
+        inspector: Rc::new(
+            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                EDITOR_PANEL_ARENAS.with(|arenas| {
+                    let mut inspector_arena = arenas.inspector.borrow_mut();
+
+                    if let Ok(entry) = inspector_arena.get_mut(panel_instance) {
+                        let panel = &mut entry.item;
+
+                        panel.render(tree).unwrap();
+                    }
+                });
 
                 Ok(())
-            })),
-        },
-        file_system: PanelInstanceData {
-            panel_type: EditorPanelType::FileSystem,
-            render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
-                tree.push(text_box(String::new(), "FileSystem".to_string()))?;
+            },
+        ),
+        file_system: Rc::new(
+            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                EDITOR_PANEL_ARENAS.with(|arenas| {
+                    let mut file_system_arena = arenas.file_system.borrow_mut();
+
+                    if let Ok(entry) = file_system_arena.get_mut(panel_instance) {
+                        let panel = &mut entry.item;
+
+                        panel.render(tree).unwrap();
+                    }
+                });
 
                 Ok(())
-            })),
-        },
+            },
+        ),
     };
 
     // Initial main window.
 
     let window_list = {
-        let mut list: WindowList<EditorPanelType> = Default::default();
+        let mut list: WindowList = Default::default();
 
         let main_window_id = "main_window".to_string();
 
-        let main_window_panel_tree =
-            editor::panel::build_main_window_panel_tree(&main_window_id, &panel_metadata_map)
+        EDITOR_SCENE_CONTEXT.with(|sc| {
+            let resource_arenas = sc.resources.borrow();
+
+            EDITOR_PANEL_ARENAS.with(|panel_arenas| {
+                let main_window_panel_tree = editor::panel::build_main_window_panel_tree(
+                    &main_window_id,
+                    &resource_arenas,
+                    panel_arenas,
+                    &panel_metadata_map,
+                )
                 .unwrap();
 
-        let main_window = Window::new(
-            main_window_id,
-            WindowOptions {
-                docked: true,
-                size: (
-                    window_info.window_resolution.width,
-                    window_info.window_resolution.height,
-                ),
-                ..Default::default()
-            },
-            Some(render_main_window_header),
-            main_window_panel_tree,
-        );
+                let main_window = Window::new(
+                    main_window_id,
+                    WindowOptions {
+                        docked: true,
+                        size: (
+                            window_info.window_resolution.width,
+                            window_info.window_resolution.height,
+                        ),
+                        ..Default::default()
+                    },
+                    Some(render_main_window_header),
+                    main_window_panel_tree,
+                );
 
-        list.push_back(main_window);
+                list.push_back(main_window);
+            });
+        });
 
-        for i in 0..15 {
-            let floating_window_id = format!("floating_window_{}", i);
+        for i in 0..2 {
+            EDITOR_PANEL_ARENAS.with(|arenas| {
+                let mut outline_arena = arenas.outline.borrow_mut();
+                let mut console_arena = arenas.console.borrow_mut();
+                let mut inspector_arena = arenas.inspector.borrow_mut();
 
-            let floating_window_panel_tree =
-                build_floating_window_panel_tree(&floating_window_id, &panel_metadata_map.console)?;
+                let (panel_id, panel_instance, render_callback) = if i == 0 {
+                    (
+                        format!("Outline {}", i),
+                        outline_arena.insert(Uuid::new_v4(), Default::default()),
+                        panel_metadata_map.outline.clone(),
+                    )
+                } else if i == 1 {
+                    (
+                        format!("Console {}", i),
+                        console_arena.insert(Uuid::new_v4(), Default::default()),
+                        panel_metadata_map.console.clone(),
+                    )
+                } else {
+                    (
+                        format!("Inspector {}", i),
+                        inspector_arena.insert(Uuid::new_v4(), Default::default()),
+                        panel_metadata_map.inspector.clone(),
+                    )
+                };
 
-            let floating_window = Window::new(
-                floating_window_id,
-                WindowOptions {
-                    docked: false,
-                    with_titlebar: true,
-                    size: (236, 178),
-                    position: (100 + i * 36, 100 + i * 36),
-                },
-                None,
-                floating_window_panel_tree,
-            );
+                let floating_window_panel_tree = build_floating_window_panel_tree(
+                    &panel_id,
+                    PanelInstanceData {
+                        panel_instance,
+                        render: Some(render_callback),
+                    },
+                )
+                .unwrap();
 
-            list.push_back(floating_window);
+                let floating_window = Window::new(
+                    panel_id,
+                    WindowOptions {
+                        docked: false,
+                        with_titlebar: true,
+                        size: (300, 225),
+                        position: (100 + i * 100, 100 + i * 100),
+                    },
+                    None,
+                    floating_window_panel_tree,
+                );
+
+                list.push_back(floating_window);
+            });
         }
 
         list
@@ -320,7 +412,7 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn render_window_list(window_list: &mut WindowList<EditorPanelType>, resolution: &Resolution) {
+fn render_window_list(window_list: &mut WindowList, resolution: &Resolution) {
     let mut focused_window = None;
 
     {

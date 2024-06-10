@@ -1,75 +1,74 @@
 use core::fmt;
-use std::fmt::Display;
+use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::color::{self, Color};
+use crate::{
+    color::{self, Color},
+    resource::handle::Handle,
+};
 
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
     ui_box::{
-        interaction::UIBoxInteraction,
-        tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        utils::text_box,
-        UIBox, UIBoxFeatureFlag, UILayoutDirection,
+        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox, UIBoxFeatureFlag,
+        UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
 
 pub mod tree;
 
+pub type PanelRenderCallback = Rc<dyn Fn(&Handle, &mut UIBoxTree) -> Result<(), String>>;
+
 #[derive(Default, Clone, Serialize, Deserialize)]
-pub struct PanelInstanceData<T> {
-    pub panel_type: T,
+pub struct PanelInstanceData {
+    pub panel_instance: Handle,
     #[serde(skip)]
-    pub render_callback: Option<UIBoxTreeRenderCallback>,
+    pub render: Option<PanelRenderCallback>,
 }
 
-impl<T: fmt::Debug> fmt::Debug for PanelInstanceData<T> {
+impl fmt::Debug for PanelInstanceData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("PanelInstanceData")
-            .field("panel_type", &self.panel_type)
             .field(
-                "render_callback",
-                match self.render_callback {
-                    Some(_) => &"Some(UIBoxTreeRenderCallback>,)",
+                "render",
+                match self.render {
+                    Some(_) => &"Some(PanelRenderCallback)",
                     None => &"None ",
                 },
             )
             .finish()
     }
 }
-
-impl<T: fmt::Debug> fmt::Display for PanelInstanceData<T> {
+impl fmt::Display for PanelInstanceData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct Panel<T> {
+pub struct Panel {
     pub path: String,
     // For this panel.
     pub resizable: bool,
     pub alpha_split: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub instance_data: Option<PanelInstanceData<T>>,
+    pub instance_data: Option<PanelInstanceData>,
     // For child panels.
     pub layout_direction: UILayoutDirection,
 }
 
-impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> fmt::Display
-    for Panel<T>
-{
+impl fmt::Display for Panel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Panel ({})", self.path)
     }
 }
 
-impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Panel<T> {
+impl Panel {
     pub fn new(
         alpha_split: f32,
-        instance_data: Option<PanelInstanceData<T>>,
+        instance_data: Option<PanelInstanceData>,
         layout_direction: UILayoutDirection,
     ) -> Self {
         Self {
@@ -148,11 +147,13 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         panel_interaction_result: &UIBoxInteraction,
     ) -> Result<(), String> {
         match &self.instance_data {
-            Some(data) => match &data.render_callback {
-                Some(render) => render(ui_box_tree),
+            Some(instance_data) => match &instance_data.render {
+                Some(render) => render(&instance_data.panel_instance, ui_box_tree),
                 None => {
-                    let _result = ui_box_tree
-                        .push(text_box(String::new(), format!("{}", data.panel_type)))?;
+                    let _result = ui_box_tree.push(text_box(
+                        String::new(),
+                        format!("Panel {}", &instance_data.panel_instance.uuid),
+                    ))?;
 
                     Ok(())
                 }

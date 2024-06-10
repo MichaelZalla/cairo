@@ -1,68 +1,89 @@
-use core::fmt;
+use std::cell::RefCell;
 
 use serde::{Deserialize, Serialize};
 
-use cairo::ui::{
-    panel::{tree::PanelTree, Panel, PanelInstanceData},
-    ui_box::UILayoutDirection,
+use uuid::Uuid;
+
+use cairo::{
+    buffer::Buffer2D,
+    resource::arena::Arena,
+    scene::{camera::Camera, resources::SceneResources},
+    ui::{
+        extent::ScreenExtent,
+        panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
+        ui_box::{tree::UIBoxTree, UILayoutDirection},
+    },
+    vec::vec3::{self, Vec3},
 };
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub enum EditorPanelType {
-    #[default]
-    Null,
-    Outline,
-    Viewport3D,
-    AssetBrowser,
-    Console,
-    Inspector,
-    FileSystem,
-}
+use asset_browser::AssetBrowserPanel;
+use console::ConsolePanel;
+use file_system::FileSystemPanel;
+use inspector::InspectorPanel;
+use outline::OutlinePanel;
+use viewport_3d::Viewport3DPanel;
 
-impl fmt::Display for EditorPanelType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                EditorPanelType::Null => "EditorPanelType::Null",
-                EditorPanelType::Outline => "EditorPanelType::Outline",
-                EditorPanelType::Viewport3D => "EditorPanelType::Viewport3D",
-                EditorPanelType::AssetBrowser => "EditorPanelType::AssetBrowser",
-                EditorPanelType::Console => "EditorPanelType::Console",
-                EditorPanelType::Inspector => "EditorPanelType::Inspector",
-                EditorPanelType::FileSystem => "EditorPanelType::FileSystem",
-            }
-        )
+pub mod asset_browser;
+pub mod console;
+pub mod file_system;
+pub mod inspector;
+pub mod outline;
+pub mod viewport_3d;
+
+pub trait PanelInstance {
+    fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String>;
+
+    fn custom_render_callback(
+        &mut self,
+        _extent: &ScreenExtent,
+        _target: &mut Buffer2D,
+    ) -> Result<(), String> {
+        Ok(())
     }
 }
 
-pub struct EditorPanelMetadataMap {
-    pub outline: PanelInstanceData<EditorPanelType>,
-    pub viewport3d: PanelInstanceData<EditorPanelType>,
-    pub asset_browser: PanelInstanceData<EditorPanelType>,
-    pub console: PanelInstanceData<EditorPanelType>,
-    pub inspector: PanelInstanceData<EditorPanelType>,
-    pub file_system: PanelInstanceData<EditorPanelType>,
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct EditorPanelArenas {
+    pub outline: RefCell<Arena<OutlinePanel>>,
+    pub viewport_3d: RefCell<Arena<Viewport3DPanel>>,
+    pub asset_browser: RefCell<Arena<AssetBrowserPanel>>,
+    pub console: RefCell<Arena<ConsolePanel>>,
+    pub inspector: RefCell<Arena<InspectorPanel>>,
+    pub file_system: RefCell<Arena<FileSystemPanel>>,
+}
+
+thread_local! {
+    pub static EDITOR_PANEL_ARENAS: EditorPanelArenas = Default::default();
+}
+
+pub struct EditorPanelRenderCallbacks {
+    pub outline: PanelRenderCallback,
+    pub viewport_3d: PanelRenderCallback,
+    pub asset_browser: PanelRenderCallback,
+    pub console: PanelRenderCallback,
+    pub inspector: PanelRenderCallback,
+    pub file_system: PanelRenderCallback,
 }
 
 pub fn build_floating_window_panel_tree<'a>(
     window_id: &String,
-    panel_metadata: &PanelInstanceData<EditorPanelType>,
-) -> Result<PanelTree<'a, EditorPanelType>, String> {
+    panel_instance_data: PanelInstanceData,
+) -> Result<PanelTree<'a>, String> {
     Ok(PanelTree::with_root(Panel {
         path: format!("{}_root", window_id),
         resizable: true,
         alpha_split: 1.0,
-        instance_data: Some(panel_metadata.clone()),
+        instance_data: Some(panel_instance_data),
         layout_direction: UILayoutDirection::TopToBottom,
     }))
 }
 
 pub fn build_main_window_panel_tree<'a>(
     window_id: &String,
-    panel_metadata_map: &EditorPanelMetadataMap,
-) -> Result<PanelTree<'a, EditorPanelType>, String> {
+    resource_arenas: &SceneResources,
+    panel_arenas: &EditorPanelArenas,
+    panel_render_callbacks: &EditorPanelRenderCallbacks,
+) -> Result<PanelTree<'a>, String> {
     let mut tree = PanelTree::with_root(Panel {
         path: format!("{}_root", window_id),
         resizable: true,
@@ -71,6 +92,64 @@ pub fn build_main_window_panel_tree<'a>(
         layout_direction: UILayoutDirection::LeftToRight,
     });
 
+    let mut camera_arena = resource_arenas.camera.borrow_mut();
+
+    let mut cameras = [
+        Camera::from_perspective(
+            Vec3 {
+                x: 4.0,
+                y: 4.0,
+                z: -4.0,
+            },
+            Default::default(),
+            75.0,
+            16.0 / 9.0,
+        ),
+        Camera::from_perspective(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -5.0,
+            },
+            vec3::FORWARD,
+            75.0,
+            16.0 / 9.0,
+        ),
+        Camera::from_perspective(
+            Vec3 {
+                x: 0.0,
+                y: 5.0,
+                z: 0.0,
+            },
+            -vec3::UP
+                + Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0001,
+                },
+            75.0,
+            16.0 / 9.0,
+        ),
+        Camera::from_perspective(
+            Vec3 {
+                x: -5.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            vec3::RIGHT,
+            75.0,
+            16.0 / 9.0,
+        ),
+    ];
+
+    for (index, camera) in cameras.iter_mut().enumerate() {
+        camera.movement_speed = 5.0;
+
+        if index != 0 {
+            camera.set_projection_z_far(25.0);
+        }
+    }
+
     // Root > Left.
 
     tree.push_parent(
@@ -78,13 +157,19 @@ pub fn build_main_window_panel_tree<'a>(
         Panel::new(0.2, None, UILayoutDirection::TopToBottom),
     )?;
 
-    // Root > Left > Top (Scene).
+    // Root > Left > Top (Outline).
 
     tree.push(
         "Top",
         Panel::new(
             0.5,
-            Some(panel_metadata_map.outline.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.outline.clone()),
+                panel_instance: panel_arenas
+                    .outline
+                    .borrow_mut()
+                    .insert(Uuid::new_v4(), Default::default()),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -95,7 +180,13 @@ pub fn build_main_window_panel_tree<'a>(
         "Bottom",
         Panel::new(
             0.5,
-            Some(panel_metadata_map.file_system.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.file_system.clone()),
+                panel_instance: panel_arenas
+                    .file_system
+                    .borrow_mut()
+                    .insert(Uuid::new_v4(), Default::default()),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -123,7 +214,13 @@ pub fn build_main_window_panel_tree<'a>(
         "Left",
         Panel::new(
             0.5,
-            Some(panel_metadata_map.viewport3d.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
+                    Uuid::new_v4(),
+                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[0])),
+                ),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -132,7 +229,13 @@ pub fn build_main_window_panel_tree<'a>(
         "Right",
         Panel::new(
             0.5,
-            Some(panel_metadata_map.viewport3d.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
+                    Uuid::new_v4(),
+                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[1])),
+                ),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -152,7 +255,13 @@ pub fn build_main_window_panel_tree<'a>(
         "Left",
         Panel::new(
             0.5,
-            Some(panel_metadata_map.viewport3d.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
+                    Uuid::new_v4(),
+                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[2])),
+                ),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -161,7 +270,13 @@ pub fn build_main_window_panel_tree<'a>(
         "Right",
         Panel::new(
             0.5,
-            Some(panel_metadata_map.viewport3d.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
+                    Uuid::new_v4(),
+                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[3])),
+                ),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -174,13 +289,19 @@ pub fn build_main_window_panel_tree<'a>(
 
     tree.pop_parent()?;
 
-    // Root > Middle > Bottom.
+    // Root > Middle > Bottom (Console).
 
     tree.push(
         "Bottom",
         Panel::new(
             0.3,
-            Some(panel_metadata_map.console.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.console.clone()),
+                panel_instance: panel_arenas
+                    .console
+                    .borrow_mut()
+                    .insert(Uuid::new_v4(), Default::default()),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;
@@ -195,7 +316,13 @@ pub fn build_main_window_panel_tree<'a>(
         "Right",
         Panel::new(
             0.2,
-            Some(panel_metadata_map.inspector.clone()),
+            Some(PanelInstanceData {
+                render: Some(panel_render_callbacks.inspector.clone()),
+                panel_instance: panel_arenas
+                    .inspector
+                    .borrow_mut()
+                    .insert(Uuid::new_v4(), Default::default()),
+            }),
             UILayoutDirection::TopToBottom,
         ),
     )?;

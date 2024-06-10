@@ -1,4 +1,4 @@
-use core::fmt::{self, Display};
+use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
@@ -12,27 +12,25 @@ use crate::ui::{
 use super::Panel;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct PanelTree<'a, T: Clone + Default + std::fmt::Debug + fmt::Display> {
+pub struct PanelTree<'a> {
     #[serde(flatten)]
-    tree: Tree<'a, Panel<T>>,
+    tree: Tree<'a, Panel>,
 }
 
-impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> fmt::Display
-    for PanelTree<'a, T>
-{
+impl<'a> fmt::Display for PanelTree<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", serde_json::to_string_pretty(&self).unwrap())
     }
 }
 
-impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> PanelTree<'a, T> {
-    pub fn with_root(root_panel: Panel<T>) -> Self {
+impl<'a> PanelTree<'a> {
+    pub fn with_root(root_panel: Panel) -> Self {
         Self {
-            tree: Tree::<'a, Panel<T>>::with_root(root_panel),
+            tree: Tree::<'a, Panel>::with_root(root_panel),
         }
     }
 
-    pub fn push(&mut self, id: &str, mut panel: Panel<T>) -> Result<(), String> {
+    pub fn push(&mut self, id: &str, mut panel: Panel) -> Result<(), String> {
         if let Some(current_node_rc) = self.tree.get_current() {
             let current_node = &current_node_rc.borrow();
             let current_panel = &current_node.data;
@@ -47,7 +45,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         Ok(())
     }
 
-    pub fn push_parent(&mut self, id: &str, panel: Panel<T>) -> Result<(), String> {
+    pub fn push_parent(&mut self, id: &str, panel: Panel) -> Result<(), String> {
         self.push(id, panel)?;
 
         self.tree.push_parent_post();
@@ -62,7 +60,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
     pub fn render(
         &mut self,
         ui_context: &UIContext<'static>,
-        window: &Window<T>,
+        window: &Window,
     ) -> Result<(), String> {
         let base_tree = &window.ui_trees.base;
 
