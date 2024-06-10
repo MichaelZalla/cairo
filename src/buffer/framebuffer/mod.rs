@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     software_renderer::zbuffer::{self, ZBuffer},
@@ -19,7 +19,7 @@ pub enum FramebufferAttachmentKind {
 pub struct FramebufferAttachments {
     pub stencil: Option<RefCell<Buffer2D<u8>>>,
     pub depth: Option<RefCell<ZBuffer>>,
-    pub color: Option<RefCell<Buffer2D>>,
+    pub color: Option<Rc<RefCell<Buffer2D>>>,
     pub forward_ldr: Option<RefCell<Buffer2D>>,
     pub forward_or_deferred_hdr: Option<RefCell<Buffer2D<Vec3>>>,
 }
@@ -62,8 +62,11 @@ impl Framebuffer {
                 )));
             }
             FramebufferAttachmentKind::Color => {
-                self.attachments.color =
-                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+                self.attachments.color = Some(Rc::new(RefCell::new(Buffer2D::new(
+                    self.width,
+                    self.height,
+                    None,
+                ))));
             }
             FramebufferAttachmentKind::ForwardLdr => {
                 self.attachments.forward_ldr =
