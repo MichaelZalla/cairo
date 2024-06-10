@@ -19,20 +19,20 @@ use super::{
 pub mod tree;
 
 #[derive(Default, Clone, Serialize, Deserialize)]
-pub struct PanelMetadata<T> {
+pub struct PanelInstanceData<T> {
     pub panel_type: T,
     #[serde(skip)]
     pub render_callback: Option<UIBoxTreeRenderCallback>,
 }
 
-impl<T: fmt::Debug> fmt::Debug for PanelMetadata<T> {
+impl<T: fmt::Debug> fmt::Debug for PanelInstanceData<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PanelMetadata")
+        f.debug_struct("PanelInstanceData")
             .field("panel_type", &self.panel_type)
             .field(
                 "render_callback",
                 match self.render_callback {
-                    Some(_) => &"Some(Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>)",
+                    Some(_) => &"Some(UIBoxTreeRenderCallback>,)",
                     None => &"None ",
                 },
             )
@@ -40,7 +40,7 @@ impl<T: fmt::Debug> fmt::Debug for PanelMetadata<T> {
     }
 }
 
-impl<T: fmt::Debug> fmt::Display for PanelMetadata<T> {
+impl<T: fmt::Debug> fmt::Display for PanelInstanceData<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }
@@ -53,7 +53,7 @@ pub struct Panel<T> {
     pub resizable: bool,
     pub alpha_split: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub panel_metadata: Option<PanelMetadata<T>>,
+    pub instance_data: Option<PanelInstanceData<T>>,
     // For child panels.
     pub layout_direction: UILayoutDirection,
 }
@@ -69,14 +69,14 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
 impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>> Panel<T> {
     pub fn new(
         alpha_split: f32,
-        panel_metadata: Option<PanelMetadata<T>>,
+        instance_data: Option<PanelInstanceData<T>>,
         layout_direction: UILayoutDirection,
     ) -> Self {
         Self {
             path: "".to_string(),
             resizable: true,
             alpha_split,
-            panel_metadata,
+            instance_data,
             layout_direction,
         }
     }
@@ -147,12 +147,12 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
         ui_box_tree: &mut UIBoxTree,
         panel_interaction_result: &UIBoxInteraction,
     ) -> Result<(), String> {
-        match &self.panel_metadata {
-            Some(metadata) => match &metadata.render_callback {
+        match &self.instance_data {
+            Some(data) => match &data.render_callback {
                 Some(render) => render(ui_box_tree),
                 None => {
                     let _result = ui_box_tree
-                        .push(text_box(String::new(), format!("{}", metadata.panel_type)))?;
+                        .push(text_box(String::new(), format!("{}", data.panel_type)))?;
 
                     Ok(())
                 }

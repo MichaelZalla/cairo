@@ -3,7 +3,7 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 
 use cairo::ui::{
-    panel::{tree::PanelTree, Panel, PanelMetadata},
+    panel::{tree::PanelTree, Panel, PanelInstanceData},
     ui_box::UILayoutDirection,
 };
 
@@ -38,23 +38,23 @@ impl fmt::Display for EditorPanelType {
 }
 
 pub struct EditorPanelMetadataMap {
-    pub outline: PanelMetadata<EditorPanelType>,
-    pub viewport3d: PanelMetadata<EditorPanelType>,
-    pub asset_browser: PanelMetadata<EditorPanelType>,
-    pub console: PanelMetadata<EditorPanelType>,
-    pub inspector: PanelMetadata<EditorPanelType>,
-    pub file_system: PanelMetadata<EditorPanelType>,
+    pub outline: PanelInstanceData<EditorPanelType>,
+    pub viewport3d: PanelInstanceData<EditorPanelType>,
+    pub asset_browser: PanelInstanceData<EditorPanelType>,
+    pub console: PanelInstanceData<EditorPanelType>,
+    pub inspector: PanelInstanceData<EditorPanelType>,
+    pub file_system: PanelInstanceData<EditorPanelType>,
 }
 
 pub fn build_floating_window_panel_tree<'a>(
     window_id: &String,
-    panel_metadata: &PanelMetadata<EditorPanelType>,
+    panel_metadata: &PanelInstanceData<EditorPanelType>,
 ) -> Result<PanelTree<'a, EditorPanelType>, String> {
     Ok(PanelTree::with_root(Panel {
         path: format!("{}_root", window_id),
         resizable: true,
         alpha_split: 1.0,
-        panel_metadata: Some(panel_metadata.clone()),
+        instance_data: Some(panel_metadata.clone()),
         layout_direction: UILayoutDirection::TopToBottom,
     }))
 }
@@ -67,7 +67,7 @@ pub fn build_main_window_panel_tree<'a>(
         path: format!("{}_root", window_id),
         resizable: true,
         alpha_split: 1.0,
-        panel_metadata: None,
+        instance_data: None,
         layout_direction: UILayoutDirection::LeftToRight,
     });
 

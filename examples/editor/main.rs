@@ -19,7 +19,7 @@ use cairo::{
     font::cache::FontCache,
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        panel::PanelMetadata,
+        panel::PanelInstanceData,
         ui_box::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
             utils::text_box,
@@ -73,7 +73,7 @@ fn main() -> Result<(), String> {
         });
 
     let panel_metadata_map = EditorPanelMetadataMap {
-        outline: PanelMetadata {
+        outline: PanelInstanceData {
             panel_type: EditorPanelType::Outline,
             render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
                 tree.push(text_box(String::new(), "Outline".to_string()))?;
@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
                 Ok(())
             })),
         },
-        viewport3d: PanelMetadata {
+        viewport3d: PanelInstanceData {
             panel_type: EditorPanelType::Viewport3D,
             render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
                 tree.push(text_box(String::new(), "Viewport3D".to_string()))?;
@@ -89,7 +89,7 @@ fn main() -> Result<(), String> {
                 Ok(())
             })),
         },
-        asset_browser: PanelMetadata {
+        asset_browser: PanelInstanceData {
             panel_type: EditorPanelType::AssetBrowser,
             render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
                 tree.push(text_box(String::new(), "AssetBrowser".to_string()))?;
@@ -97,7 +97,7 @@ fn main() -> Result<(), String> {
                 Ok(())
             })),
         },
-        console: PanelMetadata {
+        console: PanelInstanceData {
             panel_type: EditorPanelType::Console,
             render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
                 tree.push(text_box(String::new(), "Console".to_string()))?;
@@ -105,7 +105,7 @@ fn main() -> Result<(), String> {
                 Ok(())
             })),
         },
-        inspector: PanelMetadata {
+        inspector: PanelInstanceData {
             panel_type: EditorPanelType::Inspector,
             render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
                 tree.push(text_box(String::new(), "Inspector".to_string()))?;
@@ -113,7 +113,7 @@ fn main() -> Result<(), String> {
                 Ok(())
             })),
         },
-        file_system: PanelMetadata {
+        file_system: PanelInstanceData {
             panel_type: EditorPanelType::FileSystem,
             render_callback: Some(Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
                 tree.push(text_box(String::new(), "FileSystem".to_string()))?;
