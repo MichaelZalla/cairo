@@ -90,7 +90,7 @@ impl<'a, T: Default + Clone + fmt::Debug + Display + Serialize + Deserialize<'a>
 
                 Ok(())
             },
-            &mut || {
+            &mut |_node| {
                 let mut ui_box_tree = base_tree.borrow_mut();
 
                 if let Some(rc) = ui_box_tree.get_current() {

@@ -74,7 +74,7 @@ where
     ) -> Result<(), String>
     where
         C: FnMut(usize, usize, Option<&T>, &mut Self) -> Result<(), String>,
-        D: FnMut(),
+        D: FnMut(&mut Node<'a, T>),
     {
         match method {
             NodeLocalTraversalMethod::PreOrder => {
@@ -94,7 +94,7 @@ where
                 }
 
                 if !&self.children.is_empty() {
-                    cleanup_action();
+                    cleanup_action(self);
                 }
 
                 Ok(())

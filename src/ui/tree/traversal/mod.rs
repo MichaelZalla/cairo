@@ -25,7 +25,7 @@ pub fn visit_dfs_mut_for_root<'a, T, C, D>(
 where
     T: Default + Clone + Serialize + Deserialize<'a>,
     C: FnMut(usize, usize, Option<&T>, &mut Node<'a, T>) -> Result<(), String>,
-    D: FnMut(),
+    D: FnMut(&mut Node<'a, T>),
 {
     root.borrow_mut()
         .visit_dfs_mut(method, 0, 0, None, visit_action, cleanup_action)
@@ -71,7 +71,7 @@ macro_rules! visit_dfs_mut {
                 Option<&$type_param>,
                 &mut Node<'a, $type_param>,
             ) -> Result<(), String>,
-            D: FnMut(),
+            D: FnMut(&mut Node<'a, $type_param>),
         {
             if let Some(root) = &self.$root {
                 $crate::ui::tree::traversal::visit_dfs_mut_for_root::<$type_param, C, D>(

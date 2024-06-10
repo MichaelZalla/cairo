@@ -154,7 +154,7 @@ impl<'a> UIBoxTree<'a> {
 
                         Ok(())
                     },
-                    &mut || {},
+                    &mut |_node| {},
                 )
                 .unwrap();
 
@@ -178,7 +178,7 @@ impl<'a> UIBoxTree<'a> {
 
                         Ok(())
                     },
-                    &mut || {},
+                    &mut |_node| {},
                 )
                 .unwrap();
         });
@@ -271,7 +271,7 @@ impl<'a> UIBoxTree<'a> {
 
                 Ok(())
             },
-            &mut || {}
+            &mut |_node| {}
         )?;
 
         // 2. Calculate sibling-dependent sizes with pre-order traversal.
@@ -343,7 +343,7 @@ impl<'a> UIBoxTree<'a> {
 
                 Ok(())
             },
-            &mut || {},
+            &mut |_node| {},
         )?;
 
         // 3. Calculate upward-dependent sizes with a pre-order traversal.
@@ -437,7 +437,7 @@ impl<'a> UIBoxTree<'a> {
             }
 
             Ok(())
-        }, &mut || {})?;
+        }, &mut |_node| {})?;
 
         // 4. Calculate downward-dependent sizes with a post-order traversal.
 
@@ -516,7 +516,7 @@ impl<'a> UIBoxTree<'a> {
             }
 
             Ok(())
-        }, &mut || {})?;
+        }, &mut |_node| {})?;
 
         // 5. Solve any violations (children extending beyond parent) with a pre-order traversal.
 
@@ -726,7 +726,7 @@ impl<'a> UIBoxTree<'a> {
 
                 Ok(())
             },
-            &mut || {}
+            &mut |_node| {}
         )?;
 
         // 6. Compute the relative positions of each child with a pre-order traversal.
@@ -805,7 +805,7 @@ impl<'a> UIBoxTree<'a> {
 
                 Ok(())
             },
-            &mut || {},
+            &mut |_node| {},
         )?;
 
         // Check our results.
