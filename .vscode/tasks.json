@@ -21,6 +21,25 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "label": "Rust: cargo test --lib",
+      "command": "cargo test --lib"
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "test"
+      },
+      "label": "Rust: cargo +nightly-x86_64-pc-windows-msvc miri test",
+      "command": "cargo +nightly-x86_64-pc-windows-msvc miri test"
+    },
+    {
+      "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
         "kind": "build"
       },
       "label": "Rust: cargo run --example basic-window",
