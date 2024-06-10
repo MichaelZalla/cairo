@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     fmt::{Display, Error},
+    rc::Rc,
 };
 
 use serde::{Deserialize, Serialize};
@@ -22,6 +23,17 @@ use super::{
     },
     resources::SceneResources,
 };
+
+type UpdateSceneGraphNodeCallback = dyn Fn(
+    &Mat4,
+    &mut SceneNode,
+    &SceneResources,
+    &App,
+    &MouseState,
+    &KeyboardState,
+    &GameControllerState,
+    &mut ShaderContext,
+) -> Result<bool, String>;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SceneGraphRenderOptions {
@@ -47,7 +59,7 @@ impl SceneGraph {
         }
     }
 
-    pub fn update<C>(
+    pub fn update(
         &mut self,
         resources: &SceneResources,
         shader_context: &mut ShaderContext,
@@ -55,51 +67,43 @@ impl SceneGraph {
         mouse_state: &MouseState,
         keyboard_state: &KeyboardState,
         game_controller_state: &GameControllerState,
-        update_node: &mut C,
-    ) -> Result<(), String>
-    where
-        C: FnMut(
-            &Mat4,
-            &mut SceneNode,
-            &SceneResources,
-            &App,
-            &MouseState,
-            &KeyboardState,
-            &GameControllerState,
-            &mut ShaderContext,
-        ) -> Result<bool, String>,
-    {
+        mut update_node: Option<Rc<UpdateSceneGraphNodeCallback>>,
+    ) -> Result<(), String> {
         self.root.visit_mut(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),
             &mut |_current_depth: usize, current_world_transform: Mat4, node: &mut SceneNode| {
-                match update_node(
-                    &current_world_transform,
-                    node,
-                    resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    shader_context,
-                ) {
-                    Ok(was_handled) => {
-                        if !was_handled {
-                            return node.update(
-                                &current_world_transform,
-                                resources,
-                                app,
-                                mouse_state,
-                                keyboard_state,
-                                game_controller_state,
-                                shader_context,
-                            );
-                        }
+                let mut was_handled = false;
 
-                        Ok(())
+                if let Some(callback) = update_node.as_mut() {
+                    match (*callback)(
+                        &current_world_transform,
+                        node,
+                        resources,
+                        app,
+                        mouse_state,
+                        keyboard_state,
+                        game_controller_state,
+                        shader_context,
+                    ) {
+                        Ok(result) => was_handled = result,
+                        Err(e) => return Err(e),
                     }
-                    Err(e) => Err(e),
+                };
+
+                if !was_handled {
+                    return node.update(
+                        &current_world_transform,
+                        resources,
+                        app,
+                        mouse_state,
+                        keyboard_state,
+                        game_controller_state,
+                        shader_context,
+                    );
                 }
+
+                Ok(())
             },
         )?;
 
