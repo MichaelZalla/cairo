@@ -39,6 +39,7 @@ type UpdateSceneGraphNodeCallback = dyn Fn(
 pub struct SceneGraphRenderOptions {
     pub draw_lights: bool,
     pub draw_cameras: bool,
+    pub camera: Option<Handle>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -124,8 +125,11 @@ impl SceneGraph {
 
         // Render scene.
 
-        let mut active_camera_handle: Option<Handle> = None;
-        let mut clipping_camera_handle: Option<Handle> = None;
+        let mut active_camera_handle: Option<Handle> =
+            options.as_ref().and_then(|opts| opts.camera);
+
+        let mut clipping_camera_handle: Option<Handle> = active_camera_handle;
+
         let mut active_skybox_handle: Option<Handle> = None;
         let mut active_skybox_transform: Option<Mat4> = None;
 
@@ -148,7 +152,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let camera = &entry.item;
 
-                                if camera.is_active {
+                                if camera.is_active && active_camera_handle.is_none() {
                                     active_camera_handle.replace(*handle);
                                     clipping_camera_handle.replace(*handle);
                                 } else if let Some(options) = &options {
