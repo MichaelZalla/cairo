@@ -8,8 +8,8 @@ use cairo::ui::{
     UISize, UISizeWithStrictness,
 };
 
-static MENU_BAR_ITEMS: [&str; 9] = [
-    "File", "Edit", "Select", "View", "Scene", "Render", "Tools", "Windows", "Help",
+static MENU_BAR_ITEMS: [&str; 8] = [
+    "File", "Edit", "Select", "View", "Scene", "Render", "Window", "Help",
 ];
 
 static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button 4", "Button 5"];
