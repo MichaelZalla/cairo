@@ -37,7 +37,7 @@ use cairo::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
             UIBox,
         },
-        window::{Window, WindowList, WindowOptions, DEFAULT_WINDOW_FILL_COLOR},
+        window::{Window, WindowList, WindowOptions},
     },
 };
 
@@ -95,12 +95,8 @@ fn main() -> Result<(), String> {
     let render_main_window_header: UIBoxTreeRenderCallback =
         Rc::new(|tree: &mut UIBoxTree| -> Result<(), String> {
             GLOBAL_UI_CONTEXT.with(|ctx| {
-                ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
-                    ctx.border_color(color::BLACK, || {
-                        editor::ui::build_main_menu_bar_ui(ctx, tree)?;
-                        editor::ui::build_toolbar_ui(ctx, tree)
-                    })
-                })
+                editor::ui::build_main_menu_bar_ui(ctx, tree)?;
+                editor::ui::build_toolbar_ui(ctx, tree)
             })?;
 
             Ok(())
