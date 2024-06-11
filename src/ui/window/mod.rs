@@ -139,19 +139,17 @@ impl<'a> Window<'a> {
 
         let mut render_titlebar_result = None;
 
-        {
-            let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
+        // Rebuilds the UI tree root based on the current window resolution.
 
-            // println!("\nRebuilding tree...\n");
+        if self.docked {
+            self.size.0 = main_window_bounds.width;
+            self.size.1 = main_window_bounds.height;
+        }
 
-            // Rebuilds the UI tree root based on the current window resolution.
+        let mut root_ui_box: UIBox = Default::default();
 
-            if self.docked {
-                self.size.0 = main_window_bounds.width;
-                self.size.1 = main_window_bounds.height;
-            }
-
-            let root_ui_box = UIBox::new(
+        ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
+            root_ui_box = UIBox::new(
                 format!("{}_Root__{}_root", self.id, self.id),
                 UIBoxFeatureMask::none()
                     | UIBoxFeatureFlag::DrawFill
@@ -174,23 +172,23 @@ impl<'a> Window<'a> {
                 ],
             );
 
-            {
-                *ctx.global_offset.borrow_mut() = self.position;
-            }
+            Ok(())
+        })?;
 
-            ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
-                ui_box_tree.push_parent(root_ui_box)?;
+        {
+            *ctx.global_offset.borrow_mut() = self.position;
+        }
 
-                if self.with_titlebar {
-                    render_titlebar_result.replace(render_titlebar(
-                        &self.id,
-                        self.dragging,
-                        ui_box_tree,
-                    )?);
-                }
+        {
+            let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
 
-                Ok(())
-            })?;
+            ui_box_tree.push_parent(root_ui_box)?;
+        }
+
+        if self.with_titlebar {
+            let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
+
+            render_titlebar_result.replace(render_titlebar(&self.id, self.dragging, ui_box_tree)?);
 
             match &self.render_header_callback {
                 Some(render) => render(ui_box_tree),
