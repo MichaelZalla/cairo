@@ -12,7 +12,7 @@ use crate::{
     color::{self, Color},
     debug_print,
     device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
-    graphics::{text::TextOperation, Graphics},
+    graphics::{horizontal_line_unsafe, text::TextOperation, vertical_line_unsafe, Graphics},
     ui::context::GLOBAL_UI_CONTEXT,
 };
 
@@ -533,6 +533,13 @@ impl UIBox {
             let (x, y) = self.get_pixel_coordinates();
             let (width, height) = self.get_computed_pixel_size();
 
+            let (x1, y1, x2, y2) = (
+                x as i32,
+                y as i32,
+                (x + width - 1) as i32,
+                (y + height - 1) as i32,
+            );
+
             if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
                 let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
                     Some(&color::BLUE)
@@ -554,24 +561,29 @@ impl UIBox {
                     mem::swap(&mut top_left, &mut bottom_right);
                 }
 
-                let (x1, y1, x2, y2) = (
-                    x as i32,
-                    y as i32,
-                    (x + width - 1) as i32,
-                    (y + height - 1) as i32,
-                );
-
                 // Top edge.
-                Graphics::line(target, x1, y1, x2, y1, &top_left);
-
-                // Left edge.
-                Graphics::line(target, x1, y1, x1, y2, &top_left);
+                horizontal_line_unsafe(target, x1 as u32, x2 as u32, y1 as u32, &top_left.to_u32());
 
                 // Bottom edge.
-                Graphics::line(target, x1, y2, x2, y2, &bottom_right);
+                horizontal_line_unsafe(
+                    target,
+                    x1 as u32,
+                    x2 as u32,
+                    y2 as u32,
+                    &bottom_right.to_u32(),
+                );
+
+                // Left edge.
+                vertical_line_unsafe(target, x1 as u32, y1 as u32, y2 as u32, &top_left.to_u32());
 
                 // Right edge.
-                Graphics::line(target, x2, y1, x2, y2, &bottom_right);
+                vertical_line_unsafe(
+                    target,
+                    x2 as u32,
+                    y1 as u32,
+                    y2 as u32,
+                    &bottom_right.to_u32(),
+                );
             }
         }
 
