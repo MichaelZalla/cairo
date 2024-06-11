@@ -208,7 +208,14 @@ impl<'a> Window<'a> {
         if self.with_titlebar {
             let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
 
-            render_titlebar_result.replace(render_titlebar(&self.id, self.dragging, ui_box_tree)?);
+            render_titlebar_result.replace(render_titlebar(
+                &self.id,
+                self.dragging,
+                &root_ui_box_result
+                    .mouse_interaction_in_bounds
+                    .active_drag_handle,
+                ui_box_tree,
+            )?);
 
             match &self.render_header_callback {
                 Some(render) => render(ui_box_tree),
@@ -307,6 +314,7 @@ impl<'a> Window<'a> {
 fn render_titlebar(
     id: &str,
     was_dragging: bool,
+    active_drag_handle: &Option<UIBoxDragHandle>,
     tree: &mut UIBoxTree,
 ) -> Result<WindowRenderTitlebarResult, String> {
     let mut result = WindowRenderTitlebarResult {
@@ -337,7 +345,11 @@ fn render_titlebar(
                     ]),
                 ))?;
 
-                if !was_dragging
+                // @TODO Generalize this over all UIBox instances with Draggable
+                // feature enabled.
+
+                if active_drag_handle.is_none()
+                    && !was_dragging
                     && container_box_result
                         .mouse_interaction_in_bounds
                         .was_left_pressed
