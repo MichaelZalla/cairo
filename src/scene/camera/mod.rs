@@ -163,9 +163,9 @@ impl Camera {
     pub fn set_kind(&mut self, kind: CameraProjectionKind) {
         self.kind = kind;
 
-        // Recompute projections.
-
         self.recompute_projections();
+
+        self.recompute_world_space_frustum();
     }
 
     pub fn get_field_of_view(&self) -> Option<f32> {
@@ -176,6 +176,8 @@ impl Camera {
         self.field_of_view = fov;
 
         self.recompute_projections();
+
+        self.recompute_world_space_frustum();
     }
 
     pub fn get_aspect_ratio(&self) -> Option<f32> {
@@ -188,6 +190,8 @@ impl Camera {
                 self.aspect_ratio = Some(aspect_ratio);
 
                 self.recompute_projections();
+
+                self.recompute_world_space_frustum();
 
                 Ok(())
             }
@@ -204,9 +208,9 @@ impl Camera {
     pub fn set_projection_z_near(&mut self, near: f32) {
         self.projection_z_near = near;
 
-        // Recompute projections.
-
         self.recompute_projections();
+
+        self.recompute_world_space_frustum();
     }
 
     pub fn get_projection_z_far(&self) -> f32 {
@@ -216,9 +220,9 @@ impl Camera {
     pub fn set_projection_z_far(&mut self, far: f32) {
         self.projection_z_far = far;
 
-        // Recompute projections.
-
         self.recompute_projections();
+
+        self.recompute_world_space_frustum();
     }
 
     pub fn get_frustum(&self) -> &Frustum {
@@ -446,6 +450,8 @@ impl Camera {
                     self.field_of_view = Some(current_field_of_view);
 
                     self.recompute_projections();
+
+                    self.recompute_world_space_frustum();
                 }
                 CameraProjectionKind::Orthographic => {
                     let current_z_far = self.get_projection_z_far();
