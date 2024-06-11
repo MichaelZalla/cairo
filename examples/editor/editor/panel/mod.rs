@@ -177,17 +177,17 @@ pub fn build_main_window_panel_tree<'a>(
         ),
     )?;
 
-    // Root > Left > Bottom (FileSystem).
+    // Root > Left > Bottom (AssetBrowser).
 
     tree.push(
         "Bottom",
         Panel::new(
             0.5,
             Some(PanelInstanceData {
-                render: Some(panel_render_callbacks.file_system.clone()),
+                render: Some(panel_render_callbacks.asset_browser.clone()),
                 custom_render_callback: None,
                 panel_instance: panel_arenas
-                    .file_system
+                    .asset_browser
                     .borrow_mut()
                     .insert(Uuid::new_v4(), Default::default()),
             }),
