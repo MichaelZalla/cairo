@@ -8,7 +8,7 @@ use sdl2::mouse::MouseButton;
 use crate::{
     app::resolution::Resolution,
     color::{self, Color},
-    device::mouse::MouseEventKind,
+    device::mouse::{MouseDragEvent, MouseEventKind},
     mem::linked_list::LinkedList,
 };
 
@@ -19,7 +19,7 @@ use super::{
     ui_box::{
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
         utils::{button_box, container_box, text_box},
-        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+        UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
@@ -155,9 +155,13 @@ impl<'a> Window<'a> {
                     | UIBoxFeatureFlag::DrawFill
                     | UIBoxFeatureFlag::DrawChildDividers
                     | if self.docked {
-                        UIBoxFeatureFlag::Null
+                        UIBoxFeatureMask::none()
                     } else {
                         UIBoxFeatureFlag::DrawBorder
+                            | UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
+                            | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
+                            | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
+                            | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis
                     },
                 UILayoutDirection::TopToBottom,
                 [
@@ -179,10 +183,26 @@ impl<'a> Window<'a> {
             *ctx.global_offset.borrow_mut() = self.position;
         }
 
+        let root_ui_box_result;
+
         {
             let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
 
-            ui_box_tree.push_parent(root_ui_box)?;
+            root_ui_box_result = ui_box_tree.push_parent(root_ui_box)?;
+        }
+
+        match &root_ui_box_result
+            .mouse_interaction_in_bounds
+            .active_drag_handle
+        {
+            Some(handle) => {
+                let mouse = &ctx.input_events.borrow().mouse;
+
+                if let Some(drag) = &mouse.drag_event {
+                    self.apply_resize_event(drag, handle, main_window_bounds);
+                }
+            }
+            None => (),
         }
 
         if self.with_titlebar {
@@ -243,6 +263,34 @@ impl<'a> Window<'a> {
         self.position.1 = (new_y.max(0) as u32).min(main_window_bounds.height - self.size.1);
 
         self.extent = ScreenExtent::new(self.position, self.size);
+    }
+
+    fn apply_resize_event(
+        &mut self,
+        drag_event: &MouseDragEvent,
+        handle: &UIBoxDragHandle,
+        main_window_bounds: &Resolution,
+    ) {
+        let delta = drag_event.delta;
+
+        match &handle {
+            UIBoxDragHandle::Left => {
+                self.apply_position_delta((delta.0, 0), main_window_bounds);
+
+                self.size.0 = (self.size.0 as i32 - delta.0) as u32;
+            }
+            UIBoxDragHandle::Top => {
+                self.apply_position_delta((0, delta.1), main_window_bounds);
+
+                self.size.1 = (self.size.1 as i32 - delta.1) as u32;
+            }
+            UIBoxDragHandle::Bottom => {
+                self.size.1 = (self.size.1 as i32 + delta.1) as u32;
+            }
+            UIBoxDragHandle::Right => {
+                self.size.0 = (self.size.0 as i32 + delta.0) as u32;
+            }
+        }
     }
 
     fn render_panel_tree_to_base_ui_tree(&mut self) -> Result<(), String> {
