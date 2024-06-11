@@ -117,7 +117,9 @@ fn main() -> Result<(), String> {
                                     strictness: 1.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -139,7 +141,9 @@ fn main() -> Result<(), String> {
                                     strictness: 1.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -161,7 +165,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -181,7 +187,9 @@ fn main() -> Result<(), String> {
                                     strictness: 1.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -203,7 +211,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -227,7 +237,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -249,7 +261,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -269,7 +283,9 @@ fn main() -> Result<(), String> {
                                     strictness: 0.0,
                                 },
                             ],
-                        )).unwrap();
+                            None,
+                        ))
+                        .unwrap();
 
                         Ok(())
                     })?;
@@ -293,6 +309,7 @@ fn main() -> Result<(), String> {
                                             strictness: 0.0,
                                         },
                                     ],
+                                    None,
                                 ))?;
 
                                 tree.push(UIBox::new(
@@ -309,6 +326,7 @@ fn main() -> Result<(), String> {
                                             strictness: 1.0,
                                         },
                                     ],
+                                    None,
                                 ))?;
 
                                 tree.push(text_box(format!("RootChild2Child2Child{}Text__root_child2_child2_child{}_text", i, i), format!("Label {}", i)))?;
@@ -327,6 +345,7 @@ fn main() -> Result<(), String> {
                                             strictness: 1.0,
                                         },
                                     ],
+                                    None,
                                 ))?;
 
                                 tree.pop_parent()?;

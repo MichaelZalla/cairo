@@ -21,7 +21,7 @@ pub fn container_box(
         ],
     };
 
-    UIBox::new(id, UIBoxFeatureMask::none(), layout_direction, sizes)
+    UIBox::new(id, UIBoxFeatureMask::none(), layout_direction, sizes, None)
 }
 
 pub fn greedy_box(id: String, layout_direction: UILayoutDirection) -> UIBox {
@@ -39,6 +39,7 @@ pub fn greedy_box(id: String, layout_direction: UILayoutDirection) -> UIBox {
                 strictness: 1.0,
             },
         ],
+        None,
     )
 }
 
@@ -57,6 +58,7 @@ pub fn text_box(id: String, label: String) -> UIBox {
                 strictness: 1.0,
             },
         ],
+        None,
     );
 
     text_box.text_content = Some(label);
@@ -93,6 +95,7 @@ pub fn button_box(
             | UIBoxFeatureFlag::Clickable,
         UILayoutDirection::LeftToRight,
         sizes,
+        None,
     );
 
     button_box.text_content = Some(label);
@@ -115,5 +118,6 @@ pub fn spacer_box(size: u32) -> UIBox {
                 strictness: 1.0,
             },
         ],
+        None,
     )
 }

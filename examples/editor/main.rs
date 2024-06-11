@@ -20,9 +20,18 @@ use cairo::{
     },
     font::cache::FontCache,
     resource::handle::Handle,
-    scene::context::SceneContext,
+    scene::{
+        context::{utils::make_cube_scene, SceneContext},
+        resources::SceneResources,
+    },
+    shaders::{
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
+        default_vertex_shader::DEFAULT_VERTEX_SHADER,
+    },
+    software_renderer::SoftwareRenderer,
     ui::{
         context::GLOBAL_UI_CONTEXT,
+        extent::ScreenExtent,
         panel::PanelInstanceData,
         ui_box::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
@@ -66,6 +75,21 @@ fn main() -> Result<(), String> {
 
     let current_frame_index_rc = RefCell::new(0_u32);
 
+    let mut scene_resources_rc: Option<Rc<RefCell<SceneResources>>> = None;
+
+    EDITOR_SCENE_CONTEXT.with(|sc| {
+        let cube_scene_context =
+            make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
+
+        let resources = RefCell::into_inner(Rc::try_unwrap(cube_scene_context.resources).unwrap());
+        let scenes = RefCell::into_inner(cube_scene_context.scenes);
+
+        *sc.resources.borrow_mut() = resources;
+        *sc.scenes.borrow_mut() = scenes;
+
+        scene_resources_rc.replace(sc.resources.clone());
+    });
+
     // Panel rendering callbacks.
 
     let render_main_window_header: UIBoxTreeRenderCallback =
@@ -98,20 +122,40 @@ fn main() -> Result<(), String> {
                 Ok(())
             },
         ),
-        viewport_3d: Rc::new(
-            |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
-                EDITOR_PANEL_ARENAS.with(|arenas| {
-                    let mut viewport_3d_arena = arenas.viewport_3d.borrow_mut();
+        viewport_3d: (
+            Rc::new(
+                |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+                    EDITOR_PANEL_ARENAS.with(|arenas| {
+                        let mut viewport_3d_arena = arenas.viewport_3d.borrow_mut();
 
-                    if let Ok(entry) = viewport_3d_arena.get_mut(panel_instance) {
-                        let panel = &mut entry.item;
+                        if let Ok(entry) = viewport_3d_arena.get_mut(panel_instance) {
+                            let panel = &mut entry.item;
 
-                        panel.render(tree).unwrap();
-                    }
-                });
+                            panel.render(tree).unwrap();
+                        }
+                    });
 
-                Ok(())
-            },
+                    Ok(())
+                },
+            ),
+            Rc::new(
+                |panel_instance: &Handle,
+                 extent: &ScreenExtent,
+                 target: &mut Buffer2D|
+                 -> Result<(), String> {
+                    EDITOR_PANEL_ARENAS.with(|arenas| {
+                        let mut viewport_3d_arena = arenas.viewport_3d.borrow_mut();
+
+                        if let Ok(entry) = viewport_3d_arena.get_mut(panel_instance) {
+                            let panel = &mut entry.item;
+
+                            panel.custom_render_callback(extent, target).unwrap();
+                        }
+                    });
+
+                    Ok(())
+                },
+            ),
         ),
         asset_browser: Rc::new(
             |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
@@ -175,6 +219,18 @@ fn main() -> Result<(), String> {
         ),
     };
 
+    // Renderer
+
+    let renderer = SoftwareRenderer::new(
+        Default::default(),
+        scene_resources_rc.unwrap(),
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    let renderer_rc: Rc<RefCell<SoftwareRenderer>> = Rc::new(RefCell::new(renderer));
+
     // Initial main window.
 
     let window_list = {
@@ -191,6 +247,7 @@ fn main() -> Result<(), String> {
                     &resource_arenas,
                     panel_arenas,
                     &panel_metadata_map,
+                    &renderer_rc,
                 )
                 .unwrap();
 
@@ -243,6 +300,7 @@ fn main() -> Result<(), String> {
                     PanelInstanceData {
                         panel_instance,
                         render: Some(render_callback),
+                        custom_render_callback: None,
                     },
                 )
                 .unwrap();

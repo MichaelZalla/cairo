@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -8,10 +8,11 @@ use cairo::{
     buffer::Buffer2D,
     resource::arena::Arena,
     scene::{camera::Camera, resources::SceneResources},
+    software_renderer::SoftwareRenderer,
     ui::{
         extent::ScreenExtent,
         panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
-        ui_box::{tree::UIBoxTree, UILayoutDirection},
+        ui_box::{tree::UIBoxTree, UIBoxCustomRenderCallback, UILayoutDirection},
     },
     vec::vec3::{self, Vec3},
 };
@@ -58,7 +59,7 @@ thread_local! {
 
 pub struct EditorPanelRenderCallbacks {
     pub outline: PanelRenderCallback,
-    pub viewport_3d: PanelRenderCallback,
+    pub viewport_3d: (PanelRenderCallback, Rc<UIBoxCustomRenderCallback>),
     pub asset_browser: PanelRenderCallback,
     pub console: PanelRenderCallback,
     pub inspector: PanelRenderCallback,
@@ -83,6 +84,7 @@ pub fn build_main_window_panel_tree<'a>(
     resource_arenas: &SceneResources,
     panel_arenas: &EditorPanelArenas,
     panel_render_callbacks: &EditorPanelRenderCallbacks,
+    renderer: &Rc<RefCell<SoftwareRenderer>>,
 ) -> Result<PanelTree<'a>, String> {
     let mut tree = PanelTree::with_root(Panel {
         path: format!("{}_root", window_id),
@@ -165,6 +167,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.5,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.outline.clone()),
+                custom_render_callback: None,
                 panel_instance: panel_arenas
                     .outline
                     .borrow_mut()
@@ -182,6 +185,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.5,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.file_system.clone()),
+                custom_render_callback: None,
                 panel_instance: panel_arenas
                     .file_system
                     .borrow_mut()
@@ -215,10 +219,14 @@ pub fn build_main_window_panel_tree<'a>(
         Panel::new(
             0.5,
             Some(PanelInstanceData {
-                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                render: Some(panel_render_callbacks.viewport_3d.0.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
-                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[0])),
+                    Viewport3DPanel::new(
+                        renderer.clone(),
+                        camera_arena.insert(Uuid::new_v4(), cameras[0]),
+                    ),
                 ),
             }),
             UILayoutDirection::TopToBottom,
@@ -230,10 +238,14 @@ pub fn build_main_window_panel_tree<'a>(
         Panel::new(
             0.5,
             Some(PanelInstanceData {
-                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                render: Some(panel_render_callbacks.viewport_3d.0.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
-                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[1])),
+                    Viewport3DPanel::new(
+                        renderer.clone(),
+                        camera_arena.insert(Uuid::new_v4(), cameras[1]),
+                    ),
                 ),
             }),
             UILayoutDirection::TopToBottom,
@@ -256,10 +268,14 @@ pub fn build_main_window_panel_tree<'a>(
         Panel::new(
             0.5,
             Some(PanelInstanceData {
-                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                render: Some(panel_render_callbacks.viewport_3d.0.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
-                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[2])),
+                    Viewport3DPanel::new(
+                        renderer.clone(),
+                        camera_arena.insert(Uuid::new_v4(), cameras[2]),
+                    ),
                 ),
             }),
             UILayoutDirection::TopToBottom,
@@ -271,10 +287,14 @@ pub fn build_main_window_panel_tree<'a>(
         Panel::new(
             0.5,
             Some(PanelInstanceData {
-                render: Some(panel_render_callbacks.viewport_3d.clone()),
+                render: Some(panel_render_callbacks.viewport_3d.0.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
-                    Viewport3DPanel::new(camera_arena.insert(Uuid::new_v4(), cameras[3])),
+                    Viewport3DPanel::new(
+                        renderer.clone(),
+                        camera_arena.insert(Uuid::new_v4(), cameras[3]),
+                    ),
                 ),
             }),
             UILayoutDirection::TopToBottom,
@@ -297,6 +317,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.3,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.console.clone()),
+                custom_render_callback: None,
                 panel_instance: panel_arenas
                     .console
                     .borrow_mut()
@@ -318,6 +339,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.2,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.inspector.clone()),
+                custom_render_callback: None,
                 panel_instance: panel_arenas
                     .inspector
                     .borrow_mut()

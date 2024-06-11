@@ -56,7 +56,7 @@ pub struct SoftwareRenderer {
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
-    shader_context: Rc<RefCell<ShaderContext>>,
+    pub shader_context: Rc<RefCell<ShaderContext>>,
     scene_resources: Rc<RefCell<SceneResources>>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,

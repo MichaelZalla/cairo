@@ -11,8 +11,8 @@ use crate::{
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
     ui_box::{
-        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox, UIBoxFeatureFlag,
-        UILayoutDirection,
+        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
+        UIBoxCustomRenderCallback, UIBoxFeatureFlag, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
@@ -26,6 +26,8 @@ pub struct PanelInstanceData {
     pub panel_instance: Handle,
     #[serde(skip)]
     pub render: Option<PanelRenderCallback>,
+    #[serde(skip)]
+    pub custom_render_callback: Option<Rc<UIBoxCustomRenderCallback>>,
 }
 
 impl fmt::Debug for PanelInstanceData {
@@ -35,6 +37,13 @@ impl fmt::Debug for PanelInstanceData {
                 "render",
                 match self.render {
                     Some(_) => &"Some(PanelRenderCallback)",
+                    None => &"None ",
+                },
+            )
+            .field(
+                "custom_render_callback",
+                match self.custom_render_callback {
+                    Some(_) => &"Some(Rc<UIBoxCustomRenderCallback>)",
                     None => &"None ",
                 },
             )
@@ -107,6 +116,15 @@ impl Panel {
                 UIBoxFeatureFlag::DrawBorder
             } else {
                 UIBoxFeatureFlag::Null
+            }
+            | if let Some(data) = &self.instance_data {
+                if data.custom_render_callback.is_some() {
+                    UIBoxFeatureFlag::DrawCustomRender
+                } else {
+                    UIBoxFeatureFlag::Null
+                }
+            } else {
+                UIBoxFeatureFlag::Null
             };
 
         let mut panel_ui_box: UIBox = Default::default();
@@ -127,6 +145,13 @@ impl Panel {
                             strictness: 1.0,
                         },
                     ],
+                    if let Some(data) = &self.instance_data {
+                        data.custom_render_callback
+                            .as_ref()
+                            .map(|callback| (data.panel_instance, callback.clone()))
+                    } else {
+                        None
+                    },
                 );
 
                 Ok(())

@@ -46,6 +46,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
                 strictness: 1.0,
             },
         ],
+        None,
     ))?;
 
     tree.push_parent(container_box(

@@ -174,6 +174,7 @@ impl<'a> Window<'a> {
                         strictness: 1.0,
                     },
                 ],
+                None,
             );
 
             Ok(())
@@ -397,6 +398,7 @@ fn render_titlebar(
                             strictness: 1.0,
                         },
                     ],
+                    None,
                 ))?;
 
                 let mut close_button = button_box(

@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::{cell::RefCell, fmt, mem, rc::Rc};
 
 use serde::{Deserialize, Serialize};
@@ -13,6 +14,7 @@ use crate::{
     debug_print,
     device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
     graphics::{horizontal_line_unsafe, text::TextOperation, vertical_line_unsafe, Graphics},
+    resource::handle::Handle,
     ui::context::GLOBAL_UI_CONTEXT,
 };
 
@@ -45,6 +47,7 @@ bitmask! {
         ResizableMinExtentOnSecondaryAxis = (1 << 9),
         ResizableMaxExtentOnSecondaryAxis = (1 << 10),
         DrawChildDividers = (1 << 11),
+        DrawCustomRender = (1 << 12),
     }
 }
 
@@ -87,11 +90,14 @@ pub enum UIBoxDragHandle {
     Right,
 }
 
+pub type UIBoxCustomRenderCallback =
+    dyn Fn(&Handle, &ScreenExtent, &mut Buffer2D) -> Result<(), String>;
+
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
 // interpret user inputs, while computed fields from the current frame are used
 // for box rendering.
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct UIBox {
     pub id: String,
     pub key: UIKey,
@@ -123,6 +129,38 @@ pub struct UIBox {
     pub active_drag_handle: Option<UIBoxDragHandle>,
     #[serde(skip)]
     pub last_read_at_frame: u32,
+    #[serde(skip)]
+    pub custom_render_callback: Option<(Handle, Rc<UIBoxCustomRenderCallback>)>,
+}
+
+impl Debug for UIBox {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("UIBox")
+            .field("id", &self.id)
+            .field("key", &self.key)
+            .field("features", &self.features)
+            .field("text_content", &self.text_content)
+            .field("layout_direction", &self.layout_direction)
+            .field("parent_layout_direction", &self.parent_layout_direction)
+            .field("semantic_sizes", &self.semantic_sizes)
+            .field("styles", &self.styles)
+            .field(
+                "computed_relative_position",
+                &self.computed_relative_position,
+            )
+            .field("computed_size", &self.computed_size)
+            .field("global_bounds", &self.global_bounds)
+            .field("hot", &self.hot)
+            .field("hot_transition", &self.hot_transition)
+            .field("active", &self.active)
+            .field("active_transition", &self.active_transition)
+            .field("focused", &self.focused)
+            .field("hot_drag_handle", &self.hot_drag_handle)
+            .field("active_drag_handle", &self.active_drag_handle)
+            .field("last_read_at_frame", &self.last_read_at_frame)
+            // .field("custom_render_callback", &self.custom_render_callback)
+            .finish()
+    }
 }
 
 impl UIBox {
@@ -131,6 +169,7 @@ impl UIBox {
         features: UIBoxFeatureMask,
         layout_direction: UILayoutDirection,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
+        custom_render_callback: Option<(Handle, Rc<UIBoxCustomRenderCallback>)>,
     ) -> Self {
         let id_split_str = id.split("__").collect::<Vec<&str>>();
 
@@ -186,6 +225,7 @@ impl UIBox {
             styles,
             hot_transition: 1.0,
             active_transition: 1.0,
+            custom_render_callback,
             ..Default::default()
         };
 
