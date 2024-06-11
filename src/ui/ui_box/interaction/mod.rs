@@ -2,7 +2,10 @@ use sdl2::mouse::MouseButton;
 
 use crate::{device::mouse::MouseEventKind, ui::context::UIInputEvents};
 
-use super::UIBox;
+use super::{
+    UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+    UI_DIVIDER_CURSOR_SNAP_EPSILON,
+};
 
 #[derive(Default, Debug, Clone)]
 pub struct UIMouseInteraction {
@@ -25,18 +28,18 @@ pub struct UIMouseInteraction {
     pub is_right_down: bool,
     pub was_right_released: bool,
     // pub was_right_double_clicked: bool,
-
-    // pub is_dragging: bool,
+    pub hot_drag_handle: Option<UIBoxDragHandle>,
+    pub active_drag_handle: Option<UIBoxDragHandle>,
 }
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxInteraction {
-    // ui_box: Rc<RefCell<Node<'a, UIBox>>>,
     pub mouse_interaction_in_bounds: UIMouseInteraction,
 }
 
 impl UIBoxInteraction {
     pub fn from_user_inputs(
+        features: &UIBoxFeatureMask,
         ui_box_previous_frame: Option<&UIBox>,
         input_events: &UIInputEvents,
     ) -> Self {
@@ -93,8 +96,142 @@ impl UIBoxInteraction {
             }
         }
 
+        mouse_interaction_in_bounds.hot_drag_handle = match ui_box_previous_frame {
+            Some(previous_frame) => {
+                if features.intersects(
+                    UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
+                        | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
+                        | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
+                        | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis,
+                ) {
+                    // Set drag cursor if it's within epislon.
+
+                    let mouse_position = input_events.mouse.position;
+
+                    let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
+
+                    let (min_primary, max_primary, min_secondary, max_secondary) =
+                        match previous_frame.parent_layout_direction {
+                            UILayoutDirection::TopToBottom => (
+                                previous_frame.global_bounds.top as i32,
+                                previous_frame.global_bounds.bottom as i32,
+                                previous_frame.global_bounds.left as i32,
+                                previous_frame.global_bounds.right as i32,
+                            ),
+                            UILayoutDirection::LeftToRight => (
+                                previous_frame.global_bounds.left as i32,
+                                previous_frame.global_bounds.right as i32,
+                                previous_frame.global_bounds.top as i32,
+                                previous_frame.global_bounds.bottom as i32,
+                            ),
+                        };
+
+                    let (mouse_primary, mouse_secondary) =
+                        match previous_frame.parent_layout_direction {
+                            UILayoutDirection::TopToBottom => (mouse_y, mouse_x),
+                            UILayoutDirection::LeftToRight => (mouse_x, mouse_y),
+                        };
+
+                    let (
+                        drag_handle_min_primary,
+                        drag_handle_max_primary,
+                        drag_handle_min_secondary,
+                        drag_handle_max_secondary,
+                    ) = match previous_frame.parent_layout_direction {
+                        UILayoutDirection::TopToBottom => (
+                            UIBoxDragHandle::Top,
+                            UIBoxDragHandle::Bottom,
+                            UIBoxDragHandle::Left,
+                            UIBoxDragHandle::Right,
+                        ),
+                        UILayoutDirection::LeftToRight => (
+                            UIBoxDragHandle::Left,
+                            UIBoxDragHandle::Right,
+                            UIBoxDragHandle::Top,
+                            UIBoxDragHandle::Bottom,
+                        ),
+                    };
+
+                    if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis)
+                        && within_epsilon(mouse_primary, min_primary)
+                        && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
+                    {
+                        Some(drag_handle_min_primary)
+                    } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis)
+                        && within_epsilon(mouse_primary, max_primary)
+                        && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
+                    {
+                        Some(drag_handle_max_primary)
+                    } else if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis)
+                        && within_epsilon(mouse_secondary, min_secondary)
+                        && (min_primary..max_primary + 1).contains(&mouse_primary)
+                    {
+                        Some(drag_handle_min_secondary)
+                    } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis)
+                        && within_epsilon(mouse_secondary, max_secondary)
+                        && (min_primary..max_primary + 1).contains(&mouse_primary)
+                    {
+                        Some(drag_handle_max_secondary)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            None => None,
+        };
+
+        mouse_interaction_in_bounds.active_drag_handle = match ui_box_previous_frame {
+            // Check if we had an active drag handle in the previous frame.
+            Some(prev_frame) => match &prev_frame.active_drag_handle {
+                Some(prev_active_handle) => {
+                    match &input_events.mouse.button_event {
+                        Some(event) => {
+                            // Check if we've released the mouse this frame.
+
+                            if matches!(
+                                (event.button, event.kind),
+                                (MouseButton::Left, MouseEventKind::Up)
+                            ) {
+                                None
+                            } else {
+                                Some(*prev_active_handle)
+                            }
+                        }
+                        None => {
+                            // Otherwise, keep the handle active.
+
+                            Some(*prev_active_handle)
+                        }
+                    }
+                }
+                None => match &mouse_interaction_in_bounds.hot_drag_handle {
+                    Some(hot_handle) => match &input_events.mouse.button_event {
+                        Some(event) => {
+                            if matches!(
+                                (event.button, event.kind),
+                                (MouseButton::Left, MouseEventKind::Down)
+                            ) {
+                                Some(*hot_handle)
+                            } else {
+                                None
+                            }
+                        }
+                        None => None,
+                    },
+                    None => None,
+                },
+            },
+            None => None,
+        };
+
         Self {
             mouse_interaction_in_bounds,
         }
     }
+}
+
+fn within_epsilon(mouse_along_axis: i32, target_along_axis: i32) -> bool {
+    (mouse_along_axis - target_along_axis).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
 }

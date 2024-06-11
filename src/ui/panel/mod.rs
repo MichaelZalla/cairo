@@ -107,11 +107,6 @@ impl Panel {
                 UIBoxFeatureFlag::DrawBorder
             } else {
                 UIBoxFeatureFlag::Null
-            }
-            | if self.resizable {
-                UIBoxFeatureFlag::Resizable
-            } else {
-                UIBoxFeatureFlag::Null
             };
 
         let mut panel_ui_box: UIBox = Default::default();

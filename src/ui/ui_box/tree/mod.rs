@@ -83,11 +83,21 @@ impl<'a> UIBoxTree<'a> {
             let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
 
             let interaction_result = match cache.get(&ui_box.key) {
-                Some(ui_box_previous_frame) => {
-                    UIBoxInteraction::from_user_inputs(Some(ui_box_previous_frame), &input_events)
-                }
-                None => UIBoxInteraction::from_user_inputs(None, &input_events),
+                Some(ui_box_previous_frame) => UIBoxInteraction::from_user_inputs(
+                    &ui_box.features,
+                    Some(ui_box_previous_frame),
+                    &input_events,
+                ),
+                None => UIBoxInteraction::from_user_inputs(&ui_box.features, None, &input_events),
             };
+
+            ui_box.hot_drag_handle = interaction_result
+                .mouse_interaction_in_bounds
+                .hot_drag_handle;
+
+            ui_box.active_drag_handle = interaction_result
+                .mouse_interaction_in_bounds
+                .active_drag_handle;
 
             // Updates hot state for this node, based on the node's previous
             // layout (from the prior frame).
@@ -922,6 +932,9 @@ fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_i
         cached_ui_box.active_transition = ui_box.active_transition;
 
         cached_ui_box.focused = ui_box.focused;
+
+        cached_ui_box.hot_drag_handle = ui_box.hot_drag_handle;
+        cached_ui_box.active_drag_handle = ui_box.active_drag_handle;
 
         cached_ui_box.last_read_at_frame = frame_index;
     } else if !ui_box.key.is_null() {

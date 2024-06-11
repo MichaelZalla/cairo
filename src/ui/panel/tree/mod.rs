@@ -3,9 +3,9 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::ui::{
-    context::UIContext,
+    context::{UIContext, GLOBAL_UI_CONTEXT},
     tree::{node::NodeLocalTraversalMethod, Tree},
-    ui_box::UIBoxFeatureFlag,
+    ui_box::{UIBoxDragHandle, UIBoxFeatureFlag},
     window::Window,
 };
 
@@ -66,14 +66,20 @@ impl<'a> PanelTree<'a> {
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, _sibling_index, _parent_data, panel_tree_node| {
-                let panel = &panel_tree_node.data;
+            &mut |_depth, sibling_index, parent_data, panel_tree_node| {
+                let panel = &mut panel_tree_node.data;
 
                 let is_leaf_panel = panel_tree_node.children.is_empty();
 
                 let mut ui_box_tree = base_tree.borrow_mut();
 
-                let panel_box = panel.make_panel_box(ui_context, !window.docked)?;
+                let mut panel_box = panel.make_panel_box(ui_context, !window.docked)?;
+
+                if let Some(parent) = parent_data {
+                    if parent.resizable && sibling_index != 0 {
+                        panel_box.features |= UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis;
+                    }
+                }
 
                 if is_leaf_panel {
                     let panel_interaction_result = ui_box_tree.push_parent(panel_box)?;
@@ -88,14 +94,71 @@ impl<'a> PanelTree<'a> {
 
                 Ok(())
             },
-            &mut |_node| {
+            &mut |node| {
                 let mut ui_box_tree = base_tree.borrow_mut();
 
                 if let Some(rc) = ui_box_tree.get_current() {
                     let mut ui_box_node = (*rc).borrow_mut();
 
                     if !ui_box_node.children.is_empty() {
+                        // Enable child dividers.
                         ui_box_node.data.features |= UIBoxFeatureFlag::DrawChildDividers;
+
+                        // Check each child for an active drag handle.
+                        let mut resized_child: Option<(usize, UIBoxDragHandle)> = None;
+
+                        for (index, child) in ui_box_node.children.iter().enumerate() {
+                            let child_panel = &(*child).borrow().data;
+
+                            if let Some(handle) = &child_panel.active_drag_handle {
+                                resized_child.replace((index, *handle));
+                            }
+                        }
+
+                        if let Some((resized_child_index, drag_handle)) = resized_child {
+                            GLOBAL_UI_CONTEXT.with(|ctx| {
+                                let mouse = &ctx.input_events.borrow().mouse;
+                                let cache = &ctx.cache.borrow();
+
+                                if let Some(drag_event) = &mouse.drag_event {
+                                    let pixel_delta = drag_event.delta;
+
+                                    let prev_frame_parent =
+                                        cache.get(&ui_box_node.data.key).unwrap();
+
+                                    let prev_frame_parent_size = match drag_handle {
+                                        UIBoxDragHandle::Left | UIBoxDragHandle::Right => {
+                                            prev_frame_parent.global_bounds.right
+                                                - prev_frame_parent.global_bounds.left
+                                        }
+                                        UIBoxDragHandle::Top | UIBoxDragHandle::Bottom => {
+                                            prev_frame_parent.global_bounds.bottom
+                                                - prev_frame_parent.global_bounds.top
+                                        }
+                                    };
+
+                                    let drag_pixels = match drag_handle {
+                                        UIBoxDragHandle::Left | UIBoxDragHandle::Right => {
+                                            pixel_delta.0 as f32
+                                        }
+                                        UIBoxDragHandle::Top | UIBoxDragHandle::Bottom => {
+                                            pixel_delta.1 as f32
+                                        }
+                                    };
+
+                                    let drag_alpha = drag_pixels / prev_frame_parent_size as f32;
+
+                                    let (take, give) =
+                                        (resized_child_index, resized_child_index - 1);
+
+                                    (*node.children[give]).borrow_mut().data.alpha_split +=
+                                        drag_alpha;
+
+                                    (*node.children[take]).borrow_mut().data.alpha_split -=
+                                        drag_alpha;
+                                }
+                            });
+                        }
                     }
                 }
 

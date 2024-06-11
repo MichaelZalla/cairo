@@ -40,8 +40,11 @@ bitmask! {
         SkipTextCaching = (1 << 4),
         Hoverable = (1 << 5),
         Clickable = (1 << 6),
-        DrawChildDividers = (1 << 7),
-        Resizable = (1 << 8),
+        ResizableMinExtentOnPrimaryAxis = (1 << 7),
+        ResizableMaxExtentOnPrimaryAxis = (1 << 8),
+        ResizableMinExtentOnSecondaryAxis = (1 << 9),
+        ResizableMaxExtentOnSecondaryAxis = (1 << 10),
+        DrawChildDividers = (1 << 11),
     }
 }
 
@@ -76,6 +79,14 @@ pub static UI_DIVIDER_CURSOR_SNAP_EPSILON: i32 = 3;
 
 static UI_BOX_DEBUG_AUTOLAYOUT: bool = false;
 
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub enum UIBoxDragHandle {
+    Left,
+    Top,
+    Bottom,
+    Right,
+}
+
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
 // interpret user inputs, while computed fields from the current frame are used
@@ -106,6 +117,10 @@ pub struct UIBox {
     pub active_transition: f32,
     #[serde(skip)]
     pub focused: bool,
+    #[serde(skip)]
+    pub hot_drag_handle: Option<UIBoxDragHandle>,
+    #[serde(skip)]
+    pub active_drag_handle: Option<UIBoxDragHandle>,
     #[serde(skip)]
     pub last_read_at_frame: u32,
 }
@@ -446,6 +461,24 @@ impl UIBox {
             });
         }
 
+        // Set cursor based on any active drag handle.
+
+        match &self.hot_drag_handle {
+            Some(handle) => {
+                GLOBAL_UI_CONTEXT.with(|ctx| {
+                    *ctx.cursor_kind.borrow_mut() = match handle {
+                        UIBoxDragHandle::Left | UIBoxDragHandle::Right => {
+                            MouseCursorKind::DragLeftRight
+                        }
+                        UIBoxDragHandle::Top | UIBoxDragHandle::Bottom => {
+                            MouseCursorKind::DragUpDown
+                        }
+                    };
+                });
+            }
+            None => (),
+        }
+
         Ok(())
     }
 
@@ -492,44 +525,10 @@ impl UIBox {
                 };
 
                 Graphics::line(target, x1, y1, x2, y2, &divider_color);
-
-                if self.features.contains(UIBoxFeatureFlag::Resizable) {
-                    // Set cursor if nearby.
-
-                    GLOBAL_UI_CONTEXT.with(|ctx| {
-                        let mouse_position = ctx.input_events.borrow().mouse.position;
-
-                        let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
-
-                        match self.layout_direction {
-                            UILayoutDirection::TopToBottom => {
-                                if (mouse_y - y1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
-                                    && (x1..x2 + 1).contains(&mouse_x)
-                                {
-                                    GLOBAL_UI_CONTEXT.with(|ctx| {
-                                        *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragUpDown;
-                                    });
-                                }
-                            }
-                            UILayoutDirection::LeftToRight => {
-                                if (mouse_x - x1).abs() < UI_DIVIDER_CURSOR_SNAP_EPSILON
-                                    && (y1..y2 + 1).contains(&mouse_y)
-                                {
-                                    GLOBAL_UI_CONTEXT.with(|ctx| {
-                                        *ctx.cursor_kind.borrow_mut() =
-                                            MouseCursorKind::DragLeftRight;
-                                    });
-                                }
-                            }
-                        }
-                    });
-                }
             }
         }
 
-        if self.features.contains(UIBoxFeatureFlag::DrawBorder)
-            || self.features.contains(UIBoxFeatureFlag::DrawChildDividers)
-        {
+        if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
             let (x, y) = self.get_pixel_coordinates();
             let (width, height) = self.get_computed_pixel_size();
 
@@ -540,17 +539,15 @@ impl UIBox {
                 (y + height - 1) as i32,
             );
 
-            if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
-                let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
-                    Some(&color::BLUE)
-                } else if self.styles.border_color.is_some() {
-                    self.styles.border_color.as_ref()
-                } else {
-                    None
-                };
+            let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
+                Some(&color::BLUE)
+            } else if self.styles.border_color.is_some() {
+                self.styles.border_color.as_ref()
+            } else {
+                None
+            };
 
-                Graphics::rectangle(target, x, y, width, height, None, border_color);
-            }
+            Graphics::rectangle(target, x, y, width, height, None, border_color);
 
             if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
                 let (mut top_left, mut bottom_right) = (color::WHITE, color::BLACK);
@@ -584,6 +581,42 @@ impl UIBox {
                     y2 as u32,
                     &bottom_right.to_u32(),
                 );
+            }
+
+            // Drag
+
+            let handle = match &self.active_drag_handle {
+                Some(active_handle) => Some(active_handle),
+                None => match &self.hot_drag_handle {
+                    Some(hot_handle) => Some(hot_handle),
+                    None => None,
+                },
+            };
+
+            let color = match &self.active_drag_handle {
+                Some(_) => color::BLUE.to_u32(),
+                None => match &self.hot_drag_handle {
+                    Some(_) => color::RED.to_u32(),
+                    None => 0,
+                },
+            };
+
+            match &handle {
+                Some(handle) => match handle {
+                    UIBoxDragHandle::Top => {
+                        horizontal_line_unsafe(target, x1 as u32, x2 as u32, y1 as u32, &color)
+                    }
+                    UIBoxDragHandle::Bottom => {
+                        horizontal_line_unsafe(target, x1 as u32, x2 as u32, y2 as u32, &color)
+                    }
+                    UIBoxDragHandle::Left => {
+                        vertical_line_unsafe(target, x1 as u32, y1 as u32, y2 as u32, &color)
+                    }
+                    UIBoxDragHandle::Right => {
+                        vertical_line_unsafe(target, x2 as u32, y1 as u32, y2 as u32, &color)
+                    }
+                },
+                None => (),
             }
         }
 
