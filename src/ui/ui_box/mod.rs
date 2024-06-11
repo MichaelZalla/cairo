@@ -1,5 +1,9 @@
-use std::fmt::Debug;
-use std::{cell::RefCell, fmt, mem, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::{self, Debug},
+    mem,
+    rc::Rc,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -165,26 +169,13 @@ impl Debug for UIBox {
 
 impl UIBox {
     pub fn new(
-        mut id: String,
+        id: String,
         features: UIBoxFeatureMask,
         layout_direction: UILayoutDirection,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
         custom_render_callback: Option<(Handle, Rc<UIBoxCustomRenderCallback>)>,
     ) -> Self {
-        let id_split_str = id.split("__").collect::<Vec<&str>>();
-
-        let id_split_strings = id_split_str
-            .iter()
-            .map(|s| String::from(*s))
-            .collect::<Vec<String>>();
-
-        let key = if id_split_strings.len() == 1 {
-            Default::default()
-        } else {
-            id = id_split_strings[0].to_string();
-
-            UIKey::from_string(id_split_strings[1].to_string())
-        };
+        let key = UIKey::from_string(id.clone());
 
         // Styles may have changed after the previous frame was rendered.
 

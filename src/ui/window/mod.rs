@@ -325,10 +325,7 @@ fn render_titlebar(
         ctx.fill_color(color::BLACK, || {
             ctx.text_color(color::WHITE, || {
                 let container_box_result = tree.push_parent(container_box(
-                    format!(
-                        "{}_WindowTitleBarContainer__{}_window_titlebar_container",
-                        id, id
-                    ),
+                    format!("{}_WindowTitleBarContainer", id),
                     UILayoutDirection::LeftToRight,
                     Some([
                         UISizeWithStrictness {
@@ -374,7 +371,7 @@ fn render_titlebar(
                 }
 
                 tree.push(text_box(
-                    format!("{}_WindowTitleBarTitle__{}_window_titlebar_title", id, id),
+                    format!("{}_WindowTitleBarTitle", id),
                     id.to_string(),
                 ))?;
 
@@ -398,7 +395,7 @@ fn render_titlebar(
                 ))?;
 
                 let mut close_button = button_box(
-                    format!("{}_WindowTitleBarClose__{}_window_titlebar_close", id, id),
+                    format!("{}_WindowTitleBarClose", id),
                     "Close".to_string(),
                     None,
                 );

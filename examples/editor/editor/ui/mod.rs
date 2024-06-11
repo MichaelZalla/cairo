@@ -16,7 +16,7 @@ static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button
 
 pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), String> {
     tree.push_parent(container_box(
-        "MainMenuBar__main_menu_bar".to_string(),
+        "MainMenuBar".to_string(),
         UILayoutDirection::LeftToRight,
         Some([
             UISizeWithStrictness {
@@ -33,7 +33,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
     // Icon
 
     tree.push(UIBox::new(
-        "MainMenuBarLogo__main_menu_bar_logo".to_string(),
+        "MainMenuBarLogo".to_string(),
         UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
         UILayoutDirection::LeftToRight,
         [
@@ -50,7 +50,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
     ))?;
 
     tree.push_parent(container_box(
-        "MainMenuBarMenu__main_menu_bar_menu".to_string(),
+        "MainMenuBarMenu".to_string(),
         UILayoutDirection::TopToBottom,
         Some([
             UISizeWithStrictness {
@@ -67,14 +67,14 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
     // Top spacer
 
     tree.push(greedy_box(
-        "MainMenuBarMenuTopSpacer__main_menu_bar_menu_top_spacer".to_string(),
+        "MainMenuBarMenuTopSpacer".to_string(),
         UILayoutDirection::LeftToRight,
     ))?;
 
     // Menu item list
 
     tree.push_parent(container_box(
-        "MainMenuBarMenuItemList__main_menu_bar_menu_item_list".to_string(),
+        "MainMenuBarMenuItemList".to_string(),
         UILayoutDirection::LeftToRight,
         None,
     ))?;
@@ -87,10 +87,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
         // Menu bar item (container)
 
         tree.push_parent(container_box(
-            format!(
-                "MainMenuBarMenuItemList_MenuItem{}__menu_bar_menu_item_{}",
-                item_index, item_index
-            ),
+            format!("MainMenuBarMenuItemList_MenuItem{}", item_index),
             UILayoutDirection::LeftToRight,
             None,
         ))?;
@@ -98,10 +95,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
         // Menu bar button (text)
 
         let mut button_box = button_box(
-            format!(
-                "MainMenuBarMenuItemList_MenuItem{}_Text__menu_bar_menu_item_{}_text",
-                item_index, item_index
-            ),
+            format!("MainMenuBarMenuItemList_MenuItem{}_Text", item_index),
             item_label.to_string(),
             None,
         );
@@ -118,7 +112,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
     // Bottom spacer
 
     tree.push(greedy_box(
-        "MainMenuBarMenuBottomSpacer__main_menu_bar_menu_bottomspacer".to_string(),
+        "MainMenuBarMenuBottomSpacer".to_string(),
         UILayoutDirection::LeftToRight,
     ))?;
 
@@ -133,7 +127,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
 
 pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), String> {
     tree.push_parent(container_box(
-        "Toolbar__toolbar".to_string(),
+        "Toolbar".to_string(),
         UILayoutDirection::LeftToRight,
         Some([
             UISizeWithStrictness {
@@ -150,7 +144,7 @@ pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), St
     // Toolbar buttons list
 
     tree.push_parent(container_box(
-        "ToolbarItemList__toolbar_item_list".to_string(),
+        "ToolbarItemList".to_string(),
         UILayoutDirection::LeftToRight,
         None,
     ))?;
@@ -165,10 +159,7 @@ pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), St
         // Button.
 
         tree.push(button_box(
-            format!(
-                "ToolbarItemList_Item{}__toolbar_item_list_item{}",
-                button_index, button_index
-            ),
+            format!("ToolbarItemList_Item{}", button_index),
             button_label.to_string(),
             Some([
                 UISizeWithStrictness {

@@ -86,23 +86,16 @@ impl Panel {
         }
     }
 
-    fn get_panel_ui_box_id_and_hash(&self) -> (String, String) {
+    fn get_panel_ui_box_id(&self) -> String {
         let panel_path = &self.path;
         let panel_path_cloned = panel_path.clone();
         let panel_path_components = panel_path_cloned.split(' ').collect::<Vec<&str>>();
 
-        let panel_ui_box_id = panel_path_components.join("");
-        let panel_ui_box_key_hash = panel_path_components
-            .iter()
-            .map(|s| s.to_lowercase())
-            .collect::<Vec<String>>()
-            .join("_");
-
-        (panel_ui_box_id, panel_ui_box_key_hash)
+        panel_path_components.join("")
     }
 
     pub fn make_panel_box(&self, draw_border: bool) -> Result<UIBox, String> {
-        let (panel_ui_box_id, panel_ui_box_key_hash) = self.get_panel_ui_box_id_and_hash();
+        let panel_ui_box_id = self.get_panel_ui_box_id();
 
         let ui_box_feature_flags = UIBoxFeatureFlag::DrawFill
             | if draw_border {
@@ -121,7 +114,7 @@ impl Panel {
             };
 
         let panel_ui_box = UIBox::new(
-            format!("{}__{}", panel_ui_box_id, panel_ui_box_key_hash),
+            panel_ui_box_id.to_string(),
             ui_box_feature_flags,
             self.layout_direction,
             [

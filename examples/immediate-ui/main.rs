@@ -94,7 +94,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::WHITE, || {
                         tree.push_parent(UIBox::new(
-                            "Root__root".to_string(),
+                            "Root".to_string(),
                             UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
                             UILayoutDirection::TopToBottom,
                             [
@@ -126,7 +126,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::GREEN, || {
                         tree.push_parent(UIBox::new(
-                            "RootChild1__root_child1".to_string(),
+                            "RootChild1".to_string(),
                             UIBoxFeatureFlag::DrawFill
                                 | UIBoxFeatureFlag::Hoverable
                                 | UIBoxFeatureFlag::Clickable,
@@ -150,7 +150,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::ORANGE, || {
                         tree.push(UIBox::new(
-                            "RootChild1Child1__root_child1_child1".to_string(),
+                            "RootChild1Child1".to_string(),
                             UIBoxFeatureFlag::DrawFill
                                 | UIBoxFeatureFlag::Hoverable
                                 | UIBoxFeatureFlag::Clickable,
@@ -174,7 +174,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::BLACK, || {
                         tree.push(UIBox::new(
-                            "RootChild1Spacer1__root_child1_spacer1".to_string(),
+                            "RootChild1Spacer1".to_string(),
                             UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
                             UILayoutDirection::TopToBottom,
                             [
@@ -196,7 +196,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::SKY_BOX, || {
                         tree.push(UIBox::new(
-                            "RootChild1Child2__root_child1_child2".to_string(),
+                            "RootChild1Child2".to_string(),
                             UIBoxFeatureFlag::DrawFill
                                 | UIBoxFeatureFlag::Hoverable
                                 | UIBoxFeatureFlag::Clickable,
@@ -224,7 +224,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::GREEN, || {
                         tree.push_parent(UIBox::new(
-                            "RootChild2__root_child2".to_string(),
+                            "RootChild2".to_string(),
                             UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
                             UILayoutDirection::LeftToRight,
                             [
@@ -246,7 +246,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::ORANGE, || {
                         tree.push(UIBox::new(
-                            "RootChild2Child1__root_child2_child1".to_string(),
+                            "RootChild2Child1".to_string(),
                             UIBoxFeatureFlag::DrawFill
                                 | UIBoxFeatureFlag::Hoverable
                                 | UIBoxFeatureFlag::Clickable,
@@ -270,7 +270,7 @@ fn main() -> Result<(), String> {
 
                     ctx.fill_color(color::SKY_BOX, || {
                         tree.push_parent(UIBox::new(
-                            "RootChild2Child2__root_child2_child2".to_string(),
+                            "RootChild2Child2".to_string(),
                             UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable,
                             UILayoutDirection::TopToBottom,
                             [
@@ -296,7 +296,7 @@ fn main() -> Result<(), String> {
 
                             for i in 0..child_count {
                                 tree.push_parent(UIBox::new(
-                                    format!("RootChild2Child2Child{}__root_child2_child2_child{}", i, i),
+                                    format!("RootChild2Child2Child{}", i),
                                     UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable,
                                     UILayoutDirection::LeftToRight,
                                     [
@@ -313,7 +313,7 @@ fn main() -> Result<(), String> {
                                 ))?;
 
                                 tree.push(UIBox::new(
-                                    format!("RootChild2Child2Child{}SpacerBefore__root_child2_child2_child{}_spacer_before", i, i),
+                                    format!("RootChild2Child2Child{}SpacerBefore", i),
                                     UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
                                     UILayoutDirection::TopToBottom,
                                     [
@@ -329,10 +329,13 @@ fn main() -> Result<(), String> {
                                     None,
                                 ))?;
 
-                                tree.push(text_box(format!("RootChild2Child2Child{}Text__root_child2_child2_child{}_text", i, i), format!("Label {}", i)))?;
+                                tree.push(text_box(
+                                    format!("RootChild2Child2Child{}Text", i),
+                                    format!("Label {}", i),
+                                ))?;
 
                                 tree.push(UIBox::new(
-                                    format!("RootChild2Child2Child{}SpacerAfter__root_child2_child2_child{}_spacer_after", i, i),
+                                    format!("RootChild2Child2Child{}SpacerAfter", i),
                                     UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
                                     UILayoutDirection::TopToBottom,
                                     [
