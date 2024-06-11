@@ -3,13 +3,10 @@ use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    color::{self, Color},
-    resource::handle::Handle,
-};
+use crate::{color::Color, resource::handle::Handle};
 
 use super::{
-    context::{UIContext, GLOBAL_UI_CONTEXT},
+    context::GLOBAL_UI_CONTEXT,
     ui_box::{
         interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
         UIBoxCustomRenderCallback, UIBoxFeatureFlag, UILayoutDirection,
@@ -104,11 +101,7 @@ impl Panel {
         (panel_ui_box_id, panel_ui_box_key_hash)
     }
 
-    pub fn make_panel_box(
-        &self,
-        ui_context: &UIContext<'static>,
-        draw_border: bool,
-    ) -> Result<UIBox, String> {
+    pub fn make_panel_box(&self, draw_border: bool) -> Result<UIBox, String> {
         let (panel_ui_box_id, panel_ui_box_key_hash) = self.get_panel_ui_box_id_and_hash();
 
         let ui_box_feature_flags = UIBoxFeatureFlag::DrawFill
@@ -127,36 +120,28 @@ impl Panel {
                 UIBoxFeatureFlag::Null
             };
 
-        let mut panel_ui_box: UIBox = Default::default();
-
-        ui_context.fill_color(color::WHITE, || {
-            ui_context.border_color(color::BLACK, || {
-                panel_ui_box = UIBox::new(
-                    format!("{}__{}", panel_ui_box_id, panel_ui_box_key_hash),
-                    ui_box_feature_flags,
-                    self.layout_direction,
-                    [
-                        UISizeWithStrictness {
-                            size: UISize::PercentOfParent(self.alpha_split),
-                            strictness: 0.0,
-                        },
-                        UISizeWithStrictness {
-                            size: UISize::PercentOfParent(1.0),
-                            strictness: 1.0,
-                        },
-                    ],
-                    if let Some(data) = &self.instance_data {
-                        data.custom_render_callback
-                            .as_ref()
-                            .map(|callback| (data.panel_instance, callback.clone()))
-                    } else {
-                        None
-                    },
-                );
-
-                Ok(())
-            })
-        })?;
+        let panel_ui_box = UIBox::new(
+            format!("{}__{}", panel_ui_box_id, panel_ui_box_key_hash),
+            ui_box_feature_flags,
+            self.layout_direction,
+            [
+                UISizeWithStrictness {
+                    size: UISize::PercentOfParent(self.alpha_split),
+                    strictness: 0.0,
+                },
+                UISizeWithStrictness {
+                    size: UISize::PercentOfParent(1.0),
+                    strictness: 1.0,
+                },
+            ],
+            if let Some(data) = &self.instance_data {
+                data.custom_render_callback
+                    .as_ref()
+                    .map(|callback| (data.panel_instance, callback.clone()))
+            } else {
+                None
+            },
+        );
 
         Ok(panel_ui_box)
     }

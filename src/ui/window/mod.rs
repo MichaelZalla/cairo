@@ -224,7 +224,13 @@ impl<'a> Window<'a> {
             }?;
         }
 
-        self.render_panel_tree_to_base_ui_tree()?;
+        {
+            // Builds UI from the current editor panel tree.
+
+            let panel_tree = &mut self.panel_tree.borrow_mut();
+
+            panel_tree.render(self)?;
+        }
 
         // Commit this UI tree for the current frame.
 
@@ -299,16 +305,6 @@ impl<'a> Window<'a> {
                 self.size.0 = (self.size.0 as i32 + delta.0) as u32;
             }
         }
-    }
-
-    fn render_panel_tree_to_base_ui_tree(&mut self) -> Result<(), String> {
-        // Builds UI from the current editor panel tree.
-
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            let panel_tree = &mut self.panel_tree.borrow_mut();
-
-            panel_tree.render(ctx, self)
-        })
     }
 }
 

@@ -3,7 +3,7 @@ use core::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::ui::{
-    context::{UIContext, GLOBAL_UI_CONTEXT},
+    context::GLOBAL_UI_CONTEXT,
     tree::{node::NodeLocalTraversalMethod, Tree},
     ui_box::{UIBoxDragHandle, UIBoxFeatureFlag},
     window::Window,
@@ -57,11 +57,7 @@ impl<'a> PanelTree<'a> {
         self.tree.pop_parent()
     }
 
-    pub fn render(
-        &mut self,
-        ui_context: &UIContext<'static>,
-        window: &Window,
-    ) -> Result<(), String> {
+    pub fn render(&mut self, window: &Window) -> Result<(), String> {
         let base_tree = &window.ui_trees.base;
 
         self.tree.visit_root_dfs_mut(
@@ -73,7 +69,7 @@ impl<'a> PanelTree<'a> {
 
                 let mut ui_box_tree = base_tree.borrow_mut();
 
-                let mut panel_box = panel.make_panel_box(ui_context, !window.docked)?;
+                let mut panel_box = panel.make_panel_box(!window.docked)?;
 
                 if let Some(parent) = parent_data {
                     if parent.resizable && sibling_index != 0 {
