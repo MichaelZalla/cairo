@@ -27,8 +27,8 @@ fn apply_wrapping_options<T: Default + Debug + Copy + PartialEq>(
             z: 1.0,
         },
         TextureMapWrapping::ClampToEdge => Vec2 {
-            x: uv.x.max(0.0).min(1.0),
-            y: uv.y.max(0.0).min(1.0),
+            x: uv.x.clamp(0.0, 1.0),
+            y: uv.y.clamp(0.0, 1.0),
             z: 1.0,
         },
         TextureMapWrapping::ClampToBorder(_border_color) => {

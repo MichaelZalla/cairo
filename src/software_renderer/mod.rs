@@ -478,7 +478,7 @@ impl SoftwareRenderer {
                                 let far = depth_buffer.get_projection_z_far();
 
                                 linear_space_interpolant.depth =
-                                    ((z - near) / (far - near)).max(0.0).min(1.0);
+                                    ((z - near) / (far - near)).clamp(0.0, 1.0);
 
                                 if let Some(sample) = (self.geometry_shader)(
                                     &shader_context,

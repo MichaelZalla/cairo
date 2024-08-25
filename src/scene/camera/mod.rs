@@ -445,7 +445,7 @@ impl Camera {
 
                     current_field_of_view -= event.delta as f32;
 
-                    current_field_of_view = current_field_of_view.max(1.0).min(120.0);
+                    current_field_of_view = current_field_of_view.clamp(1.0, 120.0);
 
                     self.field_of_view = Some(current_field_of_view);
 
