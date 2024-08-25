@@ -206,8 +206,8 @@ impl LookVector {
         }
 
         let left_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.left.position.x as f32 / std::i16::MAX as f32,
-            y: game_controller_state.joysticks.left.position.y as f32 / std::i16::MAX as f32,
+            x: game_controller_state.joysticks.left.position.x as f32 / i16::MAX as f32,
+            y: game_controller_state.joysticks.left.position.y as f32 / i16::MAX as f32,
             z: 1.0,
         };
 
@@ -224,8 +224,8 @@ impl LookVector {
         }
 
         let right_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.right.position.x as f32 / std::i16::MAX as f32,
-            y: game_controller_state.joysticks.right.position.y as f32 / std::i16::MAX as f32,
+            x: game_controller_state.joysticks.right.position.x as f32 / i16::MAX as f32,
+            y: game_controller_state.joysticks.right.position.y as f32 / i16::MAX as f32,
             z: 1.0,
         };
 
