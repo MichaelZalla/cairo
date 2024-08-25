@@ -213,7 +213,7 @@ fn main() -> Result<(), String> {
 
                     node.get_transform_mut().set_rotation(Vec3 {
                         x: 0.0,
-                        y: uptime % (2.0 * PI) / 3.0,
+                        y: (uptime / 3.0) % (2.0 * PI),
                         z: 0.0,
                     });
 
