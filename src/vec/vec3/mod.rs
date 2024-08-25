@@ -230,6 +230,15 @@ impl Vec3 {
         self.y = self.y.sqrt();
         self.z = self.z.sqrt();
     }
+
+    pub fn tone_map_exposure(&self, exposure: f32) -> Self {
+        Self::ones()
+            - Self {
+                x: (-self.x * exposure).exp(),
+                y: (-self.y * exposure).exp(),
+                z: (-self.z * exposure).exp(),
+            }
+    }
 }
 
 pub static MIN: Vec3 = Vec3 {

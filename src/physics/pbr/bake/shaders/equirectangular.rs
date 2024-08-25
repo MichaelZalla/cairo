@@ -89,22 +89,11 @@ pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
                 let uv: Vec2 = sample_spherical_to_cartesian(sample.world_pos.as_normal());
 
-                let mut sample = sample_nearest_vec3(uv, map, None) / 255.0;
-
-                sample *= HDR_EXPOSURE;
-
-                // return Color::from_vec3(sample);
+                let sample = sample_nearest_vec3(uv, map, None) / 255.0;
 
                 // Exposure tone mapping
 
-                let color_tone_mapped_vec3 = Vec3::ones()
-                    - Vec3 {
-                        x: (-sample.x).exp(),
-                        y: (-sample.y).exp(),
-                        z: (-sample.z).exp(),
-                    };
-
-                return Color::from_vec3(color_tone_mapped_vec3);
+                return Color::from_vec3(sample.tone_map_exposure(100.0));
             }
         }
 

@@ -557,14 +557,7 @@ impl SoftwareRenderer {
         if self.options.do_lighting {
             // Exposure tone mapping
 
-            static EXPOSURE: f32 = 1.0;
-
-            color_tone_mapped_vec3 = Vec3::ones()
-                - Vec3 {
-                    x: (-hdr_color.x * EXPOSURE).exp(),
-                    y: (-hdr_color.y * EXPOSURE).exp(),
-                    z: (-hdr_color.z * EXPOSURE).exp(),
-                };
+            color_tone_mapped_vec3 = hdr_color.tone_map_exposure(1.0);
         }
 
         // (Gamma) Transform linear space to sRGB space.

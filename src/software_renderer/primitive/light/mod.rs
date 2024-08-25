@@ -135,18 +135,9 @@ impl SoftwareRenderer {
                 + light.look_vector.get_up() * opposite_over_adjacent * light.influence_distance,
         ];
 
-        let mut color = {
-            // Exposure tone mapping
+        // Exposure tone mapping
 
-            static EXPOSURE: f32 = 1.0;
-
-            Vec3::ones()
-                - Vec3 {
-                    x: (-light.intensities.x * EXPOSURE).exp(),
-                    y: (-light.intensities.y * EXPOSURE).exp(),
-                    z: (-light.intensities.z * EXPOSURE).exp(),
-                }
-        };
+        let mut color = light.intensities.tone_map_exposure(1.0);
 
         color.linear_to_srgb();
 
