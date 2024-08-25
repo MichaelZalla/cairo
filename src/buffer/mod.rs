@@ -33,10 +33,7 @@ where
     pub fn new(width: u32, height: u32, fill_value: Option<T>) -> Self {
         let width_over_height = width as f32 / height as f32;
 
-        let value: T = match fill_value {
-            Some(fill_value) => fill_value,
-            None => Default::default(),
-        };
+        let value: T = fill_value.unwrap_or_default();
 
         let data: Vec<T> = vec![value; (width * height) as usize];
 
@@ -151,10 +148,7 @@ where
     }
 
     pub fn clear(&mut self, value: Option<T>) -> &Self {
-        let fill_value: T = match value {
-            Some(value) => value,
-            None => Default::default(),
-        };
+        let fill_value: T = value.unwrap_or_default();
 
         for i in 0..self.data.len() {
             self.data[i] = fill_value;

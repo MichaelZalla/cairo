@@ -216,10 +216,7 @@ impl SceneNode {
     where
         C: FnMut(usize, Mat4, &SceneNode) -> Result<(), String>,
     {
-        let local = match local_method {
-            Some(method) => method,
-            None => Default::default(),
-        };
+        let local = local_method.unwrap_or_default();
 
         let current_depth: usize = 0;
         let parent_world_transform = Mat4::identity();
@@ -241,11 +238,7 @@ impl SceneNode {
     where
         C: FnMut(usize, Mat4, &mut SceneNode) -> Result<(), String>,
     {
-        let local = match local_method {
-            Some(method) => method,
-            None => Default::default(),
-        };
-
+        let local = local_method.unwrap_or_default();
         let current_depth: usize = 0;
         let parent_world_transform = Mat4::identity();
 

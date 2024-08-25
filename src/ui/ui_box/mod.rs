@@ -446,10 +446,7 @@ impl UIBox {
         let (x, y) = self.get_pixel_coordinates();
         let (width, height) = self.get_computed_pixel_size();
 
-        let end = match self.styles.fill_color {
-            Some(color) => color,
-            None => Default::default(),
-        };
+        let end = self.styles.fill_color.unwrap_or_default();
 
         let fill_color = if self.active_transition < 0.999 {
             let with_hot = UI_BOX_HOT_COLOR.lerp_linear(end, self.hot_transition);
@@ -466,10 +463,7 @@ impl UIBox {
         if self.features.contains(UIBoxFeatureFlag::DrawText) {
             let text_content = self.text_content.as_ref().expect("Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!");
 
-            let text_color = match self.styles.text_color {
-                Some(color) => color,
-                None => Default::default(),
-            };
+            let text_color = self.styles.text_color.unwrap_or_default();
 
             GLOBAL_UI_CONTEXT.with(|ctx| {
                 let mut text_cache = ctx.text_cache.borrow_mut();
@@ -519,10 +513,7 @@ impl UIBox {
         target: &mut Buffer2D,
     ) -> Result<(), String> {
         if self.features.contains(UIBoxFeatureFlag::DrawChildDividers) && !children.is_empty() {
-            let divider_color = match self.styles.border_color {
-                Some(color) => color,
-                None => Default::default(),
-            };
+            let divider_color = self.styles.border_color.unwrap_or_default();
 
             for (child_index, child) in children.iter().enumerate() {
                 if child_index == 0 {

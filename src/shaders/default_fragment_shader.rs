@@ -178,11 +178,7 @@ fn contribute_ambient_ibl(
 ) -> Vec3 {
     // Total incoming ambient light from environment.
 
-    let cubemap_rotation_transform = if let Some(transform) = context.skybox_transform {
-        transform
-    } else {
-        Default::default()
-    };
+    let cubemap_rotation_transform = context.skybox_transform.unwrap_or_default();
 
     let irradiance = diffuse_irradiance_map.sample_nearest(
         &(Vec4::new(sample.world_normal, 1.0) * cubemap_rotation_transform),
