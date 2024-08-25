@@ -9,7 +9,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -19,7 +21,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -47,7 +51,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -64,7 +70,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -81,7 +89,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -99,7 +109,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -116,7 +128,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -125,7 +139,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -134,7 +150,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -143,7 +161,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -152,7 +172,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -161,7 +183,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -170,7 +194,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -179,7 +205,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -188,7 +216,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -197,7 +227,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -206,7 +238,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -215,7 +249,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -224,7 +260,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -233,7 +271,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
