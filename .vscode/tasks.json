@@ -298,5 +298,16 @@
       "label": "Rust: cargo run --example allocators",
       "command": "cargo run --example allocators"
     },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example particle-systems",
+      "command": "cargo run --example particle-systems"
+    },
   ]
 }
