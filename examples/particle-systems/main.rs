@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, f32::consts::PI};
 
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
@@ -8,10 +8,10 @@ use cairo::{
     color::{self},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     graphics::Graphics,
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
-use random::{DirectionSampler, RandomSampler};
+use random::{DirectionSampler, RandomSampler, VectorDisplaceSampler};
 
 mod random;
 
@@ -57,21 +57,45 @@ fn main() -> Result<(), String> {
 
         // Clears pixel buffer
 
-        // framebuffer.clear(Some(color::BLACK.to_u32()));
+        framebuffer.clear(Some(color::BLACK.to_u32()));
 
         {
-            let uniform_sample_normal = sampler.sample_direction_uniform();
+            // let uniform_sample_normal = sampler.sample_direction_uniform();
 
-            let start = framebuffer_center;
-            let end = framebuffer_center + uniform_sample_normal * 200.0;
+            // let start = framebuffer_center;
+            // let end = framebuffer_center + uniform_sample_normal * 200.0;
+
+            // Graphics::line(
+            //     &mut framebuffer,
+            //     start.x as i32,
+            //     start.y as i32,
+            //     end.x as i32,
+            //     end.y as i32,
+            //     &color::YELLOW,
+            // );
+        }
+
+        {
+            let v = vec3::RIGHT * 150.0;
 
             Graphics::line(
                 &mut framebuffer,
-                start.x as i32,
-                start.y as i32,
-                end.x as i32,
-                end.y as i32,
-                &color::YELLOW,
+                framebuffer_center.x as i32,
+                framebuffer_center.y as i32,
+                (framebuffer_center.x + v.x) as i32,
+                (framebuffer_center.y + v.y) as i32,
+                &color::RED,
+            );
+
+            let permutation = sampler.sample_displacement_uniform(&v, PI / 8.0);
+
+            Graphics::line(
+                &mut framebuffer,
+                framebuffer_center.x as i32,
+                framebuffer_center.y as i32,
+                (framebuffer_center.x + permutation.x) as i32,
+                (framebuffer_center.y + permutation.y) as i32,
+                &color::BLUE,
             );
         }
 
