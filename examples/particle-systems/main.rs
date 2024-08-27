@@ -84,10 +84,10 @@ fn main() -> Result<(), String> {
                 framebuffer_center.y as i32,
                 (framebuffer_center.x + v.x) as i32,
                 (framebuffer_center.y + v.y) as i32,
-                &color::RED,
+                &color::YELLOW,
             );
 
-            let permutation = sampler.sample_displacement_uniform(&v, PI / 8.0);
+            let permutation = sampler.sample_displacement_uniform(&v, -PI / 2.0);
 
             Graphics::line(
                 &mut framebuffer,
@@ -95,8 +95,22 @@ fn main() -> Result<(), String> {
                 framebuffer_center.y as i32,
                 (framebuffer_center.x + permutation.x) as i32,
                 (framebuffer_center.y + permutation.y) as i32,
-                &color::BLUE,
+                &color::RED,
             );
+
+            match sampler.sample_displacement_normal(&v, PI / 2.0) {
+                Ok(permutation) => {
+                    Graphics::line(
+                        &mut framebuffer,
+                        framebuffer_center.x as i32,
+                        framebuffer_center.y as i32,
+                        (framebuffer_center.x + permutation.x) as i32,
+                        (framebuffer_center.y + permutation.y) as i32,
+                        &color::BLUE,
+                    );
+                }
+                Err(_) => panic!(),
+            }
         }
 
         return Ok(framebuffer.get_all().clone());

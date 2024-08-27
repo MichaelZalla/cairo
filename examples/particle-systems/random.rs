@@ -12,6 +12,7 @@ use cairo::{
         vec4::Vec4,
     },
 };
+use rand_distr::{Normal, NormalError};
 
 #[derive(Default, Debug, Clone)]
 pub struct RandomSampler {
@@ -20,6 +21,7 @@ pub struct RandomSampler {
 
 pub trait RangeSampler {
     fn sample_range_uniform(&mut self, min: f32, max: f32) -> f32;
+    fn sample_range_normal(&mut self, mean: f32, std_dev: f32) -> Result<f32, NormalError>;
 }
 
 pub trait DirectionSampler {
@@ -28,6 +30,35 @@ pub trait DirectionSampler {
 
 pub trait VectorDisplaceSampler {
     fn sample_displacement_uniform(&mut self, v: &Vec3, max_deflection_angle_radians: f32) -> Vec3;
+    fn sample_displacement_normal(
+        &mut self,
+        v: &Vec3,
+        max_deflection_angle_radians: f32,
+    ) -> Result<Vec3, NormalError>;
+}
+
+impl RandomSampler {
+    fn sample_displacement(&mut self, v: &Vec3, max_deflection_angle_radians: f32, f: f32) -> Vec3 {
+        // See: https://math.stackexchange.com/a/4343075
+
+        let normal = v.as_normal();
+        let tangent = vec3::UP.cross(normal).as_normal();
+        let bitangent = normal.cross(tangent);
+
+        // @NOTE: Using {normal, bitangent, tangent} order such that `normal`
+        // becomes the X-axis in our new frame of reference; for 3D, we will
+        // want `normal` to serve as the Z-axis instead.
+        let basis = Mat4::tbn(normal, bitangent, tangent);
+
+        let phi = f.sqrt() * max_deflection_angle_radians;
+
+        // @NOTE: Skipping rotation sample for now, as we don't need it for 2D.
+        // let theta = self.sample_range_uniform(-PI, PI);
+
+        let right_rotated = Vec4::new(vec3::RIGHT, 1.0) * Mat4::rotation_z(phi);
+
+        ((right_rotated * basis) * v.mag()).to_vec3()
+    }
 }
 
 impl RangeSampler for RandomSampler {
@@ -36,6 +67,15 @@ impl RangeSampler for RandomSampler {
         let sampler = Uniform::new_inclusive(min, max);
 
         sampler.sample(&mut self.rng)
+    }
+
+    /// Returns a normally distributed random scalar with a given mean and
+    /// standard deviation.
+    fn sample_range_normal(&mut self, mean: f32, std_dev: f32) -> Result<f32, NormalError> {
+        match Normal::new(mean, std_dev) {
+            Ok(distribution) => Ok(distribution.sample(&mut self.rng)),
+            Err(err) => Err(err),
+        }
     }
 }
 
@@ -60,29 +100,21 @@ impl DirectionSampler for RandomSampler {
 
 impl VectorDisplaceSampler for RandomSampler {
     fn sample_displacement_uniform(&mut self, v: &Vec3, max_deflection_angle_radians: f32) -> Vec3 {
-        // See: https://math.stackexchange.com/a/4343075
+        let f = self.sample_range_uniform(0.0, 1.0);
 
-        let normal = v.as_normal();
-        let tangent = vec3::UP.cross(normal).as_normal();
-        let bitangent = normal.cross(tangent);
+        self.sample_displacement(v, max_deflection_angle_radians, f)
+    }
 
-        // @NOTE: Using {normal, bitangent, tangent} order such that `normal`
-        // becomes the X-axis in our new frame of reference; for 3D, we will
-        // want `normal` to serve as the Z-axis instead.
-        let basis = Mat4::tbn(normal, bitangent, tangent);
+    fn sample_displacement_normal(
+        &mut self,
+        v: &Vec3,
+        max_deflection_angle_radians: f32,
+    ) -> Result<Vec3, NormalError> {
+        let std_dev = max_deflection_angle_radians / 3.0;
 
-        // let f = self.sample_range_uniform(0.0, 1.0);
-        let f =
-            self.sample_range_uniform(-max_deflection_angle_radians, max_deflection_angle_radians);
-
-        // let phi = f.sqrt() * max_deflection_angle_radians;
-        let phi = f;
-
-        // @NOTE: Skipping rotation sample for now, as we don't need it for 2D.
-        // let theta = self.sample_range_uniform(-PI, PI);
-
-        let right_rotated = Vec4::new(vec3::RIGHT, 1.0) * Mat4::rotation_z(phi);
-
-        ((right_rotated * basis) * v.mag()).to_vec3()
+        match self.sample_range_normal(0.0, std_dev) {
+            Ok(f) => Ok(self.sample_displacement(v, max_deflection_angle_radians, f.abs())),
+            Err(err) => Err(err),
+        }
     }
 }

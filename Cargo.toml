@@ -43,6 +43,7 @@ features = ["ttf","unsafe_textures", "image"]
 
 [dev-dependencies]
 rand = "0.8.5"
+rand_distr = "0.4.3"
 
 [profile.dev]
 opt-level = 1
