@@ -280,5 +280,16 @@
       "label": "Rust: cargo run --example sponza",
       "command": "cargo run --example sponza"
     },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example allocators",
+      "command": "cargo run --example allocators"
+    },
   ]
 }

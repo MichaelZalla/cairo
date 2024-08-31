@@ -4,4 +4,5 @@
 // pub mod list4;
 // pub mod list5;
 // pub mod list6;
+pub mod arena;
 pub mod linked_list;
