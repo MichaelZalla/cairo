@@ -9,9 +9,9 @@ pub struct FixedStackArena {
     capacity: usize,
     align: usize,
     layout: Layout,
-    memory: Option<UniquePtr<[u8]>>,
+    memory: UniquePtr<[u8]>,
     bytes_allocated: usize,
-    finger: Option<NonNull<u8>>,
+    finger: NonNull<u8>,
 }
 
 impl FixedStackArena {
@@ -20,43 +20,38 @@ impl FixedStackArena {
         // Create layout.
         let layout = FixedStackArena::layout(capacity, align)?;
 
-        // Skip initial allocation if the initial arena size is zero.
-        let (data, finger) = if capacity == 0 {
-            (None, None)
-        } else {
-            unsafe {
-                // Allocate.
-                let raw_ptr_mut = alloc(layout);
-                // let raw_ptr_mut = libc::malloc(layout.size()).cast::<u8>();
+        let (memory, finger) = unsafe {
+            // Allocate.
+            let raw_ptr_mut = alloc(layout);
+            // let raw_ptr_mut = libc::malloc(layout.size()).cast::<u8>();
 
-                // Panic (stack unwind) or abort (no stack unwind) on OOM.
-                if raw_ptr_mut.is_null() {
-                    handle_alloc_error(layout);
-                }
-
-                // Cast memory chunk to a slice.
-                let slice = std::slice::from_raw_parts_mut(raw_ptr_mut, capacity);
-
-                // Wrap slice inside a `UniquePtr`.
-                let non_null = match NonNull::new(slice) {
-                    Some(ptr) => ptr,
-                    None => return Err(AllocatorError::Null),
-                };
-
-                // Finger pointer initialized to the start of our chunk.
-                let finger = non_null.cast::<u8>();
-
-                let unique_ptr = UniquePtr::new(non_null);
-
-                (Some(unique_ptr), Some(finger))
+            // Panic (stack unwind) or abort (no stack unwind) on OOM.
+            if raw_ptr_mut.is_null() {
+                handle_alloc_error(layout);
             }
+
+            // Cast memory chunk to a slice.
+            let slice = std::slice::from_raw_parts_mut(raw_ptr_mut, capacity);
+
+            // Wrap slice inside a `UniquePtr`.
+            let non_null = match NonNull::new(slice) {
+                Some(ptr) => ptr,
+                None => return Err(AllocatorError::Null),
+            };
+
+            // Finger pointer initialized to the start of our chunk.
+            let finger = non_null.cast::<u8>();
+
+            let unique_ptr = UniquePtr::new(non_null);
+
+            (unique_ptr, finger)
         };
 
         Ok(Self {
             capacity,
             align,
             layout,
-            memory: data,
+            memory,
             bytes_allocated: 0,
             finger,
         })
@@ -73,28 +68,25 @@ impl FixedStackArena {
     fn _push(&mut self, size: usize, zeroed: bool) -> UniquePtr<[u8]> {
         assert!(self.capacity() - self.bytes_allocated() >= size);
 
-        match self.finger {
-            Some(finger) => unsafe {
-                let slice = std::slice::from_raw_parts_mut(finger.as_ptr(), size);
+        unsafe {
+            let slice = std::slice::from_raw_parts_mut(self.finger.as_ptr(), size);
 
-                if zeroed {
-                    slice.fill(0);
-                }
+            if zeroed {
+                slice.fill(0);
+            }
 
-                let non_null = match NonNull::new(slice) {
-                    Some(ptr) => ptr,
-                    None => panic!("{}", AllocatorError::Null),
-                };
+            let non_null = match NonNull::new(slice) {
+                Some(ptr) => ptr,
+                None => panic!("{}", AllocatorError::Null),
+            };
 
-                let unique_ptr = UniquePtr::new(non_null);
+            let unique_ptr = UniquePtr::new(non_null);
 
-                self.bytes_allocated += size;
+            self.bytes_allocated += size;
 
-                self.finger = Some(NonNull::new_unchecked(finger.as_ptr().byte_add(size)));
+            self.finger = NonNull::new_unchecked(self.finger.as_ptr().byte_add(size));
 
-                unique_ptr
-            },
-            None => todo!(),
+            unique_ptr
         }
     }
 
@@ -127,22 +119,15 @@ impl Arena for FixedStackArena {
     fn release(mut allocator: Self) {
         allocator.clear();
 
-        allocator.capacity = 0;
-
-        allocator.finger = None;
+        // allocator.finger = None;
 
         unsafe {
-            match allocator.memory {
-                Some(unique_ptr) => {
-                    let raw_ptr_mut = unique_ptr.as_ptr();
+            let raw_ptr_mut = allocator.memory.as_ptr();
 
-                    let raw_ptr_mut_u8 = raw_ptr_mut.cast::<u8>();
+            let raw_ptr_mut_u8 = raw_ptr_mut.cast::<u8>();
 
-                    dealloc(raw_ptr_mut_u8, allocator.layout);
-                    // libc::free(raw_ptr_mut_u8.cast::<c_void>());
-                }
-                None => (),
-            }
+            dealloc(raw_ptr_mut_u8, allocator.layout);
+            // libc::free(raw_ptr_mut_u8.cast::<c_void>());
         }
     }
 
@@ -191,9 +176,9 @@ impl Arena for FixedStackArena {
         self.bytes_allocated -= size;
 
         unsafe {
-            self.finger.replace(NonNull::new_unchecked(
-                self.finger.unwrap().as_ptr().byte_sub(size),
-            ));
+            let ptr = self.finger.as_ptr();
+
+            self.finger = NonNull::new_unchecked(ptr.byte_sub(size));
         }
 
         Ok(())
