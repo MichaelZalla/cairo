@@ -3,7 +3,7 @@
 use crate::{
     color::{self, Color},
     physics::pbr::sampling::importance_sample_ggx,
-    random::hammersley_2d_sequence,
+    random::sequence::hammersley_2d_sequence,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
