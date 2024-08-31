@@ -18,6 +18,7 @@ pub trait Arena {
     fn push_for<T: Sized + Default + Clone>(&mut self) -> UniquePtr<T>;
 
     fn pop(&mut self, size: usize) -> Result<(), AllocatorError>;
+    fn pop_to(&mut self, position: UniquePtr<[u8]>) -> Result<(), AllocatorError>;
 
     fn clear(&mut self);
 

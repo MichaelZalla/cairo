@@ -184,6 +184,29 @@ impl Arena for FixedStackArena {
         Ok(())
     }
 
+    fn pop_to(&mut self, position: UniquePtr<[u8]>) -> Result<(), AllocatorError> {
+        let target = position.as_ptr().cast::<u8>();
+        let start = self.memory.as_ptr().cast::<u8>();
+        let end = self.finger.as_ptr();
+
+        if target < start || target > end {
+            return Err(AllocatorError::InvalidArguments);
+        }
+
+        unsafe {
+            self.bytes_allocated = target.offset_from(start).try_into().unwrap();
+
+            match NonNull::new(self.memory.as_ptr().byte_add(self.bytes_allocated)) {
+                Some(non_null) => {
+                    self.finger = non_null.cast::<u8>();
+                }
+                None => panic!(),
+            }
+        }
+
+        Ok(())
+    }
+
     fn clear(&mut self) {
         self.pop(self.bytes_allocated()).unwrap();
     }
@@ -348,6 +371,30 @@ mod tests {
         *data = 3.14;
 
         println!("After: {}", *data);
+    }
+
+    #[test]
+    fn test_pop_to() {
+        let mut stack = match FixedStackArena::new(32, 1) {
+            Ok(stack) => stack,
+            Err(err) => panic!("{}", err.to_string()),
+        };
+
+        let a = stack.push(1);
+        let b = stack.push(1);
+        let _c = stack.push(1);
+        let e = stack.push(1);
+        let _f = stack.push(1);
+        let _g = stack.push(1);
+
+        assert!(stack.pop_to(e).is_ok());
+        assert_eq!(stack.bytes_allocated(), 3);
+
+        assert!(stack.pop_to(b).is_ok());
+        assert_eq!(stack.bytes_allocated(), 1);
+
+        assert!(stack.pop_to(a).is_ok());
+        assert_eq!(stack.bytes_allocated(), 0);
     }
 
     #[test]
