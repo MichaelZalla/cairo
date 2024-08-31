@@ -183,8 +183,10 @@ impl Arena for FixedStackArena {
         }
     }
 
-    fn pop(&mut self, size: usize) {
-        assert!(size <= self.bytes_allocated);
+    fn pop(&mut self, size: usize) -> Result<(), AllocatorError> {
+        if size > self.bytes_allocated {
+            return Err(AllocatorError::InvalidArguments);
+        }
 
         self.bytes_allocated -= size;
 
@@ -193,10 +195,12 @@ impl Arena for FixedStackArena {
                 self.finger.unwrap().as_ptr().byte_sub(size),
             ));
         }
+
+        Ok(())
     }
 
     fn clear(&mut self) {
-        self.pop(self.bytes_allocated());
+        self.pop(self.bytes_allocated()).unwrap();
     }
 }
 
@@ -218,14 +222,13 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_pop_on_empty_panic() {
         let mut stack = match FixedStackArena::new(1024, 1) {
             Ok(stack) => stack,
             Err(err) => panic!("{}", err.to_string()),
         };
 
-        stack.pop(1);
+        assert!(stack.pop(1).is_err())
     }
 
     #[test]
@@ -253,17 +256,17 @@ mod tests {
         assert_eq!(stack.capacity(), 32);
         assert_eq!(stack.bytes_allocated(), 3);
 
-        stack.pop(1);
+        assert!(stack.pop(1).is_ok());
 
         assert_eq!(stack.capacity(), 32);
         assert_eq!(stack.bytes_allocated(), 2);
 
-        stack.pop(1);
+        assert!(stack.pop(1).is_ok());
 
         assert_eq!(stack.capacity(), 32);
         assert_eq!(stack.bytes_allocated(), 1);
 
-        stack.pop(1);
+        assert!(stack.pop(1).is_ok());
 
         assert_eq!(stack.capacity(), 32);
         assert_eq!(stack.bytes_allocated(), 0);

@@ -1,3 +1,4 @@
+use error::AllocatorError;
 use unique::UniquePtr;
 
 pub mod error;
@@ -11,10 +12,12 @@ pub trait Arena {
 
     fn push(&mut self, size: usize) -> UniquePtr<[u8]>;
     fn push_zero(&mut self, size: usize) -> UniquePtr<[u8]>;
+
     fn push_array<T: Sized + Default + Clone>(&mut self, count: usize) -> UniquePtr<[T]>;
+
     fn push_for<T: Sized + Default + Clone>(&mut self) -> UniquePtr<T>;
 
-    fn pop(&mut self, size: usize);
+    fn pop(&mut self, size: usize) -> Result<(), AllocatorError>;
 
     fn clear(&mut self);
 
