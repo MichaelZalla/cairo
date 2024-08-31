@@ -143,6 +143,10 @@ impl Arena for FixedStackArena {
         self.align
     }
 
+    fn top(&self) -> &NonNull<u8> {
+        &self.finger
+    }
+
     // Push some bytes onto the stack.
     fn push(&mut self, size: usize) -> UniquePtr<[u8]> {
         self._push(size, false)

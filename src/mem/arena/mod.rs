@@ -1,7 +1,10 @@
+use std::ptr::NonNull;
+
 use error::AllocatorError;
 use unique::UniquePtr;
 
 pub mod error;
+pub mod scratch;
 pub mod stack;
 pub mod unique;
 
@@ -9,6 +12,8 @@ pub trait Arena {
     fn align(&self) -> usize;
     fn capacity(&self) -> usize;
     fn bytes_allocated(&self) -> usize;
+
+    fn top(&self) -> &NonNull<u8>;
 
     fn push(&mut self, size: usize) -> UniquePtr<[u8]>;
     fn push_zero(&mut self, size: usize) -> UniquePtr<[u8]>;
