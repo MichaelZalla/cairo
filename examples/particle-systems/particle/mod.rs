@@ -5,7 +5,7 @@ use crate::force::Force;
 pub mod generator;
 pub mod particlelist;
 
-pub static PARTICLE_MAX_AGE_SECONDS: f32 = 5.0;
+pub static PARTICLE_MAX_AGE_SECONDS: f32 = 2.0;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Particle {

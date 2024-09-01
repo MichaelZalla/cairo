@@ -80,7 +80,7 @@ fn world_to_screen_space(world_space_position: &Vec3, framebuffer_center: &Vec3)
 fn draw_particle(
     particle: &Particle,
     screen_space_position: &Vec3,
-    prev_screen_space_position: &Vec3,
+    _prev_screen_space_position: &Vec3,
     framebuffer: &mut Buffer2D,
 ) {
     debug_assert!(particle.alive);
@@ -96,14 +96,51 @@ fn draw_particle(
         a: 1.0,
     };
 
-    Graphics::line(
-        framebuffer,
+    // framebuffer.set(
+    //     screen_space_position.x as u32,
+    //     screen_space_position.y as u32,
+    //     color.to_u32(),
+    // );
+
+    // Graphics::line(
+    //     framebuffer,
+    //     screen_space_position.x as i32,
+    //     screen_space_position.y as i32,
+    //     prev_screen_space_position.x as i32,
+    //     prev_screen_space_position.y as i32,
+    //     &color,
+    // );
+
+    let top_left = (
         screen_space_position.x as i32,
         screen_space_position.y as i32,
-        prev_screen_space_position.x as i32,
-        prev_screen_space_position.y as i32,
-        &color,
     );
+
+    if (top_left.0 as u32) > framebuffer.width - 8 {
+        return;
+    }
+
+    if (top_left.1 as u32) > framebuffer.height - 8 {
+        return;
+    }
+
+    if top_left.0 + 8 < 0 {
+        return;
+    }
+
+    if top_left.1 + 8 < 0 {
+        return;
+    }
+
+    Graphics::rectangle(
+        framebuffer,
+        top_left.0 as u32,
+        top_left.1 as u32,
+        8,
+        8,
+        Some(&color),
+        None,
+    )
 }
 
 fn main() -> Result<(), String> {
@@ -144,7 +181,7 @@ fn main() -> Result<(), String> {
         }),
         100.0,
         None,
-        300.0,
+        200.0,
         8.0,
     );
 
@@ -163,7 +200,7 @@ fn main() -> Result<(), String> {
         ),
         100.0,
         Some(PI / 4.0),
-        300.0,
+        200.0,
         8.0,
     );
 
@@ -182,7 +219,7 @@ fn main() -> Result<(), String> {
         ),
         100.0,
         Some(PI / 2.0),
-        300.0,
+        200.0,
         8.0,
     );
 
