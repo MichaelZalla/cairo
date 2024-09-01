@@ -8,12 +8,9 @@ use cairo::{
     color::{self},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     graphics::Graphics,
+    random::sampler::{RandomSampler, VectorDisplaceSampler},
     vec::vec3::{self, Vec3},
 };
-
-use random::{DirectionSampler, RandomSampler, VectorDisplaceSampler};
-
-mod random;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -43,7 +40,13 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    let sampler_rc: RefCell<RandomSampler> = Default::default();
+    let sampler_rc: RefCell<RandomSampler<1024>> = Default::default();
+
+    {
+        let mut sampler = sampler_rc.borrow_mut();
+
+        sampler.seed().unwrap();
+    }
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &mut KeyboardState,

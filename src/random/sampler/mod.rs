@@ -1,27 +1,24 @@
 use std::f32::consts::PI;
 
-use rand::{
-    distributions::{Distribution, Uniform},
-    rngs::ThreadRng,
-};
+use rand::rngs::ThreadRng;
 
-use cairo::{
+use rand_distr::{Distribution, Normal, NormalError, Uniform};
+
+use distribution::GeneratedDistribution;
+
+use crate::{
     matrix::Mat4,
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
     },
 };
-use rand_distr::{Normal, NormalError};
 
-#[derive(Default, Debug, Clone)]
-pub struct RandomSampler {
-    rng: ThreadRng,
-}
+pub mod distribution;
 
 pub trait RangeSampler {
     fn sample_range_uniform(&mut self, min: f32, max: f32) -> f32;
-    fn sample_range_normal(&mut self, mean: f32, std_dev: f32) -> Result<f32, NormalError>;
+    fn sample_range_normal(&mut self, mean: f32, std_dev: f32) -> f32;
 }
 
 pub trait DirectionSampler {
@@ -37,7 +34,49 @@ pub trait VectorDisplaceSampler {
     ) -> Result<Vec3, NormalError>;
 }
 
-impl RandomSampler {
+#[derive(Default, Debug, Clone)]
+pub struct RandomSampler<const N: usize> {
+    rng: ThreadRng,
+    uniform_seed: GeneratedDistribution<N>,
+    normal_seed: GeneratedDistribution<N>,
+    is_seeded: bool,
+}
+
+impl<const N: usize> RandomSampler<N> {
+    pub fn seed(&mut self) -> Result<(), NormalError> {
+        let uniform_sampler = Uniform::new_inclusive(0.0, 1.0);
+
+        let normal_sampler = match Normal::new(0.0, 1.0) {
+            Ok(distribution) => distribution,
+            Err(err) => return Err(err),
+        };
+
+        for i in 0..N {
+            self.uniform_seed.values[i] = uniform_sampler.sample(&mut self.rng);
+            self.normal_seed.values[i] = normal_sampler.sample(&mut self.rng);
+        }
+
+        self.is_seeded = true;
+
+        Ok(())
+    }
+
+    // Returns a uniformly distributed random scalar in the range [min...max].
+    fn _sample_range_uniform(&mut self, min: f32, max: f32) -> f32 {
+        let sampler = Uniform::new_inclusive(min, max);
+
+        sampler.sample(&mut self.rng)
+    }
+
+    /// Returns a normally distributed random scalar with a given mean and
+    /// standard deviation.
+    fn _sample_range_normal(&mut self, mean: f32, std_dev: f32) -> Result<f32, NormalError> {
+        match Normal::new(mean, std_dev) {
+            Ok(distribution) => Ok(distribution.sample(&mut self.rng)),
+            Err(err) => Err(err),
+        }
+    }
+
     fn sample_displacement(&mut self, v: &Vec3, max_deflection_angle_radians: f32, f: f32) -> Vec3 {
         // See: https://math.stackexchange.com/a/4343075
 
@@ -50,6 +89,7 @@ impl RandomSampler {
         // want `normal` to serve as the Z-axis instead.
         let basis = Mat4::tbn(normal, bitangent, tangent);
 
+        // @NOTE: Rotation currently only happens in the positive direction.
         let phi = f.sqrt() * max_deflection_angle_radians;
 
         // @NOTE: Skipping rotation sample for now, as we don't need it for 2D.
@@ -61,25 +101,24 @@ impl RandomSampler {
     }
 }
 
-impl RangeSampler for RandomSampler {
+impl<const N: usize> RangeSampler for RandomSampler<N> {
     // Returns a uniformly distributed random scalar in the range [min...max].
     fn sample_range_uniform(&mut self, min: f32, max: f32) -> f32 {
-        let sampler = Uniform::new_inclusive(min, max);
+        let sample = self.uniform_seed.sample();
 
-        sampler.sample(&mut self.rng)
+        (max - min) * sample + min
     }
 
     /// Returns a normally distributed random scalar with a given mean and
     /// standard deviation.
-    fn sample_range_normal(&mut self, mean: f32, std_dev: f32) -> Result<f32, NormalError> {
-        match Normal::new(mean, std_dev) {
-            Ok(distribution) => Ok(distribution.sample(&mut self.rng)),
-            Err(err) => Err(err),
-        }
+    fn sample_range_normal(&mut self, mean: f32, std_dev: f32) -> f32 {
+        let sample = self.normal_seed.sample();
+
+        std_dev * sample + mean
     }
 }
 
-impl DirectionSampler for RandomSampler {
+impl<const N: usize> DirectionSampler for RandomSampler<N> {
     // Returns a uniformly random normal on the unit circle.
     fn sample_direction_uniform(&mut self) -> Vec3 {
         let azimuth = self.sample_range_uniform(-PI, PI);
@@ -90,7 +129,6 @@ impl DirectionSampler for RandomSampler {
         let sample = Vec3 {
             x: r * azimuth.cos(),
             y: height,
-            // z: -r * azimuth.sin(),
             z: 0.0,
         };
 
@@ -98,7 +136,7 @@ impl DirectionSampler for RandomSampler {
     }
 }
 
-impl VectorDisplaceSampler for RandomSampler {
+impl<const N: usize> VectorDisplaceSampler for RandomSampler<N> {
     fn sample_displacement_uniform(&mut self, v: &Vec3, max_deflection_angle_radians: f32) -> Vec3 {
         let f = self.sample_range_uniform(0.0, 1.0);
 
@@ -112,9 +150,8 @@ impl VectorDisplaceSampler for RandomSampler {
     ) -> Result<Vec3, NormalError> {
         let std_dev = max_deflection_angle_radians / 3.0;
 
-        match self.sample_range_normal(0.0, std_dev) {
-            Ok(f) => Ok(self.sample_displacement(v, max_deflection_angle_radians, f.abs())),
-            Err(err) => Err(err),
-        }
+        let f = self.sample_range_normal(0.0, std_dev);
+
+        Ok(self.sample_displacement(v, max_deflection_angle_radians, f.abs()))
     }
 }
