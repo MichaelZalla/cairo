@@ -14,6 +14,7 @@ use cairo::{
     buffer::Buffer2D,
     color::{self, Color},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    graphics::Graphics,
     random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
@@ -76,7 +77,12 @@ fn world_to_screen_space(world_space_position: &Vec3, framebuffer_center: &Vec3)
     screen_space_position * PIXELS_PER_METER + *framebuffer_center
 }
 
-fn draw_particle(particle: &Particle, screen_space_position: &Vec3, framebuffer: &mut Buffer2D) {
+fn draw_particle(
+    particle: &Particle,
+    screen_space_position: &Vec3,
+    prev_screen_space_position: &Vec3,
+    framebuffer: &mut Buffer2D,
+) {
     debug_assert!(particle.alive);
 
     let age_alpha = particle.age / PARTICLE_MAX_AGE_SECONDS;
@@ -90,10 +96,13 @@ fn draw_particle(particle: &Particle, screen_space_position: &Vec3, framebuffer:
         a: 1.0,
     };
 
-    framebuffer.set(
-        screen_space_position.x as u32,
-        screen_space_position.y as u32,
-        color.to_u32(),
+    Graphics::line(
+        framebuffer,
+        screen_space_position.x as i32,
+        screen_space_position.y as i32,
+        prev_screen_space_position.x as i32,
+        prev_screen_space_position.y as i32,
+        &color,
     );
 }
 
@@ -133,9 +142,9 @@ fn main() -> Result<(), String> {
             y: 20.0,
             z: 0.0,
         }),
-        150.0,
+        100.0,
         None,
-        30.0,
+        300.0,
         8.0,
     );
 
@@ -152,9 +161,9 @@ fn main() -> Result<(), String> {
                 z: 0.0,
             },
         ),
-        150.0,
+        100.0,
         Some(PI / 4.0),
-        30.0,
+        300.0,
         8.0,
     );
 
@@ -171,9 +180,9 @@ fn main() -> Result<(), String> {
                 z: 0.0,
             },
         ),
-        150.0,
-        Some(PI / 4.0),
-        30.0,
+        100.0,
+        Some(PI / 2.0),
+        300.0,
         8.0,
     );
 
@@ -254,7 +263,15 @@ fn main() -> Result<(), String> {
                 if (screen_space_position.x as u32) < framebuffer.width
                     && (screen_space_position.y as u32) < framebuffer.height
                 {
-                    draw_particle(particle, &screen_space_position, &mut framebuffer);
+                    let prev_screen_space_position =
+                        world_to_screen_space(&particle.prev_position, &framebuffer_center);
+
+                    draw_particle(
+                        particle,
+                        &screen_space_position,
+                        &prev_screen_space_position,
+                        &mut framebuffer,
+                    );
                 }
             }
         }

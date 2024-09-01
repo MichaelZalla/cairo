@@ -13,6 +13,7 @@ pub struct Particle {
     pub age: f32,
     pub mass: f32,
     pub position: Vec3,
+    pub prev_position: Vec3,
     pub velocity: Vec3,
     pub acceleration: Vec3,
 }
@@ -24,6 +25,7 @@ impl Default for Particle {
             mass: 1.0,
             age: Default::default(),
             position: Default::default(),
+            prev_position: Default::default(),
             velocity: Default::default(),
             acceleration: Default::default(),
         }
@@ -49,6 +51,8 @@ impl Particle {
 
     pub fn integrate(&mut self, h: f32) {
         let new_velocity = self.velocity + self.acceleration * h;
+
+        self.prev_position = self.position;
 
         self.position = self.position + (self.velocity + new_velocity) / 2.0 * h;
 
