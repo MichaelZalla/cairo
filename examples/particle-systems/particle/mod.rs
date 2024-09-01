@@ -40,13 +40,13 @@ impl Particle {
     }
 
     pub fn compute_acceleration(&mut self, forces: &[&Force]) {
-        let mut total_acceleration_from_forces: Vec3 = Default::default();
+        let mut total_force: Vec3 = Default::default();
 
         for force in forces {
-            total_acceleration_from_forces += force(&self);
+            total_force += force(&self);
         }
 
-        self.acceleration = total_acceleration_from_forces;
+        self.acceleration = total_force / self.mass;
     }
 
     pub fn integrate(&mut self, h: f32) {

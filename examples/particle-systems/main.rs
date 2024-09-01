@@ -18,7 +18,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use force::{Acceleration, Force};
+use force::{Force, Newtons};
 
 use particle::{
     generator::{ParticleGenerator, ParticleGeneratorKind},
@@ -32,15 +32,15 @@ mod force;
 mod particle;
 mod simulation;
 
-static GRAVITY: Force = |_: &Particle| -> Acceleration {
+static GRAVITY: Force = |particle: &Particle| -> Newtons {
     Vec3 {
         x: 0.0,
         y: -(SDL_STANDARD_GRAVITY as f32),
         z: 0.0,
-    }
+    } * particle.mass
 };
 
-static AIR_RESISTANCE: Force = |particle: &Particle| -> Acceleration {
+static AIR_RESISTANCE: Force = |particle: &Particle| -> Newtons {
     static D: f32 = 0.2;
 
     static WIND: Vec3 = Vec3 {
@@ -49,7 +49,7 @@ static AIR_RESISTANCE: Force = |particle: &Particle| -> Acceleration {
         z: 0.0,
     };
 
-    (WIND - particle.velocity) * (D / particle.mass)
+    (WIND - particle.velocity) * D
 };
 
 fn main() -> Result<(), String> {
