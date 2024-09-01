@@ -15,7 +15,6 @@ use cairo::{
     buffer::Buffer2D,
     color::{self},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
 
@@ -23,13 +22,15 @@ use force::{Acceleration, Force};
 
 use particle::{
     generator::{ParticleGenerator, ParticleGeneratorKind},
-    particlelist::ParticleList,
     Particle,
 };
+
+use simulation::Simulation;
 
 mod draw_particle;
 mod force;
 mod particle;
+mod simulation;
 
 static GRAVITY: Force = |_: &Particle| -> Acceleration {
     Vec3 {
@@ -50,13 +51,6 @@ static AIR_RESISTANCE: Force = |particle: &Particle| -> Acceleration {
 
     (WIND - particle.velocity) * (D / particle.mass)
 };
-
-struct Simulation<'a> {
-    pub sampler: RefCell<RandomSampler<1024>>,
-    pub pool: RefCell<ParticleList>,
-    pub forces: Vec<&'a Force>,
-    pub generators: RefCell<Vec<ParticleGenerator>>,
-}
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -87,6 +81,8 @@ fn main() -> Result<(), String> {
     };
 
     let framebuffer_rc = RefCell::new(framebuffer);
+
+    // Define some particle generators.
 
     let omnidirectional = ParticleGenerator::new(
         ParticleGeneratorKind::Omnidirectional(Vec3 {
@@ -138,12 +134,16 @@ fn main() -> Result<(), String> {
         8.0,
     );
 
+    // Set up our particle simulation.
+
     let sim = Simulation {
         sampler: Default::default(),
         pool: Default::default(),
         forces: vec![&GRAVITY, &AIR_RESISTANCE],
         generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
     };
+
+    // Seed the simulation's random number sampler.
 
     {
         let mut sampler = sim.sampler.borrow_mut();
@@ -156,13 +156,9 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let uptime_seconds = app.timing_info.uptime_seconds;
-
         let h = app.timing_info.seconds_since_last_update;
 
-        let mut sampler = sim.sampler.borrow_mut();
-        let mut pool = sim.pool.borrow_mut();
-        let mut generators = sim.generators.borrow_mut();
+        let uptime_seconds = app.timing_info.uptime_seconds;
 
         let cursor_screen_space = Vec3 {
             x: mouse_state.position.0 as f32,
@@ -172,28 +168,9 @@ fn main() -> Result<(), String> {
 
         let cursor_world_space = screen_to_world_space(&cursor_screen_space, &framebuffer_center);
 
-        for generator in generators.iter_mut() {
-            match generator.kind {
-                ParticleGeneratorKind::Omnidirectional(ref mut origin) => {
-                    *origin = Vec3 {
-                        y: 30.0 + 20.0 * (uptime_seconds * 3.0).sin(),
-                        x: origin.x,
-                        z: origin.z,
-                    }
-                }
-                ParticleGeneratorKind::Directed(origin, ref mut direction) => {
-                    *direction = (cursor_world_space - origin).as_normal();
-                }
-            }
+        // Simulation tick.
 
-            generator.generate(&mut pool, &mut sampler, h)?;
-        }
-
-        pool.test_and_deactivate(h);
-
-        pool.compute_accelerations(&sim.forces);
-
-        pool.integrate(h);
+        sim.tick(h, uptime_seconds, &cursor_world_space)?;
 
         Ok(())
     };
