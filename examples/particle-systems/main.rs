@@ -185,14 +185,60 @@ fn main() -> Result<(), String> {
                 },
             ),
             // Functional acceleration operator: Rotation around the Z-axis.
+            // Box::new(
+            //     |_particle: &Particle, new_velocity: &Vec3, h: f32| -> Vec3 {
+            //         static ANGLE: f32 = PI / 2.0;
+
+            //         let new_velocity_vec4 =
+            //             Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(ANGLE * h);
+
+            //         new_velocity_vec4.to_vec3()
+            //     },
+            // ),
+        ],
+        velocity: vec![
+            // Velocity operator: Vortex.
+            Box::new(|particle: &Particle, new_velocity: &Vec3, h: f32| -> Vec3 {
+                static VORTEX_CENTER: Vec3 = Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                };
+
+                static VORTEX_RADIUS: f32 = 350.0;
+
+                static VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS: f32 = 3.0;
+
+                static VORTEX_ROTATIONAL_FREQUENCY_MAX: f32 = 5.0;
+
+                static VORTEX_TIGHTNESS: f32 = 1.7;
+
+                let particle_distance_from_vortex_center =
+                    (particle.position - VORTEX_CENTER).mag();
+
+                let particle_rotational_frequency_scaling_factor =
+                    (VORTEX_RADIUS / particle_distance_from_vortex_center).powf(VORTEX_TIGHTNESS);
+
+                let particle_rotational_frequency = (VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS
+                    * particle_rotational_frequency_scaling_factor)
+                    .max(VORTEX_ROTATIONAL_FREQUENCY_MAX);
+
+                let omega = 2.0 * PI * particle_rotational_frequency;
+
+                let new_velocity_vec4 = Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(omega * h);
+
+                new_velocity_vec4.to_vec3()
+            }),
+            // Velocity operator: Translation by offset.
             Box::new(
-                |_particle: &Particle, new_velocity: &Vec3, h: f32| -> Vec3 {
-                    static ANGLE: f32 = PI / 2.0;
+                |_particle: &Particle, new_velocity: &Vec3, _h: f32| -> Vec3 {
+                    static OFFSET: Vec3 = Vec3 {
+                        x: 50.0,
+                        y: 0.0,
+                        z: 0.0,
+                    };
 
-                    let new_velocity_vec4 =
-                        Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(ANGLE * h);
-
-                    new_velocity_vec4.to_vec3()
+                    *new_velocity + OFFSET
                 },
             ),
         ],

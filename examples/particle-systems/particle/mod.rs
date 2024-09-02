@@ -65,7 +65,13 @@ impl Particle {
 
         self.prev_position = self.position;
 
-        self.position = self.position + (self.velocity + new_velocity) / 2.0 * h;
+        let mut modified_velocity = (self.velocity + new_velocity) / 2.0;
+
+        for operator in operators.velocity.iter_mut() {
+            modified_velocity = operator(&self, &modified_velocity, h);
+        }
+
+        self.position = self.position + modified_velocity * h;
 
         self.velocity = new_velocity;
     }

@@ -27,11 +27,16 @@ pub(crate) trait FunctionalAccelerationOperator:
 
 impl<T: FnMut(&Particle, &Vec3, f32) -> Vec3> FunctionalAccelerationOperator for T {}
 
+pub(crate) trait VelocityOperator: FnMut(&Particle, &Vec3, f32) -> Vec3 {}
+
+impl<T: FnMut(&Particle, &Vec3, f32) -> Vec3> VelocityOperator for T {}
+
 #[derive(Default)]
 pub(crate) struct Operators {
     // pub initialization: Vec<fn(&mut Particle)>,
     pub additive_acceleration: Vec<Box<dyn AdditiveAccelerationOperator>>,
     pub functional_acceleration: Vec<Box<dyn FunctionalAccelerationOperator>>,
+    pub velocity: Vec<Box<dyn VelocityOperator>>,
 }
 
 pub(crate) struct Simulation<'a, const N: usize> {
