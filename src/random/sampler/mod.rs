@@ -81,7 +81,17 @@ impl<const N: usize> RandomSampler<N> {
         // See: https://math.stackexchange.com/a/4343075
 
         let normal = v.as_normal();
-        let tangent = vec3::UP.cross(normal).as_normal();
+
+        let tangent = {
+            let mut tangent = vec3::UP.cross(normal).as_normal();
+
+            if tangent.x.is_nan() {
+                tangent = vec3::RIGHT.cross(normal).as_normal();
+            }
+
+            tangent
+        };
+
         let bitangent = normal.cross(tangent);
 
         // @NOTE: Using {normal, bitangent, tangent} order such that `normal`
