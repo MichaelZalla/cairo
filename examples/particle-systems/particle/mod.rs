@@ -1,6 +1,9 @@
 use cairo::vec::vec3::Vec3;
 
-use crate::force::Force;
+use crate::{
+    force::{Force, Newtons},
+    simulation::Operators,
+};
 
 pub mod generator;
 pub mod particlelist;
@@ -39,18 +42,26 @@ impl Particle {
         self.age > PARTICLE_MAX_AGE_SECONDS
     }
 
-    pub fn compute_acceleration(&mut self, forces: &[&Force]) {
-        let mut total_force: Vec3 = Default::default();
+    pub fn compute_acceleration(&mut self, forces: &[&Force], operators: &mut Operators, h: f32) {
+        let mut total_force_newtons: Newtons = Default::default();
 
         for force in forces {
-            total_force += force(&self);
+            total_force_newtons += force(&self);
         }
 
-        self.acceleration = total_force / self.mass;
+        self.acceleration = total_force_newtons / self.mass;
+
+        for operator in operators.additive_acceleration.iter_mut() {
+            self.acceleration += operator(&self, h);
+        }
     }
 
-    pub fn integrate(&mut self, h: f32) {
-        let new_velocity = self.velocity + self.acceleration * h;
+    pub fn integrate(&mut self, operators: &mut Operators, h: f32) {
+        let mut new_velocity = self.velocity + self.acceleration * h;
+
+        for operator in operators.functional_acceleration.iter_mut() {
+            new_velocity = operator(&self, &new_velocity, h);
+        }
 
         self.prev_position = self.position;
 

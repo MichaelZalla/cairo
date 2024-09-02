@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use core::f32;
 
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use draw_particle::{draw_particle, screen_to_world_space, world_to_screen_space};
 use sdl2::sys::SDL_STANDARD_GRAVITY;
@@ -15,7 +15,9 @@ use cairo::{
     buffer::Buffer2D,
     color::{self},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    vec::vec3::Vec3,
+    matrix::Mat4,
+    random::sampler::{DirectionSampler, RandomSampler},
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 use force::{Force, Newtons};
@@ -25,7 +27,7 @@ use particle::{
     Particle,
 };
 
-use simulation::Simulation;
+use simulation::{Operators, Simulation};
 
 mod draw_particle;
 mod force;
@@ -92,7 +94,7 @@ fn main() -> Result<(), String> {
         }),
         100.0,
         None,
-        200.0,
+        100.0,
         8.0,
     );
 
@@ -111,7 +113,7 @@ fn main() -> Result<(), String> {
         ),
         100.0,
         Some(PI / 4.0),
-        200.0,
+        100.0,
         8.0,
     );
 
@@ -130,26 +132,79 @@ fn main() -> Result<(), String> {
         ),
         100.0,
         Some(PI / 2.0),
-        200.0,
+        100.0,
         8.0,
     );
 
     // Set up our particle simulation.
 
-    let sim = Simulation {
-        sampler: Default::default(),
-        pool: Default::default(),
-        forces: vec![&GRAVITY, &AIR_RESISTANCE],
-        generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
-    };
+    const SEED_SIZE: usize = 2048;
+
+    let mut sampler: RandomSampler<SEED_SIZE> = Default::default();
 
     // Seed the simulation's random number sampler.
 
-    {
-        let mut sampler = sim.sampler.borrow_mut();
-
-        sampler.seed().unwrap();
+    match sampler.seed() {
+        Ok(_) => (),
+        Err(err) => return Err(format!("{}", err)),
     }
+
+    let sampler_rc = Rc::new(RefCell::new(sampler));
+
+    let sampler_rc_for_random_acceleration_operator = sampler_rc.clone();
+
+    let operators = Operators {
+        additive_acceleration: vec![
+            // Additive acceleration operator: Contributes a random acceleration.
+            Box::new(move |_particle: &Particle, h: f32| -> Vec3 {
+                static SCALING_FACTOR: f32 = 1.0;
+
+                let mut sampler = sampler_rc_for_random_acceleration_operator.borrow_mut();
+
+                sampler.sample_direction_uniform() * SCALING_FACTOR / h
+            }),
+        ],
+        functional_acceleration: vec![
+            // Functional acceleration operator: Enforces a minimum velocity;
+            Box::new(
+                |particle: &Particle, new_velocity: &Vec3, _h: f32| -> Vec3 {
+                    static MINIMUM_SPEED: f32 = 20.0;
+
+                    let current_speed = particle.velocity.mag();
+                    let new_speed = new_velocity.mag();
+
+                    if new_speed >= MINIMUM_SPEED {
+                        return *new_velocity;
+                    }
+
+                    if current_speed > MINIMUM_SPEED {
+                        particle.velocity
+                    } else {
+                        particle.velocity.as_normal() * MINIMUM_SPEED
+                    }
+                },
+            ),
+            // Functional acceleration operator: Rotation around the Z-axis.
+            Box::new(
+                |_particle: &Particle, new_velocity: &Vec3, h: f32| -> Vec3 {
+                    static ANGLE: f32 = PI / 2.0;
+
+                    let new_velocity_vec4 =
+                        Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(ANGLE * h);
+
+                    new_velocity_vec4.to_vec3()
+                },
+            ),
+        ],
+    };
+
+    let sim = Simulation {
+        sampler: sampler_rc.clone(),
+        pool: Default::default(),
+        forces: vec![&GRAVITY, &AIR_RESISTANCE],
+        operators: RefCell::new(operators),
+        generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
+    };
 
     let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,

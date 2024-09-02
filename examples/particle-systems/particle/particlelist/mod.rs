@@ -1,6 +1,6 @@
 use std::slice::{Iter, IterMut};
 
-use crate::force::Force;
+use crate::{force::Force, simulation::Operators};
 
 use super::Particle;
 
@@ -107,16 +107,16 @@ impl ParticleList {
     }
 
     /// Computes and stores a new acceleration for each particle.
-    pub fn compute_accelerations(&mut self, forces: &[&Force]) {
+    pub fn compute_accelerations(&mut self, forces: &[&Force], operators: &mut Operators, h: f32) {
         for particle in self.pool.iter_mut() {
-            particle.compute_acceleration(forces);
+            particle.compute_acceleration(forces, operators, h);
         }
     }
 
     /// Performs numerical integration to update each active (alive) particle.
-    pub fn integrate(&mut self, h: f32) {
+    pub fn integrate(&mut self, operators: &mut Operators, h: f32) {
         for particle in self.pool.iter_mut() {
-            particle.integrate(h);
+            particle.integrate(operators, h);
         }
     }
 
