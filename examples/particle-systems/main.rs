@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
     let directional_right = ParticleGenerator::new(
         ParticleGeneratorKind::Directed(
             Vec3 {
-                x: -50.0,
+                x: -75.0,
                 y: 0.0,
                 z: 0.0,
             },
@@ -120,7 +120,7 @@ fn main() -> Result<(), String> {
     let directional_up = ParticleGenerator::new(
         ParticleGeneratorKind::Directed(
             Vec3 {
-                x: 50.0,
+                x: 75.0,
                 y: 0.0,
                 z: 0.0,
             },
@@ -156,13 +156,96 @@ fn main() -> Result<(), String> {
     let operators = Operators {
         additive_acceleration: vec![
             // Additive acceleration operator: Contributes a random acceleration.
-            Box::new(move |_particle: &Particle, h: f32| -> Vec3 {
-                static SCALING_FACTOR: f32 = 1.0;
+            Box::new(
+                move |_particle: &Particle, _total_acceleration: &Vec3, h: f32| -> Vec3 {
+                    static SCALING_FACTOR: f32 = 1.0;
 
-                let mut sampler = sampler_rc_for_random_acceleration_operator.borrow_mut();
+                    let mut sampler = sampler_rc_for_random_acceleration_operator.borrow_mut();
 
-                sampler.sample_direction_uniform() * SCALING_FACTOR / h
-            }),
+                    sampler.sample_direction_uniform() * SCALING_FACTOR / h
+                },
+            ),
+            // Additive acceleration operator: Avoids a static sphere collider.
+            Box::new(
+                |particle: &Particle, total_acceleration: &Vec3, _h: f32| -> Vec3 {
+                    static COLLIDER_CENTER: Vec3 = Vec3 {
+                        x: -15.0,
+                        y: -15.0,
+                        z: 0.0,
+                    };
+
+                    static COLLIDER_RADIUS: f32 = 40.0;
+                    static COLLIDER_SAFE_RADIUS: f32 = COLLIDER_RADIUS + 5.0;
+                    static THRESHOLD_TIME: f32 = 3.0;
+
+                    if particle.velocity.mag() == 0.0 {
+                        return Default::default();
+                    }
+
+                    let particle_direction = particle.velocity.as_normal();
+
+                    let particle_to_collider_center = COLLIDER_CENTER - particle.position;
+
+                    let distance_of_particle_closest_approach_to_collider_center =
+                        particle_to_collider_center.dot(particle_direction);
+
+                    if distance_of_particle_closest_approach_to_collider_center < 0.0 {
+                        return Default::default();
+                    }
+
+                    let distance_of_concern = particle.velocity.mag() * THRESHOLD_TIME;
+
+                    if distance_of_particle_closest_approach_to_collider_center
+                        > distance_of_concern
+                    {
+                        return Default::default();
+                    }
+
+                    let closest_approach = particle.position
+                        + particle_direction
+                            * distance_of_particle_closest_approach_to_collider_center;
+
+                    let collider_center_to_closest_approach = closest_approach - COLLIDER_CENTER;
+
+                    let collider_center_to_closest_approach_direction =
+                        collider_center_to_closest_approach.as_normal();
+
+                    let collider_center_to_closest_approach_distance =
+                        collider_center_to_closest_approach.mag();
+
+                    if collider_center_to_closest_approach_distance > COLLIDER_SAFE_RADIUS {
+                        return Default::default();
+                    }
+
+                    let turning_target = COLLIDER_CENTER
+                        + collider_center_to_closest_approach_direction * COLLIDER_SAFE_RADIUS;
+
+                    let particle_to_turning_target = turning_target - particle.position;
+                    let particle_to_turning_target_distance = particle_to_turning_target.mag();
+
+                    let velocity_towards_turning_target = particle
+                        .velocity
+                        .dot(particle_to_turning_target / particle_to_turning_target_distance);
+
+                    let time_to_reach_turning_target =
+                        particle_to_turning_target_distance / velocity_towards_turning_target;
+
+                    let average_speed_increase_othogonal_to_velocity =
+                        (particle_direction.cross(particle_to_turning_target)).mag()
+                            / time_to_reach_turning_target;
+
+                    let required_magnitude_of_acceleration = 2.0
+                        * average_speed_increase_othogonal_to_velocity
+                        / time_to_reach_turning_target;
+
+                    let existing_acceleration_in_collider_center_to_closest_approach_direction =
+                        collider_center_to_closest_approach_direction.dot(*total_acceleration);
+
+                    collider_center_to_closest_approach_direction * (required_magnitude_of_acceleration
+                    - existing_acceleration_in_collider_center_to_closest_approach_direction)
+                    .max(0.0)
+                },
+            ),
         ],
         functional_acceleration: vec![
             // Functional acceleration operator: Enforces a minimum velocity;
@@ -205,19 +288,18 @@ fn main() -> Result<(), String> {
                     z: 0.0,
                 };
 
-                static VORTEX_RADIUS: f32 = 350.0;
+                static VORTEX_RADIUS: f32 = 200.0;
 
-                static VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS: f32 = 3.0;
+                static VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS: f32 = 1.5;
 
-                static VORTEX_ROTATIONAL_FREQUENCY_MAX: f32 = 5.0;
+                static VORTEX_ROTATIONAL_FREQUENCY_MAX: f32 = 10.0;
 
-                static VORTEX_TIGHTNESS: f32 = 1.7;
+                static VORTEX_TIGHTNESS: f32 = 1.5;
 
-                let particle_distance_from_vortex_center =
-                    (particle.position - VORTEX_CENTER).mag();
+                let particle_distance_to_vortex_center = (particle.position - VORTEX_CENTER).mag();
 
                 let particle_rotational_frequency_scaling_factor =
-                    (VORTEX_RADIUS / particle_distance_from_vortex_center).powf(VORTEX_TIGHTNESS);
+                    (VORTEX_RADIUS / particle_distance_to_vortex_center).powf(VORTEX_TIGHTNESS);
 
                 let particle_rotational_frequency = (VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS
                     * particle_rotational_frequency_scaling_factor)

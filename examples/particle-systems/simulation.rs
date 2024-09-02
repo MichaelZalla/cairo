@@ -14,11 +14,11 @@ use crate::{
 type Acceleration = Vec3;
 
 pub(crate) trait AdditiveAccelerationOperator:
-    FnMut(&Particle, f32) -> Acceleration
+    FnMut(&Particle, &Vec3, f32) -> Acceleration
 {
 }
 
-impl<T: FnMut(&Particle, f32) -> Acceleration> AdditiveAccelerationOperator for T {}
+impl<T: FnMut(&Particle, &Vec3, f32) -> Acceleration> AdditiveAccelerationOperator for T {}
 
 pub(crate) trait FunctionalAccelerationOperator:
     FnMut(&Particle, &Vec3, f32) -> Vec3

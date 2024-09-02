@@ -4,7 +4,7 @@ use crate::{force::Force, simulation::Operators};
 
 use super::Particle;
 
-static MAX_PARTICLES: usize = 4096;
+static MAX_PARTICLES: usize = 8192;
 
 #[derive(Debug, Clone)]
 pub struct ParticleList {

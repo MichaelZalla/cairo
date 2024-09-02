@@ -8,7 +8,7 @@ use crate::{
 pub mod generator;
 pub mod particlelist;
 
-pub static PARTICLE_MAX_AGE_SECONDS: f32 = 2.0;
+pub static PARTICLE_MAX_AGE_SECONDS: f32 = 5.0;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Particle {
@@ -52,7 +52,7 @@ impl Particle {
         self.acceleration = total_force_newtons / self.mass;
 
         for operator in operators.additive_acceleration.iter_mut() {
-            self.acceleration += operator(&self, h);
+            self.acceleration += operator(&self, &self.acceleration, h);
         }
     }
 
