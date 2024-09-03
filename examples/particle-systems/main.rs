@@ -22,6 +22,7 @@ use cairo::{
 mod draw_particle;
 mod force;
 mod make_simulation;
+mod operator;
 mod particle;
 mod simulation;
 

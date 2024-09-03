@@ -4,32 +4,12 @@ use cairo::{random::sampler::RandomSampler, vec::vec3::Vec3};
 
 use crate::{
     force::Force,
+    operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     particle::{
         generator::{ParticleGenerator, ParticleGeneratorKind},
         particlelist::ParticleList,
-        Particle,
     },
 };
-
-type Acceleration = Vec3;
-
-pub(crate) trait AdditiveAccelerationOperator:
-    FnMut(&Particle, &Vec3, f32) -> Acceleration
-{
-}
-
-impl<T: FnMut(&Particle, &Vec3, f32) -> Acceleration> AdditiveAccelerationOperator for T {}
-
-pub(crate) trait FunctionalAccelerationOperator:
-    FnMut(&Particle, &Vec3, f32) -> Vec3
-{
-}
-
-impl<T: FnMut(&Particle, &Vec3, f32) -> Vec3> FunctionalAccelerationOperator for T {}
-
-pub(crate) trait VelocityOperator: FnMut(&Particle, &Vec3, f32) -> Vec3 {}
-
-impl<T: FnMut(&Particle, &Vec3, f32) -> Vec3> VelocityOperator for T {}
 
 #[derive(Default)]
 pub(crate) struct Operators {
