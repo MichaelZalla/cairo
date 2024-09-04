@@ -48,3 +48,6 @@ opt-level = 1
 
 [profile.release]
 opt-level = 3
+
+[dev-dependencies]
+physical_constants = "0.5.0"

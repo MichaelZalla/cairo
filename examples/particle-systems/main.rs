@@ -25,6 +25,7 @@ mod make_simulation;
 mod operator;
 mod particle;
 mod simulation;
+mod state_vector;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {

@@ -2,43 +2,42 @@ use std::cell::RefCell;
 use std::f32::consts::PI;
 use std::rc::Rc;
 
-use cairo::matrix::Mat4;
-use cairo::vec::vec4::Vec4;
-use sdl2::sys::SDL_STANDARD_GRAVITY;
+// use sdl2::sys::SDL_STANDARD_GRAVITY;
 
-use cairo::random::sampler::{DirectionSampler, RandomSampler};
-use cairo::vec::vec3::Vec3;
-
-use crate::force::{Force, Newtons};
-
-use crate::particle::{
-    generator::{ParticleGenerator, ParticleGeneratorKind},
-    Particle,
+use cairo::{
+    matrix::Mat4,
+    random::sampler::{DirectionSampler, RandomSampler},
+    vec::vec3::Vec3,
+    vec::vec4::Vec4,
 };
 
-use crate::simulation::{Operators, Simulation};
+use crate::{
+    particle::generator::{ParticleGenerator, ParticleGeneratorKind},
+    simulation::{Operators, Simulation},
+    state_vector::StateVector,
+};
 
 pub(crate) const SEED_SIZE: usize = 2048;
 
-static GRAVITY: Force = |particle: &Particle| -> Newtons {
-    Vec3 {
-        x: 0.0,
-        y: -(SDL_STANDARD_GRAVITY as f32),
-        z: 0.0,
-    } * particle.mass
-};
+// static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| -> Newtons {
+//     Vec3 {
+//         x: 0.0,
+//         y: -(SDL_STANDARD_GRAVITY as f32),
+//         z: 0.0,
+//     } * PARTICLE_MASS
+// };
 
-static AIR_RESISTANCE: Force = |particle: &Particle| -> Newtons {
-    static D: f32 = 0.2;
+// static AIR_RESISTANCE: Force = |state: &StateVector, i: usize, _current_time: f32| -> Newtons {
+//     static D: f32 = 0.2;
 
-    static WIND: Vec3 = Vec3 {
-        x: -12.5,
-        y: -3.0,
-        z: 0.0,
-    };
+//     static WIND: Vec3 = Vec3 {
+//         x: -12.5,
+//         y: -3.0,
+//         z: 0.0,
+//     };
 
-    (WIND - particle.velocity) * D
-};
+//     (WIND - state.data[i + state.len()]) * D
+// };
 
 pub(crate) fn make_simulation<'a>(
     sampler: Rc<RefCell<RandomSampler<SEED_SIZE>>>,
@@ -52,10 +51,10 @@ pub(crate) fn make_simulation<'a>(
             y: 20.0,
             z: 0.0,
         }),
-        100.0,
+        5.0,
         None,
-        100.0,
-        8.0,
+        5.0,
+        2.0,
     );
 
     let directional_right = ParticleGenerator::new(
@@ -71,10 +70,10 @@ pub(crate) fn make_simulation<'a>(
                 z: 0.0,
             },
         ),
-        100.0,
+        5.0,
         Some(PI / 4.0),
-        100.0,
-        8.0,
+        5.0,
+        2.0,
     );
 
     let directional_up = ParticleGenerator::new(
@@ -90,27 +89,35 @@ pub(crate) fn make_simulation<'a>(
                 z: 0.0,
             },
         ),
-        100.0,
+        5.0,
         Some(PI / 2.0),
-        100.0,
-        8.0,
+        5.0,
+        2.0,
     );
 
     let operators = Operators {
         additive_acceleration: vec![
             // Additive acceleration operator: Contributes a random acceleration.
-            Box::new(
-                move |_particle: &Particle, _total_acceleration: &Vec3, h: f32| -> Vec3 {
-                    static SCALING_FACTOR: f32 = 1.0;
+            // Box::new(
+            //     move |_current_state: &StateVector,
+            //           _i: usize,
+            //           _total_acceleration: &Vec3,
+            //           h: f32|
+            //           -> Vec3 {
+            //         static SCALING_FACTOR: f32 = 1.0;
 
-                    let mut sampler = sampler_for_random_acceleration_operator.borrow_mut();
+            //         let mut sampler = sampler_for_random_acceleration_operator.borrow_mut();
 
-                    sampler.sample_direction_uniform() * SCALING_FACTOR / h
-                },
-            ),
+            //         sampler.sample_direction_uniform() * SCALING_FACTOR / h
+            //     },
+            // ),
             // Additive acceleration operator: Avoids a static sphere collider.
             Box::new(
-                |particle: &Particle, total_acceleration: &Vec3, _h: f32| -> Vec3 {
+                |current_state: &StateVector,
+                 i: usize,
+                 total_acceleration: &Vec3,
+                 _h: f32|
+                 -> Vec3 {
                     static COLLIDER_CENTER: Vec3 = Vec3 {
                         x: -15.0,
                         y: -15.0,
@@ -121,13 +128,18 @@ pub(crate) fn make_simulation<'a>(
                     static COLLIDER_SAFE_RADIUS: f32 = COLLIDER_RADIUS + 5.0;
                     static THRESHOLD_TIME: f32 = 3.0;
 
-                    if particle.velocity.mag() == 0.0 {
+                    let n = current_state.len();
+
+                    let current_position = current_state.data[i];
+                    let current_velocity = current_state.data[i + n];
+
+                    if current_velocity.mag() == 0.0 {
                         return Default::default();
                     }
 
-                    let particle_direction = particle.velocity.as_normal();
+                    let particle_direction = current_velocity.as_normal();
 
-                    let particle_to_collider_center = COLLIDER_CENTER - particle.position;
+                    let particle_to_collider_center = COLLIDER_CENTER - current_position;
 
                     let distance_of_particle_closest_approach_to_collider_center =
                         particle_to_collider_center.dot(particle_direction);
@@ -136,7 +148,7 @@ pub(crate) fn make_simulation<'a>(
                         return Default::default();
                     }
 
-                    let distance_of_concern = particle.velocity.mag() * THRESHOLD_TIME;
+                    let distance_of_concern = current_velocity.mag() * THRESHOLD_TIME;
 
                     if distance_of_particle_closest_approach_to_collider_center
                         > distance_of_concern
@@ -144,7 +156,7 @@ pub(crate) fn make_simulation<'a>(
                         return Default::default();
                     }
 
-                    let closest_approach = particle.position
+                    let closest_approach = current_position
                         + particle_direction
                             * distance_of_particle_closest_approach_to_collider_center;
 
@@ -163,11 +175,10 @@ pub(crate) fn make_simulation<'a>(
                     let turning_target = COLLIDER_CENTER
                         + collider_center_to_closest_approach_direction * COLLIDER_SAFE_RADIUS;
 
-                    let particle_to_turning_target = turning_target - particle.position;
+                    let particle_to_turning_target = turning_target - current_position;
                     let particle_to_turning_target_distance = particle_to_turning_target.mag();
 
-                    let velocity_towards_turning_target = particle
-                        .velocity
+                    let velocity_towards_turning_target = current_velocity
                         .dot(particle_to_turning_target / particle_to_turning_target_distance);
 
                     let time_to_reach_turning_target =
@@ -192,27 +203,31 @@ pub(crate) fn make_simulation<'a>(
         ],
         functional_acceleration: vec![
             // Functional acceleration operator: Enforces a minimum velocity;
-            Box::new(
-                |particle: &Particle, new_velocity: &Vec3, _h: f32| -> Vec3 {
-                    static MINIMUM_SPEED: f32 = 20.0;
+            // Box::new(
+            //     |current_state: &StateVector, i: usize, new_velocity: &Vec3, _h: f32| -> Vec3 {
+            //         static MINIMUM_SPEED: f32 = 20.0;
 
-                    let current_speed = particle.velocity.mag();
-                    let new_speed = new_velocity.mag();
+            //         let n = current_state.len();
 
-                    if new_speed >= MINIMUM_SPEED {
-                        return *new_velocity;
-                    }
+            //         let current_velocity = current_state.data[i + n];
 
-                    if current_speed > MINIMUM_SPEED {
-                        particle.velocity
-                    } else {
-                        particle.velocity.as_normal() * MINIMUM_SPEED
-                    }
-                },
-            ),
+            //         let current_speed = current_velocity.mag();
+            //         let new_speed = new_velocity.mag();
+
+            //         if new_speed >= MINIMUM_SPEED {
+            //             return *new_velocity;
+            //         }
+
+            //         if current_speed > MINIMUM_SPEED {
+            //             current_velocity
+            //         } else {
+            //             current_velocity.as_normal() * MINIMUM_SPEED
+            //         }
+            //     },
+            // ),
             // Functional acceleration operator: Rotation around the Z-axis.
             // Box::new(
-            //     |_particle: &Particle, new_velocity: &Vec3, h: f32| -> Vec3 {
+            //     |_current_state: &StateVector, _i: usize, new_velocity: &Vec3, h: f32| -> Vec3 {
             //         static ANGLE: f32 = PI / 2.0;
 
             //         let new_velocity_vec4 =
@@ -224,39 +239,45 @@ pub(crate) fn make_simulation<'a>(
         ],
         velocity: vec![
             // Velocity operator: Vortex.
-            Box::new(|particle: &Particle, new_velocity: &Vec3, h: f32| -> Vec3 {
-                static VORTEX_CENTER: Vec3 = Vec3 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0,
-                };
+            Box::new(
+                |current_state: &StateVector, i: usize, new_velocity: &Vec3, h: f32| -> Vec3 {
+                    static VORTEX_CENTER: Vec3 = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    };
 
-                static VORTEX_RADIUS: f32 = 200.0;
+                    static VORTEX_RADIUS: f32 = 200.0;
 
-                static VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS: f32 = 1.5;
+                    static VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS: f32 = 1.5;
 
-                static VORTEX_ROTATIONAL_FREQUENCY_MAX: f32 = 10.0;
+                    static VORTEX_ROTATIONAL_FREQUENCY_MAX: f32 = 10.0;
 
-                static VORTEX_TIGHTNESS: f32 = 1.5;
+                    static VORTEX_TIGHTNESS: f32 = 1.5;
 
-                let particle_distance_to_vortex_center = (particle.position - VORTEX_CENTER).mag();
+                    let current_position = current_state.data[i];
 
-                let particle_rotational_frequency_scaling_factor =
-                    (VORTEX_RADIUS / particle_distance_to_vortex_center).powf(VORTEX_TIGHTNESS);
+                    let particle_distance_to_vortex_center =
+                        (current_position - VORTEX_CENTER).mag();
 
-                let particle_rotational_frequency = (VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS
-                    * particle_rotational_frequency_scaling_factor)
-                    .max(VORTEX_ROTATIONAL_FREQUENCY_MAX);
+                    let particle_rotational_frequency_scaling_factor =
+                        (VORTEX_RADIUS / particle_distance_to_vortex_center).powf(VORTEX_TIGHTNESS);
 
-                let omega = 2.0 * PI * particle_rotational_frequency;
+                    let particle_rotational_frequency = (VORTEX_ROTATIONAL_FREQUENCY_AT_RADIUS
+                        * particle_rotational_frequency_scaling_factor)
+                        .max(VORTEX_ROTATIONAL_FREQUENCY_MAX);
 
-                let new_velocity_vec4 = Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(omega * h);
+                    let omega = 2.0 * PI * particle_rotational_frequency;
 
-                new_velocity_vec4.to_vec3()
-            }),
+                    let new_velocity_vec4 =
+                        Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(omega * h);
+
+                    new_velocity_vec4.to_vec3()
+                },
+            ),
             // Velocity operator: Translation by offset.
             // Box::new(
-            //     |_particle: &Particle, new_velocity: &Vec3, _h: f32| -> Vec3 {
+            //     |_current_state: &StateVector, _i: usize, new_velocity: &Vec3, _h: f32| -> Vec3 {
             //         static OFFSET: Vec3 = Vec3 {
             //             x: 50.0,
             //             y: 0.0,
@@ -272,7 +293,9 @@ pub(crate) fn make_simulation<'a>(
     Simulation {
         sampler,
         pool: Default::default(),
-        forces: vec![&GRAVITY, &AIR_RESISTANCE],
+        forces: vec![
+            // &GRAVITY, &AIR_RESISTANCE
+        ],
         operators: RefCell::new(operators),
         generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
     }

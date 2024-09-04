@@ -1,7 +1,8 @@
 use cairo::vec::vec3::Vec3;
 
-use crate::particle::Particle;
+use crate::state_vector::StateVector;
 
 pub type Newtons = Vec3;
+pub type Acceleration = Vec3;
 
-pub type Force = fn(&Particle) -> Newtons;
+pub type Force = fn(&StateVector, i: usize, current_time: f32) -> Newtons;

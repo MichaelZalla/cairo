@@ -1,7 +1,5 @@
 use std::slice::{Iter, IterMut};
 
-use crate::{force::Force, simulation::Operators};
-
 use super::Particle;
 
 static MAX_PARTICLES: usize = 8192;
@@ -103,20 +101,6 @@ impl ParticleList {
                 self.inactive_stack.push(index);
                 self.inactive_count += 1;
             }
-        }
-    }
-
-    /// Computes and stores a new acceleration for each particle.
-    pub fn compute_accelerations(&mut self, forces: &[&Force], operators: &mut Operators, h: f32) {
-        for particle in self.pool.iter_mut() {
-            particle.compute_acceleration(forces, operators, h);
-        }
-    }
-
-    /// Performs numerical integration to update each active (alive) particle.
-    pub fn integrate(&mut self, operators: &mut Operators, h: f32) {
-        for particle in self.pool.iter_mut() {
-            particle.integrate(operators, h);
         }
     }
 

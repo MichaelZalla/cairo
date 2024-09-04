@@ -1,24 +1,25 @@
 use cairo::vec::vec3::Vec3;
 
 use crate::{
-    force::{Force, Newtons},
-    simulation::Operators,
+    simulation::{FromStateVector, ToStateVector},
+    state_vector::StateVector,
 };
 
 pub mod generator;
 pub mod particlelist;
 
-pub static PARTICLE_MAX_AGE_SECONDS: f32 = 5.0;
+pub static PARTICLE_MASS: f32 = 50_000_000_000_000.0;
+pub static PARTICLE_MAX_AGE_SECONDS: f32 = 60.0;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Particle {
     pub alive: bool,
     pub age: f32,
+    #[allow(unused)]
     pub mass: f32,
     pub position: Vec3,
     pub prev_position: Vec3,
     pub velocity: Vec3,
-    pub acceleration: Vec3,
 }
 
 impl Default for Particle {
@@ -30,8 +31,22 @@ impl Default for Particle {
             position: Default::default(),
             prev_position: Default::default(),
             velocity: Default::default(),
-            acceleration: Default::default(),
         }
+    }
+}
+
+impl ToStateVector for Particle {
+    fn write_to(&self, state: &mut StateVector, n: usize, i: usize) {
+        state.data[i] = self.position;
+        state.data[i + n] = self.velocity;
+    }
+}
+
+impl FromStateVector for Particle {
+    fn write_from(&mut self, state: &StateVector, n: usize, i: usize) {
+        self.velocity = state.data[i + n];
+        self.prev_position = self.position;
+        self.position = state.data[i];
     }
 }
 
@@ -40,39 +55,5 @@ impl Particle {
         self.age += h;
 
         self.age > PARTICLE_MAX_AGE_SECONDS
-    }
-
-    pub fn compute_acceleration(&mut self, forces: &[&Force], operators: &mut Operators, h: f32) {
-        let mut total_force_newtons: Newtons = Default::default();
-
-        for force in forces {
-            total_force_newtons += force(&self);
-        }
-
-        self.acceleration = total_force_newtons / self.mass;
-
-        for operator in operators.additive_acceleration.iter_mut() {
-            self.acceleration += operator(&self, &self.acceleration, h);
-        }
-    }
-
-    pub fn integrate(&mut self, operators: &mut Operators, h: f32) {
-        let mut new_velocity = self.velocity + self.acceleration * h;
-
-        for operator in operators.functional_acceleration.iter_mut() {
-            new_velocity = operator(&self, &new_velocity, h);
-        }
-
-        self.prev_position = self.position;
-
-        let mut modified_velocity = (self.velocity + new_velocity) / 2.0;
-
-        for operator in operators.velocity.iter_mut() {
-            modified_velocity = operator(&self, &modified_velocity, h);
-        }
-
-        self.position = self.position + modified_velocity * h;
-
-        self.velocity = new_velocity;
     }
 }

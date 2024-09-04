@@ -1,23 +1,21 @@
 use cairo::vec::vec3::Vec3;
 
-use crate::particle::Particle;
-
-type Acceleration = Vec3;
+use crate::{force::Acceleration, state_vector::StateVector};
 
 pub(crate) trait AdditiveAccelerationOperator:
-    FnMut(&Particle, &Vec3, f32) -> Acceleration
+    FnMut(&StateVector, usize, &Vec3, f32) -> Acceleration
 {
 }
 
-impl<T: FnMut(&Particle, &Vec3, f32) -> Acceleration> AdditiveAccelerationOperator for T {}
+impl<T: FnMut(&StateVector, usize, &Vec3, f32) -> Acceleration> AdditiveAccelerationOperator for T {}
 
 pub(crate) trait FunctionalAccelerationOperator:
-    FnMut(&Particle, &Vec3, f32) -> Vec3
+    FnMut(&StateVector, usize, &Vec3, f32) -> Vec3
 {
 }
 
-impl<T: FnMut(&Particle, &Vec3, f32) -> Vec3> FunctionalAccelerationOperator for T {}
+impl<T: FnMut(&StateVector, usize, &Vec3, f32) -> Vec3> FunctionalAccelerationOperator for T {}
 
-pub(crate) trait VelocityOperator: FnMut(&Particle, &Vec3, f32) -> Vec3 {}
+pub(crate) trait VelocityOperator: FnMut(&StateVector, usize, &Vec3, f32) -> Vec3 {}
 
-impl<T: FnMut(&Particle, &Vec3, f32) -> Vec3> VelocityOperator for T {}
+impl<T: FnMut(&StateVector, usize, &Vec3, f32) -> Vec3> VelocityOperator for T {}
