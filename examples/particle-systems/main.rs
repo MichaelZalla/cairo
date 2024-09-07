@@ -4,9 +4,6 @@ use core::f32;
 
 use std::{cell::RefCell, rc::Rc};
 
-use draw_particle::{draw_particle, screen_to_world_space, world_to_screen_space};
-use make_simulation::{make_simulation, SEED_SIZE};
-
 use cairo::{
     app::{
         resolution::{Resolution, RESOLUTION_1280_BY_720},
@@ -18,6 +15,10 @@ use cairo::{
     random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
+
+use draw_particle::{draw_particle, screen_to_world_space, world_to_screen_space};
+use make_simulation::{make_simulation, SEED_SIZE};
+use particle::MAX_PARTICLE_SIZE_PIXELS;
 
 mod draw_particle;
 mod force;
@@ -111,8 +112,10 @@ fn main() -> Result<(), String> {
                 let screen_space_position =
                     world_to_screen_space(&particle.position, &framebuffer_center);
 
-                if (screen_space_position.x as u32) < framebuffer.width
-                    && (screen_space_position.y as u32) < framebuffer.height
+                if (screen_space_position.x as i32 - MAX_PARTICLE_SIZE_PIXELS as i32)
+                    < framebuffer.width as i32
+                    && (screen_space_position.y as i32 - MAX_PARTICLE_SIZE_PIXELS as i32)
+                        < framebuffer.height as i32
                 {
                     let prev_screen_space_position =
                         world_to_screen_space(&particle.prev_position, &framebuffer_center);

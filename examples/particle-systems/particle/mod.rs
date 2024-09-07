@@ -10,6 +10,7 @@ pub mod particlelist;
 
 pub static PARTICLE_MASS: f32 = 50_000_000_000_000.0;
 pub static PARTICLE_MAX_AGE_SECONDS: f32 = 60.0;
+pub static MAX_PARTICLE_SIZE_PIXELS: u32 = 8;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Particle {

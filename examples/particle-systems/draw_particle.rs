@@ -6,7 +6,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::particle::{Particle, PARTICLE_MAX_AGE_SECONDS};
+use crate::particle::{Particle, MAX_PARTICLE_SIZE_PIXELS, PARTICLE_MAX_AGE_SECONDS};
 
 static PIXELS_PER_METER: f32 = 4.0;
 
@@ -44,9 +44,11 @@ pub(crate) fn draw_particle(
 
     let age_alpha = particle.age / PARTICLE_MAX_AGE_SECONDS;
 
-    // let age_alpha_u8 = 255.0 * (1.0 - age_alpha.min(1.0));
-
-    let color = Color::from_vec3(lerp(color::RED.to_vec3(), color::BLUE.to_vec3(), age_alpha));
+    let color = Color::from_vec3(lerp(
+        color::WHITE.to_vec3(),
+        color::BLACK.to_vec3(),
+        age_alpha,
+    ));
 
     // Color {
     //     r: age_alpha_u8,
@@ -70,34 +72,21 @@ pub(crate) fn draw_particle(
     //     &color,
     // );
 
-    let top_left = (
-        screen_space_position.x as i32,
-        screen_space_position.y as i32,
-    );
+    // Assumes screen space position lies within our buffer.
 
-    if (top_left.0 as u32) > framebuffer.width - 8 {
-        return;
+    let x = screen_space_position.x as i32;
+    let y = screen_space_position.y as i32;
+
+    let size = MAX_PARTICLE_SIZE_PIXELS as f32 - ((MAX_PARTICLE_SIZE_PIXELS as f32) * age_alpha);
+    let size_over_2 = size / 2.0;
+
+    if let Some((x, y, width, height)) = Graphics::clip_rectangle(
+        x - size_over_2 as i32,
+        y - size_over_2 as i32,
+        size as u32,
+        size as u32,
+        &framebuffer,
+    ) {
+        Graphics::rectangle(framebuffer, x, y, width, height, Some(&color), None)
     }
-
-    if (top_left.1 as u32) > framebuffer.height - 8 {
-        return;
-    }
-
-    if top_left.0 + 8 < 0 {
-        return;
-    }
-
-    if top_left.1 + 8 < 0 {
-        return;
-    }
-
-    Graphics::rectangle(
-        framebuffer,
-        top_left.0 as u32,
-        top_left.1 as u32,
-        8,
-        8,
-        Some(&color),
-        None,
-    )
 }
