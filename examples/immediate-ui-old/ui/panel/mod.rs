@@ -41,7 +41,7 @@ pub static DEFAULT_PANEL_CONTENT_LAYOUT_OPTIONS: UILayoutOptions =
 
 #[derive(Default, Debug)]
 pub struct PanelOptions {
-    pub item_layout_options: ItemLayoutOptions,
+    pub _item_layout_options: ItemLayoutOptions,
     pub content_layout_options: Option<UILayoutOptions>,
     pub titlebar_options: Option<PanelTitlebarOptions>,
     pub resizable: bool,
@@ -53,6 +53,7 @@ pub struct DoPanelResult {
     pub requested_resize: (i32, i32),
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn do_panel<C>(
     ctx: &mut RefMut<'_, UIContext>,
     panel_uuid: &Uuid,
@@ -133,6 +134,7 @@ where
 
 pub static PANEL_TITLE_BAR_HEIGHT: u32 = 26;
 
+#[allow(clippy::too_many_arguments)]
 fn draw_panel<C>(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &mut UILayoutContext,
