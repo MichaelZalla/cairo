@@ -20,6 +20,7 @@ pub struct Color {
 pub static TRANSPARENT: Color = Color::rgba(0, 0, 0, 0);
 
 pub static BLACK: Color = Color::rgb(0, 0, 0);
+pub static DARK_GRAY: Color = Color::rgb(64, 64, 64);
 pub static WHITE: Color = Color::rgb(255, 255, 255);
 pub static RED: Color = Color::rgb(255, 0, 0);
 pub static YELLOW: Color = Color::rgb(255, 255, 0);
@@ -35,6 +36,26 @@ impl fmt::Display for Color {
             "(r={}, g={}, b={}, a={})",
             self.r, self.g, self.b, self.a
         )
+    }
+}
+
+impl std::ops::MulAssign<f32> for Color {
+    fn mul_assign(&mut self, scale: f32) {
+        self.r = (self.r * scale).max(0.0).min(255.0);
+        self.g = (self.g * scale).max(0.0).min(255.0);
+        self.b = (self.b * scale).max(0.0).min(255.0);
+    }
+}
+
+impl std::ops::Mul<f32> for Color {
+    type Output = Self;
+
+    fn mul(self, scale: f32) -> Self::Output {
+        let mut cloned = self.clone();
+
+        cloned *= scale;
+
+        cloned
     }
 }
 

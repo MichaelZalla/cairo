@@ -10,8 +10,8 @@ use crate::{
     particle::{
         generator::{ParticleGenerator, ParticleGeneratorKind},
         particlelist::ParticleList,
-        PARTICLE_MASS,
     },
+    quadtree::Quadtree,
     state_vector::StateVector,
 };
 
@@ -27,6 +27,7 @@ pub(crate) trait FromStateVector {
 
 fn system_dynamics_function(
     current_state: &StateVector,
+    quadtree: &Quadtree,
     forces: &[&Force],
     operators: &mut Operators,
     current_time: f32,
@@ -35,7 +36,8 @@ fn system_dynamics_function(
     let n = current_state.len();
 
     // Compute new accelerations for derivative.
-    let mut derivative = compute_accelerations(current_state, forces, operators, current_time, h);
+    let mut derivative =
+        compute_accelerations(current_state, quadtree, forces, operators, current_time, h);
 
     for i in 0..n {
         // Copy velocities from previous (current?) state.
@@ -47,6 +49,7 @@ fn system_dynamics_function(
 
 fn compute_accelerations(
     current_state: &StateVector,
+    quadtree: &Quadtree,
     forces: &[&Force],
     operators: &mut Operators,
     current_time: f32,
@@ -76,26 +79,15 @@ fn compute_accelerations(
         derivative.data[i + n] = net_force_acceleration_with_operators;
     }
 
-    // Compute interparticle acceleration acting on each particle.
+    if let Some(ptr) = quadtree.root {
+        let root = unsafe { ptr.as_ref() };
 
-    if n < 2 {
-        return derivative;
-    }
+        // Compute interparticle acceleration acting on each particle.
 
-    for i in 0..n - 1 {
-        for j in i + 1..n {
-            let attractor_position = &current_state.data[j];
-            let attractor_mass = PARTICLE_MASS;
-            let attractee_position = &current_state.data[i];
+        for i in 0..n {
+            let position = &current_state.data[i];
 
-            let acceleration = universal_gravity_acceleration(
-                attractor_position,
-                attractor_mass,
-                attractee_position,
-            );
-
-            derivative.data[i + n] += acceleration;
-            derivative.data[j + n] -= acceleration;
+            derivative.data[i + n] += root.acceleration(position);
         }
     }
 
@@ -164,6 +156,7 @@ pub(crate) struct Simulation<'a, const N: usize> {
     pub forces: Vec<&'a Force>,
     pub operators: RefCell<Operators>,
     pub generators: RefCell<Vec<ParticleGenerator>>,
+    pub quadtree: RefCell<Quadtree>,
 }
 
 impl<'a, const N: usize> Simulation<'a, N> {
@@ -175,6 +168,7 @@ impl<'a, const N: usize> Simulation<'a, N> {
     ) -> Result<(), String> {
         let mut pool = self.pool.borrow_mut();
         let mut generators = self.generators.borrow_mut();
+        let mut quadtree = self.quadtree.borrow_mut();
 
         {
             let mut sampler = self.sampler.borrow_mut();
@@ -223,10 +217,43 @@ impl<'a, const N: usize> Simulation<'a, N> {
             }
         }
 
+        let positions = &state.data[0..n];
+
+        let mut new_quadtree = Quadtree::new(Vec3::extent(positions));
+
+        // Build out the tree!
+
+        match new_quadtree.root.as_mut() {
+            Some(link) => unsafe {
+                let root = link.as_mut();
+
+                for (i, index) in alive_indices.iter().enumerate() {
+                    match pool.at(*index) {
+                        Some(particle) => {
+                            let mass = particle.mass;
+                            let position = state.data[i];
+
+                            root.insert(position, mass);
+                        }
+                        None => panic!(),
+                    }
+                }
+            },
+            None => panic!("Something is very wrong"),
+        }
+
+        *quadtree = new_quadtree;
+
         let mut operators = self.operators.borrow_mut();
 
-        let derivative =
-            system_dynamics_function(&state, &self.forces, &mut operators, uptime_seconds, h);
+        let derivative = system_dynamics_function(
+            &state,
+            &quadtree,
+            &self.forces,
+            &mut operators,
+            uptime_seconds,
+            h,
+        );
 
         let new_state = integrate(&state, &derivative, &mut operators, h);
 

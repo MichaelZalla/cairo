@@ -33,7 +33,7 @@ impl AABB {
         }
     }
 
-    fn from_min_max(min: Vec3, max: Vec3) -> Self {
+    pub fn from_min_max(min: Vec3, max: Vec3) -> Self {
         let half_extents = Vec3 {
             x: (max.x - min.x),
             y: (max.y - min.y),
@@ -84,6 +84,67 @@ impl AABB {
         }
 
         true
+    }
+
+    pub fn subdivide_2d(&self) -> [Self; 4] {
+        let top_left_subdivision = Self::from_min_max(
+            Vec3 {
+                x: self.left,
+                y: self.center.y,
+                z: 0.0,
+            },
+            Vec3 {
+                x: self.center.x,
+                y: self.top,
+                z: 0.0,
+            },
+        );
+
+        let top_right_subdivision = Self::from_min_max(
+            Vec3 {
+                x: self.center.x,
+                y: self.center.y,
+                z: 0.0,
+            },
+            Vec3 {
+                x: self.right,
+                y: self.top,
+                z: 0.0,
+            },
+        );
+
+        let bottom_left_subdivision = Self::from_min_max(
+            Vec3 {
+                x: self.left,
+                y: self.bottom,
+                z: 0.0,
+            },
+            Vec3 {
+                x: self.center.x,
+                y: self.center.y,
+                z: 0.0,
+            },
+        );
+
+        let bottom_right_subdivision = Self::from_min_max(
+            Vec3 {
+                x: self.center.x,
+                y: self.bottom,
+                z: 0.0,
+            },
+            Vec3 {
+                x: self.right,
+                y: self.center.y,
+                z: 0.0,
+            },
+        );
+
+        [
+            top_left_subdivision,
+            top_right_subdivision,
+            bottom_left_subdivision,
+            bottom_right_subdivision,
+        ]
     }
 }
 

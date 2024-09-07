@@ -51,10 +51,10 @@ pub(crate) fn make_simulation<'a>(
             y: 20.0,
             z: 0.0,
         }),
-        5.0,
+        50.0,
         None,
+        15.0,
         5.0,
-        2.0,
     );
 
     let directional_right = ParticleGenerator::new(
@@ -70,10 +70,10 @@ pub(crate) fn make_simulation<'a>(
                 z: 0.0,
             },
         ),
-        5.0,
+        50.0,
         Some(PI / 4.0),
+        15.0,
         5.0,
-        2.0,
     );
 
     let directional_up = ParticleGenerator::new(
@@ -89,10 +89,10 @@ pub(crate) fn make_simulation<'a>(
                 z: 0.0,
             },
         ),
-        5.0,
+        50.0,
         Some(PI / 2.0),
+        15.0,
         5.0,
-        2.0,
     );
 
     let operators = Operators {
@@ -298,5 +298,6 @@ pub(crate) fn make_simulation<'a>(
         ],
         operators: RefCell::new(operators),
         generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
+        quadtree: RefCell::new(Default::default()),
     }
 }

@@ -4,6 +4,8 @@ use core::f32;
 
 use std::{cell::RefCell, rc::Rc};
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::{
         resolution::{Resolution, RESOLUTION_1280_BY_720},
@@ -17,14 +19,17 @@ use cairo::{
 };
 
 use draw_particle::{draw_particle, screen_to_world_space, world_to_screen_space};
+use draw_quadtree::draw_quadtree;
 use make_simulation::{make_simulation, SEED_SIZE};
 use particle::MAX_PARTICLE_SIZE_PIXELS;
 
 mod draw_particle;
+mod draw_quadtree;
 mod force;
 mod make_simulation;
 mod operator;
 mod particle;
+mod quadtree;
 mod simulation;
 mod state_vector;
 
@@ -74,8 +79,10 @@ fn main() -> Result<(), String> {
 
     let sim = make_simulation(sampler_rc, sampler_rc_for_random_acceleration_operator);
 
+    let draw_debug = RefCell::new(false);
+
     let mut update = |app: &mut App,
-                      _keyboard_state: &mut KeyboardState,
+                      keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
@@ -94,6 +101,14 @@ fn main() -> Result<(), String> {
         // Simulation tick.
 
         sim.tick(h, uptime_seconds, &cursor_world_space)?;
+
+        // Inputs.
+
+        if keyboard_state.keys_pressed.contains(&Keycode::Q) {
+            let mut debug = draw_debug.borrow_mut();
+
+            *debug = !*debug;
+        }
 
         Ok(())
     };
@@ -128,6 +143,14 @@ fn main() -> Result<(), String> {
                     );
                 }
             }
+        }
+
+        // Visualize of our simulation's quadtree.
+
+        if *draw_debug.borrow() {
+            let quadtree = sim.quadtree.borrow();
+
+            draw_quadtree(&quadtree, &mut framebuffer, &framebuffer_center);
         }
 
         Ok(framebuffer.get_all().clone())

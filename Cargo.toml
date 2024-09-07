@@ -50,4 +50,5 @@ opt-level = 1
 opt-level = 3
 
 [dev-dependencies]
+arrayvec = "0.7.6"
 physical_constants = "0.5.0"
