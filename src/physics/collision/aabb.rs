@@ -67,7 +67,7 @@ impl AABB {
     }
 
     pub fn new_from_triangle(v0: &Vec3, v1: &Vec3, v2: &Vec3) -> Self {
-        let (min, max) = get_min_max_for_vec3(&[v0, v1, v2]);
+        let (min, max) = Vec3::extent(&[*v0, *v1, *v2]);
 
         AABB::from_min_max(min, max)
     }
@@ -95,33 +95,6 @@ impl fmt::Display for AABB {
             self.center, self.left, self.right, self.bottom, self.top, self.near, self.far
         )
     }
-}
-
-fn get_min_max_for_vec3(points_ref: &[&Vec3]) -> (Vec3, Vec3) {
-    let mut min = vec3::MAX;
-    let mut max = vec3::MIN;
-
-    for v in points_ref {
-        if v.x < min.x {
-            min.x = v.x;
-        } else if v.x > max.x {
-            max.x = v.x;
-        }
-
-        if v.y < min.y {
-            min.y = v.y;
-        } else if v.y > max.y {
-            max.y = v.y;
-        }
-
-        if v.z < min.z {
-            min.z = v.z;
-        } else if v.z > max.z {
-            max.z = v.z;
-        }
-    }
-
-    (min, max)
 }
 
 fn get_min_max_for_mesh(mesh: &Mesh) -> (Vec3, Vec3) {

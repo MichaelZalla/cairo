@@ -174,6 +174,33 @@ impl ops::MulAssign<Vec3> for Vec3 {
 }
 
 impl Vec3 {
+    pub fn extent(points: &[Vec3]) -> (Vec3, Vec3) {
+        let mut min = MAX;
+        let mut max = MIN;
+
+        for v in points {
+            if v.x < min.x {
+                min.x = v.x;
+            } else if v.x > max.x {
+                max.x = v.x;
+            }
+
+            if v.y < min.y {
+                min.y = v.y;
+            } else if v.y > max.y {
+                max.y = v.y;
+            }
+
+            if v.z < min.z {
+                min.z = v.z;
+            } else if v.z > max.z {
+                max.z = v.z;
+            }
+        }
+
+        (min, max)
+    }
+
     pub fn mag(self) -> f32 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
