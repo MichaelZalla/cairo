@@ -568,10 +568,9 @@ impl App {
             let unused_seconds = unused_ticks as f64 / ticks_per_second as f64;
             let _unused_milliseconds = unused_seconds * 1000.0;
 
+            // #[cfg(print_timing_info)]
             if frames_rendered % 50 == 0 {
-                debug_print!("frames_per_second={}", self.timing_info.frames_per_second);
-                debug_print!("unused_seconds={}", unused_seconds);
-                debug_print!("unused_milliseconds={}", unused_milliseconds);
+                println!("timing_info={}", self.timing_info);
             }
 
             frame_start = timer_subsystem.performance_counter();

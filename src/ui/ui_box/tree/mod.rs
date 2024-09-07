@@ -4,8 +4,6 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use crate::{
     buffer::Buffer2D,
     color,
-    debug::println_indent,
-    debug_print,
     graphics::{text::cache::cache_text, Graphics},
     ui::{
         context::GLOBAL_UI_CONTEXT,
@@ -20,6 +18,30 @@ use crate::{
 };
 
 use super::{key::UIKey, UIBox, UIBoxInteraction};
+
+#[cfg(feature = "print_ui_layout_info")]
+macro_rules! ui_debug_print {
+    ($( $args:expr ),*) => { println!( $( $args ),* ); }
+}
+
+#[cfg(not(feature = "print_ui_layout_info"))]
+macro_rules! ui_debug_print {
+    ($( $args:expr ),*) => {};
+}
+
+#[cfg(feature = "print_ui_layout_info")]
+macro_rules! ui_debug_print_indented {
+    ($depth: expr, $msg: expr) => {
+        let indent = 2 * ($depth + 1);
+
+        ui_debug_print!("{:indent$}{}", ">", $msg);
+    }
+}
+
+#[cfg(not(feature = "print_ui_layout_info"))]
+macro_rules! ui_debug_print_indented {
+    ($depth: expr, $msg: expr) => {};
+}
 
 pub type UIBoxTreeRenderCallback = Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>;
 
@@ -132,7 +154,7 @@ impl<'a> UIBoxTree<'a> {
         // this frame's UI tree.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            debug_print!("\nUser inputs pass:\n");
+            ui_debug_print!("\nUser inputs pass:\n");
 
             let mut input_events = ctx.input_events.borrow_mut();
 
@@ -197,14 +219,15 @@ impl<'a> UIBoxTree<'a> {
     }
 
     pub fn do_autolayout_pass(&mut self) -> Result<(), String> {
-        debug_print!("\nAuto-layout pass:\n");
+        ui_debug_print!("\nAuto-layout pass:\n");
 
         // For each axis...
 
         // 1. Calculate "standalone" sizes.
 
-        debug_print!(">\n> (Standalone sizes pass...)\n>");
+        ui_debug_print!(">\n> (Standalone sizes pass...)\n>");
 
+        #[allow(unused)]
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _sibling_index, parent_data, node| {
@@ -224,10 +247,11 @@ impl<'a> UIBoxTree<'a> {
 
                     match size_with_strictness.size {
                         UISize::Pixels(pixels) => {
-                            println_indent(
+                            ui_debug_print_indented!(
                                 depth,
-                                format!("{}: Pixel size for {} axis: {}", ui_box.id, axis, pixels),
+                                format!("{}: Pixel size for {} axis: {}", ui_box.id, axis, pixels)
                             );
+                            
                             ui_box.computed_size[screen_axis_index] = pixels as f32;
                         }
                         UISize::TextContent => {
@@ -248,34 +272,36 @@ impl<'a> UIBoxTree<'a> {
                             if is_horizontal_axis {
                                 ui_box.computed_size[0] = texture_width as f32;
 
-                                println_indent(
+                                ui_debug_print_indented!(
                                     depth,
                                     format!(
                                         "{}: Rendered text is {} pixels wide.",
                                         ui_box.id,
                                         texture_width
-                                    ),
+                                    )
                                 );
                             } else {
                                 ui_box.computed_size[1] = texture_height as f32;
 
-                                println_indent(
+                                ui_debug_print_indented!(
                                     depth,
                                     format!(
                                         "{}: Rendered text is {} pixels tall.",
                                         ui_box.id,
                                         texture_height
-                                    ),
+                                    )
                                 );
                             }
                         },
-                        _ => println_indent(
-                            depth,
-                            format!(
-                                "{}: Uses {} size for {} axis. Skipping.",
-                                ui_box.id, size_with_strictness.size, axis
-                            ),
-                        ),
+                        _ => {
+                            ui_debug_print_indented!(
+                                depth,
+                                format!(
+                                    "{}: Uses {} size for {} axis. Skipping.",
+                                    ui_box.id, size_with_strictness.size, axis
+                                )
+                            );
+                        },
                     }
                 }
 
@@ -286,7 +312,7 @@ impl<'a> UIBoxTree<'a> {
 
         // 2. Calculate sibling-dependent sizes with pre-order traversal.
 
-        debug_print!(">\n> (Sibling-dependent pass...)\n>");
+        ui_debug_print!(">\n> (Sibling-dependent pass...)\n>");
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
@@ -358,20 +384,21 @@ impl<'a> UIBoxTree<'a> {
 
         // 3. Calculate upward-dependent sizes with a pre-order traversal.
 
-        debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
-
+        ui_debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
+        
+        #[allow(unused)]
         self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, _sibling_index, parent_data, node| {
             let ui_box: &mut UIBox = &mut node.data;
 
             let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
 
             if node.parent.is_none() {
-                println_indent(
+                ui_debug_print_indented!(
                     depth,
                     format!(
                         "{}: Skipping (root node).",
                         ui_box.id,
-                    ),
+                    )
                 );
 
                 return Ok(());
@@ -413,7 +440,7 @@ impl<'a> UIBoxTree<'a> {
                                 UISize::Pixels(_) | UISize::TextContent | UISize::PercentOfParent(_) | UISize::MaxOfSiblings => {
                                     ui_box.computed_size[screen_axis_index] = parent.computed_size[screen_axis_index] * percentage;
 
-                                    println_indent(
+                                    ui_debug_print_indented!(
                                         depth,
                                         format!(
                                             "{}: ({} axis) Computed size {} as {} percent of parent size {}",
@@ -422,7 +449,7 @@ impl<'a> UIBoxTree<'a> {
                                             ui_box.computed_size[screen_axis_index],
                                             percentage * 100.0,
                                             parent.computed_size[screen_axis_index]
-                                        ),
+                                        )
                                     );
                                 },
                             }
@@ -435,12 +462,12 @@ impl<'a> UIBoxTree<'a> {
                         }
                     },
                     _ => {
-                        println_indent(
+                        ui_debug_print_indented!(
                             depth,
                             format!(
                                 "{}: Uses {} size for {} axis. Skipping.",
                                 ui_box.id, size_with_strictness.size, axis
-                            ),
+                            )
                         );
                     }
                 }
@@ -451,18 +478,19 @@ impl<'a> UIBoxTree<'a> {
 
         // 4. Calculate downward-dependent sizes with a post-order traversal.
 
-        debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
+        ui_debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
 
+        #[allow(unused)]
         self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PostOrder, &mut |depth, _sibling_index, parent_data, node| {
             let ui_box: &mut UIBox = &mut node.data;
 
             if node.children.is_empty() {
-                println_indent(
+                ui_debug_print_indented!(
                     depth,
                     format!(
                         "{}: Skipping (leaf node).",
                         ui_box.id,
-                    ),
+                    )
                 );
 
                 return Ok(());
@@ -503,23 +531,23 @@ impl<'a> UIBoxTree<'a> {
 
                         ui_box.computed_size[screen_axis_index] = size_of_children_along_axis;
 
-                        println_indent(
+                        ui_debug_print_indented!(
                             depth,
                             format!(
                                 "{}: ({} axis) Computed box size {} as the sum of its children's sizes.",
                                 ui_box.id,
                                 axis,
                                 ui_box.computed_size[screen_axis_index],
-                            ),
+                            )
                         );
                     },
                     _ => {
-                        println_indent(
+                        ui_debug_print_indented!(
                             depth,
                             format!(
                                 "{}: Uses {} size for {} axis. Skipping.",
                                 ui_box.id, size_with_strictness.size, axis
-                            ),
+                            )
                         );
                     },
                 }
@@ -530,15 +558,16 @@ impl<'a> UIBoxTree<'a> {
 
         // 5. Solve any violations (children extending beyond parent) with a pre-order traversal.
 
-        debug_print!(">\n> (Violations pass...)\n>");
+        ui_debug_print!(">\n> (Violations pass...)\n>");
 
+        #[allow(unused)]
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _sibling_index, parent_data, node| {
                 let ui_box: &mut UIBox = &mut node.data;
 
                 if node.children.is_empty() {
-                    println_indent(depth, format!("{}: Skipping (leaf node).", ui_box.id,));
+                    ui_debug_print_indented!(depth, format!("{}: Skipping (leaf node).", ui_box.id,));
 
                     return Ok(());
                 }
@@ -555,50 +584,50 @@ impl<'a> UIBoxTree<'a> {
 
                     let screen_axis_index = if is_horizontal_axis { 0 } else { 1 };
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
-                        String::new(),
+                        String::new()
                     );
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
-                        format!("id: {}", ui_box.id),
+                        format!("id: {}", ui_box.id)
                     );
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
-                        format!("parent_layout: {}", ui_box.parent_layout_direction),
+                        format!("parent_layout: {}", ui_box.parent_layout_direction)
                     );
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
                         format!("axis: {}", axis)
                     );
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
-                        format!("layout: {}", ui_box.layout_direction),
+                        format!("layout: {}", ui_box.layout_direction)
                     );
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
-                        format!("screen_axis_index: {}", screen_axis_index),
+                        format!("screen_axis_index: {}", screen_axis_index)
                     );
 
-                    println_indent(
+                    ui_debug_print_indented!(
                         depth + 1,
-                        format!("is_horizontal_axis: {}", is_horizontal_axis),
+                        format!("is_horizontal_axis: {}", is_horizontal_axis)
                     );
 
                     match size_with_strictness.size {
                         UISize::Null | UISize::TextContent => panic!(),
                         UISize::ChildrenSum => {
-                            println_indent(
+                            ui_debug_print_indented!(
                                 depth,
                                 format!(
                                     "{}: Uses {} size. Skipping.",
                                     ui_box.id, ui_box.semantic_sizes[axis_index].size,
-                                ),
+                                )
                             );
                         }
                         UISize::Pixels(_) | UISize::PercentOfParent(_) | UISize::MaxOfSiblings => {
@@ -623,25 +652,25 @@ impl<'a> UIBoxTree<'a> {
                                 }
                             };
 
-                            println_indent(
+                            ui_debug_print_indented!(
                                 depth + 1,
-                                format!("computed_size_along_axis: {}", computed_size_along_axis),
+                                format!("computed_size_along_axis: {}", computed_size_along_axis)
                             );
 
-                            println_indent(
+                            ui_debug_print_indented!(
                                 depth + 1,
-                                format!("size_of_children_along_axis: {}", size_of_children_along_axis),
+                                format!("size_of_children_along_axis: {}", size_of_children_along_axis)
                             );
 
                             if computed_size_along_axis < size_of_children_along_axis {
-                                println_indent(
+                                ui_debug_print_indented!(
                                     depth,
                                     format!(
                                         "{}: Detected size violation of children ({} > {}!).",
                                         ui_box.id,
                                         size_of_children_along_axis,
                                         computed_size_along_axis,
-                                    ),
+                                    )
                                 );
 
                                 // Need to account for strictness of children
@@ -682,14 +711,14 @@ impl<'a> UIBoxTree<'a> {
                                 let alpha_adjusted_for_size_reserved =
                                     (computed_size_along_axis - size_reserved_for_strict_children) / (size_of_children_along_axis - size_reserved_for_strict_children);
 
-                                println_indent(
+                                ui_debug_print_indented!(
                                     depth + 1,
-                                    format!("size_reserved_for_strict_children: {}", size_reserved_for_strict_children),
+                                    format!("size_reserved_for_strict_children: {}", size_reserved_for_strict_children)
                                 );
 
-                                println_indent(
+                                ui_debug_print_indented!(
                                     depth + 1,
-                                    format!("alpha_adjusted_for_size_reserved: {}", alpha_adjusted_for_size_reserved),
+                                    format!("alpha_adjusted_for_size_reserved: {}", alpha_adjusted_for_size_reserved)
                                 );
 
                                 for child in &node.children {
@@ -697,9 +726,9 @@ impl<'a> UIBoxTree<'a> {
 
                                     let old_child_size = child_ui_box.computed_size[screen_axis_index];
 
-                                    println_indent(
+                                    ui_debug_print_indented!(
                                         depth + 1,
-                                        format!("old_child_size for {}: {}", child_ui_box.id, old_child_size),
+                                        format!("old_child_size for {}: {}", child_ui_box.id, old_child_size)
                                     );
 
                                     let strictness =
@@ -714,7 +743,7 @@ impl<'a> UIBoxTree<'a> {
                                     };
 
                                     if new_child_size != old_child_size {
-                                        println_indent(
+                                        ui_debug_print_indented!(
                                             depth + 1,
                                             format!(
                                                 "{}: ({} axis) Scaling down from {} to {} (strictness: {}).",
@@ -723,7 +752,7 @@ impl<'a> UIBoxTree<'a> {
                                                 old_child_size,
                                                 new_child_size,
                                                 strictness,
-                                            ),
+                                            )
                                         );
                                     }
 
@@ -741,7 +770,7 @@ impl<'a> UIBoxTree<'a> {
 
         // 6. Compute the relative positions of each child with a pre-order traversal.
 
-        debug_print!(">\n> (Relative positioning pass...)\n>");
+        ui_debug_print!(">\n> (Relative positioning pass...)\n>");
 
         self.tree.visit_root_dfs_mut(
             &NodeLocalTraversalMethod::PreOrder,
@@ -824,24 +853,27 @@ impl<'a> UIBoxTree<'a> {
     }
 
     fn debug_computed_sizes(&self) -> Result<(), String> {
-        debug_print!("\nResults:\n");
+        ui_debug_print!("\nResults:\n");
 
+        #[allow(unused)]
         self.tree.visit_root_dfs(
             &NodeLocalTraversalMethod::PreOrder,
             &mut |depth, _parent_data, node| {
-                let ui_box: &UIBox = &node.data;
+                #[cfg(feature = "print_ui_layout_info")] {
+                    let ui_box: &UIBox = &node.data;
 
-                let rel_position = ui_box.computed_relative_position;
-                let global_position = ui_box.global_bounds;
-                let size = ui_box.computed_size;
-
-                println_indent(
-                    depth,
-                    format!(
-                        "{}: Relative position: ({},{}) | Global position: ({},{}) | Computed size: {}x{}.",
-                        ui_box.id, rel_position[0], rel_position[1], global_position.left, global_position.top, size[0], size[1],
-                    ),
-                );
+                    let rel_position = ui_box.computed_relative_position;
+                    let global_position = ui_box.global_bounds;
+                    let size = ui_box.computed_size;
+    
+                    ui_debug_print_indented!(
+                        depth,
+                        format!(
+                            "{}: Relative position: ({},{}) | Global position: ({},{}) | Computed size: {}x{}.",
+                            ui_box.id, rel_position[0], rel_position[1], global_position.left, global_position.top, size[0], size[1],
+                        )
+                    );
+                }
 
                 Ok(())
             },
