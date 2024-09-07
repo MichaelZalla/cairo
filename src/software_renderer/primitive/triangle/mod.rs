@@ -265,7 +265,7 @@ impl SoftwareRenderer {
         // shader_context: &ShaderContext,
         // scene_resources: &SceneResources,
     ) {
-        let mut tri = vec![v0, v1, v2];
+        let mut tri = [v0, v1, v2];
 
         // Sorts points by y-value (highest-to-lowest)
 
