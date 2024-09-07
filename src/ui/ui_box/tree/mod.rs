@@ -421,55 +421,54 @@ impl<'a> UIBoxTree<'a> {
                     (true, UILayoutDirection::LeftToRight) | (false, UILayoutDirection::TopToBottom) => 0,
                 };
 
-                match size_with_strictness.size {
-                    UISize::PercentOfParent(percentage) => match parent_data {
-                        Some(parent) => {
+                if let UISize::PercentOfParent(percentage) = size_with_strictness.size {
+                    match parent_data {
+                    Some(parent) => {
 
-                            let parent_size_for_axis = parent.semantic_sizes[corresponding_parent_axis_index].size;
+                        let parent_size_for_axis = parent.semantic_sizes[corresponding_parent_axis_index].size;
 
-                            match parent_size_for_axis {
-                                UISize::ChildrenSum => {
-                                    panic!(
-                                        "{}: Uses {} size for {} axis, but parent {} uses downward-dependent {} size for same axis.",
-                                        ui_box.id, size_with_strictness.size, axis,
-                                        parent.id,
-                                        parent_size_for_axis
-                                    );
-                                },
-                                UISize::Null => panic!("{}: Parent node has `Null` size for screen axis {}!", ui_box.id, if screen_axis_index == 0 { "X" } else { "Y" }),
-                                UISize::Pixels(_) | UISize::TextContent | UISize::PercentOfParent(_) | UISize::MaxOfSiblings => {
-                                    ui_box.computed_size[screen_axis_index] = parent.computed_size[screen_axis_index] * percentage;
+                        match parent_size_for_axis {
+                            UISize::ChildrenSum => {
+                                panic!(
+                                    "{}: Uses {} size for {} axis, but parent {} uses downward-dependent {} size for same axis.",
+                                    ui_box.id, size_with_strictness.size, axis,
+                                    parent.id,
+                                    parent_size_for_axis
+                                );
+                            },
+                            UISize::Null => panic!("{}: Parent node has `Null` size for screen axis {}!", ui_box.id, if screen_axis_index == 0 { "X" } else { "Y" }),
+                            UISize::Pixels(_) | UISize::TextContent | UISize::PercentOfParent(_) | UISize::MaxOfSiblings => {
+                                ui_box.computed_size[screen_axis_index] = parent.computed_size[screen_axis_index] * percentage;
 
-                                    ui_debug_print_indented!(
-                                        depth,
-                                        format!(
-                                            "{}: ({} axis) Computed size {} as {} percent of parent size {}",
-                                            ui_box.id,
-                                            axis,
-                                            ui_box.computed_size[screen_axis_index],
-                                            percentage * 100.0,
-                                            parent.computed_size[screen_axis_index]
-                                        )
-                                    );
-                                },
-                            }
+                                ui_debug_print_indented!(
+                                    depth,
+                                    format!(
+                                        "{}: ({} axis) Computed size {} as {} percent of parent size {}",
+                                        ui_box.id,
+                                        axis,
+                                        ui_box.computed_size[screen_axis_index],
+                                        percentage * 100.0,
+                                        parent.computed_size[screen_axis_index]
+                                    )
+                                );
+                            },
                         }
-                        None => {
-                            panic!(
-                                "{}: Uses {} size for {} axis, but node has no parent!",
-                                ui_box.id, size_with_strictness.size, axis
-                            );
-                        }
-                    },
-                    _ => {
-                        ui_debug_print_indented!(
-                            depth,
-                            format!(
-                                "{}: Uses {} size for {} axis. Skipping.",
-                                ui_box.id, size_with_strictness.size, axis
-                            )
+                    }
+                    None => {
+                        panic!(
+                            "{}: Uses {} size for {} axis, but node has no parent!",
+                            ui_box.id, size_with_strictness.size, axis
                         );
                     }
+                }
+                } else {
+                    ui_debug_print_indented!(
+                        depth,
+                        format!(
+                            "{}: Uses {} size for {} axis. Skipping.",
+                            ui_box.id, size_with_strictness.size, axis
+                        )
+                    );
                 }
             }
 
@@ -508,48 +507,45 @@ impl<'a> UIBoxTree<'a> {
 
                 let screen_axis_index = if is_horizontal_axis { 0 } else { 1 };
 
-                match size_with_strictness.size {
-                    UISize::ChildrenSum => {
-                        let size_of_children_along_axis = {
-                            let child_sizes_along_axis = node
-                                .children
-                                .iter()
-                                .map(|c| c.borrow().data.computed_size[screen_axis_index]);
+                if let UISize::ChildrenSum = size_with_strictness.size {
+                    let size_of_children_along_axis = {
+                        let child_sizes_along_axis = node
+                            .children
+                            .iter()
+                            .map(|c| c.borrow().data.computed_size[screen_axis_index]);
 
-                            match (ui_box.layout_direction, screen_axis_index) {
-                                (UILayoutDirection::LeftToRight, 0) | (UILayoutDirection::TopToBottom, 1) => {
-                                    child_sizes_along_axis.into_iter().sum()
-                                },
-                                _ => {
-                                    child_sizes_along_axis
-                                    .into_iter()
-                                    .max_by(|a, b| a.partial_cmp(b).unwrap())
-                                    .unwrap()
-                                }
+                        match (ui_box.layout_direction, screen_axis_index) {
+                            (UILayoutDirection::LeftToRight, 0) | (UILayoutDirection::TopToBottom, 1) => {
+                                child_sizes_along_axis.into_iter().sum()
+                            },
+                            _ => {
+                                child_sizes_along_axis
+                                .into_iter()
+                                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                                .unwrap()
                             }
-                        };
+                        }
+                    };
 
-                        ui_box.computed_size[screen_axis_index] = size_of_children_along_axis;
+                    ui_box.computed_size[screen_axis_index] = size_of_children_along_axis;
 
-                        ui_debug_print_indented!(
-                            depth,
-                            format!(
-                                "{}: ({} axis) Computed box size {} as the sum of its children's sizes.",
-                                ui_box.id,
-                                axis,
-                                ui_box.computed_size[screen_axis_index],
-                            )
-                        );
-                    },
-                    _ => {
-                        ui_debug_print_indented!(
-                            depth,
-                            format!(
-                                "{}: Uses {} size for {} axis. Skipping.",
-                                ui_box.id, size_with_strictness.size, axis
-                            )
-                        );
-                    },
+                    ui_debug_print_indented!(
+                        depth,
+                        format!(
+                            "{}: ({} axis) Computed box size {} as the sum of its children's sizes.",
+                            ui_box.id,
+                            axis,
+                            ui_box.computed_size[screen_axis_index],
+                        )
+                    );
+                } else {
+                    ui_debug_print_indented!(
+                        depth,
+                        format!(
+                            "{}: Uses {} size for {} axis. Skipping.",
+                            ui_box.id, size_with_strictness.size, axis
+                        )
+                    );
                 }
             }
 
