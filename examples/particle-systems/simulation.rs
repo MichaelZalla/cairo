@@ -84,40 +84,40 @@ fn compute_accelerations(
 
     for i in 0..n - 1 {
         for j in i + 1..n {
-            let force = compute_interparticle_force(current_state, i, j, current_time);
+            let attractor_position = &current_state.data[j];
+            let attractor_mass = PARTICLE_MASS;
+            let attractee_position = &current_state.data[i];
 
-            derivative.data[i + n] += force / PARTICLE_MASS;
-            derivative.data[j + n] -= force / PARTICLE_MASS;
+            let acceleration = universal_gravity_acceleration(
+                attractor_position,
+                attractor_mass,
+                attractee_position,
+            );
+
+            derivative.data[i + n] += acceleration;
+            derivative.data[j + n] -= acceleration;
         }
     }
 
     derivative
 }
 
-fn compute_interparticle_force(
-    current_state: &StateVector,
-    i: usize,
-    j: usize,
-    _current_time: f32,
+pub fn universal_gravity_acceleration(
+    attractor_position: &Vec3,
+    attractor_mass: f32,
+    attractee_position: &Vec3,
 ) -> Acceleration {
-    // Basic interparticle gravitational force.
-    let i_to_j = current_state.data[j] - current_state.data[i];
+    let attractee_to_attractor = *attractor_position - *attractee_position;
 
-    let distance = i_to_j.mag();
+    let distance = attractee_to_attractor.mag();
 
     if distance < 1.0 {
         return Default::default();
     }
 
-    let g_j = NEWTONIAN_CONSTANT_OF_GRAVITATION as f32 * PARTICLE_MASS;
+    let g_a = NEWTONIAN_CONSTANT_OF_GRAVITATION as f32 * attractor_mass;
 
-    let i_to_j_direction = i_to_j.as_normal();
-
-    let particle_i_mass_over_distance_squared = PARTICLE_MASS / (distance * distance);
-
-    let gravitational_force = i_to_j_direction * particle_i_mass_over_distance_squared * g_j;
-
-    gravitational_force
+    (attractee_to_attractor / distance.powi(3)) * g_a
 }
 
 fn integrate(
