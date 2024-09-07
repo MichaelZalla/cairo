@@ -98,47 +98,44 @@ impl App {
         let window_canvas_rc_clone = window_canvas_rc.clone();
 
         let event_watch = if resizable {
-            let watch = event_subsystem.add_event_watch(move |event| {
-                if let Event::Window {
-                    timestamp: _timestamp,
-                    window_id: _window_id,
-                    win_event,
-                } = event
-                {
-                    match win_event {
-                        WindowEvent::Resized(width, height)
-                        | WindowEvent::SizeChanged(width, height) => {
-                            let mut canvas_window = (*canvas_window_rc).borrow_mut();
-                            let mut window_info = (*window_info_rc_clone).borrow_mut();
-                            let mut window_canvas = (*window_canvas_rc_clone).borrow_mut();
+            let watch =
+                event_subsystem.add_event_watch(move |event| {
+                    if let Event::Window {
+                        timestamp: _timestamp,
+                        window_id: _window_id,
+                        win_event:
+                            WindowEvent::Resized(width, height)
+                            | WindowEvent::SizeChanged(width, height),
+                    } = event
+                    {
+                        let mut canvas_window = (*canvas_window_rc).borrow_mut();
+                        let mut window_info = (*window_info_rc_clone).borrow_mut();
+                        let mut window_canvas = (*window_canvas_rc_clone).borrow_mut();
 
-                            let new_resolution = Resolution {
-                                width: width as u32,
-                                height: height as u32,
-                            };
+                        let new_resolution = Resolution {
+                            width: width as u32,
+                            height: height as u32,
+                        };
 
-                            handle_window_resize_event(
-                                &mut canvas_window,
-                                &mut window_info,
-                                &mut window_canvas,
-                                new_resolution,
-                            )
-                            .unwrap();
+                        handle_window_resize_event(
+                            &mut canvas_window,
+                            &mut window_info,
+                            &mut window_canvas,
+                            new_resolution,
+                        )
+                        .unwrap();
 
-                            render_and_present(
-                                &mut canvas_window,
-                                &mut window_canvas,
-                                None,
-                                None,
-                                Some(new_resolution),
-                                rod,
-                            )
-                            .unwrap();
-                        }
-                        _ => (),
+                        render_and_present(
+                            &mut canvas_window,
+                            &mut window_canvas,
+                            None,
+                            None,
+                            Some(new_resolution),
+                            rod,
+                        )
+                        .unwrap();
                     };
-                };
-            });
+                });
 
             Some(watch)
         } else {
