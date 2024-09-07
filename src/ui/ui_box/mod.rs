@@ -15,7 +15,6 @@ use crate::{
     animation::{exponential, lerp},
     buffer::Buffer2D,
     color::{self, Color},
-    debug_print,
     device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
     graphics::{horizontal_line_unsafe, text::TextOperation, vertical_line_unsafe, Graphics},
     resource::handle::Handle,
@@ -207,7 +206,7 @@ impl UIBox {
             text_color,
         };
 
-        let ui_box = Self {
+        Self {
             id,
             key,
             features,
@@ -218,12 +217,7 @@ impl UIBox {
             active_transition: 1.0,
             custom_render_callback,
             ..Default::default()
-        };
-
-        debug_print!("Created {}", ui_box);
-
-        #[allow(clippy::let_and_return)]
-        ui_box
+        }
     }
 
     pub fn get_pixel_coordinates(&self) -> (u32, u32) {

@@ -9,7 +9,7 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
 
 use crate::{
-    app::context::ApplicationRenderingContext, buffer::Buffer2D, color::Color, debug_print,
+    app::context::ApplicationRenderingContext, buffer::Buffer2D, color::Color,
     serde::PostDeserialize, vec::vec2::Vec2, vec::vec3::Vec3,
 };
 
@@ -138,7 +138,8 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         }
 
         if self.is_mipmapped {
-            debug_print!("Called Texture::validate_for_mipmapping() on a Texture that already has mipmapping enabled!");
+            #[cfg(feature = "print_warnings")]
+            println!("Called Texture::validate_for_mipmapping() on a Texture that already has mipmapping enabled!");
 
             return Ok(());
         }

@@ -9,7 +9,6 @@ use sdl2::{
 
 use crate::{
     app::{resolution::RESOLUTION_640_BY_480, AppWindowInfo},
-    debug_print,
     device::game_controller::GameController,
 };
 
@@ -63,7 +62,8 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     let count = game_controller_subsystem.num_joysticks()?;
 
-    debug_print!(
+    #[cfg(feature = "print_init_info")]
+    println!(
         "Initialized game controller subsystem with {} joysticks.\n",
         count
     );
@@ -73,13 +73,16 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
             match game_controller_subsystem.open(joystick_index) {
                 Ok(joystick) => {
                     if joystick.attached() {
+                        #[cfg(feature = "print_init_info")]
                         println!("Controller mapping: {}", joystick.mapping());
 
                         game_controllers[joystick_index as usize] =
                             Some(GameController::new_with_handle(joystick));
                     }
                 }
+                #[allow(unused)]
                 Err(e) => {
+                    #[cfg(feature = "print_init_info")]
                     println!("Error initializing controller {}: '{}'", joystick_index, e)
                 }
             }
@@ -88,7 +91,8 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
     let haptic_subsystem = sdl_context.haptic()?;
 
-    debug_print!("Initialized haptic subsystem.\n");
+    #[cfg(feature = "print_init_info")]
+    println!("Initialized haptic subsystem.\n");
 
     for controller in game_controllers.as_mut_slice() {
         if controller.is_some() {
@@ -98,7 +102,9 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
                 Ok(device) => {
                     unwrapped.set_haptic_device(device);
                 }
+                #[allow(unused)]
                 Err(e) => {
+                    #[cfg(feature = "print_init_info")]
                     println!(
                         "Error retrieving haptic device for joystick {}: '{}'",
                         unwrapped.id, e

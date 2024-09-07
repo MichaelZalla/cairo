@@ -17,7 +17,7 @@ use crate::{
         mouse::{MouseDragEvent, MouseEvent, MouseEventKind, MouseState, MouseWheelEvent},
     },
     stats::CycleCounters,
-    {debug_print, time::TimingInfo},
+    time::TimingInfo,
 };
 
 use context::{make_application_context, make_window_canvas, ApplicationContext};
@@ -210,11 +210,10 @@ impl App {
 
             self.timing_info.milliseconds_slept = seconds_slept * 1000.0;
 
-            debug_print!(
+            #[cfg(feature = "print_timing_info")]
+            println!(
                 "Slept for {} ticks, {}s, {}ms!",
-                ticks_slept,
-                seconds_slept,
-                self.timing_info.milliseconds_slept
+                ticks_slept, seconds_slept, self.timing_info.milliseconds_slept
             );
 
             // Event polling
@@ -568,7 +567,7 @@ impl App {
             let unused_seconds = unused_ticks as f64 / ticks_per_second as f64;
             let _unused_milliseconds = unused_seconds * 1000.0;
 
-            // #[cfg(print_timing_info)]
+            #[cfg(feature = "print_timing_info")]
             if frames_rendered % 50 == 0 {
                 println!("timing_info={}", self.timing_info);
             }
@@ -590,6 +589,7 @@ impl App {
                     .get_mut(AppCycleCounter::Run as usize)
                     .end();
 
+                #[cfg(feature = "print_timing_info")]
                 println!("Frame {}:", self.timing_info.current_frame_index);
 
                 self.cycle_counters.report::<AppCycleCounter>();

@@ -9,8 +9,10 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+print_init_info = []
 print_timing_info = []
 print_ui_layout_info = []
+print_warnings = []
 debug_cycle_counts = []
 
 [dependencies]
