@@ -62,7 +62,22 @@ impl ParticleList {
         self.pool.iter_mut()
     }
 
-    #[allow(unused)]
+    pub fn at(&self, index: usize) -> Option<&Particle> {
+        if index < self.pool.len() {
+            Some(&self.pool[index])
+        } else {
+            None
+        }
+    }
+
+    pub fn at_mut(&mut self, index: usize) -> Option<&mut Particle> {
+        if index < self.pool.len() {
+            Some(&mut self.pool[index])
+        } else {
+            None
+        }
+    }
+
     pub fn reset_inactive_stack(&mut self) {
         self.inactive_stack.clear();
 

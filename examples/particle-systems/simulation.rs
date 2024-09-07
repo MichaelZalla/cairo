@@ -206,9 +206,21 @@ impl<'a, const N: usize> Simulation<'a, N> {
 
         let n = state.len();
 
+        let alive_indices: Vec<usize> = pool
+            .iter()
+            .enumerate()
+            .filter(|(_i, p)| p.alive)
+            .map(|(i, _p)| i)
+            .collect();
+
         // Copy current positions and velocities into the current state.
-        for (i, particle) in pool.iter().filter(|p| p.alive).enumerate() {
-            particle.write_to(&mut state, n, i);
+        for (i, index) in alive_indices.iter().enumerate() {
+            match pool.at(*index) {
+                Some(particle) => {
+                    particle.write_to(&mut state, n, i);
+                }
+                None => panic!(),
+            }
         }
 
         let mut operators = self.operators.borrow_mut();
@@ -219,8 +231,13 @@ impl<'a, const N: usize> Simulation<'a, N> {
         let new_state = integrate(&state, &derivative, &mut operators, h);
 
         // Copy new positions and velocities back into each particle.
-        for (i, particle) in pool.iter_mut().filter(|p| p.alive).enumerate() {
-            particle.write_from(&new_state, n, i);
+        for (i, index) in alive_indices.iter().enumerate() {
+            match pool.at_mut(*index) {
+                Some(particle) => {
+                    particle.write_from(&new_state, n, i);
+                }
+                None => panic!(),
+            }
         }
 
         Ok(())
