@@ -145,14 +145,14 @@ impl Graphics {
 
         if let Some(fill_color) = fill {
             for current_y in y..y + height {
-                horizontal_line_unsafe(buffer, x, x + width - 1, current_y, &fill_color.to_u32())
+                horizontal_line_unsafe(buffer, x, x + width - 1, current_y, fill_color.to_u32())
             }
         }
 
         // Render a border.
 
         if let Some(border_color) = border {
-            let color_u32 = &border_color.to_u32();
+            let color_u32 = border_color.to_u32();
 
             // Top edge
             horizontal_line_unsafe(buffer, x, x + width - 1, y, color_u32);
@@ -326,15 +326,15 @@ impl Graphics {
 }
 
 // @NOTE Assumes all coordinate arguments lie inside the buffer boundary.
-pub fn horizontal_line_unsafe(buffer: &mut Buffer2D, x1: u32, x2: u32, y: u32, color_u32: &u32) {
+pub fn horizontal_line_unsafe(buffer: &mut Buffer2D, x1: u32, x2: u32, y: u32, color_u32: u32) {
     for x in x1..x2 + 1 {
-        buffer.set(x, y, *color_u32);
+        buffer.set(x, y, color_u32);
     }
 }
 
 // @NOTE Assumes all coordinate arguments lie inside the buffer boundary.
-pub fn vertical_line_unsafe(buffer: &mut Buffer2D, x: u32, y1: u32, y2: u32, color_u32: &u32) {
+pub fn vertical_line_unsafe(buffer: &mut Buffer2D, x: u32, y1: u32, y2: u32, color_u32: u32) {
     for y in y1..y2 + 1 {
-        buffer.set(x, y, *color_u32);
+        buffer.set(x, y, color_u32);
     }
 }

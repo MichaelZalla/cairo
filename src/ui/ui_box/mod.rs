@@ -575,7 +575,7 @@ impl UIBox {
                 }
 
                 // Top edge.
-                horizontal_line_unsafe(target, x1 as u32, x2 as u32, y1 as u32, &top_left.to_u32());
+                horizontal_line_unsafe(target, x1 as u32, x2 as u32, y1 as u32, top_left.to_u32());
 
                 // Bottom edge.
                 horizontal_line_unsafe(
@@ -583,11 +583,11 @@ impl UIBox {
                     x1 as u32,
                     x2 as u32,
                     y2 as u32,
-                    &bottom_right.to_u32(),
+                    bottom_right.to_u32(),
                 );
 
                 // Left edge.
-                vertical_line_unsafe(target, x1 as u32, y1 as u32, y2 as u32, &top_left.to_u32());
+                vertical_line_unsafe(target, x1 as u32, y1 as u32, y2 as u32, top_left.to_u32());
 
                 // Right edge.
                 vertical_line_unsafe(
@@ -595,7 +595,7 @@ impl UIBox {
                     x2 as u32,
                     y1 as u32,
                     y2 as u32,
-                    &bottom_right.to_u32(),
+                    bottom_right.to_u32(),
                 );
             }
 
@@ -620,16 +620,16 @@ impl UIBox {
             match &handle {
                 Some(handle) => match handle {
                     UIBoxDragHandle::Top => {
-                        horizontal_line_unsafe(target, x1 as u32, x2 as u32, y1 as u32, &color)
+                        horizontal_line_unsafe(target, x1 as u32, x2 as u32, y1 as u32, color)
                     }
                     UIBoxDragHandle::Bottom => {
-                        horizontal_line_unsafe(target, x1 as u32, x2 as u32, y2 as u32, &color)
+                        horizontal_line_unsafe(target, x1 as u32, x2 as u32, y2 as u32, color)
                     }
                     UIBoxDragHandle::Left => {
-                        vertical_line_unsafe(target, x1 as u32, y1 as u32, y2 as u32, &color)
+                        vertical_line_unsafe(target, x1 as u32, y1 as u32, y2 as u32, color)
                     }
                     UIBoxDragHandle::Right => {
-                        vertical_line_unsafe(target, x2 as u32, y1 as u32, y2 as u32, &color)
+                        vertical_line_unsafe(target, x2 as u32, y1 as u32, y2 as u32, color)
                     }
                 },
                 None => (),
