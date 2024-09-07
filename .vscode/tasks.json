@@ -1,5 +1,12 @@
 {
   "version": "2.0.0",
+  "options": {
+    "windows": {
+      "env": {
+        "SDL_PATH": "C:\\Users\\micha\\source\\vclib"
+      }
+    }
+  },
   "tasks": [
     {
       "label": "restart",
