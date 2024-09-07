@@ -101,27 +101,31 @@ impl Graphics {
     }
 
     pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], color: &Color) {
-        for i in 0..p.len() {
-            if i == p.len() - 1 {
-                Graphics::line(
-                    buffer,
-                    p[i].x as i32,
-                    p[i].y as i32,
-                    p[0].x as i32,
-                    p[0].y as i32,
-                    color,
-                );
-            } else {
-                Graphics::line(
-                    buffer,
-                    p[i].x as i32,
-                    p[i].y as i32,
-                    p[i + 1].x as i32,
-                    p[i + 1].y as i32,
-                    color,
-                );
-            }
+        if p.is_empty() {
+            return;
         }
+
+        let last_index: usize = p.len() - 1;
+
+        for i in 0..last_index {
+            Graphics::line(
+                buffer,
+                p[i].x as i32,
+                p[i].y as i32,
+                p[i + 1].x as i32,
+                p[i + 1].y as i32,
+                color,
+            );
+        }
+
+        Graphics::line(
+            buffer,
+            p[last_index].x as i32,
+            p[last_index].y as i32,
+            p[0].x as i32,
+            p[0].y as i32,
+            color,
+        );
     }
 
     pub fn rectangle(
