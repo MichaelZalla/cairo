@@ -13,7 +13,7 @@ impl<'a, T: Arena> ScratchArena<'a, T> {
         let start = {
             let borrowed = &arena;
 
-            borrowed.top().clone()
+            *borrowed.top()
         };
 
         Self { arena, start }

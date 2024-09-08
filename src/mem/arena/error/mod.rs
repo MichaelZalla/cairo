@@ -11,7 +11,7 @@ impl Display for AllocatorError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let description = match self {
             AllocatorError::Null => "AllocatorError::Null".to_string(),
-            AllocatorError::Layout(err) => format!("AllocatorError::Layout({})", err.to_string()),
+            AllocatorError::Layout(err) => format!("AllocatorError::Layout({})", err),
             AllocatorError::InvalidArguments => "AllocatorError::InvalidArguments".to_string(),
         };
 

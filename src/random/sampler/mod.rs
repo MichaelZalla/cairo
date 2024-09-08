@@ -134,7 +134,7 @@ impl<const N: usize> DirectionSampler for RandomSampler<N> {
         let azimuth = self.sample_range_uniform(-PI, PI);
         let height = self.sample_range_uniform(-1.0, 1.0);
 
-        let r = (1.0 - height * height as f32).sqrt();
+        let r = (1.0 - height * height).sqrt();
 
         let sample = Vec3 {
             x: r * azimuth.cos(),
