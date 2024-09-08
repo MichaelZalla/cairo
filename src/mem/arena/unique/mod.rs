@@ -36,12 +36,16 @@ impl<T: ?Sized> UniquePtr<T> {
     pub fn as_ptr(&self) -> *mut T {
         self.pointer.as_ptr()
     }
+}
 
-    pub fn as_ref<'a>(&self) -> &'a T {
+impl<T: ?Sized> AsRef<T> for UniquePtr<T> {
+    fn as_ref(&self) -> &T {
         unsafe { self.pointer.as_ref() }
     }
+}
 
-    pub fn as_mut<'a>(&mut self) -> &'a mut T {
+impl<T: ?Sized> AsMut<T> for UniquePtr<T> {
+    fn as_mut(&mut self) -> &mut T {
         unsafe { self.pointer.as_mut() }
     }
 }
