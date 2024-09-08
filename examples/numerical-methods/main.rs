@@ -3,11 +3,11 @@ use std::cell::RefCell;
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
-    color,
+    color::{self, Color},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
 };
 
-use graph::Graph;
+use graph::{Graph, GraphingFunction};
 
 mod graph;
 
@@ -27,12 +27,13 @@ fn main() -> Result<(), String> {
     let graph = Graph::new(
         (
             (framebuffer.width / 2) as i32,
-            (framebuffer.height - 64) as i32,
+            (framebuffer.height / 2) as i32,
         ),
-        8,
+        48,
     );
 
     let graph_rc = RefCell::new(graph);
+
     let framebuffer_rc = RefCell::new(framebuffer);
 
     let render_scene_to_framebuffer = |_frame_index: Option<u32>,
@@ -48,7 +49,15 @@ fn main() -> Result<(), String> {
 
         framebuffer.clear(None);
 
-        graph.render(&mut framebuffer);
+        let functions: Vec<(GraphingFunction, Color)> = vec![
+            (|x: f32| -> f32 { x.sin() }, color::BLUE),
+            (|x: f32| -> f32 { x.cos() }, color::RED),
+            (|x: f32| -> f32 { x * x }, color::GREEN),
+            (|x: f32| -> f32 { x.sqrt() }, color::SKY_BOX),
+            (|x: f32| -> f32 { x.exp() }, color::ORANGE),
+        ];
+
+        graph.render(&functions, &mut framebuffer);
 
         Ok(framebuffer.get_all().clone())
     };

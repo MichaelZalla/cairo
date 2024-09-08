@@ -2,10 +2,12 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     buffer::Buffer2D,
-    color,
+    color::{self, Color},
     device::{keyboard::KeyboardState, mouse::MouseState},
     graphics::Graphics,
 };
+
+pub type GraphingFunction = fn(x: f32) -> f32;
 
 pub struct Graph {
     screen_origin: (i32, i32),
@@ -52,17 +54,22 @@ impl Graph {
         // Change zoom level with scroll wheel.
 
         if let Some(event) = &mouse_state.wheel_event {
-            if event.delta > 0 {
-                self.pixels_per_unit = (self.pixels_per_unit + 1).clamp(2, 64);
-            } else {
-                self.pixels_per_unit = (self.pixels_per_unit as i32 - 1).clamp(2, 64) as u32;
-            }
+            let delta: i32 = if event.delta > 0 { 1 } else { -1 };
+
+            self.pixels_per_unit = (self.pixels_per_unit as i32 + delta).clamp(2, 256) as u32;
         }
     }
 
-    pub fn render(&self, buffer: &mut Buffer2D) {
+    pub fn render(&self, functions: &Vec<(GraphingFunction, Color)>, buffer: &mut Buffer2D) {
+        self.render_axes(buffer);
+
+        self.render_ticks(buffer);
+
+        self.render_functions(functions, buffer);
+    }
+
+    fn render_axes(&self, buffer: &mut Buffer2D) {
         let screen_origin = self.screen_origin;
-        let pixels_per_unit = self.pixels_per_unit;
 
         // Draw the X axis.
 
@@ -80,6 +87,11 @@ impl Graph {
         );
 
         Graphics::line(buffer, x1, y1, x2, y2, &color::YELLOW);
+    }
+
+    fn render_ticks(&self, buffer: &mut Buffer2D) {
+        let screen_origin = self.screen_origin;
+        let pixels_per_unit = self.pixels_per_unit;
 
         // Plot ticks.
 
@@ -145,6 +157,28 @@ impl Graph {
                 tick_end.1,
                 &color::YELLOW,
             )
+        }
+    }
+
+    fn render_functions(&self, functions: &Vec<(GraphingFunction, Color)>, buffer: &mut Buffer2D) {
+        for (function, color) in functions {
+            self.render_function(function, color, buffer);
+        }
+    }
+
+    fn render_function(&self, function: &GraphingFunction, color: &Color, buffer: &mut Buffer2D) {
+        for i in 0..buffer.width - 1 {
+            let (x_cartesian, _) = self.screen_to_cartesian(i as i32, 0);
+            let y_cartesian = function(x_cartesian);
+            let point = self.cartesian_to_screen(x_cartesian, y_cartesian);
+
+            if point.0 >= 0
+                && point.0 < buffer.width as i32
+                && point.1 >= 0
+                && point.1 < buffer.height as i32
+            {
+                buffer.set(point.0 as u32, point.1 as u32, color.to_u32())
+            }
         }
     }
 }
