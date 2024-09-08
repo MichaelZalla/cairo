@@ -168,18 +168,17 @@ impl Graph {
     }
 
     pub fn function(&self, function: &GraphingFunction, color: &Color, buffer: &mut Buffer2D) {
-        for i in 0..buffer.width - 1 {
-            let (x_cartesian, _) = self.screen_to_cartesian(i as i32, 0);
-            let y_cartesian = function(x_cartesian);
-            let point = self.cartesian_to_screen(x_cartesian, y_cartesian);
+        for i in 0..buffer.width - 2 {
+            let (x1_cartesian, _) = self.screen_to_cartesian(i as i32, 0);
+            let y1_cartesian = function(x1_cartesian);
 
-            if point.0 >= 0
-                && point.0 < buffer.width as i32
-                && point.1 >= 0
-                && point.1 < buffer.height as i32
-            {
-                buffer.set(point.0 as u32, point.1 as u32, color.to_u32())
-            }
+            let (x2_cartesian, _) = self.screen_to_cartesian(i as i32 + 1, 0);
+            let y2_cartesian = function(x2_cartesian);
+
+            let start = self.cartesian_to_screen(x1_cartesian, y1_cartesian);
+            let end = self.cartesian_to_screen(x2_cartesian, y2_cartesian);
+
+            Graphics::line(buffer, start.0, start.1, end.0, end.1, color);
         }
     }
 }
