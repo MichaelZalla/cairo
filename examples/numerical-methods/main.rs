@@ -7,7 +7,7 @@ use cairo::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
 };
 
-use graph::{Graph, GraphingFunction};
+use graph::{BoxedGraphingFunction, Graph};
 
 mod graph;
 
@@ -51,7 +51,7 @@ fn main() -> Result<(), String> {
 
         graph.axes(&mut framebuffer);
 
-        let functions: Vec<(GraphingFunction, Color)> = vec![
+        let functions: Vec<(BoxedGraphingFunction, Color)> = vec![
             (Box::new(|x: f32| -> f32 { x.sin() * 4.0 }), color::BLUE),
             (Box::new(|x: f32| -> f32 { x.cos() }), color::RED),
             (Box::new(|x: f32| -> f32 { x * x }), color::GREEN),

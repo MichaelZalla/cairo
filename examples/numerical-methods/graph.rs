@@ -7,7 +7,8 @@ use cairo::{
     graphics::Graphics,
 };
 
-pub type GraphingFunction = fn(x: f32) -> f32;
+pub type GraphingFunction = dyn Fn(f32) -> f32;
+pub type BoxedGraphingFunction = Box<GraphingFunction>;
 
 pub struct Graph {
     screen_origin: (i32, i32),
@@ -161,7 +162,11 @@ impl Graph {
         }
     }
 
-    pub fn functions(&self, functions: &Vec<(GraphingFunction, Color)>, buffer: &mut Buffer2D) {
+    pub fn functions(
+        &self,
+        functions: &Vec<(BoxedGraphingFunction, Color)>,
+        buffer: &mut Buffer2D,
+    ) {
         for (function, color) in functions {
             self.function(function, color, buffer);
         }
