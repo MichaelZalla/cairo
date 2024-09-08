@@ -30,6 +30,7 @@ pub struct ParticleGenerator {
     particles_per_second: f32,
     fractional_particles_accumulator: f32,
     max_deflection_angle_radians: Option<f32>,
+    mass: f32,
     speed_mean: f32,
     speed_range: f32,
 }
@@ -39,6 +40,7 @@ impl ParticleGenerator {
         kind: ParticleGeneratorKind,
         particles_per_second: f32,
         max_deflection_angle_radians: Option<f32>,
+        mass: f32,
         speed_mean: f32,
         speed_range: f32,
     ) -> Self {
@@ -47,6 +49,7 @@ impl ParticleGenerator {
             particles_per_second,
             fractional_particles_accumulator: 0.0,
             max_deflection_angle_radians,
+            mass,
             speed_mean,
             speed_range,
         }
@@ -105,6 +108,7 @@ impl ParticleGenerator {
             position += velocity * h * sampler.sample_range_uniform(0.0, 1.0);
 
             list.activate(Particle {
+                mass: self.mass,
                 position,
                 velocity,
                 ..Default::default()

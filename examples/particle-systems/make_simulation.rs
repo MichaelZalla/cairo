@@ -53,6 +53,7 @@ pub(crate) fn make_simulation<'a>(
         }),
         50.0,
         None,
+        10.0,
         15.0,
         5.0,
     );
@@ -72,6 +73,7 @@ pub(crate) fn make_simulation<'a>(
         ),
         50.0,
         Some(PI / 4.0),
+        10.0,
         15.0,
         5.0,
     );
@@ -91,6 +93,7 @@ pub(crate) fn make_simulation<'a>(
         ),
         50.0,
         Some(PI / 2.0),
+        10.0,
         15.0,
         5.0,
     );
