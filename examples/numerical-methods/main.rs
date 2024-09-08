@@ -49,15 +49,17 @@ fn main() -> Result<(), String> {
 
         framebuffer.clear(None);
 
+        graph.axes(&mut framebuffer);
+
         let functions: Vec<(GraphingFunction, Color)> = vec![
-            (|x: f32| -> f32 { x.sin() }, color::BLUE),
-            (|x: f32| -> f32 { x.cos() }, color::RED),
-            (|x: f32| -> f32 { x * x }, color::GREEN),
-            (|x: f32| -> f32 { x.sqrt() }, color::SKY_BOX),
-            (|x: f32| -> f32 { x.exp() }, color::ORANGE),
+            (Box::new(|x: f32| -> f32 { x.sin() * 4.0 }), color::BLUE),
+            (Box::new(|x: f32| -> f32 { x.cos() }), color::RED),
+            (Box::new(|x: f32| -> f32 { x * x }), color::GREEN),
+            (Box::new(|x: f32| -> f32 { x.sqrt() }), color::SKY_BOX),
+            (Box::new(|x: f32| -> f32 { x.exp() }), color::ORANGE),
         ];
 
-        graph.render(&functions, &mut framebuffer);
+        graph.functions(&functions, &mut framebuffer);
 
         Ok(framebuffer.get_all().clone())
     };

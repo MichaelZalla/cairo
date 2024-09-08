@@ -60,12 +60,9 @@ impl Graph {
         }
     }
 
-    pub fn render(&self, functions: &Vec<(GraphingFunction, Color)>, buffer: &mut Buffer2D) {
+    pub fn axes(&self, buffer: &mut Buffer2D) {
         self.render_axes(buffer);
-
         self.render_ticks(buffer);
-
-        self.render_functions(functions, buffer);
     }
 
     fn render_axes(&self, buffer: &mut Buffer2D) {
@@ -93,9 +90,11 @@ impl Graph {
         let screen_origin = self.screen_origin;
         let pixels_per_unit = self.pixels_per_unit;
 
-        // Plot ticks.
+        // Tick frequency.
 
-        static UNITS_PER_TICK: u32 = 4;
+        static UNITS_PER_TICK: u32 = 1;
+
+        // Screen coordinates to cartesian.
 
         let screen_origin_cartesian = (0.0 as f32, 0.0 as f32);
 
@@ -108,6 +107,8 @@ impl Graph {
 
         let screen_right_cartesian =
             self.screen_to_cartesian((buffer.width - 1) as i32, screen_origin.1);
+
+        // Compute the pixel-constant tick width, as a cartesian distance.
 
         static TICK_WIDTH_PIXELS: f32 = 3.0;
 
@@ -160,13 +161,13 @@ impl Graph {
         }
     }
 
-    fn render_functions(&self, functions: &Vec<(GraphingFunction, Color)>, buffer: &mut Buffer2D) {
+    pub fn functions(&self, functions: &Vec<(GraphingFunction, Color)>, buffer: &mut Buffer2D) {
         for (function, color) in functions {
-            self.render_function(function, color, buffer);
+            self.function(function, color, buffer);
         }
     }
 
-    fn render_function(&self, function: &GraphingFunction, color: &Color, buffer: &mut Buffer2D) {
+    pub fn function(&self, function: &GraphingFunction, color: &Color, buffer: &mut Buffer2D) {
         for i in 0..buffer.width - 1 {
             let (x_cartesian, _) = self.screen_to_cartesian(i as i32, 0);
             let y_cartesian = function(x_cartesian);
