@@ -175,10 +175,33 @@ impl Graph {
             let (x2_cartesian, _) = self.screen_to_cartesian(i as i32 + 1, 0);
             let y2_cartesian = function(x2_cartesian);
 
-            let start = self.cartesian_to_screen(x1_cartesian, y1_cartesian);
-            let end = self.cartesian_to_screen(x2_cartesian, y2_cartesian);
-
-            Graphics::line(buffer, start.0, start.1, end.0, end.1, color);
+            self.line(
+                x1_cartesian,
+                y1_cartesian,
+                x2_cartesian,
+                y2_cartesian,
+                color,
+                buffer,
+            );
         }
+    }
+
+    pub fn point(&self, x: f32, y: f32, color: &Color, buffer: &mut Buffer2D) {
+        let (screen_x, screen_y) = self.cartesian_to_screen(x, y);
+
+        if screen_x >= 0
+            && screen_x < buffer.width as i32
+            && screen_y >= 0
+            && screen_y < buffer.height as i32
+        {
+            buffer.set(screen_x as u32, screen_y as u32, color.to_u32());
+        }
+    }
+
+    pub fn line(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: &Color, buffer: &mut Buffer2D) {
+        let start = self.cartesian_to_screen(x1, y1);
+        let end = self.cartesian_to_screen(x2, y2);
+
+        Graphics::line(buffer, start.0, start.1, end.0, end.1, color);
     }
 }

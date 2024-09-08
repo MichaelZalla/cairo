@@ -61,6 +61,10 @@ fn main() -> Result<(), String> {
 
         graph.functions(&functions, &mut framebuffer);
 
+        // graph.point(1.0, 1.0, &color::ORANGE, &mut framebuffer);
+
+        // graph.line(0.0, 0.0, 5.0, 3.0, &color::ORANGE, &mut framebuffer);
+
         Ok(framebuffer.get_all().clone())
     };
 
