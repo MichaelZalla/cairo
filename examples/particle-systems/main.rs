@@ -4,7 +4,7 @@ use core::f32;
 
 use std::{cell::RefCell, rc::Rc};
 
-use sdl2::keyboard::Keycode;
+use sdl2::{keyboard::Keycode, mouse::MouseButton};
 
 use cairo::{
     app::{
@@ -13,17 +13,26 @@ use cairo::{
     },
     buffer::Buffer2D,
     color::{self},
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    device::{
+        game_controller::GameControllerState,
+        keyboard::KeyboardState,
+        mouse::{MouseEventKind, MouseState},
+    },
     random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
 
-use draw_particle::{draw_particle, screen_to_world_space, world_to_screen_space};
+use collider::LineSegmentCollider;
+use coordinates::{screen_to_world_space, world_to_screen_space};
+use draw_collider::draw_collider;
+use draw_particle::draw_particle;
 use draw_quadtree::draw_quadtree;
 use make_simulation::{make_simulation, SEED_SIZE};
 use particle::MAX_PARTICLE_SIZE_PIXELS;
 
 mod collider;
+mod coordinates;
+mod draw_collider;
 mod draw_particle;
 mod draw_quadtree;
 mod force;
@@ -33,6 +42,11 @@ mod particle;
 mod quadtree;
 mod simulation;
 mod state_vector;
+
+struct LineSegmentColliderCreationState {
+    start: Option<Vec3>,
+    current: Option<Vec3>,
+}
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -80,6 +94,11 @@ fn main() -> Result<(), String> {
 
     let sim = make_simulation(sampler_rc, sampler_rc_for_random_acceleration_operator);
 
+    let collider_creation_state_rc = RefCell::new(LineSegmentColliderCreationState {
+        start: None,
+        current: None,
+    });
+
     let draw_debug = RefCell::new(false);
 
     let mut update = |app: &mut App,
@@ -98,6 +117,48 @@ fn main() -> Result<(), String> {
         };
 
         let cursor_world_space = screen_to_world_space(&cursor_screen_space, &framebuffer_center);
+
+        // Check if we're creating any new collider.
+
+        let mut collider_creation_state = collider_creation_state_rc.borrow_mut();
+
+        collider_creation_state.current.replace(cursor_world_space);
+
+        if let Some(button_event) = mouse_state.button_event {
+            match (button_event.button, button_event.kind) {
+                (MouseButton::Left, MouseEventKind::Down) => {
+                    // Are we starting a new line segment?
+
+                    if collider_creation_state.start.is_none() {
+                        collider_creation_state.start.replace(cursor_world_space);
+                    }
+                }
+                (MouseButton::Left, MouseEventKind::Up) => {
+                    // Are we finishing a new line segment?
+
+                    if let Some(start) = collider_creation_state.start {
+                        let distance = (cursor_world_space - start).mag();
+
+                        if distance > 16.0 {
+                            let end = cursor_world_space;
+
+                            let collider = LineSegmentCollider::new(start, end);
+
+                            sim.colliders.borrow_mut().push(collider);
+                        }
+
+                        collider_creation_state.start.take();
+                    }
+                }
+                (MouseButton::Right, MouseEventKind::Down) => {
+                    // Are we cancelling a new line segment?
+
+                    collider_creation_state.start.take();
+                    collider_creation_state.current.take();
+                }
+                _ => (),
+            }
+        }
 
         // Simulation tick.
 
@@ -143,6 +204,32 @@ fn main() -> Result<(), String> {
                         &mut framebuffer,
                     );
                 }
+            }
+        }
+
+        // Visualize our (created and pending) colliders.
+
+        {
+            let colliders = sim.colliders.borrow();
+
+            for collider in colliders.iter() {
+                draw_collider(collider, &mut framebuffer, &framebuffer_center);
+            }
+
+            let collider_creation_state = collider_creation_state_rc.borrow();
+
+            match (
+                collider_creation_state.start,
+                collider_creation_state.current,
+            ) {
+                (Some(start), Some(end)) => {
+                    draw_collider(
+                        &LineSegmentCollider::new(start, end),
+                        &mut framebuffer,
+                        &framebuffer_center,
+                    );
+                }
+                _ => (),
             }
         }
 

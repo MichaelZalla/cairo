@@ -179,7 +179,7 @@ impl<'a, const N: usize> Simulation<'a, N> {
                 match generator.kind {
                     ParticleGeneratorKind::Omnidirectional(ref mut origin) => {
                         *origin = Vec3 {
-                            y: 30.0 + 20.0 * (uptime_seconds * 3.0).sin(),
+                            y: 40.0 + 20.0 * (uptime_seconds * 3.0).sin(),
                             x: origin.x,
                             z: origin.z,
                         }
@@ -257,7 +257,40 @@ impl<'a, const N: usize> Simulation<'a, N> {
             h,
         );
 
-        let new_state = integrate(&state, &derivative, &mut operators, h);
+        let mut new_state = integrate(&state, &derivative, &mut operators, h);
+
+        // Detect and resolve particle collisions for all colliders.
+
+        for i in 0..n {
+            let position = state.data[i];
+
+            let mut new_position = new_state.data[i];
+            let mut new_velocity = new_state.data[i + n];
+
+            // We'll break early on the first collision (if any).
+
+            for collider in self.colliders.borrow().iter() {
+                // Check if this particle has just crossed over the  plane.
+
+                match collider.get_post_collision_distance(&position, &new_position) {
+                    Some(new_distance) => {
+                        // Perform an approximate collision resolution.
+
+                        collider.resolve_approximate(
+                            &mut new_position,
+                            &mut new_velocity,
+                            new_distance,
+                        );
+
+                        new_state.data[i + n] = new_velocity;
+                        new_state.data[i] = new_position;
+
+                        break;
+                    }
+                    None => (),
+                }
+            }
+        }
 
         // Copy new positions and velocities back into each particle.
         for (i, index) in alive_indices.iter().enumerate() {

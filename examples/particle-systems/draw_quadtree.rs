@@ -6,7 +6,7 @@ use cairo::{
 };
 
 use crate::{
-    draw_particle::world_to_screen_space,
+    coordinates::world_to_screen_space,
     quadtree::{Quadtree, QuadtreeNode},
 };
 
