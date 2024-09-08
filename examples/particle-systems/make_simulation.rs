@@ -296,6 +296,7 @@ pub(crate) fn make_simulation<'a>(
         forces: vec![
             // &GRAVITY, &AIR_RESISTANCE
         ],
+        colliders: Default::default(),
         operators: RefCell::new(operators),
         generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
         quadtree: RefCell::new(Default::default()),

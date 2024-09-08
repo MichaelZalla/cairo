@@ -23,6 +23,7 @@ use draw_quadtree::draw_quadtree;
 use make_simulation::{make_simulation, SEED_SIZE};
 use particle::MAX_PARTICLE_SIZE_PIXELS;
 
+mod collider;
 mod draw_particle;
 mod draw_quadtree;
 mod force;

@@ -5,6 +5,7 @@ use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 use cairo::{random::sampler::RandomSampler, vec::vec3::Vec3};
 
 use crate::{
+    collider::LineSegmentCollider,
     force::{Acceleration, Force},
     operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     particle::{
@@ -154,6 +155,7 @@ pub(crate) struct Simulation<'a, const N: usize> {
     pub sampler: Rc<RefCell<RandomSampler<N>>>,
     pub pool: RefCell<ParticleList>,
     pub forces: Vec<&'a Force>,
+    pub colliders: RefCell<Vec<LineSegmentCollider>>,
     pub operators: RefCell<Operators>,
     pub generators: RefCell<Vec<ParticleGenerator>>,
     pub quadtree: RefCell<Quadtree>,
