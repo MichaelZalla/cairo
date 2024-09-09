@@ -73,7 +73,7 @@ impl Graph {
 
         let (x1, y1, x2, y2) = (0, screen_origin.1, buffer.width as i32, screen_origin.1);
 
-        Graphics::line(buffer, x1, y1, x2, y2, &color::YELLOW);
+        Graphics::line(buffer, x1, y1, x2, y2, &color::DARK_GRAY);
 
         // Draw the Y axis.
 
@@ -84,7 +84,7 @@ impl Graph {
             (buffer.height - 1) as i32,
         );
 
-        Graphics::line(buffer, x1, y1, x2, y2, &color::YELLOW);
+        Graphics::line(buffer, x1, y1, x2, y2, &color::DARK_GRAY);
     }
 
     fn render_ticks(&self, buffer: &mut Buffer2D) {
@@ -133,7 +133,7 @@ impl Graph {
                 tick_start.1,
                 tick_end.0,
                 tick_end.1,
-                &color::YELLOW,
+                &color::DARK_GRAY,
             )
         }
 
@@ -157,7 +157,7 @@ impl Graph {
                 tick_start.1,
                 tick_end.0,
                 tick_end.1,
-                &color::YELLOW,
+                &color::DARK_GRAY,
             )
         }
     }
