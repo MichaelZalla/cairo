@@ -5,7 +5,7 @@ use crate::{
     state::{State, StateDerivative},
 };
 
-fn euler(
+fn forward_euler(
     system_dynamics_function: &dyn Fn(State) -> StateDerivative,
     state: State,
     h: f32,
@@ -62,7 +62,7 @@ fn integrate_with_method(
     }
 }
 
-pub(crate) fn integrate_euler(
+pub(crate) fn integrate_forward_euler(
     s_0: State,
     system_dynamics_function: &dyn Fn(State) -> StateDerivative,
     step_size: f32,
@@ -73,7 +73,7 @@ pub(crate) fn integrate_euler(
 ) {
     integrate_with_method(
         s_0,
-        euler,
+        forward_euler,
         system_dynamics_function,
         step_size,
         steps,

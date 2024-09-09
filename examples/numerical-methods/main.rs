@@ -8,7 +8,7 @@ use cairo::{
 };
 
 use graph::{BoxedGraphingFunction, Graph};
-use integrator::{integrate_euler, integrate_rk2, integrate_rk4};
+use integrator::{integrate_forward_euler, integrate_rk2, integrate_rk4};
 use state::{State, StateDerivative};
 
 mod graph;
@@ -137,7 +137,7 @@ fn main() -> Result<(), String> {
             // h <= 2*T
             // 2*T = 5.0
 
-            integrate_euler(
+            integrate_forward_euler(
                 state_0,
                 exp_decay_system_dynamics_function,
                 step_size,
@@ -200,7 +200,7 @@ fn main() -> Result<(), String> {
 
             // Approximate the solution using basic Euler (O(h^2)).
 
-            integrate_euler(
+            integrate_forward_euler(
                 state_0,
                 oscillation_system_dynamics_function,
                 step_size,
