@@ -65,15 +65,31 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example render-text",
+      "command": "cargo",
       "windows": {
-        "command": "cargo run --example render-text C:/Windows/Fonts/vgasys.fon"
+        "args": [
+          "run",
+          "--example",
+          "render-text",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
       },
       "osx": {
-        "command": "cargo run --example render-text /System/Library/Fonts/Monaco.ttf"
+        "args": [
+          "run",
+          "--example",
+          "render-text",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
       },
       "linux": {
-        "command": "cargo run --example render-text"
-      }
+        "args": [
+          "run",
+          "--example",
+          "render-text",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
     },
     {
       "type": "shell",
@@ -84,15 +100,31 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example immediate-ui",
+      "command": "cargo",
       "windows": {
-        "command": "cargo run --example immediate-ui C:/Windows/Fonts/vgasys.fon"
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
       },
       "osx": {
-        "command": "cargo run --example immediate-ui /System/Library/Fonts/Monaco.ttf"
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
       },
       "linux": {
-        "command": "cargo run --example immediate-ui"
-      }
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
     },
     {
       "type": "shell",
@@ -100,19 +132,34 @@
         "$rustc"
       ],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example editor",
+      "command": "cargo",
       "windows": {
-        "command": "cargo run --example editor C:/Windows/Fonts/vgasys.fon"
+        "args": [
+          "run",
+          "--example",
+          "editor",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
       },
       "osx": {
-        "command": "cargo run --example editor /System/Library/Fonts/Monaco.ttf"
+        "args": [
+          "run",
+          "--example",
+          "editor",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
       },
       "linux": {
-        "command": "cargo run --example editor"
-      }
+        "args": [
+          "run",
+          "--example",
+          "editor",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
     },
     {
       "type": "shell",
@@ -123,15 +170,31 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example immediate-ui-old",
+      "command": "cargo",
       "windows": {
-        "command": "cargo run --example immediate-ui-old C:/Windows/Fonts/vgasys.fon"
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui-old",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
       },
       "osx": {
-        "command": "cargo run --example immediate-ui-old /System/Library/Fonts/Monaco.ttf"
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui-old",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
       },
       "linux": {
-        "command": "cargo run --example immediate-ui-old"
-      }
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui-old",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
     },
     {
       "type": "shell",

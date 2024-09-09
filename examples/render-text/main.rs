@@ -78,7 +78,7 @@ fn main() -> Result<(), String> {
 
         // Clears pixel buffer
 
-        framebuffer.clear(Some(color::BLACK.to_u32()));
+        framebuffer.clear(None);
 
         // Render some text to our pixel buffer
 
