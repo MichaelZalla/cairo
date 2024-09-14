@@ -383,5 +383,17 @@
       "label": "Rust: cargo run --example numerical-methods",
       "command": "cargo run --example numerical-methods"
     },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo run --example springy-meshes",
+      "command": "cargo run --example springy-meshes"
+    },
   ]
 }

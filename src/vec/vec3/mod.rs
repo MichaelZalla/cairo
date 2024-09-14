@@ -217,6 +217,10 @@ impl Vec3 {
         }
     }
 
+    pub fn is_zero(self) -> bool {
+        self.x.abs() < f32::EPSILON && self.y.abs() < f32::EPSILON && self.z.abs() < f32::EPSILON
+    }
+
     pub fn as_normal(self) -> Self {
         let mag = self.mag();
 
