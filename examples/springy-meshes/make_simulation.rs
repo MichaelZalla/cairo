@@ -8,7 +8,6 @@ use crate::point::Point;
 use crate::simulation::Simulation;
 use crate::springy_mesh::SpringyMesh;
 use crate::state_vector::StateVector;
-use crate::strut::Strut;
 
 static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| -> Newtons {
     Vec3 {
@@ -21,11 +20,8 @@ static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| ->
 pub fn make_simulation<'a>() -> Simulation<'a> {
     let forces = vec![&GRAVITY];
 
-    static POINT_SPACING_METERS: f32 = 3.0;
-    static STRENGTH_PER_UNIT_LENGTH: f32 = 100.0;
-    static DAMPER_PER_UNIT_LENGTH: f32 = 100.0;
-
     let mesh = {
+        static POINT_SPACING_METERS: f32 = 3.0;
         static NUM_POINTS: usize = 8;
 
         let mut points: Vec<Point> = vec![];
@@ -50,36 +46,20 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
             })
         }
 
-        let mut struts: Vec<Strut> = vec![];
+        let mut struts: Vec<(usize, usize)> = vec![];
 
         for i in 0..NUM_POINTS - 1 {
-            let rest_length = (points[i + 1].position - points[i].position).mag();
-
-            struts.push(Strut {
-                points: (i, i + 1),
-                rest_length,
-                delta_length: 0.0,
-                strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
-                damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
-            })
+            struts.push((i, i + 1));
         }
 
         if NUM_POINTS > 2 {
             let i = NUM_POINTS - 3;
             let j = NUM_POINTS - 1;
 
-            let rest_length = (points[j].position - points[i].position).mag();
-
-            struts.push(Strut {
-                points: (i, j),
-                rest_length,
-                delta_length: 0.0,
-                strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
-                damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
-            })
+            struts.push((i, j));
         }
 
-        SpringyMesh { points, struts }
+        SpringyMesh::new(points, struts)
     };
 
     let ground_plane_y: f32 = -10.0;
