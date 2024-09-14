@@ -1,6 +1,7 @@
 use cairo::vec::vec3::Vec3;
 
 use crate::{
+    collider::{Collider, LineSegmentCollider},
     force::Force,
     springy_mesh::SpringyMesh,
     state_vector::{FromStateVector, StateVector, ToStateVector},
@@ -9,6 +10,7 @@ use crate::{
 pub struct Simulation<'a> {
     pub forces: Vec<&'a Force>,
     pub wind: Vec3,
+    pub colliders: Vec<LineSegmentCollider>,
     pub mesh: SpringyMesh,
 }
 
@@ -24,7 +26,40 @@ impl<'a> Simulation<'a> {
 
         let derivative = self.system_dynamics_function(&state, current_time, h);
 
-        let new_state = self.integrate(&state, &derivative, h);
+        let mut new_state = self.integrate(&state, &derivative, h);
+
+        // Detect and resolve collisions against all colliders.
+
+        for i in 0..n {
+            let position = state.data[i];
+
+            let mut new_position = new_state.data[i];
+            let mut new_velocity = new_state.data[i + n];
+
+            // We'll break early on the first collision (if any).
+
+            for collider in &self.colliders {
+                // Check if this particle has just crossed over the  plane.
+
+                match collider.get_post_collision_distance(&position, &new_position) {
+                    Some(new_distance) => {
+                        // Perform an approximate collision resolution.
+
+                        collider.resolve_approximate(
+                            &mut new_position,
+                            &mut new_velocity,
+                            new_distance,
+                        );
+
+                        new_state.data[i + n] = new_velocity;
+                        new_state.data[i] = new_position;
+
+                        break;
+                    }
+                    None => (),
+                }
+            }
+        }
 
         for (i, point) in self.mesh.points.iter_mut().enumerate() {
             point.write_from(&new_state, n, i);
