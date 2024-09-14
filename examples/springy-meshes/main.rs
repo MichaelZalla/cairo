@@ -11,14 +11,13 @@ use cairo::{
 
 use coordinates::screen_to_world_space;
 use draw_collider::draw_collider;
-use draw_springy_mesh::draw_springy_mesh;
 use draw_wind_velocity::draw_wind_velocity;
 use make_simulation::make_simulation;
+use renderable::Renderable;
 
 mod collider;
 mod coordinates;
 mod draw_collider;
-mod draw_springy_mesh;
 mod draw_wind_velocity;
 mod force;
 mod make_simulation;
@@ -77,7 +76,9 @@ fn main() -> Result<(), String> {
 
         draw_wind_velocity(&simulation.wind, &mut framebuffer, &framebuffer_center);
 
-        draw_springy_mesh(&simulation.mesh, &mut framebuffer, &framebuffer_center);
+        simulation
+            .mesh
+            .render(&mut framebuffer, &framebuffer_center);
 
         for collider in &simulation.colliders {
             draw_collider(collider, &mut framebuffer, &framebuffer_center);
