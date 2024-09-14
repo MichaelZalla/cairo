@@ -4,7 +4,6 @@ use cairo::vec::vec3::Vec3;
 
 use crate::collider::LineSegmentCollider;
 use crate::force::{Force, Newtons};
-use crate::point::Point;
 use crate::simulation::Simulation;
 use crate::springy_mesh::SpringyMesh;
 use crate::state_vector::StateVector;
@@ -64,7 +63,32 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
     //     SpringyMesh::new(points, struts)
     // };
 
-    let mesh = SpringyMesh::new_box(Default::default(), 12.0);
+    let meshes = vec![
+        SpringyMesh::new_box(
+            Vec3 {
+                x: -15.0,
+                y: 10.0,
+                ..Default::default()
+            },
+            10.0,
+        ),
+        SpringyMesh::new_box(
+            Vec3 {
+                x: 0.0,
+                y: 10.0,
+                ..Default::default()
+            },
+            10.0,
+        ),
+        SpringyMesh::new_box(
+            Vec3 {
+                x: 15.0,
+                y: 10.0,
+                ..Default::default()
+            },
+            10.0,
+        ),
+    ];
 
     let ground_plane_y: f32 = -10.0;
     let ground_plane_width: f32 = 60.0;
@@ -85,6 +109,6 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
                 z: 0.0,
             },
         )],
-        mesh,
+        meshes,
     }
 }

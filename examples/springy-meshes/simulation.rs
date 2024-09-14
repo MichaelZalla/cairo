@@ -11,17 +11,25 @@ pub struct Simulation<'a> {
     pub forces: Vec<&'a Force>,
     pub wind: Vec3,
     pub colliders: Vec<LineSegmentCollider>,
-    pub mesh: SpringyMesh,
+    pub meshes: Vec<SpringyMesh>,
 }
 
 impl<'a> Simulation<'a> {
     pub fn tick(&mut self, current_time: f32, h: f32) {
-        let n = self.mesh.points.len();
+        let n = self.meshes.iter().map(|m| m.points.len()).sum();
 
         let mut state = StateVector::new(2, n);
 
-        for (i, point) in self.mesh.points.iter().enumerate() {
-            point.write_to(&mut state, n, i);
+        let mut point_index = 0;
+
+        for mesh in self.meshes.iter_mut() {
+            mesh.state_index_offset = point_index;
+
+            for point in &mesh.points {
+                point.write_to(&mut state, n, point_index);
+
+                point_index += 1;
+            }
         }
 
         let derivative = self.system_dynamics_function(&state, current_time, h);
@@ -61,12 +69,16 @@ impl<'a> Simulation<'a> {
             }
         }
 
-        for (i, point) in self.mesh.points.iter_mut().enumerate() {
-            if point.is_static {
-                continue;
-            }
+        let mut point_index = 0;
 
-            point.write_from(&new_state, n, i);
+        for mesh in self.meshes.iter_mut() {
+            mesh.state_index_offset = point_index;
+
+            for point in mesh.points.iter_mut() {
+                point.write_from(&new_state, n, point_index);
+
+                point_index += 1;
+            }
         }
     }
 
@@ -111,15 +123,22 @@ impl<'a> Simulation<'a> {
             derivative.data[i + n] = net_force_acceleration;
         }
 
-        // Compute forces acting on the mesh (spring, damper, drag, and lift).
-        for strut in self.mesh.struts.iter_mut() {
-            strut.compute_accelerations(&current_state, &mut derivative, n, &self.wind);
-        }
+        for mesh in self.meshes.iter_mut() {
+            // Compute forces acting on the mesh (spring, damper, drag, and lift).
+            for strut in mesh.struts.iter_mut() {
+                strut.compute_accelerations(
+                    &current_state,
+                    &mut derivative,
+                    mesh.state_index_offset,
+                    n,
+                    &self.wind,
+                );
+            }
 
-        // Compute torque needed to maintain the resting angles for each vertex.
-        for face in self.mesh.faces.iter() {
-            self.mesh
-                .compute_torsional_accelerations(&face, &mut derivative, n);
+            // Compute torque needed to maintain the resting angles for each vertex.
+            for face in mesh.faces.iter() {
+                mesh.compute_torsional_accelerations(&face, &mut derivative, n);
+            }
         }
 
         derivative

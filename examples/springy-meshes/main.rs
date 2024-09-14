@@ -76,9 +76,9 @@ fn main() -> Result<(), String> {
 
         draw_wind_velocity(&simulation.wind, &mut framebuffer, &framebuffer_center);
 
-        simulation
-            .mesh
-            .render(&mut framebuffer, &framebuffer_center);
+        for mesh in &simulation.meshes {
+            mesh.render(&mut framebuffer, &framebuffer_center);
+        }
 
         for collider in &simulation.colliders {
             draw_collider(collider, &mut framebuffer, &framebuffer_center);

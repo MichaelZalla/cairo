@@ -16,6 +16,7 @@ impl Strut {
         &mut self,
         current_state: &StateVector,
         derivative: &mut StateVector,
+        state_index_offset: usize,
         n: usize,
         wind: &Vec3,
     ) {
@@ -24,14 +25,15 @@ impl Strut {
 
         // For each strut, add spring and damper forces to connected points.
 
-        let spring_force_i_j = self.compute_spring_force(&current_state, n);
+        let spring_force_i_j = self.compute_spring_force(&current_state, state_index_offset, n);
 
         // If using air resistance, compute lift and drag for each strut;
         // distribute forces to connected points.
 
         // Local wind velocity vector.
 
-        let (drag_force, lift_force) = self.compute_drag_and_lift_forces(&current_state, n, wind);
+        let (drag_force, lift_force) =
+            self.compute_drag_and_lift_forces(&current_state, state_index_offset, n, wind);
 
         // Combine forces to determine a net force.
 
@@ -41,19 +43,24 @@ impl Strut {
 
         let drag_lift_acceleration_per_point = ((drag_force + lift_force) / strut_mass) * 0.5;
 
-        derivative.data[i + n] += spring_acceleration_i_j;
-        derivative.data[j + n] -= spring_acceleration_i_j;
+        derivative.data[state_index_offset + i + n] += spring_acceleration_i_j;
+        derivative.data[state_index_offset + j + n] -= spring_acceleration_i_j;
 
-        derivative.data[i + n] += drag_lift_acceleration_per_point;
-        derivative.data[j + n] += drag_lift_acceleration_per_point;
+        derivative.data[state_index_offset + i + n] += drag_lift_acceleration_per_point;
+        derivative.data[state_index_offset + j + n] += drag_lift_acceleration_per_point;
     }
 
-    fn compute_spring_force(&mut self, current_state: &StateVector, n: usize) -> Newtons {
+    fn compute_spring_force(
+        &mut self,
+        current_state: &StateVector,
+        state_index_offset: usize,
+        n: usize,
+    ) -> Newtons {
         let i = self.points.0;
         let j = self.points.1;
 
-        let point_i = current_state.data[i];
-        let point_j = current_state.data[j];
+        let point_i = current_state.data[state_index_offset + i];
+        let point_j = current_state.data[state_index_offset + j];
 
         let i_j = point_j - point_i;
         let i_j_direction = i_j.as_normal();
@@ -63,8 +70,9 @@ impl Strut {
 
         let spring_force_i_j = i_j_direction * self.strength * self.delta_length;
 
-        let difference_in_velocities_along_strut =
-            (current_state.data[j + n] - current_state.data[i + n]).dot(i_j_direction);
+        let difference_in_velocities_along_strut = (current_state.data[state_index_offset + j + n]
+            - current_state.data[state_index_offset + i + n])
+            .dot(i_j_direction);
 
         let damper_force_i_j = i_j_direction * self.damper * difference_in_velocities_along_strut;
 
@@ -76,6 +84,7 @@ impl Strut {
     fn compute_drag_and_lift_forces(
         &self,
         current_state: &StateVector,
+        state_index_offset: usize,
         n: usize,
         wind: &Vec3,
     ) -> (Newtons, Newtons) {
@@ -85,8 +94,8 @@ impl Strut {
         let i = self.points.0;
         let j = self.points.1;
 
-        let point_i = current_state.data[i];
-        let point_j = current_state.data[j];
+        let point_i = current_state.data[state_index_offset + i];
+        let point_j = current_state.data[state_index_offset + j];
 
         let i_j = point_j - point_i;
         let i_j_direction = i_j.as_normal();
@@ -95,8 +104,8 @@ impl Strut {
         let tangent = i_j_direction;
         let normal = vec3::FORWARD.cross(tangent).as_normal();
 
-        let velocity_i = current_state.data[i + n];
-        let velocity_j = current_state.data[j + n];
+        let velocity_i = current_state.data[state_index_offset + i + n];
+        let velocity_j = current_state.data[state_index_offset + j + n];
 
         // Average of the two points' velocities.
 
