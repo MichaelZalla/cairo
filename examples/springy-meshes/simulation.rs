@@ -116,6 +116,12 @@ impl<'a> Simulation<'a> {
             strut.compute_accelerations(&current_state, &mut derivative, n, &self.wind);
         }
 
+        // Compute torque needed to maintain the resting angles for each vertex.
+        for face in self.mesh.faces.iter() {
+            self.mesh
+                .compute_torsional_accelerations(&face, &mut derivative, n);
+        }
+
         derivative
     }
 

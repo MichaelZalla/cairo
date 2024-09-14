@@ -64,7 +64,7 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
     //     SpringyMesh::new(points, struts)
     // };
 
-    let mesh = SpringyMesh::new_box(Default::default(), 4.0);
+    let mesh = SpringyMesh::new_box(Default::default(), 12.0);
 
     let ground_plane_y: f32 = -10.0;
     let ground_plane_width: f32 = 60.0;

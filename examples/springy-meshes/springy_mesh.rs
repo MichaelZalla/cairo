@@ -9,11 +9,15 @@ use cairo::{
 };
 
 use crate::{
-    coordinates::world_to_screen_space, point::Point, renderable::Renderable, strut::Strut,
+    coordinates::world_to_screen_space,
+    point::{Point, POINT_MASS},
+    renderable::Renderable,
+    state_vector::StateVector,
+    strut::Strut,
 };
 
-static STRENGTH_PER_UNIT_LENGTH: f32 = 100.0;
-static DAMPER_PER_UNIT_LENGTH: f32 = 100.0;
+static STRENGTH_PER_UNIT_LENGTH: f32 = 400.0;
+static DAMPER_PER_UNIT_LENGTH: f32 = 250.0;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Face {
@@ -101,18 +105,109 @@ impl SpringyMesh {
             Face {
                 points: [0, 1, 2], // Top-left, top-right, bottom-right.
                 rest_angles: [PI / 2.0, PI / 4.0, PI / 4.0],
-                torsional_strength: 100.0,
-                torsional_damper: 0.2,
+                torsional_strength: 2500.0,
+                torsional_damper: 500.0,
             },
             Face {
                 points: [0, 3, 2], // Top-left, bottom-left, bottom-right.
                 rest_angles: [PI / 2.0, PI / 4.0, PI / 4.0],
-                torsional_strength: 100.0,
-                torsional_damper: 0.2,
+                torsional_strength: 2500.0,
+                torsional_damper: 500.0,
             },
         ];
 
         mesh
+    }
+
+    pub fn compute_torsional_accelerations(
+        &self,
+        face: &Face,
+        derivative: &mut StateVector,
+        n: usize,
+    ) {
+        static ANGLES: [(usize, usize, usize); 3] = [(0, 1, 2), (1, 2, 0), (2, 0, 1)];
+
+        for (angle_index, (p1_index_index, p0_index_index, p2_index_index)) in
+            ANGLES.iter().enumerate()
+        {
+            debug_assert!(p0_index_index != p1_index_index);
+            debug_assert!(p0_index_index != p2_index_index);
+            debug_assert!(p1_index_index != p2_index_index);
+
+            let p0_index = face.points[*p0_index_index];
+            let p1_index = face.points[*p1_index_index];
+            let p2_index = face.points[*p2_index_index];
+
+            let p0 = self.points[p0_index];
+            let p1 = self.points[p1_index];
+            let p2 = self.points[p2_index];
+
+            let p0_p1 = p1.position - p0.position;
+            let p0_p2 = p2.position - p0.position;
+
+            let torque = {
+                let resting_angle = face.rest_angles[angle_index];
+
+                // See: https://gamedev.stackexchange.com/a/203308
+
+                let current_angle = p0_p1.as_normal().dot(p0_p2.as_normal()).acos();
+
+                let angle_delta = current_angle - resting_angle;
+
+                vec3::FORWARD * face.torsional_strength * angle_delta
+            };
+
+            let p0_p1_normal = {
+                let p1_p2 = p2.position - p1.position;
+
+                let mut normal = vec3::FORWARD.cross(p0_p1.as_normal());
+
+                if normal.dot(p1_p2) < 0.0 {
+                    normal = -normal;
+                }
+
+                normal
+            };
+
+            let p0_p2_normal = {
+                let p2_p1 = p1.position - p2.position;
+
+                let mut normal = vec3::FORWARD.cross(p0_p2.as_normal());
+
+                if normal.dot(p2_p1) < 0.0 {
+                    normal = -normal;
+                }
+
+                normal
+            };
+
+            let damper = {
+                let p1_velocity = derivative.data[p1_index];
+                let p2_velocity = derivative.data[p2_index];
+
+                let normal_component_of_p1_velocity = p1_velocity.dot(p0_p1_normal);
+                let normal_component_of_p2_velocity = p2_velocity.dot(p0_p2_normal);
+
+                let p1_angular_velocity = normal_component_of_p1_velocity / p0_p1.mag();
+                let p2_angular_velocity = normal_component_of_p2_velocity / p0_p2.mag();
+
+                vec3::FORWARD * -face.torsional_damper * (p1_angular_velocity + p2_angular_velocity)
+            };
+
+            let net_torque = torque + damper;
+
+            let p1_force = p0_p1_normal * net_torque.mag() / p0_p1.mag();
+            let p2_force = p0_p2_normal * net_torque.mag() / p0_p2.mag();
+            let p0_force = -(p1_force + p2_force);
+
+            let p1_acceleration = p1_force / POINT_MASS;
+            let p2_acceleration = p2_force / POINT_MASS;
+            let p0_acceleration = p0_force / POINT_MASS;
+
+            derivative.data[p0_index + n] += p0_acceleration;
+            derivative.data[p1_index + n] += p1_acceleration;
+            derivative.data[p2_index + n] += p2_acceleration;
+        }
     }
 }
 
