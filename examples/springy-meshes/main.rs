@@ -23,6 +23,7 @@ mod draw_wind_velocity;
 mod force;
 mod make_simulation;
 mod point;
+mod renderable;
 mod simulation;
 mod springy_mesh;
 mod state_vector;
