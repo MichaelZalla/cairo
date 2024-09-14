@@ -115,6 +115,22 @@ impl SpringyMesh {
     }
 }
 
+fn draw_line(
+    start_world_space: &Vec3,
+    end_world_space: &Vec3,
+    color: &Color,
+    buffer: &mut Buffer2D,
+    buffer_center: &Vec3,
+) {
+    let start_screen_space = world_to_screen_space(&start_world_space, buffer_center);
+    let end_screen_space = world_to_screen_space(&end_world_space, buffer_center);
+
+    let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
+    let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
+
+    Graphics::line(buffer, x1, y1, x2, y2, &color);
+}
+
 impl Renderable for SpringyMesh {
     fn render(&self, buffer: &mut cairo::buffer::Buffer2D, buffer_center: &Vec3) {
         // Draw each point (vertex) as a square.
@@ -127,14 +143,7 @@ impl Renderable for SpringyMesh {
         // compression/elongation.
         for strut in &self.struts {
             let start_world_space = &self.points[strut.points.0].position;
-            let start_screen_space = world_to_screen_space(&start_world_space, buffer_center);
-
             let end_world_space = &self.points[strut.points.1].position;
-            let world_to_screen_space = world_to_screen_space(&end_world_space, buffer_center);
-            let end_screen_space = world_to_screen_space;
-
-            let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
-            let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
 
             let elongation_alpha =
                 ((strut.rest_length + strut.delta_length) / strut.rest_length / 2.0)
@@ -148,7 +157,13 @@ impl Renderable for SpringyMesh {
 
             let color = Color::from_vec3(color_vec3);
 
-            Graphics::line(buffer, x1, y1, x2, y2, &color);
+            draw_line(
+                start_world_space,
+                end_world_space,
+                &color,
+                buffer,
+                buffer_center,
+            );
         }
     }
 }
