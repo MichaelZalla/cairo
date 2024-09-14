@@ -1,6 +1,7 @@
 use cairo::{
+    animation::lerp,
     buffer::Buffer2D,
-    color::{self},
+    color::{self, Color},
     graphics::Graphics,
     vec::vec3::Vec3,
 };
@@ -47,6 +48,17 @@ pub(crate) fn draw_springy_mesh(
         let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
         let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
 
-        Graphics::line(framebuffer, x1, y1, x2, y2, &color::GREEN);
+        let elongation_alpha =
+            ((strut.rest_length + strut.delta_length) / strut.rest_length / 2.0).clamp(0.0, 1.0);
+
+        let color_vec3 = lerp(
+            color::RED.to_vec3(),
+            color::BLUE.to_vec3(),
+            elongation_alpha,
+        );
+
+        let color = Color::from_vec3(color_vec3);
+
+        Graphics::line(framebuffer, x1, y1, x2, y2, &color);
     }
 }

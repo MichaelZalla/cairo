@@ -8,11 +8,12 @@ pub struct Strut {
     pub damper: f32,
     pub rest_length: f32,
     pub points: (usize, usize),
+    pub delta_length: f32,
 }
 
 impl Strut {
     pub fn compute_accelerations(
-        &self,
+        &mut self,
         current_state: &StateVector,
         derivative: &mut StateVector,
         n: usize,
@@ -48,7 +49,7 @@ impl Strut {
         derivative.data[j + n] += drag_lift_acceleration_per_point;
     }
 
-    fn compute_spring_force(&self, current_state: &StateVector, n: usize) -> Newtons {
+    fn compute_spring_force(&mut self, current_state: &StateVector, n: usize) -> Newtons {
         let i = self.points.0;
         let j = self.points.1;
 
@@ -59,8 +60,9 @@ impl Strut {
         let i_j_direction = i_j.as_normal();
         let i_j_distance = i_j.mag();
 
-        let elongation = i_j_distance - self.rest_length;
-        let spring_force_i_j = i_j_direction * self.strength * elongation;
+        self.delta_length = i_j_distance - self.rest_length;
+
+        let spring_force_i_j = i_j_direction * self.strength * self.delta_length;
 
         let difference_in_velocities_along_strut =
             (current_state.data[j + n] - current_state.data[i + n]).dot(i_j_direction);

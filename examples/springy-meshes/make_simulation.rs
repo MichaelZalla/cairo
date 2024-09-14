@@ -58,6 +58,7 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
             struts.push(Strut {
                 points: (i, i + 1),
                 rest_length,
+                delta_length: 0.0,
                 strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
                 damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
             })
@@ -72,6 +73,7 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
             struts.push(Strut {
                 points: (i, j),
                 rest_length,
+                delta_length: 0.0,
                 strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
                 damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
             })

@@ -67,7 +67,7 @@ impl<'a> Simulation<'a> {
     }
 
     fn system_dynamics_function(
-        &self,
+        &mut self,
         current_state: &StateVector,
         current_time: f32,
         h: f32,
@@ -86,7 +86,7 @@ impl<'a> Simulation<'a> {
     }
 
     fn compute_accelerations(
-        &self,
+        &mut self,
         current_state: &StateVector,
         current_time: f32,
         _h: f32,
@@ -112,7 +112,7 @@ impl<'a> Simulation<'a> {
         }
 
         // Compute forces acting on the mesh (spring, damper, drag, and lift).
-        for strut in &self.mesh.struts {
+        for strut in self.mesh.struts.iter_mut() {
             strut.compute_accelerations(&current_state, &mut derivative, n, &self.wind);
         }
 
