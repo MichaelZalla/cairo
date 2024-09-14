@@ -2,9 +2,10 @@ use std::f32::consts::PI;
 
 use cairo::{
     animation::lerp,
+    buffer::Buffer2D,
     color::{self, Color},
     graphics::Graphics,
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
 use crate::{
@@ -164,6 +165,77 @@ impl Renderable for SpringyMesh {
                 buffer,
                 buffer_center,
             );
+        }
+
+        // Draw debug indicators for each torsional spring (angle) of each face.
+
+        for face in &self.faces {
+            static ANGLES: [(usize, usize, usize); 3] = [(0, 1, 2), (1, 2, 0), (2, 0, 1)];
+
+            static ANGLE_COLORS: [&Color; 3] = [&color::SKY_BOX, &color::ORANGE, &color::BLUE];
+
+            for (angle_index, (p1_index_index, p0_index_index, p2_index_index)) in
+                ANGLES.iter().enumerate()
+            {
+                let p0_index = face.points[*p0_index_index];
+                let p1_index = face.points[*p1_index_index];
+                let p2_index = face.points[*p2_index_index];
+
+                let p0 = self.points[p0_index];
+                let p1 = self.points[p1_index];
+                let p2 = self.points[p2_index];
+
+                let p0_p1 = p1.position - p0.position;
+                let p0_p2 = p2.position - p0.position;
+
+                draw_line(
+                    &(p0.position + p0_p1.as_normal() * 2.0),
+                    &(p0.position + p0_p2.as_normal() * 2.0),
+                    ANGLE_COLORS[angle_index],
+                    buffer,
+                    buffer_center,
+                );
+
+                let p0_p1_normal = {
+                    let p1_p2 = p2.position - p1.position;
+
+                    let mut normal = vec3::FORWARD.cross(p0_p1.as_normal());
+
+                    if normal.dot(p1_p2) < 0.0 {
+                        normal = -normal;
+                    }
+
+                    normal
+                };
+
+                let p0_p2_normal = {
+                    let p2_p1 = p1.position - p2.position;
+
+                    let mut normal = vec3::FORWARD.cross(p0_p2.as_normal());
+
+                    if normal.dot(p2_p1) < 0.0 {
+                        normal = -normal;
+                    }
+
+                    normal
+                };
+
+                draw_line(
+                    &p1.position,
+                    &(p1.position + p0_p1_normal * 2.0),
+                    ANGLE_COLORS[angle_index],
+                    buffer,
+                    buffer_center,
+                );
+
+                draw_line(
+                    &p2.position,
+                    &(p2.position + p0_p2_normal * 2.0),
+                    ANGLE_COLORS[angle_index],
+                    buffer,
+                    buffer_center,
+                );
+            }
         }
     }
 }
