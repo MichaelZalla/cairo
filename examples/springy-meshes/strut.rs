@@ -41,11 +41,10 @@ impl Strut {
 
         let drag_lift_acceleration_per_point = ((drag_force + lift_force) / strut_mass) * 0.5;
 
-        if i != 0 {
-            derivative.data[i + n] += spring_acceleration_i_j + drag_lift_acceleration_per_point;
-        }
-
+        derivative.data[i + n] += spring_acceleration_i_j;
         derivative.data[j + n] -= spring_acceleration_i_j;
+
+        derivative.data[i + n] += drag_lift_acceleration_per_point;
         derivative.data[j + n] += drag_lift_acceleration_per_point;
     }
 

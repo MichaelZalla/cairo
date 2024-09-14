@@ -4,6 +4,7 @@ use crate::state_vector::{FromStateVector, StateVector, ToStateVector};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Point {
+    pub is_static: bool,
     pub position: Vec3,
     pub velocity: Vec3,
 }

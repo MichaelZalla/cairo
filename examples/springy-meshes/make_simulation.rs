@@ -37,6 +37,7 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
             };
 
             points.push(Point {
+                is_static: if i == 0 { true } else { false },
                 position: Vec3 {
                     x,
                     y,

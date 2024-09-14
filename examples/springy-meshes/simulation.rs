@@ -62,6 +62,10 @@ impl<'a> Simulation<'a> {
         }
 
         for (i, point) in self.mesh.points.iter_mut().enumerate() {
+            if point.is_static {
+                continue;
+            }
+
             point.write_from(&new_state, n, i);
         }
     }
@@ -100,10 +104,6 @@ impl<'a> Simulation<'a> {
             let mut net_force_acceleration: Vec3 = Default::default();
 
             for force in &self.forces {
-                if i == 0 {
-                    continue;
-                }
-
                 net_force_acceleration += force(current_state, i, current_time);
             }
 
