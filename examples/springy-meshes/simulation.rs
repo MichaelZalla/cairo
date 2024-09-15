@@ -1,7 +1,7 @@
 use cairo::vec::vec3::Vec3;
 
 use crate::{
-    collider::{Collider, LineSegmentCollider},
+    collider::{Collider, StaticLineSegmentCollider},
     force::Force,
     springy_mesh::SpringyMesh,
     state_vector::{FromStateVector, StateVector, ToStateVector},
@@ -10,7 +10,7 @@ use crate::{
 pub struct Simulation<'a> {
     pub forces: Vec<&'a Force>,
     pub wind: Vec3,
-    pub colliders: Vec<LineSegmentCollider>,
+    pub static_colliders: Vec<StaticLineSegmentCollider>,
     pub meshes: Vec<SpringyMesh>,
 }
 
@@ -46,10 +46,10 @@ impl<'a> Simulation<'a> {
 
             // We'll break early on the first collision (if any).
 
-            for collider in &self.colliders {
+            for collider in &self.static_colliders {
                 // Check if this particle has just crossed over the  plane.
 
-                match collider.get_post_collision_distance(&position, &new_position) {
+                match collider.test(&position, &new_position) {
                     Some(new_distance) => {
                         // Perform an approximate collision resolution.
 

@@ -9,7 +9,7 @@ static DEFAULT_COEFFICIENT_OF_RESTITUTION: f32 = 0.75;
 static DEFAULT_COEFFICIENT_OF_FRICTION: f32 = 0.2;
 
 pub(crate) trait Collider {
-    fn get_post_collision_distance(&self, position: &Vec3, new_position: &Vec3) -> Option<f32>;
+    fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<f32>;
 
     fn resolve_approximate(
         &self,
@@ -20,7 +20,7 @@ pub(crate) trait Collider {
 }
 
 #[derive(Default)]
-pub(crate) struct LineSegmentCollider {
+pub(crate) struct StaticLineSegmentCollider {
     pub start: Vec3,
     pub end: Vec3,
     pub plane: Plane,
@@ -30,7 +30,7 @@ pub(crate) struct LineSegmentCollider {
     friction: f32,
 }
 
-impl LineSegmentCollider {
+impl StaticLineSegmentCollider {
     pub fn new(start: Vec3, end: Vec3) -> Self {
         let point = start + (end - start) / 2.0;
 
@@ -53,8 +53,8 @@ impl LineSegmentCollider {
     }
 }
 
-impl Collider for LineSegmentCollider {
-    fn get_post_collision_distance(&self, position: &Vec3, new_position: &Vec3) -> Option<f32> {
+impl Collider for StaticLineSegmentCollider {
+    fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<f32> {
         let projection = (*new_position - self.start).dot(self.tangent);
 
         if projection < 0.0 || projection > self.length {
@@ -99,11 +99,11 @@ impl Collider for LineSegmentCollider {
     }
 }
 
-impl fmt::Display for LineSegmentCollider {
+impl fmt::Display for StaticLineSegmentCollider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "LineSegmentCollider (start={}, end={})",
+            "StaticLineSegmentCollider (start={}, end={})",
             self.start, self.end
         )
     }

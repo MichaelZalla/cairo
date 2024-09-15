@@ -2,7 +2,7 @@ use sdl2::sys::SDL_STANDARD_GRAVITY;
 
 use cairo::vec::vec3::Vec3;
 
-use crate::collider::LineSegmentCollider;
+use crate::collider::StaticLineSegmentCollider;
 use crate::force::{Force, Newtons};
 use crate::simulation::Simulation;
 use crate::springy_mesh::SpringyMesh;
@@ -97,7 +97,7 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
     Simulation {
         forces,
         wind: Default::default(),
-        colliders: vec![LineSegmentCollider::new(
+        static_colliders: vec![StaticLineSegmentCollider::new(
             Vec3 {
                 x: -ground_plane_width_over_2,
                 y: ground_plane_y,

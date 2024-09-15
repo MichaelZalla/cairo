@@ -80,7 +80,7 @@ fn main() -> Result<(), String> {
             mesh.render(&mut framebuffer, &framebuffer_center);
         }
 
-        for collider in &simulation.colliders {
+        for collider in &simulation.static_colliders {
             draw_collider(collider, &mut framebuffer, &framebuffer_center);
         }
 

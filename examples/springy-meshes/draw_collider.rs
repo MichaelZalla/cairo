@@ -1,9 +1,9 @@
 use cairo::{buffer::Buffer2D, color, graphics::Graphics, vec::vec3::Vec3};
 
-use crate::{collider::LineSegmentCollider, coordinates::world_to_screen_space};
+use crate::{collider::StaticLineSegmentCollider, coordinates::world_to_screen_space};
 
 pub(crate) fn draw_collider(
-    collider: &LineSegmentCollider,
+    collider: &StaticLineSegmentCollider,
     framebuffer: &mut Buffer2D,
     framebuffer_center: &Vec3,
 ) {
