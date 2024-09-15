@@ -9,7 +9,7 @@ static DEFAULT_COEFFICIENT_OF_RESTITUTION: f32 = 0.75;
 static DEFAULT_COEFFICIENT_OF_FRICTION: f32 = 0.2;
 
 pub(crate) trait Collider {
-    fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<f32>;
+    fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<(f32, f32)>;
 
     fn resolve_approximate(
         &self,
@@ -54,7 +54,7 @@ impl StaticLineSegmentCollider {
 }
 
 impl Collider for StaticLineSegmentCollider {
-    fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<f32> {
+    fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<(f32, f32)> {
         let projection = (*new_position - self.start).dot(self.tangent);
 
         if projection < 0.0 || projection > self.length {
@@ -65,7 +65,14 @@ impl Collider for StaticLineSegmentCollider {
         let new_distance = self.plane.get_signed_distance_to_plane(new_position);
 
         if (distance * new_distance) < 0.0 {
-            Some(new_distance)
+            // Calculates the fraction of the timestep at which the collision
+            // occurred; note that this calculation assumes constant
+            // acceleration of the collider's 2 points and the (separate) point
+            // being tested.
+
+            let f = distance / (distance - new_distance);
+
+            Some((f, new_distance))
         } else {
             None
         }

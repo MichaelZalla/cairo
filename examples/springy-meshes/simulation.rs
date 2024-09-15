@@ -36,7 +36,7 @@ impl<'a> Simulation<'a> {
 
         let mut new_state = self.integrate(&state, &derivative, h);
 
-        // Detect and resolve collisions against all colliders.
+        // Detect and resolve collisions against all static colliders.
 
         for i in 0..n {
             let position = state.data[i];
@@ -50,7 +50,7 @@ impl<'a> Simulation<'a> {
                 // Check if this particle has just crossed over the  plane.
 
                 match collider.test(&position, &new_position) {
-                    Some(new_distance) => {
+                    Some((_f, new_distance)) => {
                         // Perform an approximate collision resolution.
 
                         collider.resolve_approximate(
