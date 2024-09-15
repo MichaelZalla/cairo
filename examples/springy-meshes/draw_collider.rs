@@ -1,6 +1,6 @@
 use cairo::{buffer::Buffer2D, color, graphics::Graphics, vec::vec3::Vec3};
 
-use crate::{collider::StaticLineSegmentCollider, coordinates::world_to_screen_space};
+use crate::{static_line_segment_collider::StaticLineSegmentCollider, coordinates::world_to_screen_space};
 
 pub(crate) fn draw_collider(
     collider: &StaticLineSegmentCollider,

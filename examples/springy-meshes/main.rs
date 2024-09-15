@@ -15,7 +15,7 @@ use draw_wind_velocity::draw_wind_velocity;
 use make_simulation::make_simulation;
 use renderable::Renderable;
 
-mod collider;
+mod static_line_segment_collider;
 mod coordinates;
 mod draw_collider;
 mod draw_wind_velocity;

@@ -1,7 +1,7 @@
 use cairo::vec::vec3::Vec3;
 
 use crate::{
-    collider::{Collider, StaticLineSegmentCollider},
+    static_line_segment_collider::{Collider, StaticLineSegmentCollider},
     force::Force,
     springy_mesh::SpringyMesh,
     state_vector::{FromStateVector, StateVector, ToStateVector},

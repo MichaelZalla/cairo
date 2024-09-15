@@ -2,7 +2,7 @@ use sdl2::sys::SDL_STANDARD_GRAVITY;
 
 use cairo::vec::vec3::Vec3;
 
-use crate::collider::StaticLineSegmentCollider;
+use crate::static_line_segment_collider::StaticLineSegmentCollider;
 use crate::force::{Force, Newtons};
 use crate::simulation::Simulation;
 use crate::springy_mesh::SpringyMesh;
