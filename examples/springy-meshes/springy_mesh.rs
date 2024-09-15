@@ -36,10 +36,10 @@ pub struct SpringyMesh {
 }
 
 impl SpringyMesh {
-    pub fn new(points: Vec<Point>, struts: Vec<(usize, usize)>) -> Self {
+    pub fn new(points: Vec<Point>, struts: Vec<(usize, usize, bool)>) -> Self {
         let struts: Vec<Strut> = struts
             .into_iter()
-            .map(|(i, j)| {
+            .map(|(i, j, is_internal)| {
                 let rest_length = (points[j].position - points[i].position).mag();
 
                 Strut {
@@ -47,7 +47,8 @@ impl SpringyMesh {
                     rest_length,
                     strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
                     damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
-                    delta_length: 1.0,
+                    is_internal,
+                    ..Default::default()
                 }
             })
             .collect();
@@ -90,15 +91,15 @@ impl SpringyMesh {
 
         let struts = vec![
             // 0 - Top
-            (0, 1),
+            (0, 1, false),
             // 1 - Right
-            (1, 2),
+            (1, 2, false),
             // 2 - Bottom
-            (3, 2),
+            (3, 2, false),
             // 3 - Left
-            (0, 3),
+            (0, 3, false),
             // 4 - Cross (top left to bottom right)
-            (0, 2),
+            (0, 2, true),
         ];
 
         let mut mesh = Self::new(points, struts);
@@ -237,23 +238,32 @@ impl Renderable for SpringyMesh {
             point.render(buffer, buffer_center);
         }
 
-        // Draws each strut as a line, using color to indicate its current
-        // compression/elongation.
+        // Draws each strut as a line.
+
         for strut in &self.struts {
             let start_world_space = &self.points[strut.points.0].position;
             let end_world_space = &self.points[strut.points.1].position;
+
+            // Use color to indicate the strut's current compression or
+            // elongation.
 
             let elongation_alpha =
                 ((strut.rest_length + strut.delta_length) / strut.rest_length / 2.0)
                     .clamp(0.0, 1.0);
 
-            let color_vec3 = lerp(
-                color::RED.to_vec3(),
-                color::BLUE.to_vec3(),
-                elongation_alpha,
-            );
+            let color = {
+                if strut.is_internal {
+                    color::DARK_GRAY
+                } else {
+                    let color_vec3 = lerp(
+                        color::RED.to_vec3(),
+                        color::BLUE.to_vec3(),
+                        elongation_alpha,
+                    );
 
-            let color = Color::from_vec3(color_vec3);
+                    Color::from_vec3(color_vec3)
+                }
+            };
 
             draw_line(
                 start_world_space,

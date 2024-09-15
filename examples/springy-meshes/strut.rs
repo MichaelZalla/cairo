@@ -9,6 +9,7 @@ pub struct Strut {
     pub rest_length: f32,
     pub points: (usize, usize),
     pub delta_length: f32,
+    pub is_internal: bool,
 }
 
 impl Strut {
