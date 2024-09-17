@@ -12,7 +12,6 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::Buffer2D,
-    color,
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
@@ -350,7 +349,7 @@ fn main() -> Result<(), String> {
             render_window_list(&mut window_list, resolution);
         }
 
-        framebuffer.clear(Some(color::BLACK.to_u32()));
+        framebuffer.clear(None);
 
         // Check if our application window was just resized.
 

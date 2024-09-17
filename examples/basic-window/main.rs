@@ -5,7 +5,6 @@ use std::cell::RefCell;
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
-    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
 };
 
@@ -42,7 +41,7 @@ fn main() -> Result<(), String> {
 
         // Clears pixel buffer
 
-        framebuffer.clear(Some(color::BLACK.to_u32()));
+        framebuffer.clear(None);
 
         // @TODO Write some pixel data to the pixel buffer,
         //       based on some borrowed state.

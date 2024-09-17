@@ -12,7 +12,6 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::Buffer2D,
-    color::{self},
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
@@ -182,7 +181,7 @@ fn main() -> Result<(), String> {
 
         // Clears pixel buffer
 
-        framebuffer.clear(Some(color::BLACK.to_u32()));
+        framebuffer.clear(None);
 
         for particle in pool.iter() {
             if particle.alive {
