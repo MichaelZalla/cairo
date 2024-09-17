@@ -16,9 +16,6 @@ use crate::{
     strut::Strut,
 };
 
-static STRENGTH_PER_UNIT_LENGTH: f32 = 400.0;
-static DAMPER_PER_UNIT_LENGTH: f32 = 250.0;
-
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Face {
     pub torsional_strength: f32,
@@ -39,18 +36,7 @@ impl SpringyMesh {
     pub fn new(points: Vec<Point>, struts: Vec<(usize, usize, bool)>) -> Self {
         let struts: Vec<Strut> = struts
             .into_iter()
-            .map(|(i, j, is_internal)| {
-                let rest_length = (points[j].position - points[i].position).mag();
-
-                Strut {
-                    points: (i, j),
-                    rest_length,
-                    strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
-                    damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
-                    is_internal,
-                    ..Default::default()
-                }
-            })
+            .map(|(i, j, is_internal)| Strut::new(i, j, &points, is_internal))
             .collect();
 
         let faces = vec![];
@@ -59,7 +45,7 @@ impl SpringyMesh {
             points,
             struts,
             faces,
-            state_index_offset: 0,
+            ..Default::default()
         }
     }
 

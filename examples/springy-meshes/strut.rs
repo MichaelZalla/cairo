@@ -1,6 +1,13 @@
 use cairo::vec::vec3::{self, Vec3};
 
-use crate::{force::Newtons, point::POINT_MASS, state_vector::StateVector};
+use crate::{
+    force::Newtons,
+    point::{Point, POINT_MASS},
+    state_vector::StateVector,
+};
+
+pub static STRENGTH_PER_UNIT_LENGTH: f32 = 400.0;
+pub static DAMPER_PER_UNIT_LENGTH: f32 = 250.0;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Strut {
@@ -13,6 +20,19 @@ pub struct Strut {
 }
 
 impl Strut {
+    pub fn new(i: usize, j: usize, points: &Vec<Point>, is_internal: bool) -> Self {
+        let rest_length = (points[j].position - points[i].position).mag();
+
+        Strut {
+            points: (i, j),
+            rest_length,
+            strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
+            damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
+            is_internal,
+            ..Default::default()
+        }
+    }
+
     pub fn compute_accelerations(
         &mut self,
         current_state: &StateVector,
