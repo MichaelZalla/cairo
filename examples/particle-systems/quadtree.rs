@@ -42,6 +42,11 @@ impl QuadtreeNode {
         self.children.is_some()
     }
 
+    #[allow(unused)]
+    pub fn is_root(&self) -> bool {
+        self.parent.is_none()
+    }
+
     pub fn contains_particles(&self) -> bool {
         self.is_internal() || self.particles.is_some()
     }
