@@ -8,7 +8,10 @@ use cairo::{random::sampler::RandomSampler, vec::vec3::Vec3};
 
 use crate::{
     force::{Force, Newtons},
-    particle::generator::{ParticleGenerator, ParticleGeneratorKind},
+    particle::{
+        generator::{ParticleGenerator, ParticleGeneratorKind},
+        PARTICLE_MASS,
+    },
     simulation::{Operators, Simulation},
     state_vector::StateVector,
 };
@@ -39,6 +42,8 @@ pub(crate) fn make_simulation<'a>(
     sampler: Rc<RefCell<RandomSampler<SEED_SIZE>>>,
     _sampler_for_random_acceleration_operator: Rc<RefCell<RandomSampler<SEED_SIZE>>>,
 ) -> Simulation<'a, SEED_SIZE> {
+    let mass = PARTICLE_MASS;
+
     // Define some particle generators.
 
     let omnidirectional = ParticleGenerator::new(
@@ -49,7 +54,7 @@ pub(crate) fn make_simulation<'a>(
         }),
         50.0,
         None,
-        10.0,
+        mass,
         15.0,
         5.0,
     );
@@ -69,7 +74,7 @@ pub(crate) fn make_simulation<'a>(
         ),
         50.0,
         Some(PI / 4.0),
-        10.0,
+        mass,
         15.0,
         5.0,
     );
@@ -89,7 +94,7 @@ pub(crate) fn make_simulation<'a>(
         ),
         50.0,
         Some(PI / 2.0),
-        10.0,
+        mass,
         15.0,
         5.0,
     );
