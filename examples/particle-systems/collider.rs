@@ -8,6 +8,17 @@ use cairo::{
 static DEFAULT_COEFFICIENT_OF_RESTITUTION: f32 = 0.75;
 static DEFAULT_COEFFICIENT_OF_FRICTION: f32 = 0.2;
 
+pub(crate) trait Collider {
+    fn get_post_collision_distance(&self, position: &Vec3, new_position: &Vec3) -> Option<f32>;
+
+    fn resolve_approximate(
+        &self,
+        new_position: &mut Vec3,
+        new_velocity: &mut Vec3,
+        new_distance: f32,
+    );
+}
+
 #[derive(Default)]
 pub(crate) struct LineSegmentCollider {
     pub start: Vec3,
@@ -40,8 +51,10 @@ impl LineSegmentCollider {
             friction: DEFAULT_COEFFICIENT_OF_FRICTION,
         }
     }
+}
 
-    pub fn get_post_collision_distance(&self, position: &Vec3, new_position: &Vec3) -> Option<f32> {
+impl Collider for LineSegmentCollider {
+    fn get_post_collision_distance(&self, position: &Vec3, new_position: &Vec3) -> Option<f32> {
         let projection = (*new_position - self.start).dot(self.tangent);
 
         if projection < 0.0 || projection > self.length {
@@ -58,7 +71,7 @@ impl LineSegmentCollider {
         }
     }
 
-    pub fn resolve_approximate(
+    fn resolve_approximate(
         &self,
         new_position: &mut Vec3,
         new_velocity: &mut Vec3,

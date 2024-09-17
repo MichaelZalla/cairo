@@ -5,7 +5,7 @@ use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 use cairo::{random::sampler::RandomSampler, vec::vec3::Vec3};
 
 use crate::{
-    collider::LineSegmentCollider,
+    collider::{Collider, LineSegmentCollider},
     force::{Acceleration, Force},
     operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     particle::{
