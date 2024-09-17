@@ -69,6 +69,10 @@ where
         &self.data
     }
 
+    pub fn get_all_mut(&mut self) -> &mut Vec<T> {
+        &mut self.data
+    }
+
     pub fn get(&self, x: u32, y: u32) -> &T {
         debug_assert!(x < self.width && y < self.height);
 
