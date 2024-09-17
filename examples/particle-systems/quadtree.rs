@@ -350,4 +350,9 @@ impl Quadtree {
 
         tree
     }
+
+    #[allow(unused)]
+    pub fn clear(&mut self) {
+        self.root = None;
+    }
 }
