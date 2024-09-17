@@ -162,6 +162,7 @@ impl Graph {
         }
     }
 
+    #[allow(unused)]
     pub fn functions(
         &self,
         functions: &Vec<(BoxedGraphingFunction, Color)>,
@@ -191,6 +192,7 @@ impl Graph {
         }
     }
 
+    #[allow(unused)]
     pub fn point(&self, x: f32, y: f32, color: &Color, buffer: &mut Buffer2D) {
         let (screen_x, screen_y) = self.cartesian_to_screen(x, y);
 
