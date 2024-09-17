@@ -1,6 +1,9 @@
 {
   "version": "2.0.0",
   "options": {
+    "env": {
+        "RUST_BACKTRACE": "1"
+      },
     "windows": {
       "env": {
         "SDL_PATH": "C:\\Users\\micha\\source\\vclib"
@@ -389,11 +392,21 @@
         "$rustc"
       ],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example springy-meshes",
       "command": "cargo run --example springy-meshes"
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example rigid-body",
+      "command": "cargo run --example rigid-body"
     },
   ]
 }

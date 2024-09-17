@@ -230,6 +230,110 @@ impl Graphics {
         }
     }
 
+    pub fn circle(
+        buffer: &mut Buffer2D,
+        center_x: u32,
+        center_y: u32,
+        radius: u32,
+        fill: Option<&Color>,
+        border: Option<&Color>,
+    ) {
+        assert!(
+            fill.is_some() || border.is_some(),
+            "Called `Graphics::circle()` with no fill or border provided!"
+        );
+
+        let fill_u32 = if let Some(fill) = fill {
+            fill.to_u32()
+        } else {
+            0
+        };
+
+        let buffer_width_minus_one = buffer.width - 1;
+        let buffer_height_minus_one = buffer.height - 1;
+
+        // If no border was specified, use the fill color for perimeter.
+
+        let border_u32 = border.unwrap_or_else(|| fill.as_ref().unwrap()).to_u32();
+
+        // Begin at (+radius, 0), relative to the circle's center.
+
+        let (mut x, mut y) = (radius as i32, 0 as i32);
+
+        let r_squared = (radius * radius) as i32;
+
+        // Explicit equation: x^2 + y^2 = r^2
+
+        loop {
+            let center_x_plus_x = center_x + x as u32;
+            let center_y_plus_y = center_y + y as u32;
+            let center_x_minus_x = center_x as i32 - x;
+
+            // Fill.
+
+            if fill_u32 != 0 {
+                // Draws 2 horizontal scanlines, at y and -y.
+
+                let cy = center_y as i32;
+
+                for i in 0..2 {
+                    let ys = if i == 0 { y } else { -y };
+                    let cy_plus_ys = cy + ys;
+
+                    if cy_plus_ys >= 0 && (cy_plus_ys as u32) < buffer.height {
+                        let (x1, x2, y) = (
+                            center_x_minus_x.max(0) as u32,
+                            center_x_plus_x.min(buffer_width_minus_one),
+                            cy_plus_ys as u32,
+                        );
+
+                        horizontal_line_unsafe(buffer, x1, x2, y, fill_u32);
+                    }
+                }
+            }
+
+            // Border.
+
+            if center_x_plus_x < buffer_width_minus_one {
+                // (x,y)
+                if center_y_plus_y < buffer_height_minus_one {
+                    buffer.set(center_x_plus_x, center_y + y as u32, border_u32);
+                }
+
+                // (x, -y)
+                if y != 0 && center_y as i32 >= y {
+                    buffer.set(center_x_plus_x, center_y - y as u32, border_u32);
+                }
+            }
+
+            if center_x as i32 >= x {
+                // (-x, y)
+                if x != 0 && center_y_plus_y < buffer_height_minus_one {
+                    buffer.set(center_x_minus_x as u32, center_y + y as u32, border_u32);
+                }
+
+                // (-x, -y)
+                if x != 0 && y != 0 && center_y as i32 >= y {
+                    buffer.set(center_x_minus_x as u32, center_y - y as u32, border_u32);
+                }
+            }
+
+            let up = (x, y + 1);
+            let left = (x - 1, y);
+
+            let up_error = ((up.0 * up.0 + up.1 * up.1) - r_squared).abs();
+            let left_error = ((left.0 * left.0 + left.1 * left.1) - r_squared).abs();
+
+            let best_choice = if up_error < left_error { up } else { left };
+
+            (x, y) = best_choice;
+
+            if x == -1 {
+                break;
+            }
+        }
+    }
+
     pub fn crosshair(
         buffer: &mut Buffer2D,
         x: i32,
