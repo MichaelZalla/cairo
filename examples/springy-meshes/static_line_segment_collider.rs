@@ -70,7 +70,9 @@ impl Collider for StaticLineSegmentCollider {
             // acceleration of the collider's 2 points and the (separate) point
             // being tested.
 
-            let f = distance / (distance - new_distance);
+            let delta = distance - new_distance;
+
+            let f = distance / delta;
 
             Some((f, new_distance))
         } else {
