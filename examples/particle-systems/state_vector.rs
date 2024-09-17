@@ -11,6 +11,14 @@ pub(crate) struct StateVector {
     pub data: Vec<Vec3>,
 }
 
+pub(crate) trait ToStateVector {
+    fn write_to(&self, state: &mut StateVector, n: usize, i: usize);
+}
+
+pub(crate) trait FromStateVector {
+    fn write_from(&mut self, state: &StateVector, n: usize, i: usize);
+}
+
 impl AddAssign for StateVector {
     fn add_assign(&mut self, rhs: Self) {
         for (lhs, rhs) in zip(self.data.iter_mut(), rhs.data.iter()) {

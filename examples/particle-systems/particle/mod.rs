@@ -1,9 +1,6 @@
 use cairo::vec::vec3::Vec3;
 
-use crate::{
-    simulation::{FromStateVector, ToStateVector},
-    state_vector::StateVector,
-};
+use crate::state_vector::{FromStateVector, StateVector, ToStateVector};
 
 pub mod generator;
 pub mod particlelist;

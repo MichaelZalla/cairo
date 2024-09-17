@@ -13,18 +13,10 @@ use crate::{
         particlelist::ParticleList,
     },
     quadtree::Quadtree,
-    state_vector::StateVector,
+    state_vector::{FromStateVector, StateVector, ToStateVector},
 };
 
 static COMPONENTS_PER_PARTICLE: usize = 2;
-
-pub(crate) trait ToStateVector {
-    fn write_to(&self, state: &mut StateVector, n: usize, i: usize);
-}
-
-pub(crate) trait FromStateVector {
-    fn write_from(&mut self, state: &StateVector, n: usize, i: usize);
-}
 
 fn system_dynamics_function(
     current_state: &StateVector,
