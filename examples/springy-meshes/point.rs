@@ -31,7 +31,7 @@ impl FromStateVector for Point {
 
 impl Renderable for Point {
     fn render(&self, buffer: &mut Buffer2D, buffer_center: &Vec3) {
-        static POINT_SIZE: u32 = 8;
+        static POINT_SIZE: u32 = 4;
         static POINT_SIZE_OVER_2: u32 = POINT_SIZE / 2;
 
         let world_space_position = self.position;

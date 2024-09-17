@@ -218,12 +218,6 @@ fn draw_line(
 
 impl Renderable for SpringyMesh {
     fn render(&self, buffer: &mut cairo::buffer::Buffer2D, buffer_center: &Vec3) {
-        // Draw each point (vertex) as a square.
-
-        for point in &self.points {
-            point.render(buffer, buffer_center);
-        }
-
         // Draws each strut as a line.
 
         for strut in &self.struts {
@@ -258,6 +252,12 @@ impl Renderable for SpringyMesh {
                 buffer,
                 buffer_center,
             );
+        }
+
+        // Draw each point (vertex) as a square.
+
+        for point in &self.points {
+            point.render(buffer, buffer_center);
         }
 
         // Draw debug indicators for each torsional spring (angle) of each face.
