@@ -1,4 +1,7 @@
-use std::cmp::{max, min};
+use std::{
+    cmp::{max, min},
+    mem,
+};
 
 use crate::{buffer::Buffer2D, color::Color, vec::vec2};
 
@@ -260,75 +263,161 @@ impl Graphics {
 
         let (mut x, mut y) = (radius as i32, 0 as i32);
 
-        let r_squared = (radius * radius) as i32;
+        static DO_DDA_ALGORITHM: bool = true;
 
-        // Explicit equation: x^2 + y^2 = r^2
+        let r_2 = (radius + radius) as i32;
+
+        // d_y = -4y - 2;
+        // d_y = -4(0) - 2;
+        // d_y = 0 - 2;
+        // d_y = -2;
+        let mut d_y = -2;
+
+        // d_x = 4x - 4;
+        // d_x = 4(r) - 4;
+        let mut d_x = r_2 + r_2 - 4;
+
+        let mut decision_value = r_2 - 1;
+
+        // {
+        //     // Credit: Molly Rocket, "Efficient DDA Circle Outlines" (2023).
+        //     //
+        //     // See: https://youtu.be/JtgQJT08J1g
+
+        //     let x_squared = up_x * up_x;
+
+        //     let c = 2 * r_squared - 1;
+
+        //     // |A| <? |B|
+        //     // -A <? B
+        //     // -((x-1)*(x-1) + y^2 - r^2)                    <? x*x + y^2 - r^2
+        //     // -(x^2 - 2x + 1 + y^2 - r^2)                   <? x^2 + y^2 - r^2
+        //     // -x^2 + 2x - 1 - y^2 + r^2                     <? x^2 + y^2 - r^2
+        //     // -x^2 + 2x - 1 - y^2 + r^2 - (x^2 + y^2 - r^2) <? 0
+        //     // -x^2 + 2x - 1 - y^2 + r^2 - x^2 - y^2 + r^2   <? 0
+        //     // -2x^2 + 2x - 1 - 2y^2 + 2r^2                  <? 0
+        //     // -2x^2 + 2x - 2y^2 + C                           <? 0
+
+        //     decision_value = -2 * x_squared + 2 * left_x - 2 * y_squared + c;
+        // }
 
         loop {
-            let center_x_plus_x = center_x + x as u32;
-            let center_y_plus_y = center_y + y as u32;
-            let center_x_minus_x = center_x as i32 - x;
+            let local_coordinates = [
+                (x, y),
+                (x, -y),
+                (-x, y),
+                (-x, -y),
+                (y, x),
+                (-y, x),
+                (y, -x),
+                (-y, -x),
+            ];
 
-            // Fill.
+            for (local_x, local_y) in local_coordinates {
+                let global_x = (center_x as i32) + local_x;
+                let global_y = (center_y as i32) + local_y;
 
-            if fill_u32 != 0 {
-                // Draws 2 horizontal scanlines, at y and -y.
+                if global_y >= 0 && global_y < buffer.height as i32 {
+                    // Border.
 
-                let cy = center_y as i32;
+                    if global_x >= 0 && global_x < buffer.width as i32 {
+                        buffer.set(global_x as u32, global_y as u32, border_u32);
+                    }
 
-                for i in 0..2 {
-                    let ys = if i == 0 { y } else { -y };
-                    let cy_plus_ys = cy + ys;
+                    // Fill.
 
-                    if cy_plus_ys >= 0 && (cy_plus_ys as u32) < buffer.height {
-                        let (x1, x2, y) = (
-                            center_x_minus_x.max(0) as u32,
-                            center_x_plus_x.min(buffer_width_minus_one),
-                            cy_plus_ys as u32,
+                    let (mut x1, mut x2) = (center_x as i32 - local_x, global_x);
+
+                    if x1 == x2 {
+                        continue;
+                    }
+
+                    if x2 < x1 {
+                        mem::swap(&mut x1, &mut x2);
+                    }
+
+                    x1 = x1.clamp(0, buffer_width_minus_one as i32);
+                    x2 = x2.clamp(0, buffer_width_minus_one as i32);
+
+                    let x2_minus_one = x2 - 1;
+
+                    if local_x == x && (local_y == y || local_y == -y) {
+                        horizontal_line_unsafe(
+                            buffer,
+                            x1 as u32,
+                            x2_minus_one as u32,
+                            global_y as u32,
+                            fill_u32,
                         );
-
-                        horizontal_line_unsafe(buffer, x1, x2, y, fill_u32);
+                    } else if local_x == y && (local_y == x || local_y == -x) {
+                        if local_y == x {
+                            if global_y > 0 {
+                                horizontal_line_unsafe(
+                                    buffer,
+                                    x1 as u32,
+                                    x2_minus_one as u32,
+                                    (global_y - 1) as u32,
+                                    fill_u32,
+                                );
+                            }
+                        } else {
+                            if global_y < buffer_height_minus_one as i32 {
+                                horizontal_line_unsafe(
+                                    buffer,
+                                    x1 as u32,
+                                    x2_minus_one as u32,
+                                    (global_y + 1) as u32,
+                                    fill_u32,
+                                );
+                            }
+                        }
                     }
                 }
             }
 
-            // Border.
+            let up_y = y + 1;
+            let left_x = x - 1;
 
-            if center_x_plus_x < buffer_width_minus_one {
-                // (x,y)
-                if center_y_plus_y < buffer_height_minus_one {
-                    buffer.set(center_x_plus_x, center_y + y as u32, border_u32);
+            let y_squared = up_y * up_y;
+
+            if DO_DDA_ALGORITHM {
+                decision_value += d_y;
+
+                d_y -= 4;
+
+                let should_go_left = decision_value < 0;
+
+                y += 1;
+
+                if should_go_left {
+                    decision_value += d_x;
+
+                    d_x -= 4;
+
+                    x -= 1;
                 }
+            } else {
+                let r_squared = (radius * radius) as i32;
 
-                // (x, -y)
-                if y != 0 && center_y as i32 >= y {
-                    buffer.set(center_x_plus_x, center_y - y as u32, border_u32);
+                let up_x = x;
+
+                let y_squared_minus_r_squared = y_squared - r_squared;
+
+                // Explicit equation: x^2 + y^2 = r^2
+
+                let left_error = left_x * left_x + y_squared_minus_r_squared;
+                let up_error = up_x * up_x + y_squared_minus_r_squared;
+
+                let should_go_left = -left_error < up_error;
+
+                y += 1;
+
+                if should_go_left {
+                    x -= 1;
                 }
             }
 
-            if center_x as i32 >= x {
-                // (-x, y)
-                if x != 0 && center_y_plus_y < buffer_height_minus_one {
-                    buffer.set(center_x_minus_x as u32, center_y + y as u32, border_u32);
-                }
-
-                // (-x, -y)
-                if x != 0 && y != 0 && center_y as i32 >= y {
-                    buffer.set(center_x_minus_x as u32, center_y - y as u32, border_u32);
-                }
-            }
-
-            let up = (x, y + 1);
-            let left = (x - 1, y);
-
-            let up_error = ((up.0 * up.0 + up.1 * up.1) - r_squared).abs();
-            let left_error = ((left.0 * left.0 + left.1 * left.1) - r_squared).abs();
-
-            let best_choice = if up_error < left_error { up } else { left };
-
-            (x, y) = best_choice;
-
-            if x == -1 {
+            if y >= x {
                 break;
             }
         }
