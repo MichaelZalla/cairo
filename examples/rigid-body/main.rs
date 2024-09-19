@@ -4,17 +4,19 @@ use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    vec::vec3::{self, Vec3},
+    vec::vec3::Vec3,
 };
+
 use coordinates::screen_to_world_space;
-use quaternion::Quaternion;
 use renderable::Renderable;
 use rigid_body::RigidBody;
+use simulation::Simulation;
 
 mod coordinates;
 mod quaternion;
 mod renderable;
 mod rigid_body;
+mod simulation;
 mod state_vector;
 mod transform;
 
@@ -43,7 +45,9 @@ fn main() -> Result<(), String> {
 
     let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0, 2.5)];
 
-    let rigid_bodies_rc = RefCell::new(rigid_bodies);
+    let simulation = Simulation { rigid_bodies };
+
+    let simulation_rc = RefCell::new(simulation);
 
     let last_mouse_coordinates_rc =
         RefCell::new((framebuffer_center.x as u32, framebuffer_center.y as u32));
@@ -65,9 +69,9 @@ fn main() -> Result<(), String> {
 
         // Draws a circle with fill and border.
 
-        let rigid_bodies = rigid_bodies_rc.borrow();
+        let simulation = simulation_rc.borrow();
 
-        for body in rigid_bodies.iter() {
+        for body in simulation.rigid_bodies.iter() {
             body.render(&mut framebuffer);
         }
 
@@ -81,7 +85,8 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let uptime = app.timing_info.uptime_seconds;
+        let uptime_seconds = app.timing_info.uptime_seconds;
+        let h = app.timing_info.seconds_since_last_update;
 
         let framebuffer = framebuffer_rc.borrow();
 
@@ -95,33 +100,9 @@ fn main() -> Result<(), String> {
             &framebuffer,
         );
 
-        let mut rigid_bodies = rigid_bodies_rc.borrow_mut();
+        let mut simulation = simulation_rc.borrow_mut();
 
-        for body in rigid_bodies.iter_mut() {
-            let position = *body.transform.translation();
-
-            if cursor_world_space.x == position.x && cursor_world_space.y == position.y {
-                continue;
-            }
-
-            let body_to_cursor = cursor_world_space - position;
-
-            let local_body_cursor_theta = body_to_cursor.as_normal().dot(vec3::RIGHT).acos();
-
-            body.transform.set_translation(Vec3 {
-                x: uptime.cos() * 5.0,
-                y: uptime.sin() * 5.0,
-                z: 0.0,
-            });
-
-            body.transform.set_orientation(Quaternion::new_2d(
-                if cursor_world_space.y < position.y {
-                    -local_body_cursor_theta
-                } else {
-                    local_body_cursor_theta
-                },
-            ));
-        }
+        simulation.tick(uptime_seconds, cursor_world_space);
 
         Ok(())
     };
