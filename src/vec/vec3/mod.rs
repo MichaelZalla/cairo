@@ -25,6 +25,10 @@ impl Vec3 {
         Default::default()
     }
 
+    pub fn from_x_y(x: f32, y: f32) -> Self {
+        Self { x, y, z: 0.0 }
+    }
+
     pub const fn ones() -> Self {
         Vec3 {
             x: 1.0,

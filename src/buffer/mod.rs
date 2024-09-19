@@ -3,7 +3,10 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::color::blend::{self, blend, BlendMode};
+use crate::{
+    color::blend::{self, blend, BlendMode},
+    vec::vec3::Vec3,
+};
 
 pub mod framebuffer;
 
@@ -15,6 +18,7 @@ where
     pub width: u32,
     pub height: u32,
     pub width_over_height: f32,
+    pub center: Vec3,
     pub data: Vec<T>,
 }
 
@@ -31,8 +35,6 @@ where
         + Div<Output = T>,
 {
     pub fn new(width: u32, height: u32, fill_value: Option<T>) -> Self {
-        let width_over_height = width as f32 / height as f32;
-
         let value: T = fill_value.unwrap_or_default();
 
         let data: Vec<T> = vec![value; (width * height) as usize];
@@ -40,7 +42,8 @@ where
         Self {
             width,
             height,
-            width_over_height,
+            width_over_height: width as f32 / height as f32,
+            center: Vec3::from_x_y(width as f32 / 2.0, height as f32 / 2.0),
             data,
         }
     }
@@ -50,6 +53,7 @@ where
             width,
             height,
             width_over_height: width as f32 / height as f32,
+            center: Vec3::from_x_y(width as f32 / 2.0, height as f32 / 2.0),
             data,
         }
     }

@@ -3,12 +3,18 @@ use std::cell::RefCell;
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
-    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    graphics::Graphics,
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
+use coordinates::screen_to_world_space;
+use quaternion::Quaternion;
+use renderable::Renderable;
+use rigid_body::RigidBody;
 
+mod coordinates;
+mod quaternion;
+mod renderable;
+mod rigid_body;
 mod state_vector;
 
 fn main() -> Result<(), String> {
@@ -34,14 +40,16 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
+    let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0)];
+
+    let rigid_bodies_rc = RefCell::new(rigid_bodies);
+
     let last_mouse_coordinates_rc =
         RefCell::new((framebuffer_center.x as u32, framebuffer_center.y as u32));
 
     let render_scene_to_framebuffer = |_frame_index: Option<u32>,
                                        new_resolution: Option<Resolution>|
      -> Result<Vec<u32>, String> {
-        let last_mouse_coordinates = last_mouse_coordinates_rc.borrow();
-
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
         if let Some(resolution) = &new_resolution {
@@ -56,29 +64,51 @@ fn main() -> Result<(), String> {
 
         // Draws a circle with fill and border.
 
-        Graphics::circle(
-            &mut framebuffer,
-            last_mouse_coordinates.0,
-            last_mouse_coordinates.1,
-            80,
-            Some(&color::BLUE),
-            Some(&color::YELLOW),
-        );
+        let rigid_bodies = rigid_bodies_rc.borrow();
+
+        for body in rigid_bodies.iter() {
+            body.render(&mut framebuffer);
+        }
 
         Ok(framebuffer.get_all().clone())
     };
 
     let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
-    let mut update = |_app: &mut App,
+    let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let mut last_mouse_coordinates = last_mouse_coordinates_rc.borrow_mut();
+        let framebuffer = framebuffer_rc.borrow();
 
-        last_mouse_coordinates.0 = mouse_state.position.0 as u32;
-        last_mouse_coordinates.1 = mouse_state.position.1 as u32;
+        let mut cursor_screen_space = last_mouse_coordinates_rc.borrow_mut();
+
+        cursor_screen_space.0 = mouse_state.position.0 as u32;
+        cursor_screen_space.1 = mouse_state.position.1 as u32;
+
+        let cursor_world_space = screen_to_world_space(
+            &Vec3::from_x_y(cursor_screen_space.0 as f32, cursor_screen_space.1 as f32),
+            &framebuffer,
+        );
+
+        let mut rigid_bodies = rigid_bodies_rc.borrow_mut();
+
+        for body in rigid_bodies.iter_mut() {
+            if cursor_world_space.x == body.position.x && cursor_world_space.y == body.position.y {
+                continue;
+            }
+
+            let body_to_cursor = cursor_world_space - body.position;
+
+            let local_body_cursor_theta = body_to_cursor.as_normal().dot(vec3::RIGHT).acos();
+
+            body.orientation = Quaternion::new_2d(if cursor_world_space.y < body.position.y {
+                -local_body_cursor_theta
+            } else {
+                local_body_cursor_theta
+            });
+        }
 
         Ok(())
     };
