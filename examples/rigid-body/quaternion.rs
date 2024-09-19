@@ -5,11 +5,17 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Quaternion {
     pub s: f32,
     pub u: Vec3,
     mat: Mat4,
+}
+
+impl Default for Quaternion {
+    fn default() -> Self {
+        Self::new_2d(0.0)
+    }
 }
 
 impl ops::Mul for Quaternion {
@@ -39,6 +45,51 @@ impl ops::Mul for Quaternion {
 impl ops::MulAssign for Quaternion {
     fn mul_assign(&mut self, rhs: Self) {
         let product = *self * rhs;
+
+        self.s = product.s;
+        self.u = product.u;
+        self.mat = product.mat;
+    }
+}
+
+impl ops::Mul<f32> for Quaternion {
+    type Output = Self;
+
+    fn mul(self, scalar: f32) -> Self::Output {
+        let s = self.s * scalar;
+        let u = self.u * scalar;
+        let mat = quaternion_to_mat4(s, u.x, u.y, u.z);
+
+        Self { s, u, mat }
+    }
+}
+
+impl ops::MulAssign<f32> for Quaternion {
+    fn mul_assign(&mut self, rhs: f32) {
+        let product = *self * rhs;
+
+        self.s = product.s;
+        self.u = product.u;
+        self.mat = product.mat;
+    }
+}
+
+impl ops::Div<f32> for Quaternion {
+    type Output = Self;
+
+    fn div(self, scalar: f32) -> Self::Output {
+        let s = self.s / scalar;
+        let u = self.u / scalar;
+        let mat = quaternion_to_mat4(s, u.x, u.y, u.z);
+
+        Self { s, u, mat }
+    }
+}
+
+impl ops::DivAssign<f32> for Quaternion {
+    fn div_assign(&mut self, rhs: f32) {
+        let product = *self / rhs;
+
         self.s = product.s;
         self.u = product.u;
         self.mat = product.mat;
@@ -51,9 +102,13 @@ impl Quaternion {
 
         let s = theta_over_2.cos();
         let u = axis_normal * theta_over_2.sin();
-        let mat = quaternion_to_mat4(s, u.x, u.y, u.z);
+        let mat = Default::default();
 
-        Self { s, u, mat }
+        let mut q = Self { s, u, mat };
+
+        q.renormalize();
+
+        q
     }
 
     pub fn new_2d(theta: f32) -> Self {
@@ -62,6 +117,28 @@ impl Quaternion {
 
     pub fn mat(&self) -> &Mat4 {
         &self.mat
+    }
+
+    pub fn renormalize(&mut self) {
+        let mag = self.mag();
+
+        self.s = self.s / mag;
+
+        self.u /= mag;
+
+        self.recompute_derived_state();
+    }
+
+    fn recompute_derived_state(&mut self) {
+        self.mat = quaternion_to_mat4(self.s, self.u.x, self.u.y, self.u.z);
+    }
+
+    fn mag_squared(&self) -> f32 {
+        self.s.powi(2) + self.u.x.powi(2) + self.u.y.powi(2) + self.u.z.powi(2)
+    }
+
+    fn mag(&self) -> f32 {
+        self.mag_squared().sqrt()
     }
 }
 

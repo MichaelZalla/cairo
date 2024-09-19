@@ -16,6 +16,7 @@ mod quaternion;
 mod renderable;
 mod rigid_body;
 mod state_vector;
+mod transform;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -40,7 +41,7 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0)];
+    let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0, 2.5)];
 
     let rigid_bodies_rc = RefCell::new(rigid_bodies);
 
@@ -80,6 +81,8 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
+        let uptime = app.timing_info.uptime_seconds;
+
         let framebuffer = framebuffer_rc.borrow();
 
         let mut cursor_screen_space = last_mouse_coordinates_rc.borrow_mut();
@@ -95,19 +98,29 @@ fn main() -> Result<(), String> {
         let mut rigid_bodies = rigid_bodies_rc.borrow_mut();
 
         for body in rigid_bodies.iter_mut() {
-            if cursor_world_space.x == body.position.x && cursor_world_space.y == body.position.y {
+            let position = *body.transform.translation();
+
+            if cursor_world_space.x == position.x && cursor_world_space.y == position.y {
                 continue;
             }
 
-            let body_to_cursor = cursor_world_space - body.position;
+            let body_to_cursor = cursor_world_space - position;
 
             let local_body_cursor_theta = body_to_cursor.as_normal().dot(vec3::RIGHT).acos();
 
-            body.orientation = Quaternion::new_2d(if cursor_world_space.y < body.position.y {
-                -local_body_cursor_theta
-            } else {
-                local_body_cursor_theta
+            body.transform.set_translation(Vec3 {
+                x: uptime.cos() * 5.0,
+                y: uptime.sin() * 5.0,
+                z: 0.0,
             });
+
+            body.transform.set_orientation(Quaternion::new_2d(
+                if cursor_world_space.y < position.y {
+                    -local_body_cursor_theta
+                } else {
+                    local_body_cursor_theta
+                },
+            ));
         }
 
         Ok(())
