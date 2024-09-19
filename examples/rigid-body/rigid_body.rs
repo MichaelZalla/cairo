@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use cairo::{
     buffer::Buffer2D,
-    color::{self},
+    color,
     graphics::Graphics,
     vec::{vec3::Vec3, vec4},
 };
@@ -11,6 +11,7 @@ use crate::{
     coordinates::{world_to_screen_space, PIXELS_PER_METER},
     quaternion::Quaternion,
     renderable::Renderable,
+    state_vector::{FromStateVector, ToStateVector},
     transform::Transform,
 };
 
@@ -24,6 +25,8 @@ impl Default for RigidBodyKind {
         Self::Circle(1.0)
     }
 }
+
+pub(crate) static COEFFICIENT_COUNT: usize = 13;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RigidBody {
@@ -44,6 +47,80 @@ pub struct RigidBody {
 impl Default for RigidBody {
     fn default() -> Self {
         Self::circle(Default::default(), 1.0, 1.0)
+    }
+}
+
+impl ToStateVector for RigidBody {
+    fn write_to(&self, state: &mut [f32]) {
+        let ptr = state.as_mut_ptr();
+
+        unsafe {
+            // Position
+            *ptr.offset(0) = self.transform.translation().x;
+            *ptr.offset(1) = self.transform.translation().y;
+            *ptr.offset(2) = self.transform.translation().z;
+
+            // Orientation
+            *ptr.offset(3) = self.transform.orientation().s;
+            *ptr.offset(4) = self.transform.orientation().u.x;
+            *ptr.offset(5) = self.transform.orientation().u.y;
+            *ptr.offset(6) = self.transform.orientation().u.z;
+
+            // Linear momentum
+            *ptr.offset(7) = self.linear_momentum.x;
+            *ptr.offset(8) = self.linear_momentum.y;
+            *ptr.offset(9) = self.linear_momentum.z;
+
+            // Angular momentum
+            *ptr.offset(10) = self.angular_momentum.x;
+            *ptr.offset(11) = self.angular_momentum.y;
+            *ptr.offset(12) = self.angular_momentum.z;
+        }
+    }
+}
+
+impl FromStateVector for RigidBody {
+    fn write_from(&mut self, state: &[f32]) {
+        let ptr = state.as_ptr();
+
+        unsafe {
+            let translation = Vec3 {
+                x: *ptr.offset(0),
+                y: *ptr.offset(1),
+                z: *ptr.offset(2),
+            };
+
+            let orientation = {
+                let s = *ptr.offset(3);
+
+                let u = Vec3 {
+                    x: *ptr.offset(4),
+                    y: *ptr.offset(5),
+                    z: *ptr.offset(6),
+                };
+
+                Quaternion::from_raw(s, u)
+            };
+
+            let linear_momentum = Vec3 {
+                x: *ptr.offset(7),
+                y: *ptr.offset(8),
+                z: *ptr.offset(9),
+            };
+
+            let angular_momentum = Vec3 {
+                x: *ptr.offset(10),
+                y: *ptr.offset(11),
+                z: *ptr.offset(12),
+            };
+
+            self.transform
+                .set_translation_and_orientation(translation, orientation);
+
+            self.linear_momentum = linear_momentum;
+
+            self.angular_momentum = angular_momentum;
+        }
     }
 }
 

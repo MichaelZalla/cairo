@@ -104,11 +104,23 @@ impl Quaternion {
         let u = axis_normal * theta_over_2.sin();
         let mat = Default::default();
 
-        let mut q = Self { s, u, mat };
+        let mut result = Self { s, u, mat };
 
-        q.renormalize();
+        result.renormalize();
 
-        q
+        result
+    }
+
+    pub fn from_raw(s: f32, u: Vec3) -> Self {
+        let mut result = Self {
+            s,
+            u,
+            mat: Default::default(),
+        };
+
+        result.recompute_derived_state();
+
+        result
     }
 
     pub fn new_2d(theta: f32) -> Self {

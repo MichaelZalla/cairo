@@ -6,13 +6,13 @@ use cairo::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     vec::vec3::Vec3,
 };
-
 use coordinates::screen_to_world_space;
+use make_simulation::make_simulation;
 use renderable::Renderable;
-use rigid_body::RigidBody;
-use simulation::Simulation;
 
 mod coordinates;
+mod force;
+mod make_simulation;
 mod quaternion;
 mod renderable;
 mod rigid_body;
@@ -43,9 +43,7 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0, 2.5)];
-
-    let simulation = Simulation { rigid_bodies };
+    let simulation = make_simulation();
 
     let simulation_rc = RefCell::new(simulation);
 
@@ -102,7 +100,7 @@ fn main() -> Result<(), String> {
 
         let mut simulation = simulation_rc.borrow_mut();
 
-        simulation.tick(uptime_seconds, cursor_world_space);
+        simulation.tick(uptime_seconds, h, cursor_world_space);
 
         Ok(())
     };
