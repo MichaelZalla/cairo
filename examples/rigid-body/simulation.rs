@@ -57,13 +57,13 @@ impl<'a> Simulation<'a> {
 
             let start = i * COEFFICIENT_COUNT;
 
-            static MASS: f32 = 2.5;
+            let one_over_mass = current_state.0[start];
 
             // Derive a velocity from the linear momentum.
 
-            derivative.0[start + 0] = current_state.0[start + 7] / MASS;
-            derivative.0[start + 1] = current_state.0[start + 8] / MASS;
-            derivative.0[start + 2] = current_state.0[start + 9] / MASS;
+            derivative.0[start + 1] = current_state.0[start + 8] * one_over_mass;
+            derivative.0[start + 2] = current_state.0[start + 9] * one_over_mass;
+            derivative.0[start + 3] = current_state.0[start + 10] * one_over_mass;
         }
 
         derivative
@@ -94,9 +94,10 @@ impl<'a> Simulation<'a> {
             let start = i * COEFFICIENT_COUNT;
 
             // Linear momentum
-            derivative.0[start + 7] = net_force_acceleration.x;
-            derivative.0[start + 8] = net_force_acceleration.y;
-            derivative.0[start + 9] = net_force_acceleration.z;
+
+            derivative.0[start + 8] = net_force_acceleration.x;
+            derivative.0[start + 9] = net_force_acceleration.y;
+            derivative.0[start + 10] = net_force_acceleration.z;
         }
 
         derivative

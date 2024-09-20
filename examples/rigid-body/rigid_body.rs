@@ -26,7 +26,7 @@ impl Default for RigidBodyKind {
     }
 }
 
-pub(crate) static COEFFICIENT_COUNT: usize = 13;
+pub(crate) static COEFFICIENT_COUNT: usize = 14;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RigidBody {
@@ -55,26 +55,29 @@ impl ToStateVector for RigidBody {
         let ptr = state.as_mut_ptr();
 
         unsafe {
+            // Inverse mass
+            *ptr.offset(0) = self.one_over_mass;
+
             // Position
-            *ptr.offset(0) = self.transform.translation().x;
-            *ptr.offset(1) = self.transform.translation().y;
-            *ptr.offset(2) = self.transform.translation().z;
+            *ptr.offset(1) = self.transform.translation().x;
+            *ptr.offset(2) = self.transform.translation().y;
+            *ptr.offset(3) = self.transform.translation().z;
 
             // Orientation
-            *ptr.offset(3) = self.transform.orientation().s;
-            *ptr.offset(4) = self.transform.orientation().u.x;
-            *ptr.offset(5) = self.transform.orientation().u.y;
-            *ptr.offset(6) = self.transform.orientation().u.z;
+            *ptr.offset(4) = self.transform.orientation().s;
+            *ptr.offset(5) = self.transform.orientation().u.x;
+            *ptr.offset(6) = self.transform.orientation().u.y;
+            *ptr.offset(7) = self.transform.orientation().u.z;
 
             // Linear momentum
-            *ptr.offset(7) = self.linear_momentum.x;
-            *ptr.offset(8) = self.linear_momentum.y;
-            *ptr.offset(9) = self.linear_momentum.z;
+            *ptr.offset(8) = self.linear_momentum.x;
+            *ptr.offset(9) = self.linear_momentum.y;
+            *ptr.offset(10) = self.linear_momentum.z;
 
             // Angular momentum
-            *ptr.offset(10) = self.angular_momentum.x;
-            *ptr.offset(11) = self.angular_momentum.y;
-            *ptr.offset(12) = self.angular_momentum.z;
+            *ptr.offset(11) = self.angular_momentum.x;
+            *ptr.offset(12) = self.angular_momentum.y;
+            *ptr.offset(13) = self.angular_momentum.z;
         }
     }
 }
@@ -85,33 +88,33 @@ impl FromStateVector for RigidBody {
 
         unsafe {
             let translation = Vec3 {
-                x: *ptr.offset(0),
-                y: *ptr.offset(1),
-                z: *ptr.offset(2),
+                x: *ptr.offset(1),
+                y: *ptr.offset(2),
+                z: *ptr.offset(3),
             };
 
             let orientation = {
-                let s = *ptr.offset(3);
+                let s = *ptr.offset(4);
 
                 let u = Vec3 {
-                    x: *ptr.offset(4),
-                    y: *ptr.offset(5),
-                    z: *ptr.offset(6),
+                    x: *ptr.offset(5),
+                    y: *ptr.offset(6),
+                    z: *ptr.offset(7),
                 };
 
                 Quaternion::from_raw(s, u)
             };
 
             let linear_momentum = Vec3 {
-                x: *ptr.offset(7),
-                y: *ptr.offset(8),
-                z: *ptr.offset(9),
+                x: *ptr.offset(8),
+                y: *ptr.offset(9),
+                z: *ptr.offset(10),
             };
 
             let angular_momentum = Vec3 {
-                x: *ptr.offset(10),
-                y: *ptr.offset(11),
-                z: *ptr.offset(12),
+                x: *ptr.offset(11),
+                y: *ptr.offset(12),
+                z: *ptr.offset(13),
             };
 
             self.transform
