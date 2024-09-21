@@ -41,7 +41,6 @@ pub struct RigidBody {
     one_over_moment_of_inertia: f32,
     velocity: Vec3,
     angular_velocity: Vec3,
-    spin: Quaternion,
 }
 
 impl Default for RigidBody {
@@ -135,16 +134,14 @@ impl RigidBody {
         let mut result = Self {
             kind: RigidBodyKind::Circle(radius),
             mass,
+            one_over_mass: 1.0 / mass,
             transform: Transform::new(center),
             linear_momentum: Default::default(),
             moment_of_inertia,
             one_over_moment_of_inertia,
             angular_momentum: Default::default(),
-            // To be initialized...
-            one_over_mass: 0.0,
             velocity: Default::default(),
             angular_velocity: Default::default(),
-            spin: Default::default(),
         };
 
         result.recompute_derived_state();
@@ -153,15 +150,9 @@ impl RigidBody {
     }
 
     fn recompute_derived_state(&mut self) {
-        self.one_over_mass = 1.0 / self.mass;
         self.velocity = self.linear_momentum * self.one_over_mass;
 
-        self.one_over_moment_of_inertia = 1.0 / self.one_over_moment_of_inertia;
         self.angular_velocity = self.angular_momentum * self.one_over_moment_of_inertia;
-
-        let angular_velocity_q = Quaternion::new(self.angular_velocity, 0.0);
-
-        self.spin = angular_velocity_q * 0.5 * (*self.transform.orientation());
     }
 }
 
