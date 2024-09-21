@@ -74,28 +74,6 @@ impl ops::MulAssign<f32> for Quaternion {
     }
 }
 
-impl ops::Div<f32> for Quaternion {
-    type Output = Self;
-
-    fn div(self, scalar: f32) -> Self::Output {
-        let s = self.s / scalar;
-        let u = self.u / scalar;
-        let mat = quaternion_to_mat4(s, u.x, u.y, u.z);
-
-        Self { s, u, mat }
-    }
-}
-
-impl ops::DivAssign<f32> for Quaternion {
-    fn div_assign(&mut self, rhs: f32) {
-        let product = *self / rhs;
-
-        self.s = product.s;
-        self.u = product.u;
-        self.mat = product.mat;
-    }
-}
-
 impl Quaternion {
     pub fn new(axis_normal: Vec3, theta: f32) -> Self {
         let theta_over_2 = theta / 2.0;
