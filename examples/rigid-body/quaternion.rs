@@ -1,4 +1,4 @@
-use std::ops;
+use std::{fmt, ops};
 
 use cairo::{
     matrix::Mat4,
@@ -15,6 +15,12 @@ pub struct Quaternion {
 impl Default for Quaternion {
     fn default() -> Self {
         Self::new_2d(0.0)
+    }
+}
+
+impl fmt::Display for Quaternion {
+    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(v, "(s={}, u={})", self.s, self.u)
     }
 }
 
