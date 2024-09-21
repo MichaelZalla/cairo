@@ -18,6 +18,23 @@ impl Default for Quaternion {
     }
 }
 
+impl ops::AddAssign for Quaternion {
+    fn add_assign(&mut self, rhs: Self) {
+        self.s += rhs.s;
+        self.u += rhs.u;
+    }
+}
+
+impl ops::Add for Quaternion {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut result = self;
+        result += rhs;
+        result
+    }
+}
+
 impl ops::Mul for Quaternion {
     type Output = Self;
 
