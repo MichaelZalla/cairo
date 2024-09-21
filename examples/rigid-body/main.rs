@@ -35,20 +35,13 @@ fn main() -> Result<(), String> {
         None,
     );
 
-    let framebuffer_center = Vec3 {
-        x: framebuffer.width as f32 / 2.0,
-        y: framebuffer.height as f32 / 2.0,
-        z: 0.0,
-    };
-
     let framebuffer_rc = RefCell::new(framebuffer);
 
     let simulation = make_simulation();
 
     let simulation_rc = RefCell::new(simulation);
 
-    let last_mouse_coordinates_rc =
-        RefCell::new((framebuffer_center.x as u32, framebuffer_center.y as u32));
+    let cursor_world_space_rc = RefCell::new(Vec3::default());
 
     let render_scene_to_framebuffer = |_frame_index: Option<u32>,
                                        new_resolution: Option<Resolution>|
@@ -86,21 +79,22 @@ fn main() -> Result<(), String> {
         let uptime_seconds = app.timing_info.uptime_seconds;
         let h = app.timing_info.seconds_since_last_update;
 
+        // Translate the cursor's current position to world space.
+
+        let cursor_screen_space = (mouse_state.position.0 as u32, mouse_state.position.1 as u32);
+
         let framebuffer = framebuffer_rc.borrow();
 
-        let mut cursor_screen_space = last_mouse_coordinates_rc.borrow_mut();
+        let mut cursor_world_space = cursor_world_space_rc.borrow_mut();
 
-        cursor_screen_space.0 = mouse_state.position.0 as u32;
-        cursor_screen_space.1 = mouse_state.position.1 as u32;
-
-        let cursor_world_space = screen_to_world_space(
+        *cursor_world_space = screen_to_world_space(
             &Vec3::from_x_y(cursor_screen_space.0 as f32, cursor_screen_space.1 as f32),
             &framebuffer,
         );
 
         let mut simulation = simulation_rc.borrow_mut();
 
-        simulation.tick(uptime_seconds, h, cursor_world_space);
+        simulation.tick(uptime_seconds, h, *cursor_world_space);
 
         Ok(())
     };
