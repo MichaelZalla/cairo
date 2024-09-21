@@ -127,6 +127,15 @@ impl Quaternion {
         Self::new(-vec3::FORWARD, theta)
     }
 
+    #[allow(unused)]
+    pub fn conjugate(&self) -> Self {
+        let s = self.s;
+        let u = -self.u;
+        let mat = quaternion_to_mat4(s, u.x, u.y, u.z);
+
+        Self { s, u, mat }
+    }
+
     pub fn mat(&self) -> &Mat4 {
         &self.mat
     }
