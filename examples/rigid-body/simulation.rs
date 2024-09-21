@@ -1,8 +1,8 @@
-use cairo::vec::{vec3::Vec3, vec4::Vec4};
+use cairo::vec::vec3::Vec3;
 
 use crate::{
-    force::Force, quaternion::Quaternion, rigid_body::RigidBody,
-    rigid_body_simulation_state::RigidBodySimulationState, state_vector::StateVector,
+    force::Force, rigid_body::RigidBody, rigid_body_simulation_state::RigidBodySimulationState,
+    state_vector::StateVector,
 };
 
 pub struct Simulation {
@@ -48,62 +48,21 @@ fn system_dynamics_function(
 
     for i in 0..n {
         let body_state = &state.0[i];
-        let body_derivative = &mut derivative.0[i];
+        let mut body_derivative = &mut derivative.0[i];
 
         // 1. Rate-of-change of position (velocity).
 
         // Derive from the body's current linear momentum.
 
-        body_derivative.position = body_state.linear_momentum * body_state.inverse_mass;
+        body_derivative.position = body_state.velocity();
 
         // 2. Rate-of-change of orientation (angular velocity).
 
-        body_derivative.orientation = {
-            let orientation = body_state.orientation;
-
-            let angular_momentum = Vec4::new(body_state.angular_momentum, 0.0);
-
-            let inverse_moment_of_intertia_world_space = {
-                let r = *orientation.mat();
-
-                r * body_state.inverse_moment_of_interia * r.transposed()
-            };
-
-            let angular_velocity =
-                (angular_momentum * inverse_moment_of_intertia_world_space).to_vec3();
-
-            let spin = Quaternion::from_raw(0.0, angular_velocity);
-
-            // First-order integration (assumes that velocity is constant over the timestep).
-            //
-            // See: https://stackoverflow.com/a/46924782/1623811
-            // See: https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/
-
-            let roc = (orientation * 0.5) * spin;
-
-            roc
-        };
+        body_derivative.orientation = body_state.angular_velocity();
 
         // 3. Rate-of-change of linear and angular momenta.
 
-        let position = body_state.position;
-
-        for force in forces {
-            let (f, point) = force(body_state, current_time);
-
-            // Accumulate linear momentum.
-
-            body_derivative.linear_momentum += f * body_state.inverse_mass;
-
-            // Accumulate angular momentum.
-
-            if let Some(point) = point {
-                let r = point - position;
-                let torque = -r.cross(f);
-
-                body_derivative.angular_momentum += torque;
-            }
-        }
+        body_state.accumulate_accelerations(forces, current_time, &mut body_derivative);
     }
 
     derivative
