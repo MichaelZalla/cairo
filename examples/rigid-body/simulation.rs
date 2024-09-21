@@ -1,112 +1,110 @@
-use cairo::vec::vec3::Vec3;
+use cairo::vec::{vec3::Vec3, vec4::Vec4};
 
 use crate::{
-    force::Force,
-    rigid_body::{RigidBody, COEFFICIENT_COUNT},
-    state_vector::{FromStateVector, StateVector, ToStateVector},
+    force::Force, quaternion::Quaternion, rigid_body::RigidBody,
+    rigid_body_simulation_state::RigidBodySimulationState, state_vector::StateVector,
 };
 
-pub struct Simulation<'a> {
-    pub forces: Vec<&'a Force>,
+pub struct Simulation {
+    pub forces: Vec<Force>,
     pub rigid_bodies: Vec<RigidBody>,
 }
 
-impl<'a> Simulation<'a> {
+impl Simulation {
     pub fn tick(&mut self, current_time: f32, h: f32, _cursor_world_space: Vec3) {
         let n = self.rigid_bodies.len();
-        let size = n * COEFFICIENT_COUNT;
 
-        let mut state = StateVector::new(size);
+        let mut state = StateVector::<RigidBodySimulationState>::new(n);
 
         for (i, body) in self.rigid_bodies.iter().enumerate() {
-            let start = i * COEFFICIENT_COUNT;
-            let end = start + COEFFICIENT_COUNT - 1;
-
-            let slice = &mut state.0[start..=end];
-
-            body.write_to(slice);
+            state.0[i] = body.state();
         }
 
         let new_state = {
             let derivative = system_dynamics_function(&state, &self.forces, current_time);
 
-            forward_euler(&state, &derivative, h)
+            // Performs basic Euler integration over position and velocity.
+
+            state + derivative * h
         };
 
+        // @NOTE `RigidBody` is responsible for re-normalizing its quaternion
+        // components as part of its call to `Transform::set_translation_and_orientation(…)`.
+
         for (i, body) in self.rigid_bodies.iter_mut().enumerate() {
-            let start = i * COEFFICIENT_COUNT;
-            let end = start + COEFFICIENT_COUNT - 1;
-
-            let slice = &new_state.0[start..=end];
-
-            body.write_from(slice);
+            body.apply_simulation_state(&new_state.0[i]);
         }
     }
 }
 
 fn system_dynamics_function(
-    current_state: &StateVector,
-    forces: &[&Force],
+    state: &StateVector<RigidBodySimulationState>,
+    forces: &[Force],
     current_time: f32,
-) -> StateVector {
-    let n = current_state.0.len() / COEFFICIENT_COUNT;
+) -> StateVector<RigidBodySimulationState> {
+    let n = state.0.len();
 
-    // Compute new accelerations (i.e., derivative) from net forces.
-    let mut derivative = compute_accelerations(current_state, forces, current_time);
+    let mut derivative = StateVector::<RigidBodySimulationState>::new(n);
 
-    // Copy
     for i in 0..n {
-        // Copy first derivatives (velocity, etc) from the prior state.
+        let body_state = &state.0[i];
+        let body_derivative = &mut derivative.0[i];
 
-        let start = i * COEFFICIENT_COUNT;
+        // 1. Rate-of-change of position (velocity).
 
-        let one_over_mass = current_state.0[start];
+        // Derive from the body's current linear momentum.
 
-        // Derive a velocity from the linear momentum.
+        body_derivative.position = body_state.linear_momentum * body_state.inverse_mass;
 
-        derivative.0[start + 1] = current_state.0[start + 8] * one_over_mass;
-        derivative.0[start + 2] = current_state.0[start + 9] * one_over_mass;
-        derivative.0[start + 3] = current_state.0[start + 10] * one_over_mass;
-    }
+        // 2. Rate-of-change of orientation (angular velocity).
 
-    derivative
-}
+        body_derivative.orientation = {
+            let orientation = body_state.orientation;
 
-fn compute_accelerations(
-    current_state: &StateVector,
-    forces: &[&Force],
-    current_time: f32,
-) -> StateVector {
-    let size = current_state.0.len();
-    let n = size / COEFFICIENT_COUNT;
+            let angular_momentum = Vec4::new(body_state.angular_momentum, 0.0);
 
-    let mut derivative = StateVector::new(size);
+            let inverse_moment_of_intertia_world_space = {
+                let r = *orientation.mat();
 
-    // Compute net force and torque acting on each rigid body.
+                r * body_state.inverse_moment_of_interia * r.transposed()
+            };
 
-    // For each point, compute net environmental force acting on it.
-    for i in 0..n {
-        let mut net_force_acceleration: Vec3 = Default::default();
+            let angular_velocity =
+                (angular_momentum * inverse_moment_of_intertia_world_space).to_vec3();
+
+            let spin = Quaternion::from_raw(0.0, angular_velocity);
+
+            // First-order integration (assumes that velocity is constant over the timestep).
+            //
+            // See: https://stackoverflow.com/a/46924782/1623811
+            // See: https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/
+
+            let roc = (orientation * 0.5) * spin;
+
+            roc
+        };
+
+        // 3. Rate-of-change of linear and angular momenta.
+
+        let position = body_state.position;
 
         for force in forces {
-            net_force_acceleration += force(current_state, i, current_time);
+            let (f, point) = force(body_state, current_time);
+
+            // Accumulate linear momentum.
+
+            body_derivative.linear_momentum += f * body_state.inverse_mass;
+
+            // Accumulate angular momentum.
+
+            if let Some(point) = point {
+                let r = point - position;
+                let torque = -r.cross(f);
+
+                body_derivative.angular_momentum += torque;
+            }
         }
-
-        // Write the final net environmental acceleration.
-        let start = i * COEFFICIENT_COUNT;
-
-        // Linear momentum
-
-        derivative.0[start + 8] = net_force_acceleration.x;
-        derivative.0[start + 9] = net_force_acceleration.y;
-        derivative.0[start + 10] = net_force_acceleration.z;
     }
 
     derivative
-}
-
-fn forward_euler(current_state: &StateVector, derivative: &StateVector, h: f32) -> StateVector {
-    // Performs basic Euler integration over position and velocity.
-
-    current_state.clone() + derivative * h
 }

@@ -1,7 +1,8 @@
 use cairo::vec::vec3::Vec3;
 
-use crate::state_vector::StateVector;
+use crate::rigid_body_simulation_state::RigidBodySimulationState;
 
+pub type Point = Vec3;
 pub type Newtons = Vec3;
 
-pub type Force = fn(&StateVector, i: usize, current_time: f32) -> Newtons;
+pub type Force = Box<dyn Fn(&RigidBodySimulationState, f32) -> (Newtons, Option<Point>)>;

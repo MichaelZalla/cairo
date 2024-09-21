@@ -72,11 +72,3 @@ impl<T: Copy + ops::Mul<f32, Output = T>> ops::Mul<f32> for &StateVector<T> {
         result
     }
 }
-
-pub trait ToStateVector {
-    fn write_to(&self, state: &mut [f32]);
-}
-
-pub trait FromStateVector {
-    fn write_from(&mut self, state: &[f32]);
-}

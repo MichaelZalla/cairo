@@ -4,14 +4,17 @@ use cairo::{
     buffer::Buffer2D,
     color,
     graphics::Graphics,
-    vec::{vec3::Vec3, vec4},
+    matrix::Mat4,
+    vec::{
+        vec3::Vec3,
+        vec4::{self, Vec4},
+    },
 };
 
 use crate::{
     coordinates::{world_to_screen_space, PIXELS_PER_METER},
-    quaternion::Quaternion,
     renderable::Renderable,
-    state_vector::{FromStateVector, ToStateVector},
+    rigid_body_simulation_state::RigidBodySimulationState,
     transform::Transform,
 };
 
@@ -26,19 +29,19 @@ impl Default for RigidBodyKind {
     }
 }
 
-pub(crate) static COEFFICIENT_COUNT: usize = 14;
-
 #[derive(Debug, Copy, Clone)]
 pub struct RigidBody {
+    #[allow(unused)]
     pub mass: f32,
-    pub moment_of_inertia: f32,
+    #[allow(unused)]
+    pub moment_of_inertia: Mat4,
     pub transform: Transform,
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
     pub kind: RigidBodyKind,
     // Derived state
-    one_over_mass: f32,
-    one_over_moment_of_inertia: f32,
+    inverse_mass: f32,
+    inverse_moment_of_inertia: Mat4,
     velocity: Vec3,
     angular_velocity: Vec3,
 }
@@ -49,96 +52,33 @@ impl Default for RigidBody {
     }
 }
 
-impl ToStateVector for RigidBody {
-    fn write_to(&self, state: &mut [f32]) {
-        let ptr = state.as_mut_ptr();
+fn get_moment_of_intertia_for_circle(radius: f32) -> (Mat4, Mat4) {
+    let scale = (PI * radius.powi(4)) / 4.0;
 
-        unsafe {
-            // Inverse mass
-            *ptr.offset(0) = self.one_over_mass;
+    let moment_of_inertia = { Mat4::scale([scale, scale, scale, 1.0]) };
 
-            // Position
-            *ptr.offset(1) = self.transform.translation().x;
-            *ptr.offset(2) = self.transform.translation().y;
-            *ptr.offset(3) = self.transform.translation().z;
+    let inverse_moment_of_inertia = {
+        let inverse_scale = 1.0 / scale;
 
-            // Orientation
-            *ptr.offset(4) = self.transform.orientation().s;
-            *ptr.offset(5) = self.transform.orientation().u.x;
-            *ptr.offset(6) = self.transform.orientation().u.y;
-            *ptr.offset(7) = self.transform.orientation().u.z;
+        Mat4::scale([inverse_scale, inverse_scale, inverse_scale, 1.0])
+    };
 
-            // Linear momentum
-            *ptr.offset(8) = self.linear_momentum.x;
-            *ptr.offset(9) = self.linear_momentum.y;
-            *ptr.offset(10) = self.linear_momentum.z;
-
-            // Angular momentum
-            *ptr.offset(11) = self.angular_momentum.x;
-            *ptr.offset(12) = self.angular_momentum.y;
-            *ptr.offset(13) = self.angular_momentum.z;
-        }
-    }
-}
-
-impl FromStateVector for RigidBody {
-    fn write_from(&mut self, state: &[f32]) {
-        let ptr = state.as_ptr();
-
-        unsafe {
-            let translation = Vec3 {
-                x: *ptr.offset(1),
-                y: *ptr.offset(2),
-                z: *ptr.offset(3),
-            };
-
-            let orientation = {
-                let s = *ptr.offset(4);
-
-                let u = Vec3 {
-                    x: *ptr.offset(5),
-                    y: *ptr.offset(6),
-                    z: *ptr.offset(7),
-                };
-
-                Quaternion::from_raw(s, u)
-            };
-
-            let linear_momentum = Vec3 {
-                x: *ptr.offset(8),
-                y: *ptr.offset(9),
-                z: *ptr.offset(10),
-            };
-
-            let angular_momentum = Vec3 {
-                x: *ptr.offset(11),
-                y: *ptr.offset(12),
-                z: *ptr.offset(13),
-            };
-
-            self.transform
-                .set_translation_and_orientation(translation, orientation);
-
-            self.linear_momentum = linear_momentum;
-
-            self.angular_momentum = angular_momentum;
-        }
-    }
+    (moment_of_inertia, inverse_moment_of_inertia)
 }
 
 impl RigidBody {
     pub fn circle(center: Vec3, radius: f32, mass: f32) -> Self {
-        let moment_of_inertia = (PI * radius.powi(4)) / 4.0;
-        let one_over_moment_of_inertia = 1.0 / moment_of_inertia;
+        let (moment_of_inertia, inverse_moment_of_inertia) =
+            get_moment_of_intertia_for_circle(radius);
 
         let mut result = Self {
             kind: RigidBodyKind::Circle(radius),
             mass,
-            one_over_mass: 1.0 / mass,
+            inverse_mass: 1.0 / mass,
             transform: Transform::new(center),
             linear_momentum: Default::default(),
             moment_of_inertia,
-            one_over_moment_of_inertia,
+            inverse_moment_of_inertia,
             angular_momentum: Default::default(),
             velocity: Default::default(),
             angular_velocity: Default::default(),
@@ -149,10 +89,32 @@ impl RigidBody {
         result
     }
 
-    fn recompute_derived_state(&mut self) {
-        self.velocity = self.linear_momentum * self.one_over_mass;
+    pub fn state(&self) -> RigidBodySimulationState {
+        RigidBodySimulationState {
+            inverse_mass: self.inverse_mass,
+            inverse_moment_of_interia: self.inverse_moment_of_inertia,
+            position: *self.transform.translation(),
+            orientation: *self.transform.orientation(),
+            linear_momentum: self.linear_momentum,
+            angular_momentum: self.angular_momentum,
+        }
+    }
 
-        self.angular_velocity = self.angular_momentum * self.one_over_moment_of_inertia;
+    pub fn apply_simulation_state(&mut self, state: &RigidBodySimulationState) {
+        let (translation, orientation) = (state.position, state.orientation);
+
+        self.transform
+            .set_translation_and_orientation(translation, orientation);
+
+        self.linear_momentum = state.linear_momentum;
+        self.angular_momentum = state.angular_momentum;
+    }
+
+    fn recompute_derived_state(&mut self) {
+        self.velocity = self.linear_momentum * self.inverse_mass;
+
+        self.angular_velocity =
+            (Vec4::new(self.angular_momentum, 0.0) * self.inverse_moment_of_inertia).to_vec3();
     }
 }
 

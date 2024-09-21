@@ -16,6 +16,7 @@ mod make_simulation;
 mod quaternion;
 mod renderable;
 mod rigid_body;
+mod rigid_body_simulation_state;
 mod simulation;
 mod state_vector;
 mod transform;
