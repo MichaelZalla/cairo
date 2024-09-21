@@ -146,6 +146,22 @@ impl Quaternion {
         &self.mat
     }
 
+    pub fn theta(&self) -> f32 {
+        // See: https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
+        //
+        // "…due to the periodic nature of sine and cosine, rotation angles
+        // differing precisely by the natural period will be encoded into
+        // identical quaternions and recovered angles in radians will be limited
+        // to [0, 2*PI]."
+
+        let cos_theta_over_2 = self.s;
+        let sin_theta_over_2 = self.u.mag();
+
+        let theta_over_2 = sin_theta_over_2.atan2(cos_theta_over_2);
+
+        theta_over_2 * 2.0
+    }
+
     pub fn renormalize(&mut self) {
         let mag = self.mag();
 
