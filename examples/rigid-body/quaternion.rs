@@ -24,21 +24,21 @@ impl ops::Mul for Quaternion {
     fn mul(self, rhs: Self) -> Self::Output {
         let (a, b) = (self, rhs);
 
-        // See: https://stackoverflow.com/a/19956940/1623811
+        //
+        // See: https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/#multiplication
+        //
+        // a * b = [
+        //   (a.s * b.s - a.u.dot(b.u)),
+        //   a.s * b.u + b.s * a.u + a.u.cross(b.u)
+        // ]
+        //
 
-        let s = a.s * b.s - a.u.x * b.u.x - a.u.y * b.u.y - a.u.z * b.u.z;
+        let s = a.s * b.s - a.u.dot(b.u);
+        let u = (b.u * a.s) + (a.u * b.s) + a.u.cross(b.u);
 
-        let x = a.s * b.u.x + a.u.x * b.s + a.u.y * b.u.z - a.u.z * b.u.y;
-        let y = a.s * b.u.y - a.u.x * b.u.z + a.u.y * b.s + a.u.z * b.u.x;
-        let z = a.s * b.u.z + a.u.x * b.u.y - a.u.y * b.u.x + a.u.z * b.s;
+        let mat = quaternion_to_mat4(s, u.x, u.y, u.z);
 
-        let mat = quaternion_to_mat4(s, x, y, z);
-
-        Self {
-            s,
-            u: Vec3 { x, y, z },
-            mat,
-        }
+        Self { s, u, mat }
     }
 }
 
