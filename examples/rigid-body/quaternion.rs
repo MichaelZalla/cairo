@@ -136,6 +136,11 @@ impl Quaternion {
         Self { s, u, mat }
     }
 
+    #[allow(unused)]
+    pub fn inverse(&self) -> Self {
+        self.conjugate() * (1.0 / self.mag_squared())
+    }
+
     pub fn mat(&self) -> &Mat4 {
         &self.mat
     }
