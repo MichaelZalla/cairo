@@ -3,12 +3,21 @@ use std::cell::RefCell;
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    color,
+    device::{
+        game_controller::GameControllerState,
+        keyboard::KeyboardState,
+        mouse::{MouseEventKind, MouseState},
+    },
+    graphics::Graphics,
     vec::vec3::Vec3,
 };
-use coordinates::screen_to_world_space;
+use coordinates::{screen_to_world_space, world_to_screen_space};
+use force::{Newtons, Point};
 use make_simulation::make_simulation;
 use renderable::Renderable;
+use rigid_body_simulation_state::RigidBodySimulationState;
+use sdl2::mouse::MouseButton;
 
 mod coordinates;
 mod force;
@@ -20,6 +29,11 @@ mod rigid_body_simulation_state;
 mod simulation;
 mod state_vector;
 mod transform;
+
+#[derive(Default, Debug, Copy, Clone)]
+struct ForceCreationState {
+    start: Option<Vec3>,
+}
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -44,6 +58,8 @@ fn main() -> Result<(), String> {
 
     let cursor_world_space_rc = RefCell::new(Vec3::default());
 
+    let force_creation_state_rc = RefCell::new(ForceCreationState::default());
+
     let render_scene_to_framebuffer = |_frame_index: Option<u32>,
                                        new_resolution: Option<Resolution>|
      -> Result<Vec<u32>, String> {
@@ -65,6 +81,27 @@ fn main() -> Result<(), String> {
 
         for body in simulation.rigid_bodies.iter() {
             body.render(&mut framebuffer);
+        }
+
+        let cursor_world_space = cursor_world_space_rc.borrow();
+        let force_creation_state = force_creation_state_rc.borrow();
+
+        if let Some(start) = &force_creation_state.start {
+            let (from, to) = (*start, cursor_world_space);
+
+            let (from_screen_space, to_screen_space) = (
+                world_to_screen_space(&from, &framebuffer),
+                world_to_screen_space(&to, &framebuffer),
+            );
+
+            Graphics::line(
+                &mut framebuffer,
+                from_screen_space.x as i32,
+                from_screen_space.y as i32,
+                to_screen_space.x as i32,
+                to_screen_space.y as i32,
+                &color::WHITE,
+            );
         }
 
         Ok(framebuffer.get_all().clone())
@@ -93,9 +130,56 @@ fn main() -> Result<(), String> {
             &framebuffer,
         );
 
+        // Are we drawing a new force to dispatch?
+
         let mut simulation = simulation_rc.borrow_mut();
 
+        let mut force_creation_state = force_creation_state_rc.borrow_mut();
+
+        if let Some(event) = &mouse_state.button_event {
+            match (event.button, event.kind) {
+                (MouseButton::Left, MouseEventKind::Down) => {
+                    let from = *cursor_world_space;
+
+                    match &simulation.rigid_bodies[0].kind {
+                        rigid_body::RigidBodyKind::Circle(radius) => {
+                            let distance =
+                                (from - *simulation.rigid_bodies[0].transform.translation()).mag();
+
+                            if distance < *radius {
+                                force_creation_state.start.replace(*cursor_world_space);
+                            }
+                        }
+                    }
+                }
+                (MouseButton::Left, MouseEventKind::Up) => {
+                    if let Some(start) = &force_creation_state.start {
+                        let (from, to) = (*start, *cursor_world_space);
+
+                        let f = (to - from) * 1000.0;
+
+                        let force = Box::new(
+                            move |_state: &RigidBodySimulationState,
+                                  _current_time: f32|
+                                  -> (Newtons, Option<Point>) {
+                                (f, Some(from))
+                            },
+                        );
+
+                        simulation.forces.push(force);
+
+                        force_creation_state.start.take();
+                    }
+                }
+                _ => (),
+            }
+        }
+
+        // Advance our simulation.
+
         simulation.tick(uptime_seconds, h, *cursor_world_space);
+
+        simulation.forces = vec![];
 
         Ok(())
     };

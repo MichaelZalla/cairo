@@ -8,6 +8,7 @@ use crate::rigid_body_simulation_state::RigidBodySimulationState;
 use crate::simulation::Simulation;
 
 pub fn make_simulation() -> Simulation {
+    #[allow(unused)]
     let gravity_body_force: Force = Box::new(
         |state: &RigidBodySimulationState, _current_time: f32| -> (Newtons, Option<Point>) {
             static BODY_FORCE: Vec3 = Vec3 {
@@ -22,7 +23,7 @@ pub fn make_simulation() -> Simulation {
 
     let forces = vec![
         //
-        gravity_body_force,
+        // gravity_body_force,
     ];
 
     let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0, 2.5)];
