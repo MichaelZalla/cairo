@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{matrix::Mat4, vec::vec3::Vec3};
 
 pub mod look_vector;
+pub mod quaternion;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Transform3D {

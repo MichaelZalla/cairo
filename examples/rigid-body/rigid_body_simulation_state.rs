@@ -2,10 +2,11 @@ use std::ops;
 
 use cairo::{
     matrix::Mat4,
+    transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-use crate::{force::Force, quaternion::Quaternion};
+use crate::force::Force;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodySimulationState {

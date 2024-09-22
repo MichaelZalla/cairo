@@ -22,7 +22,6 @@ use sdl2::mouse::MouseButton;
 mod coordinates;
 mod force;
 mod make_simulation;
-mod quaternion;
 mod renderable;
 mod rigid_body;
 mod rigid_body_simulation_state;

@@ -1,6 +1,4 @@
-use cairo::{matrix::Mat4, vec::vec3::Vec3};
-
-use crate::quaternion::Quaternion;
+use cairo::{matrix::Mat4, transform::quaternion::Quaternion, vec::vec3::Vec3};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Transform {
