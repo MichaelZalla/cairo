@@ -11,7 +11,6 @@ pub struct ShaderContext {
     pub world_view_transform: Mat4,
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
-    pub default_specular_exponent: i32,
     pub active_material: Option<String>,
     pub active_uv_test_texture_map: Option<Handle>,
     pub active_hdr_map: Option<Handle>,
@@ -35,7 +34,6 @@ impl Default for ShaderContext {
             world_view_transform: Mat4::identity(),
             projection_transform: Mat4::identity(),
             world_view_projection_transform: Default::default(),
-            default_specular_exponent: 8,
             active_material: None,
             active_uv_test_texture_map: None,
             active_hdr_map: None,
@@ -72,7 +70,6 @@ impl ShaderContext {
             world_view_projection_transform: world_transform
                 * view_inverse_transform
                 * projection_transform,
-            default_specular_exponent: 8,
             active_material: None,
             active_uv_test_texture_map: None,
             active_hdr_map: None,
