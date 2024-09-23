@@ -43,7 +43,7 @@ macro_rules! visit_dfs {
             C: FnMut(usize, Option<&$type_param>, &Node<'a, $type_param>) -> Result<(), String>,
         {
             if let Some(root) = &self.$root {
-                $crate::ui::tree::traversal::visit_dfs_for_root::<$type_param, C>(
+                $crate::collections::tree::traversal::visit_dfs_for_root::<$type_param, C>(
                     root,
                     method,
                     visit_action,
@@ -74,7 +74,7 @@ macro_rules! visit_dfs_mut {
             D: FnMut(&mut Node<'a, $type_param>),
         {
             if let Some(root) = &self.$root {
-                $crate::ui::tree::traversal::visit_dfs_mut_for_root::<$type_param, C, D>(
+                $crate::collections::tree::traversal::visit_dfs_mut_for_root::<$type_param, C, D>(
                     root,
                     method,
                     visit_action,

@@ -1,17 +1,16 @@
-use core::fmt;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
 use crate::{
     buffer::Buffer2D,
+    collections::tree::{
+        node::{Node, NodeLocalTraversalMethod},
+        Tree,
+    },
     color,
     graphics::{text::cache::cache_text, Graphics},
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        tree::{
-            node::{Node, NodeLocalTraversalMethod},
-            Tree,
-        },
         ui_box::{UIBoxFeatureFlag, UILayoutDirection},
         UI2DAxis, UISize,
     },
@@ -35,7 +34,7 @@ macro_rules! ui_debug_print_indented {
         let indent = 2 * ($depth + 1);
 
         ui_debug_print!("{:indent$}{}", ">", $msg);
-    }
+    };
 }
 
 #[cfg(not(feature = "print_ui_layout_info"))]
@@ -251,7 +250,7 @@ impl<'a> UIBoxTree<'a> {
                                 depth,
                                 format!("{}: Pixel size for {} axis: {}", ui_box.id, axis, pixels)
                             );
-                            
+
                             ui_box.computed_size[screen_axis_index] = pixels as f32;
                         }
                         UISize::TextContent => {
@@ -385,7 +384,7 @@ impl<'a> UIBoxTree<'a> {
         // 3. Calculate upward-dependent sizes with a pre-order traversal.
 
         ui_debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
-        
+
         #[allow(unused)]
         self.tree.visit_root_dfs_mut(&NodeLocalTraversalMethod::PreOrder, &mut |depth, _sibling_index, parent_data, node| {
             let ui_box: &mut UIBox = &mut node.data;
@@ -861,7 +860,7 @@ impl<'a> UIBoxTree<'a> {
                     let rel_position = ui_box.computed_relative_position;
                     let global_position = ui_box.global_bounds;
                     let size = ui_box.computed_size;
-    
+
                     ui_debug_print_indented!(
                         depth,
                         format!(

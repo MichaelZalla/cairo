@@ -14,6 +14,7 @@ use sdl2::mouse::MouseButton;
 use crate::{
     animation::{exponential, lerp},
     buffer::Buffer2D,
+    collections::tree::node::Node,
     color::{self, Color},
     device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
     graphics::{horizontal_line_unsafe, text::TextOperation, vertical_line_unsafe, Graphics},
@@ -26,7 +27,7 @@ use key::UIKey;
 use styles::UIBoxStyles;
 use tree::FocusedTransitionInfo;
 
-use super::{extent::ScreenExtent, tree::node::Node, UISizeWithStrictness, UI_2D_AXIS_COUNT};
+use super::{extent::ScreenExtent, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
 pub mod interaction;
 pub mod key;

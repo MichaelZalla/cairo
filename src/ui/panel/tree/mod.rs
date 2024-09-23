@@ -2,11 +2,13 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::ui::{
-    context::GLOBAL_UI_CONTEXT,
-    tree::{node::NodeLocalTraversalMethod, Tree},
-    ui_box::{UIBoxDragHandle, UIBoxFeatureFlag},
-    window::Window,
+use crate::{
+    collections::tree::{node::NodeLocalTraversalMethod, Tree},
+    ui::{
+        context::GLOBAL_UI_CONTEXT,
+        ui_box::{UIBoxDragHandle, UIBoxFeatureFlag},
+        window::Window,
+    },
 };
 
 use super::Panel;

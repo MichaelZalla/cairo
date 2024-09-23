@@ -7,6 +7,7 @@ extern crate sdl2;
 pub mod animation;
 pub mod app;
 pub mod buffer;
+pub mod collections;
 pub mod color;
 pub mod debug;
 pub mod device;
