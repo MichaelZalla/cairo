@@ -24,7 +24,8 @@ use cairo::{
     },
     software_renderer::SoftwareRenderer,
     texture::map::TextureMap,
-    vec::vec3::Vec3,
+    transform::quaternion::Quaternion,
+    vec::vec3::{self, Vec3},
 };
 
 fn main() -> Result<(), String> {
@@ -167,6 +168,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
+        let uptime = app.timing_info.uptime_seconds;
         let resources = scene_context.resources.borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
@@ -186,32 +188,11 @@ fn main() -> Result<(), String> {
 
             match node_type {
                 SceneNodeType::Entity => {
-                    static ENTITY_ROTATION_SPEED: f32 = 0.1;
+                    let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
 
-                    let mut rotation = *node.get_transform().rotation();
+                    let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
 
-                    rotation.z += 1.0
-                        * ENTITY_ROTATION_SPEED
-                        * PI
-                        * app.timing_info.seconds_since_last_update;
-
-                    rotation.z %= 2.0 * PI;
-
-                    rotation.x += 1.0
-                        * ENTITY_ROTATION_SPEED
-                        * PI
-                        * app.timing_info.seconds_since_last_update;
-
-                    rotation.x %= 2.0 * PI;
-
-                    rotation.y += 1.0
-                        * ENTITY_ROTATION_SPEED
-                        * PI
-                        * app.timing_info.seconds_since_last_update;
-
-                    rotation.y %= 2.0 * PI;
-
-                    node.get_transform_mut().set_rotation(rotation);
+                    node.get_transform_mut().set_rotation(q);
 
                     Ok(())
                 }

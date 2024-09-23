@@ -27,7 +27,8 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    vec::vec3::Vec3,
+    transform::quaternion::Quaternion,
+    vec::vec3::{self, Vec3},
 };
 
 pub mod scene;
@@ -211,11 +212,11 @@ fn main() -> Result<(), String> {
                 SceneNodeType::Skybox => {
                     let uptime = app.timing_info.uptime_seconds;
 
-                    node.get_transform_mut().set_rotation(Vec3 {
-                        x: 0.0,
-                        y: (uptime / 3.0) % (2.0 * PI),
-                        z: 0.0,
-                    });
+                    static ROTATION_AXIS: Vec3 = vec3::UP;
+
+                    let q = Quaternion::new(ROTATION_AXIS, (uptime / 3.0) % (2.0 * PI));
+
+                    node.get_transform_mut().set_rotation(q);
 
                     node.update(
                         &current_world_transform,

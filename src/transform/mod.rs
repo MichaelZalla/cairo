@@ -2,13 +2,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::{matrix::Mat4, vec::vec3::Vec3};
 
+use quaternion::Quaternion;
+
 pub mod look_vector;
 pub mod quaternion;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Transform3D {
     translation: Vec3,
-    rotation: Vec3,
+    rotation: Quaternion,
     scale: Vec3,
     #[serde(skip)]
     mat: Mat4,
@@ -40,11 +42,11 @@ impl Transform3D {
         self.recompute_transform();
     }
 
-    pub fn rotation(&self) -> &Vec3 {
+    pub fn rotation(&self) -> &Quaternion {
         &self.rotation
     }
 
-    pub fn set_rotation(&mut self, rotation: Vec3) {
+    pub fn set_rotation(&mut self, rotation: Quaternion) {
         self.rotation = rotation;
 
         self.recompute_transform();
@@ -67,12 +69,8 @@ impl Transform3D {
     fn recompute_transform(&mut self) {
         let translation_mat = Mat4::translation(self.translation);
 
-        let rotation_mat = Mat4::rotation_x(self.rotation.x)
-            * Mat4::rotation_y(self.rotation.y)
-            * Mat4::rotation_z(self.rotation.z);
-
         let scale_mat = Mat4::scale([self.scale.x, self.scale.y, self.scale.z, 1.0]);
 
-        self.mat = rotation_mat * scale_mat * translation_mat;
+        self.mat = *self.rotation.mat() * scale_mat * translation_mat;
     }
 }

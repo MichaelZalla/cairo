@@ -31,6 +31,7 @@ use cairo::{
         cubemap::CubeMap,
         map::{TextureMap, TextureMapStorageFormat},
     },
+    transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -424,8 +425,9 @@ fn main() -> Result<(), String> {
                                 let entity = &mut entry.item;
 
                                 let mut scale = *node.get_transform().scale();
-                                let mut rotation = *node.get_transform().rotation();
                                 let mut translation = *node.get_transform().translation();
+
+                                let transform = node.get_transform_mut();
 
                                 if let Ok(entry) = mesh_arena.get(&entity.mesh) {
                                     let mesh = &entry.item;
@@ -433,11 +435,25 @@ fn main() -> Result<(), String> {
                                     if let Some(object_name) = &mesh.object_name {
                                         match object_name.as_str() {
                                             "plane" => {
-                                                rotation.z = PI / 12.0 * (uptime).sin();
-                                                rotation.x = PI / 12.0 * (uptime).cos();
+                                                let qx = Quaternion::new(
+                                                    vec3::RIGHT,
+                                                    PI / 12.0 * (uptime).cos(),
+                                                );
+
+                                                let qz = Quaternion::new(
+                                                    vec3::FORWARD,
+                                                    PI / 12.0 * (uptime).sin(),
+                                                );
+
+                                                transform.set_rotation(qx * qz);
                                             }
                                             "red_cube" => {
-                                                rotation.y = (uptime / 2.0) % 2.0 * PI;
+                                                let qy = Quaternion::new(
+                                                    vec3::UP,
+                                                    (uptime / 2.0) % 2.0 * PI,
+                                                );
+
+                                                transform.set_rotation(qy);
 
                                                 let uniform_scale = RED_CUBE_ORIGINAL_UNIFORM_SCALE
                                                     + (uptime * 2.0).sin()
@@ -449,7 +465,12 @@ fn main() -> Result<(), String> {
                                                 scale.z = uniform_scale;
                                             }
                                             "green_cube" => {
-                                                rotation.y = (-uptime / 4.0) % 2.0 * PI;
+                                                let qy = Quaternion::new(
+                                                    vec3::UP,
+                                                    (-uptime / 4.0) % 2.0 * PI,
+                                                );
+
+                                                transform.set_rotation(qy);
 
                                                 let uniform_scale =
                                                     GREEN_CUBE_ORIGINAL_UNIFORM_SCALE
@@ -465,7 +486,12 @@ fn main() -> Result<(), String> {
                                                 translation.z = (uptime).cos() * 1.0;
                                             }
                                             "blue_cube" => {
-                                                rotation.y = (uptime / 8.0) % 2.0 * PI;
+                                                let qy = Quaternion::new(
+                                                    vec3::UP,
+                                                    (uptime / 8.0) % 2.0 * PI,
+                                                );
+
+                                                transform.set_rotation(qy);
 
                                                 let uniform_scale = BLUE_CUBE_ORIGINAL_UNIFORM_SCALE
                                                     + (uptime * 2.0).sin()
@@ -484,9 +510,8 @@ fn main() -> Result<(), String> {
                                     }
                                 }
 
-                                node.get_transform_mut().set_scale(scale);
-                                node.get_transform_mut().set_rotation(rotation);
-                                node.get_transform_mut().set_translation(translation);
+                                transform.set_scale(scale);
+                                transform.set_translation(translation);
 
                                 Ok(())
                             }

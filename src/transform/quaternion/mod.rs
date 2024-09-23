@@ -1,11 +1,13 @@
 use std::{fmt, ops};
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     matrix::Mat4,
     vec::vec3::{self, Vec3},
 };
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Quaternion {
     pub s: f32,
     pub u: Vec3,
