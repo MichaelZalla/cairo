@@ -12,8 +12,11 @@ use crate::{
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},
+        vec4::Vec4,
     },
 };
+
+use super::quaternion::Quaternion;
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct LookVector {
@@ -22,9 +25,6 @@ pub struct LookVector {
     forward: Vec3,
     up: Vec3,
     right: Vec3,
-    pitch: f32,
-    yaw: f32,
-    roll: f32,
 }
 
 impl PostDeserialize for LookVector {
@@ -51,9 +51,6 @@ impl LookVector {
             forward: vec3::FORWARD,
             up: vec3::UP,
             right: vec3::RIGHT,
-            pitch: 0.0,
-            yaw: PI / 2.0,
-            roll: 0.0,
         };
 
         vector.post_deserialize();
@@ -85,18 +82,6 @@ impl LookVector {
         self.target = target;
     }
 
-    pub fn get_direction(&self) -> Vec3 {
-        Vec3 {
-            x: self.yaw.cos() * self.pitch.cos(),
-            y: self.pitch.sin(),
-            z: self.yaw.sin() * self.pitch.cos(),
-        }
-    }
-
-    fn look_in_direction(&mut self) {
-        self.set_target_position(self.position + self.get_direction())
-    }
-
     pub fn get_forward(&self) -> Vec3 {
         self.forward
     }
@@ -107,34 +92,6 @@ impl LookVector {
 
     pub fn get_right(&self) -> Vec3 {
         self.right
-    }
-
-    pub fn get_pitch(&self) -> f32 {
-        self.pitch
-    }
-
-    pub fn set_pitch(&mut self, pitch: f32) {
-        self.pitch = pitch.clamp(-PI / 2.0 * 0.999, PI / 2.0 * 0.999);
-
-        self.look_in_direction();
-    }
-
-    pub fn get_yaw(&self) -> f32 {
-        self.yaw
-    }
-
-    pub fn set_yaw(&mut self, yaw: f32) {
-        self.yaw = yaw;
-
-        self.look_in_direction();
-    }
-
-    pub fn get_roll(&self) -> f32 {
-        self.roll
-    }
-
-    pub fn set_roll(&mut self, _roll: f32) {
-        unimplemented!()
     }
 
     pub fn update(
@@ -151,17 +108,17 @@ impl LookVector {
             // Translate relative mouse movements to NDC values (in the
             // range [0, 1]).
 
-            let mouse_x_delta = mouse_state.relative_motion.0 as f32 / 400.0;
-            let mouse_y_delta = mouse_state.relative_motion.1 as f32 / 400.0;
+            let pitch_delta = mouse_state.relative_motion.0 as f32 / 400.0;
+            let yaw_delta = mouse_state.relative_motion.1 as f32 / 400.0;
 
             // Update camera pitch and yaw, based on mouse position deltas.
 
-            if mouse_x_delta != 0.0 {
-                self.set_yaw(self.yaw - mouse_x_delta * 2.0 * PI);
+            if pitch_delta != 0.0 {
+                self.apply_rotation(Quaternion::new(self.up, -pitch_delta));
             }
 
-            if mouse_y_delta != 0.0 {
-                self.set_pitch(self.pitch - mouse_y_delta * 2.0 * PI);
+            if yaw_delta != 0.0 {
+                self.apply_rotation(Quaternion::new(self.right, -yaw_delta));
             }
         }
 
@@ -234,11 +191,30 @@ impl LookVector {
         let _roll_delta = -yaw_delta * 0.5;
 
         if pitch_delta != 0.0 {
-            self.set_pitch(self.pitch - pitch_delta * 2.0 * PI);
+            self.apply_rotation(Quaternion::new(self.up, -pitch_delta));
         }
 
         if yaw_delta != 0.0 {
-            self.set_yaw(self.yaw - yaw_delta * 2.0 * PI);
+            self.apply_rotation(Quaternion::new(self.right, yaw_delta));
         }
+    }
+
+    fn apply_rotation(&mut self, q: Quaternion) {
+        let (forward, right, up) = (self.forward, self.right, self.up);
+
+        let rotation = *q.mat();
+
+        let new_forward = Vec4::new(forward, 1.0) * rotation;
+        let new_right = Vec4::new(right, 1.0) * rotation;
+        let new_up = Vec4::new(up, 1.0) * rotation;
+
+        let position_to_target = Vec4::new(self.target - self.position, 1.0);
+        let position_to_target_rotated = position_to_target * rotation;
+
+        self.forward = new_forward.to_vec3();
+        self.right = new_right.to_vec3();
+        self.up = new_up.to_vec3();
+
+        self.target = self.position + position_to_target_rotated.to_vec3();
     }
 }
