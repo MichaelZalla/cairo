@@ -87,7 +87,9 @@ fn main() -> Result<(), String> {
         Ok(framebuffer.get_all().clone())
     };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (mut app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+
+    app.pause_updates();
 
     let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,

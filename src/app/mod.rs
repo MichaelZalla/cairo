@@ -61,6 +61,7 @@ pub struct App {
     pub context: ApplicationContext,
     pub window_canvas: Rc<RefCell<Texture>>,
     pub timing_info: TimingInfo,
+    are_updates_paused: bool,
     #[cfg(feature = "debug_cycle_counts")]
     pub cycle_counters: CycleCounters,
 }
@@ -147,11 +148,24 @@ impl App {
             context,
             window_canvas: window_canvas_rc,
             timing_info,
+            are_updates_paused: false,
             #[cfg(feature = "debug_cycle_counts")]
             cycle_counters: Default::default(),
         };
 
         (app, event_watch)
+    }
+
+    pub fn pause_updates(&mut self) {
+        self.are_updates_paused = true;
+    }
+
+    pub fn resume_updates(&mut self) {
+        self.are_updates_paused = false;
+    }
+
+    pub fn toggle_updates(&mut self) {
+        self.are_updates_paused = !self.are_updates_paused;
     }
 
     pub fn run<U, R>(mut self, update: &mut U, render: &R) -> Result<(), String>
@@ -206,6 +220,8 @@ impl App {
             let seconds_slept: f32 = ticks_slept as f32 / ticks_per_second as f32;
 
             self.timing_info.milliseconds_slept = seconds_slept * 1000.0;
+
+            let mut should_update_step_forward = false;
 
             #[cfg(feature = "print_timing_info")]
             println!(
@@ -351,6 +367,9 @@ impl App {
                         ..
                     } => match keycode {
                         Keycode::Escape { .. } => break 'main,
+                        Keycode::Space { .. } => self.toggle_updates(),
+                        Keycode::F8 { .. } => self.toggle_updates(),
+                        Keycode::F9 { .. } => should_update_step_forward = true,
                         _ => {
                             keyboard_state.keys_pressed.push(keycode);
                         }
@@ -489,22 +508,24 @@ impl App {
 
             self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
 
-            #[cfg(feature = "debug_cycle_counts")]
-            self.cycle_counters
-                .get_mut(AppCycleCounter::UpdateCallback as usize)
-                .start();
+            if !self.are_updates_paused || should_update_step_forward {
+                #[cfg(feature = "debug_cycle_counts")]
+                self.cycle_counters
+                    .get_mut(AppCycleCounter::UpdateCallback as usize)
+                    .start();
 
-            update(
-                &mut self,
-                &mut keyboard_state,
-                &mut mouse_state,
-                &mut game_controller.state,
-            )?;
+                update(
+                    &mut self,
+                    &mut keyboard_state,
+                    &mut mouse_state,
+                    &mut game_controller.state,
+                )?;
 
-            #[cfg(feature = "debug_cycle_counts")]
-            self.cycle_counters
-                .get_mut(AppCycleCounter::UpdateCallback as usize)
-                .end();
+                #[cfg(feature = "debug_cycle_counts")]
+                self.cycle_counters
+                    .get_mut(AppCycleCounter::UpdateCallback as usize)
+                    .end();
+            }
 
             prev_mouse_position = mouse_state.position;
             prev_mouse_ndc_position = mouse_state.ndc_position;
