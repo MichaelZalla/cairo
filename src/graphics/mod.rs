@@ -261,7 +261,7 @@ impl Graphics {
 
         // Begin at (+radius, 0), relative to the circle's center.
 
-        let (mut x, mut y) = (radius as i32, 0 as i32);
+        let (mut x, mut y) = (radius as i32, 0);
 
         static DO_DDA_ALGORITHM: bool = true;
 
@@ -360,16 +360,14 @@ impl Graphics {
                                     fill_u32,
                                 );
                             }
-                        } else {
-                            if global_y < buffer_height_minus_one as i32 {
-                                horizontal_line_unsafe(
-                                    buffer,
-                                    x1 as u32,
-                                    x2_minus_one as u32,
-                                    (global_y + 1) as u32,
-                                    fill_u32,
-                                );
-                            }
+                        } else if global_y < buffer_height_minus_one as i32 {
+                            horizontal_line_unsafe(
+                                buffer,
+                                x1 as u32,
+                                x2_minus_one as u32,
+                                (global_y + 1) as u32,
+                                fill_u32,
+                            );
                         }
                     }
                 }

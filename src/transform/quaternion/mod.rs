@@ -167,7 +167,7 @@ impl Quaternion {
     pub fn renormalize(&mut self) {
         let mag = self.mag();
 
-        self.s = self.s / mag;
+        self.s /= mag;
 
         self.u /= mag;
 
