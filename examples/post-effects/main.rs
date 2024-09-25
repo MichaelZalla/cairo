@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -14,13 +12,9 @@ use cairo::{
         dilation_effect::DilationEffect, grayscale_effect::GrayscaleEffect,
         invert_effect::InvertEffect, kernel_effect::KernelEffect,
     },
-    entity::Entity,
-    material::Material,
     matrix::Mat4,
-    mesh,
     scene::{
         context::utils::make_empty_scene,
-        light::{PointLight, SpotLight},
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -31,13 +25,16 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
     transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
     },
 };
+
+use scene::make_scene;
+
+mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -72,171 +69,7 @@ fn main() -> Result<(), String> {
         let resources = scene_context.resources.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        // Add a textured ground plane to our scene.
-
-        {
-            let mut materials = resources.material.borrow_mut();
-
-            let checkerboard_material = {
-                let mut material = Material::new("checkerboard".to_string());
-
-                let mut albedo_map = TextureMap::new(
-                    "./assets/textures/checkerboard.jpg",
-                    TextureMapStorageFormat::Index8(0),
-                );
-
-                // Checkerboard material
-
-                albedo_map.sampling_options.wrapping = TextureMapWrapping::Repeat;
-
-                albedo_map.load(rendering_context)?;
-
-                let albedo_map_handle = resources
-                    .texture_u8
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), albedo_map);
-
-                material.albedo_map = Some(albedo_map_handle);
-
-                material
-            };
-
-            materials.insert(checkerboard_material);
-        }
-
-        let mut plane_entity_node = {
-            let mut mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
-
-            mesh.material_name = Some("checkerboard".to_string());
-
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
-
-            let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
-
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
-
-            let mut node = SceneNode::new(
-                SceneNodeType::Entity,
-                Default::default(),
-                Some(entity_handle),
-            );
-
-            node.get_transform_mut().set_translation(Vec3 {
-                z: 3.0,
-                y: -3.0,
-                ..Default::default()
-            });
-
-            node
-        };
-
-        // Add a container (cube) to our scene.
-
-        {
-            let mut materials = resources.material.borrow_mut();
-
-            let emissive_material = {
-                let mut material = Material::new("emissive".to_string());
-
-                material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    TextureMap::new(
-                        "./examples/post-effects/assets/lava.png",
-                        TextureMapStorageFormat::RGB24,
-                    ),
-                ));
-
-                material.emissive_color_map = Some(resources.texture_u8.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    TextureMap::new(
-                        "./examples/post-effects/assets/lava_emissive.png",
-                        TextureMapStorageFormat::Index8(0),
-                    ),
-                ));
-
-                material
-                    .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
-                    .unwrap();
-
-                material
-            };
-
-            materials.insert(emissive_material);
-        }
-
-        let cube_entity_node = {
-            let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
-
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
-
-            let entity = Entity::new(mesh_handle, Some("emissive".to_string()));
-
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
-
-            let mut node = SceneNode::new(
-                SceneNodeType::Entity,
-                Default::default(),
-                Some(entity_handle),
-            );
-
-            node.get_transform_mut().set_translation(Vec3 {
-                y: 3.0,
-                ..Default::default()
-            });
-
-            node
-        };
-
-        plane_entity_node.add_child(cube_entity_node)?;
-
-        scene.root.add_child(plane_entity_node)?;
-
-        // Add a point light to our scene.
-
-        let point_light_node = {
-            let mut light = PointLight::new();
-
-            light.intensities = Vec3::ones() * 0.8;
-
-            let light_handle = resources
-                .point_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
-
-            SceneNode::new(
-                SceneNodeType::PointLight,
-                Default::default(),
-                Some(light_handle),
-            )
-        };
-
-        scene.root.add_child(point_light_node)?;
-
-        // Add a spot light to our scene.
-
-        let spot_light_node = {
-            let mut light = SpotLight::new();
-
-            light.intensities = Vec3::ones() * 0.1;
-
-            light.look_vector.set_position(Vec3 {
-                y: 30.0,
-                ..light.look_vector.get_position()
-            });
-
-            let light_handle = resources
-                .spot_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
-
-            SceneNode::new(
-                SceneNodeType::SpotLight,
-                Default::default(),
-                Some(light_handle),
-            )
-        };
-
-        scene.root.add_child(spot_light_node)?;
+        make_scene(&resources, scene, &rendering_context)?;
     }
 
     // Shader context
