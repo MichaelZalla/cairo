@@ -26,14 +26,11 @@ impl List {
     }
 
     pub fn pop(&mut self) -> Option<i32> {
-        match self.head.take() {
-            Link::None => None,
-            Link::Some(node) => {
-                self.head = node.next;
+        self.head.take().map(|node| {
+            self.head = node.next;
 
-                Some(node.elem)
-            }
-        }
+            node.elem
+        })
     }
 }
 
