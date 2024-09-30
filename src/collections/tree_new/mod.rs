@@ -20,6 +20,14 @@ impl<T> List<T> {
         }
     }
 
+    pub fn peek(&self) -> Option<&T> {
+        unsafe { self.head.as_ref().map(|node| &node.elem) }
+    }
+
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        unsafe { self.head.as_mut().map(|node| &mut node.elem) }
+    }
+
     pub fn push(&mut self, elem: T) {
         let new_tail = Node {
             elem,
@@ -212,5 +220,42 @@ mod test {
         assert_eq!(iter.next(), Some(&mut 2));
         assert_eq!(iter.next(), Some(&mut 3));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn peek() {
+        let mut list = List::new();
+
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        assert!(list.peek() == Some(&1));
+
+        list.push(6);
+
+        list.peek_mut().map(|x| *x *= 10);
+
+        assert!(list.peek() == Some(&10));
+
+        assert!(list.pop() == Some(10));
+
+        for elem in list.iter_mut() {
+            *elem *= 100;
+        }
+
+        let mut iter = list.iter();
+
+        assert_eq!(iter.next(), Some(&200));
+        assert_eq!(iter.next(), Some(&300));
+        assert_eq!(iter.next(), Some(&600));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next(), None);
+
+        assert!(list.pop() == Some(200));
+
+        list.peek_mut().map(|x| *x *= 10);
+
+        assert!(list.peek() == Some(&3000));
     }
 }
