@@ -1,261 +1,151 @@
-use std::ptr;
+use std::marker::PhantomData;
+use std::ptr::NonNull;
 
-pub struct List<T> {
-    head: Link<T>,
-    tail: *mut Node<T>,
+pub struct LinkedList<T> {
+    front: Link<T>,
+    back: Link<T>,
+    len: usize,
+    _phantom: PhantomData<T>,
 }
 
-type Link<T> = *mut Node<T>;
+type Link<T> = Option<NonNull<Node<T>>>;
 
 struct Node<T> {
     elem: T,
-    next: Link<T>,
+    front: Link<T>,
+    back: Link<T>,
 }
 
-impl<T> List<T> {
+impl<T> LinkedList<T> {
     pub fn new() -> Self {
         Self {
-            head: ptr::null_mut(),
-            tail: ptr::null_mut(),
+            front: None,
+            back: None,
+            len: 0,
+            _phantom: PhantomData,
         }
     }
 
-    pub fn peek(&self) -> Option<&T> {
-        unsafe { self.head.as_ref().map(|node| &node.elem) }
+    pub fn len(&self) -> usize {
+        self.len
     }
 
-    pub fn peek_mut(&mut self) -> Option<&mut T> {
-        unsafe { self.head.as_mut().map(|node| &mut node.elem) }
-    }
-
-    pub fn push(&mut self, elem: T) {
-        let new_tail = Node {
-            elem,
-            next: ptr::null_mut(),
-        };
-
-        let new_tail_ptr = Box::into_raw(Box::new(new_tail));
-
-        if self.tail.is_null() {
-            self.head = new_tail_ptr;
-        } else {
-            unsafe {
-                (*self.tail).next = new_tail_ptr;
-            }
-        }
-
-        self.tail = new_tail_ptr;
-    }
-
-    pub fn pop(&mut self) -> Option<T> {
+    pub fn push_front(&mut self, elem: T) {
         unsafe {
-            if self.head.is_null() {
-                None
+            let new_front = NonNull::new_unchecked(Box::into_raw(Box::new(Node {
+                elem,
+                front: None,
+                back: None,
+            })));
+
+            if let Some(old_front) = self.front {
+                // Put the new front before the old one.
+
+                (*old_front.as_ptr()).front = Some(new_front);
+                (*new_front.as_ptr()).back = Some(old_front);
             } else {
-                let old_head = Box::from_raw(self.head);
+                // If there's no front, then we're the empty list and we need
+                // to set the back too; also, some integrity checks...
 
-                self.head = old_head.next;
+                debug_assert!(self.back.is_none());
+                debug_assert!(self.front.is_none());
+                debug_assert!(self.len == 0);
 
-                if self.head.is_null() {
-                    self.tail = ptr::null_mut();
+                self.back = Some(new_front);
+            }
+
+            self.front = Some(new_front);
+            self.len += 1;
+        }
+    }
+
+    pub fn pop_front(&mut self) -> Option<T> {
+        unsafe {
+            self.front.map(|old_front| {
+                // Bring the Box back to life so we can move out its value, and
+                // subsequently drop the Box here.
+                let boxed_node = Box::from_raw(old_front.as_ptr());
+
+                // Make the next node into the new front.
+                self.front = boxed_node.back;
+
+                if let Some(new_front) = self.front {
+                    // Cleanup the new front's reference to the old front.
+                    (*new_front.as_ptr()).front = None;
+                } else {
+                    // If the front is now 'null', then the list must be empty!
+                    // Note: The 'len' check occurs before the decrement below.
+                    debug_assert!(self.len == 1);
+
+                    self.back = None;
                 }
 
-                Some(old_head.elem)
-            }
+                self.len -= 1;
+
+                boxed_node.elem
+
+                // Box dropped (freed) here.
+            })
         }
-    }
-}
-
-impl<T> Drop for List<T> {
-    fn drop(&mut self) {
-        while let Some(_) = self.pop() {}
-    }
-}
-
-pub struct IntoIter<T>(List<T>);
-
-pub struct Iter<'a, T> {
-    next: Option<&'a Node<T>>,
-}
-
-pub struct IterMut<'a, T> {
-    next: Option<&'a mut Node<T>>,
-}
-
-impl<T> List<T> {
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
-    }
-
-    pub fn iter(&self) -> Iter<T> {
-        Iter {
-            next: unsafe { self.head.as_ref() },
-        }
-    }
-
-    pub fn iter_mut(&mut self) -> IterMut<T> {
-        IterMut {
-            next: unsafe { self.head.as_mut() },
-        }
-    }
-}
-
-impl<T> Iterator for IntoIter<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.pop()
-    }
-}
-
-impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.next.map(|node| {
-            self.next = unsafe { node.next.as_ref() };
-
-            &node.elem
-        })
-    }
-}
-
-impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = &'a mut T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.next.take().map(|node| {
-            self.next = unsafe { node.next.as_mut() };
-
-            &mut node.elem
-        })
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::List;
+    use super::LinkedList;
 
     #[test]
-    fn basics() {
-        let mut list = List::new();
+    fn test_basic_front() {
+        let mut list = LinkedList::new();
 
-        // Check empty list.
-        assert_eq!(list.pop(), None);
+        // Try to break an empty list.
 
-        // Populate a list.
-        list.push(1);
-        list.push(2);
-        list.push(3);
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
 
-        // Check normal removal.
-        assert_eq!(list.pop(), Some(1));
-        assert_eq!(list.pop(), Some(2));
+        // Try to break a single-item list.
 
-        // Push some more nodes.
-        list.push(4);
-        list.push(5);
+        list.push_front(10);
 
-        // Check normal removal.
-        assert_eq!(list.pop(), Some(3));
-        assert_eq!(list.pop(), Some(4));
+        assert_eq!(list.len(), 1);
+        assert_eq!(list.pop_front(), Some(10));
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
 
-        // Check exhaustion.
-        assert_eq!(list.pop(), Some(5));
-        assert_eq!(list.pop(), None);
+        // Mess around
 
-        // Check exhaustion case left us with a correct `head` and `tail`.
-        list.push(6);
-        list.push(7);
+        list.push_front(10);
 
-        // Check normal removal.
-        assert_eq!(list.pop(), Some(6));
-        assert_eq!(list.pop(), Some(7));
-        assert_eq!(list.pop(), None);
-    }
+        assert_eq!(list.len(), 1);
 
-    #[test]
-    fn into_iter() {
-        let mut list = List::new();
+        list.push_front(20);
 
-        list.push(1);
-        list.push(2);
-        list.push(3);
+        assert_eq!(list.len(), 2);
 
-        let mut iter = list.into_iter();
+        list.push_front(30);
 
-        assert_eq!(iter.next(), Some(1));
-        assert_eq!(iter.next(), Some(2));
-        assert_eq!(iter.next(), Some(3));
-        assert_eq!(iter.next(), None);
-    }
+        assert_eq!(list.len(), 3);
 
-    #[test]
-    fn iter() {
-        let mut list = List::new();
+        let popped = list.pop_front();
 
-        list.push(1);
-        list.push(2);
-        list.push(3);
+        assert_eq!(popped, Some(30));
 
-        let mut iter = list.iter();
+        assert_eq!(list.len(), 2);
 
-        assert_eq!(iter.next(), Some(&1));
-        assert_eq!(iter.next(), Some(&2));
-        assert_eq!(iter.next(), Some(&3));
-        assert_eq!(iter.next(), None);
-    }
+        list.push_front(40);
 
-    #[test]
-    fn iter_mut() {
-        let mut list = List::new();
-
-        list.push(1);
-        list.push(2);
-        list.push(3);
-
-        let mut iter = list.iter_mut();
-
-        assert_eq!(iter.next(), Some(&mut 1));
-        assert_eq!(iter.next(), Some(&mut 2));
-        assert_eq!(iter.next(), Some(&mut 3));
-        assert_eq!(iter.next(), None);
-    }
-
-    #[test]
-    fn peek() {
-        let mut list = List::new();
-
-        list.push(1);
-        list.push(2);
-        list.push(3);
-
-        assert!(list.peek() == Some(&1));
-
-        list.push(6);
-
-        list.peek_mut().map(|x| *x *= 10);
-
-        assert!(list.peek() == Some(&10));
-
-        assert!(list.pop() == Some(10));
-
-        for elem in list.iter_mut() {
-            *elem *= 100;
-        }
-
-        let mut iter = list.iter();
-
-        assert_eq!(iter.next(), Some(&200));
-        assert_eq!(iter.next(), Some(&300));
-        assert_eq!(iter.next(), Some(&600));
-        assert_eq!(iter.next(), None);
-        assert_eq!(iter.next(), None);
-
-        assert!(list.pop() == Some(200));
-
-        list.peek_mut().map(|x| *x *= 10);
-
-        assert!(list.peek() == Some(&3000));
+        assert_eq!(list.len(), 3);
+        assert_eq!(list.pop_front(), Some(40));
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.pop_front(), Some(20));
+        assert_eq!(list.len(), 1);
+        assert_eq!(list.pop_front(), Some(10));
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
     }
 }
