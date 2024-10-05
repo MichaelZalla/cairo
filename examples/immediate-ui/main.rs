@@ -4,7 +4,7 @@ use std::{cell::RefCell, env};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1600_BY_900},
+        resolution::{Resolution, RESOLUTION_960_BY_540},
         App, AppWindowInfo,
     },
     buffer::Buffer2D,
@@ -24,8 +24,8 @@ fn main() -> Result<(), String> {
 
     let mut window_info = AppWindowInfo {
         title: "examples/immediate-ui".to_string(),
-        window_resolution: RESOLUTION_1600_BY_900,
-        canvas_resolution: RESOLUTION_1600_BY_900,
+        window_resolution: RESOLUTION_960_BY_540,
+        canvas_resolution: RESOLUTION_960_BY_540,
         ..Default::default()
     };
 
@@ -69,8 +69,6 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let uptime = app.timing_info.uptime_seconds;
-
         // Binds the latest user inputs and timing info to the UI context.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
@@ -98,13 +96,13 @@ fn main() -> Result<(), String> {
         let mut result = Ok(());
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            result = ctx.fill_color(color::BLUE, || {
-                ctx.border_color(color::YELLOW, || {
+            result = ctx.fill_color(color::WHITE, || {
+                ctx.border_color(color::BLACK, || {
                     let mut tree = ui_box_tree_rc.borrow_mut();
 
                     tree.clear();
 
-                    build_ui_tree(ctx, &mut tree, &window_info, uptime)?;
+                    build_ui_tree(ctx, &mut tree, &window_info)?;
 
                     tree.commit_frame()
                 })
