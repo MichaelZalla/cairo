@@ -60,6 +60,14 @@ impl<T> LinkedList<T> {
         unsafe { self.front.map(|node| &mut (*node.as_ptr()).elem) }
     }
 
+    pub fn back(&self) -> Option<&T> {
+        unsafe { self.back.map(|node| &(*node.as_ptr()).elem) }
+    }
+
+    pub fn back_mut(&mut self) -> Option<&mut T> {
+        unsafe { self.back.map(|node| &mut (*node.as_ptr()).elem) }
+    }
+
     pub fn push_front(&mut self, elem: T) {
         unsafe {
             let new_front = NonNull::new_unchecked(Box::into_raw(Box::new(Node {
@@ -81,6 +89,31 @@ impl<T> LinkedList<T> {
             }
 
             self.front = Some(new_front);
+            self.len += 1;
+        }
+    }
+
+    pub fn push_back(&mut self, elem: T) {
+        unsafe {
+            let new_back = NonNull::new_unchecked(Box::into_raw(Box::new(Node {
+                elem,
+                front: None,
+                back: None,
+            })));
+
+            if let Some(old_back) = self.back {
+                // Put the new back in front of the old one.
+
+                (*old_back.as_ptr()).back = Some(new_back);
+                (*new_back.as_ptr()).front = Some(old_back);
+            } else {
+                // If there's no back, then we're the empty list, so we need to
+                // set the front, too.
+
+                self.front = Some(new_back);
+            }
+
+            self.back = Some(new_back);
             self.len += 1;
         }
     }
@@ -112,6 +145,31 @@ impl<T> LinkedList<T> {
             })
         }
     }
+
+    pub fn pop_back(&mut self) -> Option<T> {
+        unsafe {
+            self.back.map(|old_back| {
+                // Bring the Box back to life so we can move out its value, and subsequently drop the Box here.
+                let boxed_node = Box::from_raw(old_back.as_ptr());
+                let result = boxed_node.elem;
+
+                // Make the previous node into the new back.
+                self.back = boxed_node.front;
+
+                if let Some(new_back) = self.back {
+                    // Cleanup the new back's reference to the old back.
+                    (*new_back.as_ptr()).back = None;
+                } else {
+                    // If the back is now 'null', then the list must be empty!
+                    self.front = None;
+                }
+
+                self.len -= 1;
+
+                result
+            })
+        }
+    }
 }
 
 // IntoIter<T>
@@ -125,6 +183,12 @@ impl<T> Iterator for IntoIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.list.pop_front()
+    }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.list.pop_back()
     }
 }
 
