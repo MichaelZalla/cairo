@@ -74,8 +74,8 @@ impl<T> LinkedList<T> {
                 (*old_front.as_ptr()).front = Some(new_front);
                 (*new_front.as_ptr()).back = Some(old_front);
             } else {
-                // If there's no front, then we're the empty list and we need
-                // to set the back too; also, some integrity checks...
+                // If there's no front, then we're the empty list, so we need to
+                // set the back, too.
 
                 self.back = Some(new_front);
             }
