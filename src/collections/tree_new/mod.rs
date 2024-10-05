@@ -30,6 +30,19 @@ impl<T> LinkedList<T> {
         self.len
     }
 
+    pub fn iter(&self) -> Iter<T> {
+        return Iter {
+            front: self.front,
+            back: self.back,
+            len: self.len,
+            _phantom: PhantomData,
+        };
+    }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter { list: self }
+    }
+
     pub fn front(&self) -> Option<&T> {
         unsafe { self.front.map(|node| &(*node.as_ptr()).elem) }
     }
@@ -91,6 +104,90 @@ impl<T> LinkedList<T> {
         }
     }
 }
+
+// IntoIter<T>
+
+pub struct IntoIter<T> {
+    list: LinkedList<T>,
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.list.pop_front()
+    }
+}
+
+impl<T> ExactSizeIterator for IntoIter<T> {
+    fn len(&self) -> usize {
+        self.list.len
+    }
+}
+
+// Iter<'a, T>
+
+pub struct Iter<'a, T> {
+    front: Link<T>,
+    back: Link<T>,
+    len: usize,
+    _phantom: PhantomData<&'a T>,
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.front.map(|node| unsafe {
+                self.len -= 1;
+
+                self.front = (*node.as_ptr()).back;
+
+                &(*node.as_ptr()).elem
+            })
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len, Some(self.len))
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.back.map(|node| unsafe {
+                self.len -= 1;
+
+                self.back = (*node.as_ptr()).front;
+
+                &(*node.as_ptr()).elem
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
+impl<'a, T> IntoIterator for &'a LinkedList<T> {
+    type Item = &'a T;
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+// Drop
 
 impl<T> Drop for LinkedList<T> {
     fn drop(&mut self) {
