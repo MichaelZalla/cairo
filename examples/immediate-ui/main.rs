@@ -65,11 +65,33 @@ fn main() -> Result<(), String> {
     // Callbacks.
 
     let mut update = |app: &mut App,
-                      _keyboard_state: &mut KeyboardState,
-                      _mouse_state: &mut MouseState,
-                      _game_controller_state: &mut GameControllerState|
+                      keyboard_state: &mut KeyboardState,
+                      mouse_state: &mut MouseState,
+                      game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
+
+        // Binds the latest user inputs and timing info to the UI context.
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            // Bind the latest user input events.
+
+            {
+                let mut input_events = ctx.input_events.borrow_mut();
+
+                input_events.keyboard = keyboard_state.clone();
+                input_events.mouse = mouse_state.clone();
+                input_events.game_controller = *game_controller_state;
+            }
+
+            // Binds the latest seconds-since-last-update.
+
+            {
+                let mut seconds_since_last_update = ctx.seconds_since_last_update.borrow_mut();
+
+                *seconds_since_last_update = app.timing_info.seconds_since_last_update;
+            }
+        });
 
         // Recreate the UI tree for this update.
 
