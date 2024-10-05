@@ -30,6 +30,14 @@ impl<T> LinkedList<T> {
         self.len
     }
 
+    pub fn front(&self) -> Option<&T> {
+        unsafe { self.front.map(|node| &(*node.as_ptr()).elem) }
+    }
+
+    pub fn front_mut(&mut self) -> Option<&mut T> {
+        unsafe { self.front.map(|node| &mut (*node.as_ptr()).elem) }
+    }
+
     pub fn push_front(&mut self, elem: T) {
         unsafe {
             let new_front = NonNull::new_unchecked(Box::into_raw(Box::new(Node {
