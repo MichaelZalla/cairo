@@ -92,6 +92,13 @@ impl<T> LinkedList<T> {
     }
 }
 
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        // Pop until we stop...
+        while let Some(_) = self.pop_front() {}
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::LinkedList;
