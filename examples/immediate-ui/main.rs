@@ -3,7 +3,6 @@ extern crate sdl2;
 use std::{cell::RefCell, env};
 
 use cairo::{
-    animation::lerp,
     app::{
         resolution::{Resolution, RESOLUTION_1600_BY_900},
         App, AppWindowInfo,
@@ -11,18 +10,18 @@ use cairo::{
     buffer::Buffer2D,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    font::cache::FontCache,
-    ui::{
-        context::GLOBAL_UI_CONTEXT,
-        ui_box::{
-            tree::UIBoxTree, utils::text_box, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask,
-            UILayoutDirection,
-        },
-        UISize, UISizeWithStrictness,
-    },
+    ui::{context::GLOBAL_UI_CONTEXT, ui_box::tree::UIBoxTree},
 };
 
+use font::load_system_font;
+use ui_tree::build_ui_tree;
+
+mod font;
+mod ui_tree;
+
 fn main() -> Result<(), String> {
+    // Main window info.
+
     let mut window_info = AppWindowInfo {
         title: "examples/immediate-ui".to_string(),
         window_resolution: RESOLUTION_1600_BY_900,
@@ -36,6 +35,8 @@ fn main() -> Result<(), String> {
 
     let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
+    // Validate command line arguments.
+
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
@@ -43,32 +44,25 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
-    let font_filepath = args[1].to_string();
+    // Load our system font.
 
-    GLOBAL_UI_CONTEXT.with(|ctx| {
-        ctx.font_cache
-            .borrow_mut()
-            .replace(FontCache::new(app.context.ttf_context));
+    let system_font_path = args[1].to_string();
 
-        {
-            let mut font_info = ctx.font_info.borrow_mut();
+    load_system_font(&app, system_font_path);
 
-            font_info.filepath = font_filepath;
-            font_info.point_size = 14;
-        }
-    });
+    // Default render framebuffer.
 
-    // Set up our app
-
-    let framebuffer = Buffer2D::new(
+    let framebuffer_rc = RefCell::new(Buffer2D::new(
         window_info.window_resolution.width,
         window_info.window_resolution.height,
         None,
-    );
+    ));
 
-    let framebuffer_rc = RefCell::new(framebuffer);
+    // Global UI tree.
 
     let ui_box_tree_rc = RefCell::new(UIBoxTree::default());
+
+    // Callbacks.
 
     let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,
@@ -76,9 +70,8 @@ fn main() -> Result<(), String> {
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
-        let _seconds_since_last_update = app.timing_info.seconds_since_last_update;
 
-        // Recreate the UI tree.
+        // Recreate the UI tree for this update.
 
         let mut result = Ok(());
 
@@ -89,283 +82,9 @@ fn main() -> Result<(), String> {
 
                     tree.clear();
 
-                    let alpha_x = uptime.sin() / 2.0 + 0.5;
-                    let alpha_y = uptime.cos() / 2.0 + 0.5;
+                    build_ui_tree(ctx, &mut tree, &window_info, uptime)?;
 
-                    ctx.fill_color(color::WHITE, || {
-                        tree.push_parent(UIBox::new(
-                            "Root".to_string(),
-                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(lerp(
-                                        window_info.window_resolution.width as f32 * 0.66,
-                                        window_info.window_resolution.width as f32,
-                                        alpha_x,
-                                    )
-                                        as u32),
-                                    strictness: 1.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(lerp(
-                                        window_info.window_resolution.height as f32 * 0.66,
-                                        window_info.window_resolution.height as f32,
-                                        alpha_y,
-                                    )
-                                        as u32),
-                                    strictness: 1.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::GREEN, || {
-                        tree.push_parent(UIBox::new(
-                            "RootChild1".to_string(),
-                            UIBoxFeatureFlag::DrawFill
-                                | UIBoxFeatureFlag::Hoverable
-                                | UIBoxFeatureFlag::Clickable,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(128),
-                                    strictness: 1.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(128),
-                                    strictness: 1.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::ORANGE, || {
-                        tree.push(UIBox::new(
-                            "RootChild1Child1".to_string(),
-                            UIBoxFeatureFlag::DrawFill
-                                | UIBoxFeatureFlag::Hoverable
-                                | UIBoxFeatureFlag::Clickable,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(1000),
-                                    strictness: 0.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(1000),
-                                    strictness: 0.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::BLACK, || {
-                        tree.push(UIBox::new(
-                            "RootChild1Spacer1".to_string(),
-                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(6),
-                                    strictness: 1.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
-                                    strictness: 1.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::SKY_BOX, || {
-                        tree.push(UIBox::new(
-                            "RootChild1Child2".to_string(),
-                            UIBoxFeatureFlag::DrawFill
-                                | UIBoxFeatureFlag::Hoverable
-                                | UIBoxFeatureFlag::Clickable,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(1000),
-                                    strictness: 0.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(1000),
-                                    strictness: 0.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    tree.pop_parent()?;
-
-                    // `Current` is now back at the root...
-
-                    ctx.fill_color(color::GREEN, || {
-                        tree.push_parent(UIBox::new(
-                            "RootChild2".to_string(),
-                            UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
-                            UILayoutDirection::LeftToRight,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
-                                    strictness: 0.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
-                                    strictness: 0.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::ORANGE, || {
-                        tree.push(UIBox::new(
-                            "RootChild2Child1".to_string(),
-                            UIBoxFeatureFlag::DrawFill
-                                | UIBoxFeatureFlag::Hoverable
-                                | UIBoxFeatureFlag::Clickable,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0 / 3.0),
-                                    strictness: 0.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
-                                    strictness: 0.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::SKY_BOX, || {
-                        tree.push_parent(UIBox::new(
-                            "RootChild2Child2".to_string(),
-                            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable,
-                            UILayoutDirection::TopToBottom,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(2.0 / 3.0),
-                                    strictness: 0.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::PercentOfParent(1.0),
-                                    strictness: 0.0,
-                                },
-                            ],
-                            None,
-                        ))
-                        .unwrap();
-
-                        Ok(())
-                    })?;
-
-                    ctx.fill_color(color::BLACK, || {
-                        ctx.border_color(color::WHITE, || {
-                            let child_count = 8_usize;
-
-                            for i in 0..child_count {
-                                tree.push_parent(UIBox::new(
-                                    format!("RootChild2Child2Child{}", i),
-                                    UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::Hoverable,
-                                    UILayoutDirection::LeftToRight,
-                                    [
-                                        UISizeWithStrictness {
-                                            size: UISize::PercentOfParent(1.0),
-                                            strictness: 0.0,
-                                        },
-                                        UISizeWithStrictness {
-                                            size: UISize::PercentOfParent(1.0),
-                                            strictness: 0.0,
-                                        },
-                                    ],
-                                    None,
-                                ))?;
-
-                                tree.push(UIBox::new(
-                                    format!("RootChild2Child2Child{}SpacerBefore", i),
-                                    UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
-                                    UILayoutDirection::TopToBottom,
-                                    [
-                                        UISizeWithStrictness {
-                                            size: UISize::PercentOfParent(1.0),
-                                            strictness: 0.0,
-                                        },
-                                        UISizeWithStrictness {
-                                            size: UISize::Pixels(1),
-                                            strictness: 1.0,
-                                        },
-                                    ],
-                                    None,
-                                ))?;
-
-                                tree.push(text_box(
-                                    format!("RootChild2Child2Child{}Text", i),
-                                    format!("Label {}", i),
-                                ))?;
-
-                                tree.push(UIBox::new(
-                                    format!("RootChild2Child2Child{}SpacerAfter", i),
-                                    UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
-                                    UILayoutDirection::TopToBottom,
-                                    [
-                                        UISizeWithStrictness {
-                                            size: UISize::PercentOfParent(1.0),
-                                            strictness: 0.0,
-                                        },
-                                        UISizeWithStrictness {
-                                            size: UISize::Pixels(1),
-                                            strictness: 1.0,
-                                        },
-                                    ],
-                                    None,
-                                ))?;
-
-                                tree.pop_parent()?;
-                            }
-
-                            Ok(())
-                        })
-                    })?;
-
-                    tree.pop_parent()?;
-                    tree.pop_parent()?;
-
-                    // `Current` is now back at the root...
-
-                    tree.do_active_focused_pass()?;
-
-                    tree.do_autolayout_pass()
+                    tree.commit_frame()
                 })
             });
         });
@@ -376,14 +95,15 @@ fn main() -> Result<(), String> {
     let render = |frame_index: Option<u32>, _new_resolution| -> Result<Vec<u32>, String> {
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
-        let fill_value = color::BLACK.to_u32();
+        framebuffer.clear(None);
 
-        framebuffer.clear(Some(fill_value));
+        {
+            // Render our current UI tree into the framebuffer.
 
-        let mut tree = ui_box_tree_rc.borrow_mut();
+            let mut tree = ui_box_tree_rc.borrow_mut();
 
-        tree.render_frame(frame_index.unwrap(), &mut framebuffer)
-            .unwrap();
+            tree.render_frame(frame_index.unwrap(), &mut framebuffer)?;
+        }
 
         Ok(framebuffer.get_all().clone())
     };
