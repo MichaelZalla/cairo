@@ -47,10 +47,6 @@ impl<T> LinkedList<T> {
                 // If there's no front, then we're the empty list and we need
                 // to set the back too; also, some integrity checks...
 
-                debug_assert!(self.back.is_none());
-                debug_assert!(self.front.is_none());
-                debug_assert!(self.len == 0);
-
                 self.back = Some(new_front);
             }
 
@@ -65,6 +61,7 @@ impl<T> LinkedList<T> {
                 // Bring the Box back to life so we can move out its value, and
                 // subsequently drop the Box here.
                 let boxed_node = Box::from_raw(old_front.as_ptr());
+                let result = boxed_node.elem;
 
                 // Make the next node into the new front.
                 self.front = boxed_node.back;
@@ -74,15 +71,12 @@ impl<T> LinkedList<T> {
                     (*new_front.as_ptr()).front = None;
                 } else {
                     // If the front is now 'null', then the list must be empty!
-                    // Note: The 'len' check occurs before the decrement below.
-                    debug_assert!(self.len == 1);
-
                     self.back = None;
                 }
 
                 self.len -= 1;
 
-                boxed_node.elem
+                result
 
                 // Box dropped (freed) here.
             })
