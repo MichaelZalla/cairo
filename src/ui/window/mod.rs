@@ -149,7 +149,7 @@ impl<'a> Window<'a> {
         }
     }
 
-    pub fn render_ui_trees(
+    pub fn rebuild_ui_trees(
         &mut self,
         ctx: &UIContext<'static>,
         main_window_bounds: &Resolution,

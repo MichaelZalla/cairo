@@ -499,7 +499,7 @@ fn render_window_list(window_list: &mut WindowList, resolution: &Resolution) {
 
             GLOBAL_UI_CONTEXT.with(|ctx| {
                 // Rebuild the UI tree based on the latest user inputs.
-                window.render_ui_trees(ctx, resolution).unwrap();
+                window.rebuild_ui_trees(ctx, resolution).unwrap();
             });
 
             if did_focus && cursor.index() != Some(1) {
