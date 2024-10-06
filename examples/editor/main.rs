@@ -327,10 +327,20 @@ fn main() -> Result<(), String> {
     // function is called when either (1) the main loop executes, or (2) the
     // user is actively resizing the main application window.
 
-    let render_window_list_to_framebuffer = |_frame_index: Option<u32>,
-                                             new_resolution: Option<Resolution>|
+    let render = |frame_index: Option<u32>,
+                  new_resolution: Option<Resolution>|
      -> Result<Vec<u32>, String> {
-        let frame_index = current_frame_index_rc.borrow();
+        let mut current_frame_index = current_frame_index_rc.borrow_mut();
+
+        if let Some(index) = frame_index {
+            *current_frame_index = index;
+
+            // Prune old entries from our UI cache.
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                ctx.prune_cache(index);
+            });
+        }
 
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
@@ -357,7 +367,9 @@ fn main() -> Result<(), String> {
                 *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
             }
 
-            window_list.render(*frame_index, &mut framebuffer).unwrap();
+            window_list
+                .render(*current_frame_index, &mut framebuffer)
+                .unwrap();
 
             {
                 let kind = &ctx.cursor_kind.borrow();
@@ -369,7 +381,7 @@ fn main() -> Result<(), String> {
         Ok(framebuffer.get_all().clone())
     };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_window_list_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render);
 
     // Set the global font info, based on the font filepath that was passed to
     // our program.
@@ -415,24 +427,6 @@ fn main() -> Result<(), String> {
         window_list.rebuild_ui_trees(resolution);
 
         Ok(())
-    };
-
-    let render = |frame_index: Option<u32>,
-                  new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
-        if let Some(index) = frame_index {
-            let mut current_frame_index = current_frame_index_rc.borrow_mut();
-
-            *current_frame_index = index;
-
-            // Prune old entries from our UI cache.
-
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                ctx.prune_cache(index);
-            });
-        }
-
-        render_window_list_to_framebuffer(frame_index, new_resolution)
     };
 
     app.run(&mut update, &render)?;
