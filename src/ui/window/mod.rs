@@ -1,5 +1,4 @@
-use core::fmt;
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -7,6 +6,7 @@ use sdl2::mouse::MouseButton;
 
 use crate::{
     app::resolution::Resolution,
+    buffer::Buffer2D,
     color::{self, Color},
     device::mouse::{MouseDragEvent, MouseEventKind},
 };
@@ -290,6 +290,14 @@ impl<'a> Window<'a> {
         }
 
         Ok(window_render_result)
+    }
+
+    pub fn render(&self, frame_index: u32, framebuffer: &mut Buffer2D) -> Result<(), String> {
+        let base_ui_tree = &mut self.ui_trees.base.borrow_mut();
+
+        // Render the window's base UI tree into the framebuffer for the current frame.
+
+        base_ui_tree.render_frame(frame_index, framebuffer)
     }
 
     fn apply_position_delta(&mut self, delta: (i32, i32), main_window_bounds: &Resolution) {

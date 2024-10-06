@@ -1,8 +1,8 @@
 use sdl2::mouse::MouseButton;
 
 use crate::{
-    app::resolution::Resolution, device::mouse::MouseEventKind, mem::linked_list::LinkedList,
-    ui::context::GLOBAL_UI_CONTEXT,
+    app::resolution::Resolution, buffer::Buffer2D, device::mouse::MouseEventKind,
+    mem::linked_list::LinkedList, ui::context::GLOBAL_UI_CONTEXT,
 };
 
 use super::Window;
@@ -72,5 +72,13 @@ impl<'a> WindowList<'a> {
         }
 
         self.0.retain(|window| window.active);
+    }
+
+    pub fn render(&self, frame_index: u32, framebuffer: &mut Buffer2D) -> Result<(), String> {
+        for window in self.0.iter() {
+            window.render(frame_index, framebuffer)?;
+        }
+
+        Ok(())
     }
 }

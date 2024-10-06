@@ -360,15 +360,7 @@ fn main() -> Result<(), String> {
                 *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
             }
 
-            for window in window_list.0.iter() {
-                let base_ui_tree = &mut window.ui_trees.base.borrow_mut();
-
-                // Render the current frame's UI tree to `framebuffer`.
-
-                base_ui_tree
-                    .render_frame(*frame_index, &mut framebuffer)
-                    .unwrap();
-            }
+            window_list.render(*frame_index, &mut framebuffer).unwrap();
 
             {
                 let kind = &ctx.cursor_kind.borrow();
