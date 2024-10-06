@@ -10,10 +10,10 @@ use cairo::{
     },
 };
 
-use crate::ButtonPanel;
+use crate::SettingsPanel;
 
 pub(crate) fn make_window_list<'a>(
-    button_panel_arena: &mut Arena<ButtonPanel>,
+    button_panel_arena: &mut Arena<SettingsPanel>,
     button_panel_render_callback: PanelRenderCallback,
     resolution: Resolution,
 ) -> Result<WindowList<'a>, String> {
@@ -27,14 +27,15 @@ pub(crate) fn make_window_list<'a>(
         let mut window_panel_tree = PanelTree::from_id(&window_id);
 
         let button_panel_data = PanelInstanceData {
-            panel_instance: button_panel_arena.insert(Uuid::new_v4(), ButtonPanel::from_id("main")),
+            panel_instance: button_panel_arena
+                .insert(Uuid::new_v4(), SettingsPanel::from_id("main")),
             render: Some(button_panel_render_callback.clone()),
             custom_render_callback: None,
         };
 
         let button_panel = Panel::new(1.0, Some(button_panel_data), UILayoutDirection::TopToBottom);
 
-        window_panel_tree.push("ButtonPanel_main", button_panel)?;
+        window_panel_tree.push("SettingsPanel_main", button_panel)?;
 
         Window::new(
             window_id,
@@ -56,7 +57,7 @@ pub(crate) fn make_window_list<'a>(
         let button_panel_data = PanelInstanceData {
             panel_instance: button_panel_arena.insert(
                 Uuid::new_v4(),
-                ButtonPanel::from_id(format!("{}", i).as_str()),
+                SettingsPanel::from_id(format!("{}", i).as_str()),
             ),
             render: Some(button_panel_render_callback.clone()),
             custom_render_callback: None,
