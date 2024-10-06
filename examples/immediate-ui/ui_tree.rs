@@ -1,5 +1,5 @@
 use cairo::{
-    app::AppWindowInfo,
+    app::resolution::Resolution,
     color,
     ui::{
         context::UIContext,
@@ -15,7 +15,7 @@ use cairo::{
 pub(crate) fn build_ui_tree(
     ctx: &UIContext<'static>,
     tree: &mut UIBoxTree,
-    window_info: &AppWindowInfo,
+    resolution: Resolution,
 ) -> Result<(), String> {
     ctx.fill_color(color::WHITE, || {
         tree.push_parent(UIBox::new(
@@ -24,11 +24,11 @@ pub(crate) fn build_ui_tree(
             UILayoutDirection::TopToBottom,
             [
                 UISizeWithStrictness {
-                    size: UISize::Pixels(window_info.window_resolution.width),
+                    size: UISize::Pixels(resolution.width),
                     strictness: 1.0,
                 },
                 UISizeWithStrictness {
-                    size: UISize::Pixels(window_info.window_resolution.height),
+                    size: UISize::Pixels(resolution.height),
                     strictness: 1.0,
                 },
             ],

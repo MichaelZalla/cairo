@@ -83,6 +83,10 @@ fn main() -> Result<(), String> {
 
         // Recreate the UI tree for this update.
 
+        let window_info = app.window_info.borrow();
+
+        let resolution = window_info.window_resolution;
+
         let mut result = Ok(());
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
@@ -92,7 +96,7 @@ fn main() -> Result<(), String> {
 
                     tree.clear();
 
-                    build_ui_tree(ctx, &mut tree, &window_info)?;
+                    build_ui_tree(ctx, &mut tree, resolution)?;
 
                     tree.commit_frame()
                 })
