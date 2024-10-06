@@ -96,6 +96,12 @@ impl<'a> UIContext<'a> {
         input_events.mouse = mouse_state.clone();
         input_events.game_controller = *game_controller_state;
     }
+
+    pub fn set_seconds_since_last_update(&self, delta_t: f32) {
+        let mut seconds_since_last_update = self.seconds_since_last_update.borrow_mut();
+
+        *seconds_since_last_update = delta_t;
+    }
 }
 
 thread_local! {

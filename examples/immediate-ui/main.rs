@@ -69,7 +69,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        // Binds the latest user inputs and timing info to the UI context.
+        // Binds the latest user inputs (and time delta) to the global UI context.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             // Bind the latest user input events.
@@ -78,11 +78,7 @@ fn main() -> Result<(), String> {
 
             // Binds the latest seconds-since-last-update.
 
-            {
-                let mut seconds_since_last_update = ctx.seconds_since_last_update.borrow_mut();
-
-                *seconds_since_last_update = app.timing_info.seconds_since_last_update;
-            }
+            ctx.set_seconds_since_last_update(app.timing_info.seconds_since_last_update);
         });
 
         // Recreate the UI tree for this update.

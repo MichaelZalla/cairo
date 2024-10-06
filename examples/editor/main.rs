@@ -416,12 +416,7 @@ fn main() -> Result<(), String> {
             ctx.set_user_inputs(keyboard_state, mouse_state, game_controller_state);
 
             // Binds the latest seconds-since-last-update.
-
-            {
-                let mut seconds_since_last_update = ctx.seconds_since_last_update.borrow_mut();
-
-                *seconds_since_last_update = app.timing_info.seconds_since_last_update;
-            }
+            ctx.set_seconds_since_last_update(app.timing_info.seconds_since_last_update);
         });
 
         let resolution = &(*app.window_info).borrow().window_resolution;
