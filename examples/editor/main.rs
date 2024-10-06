@@ -255,14 +255,7 @@ fn main() -> Result<(), String> {
 
                 let main_window = Window::new(
                     main_window_id,
-                    WindowOptions {
-                        docked: true,
-                        size: (
-                            window_info.window_resolution.width,
-                            window_info.window_resolution.height,
-                        ),
-                        ..Default::default()
-                    },
+                    WindowOptions::docked(window_info.window_resolution),
                     Some(render_main_window_header),
                     main_window_panel_tree,
                 );

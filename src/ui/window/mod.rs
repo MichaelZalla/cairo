@@ -93,6 +93,17 @@ pub struct WindowOptions {
     pub size: (u32, u32),
 }
 
+impl WindowOptions {
+    pub fn docked(resolution: Resolution) -> Self {
+        Self {
+            docked: true,
+            with_titlebar: false,
+            position: (0, 0),
+            size: (resolution.width, resolution.height),
+        }
+    }
+}
+
 pub struct WindowRenderResult {
     pub did_deactivate: bool,
 }
