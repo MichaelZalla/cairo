@@ -2,6 +2,8 @@ extern crate sdl2;
 
 use std::{cell::RefCell, env, rc::Rc};
 
+use current_platform::CURRENT_PLATFORM;
+
 use uuid::Uuid;
 
 use sdl2::mouse::{Cursor, MouseButton};
@@ -52,7 +54,12 @@ thread_local! {
 }
 
 fn main() -> Result<(), String> {
-    let title = format!("Cairo Engine (build {})", env!("GIT_COMMIT_SHORT_HASH")).to_string();
+    let title = format!(
+        "Cairo Engine - {} (build {})",
+        CURRENT_PLATFORM,
+        env!("GIT_COMMIT_SHORT_HASH")
+    )
+    .to_string();
 
     // Main window info.
 

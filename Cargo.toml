@@ -52,3 +52,4 @@ opt-level = 3
 [dev-dependencies]
 arrayvec = "0.7.6"
 physical_constants = "0.5.0"
+current_platform = "0.2.0"
