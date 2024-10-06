@@ -9,7 +9,6 @@ use crate::{
     app::resolution::Resolution,
     color::{self, Color},
     device::mouse::{MouseDragEvent, MouseEventKind},
-    mem::linked_list::LinkedList,
 };
 
 use super::{
@@ -23,6 +22,8 @@ use super::{
     },
     UISize, UISizeWithStrictness,
 };
+
+pub mod list;
 
 pub static DEFAULT_WINDOW_FILL_COLOR: Color = Color::rgb(230, 230, 230);
 
@@ -440,5 +441,3 @@ fn render_titlebar(
 
     Ok(result)
 }
-
-pub type WindowList<'a> = LinkedList<Window<'a>>;

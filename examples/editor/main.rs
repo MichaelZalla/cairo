@@ -38,7 +38,7 @@ use cairo::{
             tree::{UIBoxTree, UIBoxTreeRenderCallback},
             UIBox,
         },
-        window::{Window, WindowList, WindowOptions},
+        window::{list::WindowList, Window, WindowOptions},
     },
 };
 
