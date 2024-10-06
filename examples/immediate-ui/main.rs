@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use sdl2::mouse::Cursor;
 
-use std::{cell::RefCell, env};
+use std::{cell::RefCell, env, rc::Rc};
 
 use cairo::{
     app::{
@@ -10,20 +10,19 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::Buffer2D,
-    color,
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
         mouse::{self, cursor::MouseCursorKind, MouseState},
     },
-    ui::{context::GLOBAL_UI_CONTEXT, ui_box::tree::UIBoxTree},
+    ui::context::GLOBAL_UI_CONTEXT,
 };
 
 use font::load_system_font;
-use ui_tree::build_ui_tree;
+use window::make_window_list;
 
 mod font;
-mod ui_tree;
+mod window;
 
 fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
     let cursor = mouse::cursor::set_cursor(cursor_kind).unwrap();
@@ -59,9 +58,13 @@ fn main() -> Result<(), String> {
         None,
     ));
 
-    // Allocates a single global UI tree.
+    // Builds a list of windows containing our UI.
 
-    let ui_box_tree_rc = RefCell::new(UIBoxTree::default());
+    let window_list_rc = {
+        let list = make_window_list(window_info.window_resolution)?;
+
+        Rc::new(RefCell::new(list))
+    };
 
     // We'll need to remember the index of the last rendered frame.
 
@@ -98,7 +101,7 @@ fn main() -> Result<(), String> {
         let frame_index = *current_frame_index_rc.borrow();
 
         let mut framebuffer = framebuffer_rc.borrow_mut();
-        let mut tree = ui_box_tree_rc.borrow_mut();
+        let mut window_list = window_list_rc.borrow_mut();
         let mut retained_cursor = retained_cursor_rc.borrow_mut();
 
         // Check if our application window was just resized...
@@ -108,15 +111,10 @@ fn main() -> Result<(), String> {
 
             framebuffer.resize(resolution.width, resolution.height);
 
-            // Rebuild our UI tree, in response to the new resolution.
+            // Rebuild each window's UI tree(s), in response to the new (native
+            // window) resolution.
 
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                tree.clear();
-
-                build_ui_tree(ctx, &mut tree, resolution)?;
-
-                tree.commit_frame()
-            })?;
+            window_list.rebuild_ui_trees(resolution);
         }
 
         framebuffer.clear(None);
@@ -127,11 +125,7 @@ fn main() -> Result<(), String> {
                 *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
             }
 
-            {
-                // Render our current UI tree into the framebuffer.
-
-                tree.render_frame(frame_index, &mut framebuffer).unwrap();
-            }
+            window_list.render(frame_index, &mut framebuffer).unwrap();
 
             {
                 let cursor_kind = ctx.cursor_kind.borrow();
@@ -170,29 +164,17 @@ fn main() -> Result<(), String> {
             ctx.set_seconds_since_last_update(app.timing_info.seconds_since_last_update);
         });
 
-        // Recreate the UI tree for this update.
+        // Rebuilds the UI trees for each window in our window list.
 
-        let window_info = app.window_info.borrow();
+        let current_window_info = app.window_info.borrow();
 
-        let resolution = window_info.window_resolution;
+        let current_resolution = current_window_info.window_resolution;
 
-        let mut result = Ok(());
+        let mut window_list = window_list_rc.borrow_mut();
 
-        GLOBAL_UI_CONTEXT.with(|ctx| {
-            result = ctx.fill_color(color::WHITE, || {
-                ctx.border_color(color::BLACK, || {
-                    let mut tree = ui_box_tree_rc.borrow_mut();
+        window_list.rebuild_ui_trees(current_resolution);
 
-                    tree.clear();
-
-                    build_ui_tree(ctx, &mut tree, resolution)?;
-
-                    tree.commit_frame()
-                })
-            });
-        });
-
-        result
+        Ok(())
     };
 
     // Start the main loop...

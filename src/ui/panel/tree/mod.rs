@@ -26,6 +26,13 @@ impl<'a> fmt::Display for PanelTree<'a> {
 }
 
 impl<'a> PanelTree<'a> {
+    pub fn from_id(id: &String) -> Self {
+        Self::with_root(Panel {
+            path: format!("{}_root", id),
+            ..Default::default()
+        })
+    }
+
     pub fn with_root(root_panel: Panel) -> Self {
         Self {
             tree: Tree::<'a, Panel>::with_root(root_panel),
