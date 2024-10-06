@@ -260,7 +260,7 @@ fn main() -> Result<(), String> {
                     main_window_panel_tree,
                 );
 
-                list.push_back(main_window);
+                list.0.push_back(main_window);
             });
         });
 
@@ -312,7 +312,7 @@ fn main() -> Result<(), String> {
                     floating_window_panel_tree,
                 );
 
-                list.push_back(floating_window);
+                list.0.push_back(floating_window);
             });
         }
 
@@ -360,7 +360,7 @@ fn main() -> Result<(), String> {
                 *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
             }
 
-            for window in window_list.iter() {
+            for window in window_list.0.iter() {
                 let base_ui_tree = &mut window.ui_trees.base.borrow_mut();
 
                 // Render the current frame's UI tree to `framebuffer`.
@@ -469,7 +469,7 @@ fn render_window_list(window_list: &mut WindowList, resolution: &Resolution) {
     let mut focused_window = None;
 
     {
-        let mut cursor = window_list.cursor_mut();
+        let mut cursor = window_list.0.cursor_mut();
 
         while let Some(window) = cursor.peek_prev() {
             let mut did_focus = false;
@@ -521,8 +521,8 @@ fn render_window_list(window_list: &mut WindowList, resolution: &Resolution) {
 
     if let Some(window) = focused_window {
         // Re-insert the focused window at the end of the window list.
-        window_list.push_back(window);
+        window_list.0.push_back(window);
     }
 
-    window_list.retain(|window| window.active);
+    window_list.0.retain(|window| window.active);
 }

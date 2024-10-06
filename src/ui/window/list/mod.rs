@@ -2,4 +2,5 @@ use crate::mem::linked_list::LinkedList;
 
 use super::Window;
 
-pub type WindowList<'a> = LinkedList<Window<'a>>;
+#[derive(Default, Debug, Clone)]
+pub struct WindowList<'a>(pub LinkedList<Window<'a>>);
