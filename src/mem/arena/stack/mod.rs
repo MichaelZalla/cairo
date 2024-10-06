@@ -375,7 +375,7 @@ mod tests {
 
         println!("Before: {}", *data);
 
-        *data = 3.14;
+        *data = std::f32::consts::PI;
 
         println!("After: {}", *data);
     }
