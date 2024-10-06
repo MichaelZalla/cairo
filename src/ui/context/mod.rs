@@ -13,6 +13,10 @@ use crate::{
 
 use super::ui_box::{key::UIKey, styles::UIBoxStylesMap, UIBox};
 
+use theme::UITheme;
+
+pub mod theme;
+
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxStyleStack<T> {
     stack: Vec<T>,
@@ -41,17 +45,44 @@ pub struct UIInputEvents {
     pub game_controller: GameControllerState,
 }
 
-#[derive(Default)]
 pub struct UIContext<'a> {
     pub font_cache: RefCell<Option<FontCache<'a>>>,
     pub font_info: RefCell<FontInfo>,
     pub text_cache: RefCell<TextCache>,
+    pub theme: RefCell<UITheme>,
     pub styles: RefCell<UIBoxStylesContext>,
     pub global_offset: RefCell<(u32, u32)>,
     pub cache: RefCell<HashMap<UIKey, UIBox>>,
     pub input_events: RefCell<UIInputEvents>,
     pub seconds_since_last_update: RefCell<f32>,
     pub cursor_kind: RefCell<MouseCursorKind>,
+}
+
+impl<'a> Default for UIContext<'a> {
+    fn default() -> Self {
+        let default_theme = UITheme::default();
+
+        let styles = UIBoxStylesMap::<UIBoxStyleStack<Color>> {
+            fill_color: UIBoxStyleStack::<Color> { stack: vec![] },
+            border_color: UIBoxStyleStack::<Color> { stack: vec![] },
+            text_color: UIBoxStyleStack::<Color> {
+                stack: vec![default_theme.text],
+            },
+        };
+
+        Self {
+            font_cache: Default::default(),
+            font_info: Default::default(),
+            text_cache: Default::default(),
+            theme: RefCell::new(default_theme),
+            styles: RefCell::new(styles),
+            global_offset: Default::default(),
+            cache: Default::default(),
+            input_events: Default::default(),
+            seconds_since_last_update: Default::default(),
+            cursor_kind: Default::default(),
+        }
+    }
 }
 
 macro_rules! with_style_applied {

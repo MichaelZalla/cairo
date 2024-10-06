@@ -7,7 +7,6 @@ use sdl2::mouse::MouseButton;
 use crate::{
     app::resolution::Resolution,
     buffer::Buffer2D,
-    color::{self, Color},
     device::mouse::{MouseDragEvent, MouseEventKind},
 };
 
@@ -24,8 +23,6 @@ use super::{
 };
 
 pub mod list;
-
-pub static DEFAULT_WINDOW_FILL_COLOR: Color = Color::rgb(230, 230, 230);
 
 pub type WindowRenderCallback = Rc<dyn Fn(&mut UIBoxTree) -> Result<(), String>>;
 
@@ -171,34 +168,40 @@ impl<'a> Window<'a> {
 
         let mut root_ui_box: UIBox = Default::default();
 
-        ctx.fill_color(DEFAULT_WINDOW_FILL_COLOR, || {
-            root_ui_box = UIBox::new(
-                format!("{}_Root__{}_root", self.id, self.id),
-                UIBoxFeatureMask::none()
-                    | UIBoxFeatureFlag::DrawFill
-                    | UIBoxFeatureFlag::DrawChildDividers
-                    | if self.docked {
-                        UIBoxFeatureMask::none()
-                    } else {
-                        UIBoxFeatureFlag::DrawBorder
-                            | UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
-                            | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
-                            | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
-                            | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis
-                    },
-                UILayoutDirection::TopToBottom,
-                [
-                    UISizeWithStrictness {
-                        size: UISize::Pixels(self.size.0),
-                        strictness: 1.0,
-                    },
-                    UISizeWithStrictness {
-                        size: UISize::Pixels(self.size.1),
-                        strictness: 1.0,
-                    },
-                ],
-                None,
-            );
+        let theme = ctx.theme.borrow();
+
+        ctx.fill_color(theme.panel_background, || {
+            ctx.border_color(theme.panel_border, || {
+                root_ui_box = UIBox::new(
+                    format!("{}_Root__{}_root", self.id, self.id),
+                    UIBoxFeatureMask::none()
+                        | UIBoxFeatureFlag::DrawFill
+                        | UIBoxFeatureFlag::DrawChildDividers
+                        | if self.docked {
+                            UIBoxFeatureMask::none()
+                        } else {
+                            UIBoxFeatureFlag::DrawBorder
+                                | UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
+                                | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
+                                | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
+                                | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis
+                        },
+                    UILayoutDirection::TopToBottom,
+                    [
+                        UISizeWithStrictness {
+                            size: UISize::Pixels(self.size.0),
+                            strictness: 1.0,
+                        },
+                        UISizeWithStrictness {
+                            size: UISize::Pixels(self.size.1),
+                            strictness: 1.0,
+                        },
+                    ],
+                    None,
+                );
+
+                Ok(())
+            })?;
 
             Ok(())
         })?;
@@ -353,97 +356,97 @@ fn render_titlebar(
     };
 
     GLOBAL_UI_CONTEXT.with(|ctx| {
-        ctx.fill_color(color::BLACK, || {
-            ctx.text_color(color::WHITE, || {
-                let container_box_result = tree.push_parent(container_box(
-                    format!("{}_WindowTitleBarContainer", id),
-                    UILayoutDirection::LeftToRight,
-                    Some([
-                        UISizeWithStrictness {
-                            size: UISize::ChildrenSum,
-                            strictness: 1.0,
-                        },
-                        UISizeWithStrictness {
-                            size: UISize::PercentOfParent(1.0),
-                            strictness: 1.0,
-                        },
-                    ]),
-                ))?;
+        let theme = ctx.theme.borrow();
 
-                // @TODO Generalize this over all UIBox instances with Draggable
-                // feature enabled.
+        ctx.fill_color(theme.panel_titlebar_background, || {
+            let container_box_result = tree.push_parent(container_box(
+                format!("{}_WindowTitleBarContainer", id),
+                UILayoutDirection::LeftToRight,
+                Some([
+                    UISizeWithStrictness {
+                        size: UISize::ChildrenSum,
+                        strictness: 1.0,
+                    },
+                    UISizeWithStrictness {
+                        size: UISize::PercentOfParent(1.0),
+                        strictness: 1.0,
+                    },
+                ]),
+            ))?;
 
-                if active_drag_handle.is_none()
-                    && !was_dragging
-                    && container_box_result
-                        .mouse_interaction_in_bounds
-                        .was_left_pressed
-                {
-                    result.did_start_dragging = true;
-                } else if was_dragging {
-                    GLOBAL_UI_CONTEXT.with(|ctx| {
-                        let mouse_state = &ctx.input_events.borrow().mouse;
+            // @TODO Generalize this over all UIBox instances with Draggable
+            // feature enabled.
 
-                        let did_stop_dragging = if let Some(event) = mouse_state.button_event {
-                            matches!(
-                                (event.button, event.kind),
-                                (MouseButton::Left, MouseEventKind::Up)
-                            )
-                        } else {
-                            false
-                        };
-
-                        result.did_stop_dragging = did_stop_dragging;
-
-                        if !did_stop_dragging {
-                            result.position_delta = Some(mouse_state.relative_motion);
-                        }
-                    });
-                }
-
-                tree.push(text_box(
-                    format!("{}_WindowTitleBarTitle", id),
-                    id.to_string(),
-                ))?;
-
-                // Spacer
-
-                tree.push(UIBox::new(
-                    "".to_string(),
-                    UIBoxFeatureMask::none(),
-                    UILayoutDirection::LeftToRight,
-                    [
-                        UISizeWithStrictness {
-                            size: UISize::PercentOfParent(1.0),
-                            strictness: 0.0,
-                        },
-                        UISizeWithStrictness {
-                            size: UISize::MaxOfSiblings,
-                            strictness: 1.0,
-                        },
-                    ],
-                    None,
-                ))?;
-
-                let mut close_button = button_box(
-                    format!("{}_WindowTitleBarClose", id),
-                    "Close".to_string(),
-                    None,
-                );
-
-                close_button.features ^= UIBoxFeatureFlag::EmbossAndDeboss;
-
-                let close_button_interaction = tree.push(close_button)?;
-
-                if close_button_interaction
+            if active_drag_handle.is_none()
+                && !was_dragging
+                && container_box_result
                     .mouse_interaction_in_bounds
                     .was_left_pressed
-                {
-                    result.should_close = true;
-                }
+            {
+                result.did_start_dragging = true;
+            } else if was_dragging {
+                GLOBAL_UI_CONTEXT.with(|ctx| {
+                    let mouse_state = &ctx.input_events.borrow().mouse;
 
-                tree.pop_parent()
-            })
+                    let did_stop_dragging = if let Some(event) = mouse_state.button_event {
+                        matches!(
+                            (event.button, event.kind),
+                            (MouseButton::Left, MouseEventKind::Up)
+                        )
+                    } else {
+                        false
+                    };
+
+                    result.did_stop_dragging = did_stop_dragging;
+
+                    if !did_stop_dragging {
+                        result.position_delta = Some(mouse_state.relative_motion);
+                    }
+                });
+            }
+
+            tree.push(text_box(
+                format!("{}_WindowTitleBarTitle", id),
+                id.to_string(),
+            ))?;
+
+            // Spacer
+
+            tree.push(UIBox::new(
+                "".to_string(),
+                UIBoxFeatureMask::none(),
+                UILayoutDirection::LeftToRight,
+                [
+                    UISizeWithStrictness {
+                        size: UISize::PercentOfParent(1.0),
+                        strictness: 0.0,
+                    },
+                    UISizeWithStrictness {
+                        size: UISize::MaxOfSiblings,
+                        strictness: 1.0,
+                    },
+                ],
+                None,
+            ))?;
+
+            let mut close_button = button_box(
+                format!("{}_WindowTitleBarClose", id),
+                "Close".to_string(),
+                None,
+            );
+
+            close_button.features ^= UIBoxFeatureFlag::EmbossAndDeboss;
+
+            let close_button_interaction = tree.push(close_button)?;
+
+            if close_button_interaction
+                .mouse_interaction_in_bounds
+                .was_left_pressed
+            {
+                result.should_close = true;
+            }
+
+            tree.pop_parent()
         })
     })?;
 
