@@ -53,7 +53,7 @@ impl fmt::Display for PanelInstanceData {
     }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Panel {
     pub path: String,
     // For this panel.
@@ -63,6 +63,18 @@ pub struct Panel {
     pub instance_data: Option<PanelInstanceData>,
     // For child panels.
     pub layout_direction: UILayoutDirection,
+}
+
+impl Default for Panel {
+    fn default() -> Self {
+        Self {
+            path: "unknown".to_string(),
+            resizable: true,
+            alpha_split: 1.0,
+            instance_data: None,
+            layout_direction: Default::default(),
+        }
+    }
 }
 
 impl fmt::Display for Panel {

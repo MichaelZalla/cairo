@@ -85,7 +85,7 @@ impl<'a> fmt::Debug for Window<'a> {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct WindowOptions {
     pub docked: bool,
     pub with_titlebar: bool,
@@ -100,6 +100,17 @@ impl WindowOptions {
             with_titlebar: false,
             position: (0, 0),
             size: (resolution.width, resolution.height),
+        }
+    }
+}
+
+impl Default for WindowOptions {
+    fn default() -> Self {
+        Self {
+            docked: false,
+            with_titlebar: true,
+            position: (8, 8),
+            size: (200, 200),
         }
     }
 }
