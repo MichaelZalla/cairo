@@ -6,7 +6,7 @@ use current_platform::CURRENT_PLATFORM;
 
 use uuid::Uuid;
 
-use sdl2::mouse::{Cursor, MouseButton};
+use sdl2::mouse::Cursor;
 
 use cairo::{
     app::{
@@ -17,7 +17,7 @@ use cairo::{
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
-        mouse::{self, cursor::MouseCursorKind, MouseEventKind, MouseState},
+        mouse::{self, cursor::MouseCursorKind, MouseState},
     },
     font::cache::FontCache,
     resource::handle::Handle,
@@ -339,14 +339,14 @@ fn main() -> Result<(), String> {
 
         let mut window_list = (*window_list_rc).borrow_mut();
 
-        if let Some(resolution) = &new_resolution {
+        if let Some(resolution) = new_resolution {
             // Resize our framebuffer to match the window's new resolution.
 
             framebuffer.resize(resolution.width, resolution.height);
 
             // Rebuild the UI tree based on the new window (root) resolution.
 
-            render_window_list(&mut window_list, resolution);
+            window_list.rebuild_ui_trees(resolution);
         }
 
         framebuffer.clear(None);
@@ -419,11 +419,11 @@ fn main() -> Result<(), String> {
             ctx.set_seconds_since_last_update(app.timing_info.seconds_since_last_update);
         });
 
-        let resolution = &(*app.window_info).borrow().window_resolution;
+        let resolution = (*app.window_info).borrow().window_resolution;
 
         let mut window_list = window_list_rc.borrow_mut();
 
-        render_window_list(&mut window_list, resolution);
+        window_list.rebuild_ui_trees(resolution);
 
         Ok(())
     };
@@ -451,66 +451,4 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &render)?;
 
     Ok(())
-}
-
-fn render_window_list(window_list: &mut WindowList, resolution: &Resolution) {
-    let mut focused_window = None;
-
-    {
-        let mut cursor = window_list.0.cursor_mut();
-
-        while let Some(window) = cursor.peek_prev() {
-            let mut did_focus = false;
-
-            // Check if we should capture the current mouse event for this
-            // window, exclusively.
-
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                let mouse = &ctx.input_events.borrow().mouse;
-
-                if focused_window.is_none()
-                    && window.active
-                    && window
-                        .extent
-                        .contains(mouse.position.0 as u32, mouse.position.1 as u32)
-                {
-                    if let Some(event) = mouse.button_event {
-                        if matches!(
-                            (event.button, event.kind),
-                            (MouseButton::Left, MouseEventKind::Down)
-                        ) {
-                            did_focus = true;
-                        }
-                    }
-                }
-            });
-
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                // Rebuild the UI tree based on the latest user inputs.
-                window.rebuild_ui_trees(ctx, resolution).unwrap();
-            });
-
-            if did_focus && cursor.index() != Some(1) {
-                // Take the focused window out of the window list (temporarily).
-                focused_window.replace(cursor.remove_prev().unwrap());
-
-                GLOBAL_UI_CONTEXT.with(|ctx| {
-                    // Steal the mouse event used to focus the window.
-                    let mut input_events = ctx.input_events.borrow_mut();
-
-                    input_events.mouse.button_event.take();
-                });
-            }
-
-            // Advance the window cursor.
-            cursor.move_prev();
-        }
-    }
-
-    if let Some(window) = focused_window {
-        // Re-insert the focused window at the end of the window list.
-        window_list.0.push_back(window);
-    }
-
-    window_list.0.retain(|window| window.active);
 }
