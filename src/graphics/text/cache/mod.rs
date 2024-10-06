@@ -12,7 +12,7 @@ pub struct TextCacheKey {
     pub text: String,
 }
 
-pub type TextMask = TextureBuffer;
+pub type TextMask = TextureBuffer<f32>;
 
 type TextCacheValue = TextMask;
 

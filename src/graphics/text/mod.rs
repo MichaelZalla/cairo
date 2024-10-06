@@ -1,6 +1,7 @@
 use sdl2::{pixels::Color as SDLColor, ttf::Font};
 
 use crate::{
+    animation::lerp,
     buffer::Buffer2D,
     color::{self, Color},
     debug::message::DebugMessageBuffer,
@@ -74,8 +75,6 @@ impl Graphics {
             return;
         }
 
-        let color_u32 = op.color.to_u32();
-
         let available_height = mask.0.height.min(dest_buffer.height - op.y);
 
         let available_width =
@@ -90,15 +89,25 @@ impl Graphics {
 
         for y_rel in 0..available_height {
             for x_rel in 0..available_width {
-                let index = y_rel as usize * mask.0.width as usize + x_rel as usize;
+                let mask_pixel_index = y_rel as usize * mask.0.width as usize + x_rel as usize;
 
-                if mask.0.data[index] == 0 {
+                let alpha = mask.0.data[mask_pixel_index];
+
+                if alpha == 0.0 {
                     // Skips unrendered pixels in our text texture (mask).
 
                     continue;
                 }
 
-                dest_buffer.set(op.x + x_rel, op.y + y_rel, color_u32)
+                let (x, y) = (op.x + x_rel, op.y + y_rel);
+
+                let start = Color::from_u32(*dest_buffer.get(x, y)).to_vec3();
+                let end = op.color.to_vec3();
+
+                let blended = lerp(start, end, alpha);
+                let blended_u32 = Color::from_vec3(blended).to_u32();
+
+                dest_buffer.set(x, y, blended_u32)
             }
         }
     }
@@ -134,7 +143,7 @@ impl Graphics {
 
         let surface = font
             .render(text)
-            .solid(SDLColor::WHITE)
+            .blended(SDLColor::WHITE)
             .map_err(|e| e.to_string())?;
 
         // Read the pixel data from the rendered surface
@@ -144,10 +153,22 @@ impl Graphics {
 
         let width = text_surface_canvas_size.0;
         let height = text_surface_canvas_size.1;
+        let pixel_count = (width * height) as usize;
 
-        let bytes = text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::Index8)?;
+        static RGBA8888_CHANNEL_COUNT: usize = 4;
 
-        let buffer = Buffer2D::from_data(width, height, bytes);
+        let rgba8888 =
+            text_surface_canvas.read_pixels(None, sdl2::pixels::PixelFormatEnum::RGBA8888)?;
+
+        let mut alpha = vec![0.0; pixel_count];
+
+        for (pixel_index, alpha_value) in alpha.iter_mut().enumerate() {
+            let a = rgba8888[pixel_index * RGBA8888_CHANNEL_COUNT];
+
+            *alpha_value = a as f32 / 255.0;
+        }
+
+        let buffer = Buffer2D::from_data(width, height, alpha);
 
         Ok((width, height, TextureBuffer(buffer)))
     }

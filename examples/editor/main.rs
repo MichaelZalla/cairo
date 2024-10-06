@@ -403,7 +403,7 @@ fn main() -> Result<(), String> {
             let font_filepath = args[1].to_string();
 
             font_info.filepath = font_filepath;
-            font_info.point_size = 14;
+            font_info.point_size = 12;
         }
     });
 

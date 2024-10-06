@@ -118,7 +118,7 @@ fn draw_text(
     layout: &UILayoutContext,
     layout_offset_x: u32,
     layout_offset_y: u32,
-    texture: &TextureBuffer,
+    texture: &TextureBuffer<f32>,
     options: &TextOptions,
     parent_buffer: &mut Buffer2D,
 ) {
