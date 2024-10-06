@@ -321,8 +321,8 @@ impl SoftwareRenderer {
 
                         let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {
-                                g_buffer.buffer.width != framebuffer.width
-                                    || g_buffer.buffer.height != framebuffer.height
+                                g_buffer.0.width != framebuffer.width
+                                    || g_buffer.0.height != framebuffer.height
                             }
                             None => true,
                         };
