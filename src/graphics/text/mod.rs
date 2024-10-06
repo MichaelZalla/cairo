@@ -8,7 +8,7 @@ use crate::{
     texture::map::TextureBuffer,
 };
 
-use self::cache::{cache_text, TextCache, TextCacheKey};
+use self::cache::{cache_text, TextCache, TextCacheKey, TextMask};
 
 use super::Graphics;
 
@@ -41,19 +41,19 @@ impl Graphics {
             Some(text_cache) => {
                 cache_text(font_cache, text_cache, font_info, op.text);
 
-                let cached_texture = text_cache.get(&text_cache_key).unwrap();
+                let cached_text_mask = text_cache.get(&text_cache_key).unwrap();
 
-                Graphics::blit_text_from_mask(cached_texture, op, dest_buffer, None);
+                Graphics::blit_text_from_mask(cached_text_mask, op, dest_buffer, None);
             }
             None => {
                 let font = font_cache.load(font_info).unwrap();
 
-                let (_label_width, _label_height, texture) =
+                let (_label_width, _label_height, text_mask) =
                     Graphics::make_text_mask(font.as_ref(), op.text).unwrap();
 
                 println!("Generated text mask for text '{}' (uncached).", op.text);
 
-                Graphics::blit_text_from_mask(&texture.0, op, dest_buffer, None);
+                Graphics::blit_text_from_mask(&text_mask, op, dest_buffer, None);
             }
         }
 
@@ -61,7 +61,7 @@ impl Graphics {
     }
 
     pub fn blit_text_from_mask(
-        mask: &Buffer2D<u8>,
+        mask: &TextMask,
         op: &TextOperation,
         dest_buffer: &mut Buffer2D<u32>,
         max_width: Option<u32>,
@@ -76,10 +76,11 @@ impl Graphics {
 
         let color_u32 = op.color.to_u32();
 
-        let available_height = mask.height.min(dest_buffer.height - op.y);
+        let available_height = mask.0.height.min(dest_buffer.height - op.y);
 
         let available_width =
-            mask.width
+            mask.0
+                .width
                 .min(dest_buffer.width - op.x)
                 .min(if let Some(width) = max_width {
                     width
@@ -89,9 +90,9 @@ impl Graphics {
 
         for y_rel in 0..available_height {
             for x_rel in 0..available_width {
-                let index = y_rel as usize * mask.width as usize + x_rel as usize;
+                let index = y_rel as usize * mask.0.width as usize + x_rel as usize;
 
-                if mask.data[index] == 0 {
+                if mask.0.data[index] == 0 {
                     // Skips unrendered pixels in our text texture (mask).
 
                     continue;
@@ -128,7 +129,7 @@ impl Graphics {
         debug_messages.drain();
     }
 
-    pub fn make_text_mask(font: &Font, text: &str) -> Result<(u32, u32, TextureBuffer), String> {
+    pub fn make_text_mask(font: &Font, text: &str) -> Result<(u32, u32, TextMask), String> {
         // Generate a new text texture (mask).
 
         let surface = font

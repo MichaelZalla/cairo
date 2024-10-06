@@ -10,6 +10,7 @@ use cairo::{
         },
         Graphics,
     },
+    texture::map::TextureBuffer,
 };
 
 use super::{
@@ -64,10 +65,10 @@ pub fn do_text(
 
             (layout_offset_x, layout_offset_y) = options
                 .layout_options
-                .get_layout_offset(layout, texture_ref.width);
+                .get_layout_offset(layout, texture_ref.0.width);
 
-            item_width = texture_ref.width;
-            item_height = texture_ref.height;
+            item_width = texture_ref.0.width;
+            item_height = texture_ref.0.height;
 
             layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
@@ -88,14 +89,12 @@ pub fn do_text(
             let (_label_width, _label_height, texture) =
                 Graphics::make_text_mask(font.as_ref(), &options.text).unwrap();
 
-            let buffer = texture.0;
-
             (layout_offset_x, layout_offset_y) = options
                 .layout_options
-                .get_layout_offset(layout, buffer.width);
+                .get_layout_offset(layout, texture.0.width);
 
-            item_width = buffer.width;
-            item_height = buffer.height;
+            item_width = texture.0.width;
+            item_height = texture.0.height;
 
             layout.prepare_cursor(layout_offset_x + item_width, layout_offset_y + item_height);
 
@@ -103,7 +102,7 @@ pub fn do_text(
                 layout,
                 layout_offset_x,
                 layout_offset_y,
-                &buffer,
+                &texture,
                 options,
                 parent_buffer,
             );
@@ -119,7 +118,7 @@ fn draw_text(
     layout: &UILayoutContext,
     layout_offset_x: u32,
     layout_offset_y: u32,
-    texture: &Buffer2D<u8>,
+    texture: &TextureBuffer,
     options: &TextOptions,
     parent_buffer: &mut Buffer2D,
 ) {

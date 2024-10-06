@@ -74,8 +74,8 @@ pub fn do_dropdown(
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
-        label_texture_width = label_texture.width;
-        label_texture_height = label_texture.height;
+        label_texture_width = label_texture.0.width;
+        label_texture_height = label_texture.0.height;
     }
 
     // Check whether a mouse event occurred inside this dropdown.
@@ -322,7 +322,7 @@ fn draw_dropdown(
         }
 
         Graphics::blit_text_from_mask(
-            &model_value_texture.0,
+            &model_value_texture,
             &TextOperation {
                 text: item,
                 x,

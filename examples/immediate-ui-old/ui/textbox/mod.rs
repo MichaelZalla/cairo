@@ -82,8 +82,8 @@ pub fn do_textbox(
 
         let label_texture = text_cache.get(&text_cache_key).unwrap();
 
-        label_texture_width = label_texture.width;
-        label_texture_height = label_texture.height;
+        label_texture_width = label_texture.0.width;
+        label_texture_height = label_texture.0.height;
     }
 
     // Check whether a mouse event occurred inside this textbox.
@@ -198,7 +198,7 @@ fn draw_textbox(
 
     let label_texture = text_cache.get(text_cache_key).unwrap();
 
-    let textbox_height = label_texture.height;
+    let textbox_height = label_texture.0.height;
 
     let theme = ctx.get_theme();
 
@@ -260,7 +260,7 @@ fn draw_textbox(
                 let input_text_y = textbox_top_left.1 + 1;
 
                 Graphics::blit_text_from_mask(
-                    &model_value_texture.0,
+                    &model_value_texture,
                     &TextOperation {
                         text,
                         x: input_text_x,

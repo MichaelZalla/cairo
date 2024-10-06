@@ -1,9 +1,9 @@
 use std::collections::{hash_map::Entry, HashMap};
 
 use crate::{
-    buffer::Buffer2D,
     font::{cache::FontCache, FontInfo},
     graphics::Graphics,
+    texture::map::TextureBuffer,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -12,7 +12,9 @@ pub struct TextCacheKey {
     pub text: String,
 }
 
-type TextCacheValue = Buffer2D<u8>;
+pub type TextMask = TextureBuffer;
+
+type TextCacheValue = TextMask;
 
 pub type TextCache = HashMap<TextCacheKey, TextCacheValue>;
 
@@ -30,10 +32,10 @@ pub fn cache_text(
     if let Entry::Vacant(entry) = text_cache.entry(key.clone()) {
         let font = font_cache.load(font_info).unwrap();
 
-        let (label_width, label_height, text_texture) =
+        let (label_width, label_height, mask) =
             Graphics::make_text_mask(font.as_ref(), text).unwrap();
 
-        entry.insert(text_texture.0.to_owned());
+        entry.insert(mask.to_owned());
 
         println!("Cached rendered text ('{}', {}).", text, font_info);
 
@@ -41,6 +43,6 @@ pub fn cache_text(
     } else {
         let buffer = text_cache.get(&key).unwrap();
 
-        (buffer.width, buffer.height)
+        (buffer.0.width, buffer.0.height)
     }
 }

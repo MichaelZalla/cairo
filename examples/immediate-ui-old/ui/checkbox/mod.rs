@@ -70,8 +70,8 @@ pub fn do_checkbox(
 
         let texture = text_cache.get(&text_cache_key).unwrap();
 
-        label_texture_width = texture.width;
-        label_texture_height = texture.height;
+        label_texture_width = texture.0.width;
+        label_texture_height = texture.0.height;
     }
 
     // Check whether a mouse event occurred inside this checkbox.
@@ -157,7 +157,7 @@ fn draw_checkbox(
 
     let texture = text_cache.get(text_cache_key).unwrap();
 
-    let checkbox_size = texture.height;
+    let checkbox_size = texture.0.height;
 
     let theme = ctx.get_theme();
 

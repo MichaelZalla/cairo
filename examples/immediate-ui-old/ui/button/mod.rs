@@ -70,8 +70,8 @@ pub fn do_button(
 
         let texture = text_cache.get(&text_cache_key).unwrap();
 
-        label_texture_width = texture.width;
-        label_texture_height = texture.height;
+        label_texture_width = texture.0.width;
+        label_texture_height = texture.0.height;
     }
 
     let (layout_offset_x, layout_offset_y) = options
@@ -157,8 +157,8 @@ fn draw_button(
             parent_buffer,
             cursor.x + layout_offset_x,
             cursor.y + layout_offset_y,
-            texture.width + BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL * 2,
-            texture.height + BORDERED_BUTTON_LABEL_PADDING_VERTICAL * 2,
+            texture.0.width + BORDERED_BUTTON_LABEL_PADDING_HORIZONTAL * 2,
+            texture.0.height + BORDERED_BUTTON_LABEL_PADDING_VERTICAL * 2,
             Some(&theme.button_background),
             None,
         )
