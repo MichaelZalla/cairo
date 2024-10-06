@@ -1,5 +1,6 @@
 extern crate sdl2;
 
+use panel::ButtonPanel;
 use sdl2::mouse::Cursor;
 
 use std::{cell::RefCell, env, rc::Rc};
@@ -15,13 +16,16 @@ use cairo::{
         keyboard::KeyboardState,
         mouse::{self, cursor::MouseCursorKind, MouseState},
     },
-    ui::context::GLOBAL_UI_CONTEXT,
+    resource::{arena::Arena, handle::Handle},
+    ui::{context::GLOBAL_UI_CONTEXT, panel::PanelRenderCallback, ui_box::tree::UIBoxTree},
 };
 
 use font::load_system_font;
+use panel::PanelInstance;
 use window::make_window_list;
 
 mod font;
+mod panel;
 mod window;
 
 fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
@@ -60,8 +64,31 @@ fn main() -> Result<(), String> {
 
     // Builds a list of windows containing our UI.
 
+    let button_panel_arena_rc = Box::leak(Box::new(RefCell::new(Arena::<ButtonPanel>::new())));
+
+    let button_panel_render_callback: PanelRenderCallback = Rc::new(
+        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+            let mut button_panel_arena = button_panel_arena_rc.borrow_mut();
+
+            if let Ok(entry) = button_panel_arena.get_mut(panel_instance) {
+                let panel = &mut entry.item;
+
+                panel.render(tree).unwrap();
+            }
+
+            Ok(())
+        },
+    );
+
     let window_list_rc = {
-        let list = make_window_list(window_info.window_resolution)?;
+        let mut button_panel_arena = button_panel_arena_rc.borrow_mut();
+        let resolution = window_info.window_resolution;
+
+        let list = make_window_list(
+            &mut button_panel_arena,
+            button_panel_render_callback,
+            resolution,
+        )?;
 
         Rc::new(RefCell::new(list))
     };

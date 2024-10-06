@@ -1,13 +1,22 @@
+use uuid::Uuid;
+
 use cairo::{
     app::resolution::Resolution,
+    resource::arena::Arena,
     ui::{
-        panel::{tree::PanelTree, Panel},
+        panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
         ui_box::UILayoutDirection,
         window::{list::WindowList, Window, WindowOptions},
     },
 };
 
-pub(crate) fn make_window_list<'a>(resolution: Resolution) -> Result<WindowList<'a>, String> {
+use crate::ButtonPanel;
+
+pub(crate) fn make_window_list<'a>(
+    button_panel_arena: &mut Arena<ButtonPanel>,
+    button_panel_render_callback: PanelRenderCallback,
+    resolution: Resolution,
+) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
 
     // Builds a main "window" that encompasses our app's native OS window.
@@ -17,10 +26,15 @@ pub(crate) fn make_window_list<'a>(resolution: Resolution) -> Result<WindowList<
 
         let mut window_panel_tree = PanelTree::from_id(&window_id);
 
-        window_panel_tree.push(
-            "Something",
-            Panel::new(1.0, None, UILayoutDirection::TopToBottom),
-        )?;
+        let button_panel_data = PanelInstanceData {
+            panel_instance: button_panel_arena.insert(Uuid::new_v4(), ButtonPanel::from_id("main")),
+            render: Some(button_panel_render_callback.clone()),
+            custom_render_callback: None,
+        };
+
+        let button_panel = Panel::new(1.0, Some(button_panel_data), UILayoutDirection::TopToBottom);
+
+        window_panel_tree.push("ButtonPanel_main", button_panel)?;
 
         Window::new(
             window_id,
@@ -39,10 +53,18 @@ pub(crate) fn make_window_list<'a>(resolution: Resolution) -> Result<WindowList<
 
         let mut window_panel_tree = PanelTree::from_id(&window_id);
 
-        window_panel_tree.push(
-            "Something",
-            Panel::new(1.0, None, UILayoutDirection::TopToBottom),
-        )?;
+        let button_panel_data = PanelInstanceData {
+            panel_instance: button_panel_arena.insert(
+                Uuid::new_v4(),
+                ButtonPanel::from_id(format!("{}", i).as_str()),
+            ),
+            render: Some(button_panel_render_callback.clone()),
+            custom_render_callback: None,
+        };
+
+        let button_panel = Panel::new(1.0, Some(button_panel_data), UILayoutDirection::TopToBottom);
+
+        window_panel_tree.push(&format!("ButtonPanel_{}", i), button_panel)?;
 
         list.0.push_back(Window::new(
             window_id,
