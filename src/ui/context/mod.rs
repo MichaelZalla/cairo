@@ -83,6 +83,19 @@ impl<'a> UIContext<'a> {
     with_style_applied!(fill_color);
     with_style_applied!(border_color);
     with_style_applied!(text_color);
+
+    pub fn set_user_inputs(
+        &self,
+        keyboard_state: &mut KeyboardState,
+        mouse_state: &mut MouseState,
+        game_controller_state: &mut GameControllerState,
+    ) {
+        let mut input_events = self.input_events.borrow_mut();
+
+        input_events.keyboard = keyboard_state.clone();
+        input_events.mouse = mouse_state.clone();
+        input_events.game_controller = *game_controller_state;
+    }
 }
 
 thread_local! {

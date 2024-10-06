@@ -74,13 +74,7 @@ fn main() -> Result<(), String> {
         GLOBAL_UI_CONTEXT.with(|ctx| {
             // Bind the latest user input events.
 
-            {
-                let mut input_events = ctx.input_events.borrow_mut();
-
-                input_events.keyboard = keyboard_state.clone();
-                input_events.mouse = mouse_state.clone();
-                input_events.game_controller = *game_controller_state;
-            }
+            ctx.set_user_inputs(keyboard_state, mouse_state, game_controller_state);
 
             // Binds the latest seconds-since-last-update.
 
