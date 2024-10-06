@@ -34,10 +34,7 @@ use cairo::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
         panel::PanelInstanceData,
-        ui_box::{
-            tree::{UIBoxTree, UIBoxTreeRenderCallback},
-            UIBox,
-        },
+        ui_box::tree::{UIBoxTree, UIBoxTreeRenderCallback},
         window::{list::WindowList, Window, WindowOptions},
     },
 };
@@ -431,9 +428,7 @@ fn main() -> Result<(), String> {
             // Prune old entries from our UI cache.
 
             GLOBAL_UI_CONTEXT.with(|ctx| {
-                let mut cache = ctx.cache.borrow_mut();
-
-                cache.retain(|_key, ui_box: &mut UIBox| ui_box.last_read_at_frame == index);
+                ctx.prune_cache(index);
             });
         }
 

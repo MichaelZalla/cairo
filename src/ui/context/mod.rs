@@ -102,6 +102,12 @@ impl<'a> UIContext<'a> {
 
         *seconds_since_last_update = delta_t;
     }
+
+    pub fn prune_cache(&self, frame_index: u32) {
+        let mut cache = self.cache.borrow_mut();
+
+        cache.retain(|_key, ui_box: &mut UIBox| ui_box.last_read_at_frame == frame_index);
+    }
 }
 
 thread_local! {
