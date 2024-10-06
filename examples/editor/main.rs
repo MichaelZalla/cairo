@@ -105,7 +105,7 @@ fn main() -> Result<(), String> {
             Ok(())
         });
 
-    let panel_metadata_map = EditorPanelRenderCallbacks {
+    let editor_panel_render_callbacks = EditorPanelRenderCallbacks {
         outline: Rc::new(
             |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
                 EDITOR_PANEL_ARENAS.with(|arenas| {
@@ -245,7 +245,7 @@ fn main() -> Result<(), String> {
                     &main_window_id,
                     &resource_arenas,
                     panel_arenas,
-                    &panel_metadata_map,
+                    &editor_panel_render_callbacks,
                     &renderer_rc,
                 )
                 .unwrap();
@@ -271,19 +271,19 @@ fn main() -> Result<(), String> {
                     (
                         format!("Outline {}", i),
                         outline_arena.insert(Uuid::new_v4(), Default::default()),
-                        panel_metadata_map.outline.clone(),
+                        editor_panel_render_callbacks.outline.clone(),
                     )
                 } else if i == 1 {
                     (
                         format!("Console {}", i),
                         console_arena.insert(Uuid::new_v4(), Default::default()),
-                        panel_metadata_map.console.clone(),
+                        editor_panel_render_callbacks.console.clone(),
                     )
                 } else {
                     (
                         format!("Inspector {}", i),
                         inspector_arena.insert(Uuid::new_v4(), Default::default()),
-                        panel_metadata_map.inspector.clone(),
+                        editor_panel_render_callbacks.inspector.clone(),
                     )
                 };
 
