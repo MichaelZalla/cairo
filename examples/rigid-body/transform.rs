@@ -31,6 +31,7 @@ impl Transform {
         &self.translation
     }
 
+    #[allow(unused)]
     pub fn set_translation(&mut self, translation: Vec3) {
         self.translation = translation;
 
@@ -41,6 +42,7 @@ impl Transform {
         &self.orientation
     }
 
+    #[allow(unused)]
     pub fn set_orientation(&mut self, orientation: Quaternion) {
         self.orientation = orientation;
 
@@ -54,16 +56,19 @@ impl Transform {
         self.recompute_derived_state();
     }
 
+    #[allow(unused)]
     pub fn scale(&self) -> &Vec3 {
         &self.scale
     }
 
+    #[allow(unused)]
     pub fn set_scale(&mut self, scale: Vec3) {
         self.scale = scale;
 
         self.recompute_derived_state();
     }
 
+    #[allow(unused)]
     pub fn mat(&self) -> &Mat4 {
         &self.mat
     }
