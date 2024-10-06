@@ -2,7 +2,7 @@ use std::cmp::{max, min};
 
 use crate::{buffer::Buffer2D, color::Color, vec::vec2};
 
-use super::{horizontal_line_unsafe, vertical_line_unsafe, Graphics};
+use super::Graphics;
 
 impl Graphics {
     pub fn line(
@@ -54,7 +54,7 @@ impl Graphics {
             let min_y = min(y1, y2);
             let max_y = max(y1, y2);
 
-            vertical_line_unsafe(buffer, x1 as u32, min_y as u32, max_y as u32, color_u32);
+            buffer.vertical_line_unsafe(x1 as u32, min_y as u32, max_y as u32, color_u32);
         } else if y2 == y1 {
             // Horizontal line
 
@@ -63,7 +63,7 @@ impl Graphics {
             let min_x = min(x1, x2);
             let max_x = max(x1, x2);
 
-            horizontal_line_unsafe(buffer, min_x as u32, max_x as u32, y1 as u32, color_u32);
+            buffer.horizontal_line_unsafe(min_x as u32, max_x as u32, y1 as u32, color_u32);
         } else {
             // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
 

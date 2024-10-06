@@ -1,6 +1,6 @@
 use std::mem;
 
-use crate::{buffer::Buffer2D, color::Color, graphics::horizontal_line_unsafe};
+use crate::{buffer::Buffer2D, color::Color};
 
 use super::Graphics;
 
@@ -114,8 +114,7 @@ impl Graphics {
                     let x2_minus_one = x2 - 1;
 
                     if local_x == x && (local_y == y || local_y == -y) {
-                        horizontal_line_unsafe(
-                            buffer,
+                        buffer.horizontal_line_unsafe(
                             x1 as u32,
                             x2_minus_one as u32,
                             global_y as u32,
@@ -124,8 +123,7 @@ impl Graphics {
                     } else if local_x == y && (local_y == x || local_y == -x) {
                         if local_y == x {
                             if global_y > 0 {
-                                horizontal_line_unsafe(
-                                    buffer,
+                                buffer.horizontal_line_unsafe(
                                     x1 as u32,
                                     x2_minus_one as u32,
                                     (global_y - 1) as u32,
@@ -133,8 +131,7 @@ impl Graphics {
                                 );
                             }
                         } else if global_y < buffer_height_minus_one as i32 {
-                            horizontal_line_unsafe(
-                                buffer,
+                            buffer.horizontal_line_unsafe(
                                 x1 as u32,
                                 x2_minus_one as u32,
                                 (global_y + 1) as u32,

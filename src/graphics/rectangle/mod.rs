@@ -1,6 +1,6 @@
 use crate::{buffer::Buffer2D, color::Color};
 
-use super::{horizontal_line_unsafe, vertical_line_unsafe, Graphics};
+use super::Graphics;
 
 impl Graphics {
     pub fn rectangle(
@@ -30,8 +30,7 @@ impl Graphics {
 
         if let Some(fill_color) = fill {
             for current_y in y_start..y_end_inclusive + 1 {
-                horizontal_line_unsafe(
-                    buffer,
+                buffer.horizontal_line_unsafe(
                     x_start,
                     x_end_inclusive,
                     current_y,
@@ -47,28 +46,22 @@ impl Graphics {
 
             if y_start == y {
                 // Top edge was not clipped.
-                horizontal_line_unsafe(buffer, x_start, x_end_inclusive, y_start, color_u32);
+                buffer.horizontal_line_unsafe(x_start, x_end_inclusive, y_start, color_u32);
             }
 
             if y_end_inclusive == y + height - 1 {
                 // Bottom edge was not clipped.
-                horizontal_line_unsafe(
-                    buffer,
-                    x_start,
-                    x_end_inclusive,
-                    y_end_inclusive,
-                    color_u32,
-                );
+                buffer.horizontal_line_unsafe(x_start, x_end_inclusive, y_end_inclusive, color_u32);
             }
 
             if x_start == x {
                 // Left edge was not clipped.
-                vertical_line_unsafe(buffer, x_start, y_start, y_end_inclusive, color_u32);
+                buffer.vertical_line_unsafe(x_start, y_start, y_end_inclusive, color_u32);
             }
 
             if x_end_inclusive == x + width - 1 {
                 // Right edge was not clipped.
-                vertical_line_unsafe(buffer, x_end_inclusive, y_start, y_end_inclusive, color_u32);
+                buffer.vertical_line_unsafe(x_end_inclusive, y_start, y_end_inclusive, color_u32);
             }
         }
     }
