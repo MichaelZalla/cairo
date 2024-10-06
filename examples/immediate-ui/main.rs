@@ -1,15 +1,21 @@
 extern crate sdl2;
 
+use sdl2::mouse::Cursor;
+
 use std::{cell::RefCell, env};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_960_BY_540},
+        resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
     },
     buffer::Buffer2D,
     color,
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    device::{
+        game_controller::GameControllerState,
+        keyboard::KeyboardState,
+        mouse::{self, cursor::MouseCursorKind, MouseState},
+    },
     ui::{context::GLOBAL_UI_CONTEXT, ui_box::tree::UIBoxTree},
 };
 
@@ -19,23 +25,14 @@ use ui_tree::build_ui_tree;
 mod font;
 mod ui_tree;
 
+fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
+    let cursor = mouse::cursor::set_cursor(cursor_kind).unwrap();
+
+    retained.replace(cursor);
+}
+
 fn main() -> Result<(), String> {
-    // Main window info.
-
-    let mut window_info = AppWindowInfo {
-        title: "examples/immediate-ui".to_string(),
-        window_resolution: RESOLUTION_960_BY_540,
-        canvas_resolution: RESOLUTION_960_BY_540,
-        ..Default::default()
-    };
-
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
-
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
-
-    // Validate command line arguments.
+    // Validates command line arguments.
 
     let args: Vec<String> = env::args().collect();
 
@@ -44,13 +41,17 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
-    // Load our system font.
+    // Describes our application's window.
 
-    let system_font_path = args[1].to_string();
+    let mut window_info = AppWindowInfo {
+        title: "examples/immediate-ui".to_string(),
+        window_resolution: RESOLUTION_1280_BY_720,
+        canvas_resolution: RESOLUTION_1280_BY_720,
+        resizable: true,
+        ..Default::default()
+    };
 
-    load_system_font(&app, system_font_path);
-
-    // Default render framebuffer.
+    // Allocates a default framebuffer.
 
     let framebuffer_rc = RefCell::new(Buffer2D::new(
         window_info.window_resolution.width,
@@ -58,11 +59,99 @@ fn main() -> Result<(), String> {
         None,
     ));
 
-    // Global UI tree.
+    // Allocates a single global UI tree.
 
     let ui_box_tree_rc = RefCell::new(UIBoxTree::default());
 
-    // Callbacks.
+    // We'll need to remember the index of the last rendered frame.
+
+    // @TODO Why not have the `App` track this?!
+    let current_frame_index_rc = RefCell::new(0_u32);
+
+    // We need to retain a reference to each `Cursor` that we set through SDL.
+    // Without this reference, the SDL cursor is immediately dropped
+    // (deallocated), and we won't see our custom cursor take effect.
+
+    let retained_cursor_rc: RefCell<Option<Cursor>> = Default::default();
+
+    // Primary function for rendering the UI tree to `framebuffer`; this
+    // function is called when either (1) the main loop executes, or (2) the
+    // user is actively resizing the main (native) application window.
+
+    let render = |frame_index: Option<u32>,
+                  new_resolution: Option<Resolution>|
+     -> Result<Vec<u32>, String> {
+        if let Some(index) = frame_index {
+            // Cache the index of the last-rendered frame.
+
+            let mut current_frame_index = current_frame_index_rc.borrow_mut();
+
+            *current_frame_index = index;
+
+            // Prune old UI cache entries (with respect to this frame's index).
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                ctx.prune_cache(index);
+            });
+        }
+
+        let frame_index = *current_frame_index_rc.borrow();
+
+        let mut framebuffer = framebuffer_rc.borrow_mut();
+        let mut tree = ui_box_tree_rc.borrow_mut();
+        let mut retained_cursor = retained_cursor_rc.borrow_mut();
+
+        // Check if our application window was just resized...
+
+        if let Some(resolution) = new_resolution {
+            // Resize our framebuffer to match the native window's new resolution.
+
+            framebuffer.resize(resolution.width, resolution.height);
+
+            // Rebuild our UI tree, in response to the new resolution.
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                tree.clear();
+
+                build_ui_tree(ctx, &mut tree, resolution)?;
+
+                tree.commit_frame()
+            })?;
+        }
+
+        framebuffer.clear(None);
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            {
+                // Reset cursor for this frame.
+                *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
+            }
+
+            {
+                // Render our current UI tree into the framebuffer.
+
+                tree.render_frame(frame_index, &mut framebuffer).unwrap();
+            }
+
+            {
+                let cursor_kind = ctx.cursor_kind.borrow();
+
+                retain_cursor(&cursor_kind, &mut retained_cursor);
+            }
+        });
+
+        Ok(framebuffer.get_all().clone())
+    };
+
+    // Instantiate our app, using the rendering callback we defined above.
+
+    let (app, _event_watch) = App::new(&mut window_info, &render);
+
+    // Load the font indicated by the CLI argument(s).
+
+    load_system_font(&app, args[1].to_string());
+
+    // Define `update()` in the context of our app's main loop.
 
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
@@ -106,21 +195,7 @@ fn main() -> Result<(), String> {
         result
     };
 
-    let render = |frame_index: Option<u32>, _new_resolution| -> Result<Vec<u32>, String> {
-        let mut framebuffer = framebuffer_rc.borrow_mut();
-
-        framebuffer.clear(None);
-
-        {
-            // Render our current UI tree into the framebuffer.
-
-            let mut tree = ui_box_tree_rc.borrow_mut();
-
-            tree.render_frame(frame_index.unwrap(), &mut framebuffer)?;
-        }
-
-        Ok(framebuffer.get_all().clone())
-    };
+    // Start the main loop...
 
     app.run(&mut update, &render)?;
 
