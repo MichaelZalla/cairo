@@ -4,7 +4,7 @@ use cairo::{
     serde::PostDeserialize,
     ui::ui_box::{
         tree::UIBoxTree,
-        utils::{button, text},
+        utils::{button, spacer, text},
         UIBoxFeatureFlag,
     },
 };
@@ -64,6 +64,8 @@ impl PanelInstance for SettingsPanel {
                     );
                 });
             }
+
+            tree.push(spacer(18))?;
 
             let clicked_count_text = {
                 let mut ui_box = text(
