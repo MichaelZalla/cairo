@@ -87,9 +87,9 @@ impl<'a> Default for UIContext<'a> {
 
 macro_rules! with_style_applied {
     ($style: ident) => {
-        pub fn $style<C>(&self, $style: Color, callback: C) -> Result<(), String>
+        pub fn $style<C, T>(&self, $style: Color, callback: C) -> Result<T, String>
         where
-            C: FnOnce() -> Result<(), String>,
+            C: FnOnce() -> Result<T, String>,
         {
             {
                 let mut styles = self.styles.borrow_mut();
