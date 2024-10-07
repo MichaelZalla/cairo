@@ -17,7 +17,7 @@ use cairo::{
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
-        mouse::{self, cursor::MouseCursorKind, MouseState},
+        mouse::{self, MouseState},
     },
     font::cache::FontCache,
     resource::handle::Handle,
@@ -366,12 +366,6 @@ fn main() -> Result<(), String> {
         // Check if our application window was just resized.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            {
-                // Reset cursor for this frame.
-
-                *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
-            }
-
             window_list
                 .render(*current_frame_index, &mut framebuffer)
                 .unwrap();
@@ -418,6 +412,9 @@ fn main() -> Result<(), String> {
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         GLOBAL_UI_CONTEXT.with(|ctx| {
+            // Resets the cursor style.
+            ctx.begin_frame();
+
             // Bind the latest user input events.
             ctx.set_user_inputs(keyboard_state, mouse_state, game_controller_state);
 

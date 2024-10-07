@@ -115,6 +115,10 @@ impl<'a> UIContext<'a> {
     with_style_applied!(border_color);
     with_style_applied!(text_color);
 
+    pub fn begin_frame(&self) {
+        *self.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
+    }
+
     pub fn set_user_inputs(
         &self,
         keyboard_state: &mut KeyboardState,

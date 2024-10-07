@@ -187,11 +187,6 @@ fn main() -> Result<(), String> {
         framebuffer.clear(None);
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            {
-                // Reset cursor for this frame.
-                *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
-            }
-
             window_list.render(frame_index, &mut framebuffer).unwrap();
 
             {
@@ -231,12 +226,13 @@ fn main() -> Result<(), String> {
         // Binds the latest user inputs (and time delta) to the global UI context.
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            // Bind the latest user input events.
+            // Resets the cursor style.
+            ctx.begin_frame();
 
+            // Bind the latest user input events.
             ctx.set_user_inputs(keyboard_state, mouse_state, game_controller_state);
 
             // Binds the latest seconds-since-last-update.
-
             ctx.set_seconds_since_last_update(app.timing_info.seconds_since_last_update);
         });
 
