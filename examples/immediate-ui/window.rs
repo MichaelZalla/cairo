@@ -13,8 +13,8 @@ use cairo::{
 use crate::SettingsPanel;
 
 pub(crate) fn make_window_list<'a>(
-    button_panel_arena: &mut Arena<SettingsPanel>,
-    button_panel_render_callback: PanelRenderCallback,
+    settings_panel_arena: &mut Arena<SettingsPanel>,
+    settings_panel_render_callback: PanelRenderCallback,
     resolution: Resolution,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
@@ -26,16 +26,20 @@ pub(crate) fn make_window_list<'a>(
 
         let mut window_panel_tree = PanelTree::from_id(&window_id);
 
-        let button_panel_data = PanelInstanceData {
-            panel_instance: button_panel_arena
+        let settings_panel_instance_data = PanelInstanceData {
+            panel_instance: settings_panel_arena
                 .insert(Uuid::new_v4(), SettingsPanel::from_id("main")),
-            render: Some(button_panel_render_callback.clone()),
+            render: Some(settings_panel_render_callback.clone()),
             custom_render_callback: None,
         };
 
-        let button_panel = Panel::new(1.0, Some(button_panel_data), UILayoutDirection::TopToBottom);
+        let settings_panel = Panel::new(
+            1.0,
+            Some(settings_panel_instance_data),
+            UILayoutDirection::TopToBottom,
+        );
 
-        window_panel_tree.push("SettingsPanel_main", button_panel)?;
+        window_panel_tree.push("SettingsPanel_main", settings_panel)?;
 
         Window::new(
             window_id,
@@ -55,18 +59,22 @@ pub(crate) fn make_window_list<'a>(
 
         let mut window_panel_tree = PanelTree::from_id(&window_id);
 
-        let button_panel_data = PanelInstanceData {
-            panel_instance: button_panel_arena.insert(
+        let settings_panel_instance_data = PanelInstanceData {
+            panel_instance: settings_panel_arena.insert(
                 Uuid::new_v4(),
                 SettingsPanel::from_id(format!("{}", i).as_str()),
             ),
-            render: Some(button_panel_render_callback.clone()),
+            render: Some(settings_panel_render_callback.clone()),
             custom_render_callback: None,
         };
 
-        let button_panel = Panel::new(1.0, Some(button_panel_data), UILayoutDirection::TopToBottom);
+        let settings_panel = Panel::new(
+            1.0,
+            Some(settings_panel_instance_data),
+            UILayoutDirection::TopToBottom,
+        );
 
-        window_panel_tree.push(&format!("ButtonPanel_{}", i), button_panel)?;
+        window_panel_tree.push(&format!("SettingsPanel_{}", i), settings_panel)?;
 
         list.0.push_back(Window::new(
             window_id,

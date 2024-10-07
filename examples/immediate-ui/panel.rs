@@ -28,7 +28,9 @@ impl SettingsPanel {
 
 impl Debug for SettingsPanel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ButtonPanel").field("id", &self.id).finish()
+        f.debug_struct("SettingsPanel")
+            .field("id", &self.id)
+            .finish()
     }
 }
 

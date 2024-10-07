@@ -104,13 +104,13 @@ fn main() -> Result<(), String> {
 
     // Builds a list of windows containing our UI.
 
-    let button_panel_arena_rc = Box::leak(Box::new(RefCell::new(Arena::<SettingsPanel>::new())));
+    let settings_panel_arena_rc = Box::leak(Box::new(RefCell::new(Arena::<SettingsPanel>::new())));
 
-    let button_panel_render_callback: PanelRenderCallback = Rc::new(
+    let settings_panel_render_callback: PanelRenderCallback = Rc::new(
         |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
-            let mut button_panel_arena = button_panel_arena_rc.borrow_mut();
+            let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
 
-            if let Ok(entry) = button_panel_arena.get_mut(panel_instance) {
+            if let Ok(entry) = settings_panel_arena.get_mut(panel_instance) {
                 let panel = &mut entry.item;
 
                 panel.render(tree).unwrap();
@@ -121,12 +121,12 @@ fn main() -> Result<(), String> {
     );
 
     let window_list_rc = {
-        let mut button_panel_arena = button_panel_arena_rc.borrow_mut();
+        let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
         let resolution = window_info.window_resolution;
 
         let list = make_window_list(
-            &mut button_panel_arena,
-            button_panel_render_callback,
+            &mut settings_panel_arena,
+            settings_panel_render_callback,
             resolution,
         )?;
 
