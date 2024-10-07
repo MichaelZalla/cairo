@@ -158,7 +158,7 @@ fn draw_quadtree_node(
             center_of_mass_y - CENTER_OF_MASS_INDICATOR_SIZE_OVER_2 as i32,
             CENTER_OF_MASS_INDICATOR_SIZE,
             CENTER_OF_MASS_INDICATOR_SIZE,
-            &buffer,
+            buffer,
         ) {
             // Draw quadrant's center of mass.
 
@@ -179,21 +179,18 @@ fn draw_quadtree_node(
 
         // Draw any in-bounds subquadrants.
 
-        match node.children {
-            Some(children) => {
-                for link in children.iter() {
-                    let child = unsafe { link.as_ref() };
+        if let Some(children) = node.children {
+            for link in children.iter() {
+                let child = unsafe { link.as_ref() };
 
-                    draw_quadtree_node(
-                        child,
-                        buffer,
-                        framebuffer_center,
-                        depth + 1,
-                        Some((center_of_mass_screen_space.x, center_of_mass_screen_space.y)),
-                    );
-                }
+                draw_quadtree_node(
+                    child,
+                    buffer,
+                    framebuffer_center,
+                    depth + 1,
+                    Some((center_of_mass_screen_space.x, center_of_mass_screen_space.y)),
+                );
             }
-            None => (),
         }
     }
 }

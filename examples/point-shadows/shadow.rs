@@ -193,7 +193,7 @@ pub fn update_point_light_shadow_maps(
 
         for (handle, cubemap) in &point_light_shadow_maps {
             if let Ok(entry) = cubemap_f32_arena.get_mut(handle) {
-                entry.item = cubemap.to_owned();
+                cubemap.clone_into(&mut entry.item);
             }
         }
     }

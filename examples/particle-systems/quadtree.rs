@@ -142,28 +142,23 @@ impl QuadtreeNode {
     fn split(&mut self, incoming_particle: Option<StaticParticle>) {
         let mut quadrants = self.quadrants();
 
-        match self.particles.take() {
-            Some(mut particles_to_move) => {
-                // Migrate particles to their appropriate sub-quadrants.
+        if let Some(mut particles_to_move) = self.particles.take() {
+            // Migrate particles to their appropriate sub-quadrants.
 
-                // Remember to include any newly inserted particle.
+            // Remember to include any newly inserted particle.
 
-                match incoming_particle {
-                    Some(particle) => particles_to_move.push(particle),
-                    None => (),
-                }
-
-                for particle in particles_to_move {
-                    // Determine which new (sub)quadrant this particle belongs in.
-
-                    let quadrant_index = self.subquadrant_for(&particle.position);
-
-                    // Push into the subquadrant.
-                    quadrants[quadrant_index]
-                        .accumulate_particle_new(particle.position, particle.mass);
-                }
+            if let Some(particle) = incoming_particle {
+                particles_to_move.push(particle)
             }
-            None => (),
+
+            for particle in particles_to_move {
+                // Determine which new (sub)quadrant this particle belongs in.
+
+                let quadrant_index = self.subquadrant_for(&particle.position);
+
+                // Push into the subquadrant.
+                quadrants[quadrant_index].accumulate_particle_new(particle.position, particle.mass);
+            }
         }
 
         self.children = Some([
@@ -295,15 +290,11 @@ impl QuadtreeNode {
         self.bounds
             .subdivide_2d()
             .iter()
-            .map(|sub| {
-                let node = QuadtreeNode {
-                    bounds: *sub,
-                    center_of_mass: sub.center,
-                    parent: Some(unsafe { NonNull::new_unchecked(self) }),
-                    ..Default::default()
-                };
-
-                node
+            .map(|sub| QuadtreeNode {
+                bounds: *sub,
+                center_of_mass: sub.center,
+                parent: Some(unsafe { NonNull::new_unchecked(self) }),
+                ..Default::default()
             })
             .collect()
     }

@@ -95,7 +95,7 @@ impl Collider for LineSegmentCollider {
 
         *new_velocity = response_velocity_normal_to_plane + response_velocity_tangent_to_plane;
 
-        *new_position = *new_position - self.plane.normal * (1.0 + self.restitution) * new_distance;
+        *new_position -= self.plane.normal * (1.0 + self.restitution) * new_distance;
     }
 }
 

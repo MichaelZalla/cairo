@@ -264,22 +264,21 @@ impl<'a, const N: usize> Simulation<'a, N> {
             for collider in self.colliders.borrow().iter() {
                 // Check if this particle has just crossed over the  plane.
 
-                match collider.get_post_collision_distance(&position, &new_position) {
-                    Some(new_distance) => {
-                        // Perform an approximate collision resolution.
+                if let Some(new_distance) =
+                    collider.get_post_collision_distance(&position, &new_position)
+                {
+                    // Perform an approximate collision resolution.
 
-                        collider.resolve_approximate(
-                            &mut new_position,
-                            &mut new_velocity,
-                            new_distance,
-                        );
+                    collider.resolve_approximate(
+                        &mut new_position,
+                        &mut new_velocity,
+                        new_distance,
+                    );
 
-                        new_state.data[i + n] = new_velocity;
-                        new_state.data[i] = new_position;
+                    new_state.data[i + n] = new_velocity;
+                    new_state.data[i] = new_position;
 
-                        break;
-                    }
-                    None => (),
+                    break;
                 }
             }
         }

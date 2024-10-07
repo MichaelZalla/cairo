@@ -48,7 +48,7 @@ fn system_dynamics_function(
 
     for i in 0..n {
         let body_state = &state.0[i];
-        let mut body_derivative = &mut derivative.0[i];
+        let body_derivative = &mut derivative.0[i];
 
         // 1. Rate-of-change of position (velocity).
 
@@ -62,7 +62,7 @@ fn system_dynamics_function(
 
         // 3. Rate-of-change of linear and angular momenta.
 
-        body_state.accumulate_accelerations(forces, current_time, &mut body_derivative);
+        body_state.accumulate_accelerations(forces, current_time, body_derivative);
     }
 
     derivative

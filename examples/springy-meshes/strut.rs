@@ -20,7 +20,7 @@ pub struct Strut {
 }
 
 impl Strut {
-    pub fn new(i: usize, j: usize, points: &Vec<Point>, is_internal: bool) -> Self {
+    pub fn new(i: usize, j: usize, points: &[Point], is_internal: bool) -> Self {
         let rest_length = (points[j].position - points[i].position).mag();
 
         Strut {
@@ -46,7 +46,7 @@ impl Strut {
 
         // For each strut, add spring and damper forces to connected points.
 
-        let spring_force_i_j = self.compute_spring_force(&current_state, state_index_offset, n);
+        let spring_force_i_j = self.compute_spring_force(current_state, state_index_offset, n);
 
         // If using air resistance, compute lift and drag for each strut;
         // distribute forces to connected points.
@@ -54,7 +54,7 @@ impl Strut {
         // Local wind velocity vector.
 
         let (drag_force, lift_force) =
-            self.compute_drag_and_lift_forces(&current_state, state_index_offset, n, wind);
+            self.compute_drag_and_lift_forces(current_state, state_index_offset, n, wind);
 
         // Combine forces to determine a net force.
 

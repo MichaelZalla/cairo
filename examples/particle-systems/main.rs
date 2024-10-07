@@ -217,18 +217,15 @@ fn main() -> Result<(), String> {
 
             let collider_creation_state = collider_creation_state_rc.borrow();
 
-            match (
+            if let (Some(start), Some(end)) = (
                 collider_creation_state.start,
                 collider_creation_state.current,
             ) {
-                (Some(start), Some(end)) => {
-                    draw_collider(
-                        &LineSegmentCollider::new(start, end),
-                        &mut framebuffer,
-                        &framebuffer_center,
-                    );
-                }
-                _ => (),
+                draw_collider(
+                    &LineSegmentCollider::new(start, end),
+                    &mut framebuffer,
+                    &framebuffer_center,
+                );
             }
         }
 

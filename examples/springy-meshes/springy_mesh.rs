@@ -207,13 +207,13 @@ fn draw_line(
     buffer: &mut Buffer2D,
     buffer_center: &Vec3,
 ) {
-    let start_screen_space = world_to_screen_space(&start_world_space, buffer_center);
-    let end_screen_space = world_to_screen_space(&end_world_space, buffer_center);
+    let start_screen_space = world_to_screen_space(start_world_space, buffer_center);
+    let end_screen_space = world_to_screen_space(end_world_space, buffer_center);
 
     let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
     let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
 
-    Graphics::line(buffer, x1, y1, x2, y2, &color);
+    Graphics::line(buffer, x1, y1, x2, y2, color);
 }
 
 impl Renderable for SpringyMesh {

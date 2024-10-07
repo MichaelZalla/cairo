@@ -22,11 +22,11 @@ pub fn cache_text(
     font_cache: &mut FontCache,
     text_cache: &mut TextCache,
     font_info: &FontInfo,
-    text: &String,
+    text: &str,
 ) -> (u32, u32) {
     let key = TextCacheKey {
         font_info: font_info.clone(),
-        text: text.clone(),
+        text: text.to_string(),
     };
 
     if let Entry::Vacant(entry) = text_cache.entry(key.clone()) {

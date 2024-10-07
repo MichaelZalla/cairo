@@ -37,6 +37,7 @@ fn rk4(
     state + (k1 + k2 * 2.0 + k3 * 2.0 + k4) * (h / 6.0)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn integrate_with_method(
     s_0: State,
     integrator: impl Fn(&dyn Fn(State) -> StateDerivative, State, f32) -> StateDerivative,

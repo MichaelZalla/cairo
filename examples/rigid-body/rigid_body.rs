@@ -120,7 +120,7 @@ impl RigidBody {
 
 impl Renderable for RigidBody {
     fn render(&self, buffer: &mut Buffer2D) {
-        let position_screen_space = world_to_screen_space(self.transform.translation(), &buffer);
+        let position_screen_space = world_to_screen_space(self.transform.translation(), buffer);
 
         match self.kind {
             RigidBodyKind::Circle(radius) => {
@@ -141,7 +141,7 @@ impl Renderable for RigidBody {
                 let global_right = (local_right * *self.transform.orientation().mat()).to_vec3();
 
                 let end = *self.transform.translation() + (global_right * radius);
-                let end_screen_space = world_to_screen_space(&end, &buffer);
+                let end_screen_space = world_to_screen_space(&end, buffer);
 
                 Graphics::line(
                     buffer,

@@ -97,7 +97,7 @@ impl Graph {
 
         // Screen coordinates to cartesian.
 
-        let screen_origin_cartesian = (0.0 as f32, 0.0 as f32);
+        let screen_origin_cartesian = (0.0_f32, 0.0_f32);
 
         let screen_top_cartesian = self.screen_to_cartesian((buffer.width / 2) as i32, 0);
 

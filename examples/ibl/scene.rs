@@ -24,15 +24,20 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
         // Move the camera backwards.
 
         {
-            for option in resources.camera.borrow_mut().entries.as_mut_slice() {
-                if let Some(entry) = option {
-                    let camera = &mut entry.item;
+            for entry in resources
+                .camera
+                .borrow_mut()
+                .entries
+                .as_mut_slice()
+                .iter_mut()
+                .flatten()
+            {
+                let camera = &mut entry.item;
 
-                    camera.look_vector.set_position(Vec3 {
-                        z: -16.0,
-                        ..Default::default()
-                    });
-                }
+                camera.look_vector.set_position(Vec3 {
+                    z: -16.0,
+                    ..Default::default()
+                });
             }
         }
 

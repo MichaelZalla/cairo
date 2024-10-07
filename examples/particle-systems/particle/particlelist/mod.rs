@@ -16,20 +16,15 @@ pub struct ParticleList {
 
 impl Default for ParticleList {
     fn default() -> Self {
-        let mut pool: Vec<Particle> = Default::default();
+        let mut pool = Vec::<Particle>::with_capacity(MAX_PARTICLES);
 
-        pool.reserve(MAX_PARTICLES);
-
-        let mut inactive_stack: Vec<usize> = Default::default();
-
-        inactive_stack.reserve(MAX_PARTICLES);
+        let mut inactive_stack = Vec::<usize>::with_capacity(MAX_PARTICLES);
 
         for i in 0..MAX_PARTICLES {
-            let mut particle = Particle::default();
-
-            particle.alive = false;
-
-            pool.push(particle);
+            pool.push(Particle {
+                alive: false,
+                ..Default::default()
+            });
 
             inactive_stack.push(i);
         }

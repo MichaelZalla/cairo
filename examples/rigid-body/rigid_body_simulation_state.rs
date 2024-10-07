@@ -97,9 +97,7 @@ impl RigidBodySimulationState {
         // See: https://stackoverflow.com/a/46924782/1623811
         // See: https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/
 
-        let roc = (orientation * 0.5) * spin;
-
-        roc
+        (orientation * 0.5) * spin
     }
 
     pub fn accumulate_accelerations(

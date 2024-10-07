@@ -1,10 +1,10 @@
 use cairo::vec::vec3::Vec3;
 
 use crate::{
-    static_line_segment_collider::{Collider, StaticLineSegmentCollider},
     force::Force,
     springy_mesh::SpringyMesh,
     state_vector::{FromStateVector, StateVector, ToStateVector},
+    static_line_segment_collider::{Collider, StaticLineSegmentCollider},
 };
 
 pub struct Simulation<'a> {
@@ -49,22 +49,19 @@ impl<'a> Simulation<'a> {
             for collider in &self.static_colliders {
                 // Check if this particle has just crossed over the  plane.
 
-                match collider.test(&position, &new_position) {
-                    Some((_f, new_distance)) => {
-                        // Perform an approximate collision resolution.
+                if let Some((_f, new_distance)) = collider.test(&position, &new_position) {
+                    // Perform an approximate collision resolution.
 
-                        collider.resolve_approximate(
-                            &mut new_position,
-                            &mut new_velocity,
-                            new_distance,
-                        );
+                    collider.resolve_approximate(
+                        &mut new_position,
+                        &mut new_velocity,
+                        new_distance,
+                    );
 
-                        new_state.data[i + n] = new_velocity;
-                        new_state.data[i] = new_position;
+                    new_state.data[i + n] = new_velocity;
+                    new_state.data[i] = new_position;
 
-                        break;
-                    }
-                    None => (),
+                    break;
                 }
             }
         }
@@ -127,7 +124,7 @@ impl<'a> Simulation<'a> {
             // Compute forces acting on the mesh (spring, damper, drag, and lift).
             for strut in mesh.struts.iter_mut() {
                 strut.compute_accelerations(
-                    &current_state,
+                    current_state,
                     &mut derivative,
                     mesh.state_index_offset,
                     n,
@@ -137,7 +134,7 @@ impl<'a> Simulation<'a> {
 
             // Compute torque needed to maintain the resting angles for each vertex.
             for face in mesh.faces.iter() {
-                mesh.compute_torsional_accelerations(&face, &mut derivative, n);
+                mesh.compute_torsional_accelerations(face, &mut derivative, n);
             }
         }
 

@@ -69,7 +69,7 @@ fn main() -> Result<(), String> {
         let resources = scene_context.resources.borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
-        make_scene(&resources, scene, &rendering_context)?;
+        make_scene(&resources, scene, rendering_context)?;
     }
 
     // Shader context

@@ -59,7 +59,7 @@ pub(crate) fn draw_particle(
         y - size_over_2 as i32,
         size as u32,
         size as u32,
-        &framebuffer,
+        framebuffer,
     ) {
         Graphics::rectangle(framebuffer, x, y, width, height, Some(&color), None)
     }
