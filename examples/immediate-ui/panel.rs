@@ -4,8 +4,8 @@ use cairo::{
     serde::PostDeserialize,
     ui::ui_box::{
         tree::UIBoxTree,
-        utils::{button, spacer, text},
-        UIBoxFeatureFlag,
+        utils::{button, container, spacer, text},
+        UIBoxFeatureFlag, UILayoutDirection,
     },
 };
 
@@ -43,42 +43,61 @@ impl PanelInstance for SettingsPanel {
         SETTINGS.with(|settings| -> Result<(), String> {
             // Setting: `clicked_count`
 
-            if tree
-                .push(button(
-                    format!("button_{}", self.id).to_string(),
-                    format!("Button {}", self.id).to_string(),
+            tree.with_parent(
+                container(
+                    format!("SettingsPanel{}_settings.clicked_count.container", self.id),
+                    UILayoutDirection::LeftToRight,
                     None,
-                ))?
-                .mouse_interaction_in_bounds
-                .was_left_pressed
-            {
-                COMMAND_BUFFER.with(|buffer| {
-                    let mut pending_queue = buffer.pending_commands.borrow_mut();
+                ),
+                |tree| {
+                    if tree
+                        .push(button(
+                            format!(
+                                "SettingsPanel{}_settings.clicked_count.incrementButton",
+                                self.id
+                            )
+                            .to_string(),
+                            "Click".to_string(),
+                            None,
+                        ))?
+                        .mouse_interaction_in_bounds
+                        .was_left_pressed
+                    {
+                        COMMAND_BUFFER.with(|buffer| {
+                            let mut pending_queue = buffer.pending_commands.borrow_mut();
 
-                    pending_queue.push_back(
-                        format!(
-                            "set_setting clicked_count {}",
-                            *settings.clicked_count.borrow() + 1
-                        )
-                        .to_string(),
-                    );
-                });
-            }
+                            pending_queue.push_back(
+                                format!(
+                                    "set_setting clicked_count {}",
+                                    *settings.clicked_count.borrow() + 1
+                                )
+                                .to_string(),
+                            );
+                        });
+                    }
 
-            tree.push(spacer(18))?;
+                    tree.push(spacer(18))?;
 
-            let clicked_count_text = {
-                let mut ui_box = text(
-                    format!("SettingsPanel{}_settings.clicked_count.text", self.id).to_string(),
-                    format!("Clicked count: {}", settings.clicked_count.borrow()).to_string(),
-                );
+                    let clicked_count_text = {
+                        let mut ui_box = text(
+                            format!("SettingsPanel{}_settings.clicked_count.text", self.id)
+                                .to_string(),
+                            format!("Clicked count: {}", settings.clicked_count.borrow())
+                                .to_string(),
+                        );
 
-                ui_box.features |= UIBoxFeatureFlag::SkipTextCaching;
+                        ui_box.features |= UIBoxFeatureFlag::SkipTextCaching;
 
-                ui_box
-            };
+                        ui_box
+                    };
 
-            tree.push(clicked_count_text)?;
+                    tree.push(clicked_count_text)?;
+
+                    Ok(())
+                },
+            )?;
+
+            // Done
 
             Ok(())
         })

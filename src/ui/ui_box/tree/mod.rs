@@ -150,6 +150,19 @@ impl<'a> UIBoxTree<'a> {
         Ok(interaction_result)
     }
 
+    pub fn with_parent<C>(&mut self, ui_box: UIBox, callback: C) -> Result<UIBoxInteraction, String>
+    where
+        C: FnOnce(&mut Self) -> Result<(), String>,
+    {
+        let result = self.push_parent(ui_box)?;
+
+        callback(self)?;
+
+        self.pop_parent()?;
+
+        Ok(result)
+    }
+
     pub fn pop_parent(&mut self) -> Result<(), String> {
         self.tree.pop_parent()
     }
