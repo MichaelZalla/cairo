@@ -16,7 +16,7 @@ use super::{
     panel::tree::PanelTree,
     ui_box::{
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        utils::{button_box, container_box, text_box},
+        utils::{button, container, text},
         UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
@@ -365,7 +365,7 @@ fn render_titlebar(
         let theme = ctx.theme.borrow();
 
         ctx.fill_color(theme.panel_titlebar_background, || {
-            let container_box_result = tree.push_parent(container_box(
+            let container_box_result = tree.push_parent(container(
                 format!("{}_WindowTitleBarContainer", id),
                 UILayoutDirection::LeftToRight,
                 Some([
@@ -411,7 +411,7 @@ fn render_titlebar(
                 });
             }
 
-            tree.push(text_box(
+            tree.push(text(
                 format!("{}_WindowTitleBarTitle", id),
                 title.to_string(),
             ))?;
@@ -435,7 +435,7 @@ fn render_titlebar(
                 None,
             ))?;
 
-            let mut close_button = button_box(
+            let mut close_button = button(
                 format!("{}_WindowTitleBarClose", id),
                 "Close".to_string(),
                 None,

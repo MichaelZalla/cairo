@@ -2,7 +2,7 @@ use cairo::ui::{
     context::UIContext,
     ui_box::{
         tree::UIBoxTree,
-        utils::{button_box, container_box, greedy_box, spacer_box},
+        utils::{button, container, greedy_container, spacer},
         UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
@@ -15,7 +15,7 @@ static MENU_BAR_ITEMS: [&str; 8] = [
 static TOOLBAR_BUTTONS: [&str; 5] = ["Button 1", "Button 2", "Button 3", "Button 4", "Button 5"];
 
 pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), String> {
-    tree.push_parent(container_box(
+    tree.push_parent(container(
         "MainMenuBar".to_string(),
         UILayoutDirection::LeftToRight,
         Some([
@@ -49,7 +49,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
         None,
     ))?;
 
-    tree.push_parent(container_box(
+    tree.push_parent(container(
         "MainMenuBarMenu".to_string(),
         UILayoutDirection::TopToBottom,
         Some([
@@ -66,14 +66,14 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
 
     // Top spacer
 
-    tree.push(greedy_box(
+    tree.push(greedy_container(
         "MainMenuBarMenuTopSpacer".to_string(),
         UILayoutDirection::LeftToRight,
     ))?;
 
     // Menu item list
 
-    tree.push_parent(container_box(
+    tree.push_parent(container(
         "MainMenuBarMenuItemList".to_string(),
         UILayoutDirection::LeftToRight,
         None,
@@ -82,11 +82,11 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
     for (item_index, item_label) in MENU_BAR_ITEMS.iter().enumerate() {
         // Inter-item spacer.
 
-        tree.push(spacer_box(10))?;
+        tree.push(spacer(10))?;
 
         // Menu bar item (container)
 
-        tree.push_parent(container_box(
+        tree.push_parent(container(
             format!("MainMenuBarMenuItemList_MenuItem{}", item_index),
             UILayoutDirection::LeftToRight,
             None,
@@ -94,7 +94,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
 
         // Menu bar button (text)
 
-        let mut button_box = button_box(
+        let mut button_box = button(
             format!("MainMenuBarMenuItemList_MenuItem{}_Text", item_index),
             item_label.to_string(),
             None,
@@ -111,7 +111,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
 
     // Bottom spacer
 
-    tree.push(greedy_box(
+    tree.push(greedy_container(
         "MainMenuBarMenuBottomSpacer".to_string(),
         UILayoutDirection::LeftToRight,
     ))?;
@@ -126,7 +126,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
 }
 
 pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), String> {
-    tree.push_parent(container_box(
+    tree.push_parent(container(
         "Toolbar".to_string(),
         UILayoutDirection::LeftToRight,
         Some([
@@ -143,7 +143,7 @@ pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), St
 
     // Toolbar buttons list
 
-    tree.push_parent(container_box(
+    tree.push_parent(container(
         "ToolbarItemList".to_string(),
         UILayoutDirection::LeftToRight,
         None,
@@ -153,12 +153,12 @@ pub fn build_toolbar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<(), St
         // Inter-item spacer.
 
         if button_index != 0 {
-            tree.push(spacer_box(8))?;
+            tree.push(spacer(8))?;
         }
 
         // Button.
 
-        tree.push(button_box(
+        tree.push(button(
             format!("ToolbarItemList_Item{}", button_index),
             button_label.to_string(),
             Some([

@@ -4,7 +4,7 @@ use cairo::{
     serde::PostDeserialize,
     ui::ui_box::{
         tree::UIBoxTree,
-        utils::{button_box, text_box},
+        utils::{button, text},
         UIBoxFeatureFlag,
     },
 };
@@ -43,7 +43,7 @@ impl PanelInstance for SettingsPanel {
         let clicked_count = SETTINGS.with(|settings| *settings.clicked_count.borrow());
 
         if tree
-            .push(button_box(
+            .push(button(
                 format!("button_{}", self.id).to_string(),
                 format!("Button {}", self.id).to_string(),
                 None,
@@ -60,7 +60,7 @@ impl PanelInstance for SettingsPanel {
             });
         }
 
-        let mut dynamic_text_box = text_box(
+        let mut dynamic_text_box = text(
             format!("button_clicked_text{}", self.id).to_string(),
             format!("settings.click_count: {}", clicked_count).to_string(),
         );

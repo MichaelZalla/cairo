@@ -8,7 +8,7 @@ use crate::{color::Color, resource::handle::Handle};
 use super::{
     context::GLOBAL_UI_CONTEXT,
     ui_box::{
-        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text_box, UIBox,
+        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text, UIBox,
         UIBoxCustomRenderCallback, UIBoxFeatureFlag, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
@@ -160,7 +160,7 @@ impl Panel {
             Some(instance_data) => match &instance_data.render {
                 Some(render) => render(&instance_data.panel_instance, ui_box_tree),
                 None => {
-                    let _result = ui_box_tree.push(text_box(
+                    let _result = ui_box_tree.push(text(
                         String::new(),
                         format!("Panel {}", &instance_data.panel_instance.uuid),
                     ))?;
@@ -183,52 +183,52 @@ fn render_debug_interaction_result(
 
     GLOBAL_UI_CONTEXT.with(|ctx| {
         ctx.text_color(Color::rgb(165, 165, 165), || {
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("is_hovering: {}", mouse_result.is_hovering),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("was_left_pressed: {}", mouse_result.was_left_pressed),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("is_left_down: {}", mouse_result.is_left_down),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("was_left_released: {}", mouse_result.was_left_released),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("was_middle_pressed: {}", mouse_result.was_middle_pressed),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("is_middle_down: {}", mouse_result.is_middle_down),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("was_middle_released: {}", mouse_result.was_middle_released),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("was_right_pressed: {}", mouse_result.was_right_pressed),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("is_right_down: {}", mouse_result.is_right_down),
             ))?;
 
-            ui_box_tree.push(text_box(
+            ui_box_tree.push(text(
                 String::new(),
                 format!("was_right_released: {}", mouse_result.was_right_released),
             ))?;

@@ -2,7 +2,7 @@ use crate::ui::{UISize, UISizeWithStrictness};
 
 use super::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection};
 
-pub fn container_box(
+pub fn container(
     id: String,
     layout_direction: UILayoutDirection,
     semantic_sizes: Option<[UISizeWithStrictness; 2]>,
@@ -24,7 +24,7 @@ pub fn container_box(
     UIBox::new(id, UIBoxFeatureMask::none(), layout_direction, sizes, None)
 }
 
-pub fn greedy_box(id: String, layout_direction: UILayoutDirection) -> UIBox {
+pub fn greedy_container(id: String, layout_direction: UILayoutDirection) -> UIBox {
     UIBox::new(
         id,
         UIBoxFeatureMask::none(),
@@ -43,7 +43,7 @@ pub fn greedy_box(id: String, layout_direction: UILayoutDirection) -> UIBox {
     )
 }
 
-pub fn text_box(id: String, label: String) -> UIBox {
+pub fn text(id: String, label: String) -> UIBox {
     let mut text_box = UIBox::new(
         id,
         UIBoxFeatureFlag::Null | UIBoxFeatureFlag::DrawText,
@@ -66,7 +66,7 @@ pub fn text_box(id: String, label: String) -> UIBox {
     text_box
 }
 
-pub fn button_box(
+pub fn button(
     id: String,
     label: String,
     semantic_sizes: Option<[UISizeWithStrictness; 2]>,
@@ -103,7 +103,7 @@ pub fn button_box(
     button_box
 }
 
-pub fn spacer_box(size: u32) -> UIBox {
+pub fn spacer(size: u32) -> UIBox {
     UIBox::new(
         "".to_string(),
         UIBoxFeatureMask::none(),

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use cairo::{
     serde::PostDeserialize,
-    ui::ui_box::{tree::UIBoxTree, utils::text_box},
+    ui::ui_box::{tree::UIBoxTree, utils::text},
 };
 
 use super::PanelInstance;
@@ -16,7 +16,7 @@ impl PostDeserialize for InspectorPanel {
 
 impl PanelInstance for InspectorPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
-        tree.push(text_box(String::new(), "Inspector".to_string()))?;
+        tree.push(text(String::new(), "Inspector".to_string()))?;
 
         Ok(())
     }
