@@ -16,7 +16,7 @@ impl PostDeserialize for AssetBrowserPanel {
 
 impl PanelInstance for AssetBrowserPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
-        tree.push(text_box(String::new(), "AssetBrowser".to_string()))?;
+        tree.push(text_box(String::new(), "Asset Browser".to_string()))?;
 
         Ok(())
     }

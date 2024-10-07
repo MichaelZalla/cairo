@@ -252,6 +252,7 @@ fn main() -> Result<(), String> {
 
                 let main_window = Window::new(
                     main_window_id,
+                    "".to_string(),
                     WindowOptions::docked(window_info.window_resolution),
                     Some(render_main_window_header),
                     main_window_panel_tree,
@@ -267,21 +268,24 @@ fn main() -> Result<(), String> {
                 let mut console_arena = arenas.console.borrow_mut();
                 let mut inspector_arena = arenas.inspector.borrow_mut();
 
-                let (panel_id, panel_instance, render_callback) = if i == 0 {
+                let (panel_id, panel_title, panel_instance, render_callback) = if i == 0 {
                     (
                         format!("Outline {}", i),
+                        "Outline".to_string(),
                         outline_arena.insert(Uuid::new_v4(), Default::default()),
                         editor_panel_render_callbacks.outline.clone(),
                     )
                 } else if i == 1 {
                     (
                         format!("Console {}", i),
+                        "Console".to_string(),
                         console_arena.insert(Uuid::new_v4(), Default::default()),
                         editor_panel_render_callbacks.console.clone(),
                     )
                 } else {
                     (
                         format!("Inspector {}", i),
+                        "Inspector".to_string(),
                         inspector_arena.insert(Uuid::new_v4(), Default::default()),
                         editor_panel_render_callbacks.inspector.clone(),
                     )
@@ -299,6 +303,7 @@ fn main() -> Result<(), String> {
 
                 let floating_window = Window::new(
                     panel_id,
+                    panel_title,
                     WindowOptions {
                         docked: false,
                         with_titlebar: true,

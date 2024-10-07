@@ -44,6 +44,7 @@ impl<'a> WindowUITrees<'a> {
 #[derive(Default, Clone, Serialize, Deserialize)]
 pub struct Window<'a> {
     pub id: String,
+    pub title: String,
     pub docked: bool,
     pub dragging: bool,
     pub active: bool,
@@ -63,6 +64,7 @@ impl<'a> fmt::Debug for Window<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Window")
             .field("id", &self.id)
+            .field("title", &self.title)
             .field("docked", &self.docked)
             .field("dragging", &self.dragging)
             .field("active", &self.active)
@@ -128,12 +130,14 @@ pub struct WindowRenderTitlebarResult {
 impl<'a> Window<'a> {
     pub fn new(
         id: String,
+        title: String,
         options: WindowOptions,
         render_header_callback: Option<UIBoxTreeRenderCallback>,
         panel_tree: PanelTree<'a>,
     ) -> Self {
         Self {
             id,
+            title,
             docked: options.docked,
             active: true,
             with_titlebar: options.with_titlebar,
@@ -237,6 +241,7 @@ impl<'a> Window<'a> {
 
             render_titlebar_result.replace(render_titlebar(
                 &self.id,
+                &self.title,
                 self.dragging,
                 &root_ui_box_result
                     .mouse_interaction_in_bounds
@@ -344,6 +349,7 @@ impl<'a> Window<'a> {
 
 fn render_titlebar(
     id: &str,
+    title: &str,
     was_dragging: bool,
     active_drag_handle: &Option<UIBoxDragHandle>,
     tree: &mut UIBoxTree,
@@ -407,7 +413,7 @@ fn render_titlebar(
 
             tree.push(text_box(
                 format!("{}_WindowTitleBarTitle", id),
-                id.to_string(),
+                title.to_string(),
             ))?;
 
             // Spacer

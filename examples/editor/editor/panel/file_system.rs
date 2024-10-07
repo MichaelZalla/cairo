@@ -16,7 +16,7 @@ impl PostDeserialize for FileSystemPanel {
 
 impl PanelInstance for FileSystemPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
-        tree.push(text_box(String::new(), "FileSystem".to_string()))?;
+        tree.push(text_box(String::new(), "File System".to_string()))?;
 
         Ok(())
     }

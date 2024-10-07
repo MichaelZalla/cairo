@@ -39,6 +39,7 @@ pub(crate) fn make_window_list<'a>(
 
         Window::new(
             window_id,
+            "".to_string(),
             WindowOptions::docked(resolution),
             None,
             window_panel_tree,
@@ -69,6 +70,7 @@ pub(crate) fn make_window_list<'a>(
 
         list.0.push_back(Window::new(
             window_id,
+            "Settings".to_string(),
             WindowOptions {
                 with_titlebar: true,
                 position: (50 + i * 50, 50 + i * 50),
