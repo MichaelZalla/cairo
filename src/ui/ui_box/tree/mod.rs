@@ -7,6 +7,7 @@ use crate::{
         Tree,
     },
     color,
+    device::mouse::cursor::MouseCursorKind,
     graphics::{text::cache::cache_text, Graphics},
     ui::{
         context::GLOBAL_UI_CONTEXT,
@@ -111,6 +112,12 @@ impl<'a> UIBoxTree<'a> {
                 ),
                 None => UIBoxInteraction::from_user_inputs(&ui_box.features, None, &input_events),
             };
+
+            if ui_box.features.contains(UIBoxFeatureFlag::Hoverable)
+                && interaction_result.mouse_interaction_in_bounds.is_hovering
+            {
+                *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Hand;
+            }
 
             ui_box.hot_drag_handle = interaction_result
                 .mouse_interaction_in_bounds
