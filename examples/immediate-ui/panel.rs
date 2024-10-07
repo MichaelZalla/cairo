@@ -40,35 +40,45 @@ impl PostDeserialize for SettingsPanel {
 
 impl PanelInstance for SettingsPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
-        let clicked_count = SETTINGS.with(|settings| *settings.clicked_count.borrow());
+        SETTINGS.with(|settings| -> Result<(), String> {
+            // Setting: `clicked_count`
 
-        if tree
-            .push(button(
-                format!("button_{}", self.id).to_string(),
-                format!("Button {}", self.id).to_string(),
-                None,
-            ))?
-            .mouse_interaction_in_bounds
-            .was_left_pressed
-        {
-            COMMAND_BUFFER.with(|buffer| {
-                let mut pending_queue = buffer.pending_commands.borrow_mut();
+            if tree
+                .push(button(
+                    format!("button_{}", self.id).to_string(),
+                    format!("Button {}", self.id).to_string(),
+                    None,
+                ))?
+                .mouse_interaction_in_bounds
+                .was_left_pressed
+            {
+                COMMAND_BUFFER.with(|buffer| {
+                    let mut pending_queue = buffer.pending_commands.borrow_mut();
 
-                pending_queue.push_back(
-                    format!("set_setting clicked_count {}", clicked_count + 1).to_string(),
+                    pending_queue.push_back(
+                        format!(
+                            "set_setting clicked_count {}",
+                            *settings.clicked_count.borrow() + 1
+                        )
+                        .to_string(),
+                    );
+                });
+            }
+
+            let clicked_count_text = {
+                let mut ui_box = text(
+                    format!("SettingsPanel{}_settings.clicked_count.text", self.id).to_string(),
+                    format!("Clicked count: {}", settings.clicked_count.borrow()).to_string(),
                 );
-            });
-        }
 
-        let mut dynamic_text_box = text(
-            format!("button_clicked_text{}", self.id).to_string(),
-            format!("settings.click_count: {}", clicked_count).to_string(),
-        );
+                ui_box.features |= UIBoxFeatureFlag::SkipTextCaching;
 
-        dynamic_text_box.features |= UIBoxFeatureFlag::SkipTextCaching;
+                ui_box
+            };
 
-        tree.push(dynamic_text_box)?;
+            tree.push(clicked_count_text)?;
 
-        Ok(())
+            Ok(())
+        })
     }
 }
