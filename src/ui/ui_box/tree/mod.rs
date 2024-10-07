@@ -894,8 +894,8 @@ impl<'a> UIBoxTree<'a> {
                 ui_box.render_preorder(target)?;
 
                 if ui_box.features.contains(UIBoxFeatureFlag::DrawCustomRender) {
-                    if let Some((panel_handle, render)) = &ui_box.custom_render_callback {
-                        return render(panel_handle, &ui_box.global_bounds, target);
+                    if let Some((instance_handle, render)) = &ui_box.custom_render_callback {
+                        return render(instance_handle, &ui_box.global_bounds, target);
                     }
                 }
 
