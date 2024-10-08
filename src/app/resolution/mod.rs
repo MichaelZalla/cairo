@@ -6,6 +6,15 @@ pub struct Resolution {
     pub height: u32,
 }
 
+impl Resolution {
+    pub fn new(size: (u32, u32)) -> Self {
+        Self {
+            width: size.0,
+            height: size.1,
+        }
+    }
+}
+
 impl fmt::Display for Resolution {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Resolution ({}x{})", self.width, self.height)
