@@ -190,7 +190,7 @@ pub fn get_application_rendering_context(
     }
 }
 
-pub fn make_window_canvas(
+pub fn make_canvas_texture(
     canvas_resolution: Resolution,
     texture_creator: &TextureCreator<WindowContext>,
     blend_mode: Option<BlendMode>,
@@ -200,7 +200,7 @@ pub fn make_window_canvas(
         canvas_resolution.width,
         canvas_resolution.height,
     ) {
-        Ok(mut window_canvas) => {
+        Ok(mut canvas_texture) => {
             const BYTES_PER_PIXEL: u32 = 4;
 
             let canvas_pitch: u32 = canvas_resolution.width * BYTES_PER_PIXEL;
@@ -209,16 +209,16 @@ pub fn make_window_canvas(
                 (canvas_resolution.width * canvas_resolution.height * BYTES_PER_PIXEL) as usize;
             let pixel_buffer = &vec![0; pixel_buffer_size];
 
-            match window_canvas.update(None, pixel_buffer, canvas_pitch as usize) {
+            match canvas_texture.update(None, pixel_buffer, canvas_pitch as usize) {
                 Ok(_) => {
                     let mode = match blend_mode {
                         Some(mode) => mode,
                         None => BlendMode::None,
                     };
 
-                    window_canvas.set_blend_mode(mode);
+                    canvas_texture.set_blend_mode(mode);
 
-                    Ok(window_canvas)
+                    Ok(canvas_texture)
                 }
                 Err(e) => Err(e.to_string()),
             }

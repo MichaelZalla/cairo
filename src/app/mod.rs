@@ -20,7 +20,7 @@ use crate::{
     time::TimingInfo,
 };
 
-use context::{make_application_context, make_window_canvas, ApplicationContext};
+use context::{make_application_context, make_canvas_texture, ApplicationContext};
 use profile::AppCycleCounter;
 use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
 
@@ -59,7 +59,7 @@ impl Default for AppWindowInfo {
 pub struct App {
     pub window_info: Rc<RefCell<AppWindowInfo>>,
     pub context: ApplicationContext,
-    pub window_canvas: Rc<RefCell<Texture>>,
+    pub canvas_texture: Rc<RefCell<Texture>>,
     pub timing_info: TimingInfo,
     are_updates_paused: bool,
     #[cfg(feature = "debug_cycle_counts")]
@@ -86,8 +86,8 @@ impl App {
 
         let texture_creator = context.rendering_context.canvas.borrow().texture_creator();
 
-        let window_canvas =
-            make_window_canvas(window_info.canvas_resolution, &texture_creator, None).unwrap();
+        let canvas_texture =
+            make_canvas_texture(window_info.canvas_resolution, &texture_creator, None).unwrap();
 
         let event_subsystem = context.sdl_context.event().unwrap();
 
@@ -95,8 +95,8 @@ impl App {
         let window_info_rc = Rc::new(RefCell::new(window_info));
         let window_info_rc_clone = window_info_rc.clone();
 
-        let window_canvas_rc = Rc::new(RefCell::new(window_canvas));
-        let window_canvas_rc_clone = window_canvas_rc.clone();
+        let canvas_texture_rc = Rc::new(RefCell::new(canvas_texture));
+        let canvas_texture_rc_clone = canvas_texture_rc.clone();
 
         let event_watch = if resizable {
             let watch =
@@ -111,7 +111,7 @@ impl App {
                     {
                         let mut canvas_window = (*canvas_window_rc).borrow_mut();
                         let mut window_info = (*window_info_rc_clone).borrow_mut();
-                        let mut window_canvas = (*window_canvas_rc_clone).borrow_mut();
+                        let mut canvas_texture = (*canvas_texture_rc_clone).borrow_mut();
 
                         let new_resolution = Resolution {
                             width: width as u32,
@@ -121,14 +121,14 @@ impl App {
                         handle_window_resize_event(
                             &mut canvas_window,
                             &mut window_info,
-                            &mut window_canvas,
+                            &mut canvas_texture,
                             new_resolution,
                         )
                         .unwrap();
 
                         render_and_present(
                             &mut canvas_window,
-                            &mut window_canvas,
+                            &mut canvas_texture,
                             None,
                             None,
                             Some(new_resolution),
@@ -146,7 +146,7 @@ impl App {
         let app = App {
             window_info: window_info_rc,
             context,
-            window_canvas: window_canvas_rc,
+            canvas_texture: canvas_texture_rc,
             timing_info,
             are_updates_paused: false,
             #[cfg(feature = "debug_cycle_counts")]
@@ -323,7 +323,7 @@ impl App {
 
                             let mut canvas_window = rendering_context.canvas.borrow_mut();
                             let window_info = &mut (*self.window_info).borrow_mut();
-                            let window_canvas = &mut (*self.window_canvas).borrow_mut();
+                            let canvas_texture = &mut (*self.canvas_texture).borrow_mut();
 
                             let resolution = Resolution {
                                 width: *width as u32,
@@ -333,7 +333,7 @@ impl App {
                             handle_window_resize_event(
                                 &mut canvas_window,
                                 window_info,
-                                window_canvas,
+                                canvas_texture,
                                 resolution,
                             )?;
                         }
@@ -538,7 +538,7 @@ impl App {
             {
                 let mut canvas_window = self.context.rendering_context.canvas.borrow_mut();
 
-                let mut window_canvas = self.window_canvas.borrow_mut();
+                let mut canvas_texture = self.canvas_texture.borrow_mut();
 
                 #[cfg(feature = "debug_cycle_counts")]
                 let cycle_counters = Some(&mut self.cycle_counters);
@@ -550,7 +550,7 @@ impl App {
 
                 render_and_present(
                     &mut canvas_window,
-                    &mut window_canvas,
+                    &mut canvas_texture,
                     cycle_counters,
                     Some(current_frame_index),
                     None,
@@ -644,16 +644,16 @@ fn resize_window(
 fn resize_canvas(
     canvas: &mut Canvas<Window>,
     window_info: &mut AppWindowInfo,
-    window_canvas: &mut Texture,
+    canvas_texture: &mut Texture,
     new_resolution: Resolution,
 ) -> Result<(), String> {
     // Re-allocates a window canvas for this window.
 
     let texture_creator = canvas.texture_creator();
 
-    match make_window_canvas(new_resolution, &texture_creator, None) {
+    match make_canvas_texture(new_resolution, &texture_creator, None) {
         Ok(texture) => {
-            *window_canvas = texture;
+            *canvas_texture = texture;
 
             window_info.canvas_resolution = new_resolution;
 
@@ -671,18 +671,18 @@ fn resize_canvas(
 pub fn handle_window_resize_event(
     canvas: &mut Canvas<Window>,
     window_info: &mut AppWindowInfo,
-    window_canvas: &mut Texture,
+    canvas_texture: &mut Texture,
     resolution: Resolution,
 ) -> Result<(), String> {
     resize_window(canvas, window_info, resolution)?;
-    resize_canvas(canvas, window_info, window_canvas, resolution)?;
+    resize_canvas(canvas, window_info, canvas_texture, resolution)?;
 
     Ok(())
 }
 
 fn render_and_present(
     canvas_window: &mut Canvas<Window>,
-    window_canvas: &mut Texture,
+    canvas_texture: &mut Texture,
     mut cycle_counters: Option<&mut CycleCounters>,
     current_frame_index: Option<u32>,
     new_resolution: Option<Resolution>,
@@ -709,7 +709,7 @@ fn render_and_present(
             .start();
     }
 
-    window_canvas
+    canvas_texture
         .with_lock(None, |write_only_byte_array, _pitch| {
             // Render current scene
 
@@ -739,7 +739,7 @@ fn render_and_present(
     // Note that Canvas<Window>::copy() will automatically stretch our
     // window canvas to fit the current window size, if `dst` is `None`.
 
-    canvas_window.copy(window_canvas, None, None)?;
+    canvas_window.copy(canvas_texture, None, None)?;
 
     canvas_window.present();
 

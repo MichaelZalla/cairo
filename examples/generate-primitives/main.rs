@@ -167,14 +167,14 @@ fn main() -> Result<(), String> {
 
                     let window_info = &mut (*app.window_info).borrow_mut();
 
-                    let window_canvas = &mut (*app.window_canvas).borrow_mut();
+                    let canvas_texture = &mut (*app.canvas_texture).borrow_mut();
 
                     let new_resolution = RESOLUTIONS_16X9[*current_resolution_index];
 
                     handle_window_resize_event(
                         &mut canvas_window,
                         window_info,
-                        window_canvas,
+                        canvas_texture,
                         new_resolution,
                     )?;
 
