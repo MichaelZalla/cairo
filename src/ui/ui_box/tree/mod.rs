@@ -329,79 +329,7 @@ impl<'a> UIBoxTree<'a> {
             &mut |_node| {}
         )?;
 
-        // 2. Calculate sibling-dependent sizes with pre-order traversal.
-
-        ui_debug_print!(">\n> (Sibling-dependent pass...)\n>");
-
-        self.tree.visit_root_dfs_mut(
-            &NodeLocalTraversalMethod::PreOrder,
-            &mut |_depth, _sibling_index, parent_data, node| {
-                let ui_box: &mut UIBox = &mut node.data;
-
-                let parent_layout_direction = if let Some(parent) = parent_data {
-                    parent.layout_direction
-                } else {
-                    UILayoutDirection::default()
-                };
-
-                for (axis_index, _size_with_strictness) in ui_box.semantic_sizes.iter().enumerate()
-                {
-                    let axis = UI2DAxis::from_usize(axis_index);
-
-                    let is_horizontal_axis = match (axis, parent_layout_direction) {
-                        (UI2DAxis::Primary, UILayoutDirection::LeftToRight)
-                        | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
-                        (UI2DAxis::Primary, UILayoutDirection::TopToBottom)
-                        | (UI2DAxis::Secondary, UILayoutDirection::LeftToRight) => false,
-                    };
-
-                    let screen_axis_index = if is_horizontal_axis { 0 } else { 1 };
-
-                    if node.children.is_empty() {
-                        return Ok(());
-                    }
-
-                    let child_sizes_along_axis = node
-                        .children
-                        .iter()
-                        .map(|c| c.borrow().data.computed_size[screen_axis_index]);
-
-                    let max = child_sizes_along_axis
-                        .into_iter()
-                        .max_by(|a, b| a.partial_cmp(b).unwrap())
-                        .unwrap();
-
-                    for child in &mut node.children {
-                        let child_ui_box = &mut child.borrow_mut().data;
-
-                        let corresponding_child_axis =
-                            match (ui_box.layout_direction, is_horizontal_axis) {
-                                (UILayoutDirection::TopToBottom, true)
-                                | (UILayoutDirection::LeftToRight, false) => 1,
-                                (UILayoutDirection::TopToBottom, false)
-                                | (UILayoutDirection::LeftToRight, true) => 0,
-                            };
-
-                        let child_size_along_corresponding_child_axis =
-                            child_ui_box.semantic_sizes[corresponding_child_axis];
-
-                        if matches!(
-                            child_size_along_corresponding_child_axis.size,
-                            UISize::MaxOfSiblings
-                        ) {
-                            // println!("Box {} has child {} using MaxOfSiblings! (max = {}).", ui_box.id, child_ui_box.id, max);
-
-                            child_ui_box.computed_size[screen_axis_index] = max;
-                        }
-                    }
-                }
-
-                Ok(())
-            },
-            &mut |_node| {},
-        )?;
-
-        // 3. Calculate upward-dependent sizes with a pre-order traversal.
+        // 2. Calculate upward-dependent sizes with a pre-order traversal.
 
         ui_debug_print!(">\n> (Upward-dependent sizes pass...)\n>");
 
@@ -494,7 +422,7 @@ impl<'a> UIBoxTree<'a> {
             Ok(())
         }, &mut |_node| {})?;
 
-        // 4. Calculate downward-dependent sizes with a post-order traversal.
+        // 3. Calculate downward-dependent sizes with a post-order traversal.
 
         ui_debug_print!(">\n> (Downward-dependent sizes pass...)\n>");
 
@@ -570,6 +498,83 @@ impl<'a> UIBoxTree<'a> {
 
             Ok(())
         }, &mut |_node| {})?;
+
+        // 4. Calculate sibling-dependent sizes with pre-order traversal.
+
+        ui_debug_print!(">\n> (Sibling-dependent pass...)\n>");
+
+        self.tree.visit_root_dfs_mut(
+            &NodeLocalTraversalMethod::PreOrder,
+            &mut |_depth, _sibling_index, parent_data, node| {
+                let ui_box: &mut UIBox = &mut node.data;
+
+                let parent_layout_direction = if let Some(parent) = parent_data {
+                    parent.layout_direction
+                } else {
+                    UILayoutDirection::default()
+                };
+
+                for (axis_index, _size_with_strictness) in ui_box.semantic_sizes.iter().enumerate()
+                {
+                    let axis = UI2DAxis::from_usize(axis_index);
+
+                    let is_horizontal_axis = match (axis, parent_layout_direction) {
+                        (UI2DAxis::Primary, UILayoutDirection::LeftToRight)
+                        | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
+                        (UI2DAxis::Primary, UILayoutDirection::TopToBottom)
+                        | (UI2DAxis::Secondary, UILayoutDirection::LeftToRight) => false,
+                    };
+
+                    let screen_axis_index = if is_horizontal_axis { 0 } else { 1 };
+
+                    if node.children.is_empty() {
+                        return Ok(());
+                    }
+
+                    let child_sizes_along_axis = node
+                        .children
+                        .iter()
+                        .map(|c| c.borrow().data.computed_size[screen_axis_index]);
+
+                    let max = child_sizes_along_axis
+                        .into_iter()
+                        .max_by(|a, b| a.partial_cmp(b).unwrap())
+                        .unwrap();
+
+                    for child in &mut node.children {
+                        let child_ui_box = &mut child.borrow_mut().data;
+
+                        let corresponding_child_axis =
+                            match (ui_box.layout_direction, is_horizontal_axis) {
+                                (UILayoutDirection::TopToBottom, true)
+                                | (UILayoutDirection::LeftToRight, false) => 1,
+                                (UILayoutDirection::TopToBottom, false)
+                                | (UILayoutDirection::LeftToRight, true) => 0,
+                            };
+
+                        let child_size_along_corresponding_child_axis =
+                            child_ui_box.semantic_sizes[corresponding_child_axis];
+
+                        if matches!(
+                            child_size_along_corresponding_child_axis.size,
+                            UISize::MaxOfSiblings
+                        ) {
+                            ui_debug_print!(
+                                ">\n\n> Box {} has child {} using MaxOfSiblings! (max = {}).\n>",
+                                ui_box.id,
+                                child_ui_box.id,
+                                max
+                            );
+
+                            child_ui_box.computed_size[screen_axis_index] = max;
+                        }
+                    }
+                }
+
+                Ok(())
+            },
+            &mut |_node| {},
+        )?;
 
         // 5. Solve any violations (children extending beyond parent) with a pre-order traversal.
 
