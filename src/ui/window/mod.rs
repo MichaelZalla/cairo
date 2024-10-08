@@ -344,6 +344,8 @@ impl<'a> Window<'a> {
                 self.size.0 = (self.size.0 as i32 + delta.0) as u32;
             }
         }
+
+        self.extent = ScreenExtent::new(self.position, self.size);
     }
 }
 
