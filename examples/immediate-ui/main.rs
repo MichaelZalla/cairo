@@ -9,7 +9,7 @@ use cairo::{
         resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
     },
-    buffer::Buffer2D,
+    buffer::framebuffer::Framebuffer,
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
@@ -96,11 +96,14 @@ fn main() -> Result<(), String> {
 
     // Allocates a default framebuffer.
 
-    let framebuffer_rc = RefCell::new(Buffer2D::new(
-        window_info.window_resolution.width,
-        window_info.window_resolution.height,
-        None,
-    ));
+    let mut framebuffer = Framebuffer::new(
+        window_info.canvas_resolution.width,
+        window_info.canvas_resolution.height,
+    );
+
+    framebuffer.complete(0.3, 100.0);
+
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     // Builds a list of windows containing our UI.
 
@@ -176,7 +179,7 @@ fn main() -> Result<(), String> {
         if let Some(resolution) = new_resolution {
             // Resize our framebuffer to match the native window's new resolution.
 
-            framebuffer.resize(resolution.width, resolution.height);
+            framebuffer.resize(resolution.width, resolution.height, true);
 
             // Rebuild each window's UI tree(s), in response to the new (native
             // window) resolution.
@@ -184,10 +187,10 @@ fn main() -> Result<(), String> {
             window_list.rebuild_ui_trees(resolution);
         }
 
-        framebuffer.clear(None);
+        let mut color_buffer = framebuffer.attachments.color.as_mut().unwrap().borrow_mut();
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
-            window_list.render(frame_index, &mut framebuffer).unwrap();
+            window_list.render(frame_index, &mut color_buffer).unwrap();
 
             {
                 let cursor_kind = ctx.cursor_kind.borrow();
@@ -196,7 +199,7 @@ fn main() -> Result<(), String> {
             }
         });
 
-        Ok(framebuffer.get_all().clone())
+        Ok(color_buffer.get_all().clone())
     };
 
     // Instantiate our app, using the rendering callback we defined above.
