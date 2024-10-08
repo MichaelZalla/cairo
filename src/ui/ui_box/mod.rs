@@ -75,6 +75,8 @@ impl fmt::Display for UILayoutDirection {
     }
 }
 
+pub static UI_BOX_SPACER_ID: &str = "__SPACER__";
+
 pub static UI_BOX_HOT_COLOR: Color = color::RED;
 pub static UI_BOX_ACTIVE_COLOR: Color = color::YELLOW;
 
@@ -217,6 +219,10 @@ impl UIBox {
             custom_render_callback,
             ..Default::default()
         }
+    }
+
+    pub fn is_spacer(&self) -> bool {
+        self.id == UI_BOX_SPACER_ID
     }
 
     pub fn get_pixel_coordinates(&self) -> (u32, u32) {
@@ -579,7 +585,13 @@ impl UIBox {
                 None
             };
 
-            Graphics::rectangle(target, x, y, width, height, None, border_color);
+            let fill_color = if draw_box_boundaries && self.is_spacer() {
+                Some(&color::RED)
+            } else {
+                None
+            };
+
+            Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
 
             if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
                 let (mut top_left, mut bottom_right) = (color::WHITE, color::BLACK);

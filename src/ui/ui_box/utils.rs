@@ -1,6 +1,6 @@
 use crate::ui::{UISize, UISizeWithStrictness};
 
-use super::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection};
+use super::{UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection, UI_BOX_SPACER_ID};
 
 pub fn container(
     id: String,
@@ -105,7 +105,7 @@ pub fn button(
 
 pub fn spacer(size: u32) -> UIBox {
     UIBox::new(
-        "".to_string(),
+        UI_BOX_SPACER_ID.to_string(),
         UIBoxFeatureMask::none(),
         UILayoutDirection::LeftToRight,
         [
