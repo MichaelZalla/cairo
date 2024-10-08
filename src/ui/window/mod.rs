@@ -222,20 +222,6 @@ impl<'a> Window<'a> {
             root_ui_box_result = ui_box_tree.push_parent(root_ui_box)?;
         }
 
-        match &root_ui_box_result
-            .mouse_interaction_in_bounds
-            .active_drag_handle
-        {
-            Some(handle) => {
-                let mouse = &ctx.input_events.borrow().mouse;
-
-                if let Some(drag) = &mouse.drag_event {
-                    self.apply_resize_event(drag, handle, main_window_bounds);
-                }
-            }
-            None => (),
-        }
-
         if self.with_titlebar {
             let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
 
@@ -269,6 +255,20 @@ impl<'a> Window<'a> {
             let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
 
             ui_box_tree.commit_frame()?;
+        }
+
+        match &root_ui_box_result
+            .mouse_interaction_in_bounds
+            .active_drag_handle
+        {
+            Some(handle) => {
+                let mouse = &ctx.input_events.borrow().mouse;
+
+                if let Some(drag) = &mouse.drag_event {
+                    self.apply_resize_event(drag, handle, main_window_bounds);
+                }
+            }
+            None => (),
         }
 
         {
