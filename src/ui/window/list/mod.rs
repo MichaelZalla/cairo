@@ -48,7 +48,7 @@ impl<'a> WindowList<'a> {
                     window.rebuild_ui_trees(ctx, &resolution).unwrap();
                 });
 
-                if did_focus && cursor.index() != Some(1) {
+                if did_focus && !cursor.peek_prev().unwrap().docked {
                     // Take the focused window out of the window list (temporarily).
                     focused_window.replace(cursor.remove_prev().unwrap());
 
