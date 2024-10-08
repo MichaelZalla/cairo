@@ -7,7 +7,7 @@ use sdl2::mouse::MouseButton;
 use crate::{
     app::resolution::Resolution,
     buffer::Buffer2D,
-    device::mouse::{MouseDragEvent, MouseEventKind},
+    device::mouse::{MouseEventKind, MouseState},
 };
 
 use super::{
@@ -264,8 +264,8 @@ impl<'a> Window<'a> {
             Some(handle) => {
                 let mouse = &ctx.input_events.borrow().mouse;
 
-                if let Some(drag) = &mouse.drag_event {
-                    self.apply_resize_event(drag, handle, main_window_bounds);
+                if mouse.drag_event.is_some() {
+                    self.apply_resize_event(mouse, handle, main_window_bounds);
                 }
             }
             None => (),
@@ -320,11 +320,11 @@ impl<'a> Window<'a> {
 
     fn apply_resize_event(
         &mut self,
-        drag_event: &MouseDragEvent,
+        mouse_state: &MouseState,
         handle: &UIBoxDragHandle,
         main_window_bounds: &Resolution,
     ) {
-        let delta = drag_event.delta;
+        let delta = mouse_state.drag_event.as_ref().unwrap().delta;
 
         match &handle {
             UIBoxDragHandle::Left => {
