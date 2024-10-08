@@ -102,7 +102,8 @@ impl<'a> UIBoxTree<'a> {
 
             let input_events = ctx.input_events.borrow();
 
-            let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
+            let timing_info = *ctx.timing_info.borrow();
+            let seconds_since_last_update = timing_info.seconds_since_last_update;
 
             let interaction_result = match cache.get(&ui_box.key) {
                 Some(ui_box_previous_frame) => UIBoxInteraction::from_user_inputs(
@@ -177,7 +178,8 @@ impl<'a> UIBoxTree<'a> {
 
             let mut input_events = ctx.input_events.borrow_mut();
 
-            let seconds_since_last_update = *ctx.seconds_since_last_update.borrow();
+            let timing_info = *ctx.timing_info.borrow();
+            let seconds_since_last_update = timing_info.seconds_since_last_update;
 
             let mut next_focused_key = self.next_focused_key.borrow_mut();
 

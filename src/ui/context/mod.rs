@@ -9,6 +9,7 @@ use crate::{
     },
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
+    time::TimingInfo,
 };
 
 use super::ui_box::{key::UIKey, styles::UIBoxStylesMap, UIBox};
@@ -60,7 +61,7 @@ pub struct UIContext<'a> {
     pub global_offset: RefCell<(u32, u32)>,
     pub cache: RefCell<HashMap<UIKey, UIBox>>,
     pub input_events: RefCell<UIInputEvents>,
-    pub seconds_since_last_update: RefCell<f32>,
+    pub timing_info: RefCell<TimingInfo>,
     pub cursor_kind: RefCell<MouseCursorKind>,
     #[cfg(debug_assertions)]
     pub debug: RefCell<UIContextDebugOptions>,
@@ -87,7 +88,7 @@ impl<'a> Default for UIContext<'a> {
             global_offset: Default::default(),
             cache: Default::default(),
             input_events: Default::default(),
-            seconds_since_last_update: Default::default(),
+            timing_info: Default::default(),
             cursor_kind: Default::default(),
             #[cfg(debug_assertions)]
             debug: Default::default(),
@@ -142,10 +143,8 @@ impl<'a> UIContext<'a> {
         input_events.game_controller = *game_controller_state;
     }
 
-    pub fn set_seconds_since_last_update(&self, delta_t: f32) {
-        let mut seconds_since_last_update = self.seconds_since_last_update.borrow_mut();
-
-        *seconds_since_last_update = delta_t;
+    pub fn set_timing_info(&self, timing_info: &TimingInfo) {
+        *self.timing_info.borrow_mut() = *timing_info;
     }
 
     pub fn prune_cache(&self, frame_index: u32) {
