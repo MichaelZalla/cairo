@@ -365,7 +365,7 @@ fn render_titlebar(
         let theme = ctx.theme.borrow();
 
         ctx.fill_color(theme.panel_titlebar_background, || {
-            let container_box_result = tree.push_parent(container(
+            let titlebar_container = container(
                 format!("{}_WindowTitleBarContainer", id),
                 UILayoutDirection::LeftToRight,
                 Some([
@@ -378,7 +378,9 @@ fn render_titlebar(
                         strictness: 1.0,
                     },
                 ]),
-            ))?;
+            );
+
+            let container_box_result = tree.push_parent(titlebar_container)?;
 
             // @TODO Generalize this over all UIBox instances with Draggable
             // feature enabled.
