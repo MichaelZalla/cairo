@@ -28,7 +28,7 @@ impl<'a> fmt::Display for PanelTree<'a> {
 impl<'a> PanelTree<'a> {
     pub fn from_id(id: &String) -> Self {
         Self::with_root(Panel {
-            path: format!("{}_root", id),
+            path: format!("{}_panel_tree_root", id),
             ..Default::default()
         })
     }
@@ -78,7 +78,7 @@ impl<'a> PanelTree<'a> {
 
                 let mut ui_box_tree = base_tree.borrow_mut();
 
-                let mut panel_box = panel.make_panel_box(!window.docked)?;
+                let mut panel_box = panel.make_panel_box(window)?;
 
                 if let Some(parent) = parent_data {
                     if parent.resizable && sibling_index != 0 {

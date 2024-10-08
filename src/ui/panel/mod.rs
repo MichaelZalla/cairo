@@ -11,6 +11,7 @@ use super::{
         interaction::UIBoxInteraction, tree::UIBoxTree, utils::text, UIBox,
         UIBoxCustomRenderCallback, UIBoxFeatureFlag, UILayoutDirection,
     },
+    window::Window,
     UISize, UISizeWithStrictness,
 };
 
@@ -106,10 +107,12 @@ impl Panel {
         panel_path_components.join("")
     }
 
-    pub fn make_panel_box(&self, draw_border: bool) -> Result<UIBox, String> {
+    pub fn make_panel_box(&self, window: &Window) -> Result<UIBox, String> {
         let panel_ui_box_id = self.get_panel_ui_box_id();
 
-        let ui_box_feature_flags = UIBoxFeatureFlag::DrawFill
+        let draw_border = !window.docked;
+
+        let ui_box_feature_flags = UIBoxFeatureFlag::Null
             | if draw_border {
                 UIBoxFeatureFlag::DrawBorder
             } else {
@@ -130,12 +133,19 @@ impl Panel {
             ui_box_feature_flags,
             self.layout_direction,
             [
-                UISizeWithStrictness {
-                    size: UISize::PercentOfParent(self.alpha_split),
-                    strictness: 0.0,
+                if self.alpha_split < 0.999 {
+                    UISizeWithStrictness {
+                        size: UISize::PercentOfParent(self.alpha_split),
+                        strictness: 0.0,
+                    }
+                } else {
+                    UISizeWithStrictness {
+                        size: UISize::ChildrenSum,
+                        strictness: 1.0,
+                    }
                 },
                 UISizeWithStrictness {
-                    size: UISize::PercentOfParent(1.0),
+                    size: UISize::ChildrenSum,
                     strictness: 1.0,
                 },
             ],

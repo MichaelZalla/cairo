@@ -308,6 +308,46 @@ impl<'a> Window<'a> {
         base_ui_tree.render_frame(frame_index, framebuffer)
     }
 
+    fn get_computed_size_of_root_child(&self, index: usize) -> Option<(u32, u32)> {
+        let base_ui_tree = self.ui_trees.base.borrow();
+        let root_rc_option = &base_ui_tree.tree.root;
+
+        if let Some(root_rc) = root_rc_option {
+            let root = root_rc.as_ref().borrow();
+            let titlebar_root = &root.children[index].borrow().data;
+
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                ctx.cache
+                    .borrow()
+                    .get(&titlebar_root.key)
+                    .map(|cached_ui_box| cached_ui_box.get_computed_pixel_size())
+            })
+        } else {
+            None
+        }
+    }
+
+    fn get_computed_size_of_titlebar(&self) -> Option<(u32, u32)> {
+        self.get_computed_size_of_root_child(0)
+    }
+
+    fn get_computed_size_of_panel_tree(&self) -> Option<(u32, u32)> {
+        self.get_computed_size_of_root_child(1)
+    }
+
+    fn get_computed_size(&self) -> (u32, u32) {
+        // Computes the minimum extent needed to fit the titlebar (height) and panel tree content.
+        // Note: The titlebar's width is always equal to this window's width.
+
+        let titlebar_computed_size = self.get_computed_size_of_titlebar().unwrap_or_default();
+        let panel_tree_computed_size = self.get_computed_size_of_panel_tree().unwrap_or_default();
+
+        (
+            panel_tree_computed_size.0,
+            titlebar_computed_size.1 + panel_tree_computed_size.1,
+        )
+    }
+
     fn apply_position_delta(&mut self, delta: (i32, i32), main_window_bounds: &Resolution) {
         let new_x = self.position.0 as i32 + delta.0;
         let new_y = self.position.1 as i32 + delta.1;
@@ -324,24 +364,62 @@ impl<'a> Window<'a> {
         handle: &UIBoxDragHandle,
         main_window_bounds: &Resolution,
     ) {
-        let delta = mouse_state.drag_event.as_ref().unwrap().delta;
+        let mut delta = mouse_state.drag_event.as_ref().unwrap().delta;
+
+        // Restricts the resize deltas to protect the minimum size needed for
+        // the window's inner content.
+
+        let minimum_size = self.get_computed_size();
+
+        let buffer = (
+            self.size.0.max(minimum_size.0) as i32 - minimum_size.0 as i32,
+            self.size.1.max(minimum_size.1) as i32 - minimum_size.1 as i32,
+        );
 
         match &handle {
             UIBoxDragHandle::Left => {
-                self.apply_position_delta((delta.0, 0), main_window_bounds);
+                if delta.0 > 0 {
+                    delta.0 = delta.0.min(buffer.0);
+                } else {
+                    delta.0 = delta.0.max(-(self.extent.left as i32));
+                }
 
                 self.size.0 = (self.size.0 as i32 - delta.0) as u32;
-            }
-            UIBoxDragHandle::Top => {
-                self.apply_position_delta((0, delta.1), main_window_bounds);
 
-                self.size.1 = (self.size.1 as i32 - delta.1) as u32;
-            }
-            UIBoxDragHandle::Bottom => {
-                self.size.1 = (self.size.1 as i32 + delta.1) as u32;
+                self.apply_position_delta((delta.0, 0), main_window_bounds);
             }
             UIBoxDragHandle::Right => {
+                if delta.0 < 0 {
+                    delta.0 = delta.0.max(-buffer.0);
+                } else {
+                    delta.0 = delta
+                        .0
+                        .min(main_window_bounds.width as i32 - 1 - self.extent.right as i32);
+                }
+
                 self.size.0 = (self.size.0 as i32 + delta.0) as u32;
+            }
+            UIBoxDragHandle::Top => {
+                if delta.1 > 0 {
+                    delta.1 = delta.1.min(buffer.1);
+                } else {
+                    delta.1 = delta.1.max(-(self.extent.top as i32));
+                }
+
+                self.size.1 = (self.size.1 as i32 - delta.1) as u32;
+
+                self.apply_position_delta((0, delta.1), main_window_bounds);
+            }
+            UIBoxDragHandle::Bottom => {
+                if delta.1 < 0 {
+                    delta.1 = delta.1.max(-buffer.1);
+                } else {
+                    delta.1 = delta
+                        .1
+                        .min(main_window_bounds.height as i32 - 1 - self.extent.bottom as i32);
+                }
+
+                self.size.1 = (self.size.1 as i32 + delta.1) as u32;
             }
         }
 

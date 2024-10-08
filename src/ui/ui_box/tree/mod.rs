@@ -54,7 +54,7 @@ pub struct FocusedTransitionInfo {
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxTree<'a> {
-    tree: Tree<'a, UIBox>,
+    pub tree: Tree<'a, UIBox>,
     pub focused_transition: RefCell<FocusedTransitionInfo>,
     pub next_focused_key: RefCell<Option<UIKey>>,
 }
