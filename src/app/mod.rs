@@ -672,10 +672,10 @@ pub fn handle_window_resize_event(
     canvas: &mut Canvas<Window>,
     window_info: &mut AppWindowInfo,
     canvas_texture: &mut Texture,
-    resolution: Resolution,
+    new_resolution: Resolution,
 ) -> Result<(), String> {
-    resize_window(canvas, window_info, resolution)?;
-    resize_canvas(canvas, window_info, canvas_texture, resolution)?;
+    resize_window(canvas, window_info, new_resolution)?;
+    resize_canvas(canvas, window_info, canvas_texture, new_resolution)?;
 
     Ok(())
 }
