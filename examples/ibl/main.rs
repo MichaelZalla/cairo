@@ -247,27 +247,24 @@ fn main() -> Result<(), String> {
         )?;
 
         for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                Keycode::Num0 | Keycode::Num9 => {
-                    let mut current_index = current_handles_index.borrow_mut();
+            if let (Keycode::Num0 | Keycode::Num9, _) = keycode {
+                let mut current_index = current_handles_index.borrow_mut();
 
-                    *current_index = if *keycode == Keycode::Num0 {
-                        (*current_index + 1) % radiance_irradiance_handles.len()
-                    } else if *current_index == 0 {
-                        radiance_irradiance_handles.len() - 1
-                    } else {
-                        *current_index - 1
-                    };
+                *current_index = if keycode.0 == Keycode::Num0 {
+                    (*current_index + 1) % radiance_irradiance_handles.len()
+                } else if *current_index == 0 {
+                    radiance_irradiance_handles.len() - 1
+                } else {
+                    *current_index - 1
+                };
 
-                    println!("{}", current_index);
+                println!("{}", current_index);
 
-                    set_ibl_map_handles(
-                        &mut resources,
-                        scene,
-                        &radiance_irradiance_handles[*current_index],
-                    );
-                }
-                _ => (),
+                set_ibl_map_handles(
+                    &mut resources,
+                    scene,
+                    &radiance_irradiance_handles[*current_index],
+                );
             }
         }
 

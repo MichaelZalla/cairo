@@ -42,13 +42,19 @@ impl Graph {
 
         static TRANSLATION_SPEED: i32 = 8;
 
-        if keyboard_state.keys_pressed.contains(&Keycode::W) {
+        let keycodes_pressed = keyboard_state
+            .keys_pressed
+            .iter()
+            .map(|(code, _)| *code)
+            .collect::<Vec<Keycode>>();
+
+        if keycodes_pressed.contains(&Keycode::W) {
             self.screen_origin.1 += TRANSLATION_SPEED;
-        } else if keyboard_state.keys_pressed.contains(&Keycode::A) {
+        } else if keycodes_pressed.contains(&Keycode::A) {
             self.screen_origin.0 += TRANSLATION_SPEED;
-        } else if keyboard_state.keys_pressed.contains(&Keycode::S) {
+        } else if keycodes_pressed.contains(&Keycode::S) {
             self.screen_origin.1 -= TRANSLATION_SPEED;
-        } else if keyboard_state.keys_pressed.contains(&Keycode::D) {
+        } else if keycodes_pressed.contains(&Keycode::D) {
             self.screen_origin.0 -= TRANSLATION_SPEED;
         }
 

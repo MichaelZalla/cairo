@@ -1,8 +1,8 @@
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 
 pub mod keycode;
 
 #[derive(Default, Debug, Clone)]
 pub struct KeyboardState {
-    pub keys_pressed: Vec<Keycode>,
+    pub keys_pressed: Vec<(Keycode, Mod)>,
 }

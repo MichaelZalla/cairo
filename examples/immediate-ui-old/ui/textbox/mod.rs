@@ -112,9 +112,9 @@ pub fn do_textbox(
 
     if let Some(target_id) = ctx.get_focus_target() {
         if target_id == id {
-            for code in &keyboard_state.keys_pressed {
+            for (code, _) in &keyboard_state.keys_pressed {
                 match code {
-                    Keycode::Backspace | Keycode::Delete { .. } => {
+                    Keycode::Backspace | Keycode::Delete => {
                         // Remove one character from the model value, if possible.
 
                         match &mut model_entry {

@@ -155,7 +155,7 @@ fn main() -> Result<(), String> {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
-                Keycode::R { .. } => {
+                (Keycode::R, _) => {
                     // Resize the app's rendering canvas.
 
                     let mut current_resolution_index = current_resolution_index_rc.borrow_mut();
@@ -183,7 +183,7 @@ fn main() -> Result<(), String> {
 
                     framebuffer.resize(new_resolution.width, new_resolution.height, true);
                 }
-                Keycode::H { .. } => {
+                (Keycode::H, _) => {
                     let mut active_fragment_shader_index =
                         active_fragment_shader_index_rc.borrow_mut();
 
@@ -197,7 +197,7 @@ fn main() -> Result<(), String> {
 
                     renderer.set_fragment_shader(fragment_shaders[*active_fragment_shader_index]);
                 }
-                Keycode::L { .. } => {
+                (Keycode::L, _) => {
                     let mut looking_at_point_light = looking_at_point_light_rc.borrow_mut();
 
                     *looking_at_point_light = !*looking_at_point_light;
@@ -487,7 +487,7 @@ fn main() -> Result<(), String> {
 
             for keycode in &keyboard_state.keys_pressed {
                 match keycode {
-                    Keycode::I { .. } => {
+                    (Keycode::I, _) => {
                         let framebuffer = framebuffer_rc.borrow_mut();
 
                         let mut depth_buffer =
@@ -517,7 +517,7 @@ fn main() -> Result<(), String> {
 
                         depth_buffer.set_depth_test_method(methods[index])
                     }
-                    Keycode::H { .. } => {
+                    (Keycode::H, _) => {
                         *active_fragment_shader_index += 1;
 
                         if *active_fragment_shader_index == fragment_shaders.len() {

@@ -154,7 +154,7 @@ pub fn do_slider(
     //         if target_id == id {
     //             for code in &keyboard_state.keys_pressed {
     //                 match code {
-    //                     Keycode::Backspace | Keycode::Delete { .. } => {
+    //                     (Keycode::Backspace | Keycode::Delete, _) => {
     //                         // Remove one character from the model value, if possible.
 
     //                         match &mut model_entry {

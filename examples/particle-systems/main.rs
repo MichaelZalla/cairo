@@ -165,7 +165,13 @@ fn main() -> Result<(), String> {
 
         // Inputs.
 
-        if keyboard_state.keys_pressed.contains(&Keycode::Q) {
+        if keyboard_state
+            .keys_pressed
+            .iter()
+            .map(|(code, _)| *code)
+            .collect::<Vec<Keycode>>()
+            .contains(&Keycode::Q)
+        {
             let mut debug = draw_debug.borrow_mut();
 
             *debug = !*debug;

@@ -44,17 +44,17 @@ impl RenderShaderOptions {
     ) {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
-                Keycode::B { .. } => {
+                (Keycode::B, _) => {
                     self.bilinear_active = !self.bilinear_active;
 
                     println!("Bilinear filtering: {}", self.bilinear_active)
                 }
-                Keycode::T { .. } => {
+                (Keycode::T, _) => {
                     self.trilinear_active = !self.trilinear_active;
 
                     println!("Trilinear filtering: {}", self.trilinear_active)
                 }
-                Keycode::O { .. } => {
+                (Keycode::O, _) => {
                     self.ambient_occlusion_mapping_active = !self.ambient_occlusion_mapping_active;
 
                     println!(
@@ -62,7 +62,7 @@ impl RenderShaderOptions {
                         self.ambient_occlusion_mapping_active
                     )
                 }
-                Keycode::P { .. } => {
+                (Keycode::P, _) => {
                     self.base_color_mapping_active = !self.base_color_mapping_active;
 
                     println!(
@@ -74,7 +74,7 @@ impl RenderShaderOptions {
                         }
                     )
                 }
-                Keycode::N { .. } => {
+                (Keycode::N, _) => {
                     self.normal_mapping_active = !self.normal_mapping_active;
 
                     println!(
@@ -86,7 +86,7 @@ impl RenderShaderOptions {
                         }
                     )
                 }
-                Keycode::Comma { .. } => {
+                (Keycode::Comma, _) => {
                     self.displacement_mapping_active = !self.displacement_mapping_active;
 
                     println!(
@@ -98,7 +98,7 @@ impl RenderShaderOptions {
                         }
                     )
                 }
-                Keycode::R { .. } => {
+                (Keycode::R, _) => {
                     self.roughness_mapping_active = !self.roughness_mapping_active;
 
                     println!(
@@ -110,7 +110,7 @@ impl RenderShaderOptions {
                         }
                     )
                 }
-                Keycode::M { .. } => {
+                (Keycode::M, _) => {
                     self.metallic_mapping_active = !self.metallic_mapping_active;
 
                     println!(
@@ -122,7 +122,7 @@ impl RenderShaderOptions {
                         }
                     )
                 }
-                Keycode::K { .. } => {
+                (Keycode::K, _) => {
                     self.emissive_color_mapping_active = !self.emissive_color_mapping_active;
 
                     println!(

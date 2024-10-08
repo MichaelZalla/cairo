@@ -128,22 +128,22 @@ impl LookVector {
 
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
-                Keycode::Up | Keycode::W { .. } => {
+                (Keycode::Up | Keycode::W, _) => {
                     self.set_position(self.position + self.get_forward() * camera_movement_step);
                 }
-                Keycode::Down | Keycode::S { .. } => {
+                (Keycode::Down | Keycode::S, _) => {
                     self.set_position(self.position - self.get_forward() * camera_movement_step);
                 }
-                Keycode::Left | Keycode::A { .. } => {
+                (Keycode::Left | Keycode::A, _) => {
                     self.set_position(self.position - self.get_right() * camera_movement_step);
                 }
-                Keycode::Right | Keycode::D { .. } => {
+                (Keycode::Right | Keycode::D, _) => {
                     self.set_position(self.position + self.get_right() * camera_movement_step);
                 }
-                Keycode::Q { .. } => {
+                (Keycode::Q, _) => {
                     self.set_position(self.position - self.get_up() * camera_movement_step);
                 }
-                Keycode::E { .. } => {
+                (Keycode::E, _) => {
                     self.set_position(self.position + self.get_up() * camera_movement_step);
                 }
                 _ => {}

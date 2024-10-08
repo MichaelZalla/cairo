@@ -392,7 +392,7 @@ fn main() -> Result<(), String> {
 
             for keycode in &keyboard_state.keys_pressed {
                 match keycode {
-                    Keycode::I { .. } => {
+                    (Keycode::I, _) => {
                         let framebuffer = framebuffer_rc.borrow_mut();
 
                         let mut depth_buffer =
@@ -422,7 +422,7 @@ fn main() -> Result<(), String> {
 
                         depth_buffer.set_depth_test_method(methods[index])
                     }
-                    Keycode::H { .. } => {
+                    (Keycode::H, _) => {
                         *active_fragment_shader_index += 1;
 
                         if *active_fragment_shader_index == fragment_shaders.len() {

@@ -46,7 +46,7 @@ impl RenderOptions {
     ) {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
-                Keycode::Num1 { .. } => {
+                (Keycode::Num1, _) => {
                     self.do_wireframe = !self.do_wireframe;
 
                     println!(
@@ -54,7 +54,7 @@ impl RenderOptions {
                         if self.do_wireframe { "On" } else { "Off" }
                     );
                 }
-                Keycode::Num2 { .. } => {
+                (Keycode::Num2, _) => {
                     self.do_rasterized_geometry = !self.do_rasterized_geometry;
 
                     println!(
@@ -66,12 +66,12 @@ impl RenderOptions {
                         }
                     );
                 }
-                Keycode::Num3 { .. } => {
+                (Keycode::Num3, _) => {
                     self.do_lighting = !self.do_lighting;
 
                     println!("Lighting: {}", if self.do_lighting { "On" } else { "Off" });
                 }
-                Keycode::Num4 { .. } => {
+                (Keycode::Num4, _) => {
                     self.do_deferred_lighting = !self.do_deferred_lighting;
 
                     println!(
@@ -83,7 +83,7 @@ impl RenderOptions {
                         }
                     );
                 }
-                Keycode::Num5 { .. } => {
+                (Keycode::Num5, _) => {
                     self.do_visualize_normals = !self.do_visualize_normals;
 
                     println!(
@@ -95,12 +95,12 @@ impl RenderOptions {
                         }
                     );
                 }
-                Keycode::Num7 { .. } => {
+                (Keycode::Num7, _) => {
                     self.do_bloom = !self.do_bloom;
 
                     println!("Bloom pass: {}", if self.do_bloom { "On" } else { "Off" });
                 }
-                Keycode::Num8 { .. } => {
+                (Keycode::Num8, _) => {
                     // Cycle culling reject settings.
 
                     self.face_culling_strategy.reject = match self.face_culling_strategy.reject {
@@ -114,7 +114,7 @@ impl RenderOptions {
                         self.face_culling_strategy.reject
                     );
                 }
-                Keycode::Num9 { .. } => {
+                (Keycode::Num9, _) => {
                     // Cycle window orders.
 
                     self.face_culling_strategy.winding_order =

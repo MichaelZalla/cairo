@@ -364,6 +364,7 @@ impl App {
 
                     Event::KeyDown {
                         keycode: Some(keycode),
+                        keymod: modifiers,
                         ..
                     } => match keycode {
                         Keycode::Escape { .. } => break 'main,
@@ -371,7 +372,7 @@ impl App {
                         Keycode::F8 { .. } => self.toggle_updates(),
                         Keycode::F9 { .. } => should_update_step_forward = true,
                         _ => {
-                            keyboard_state.keys_pressed.push(keycode);
+                            keyboard_state.keys_pressed.push((keycode, modifiers));
                         }
                     },
 
