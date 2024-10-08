@@ -84,8 +84,6 @@ pub static UI_BOX_FOCUSED_TRANSITION_RATE: f32 = 5.0;
 
 pub static UI_DIVIDER_CURSOR_SNAP_EPSILON: i32 = 3;
 
-static UI_BOX_DEBUG_AUTOLAYOUT: bool = false;
-
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum UIBoxDragHandle {
     Left,
@@ -555,7 +553,14 @@ impl UIBox {
             }
         }
 
-        if self.features.contains(UIBoxFeatureFlag::DrawBorder) {
+        #[cfg(debug_assertions)]
+        let draw_box_boundaries =
+            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_box_boundaries);
+
+        #[cfg(not(debug_assertions))]
+        let draw_box_boundaries = false;
+
+        if self.features.contains(UIBoxFeatureFlag::DrawBorder) || draw_box_boundaries {
             let (x, y) = self.get_pixel_coordinates();
             let (width, height) = self.get_computed_pixel_size();
 
@@ -566,7 +571,7 @@ impl UIBox {
                 (y + height - 1) as i32,
             );
 
-            let border_color = if UI_BOX_DEBUG_AUTOLAYOUT {
+            let border_color = if draw_box_boundaries {
                 Some(&color::BLUE)
             } else if self.styles.border_color.is_some() {
                 self.styles.border_color.as_ref()
@@ -603,40 +608,43 @@ impl UIBox {
                 target.vertical_line_unsafe(x2 as u32, y1 as u32, y2 as u32, bottom_right.to_u32());
             }
 
-            // Drag
+            // Drag handles
 
-            let handle = match &self.active_drag_handle {
-                Some(active_handle) => Some(active_handle),
-                None => match &self.hot_drag_handle {
-                    Some(hot_handle) => Some(hot_handle),
-                    None => None,
-                },
-            };
+            #[cfg(debug_assertions)]
+            {
+                if draw_box_boundaries {
+                    let handle = match &self.active_drag_handle {
+                        Some(active_handle) => Some(active_handle),
+                        None => match &self.hot_drag_handle {
+                            Some(hot_handle) => Some(hot_handle),
+                            None => None,
+                        },
+                    };
 
-            let color = match &self.active_drag_handle {
-                Some(_) => color::BLUE.to_u32(),
-                None => match &self.hot_drag_handle {
-                    Some(_) => color::RED.to_u32(),
-                    None => 0,
-                },
-            };
+                    let color = match &self.active_drag_handle {
+                        Some(_) => color::BLUE.to_u32(),
+                        None => match &self.hot_drag_handle {
+                            Some(_) => color::RED.to_u32(),
+                            None => 0,
+                        },
+                    };
 
-            match &handle {
-                Some(handle) => match handle {
-                    UIBoxDragHandle::Top => {
-                        target.horizontal_line_unsafe(x1 as u32, x2 as u32, y1 as u32, color)
+                    match &handle {
+                        Some(handle) => {
+                            match handle {
+                                UIBoxDragHandle::Top => target
+                                    .horizontal_line_unsafe(x1 as u32, x2 as u32, y1 as u32, color),
+                                UIBoxDragHandle::Bottom => target
+                                    .horizontal_line_unsafe(x1 as u32, x2 as u32, y2 as u32, color),
+                                UIBoxDragHandle::Left => target
+                                    .vertical_line_unsafe(x1 as u32, y1 as u32, y2 as u32, color),
+                                UIBoxDragHandle::Right => target
+                                    .vertical_line_unsafe(x2 as u32, y1 as u32, y2 as u32, color),
+                            }
+                        }
+                        None => (),
                     }
-                    UIBoxDragHandle::Bottom => {
-                        target.horizontal_line_unsafe(x1 as u32, x2 as u32, y2 as u32, color)
-                    }
-                    UIBoxDragHandle::Left => {
-                        target.vertical_line_unsafe(x1 as u32, y1 as u32, y2 as u32, color)
-                    }
-                    UIBoxDragHandle::Right => {
-                        target.vertical_line_unsafe(x2 as u32, y1 as u32, y2 as u32, color)
-                    }
-                },
-                None => (),
+                }
             }
         }
 

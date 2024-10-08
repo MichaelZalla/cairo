@@ -45,6 +45,12 @@ pub struct UIInputEvents {
     pub game_controller: GameControllerState,
 }
 
+#[cfg(debug_assertions)]
+#[derive(Default, Debug, Copy, Clone)]
+pub struct UIContextDebugOptions {
+    pub draw_box_boundaries: bool,
+}
+
 pub struct UIContext<'a> {
     pub font_cache: RefCell<Option<FontCache<'a>>>,
     pub font_info: RefCell<FontInfo>,
@@ -56,6 +62,8 @@ pub struct UIContext<'a> {
     pub input_events: RefCell<UIInputEvents>,
     pub seconds_since_last_update: RefCell<f32>,
     pub cursor_kind: RefCell<MouseCursorKind>,
+    #[cfg(debug_assertions)]
+    pub debug: RefCell<UIContextDebugOptions>,
 }
 
 impl<'a> Default for UIContext<'a> {
@@ -81,6 +89,8 @@ impl<'a> Default for UIContext<'a> {
             input_events: Default::default(),
             seconds_since_last_update: Default::default(),
             cursor_kind: Default::default(),
+            #[cfg(debug_assertions)]
+            debug: Default::default(),
         }
     }
 }
