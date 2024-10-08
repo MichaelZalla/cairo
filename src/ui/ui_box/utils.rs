@@ -121,3 +121,14 @@ pub fn spacer(size: u32) -> UIBox {
         None,
     )
 }
+
+pub fn greedy_spacer() -> UIBox {
+    let mut spacer = spacer(0);
+
+    spacer.semantic_sizes[0] = UISizeWithStrictness {
+        size: UISize::PercentOfParent(1.0),
+        strictness: 0.0,
+    };
+
+    spacer
+}

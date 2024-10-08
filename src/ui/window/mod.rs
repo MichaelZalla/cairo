@@ -16,7 +16,7 @@ use super::{
     panel::tree::PanelTree,
     ui_box::{
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        utils::{button, container, text},
+        utils::{button, container, greedy_spacer, text},
         UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
@@ -418,22 +418,7 @@ fn render_titlebar(
 
             // Spacer
 
-            tree.push(UIBox::new(
-                "".to_string(),
-                UIBoxFeatureMask::none(),
-                UILayoutDirection::LeftToRight,
-                [
-                    UISizeWithStrictness {
-                        size: UISize::PercentOfParent(1.0),
-                        strictness: 0.0,
-                    },
-                    UISizeWithStrictness {
-                        size: UISize::MaxOfSiblings,
-                        strictness: 1.0,
-                    },
-                ],
-                None,
-            ))?;
+            tree.push(greedy_spacer())?;
 
             let mut close_button = button(
                 format!("{}_WindowTitleBarClose", id),
