@@ -441,19 +441,29 @@ impl UIBox {
         let (x, y) = self.get_pixel_coordinates();
         let (width, height) = self.get_computed_pixel_size();
 
-        let end = self.styles.fill_color.unwrap_or_default();
+        let is_active_transitioning = self.hot_transition < 0.999;
+        let is_hot_transitioning = self.hot_transition < 0.999;
 
-        let fill_color = if self.active_transition < 0.999 {
-            let with_hot = UI_BOX_HOT_COLOR.lerp_linear(end, self.hot_transition);
+        if is_active_transitioning
+            || is_hot_transitioning
+            || self.features.contains(UIBoxFeatureFlag::DrawFill)
+        {
+            let fill_color = {
+                let end = self.styles.fill_color.unwrap_or_default();
 
-            Some(UI_BOX_ACTIVE_COLOR.lerp_linear(with_hot, self.active_transition))
-        } else if self.hot_transition < 0.999 {
-            Some(UI_BOX_HOT_COLOR.lerp_linear(end, 0.5 + self.hot_transition / 2.0))
-        } else {
-            self.styles.fill_color
-        };
+                if is_active_transitioning {
+                    let with_hot = UI_BOX_HOT_COLOR.lerp_linear(end, self.hot_transition);
 
-        Graphics::rectangle(target, x, y, width, height, fill_color.as_ref(), None);
+                    Some(UI_BOX_ACTIVE_COLOR.lerp_linear(with_hot, self.active_transition))
+                } else if is_hot_transitioning {
+                    Some(UI_BOX_HOT_COLOR.lerp_linear(end, 0.5 + self.hot_transition / 2.0))
+                } else {
+                    self.styles.fill_color
+                }
+            };
+
+            Graphics::rectangle(target, x, y, width, height, fill_color.as_ref(), None);
+        }
 
         if self.features.contains(UIBoxFeatureFlag::DrawText) {
             let text_content = self.text_content.as_ref().expect("Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!");
