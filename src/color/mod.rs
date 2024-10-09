@@ -39,6 +39,27 @@ impl fmt::Display for Color {
     }
 }
 
+impl std::ops::MulAssign<Color> for Color {
+    fn mul_assign(&mut self, rhs: Color) {
+        self.r = (self.r * rhs.r).clamp(0.0, 255.0);
+        self.g = (self.g * rhs.g).clamp(0.0, 255.0);
+        self.b = (self.b * rhs.b).clamp(0.0, 255.0);
+        self.a = (self.a * rhs.a).clamp(0.0, 255.0);
+    }
+}
+
+impl std::ops::Mul<Color> for Color {
+    type Output = Self;
+
+    fn mul(self, rhs: Color) -> Self::Output {
+        let mut cloned = self;
+
+        cloned *= rhs;
+
+        cloned
+    }
+}
+
 impl std::ops::MulAssign<f32> for Color {
     fn mul_assign(&mut self, scale: f32) {
         self.r = (self.r * scale).clamp(0.0, 255.0);
