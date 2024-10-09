@@ -41,7 +41,7 @@ pub struct HDRBakeResult {
 pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBakeResult, String> {
     // Set up a simple cube scene, that we can use to render each side of a cubemap.
 
-    let cube_scene_context = make_cube_scene(1.0).unwrap();
+    let (scene_context, _shader_context) = make_cube_scene(1.0).unwrap();
 
     // Load the HDR image data into a texture.
 
@@ -62,7 +62,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     // Store the texture in our scene resources' HDR texture arena.
 
-    let hdr_texture_handle = (*cube_scene_context.resources)
+    let hdr_texture_handle = (*scene_context.resources)
         .borrow_mut()
         .texture_vec3
         .borrow_mut()
@@ -74,7 +74,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     let renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        cube_scene_context.resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -104,7 +104,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
         render_radiance_to_cubemap(
             &hdr_texture_handle,
             cubemap_face_framebuffer_rc.clone(),
-            &cube_scene_context,
+            &scene_context,
             &shader_context_rc,
             &renderer_rc,
         )
@@ -117,7 +117,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     {
         radiance_cubemap_texture_handle = {
-            (*cube_scene_context.resources)
+            (*scene_context.resources)
                 .borrow_mut()
                 .cubemap_vec3
                 .borrow_mut()
@@ -138,7 +138,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
         render_irradiance_to_cubemap(
             &radiance_cubemap_texture_handle,
             cubemap_face_framebuffer_rc.clone(),
-            &cube_scene_context,
+            &scene_context,
             &shader_context_rc,
             &renderer_rc,
         )
@@ -148,7 +148,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
         render_specular_prefiltered_environment_to_cubemap(
             &radiance_cubemap_texture_handle,
             cubemap_face_framebuffer_rc.clone(),
-            &cube_scene_context,
+            &scene_context,
             &shader_context_rc,
             &renderer_rc,
         )

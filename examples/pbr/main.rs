@@ -11,7 +11,6 @@ use cairo::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
-    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -36,7 +35,7 @@ fn main() -> Result<(), String> {
 
     let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
 
-    let scene_context = make_sphere_grid_scene(16.0 / 9.0)?;
+    let (scene_context, shader_context) = make_sphere_grid_scene(16.0 / 9.0)?;
 
     // Default framebuffer
 
@@ -51,7 +50,7 @@ fn main() -> Result<(), String> {
 
     // ShaderContext
 
-    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     // Renderer
 

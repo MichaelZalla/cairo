@@ -18,7 +18,6 @@ use cairo::{
     scene::node::{
         SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
     },
-    shader::context::ShaderContext,
     shaders::{
         debug_shaders::{
             albedo_fragment_shader::AlbedoFragmentShader,
@@ -91,21 +90,20 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context = {
-        let scene_context = make_primitives_scene(aspect_ratio, Some(rendering_context))?;
+    let (scene_context, shader_context) =
+        make_primitives_scene(aspect_ratio, Some(rendering_context))?;
 
-        Rc::new(RefCell::new(scene_context))
-    };
+    let scene_context_rc = Rc::new(scene_context);
 
     // Shader context
 
-    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     // Renderer
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        (*scene_context).borrow().resources.clone(),
+        scene_context_rc.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -145,10 +143,9 @@ fn main() -> Result<(), String> {
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let mut renderer = renderer_rc.borrow_mut();
-        let scene_context = (*scene_context).borrow();
 
-        let resources = scene_context.resources.borrow_mut();
-        let mut scenes = scene_context.scenes.borrow_mut();
+        let resources = scene_context_rc.resources.borrow_mut();
+        let mut scenes = scene_context_rc.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         for keycode in &keyboard_state.keys_pressed {
@@ -581,10 +578,8 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        let scene_context = (*scene_context).borrow();
-
-        let resources = (*scene_context.resources).borrow();
-        let mut scenes = scene_context.scenes.borrow_mut();
+        let resources = scene_context_rc.resources.borrow();
+        let mut scenes = scene_context_rc.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
         match scene.render(&resources, &renderer_rc, None) {

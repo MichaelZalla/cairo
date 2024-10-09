@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
     let mut scene_resources_rc: Option<Rc<RefCell<SceneResources>>> = None;
 
     EDITOR_SCENE_CONTEXT.with(|sc| {
-        let cube_scene_context =
+        let (cube_scene_context, _shader_context) =
             make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
 
         let resources = RefCell::into_inner(Rc::try_unwrap(cube_scene_context.resources).unwrap());

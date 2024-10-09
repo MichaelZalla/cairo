@@ -8,14 +8,17 @@ use cairo::{
         light::PointLight,
         node::{SceneNode, SceneNodeType},
     },
+    shader::context::ShaderContext,
     transform::Transform3D,
     vec::vec3::Vec3,
 };
 
 use uuid::Uuid;
 
-pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
-    let scene_context = make_empty_scene(camera_aspect_ratio)?;
+pub fn make_sphere_grid_scene(
+    camera_aspect_ratio: f32,
+) -> Result<(SceneContext, ShaderContext), String> {
+    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
@@ -143,5 +146,5 @@ pub fn make_sphere_grid_scene(camera_aspect_ratio: f32) -> Result<SceneContext, 
         }
     }
 
-    Ok(scene_context)
+    Ok((scene_context, shader_context))
 }

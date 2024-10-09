@@ -150,13 +150,13 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context = make_spinning_cube_scene(
+    let (scene_context, shader_context) = make_spinning_cube_scene(
         window_info.canvas_resolution.width as f32 / window_info.canvas_resolution.height as f32,
     )?;
 
     // Shader context
 
-    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     // Renderer
 

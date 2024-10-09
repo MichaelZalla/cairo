@@ -8,6 +8,7 @@ use crate::{
         light::{AmbientLight, DirectionalLight},
         node::{SceneNode, SceneNodeType},
     },
+    shader::context::ShaderContext,
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -16,8 +17,10 @@ use crate::{
 
 use uuid::Uuid;
 
-pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
+pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, ShaderContext), String> {
     let scene_context: SceneContext = Default::default();
+
+    let mut shader_context: ShaderContext = Default::default();
 
     {
         let resources = scene_context.resources.borrow_mut();
@@ -40,6 +43,14 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
             );
 
             camera.is_active = true;
+
+            camera.recompute_world_space_frustum();
+
+            shader_context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
+
+            shader_context.set_view_inverse_transform(camera.get_view_inverse_transform());
+
+            shader_context.set_projection(camera.get_projection());
 
             resources.camera.borrow_mut().insert(Uuid::new_v4(), camera)
         };
@@ -108,11 +119,11 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String
         scene.root.add_child(camera_node)?;
     }
 
-    Ok(scene_context)
+    Ok((scene_context, shader_context))
 }
 
-pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String> {
-    let scene_context = make_empty_scene(camera_aspect_ratio)?;
+pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, ShaderContext), String> {
+    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
@@ -141,5 +152,5 @@ pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<SceneContext, String>
         scene.root.add_child(cube_entity_node)?;
     }
 
-    Ok(scene_context)
+    Ok((scene_context, shader_context))
 }

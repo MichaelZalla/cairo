@@ -13,6 +13,7 @@ use cairo::{
         light::PointLight,
         node::{SceneNode, SceneNodeType},
     },
+    shader::context::ShaderContext,
     texture::cubemap::CubeMap,
     vec::vec3::{self, Vec3},
 };
@@ -21,8 +22,8 @@ use uuid::Uuid;
 pub fn make_cubes_scene(
     camera_aspect_ratio: f32,
     point_shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
-) -> Result<SceneContext, ()> {
-    let scene_context = make_empty_scene(camera_aspect_ratio).unwrap();
+) -> Result<(SceneContext, ShaderContext), String> {
+    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio).unwrap();
 
     {
         let resources = (*scene_context.resources).borrow_mut();
@@ -186,5 +187,5 @@ pub fn make_cubes_scene(
         }
     }
 
-    Ok(scene_context)
+    Ok((scene_context, shader_context))
 }

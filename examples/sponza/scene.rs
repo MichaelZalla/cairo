@@ -13,14 +13,15 @@ use cairo::{
         light::{PointLight, SpotLight},
         node::{SceneNode, SceneNodeType},
     },
+    shader::context::ShaderContext,
     vec::vec3::{self, Vec3},
 };
 
 pub fn make_sponza_scene(
     rendering_context: &ApplicationRenderingContext,
     framebuffer: &Framebuffer,
-) -> Result<SceneContext, String> {
-    let scene_context = make_empty_scene(framebuffer.width_over_height)?;
+) -> Result<(SceneContext, ShaderContext), String> {
+    let (scene_context, shader_context) = make_empty_scene(framebuffer.width_over_height)?;
 
     {
         let resources = (*scene_context.resources).borrow_mut();
@@ -172,5 +173,5 @@ pub fn make_sponza_scene(
         scene.root.add_child(spot_light_node)?;
     }
 
-    Ok(scene_context)
+    Ok((scene_context, shader_context))
 }

@@ -19,7 +19,6 @@ use cairo::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
     },
-    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -63,7 +62,8 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context = Rc::new(make_empty_scene(framebuffer_rc.borrow().width_over_height)?);
+    let (scene_context, shader_context) =
+        make_empty_scene(framebuffer_rc.borrow().width_over_height)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
@@ -246,15 +246,17 @@ fn main() -> Result<(), String> {
         ))?;
     }
 
+    let scene_context_rc = Rc::new(scene_context);
+
     // Shader context
 
-    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     // Renderer
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        scene_context.resources.clone(),
+        scene_context_rc.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -274,8 +276,8 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = scene_context.resources.borrow_mut();
-        let mut scenes = scene_context.scenes.borrow_mut();
+        let resources = scene_context_rc.resources.borrow_mut();
+        let mut scenes = scene_context_rc.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.set_ambient_light(None);
@@ -399,8 +401,8 @@ fn main() -> Result<(), String> {
     let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
         // Render scene.
 
-        let resources = (*scene_context.resources).borrow();
-        let mut scenes = scene_context.scenes.borrow_mut();
+        let resources = scene_context_rc.resources.borrow();
+        let mut scenes = scene_context_rc.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
         match scene.render(&resources, &renderer_rc, None) {

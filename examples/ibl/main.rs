@@ -21,7 +21,6 @@ use cairo::{
         resources::SceneResources,
         skybox::Skybox,
     },
-    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -66,11 +65,10 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
-    let mut spheres_scene_context =
+    let (mut scene_context, shader_context) =
         scene::make_sphere_grid_scene(framebuffer_rc.borrow().width_over_height).unwrap();
 
     {
-        let scene_context = spheres_scene_context.borrow_mut();
         let resources = (*scene_context.resources).borrow_mut();
         let scene = &mut scene_context.scenes.borrow_mut()[0];
 
@@ -108,7 +106,7 @@ fn main() -> Result<(), String> {
     let specular_brdf_integration_map_handle: Handle;
 
     {
-        let resources = (*spheres_scene_context.resources).borrow_mut();
+        let resources = (*scene_context.resources).borrow_mut();
         let mut texture_vec2 = resources.texture_vec2.borrow_mut();
 
         let specular_brdf_integration_map = generate_specular_brdf_integration_map(512);
@@ -125,7 +123,7 @@ fn main() -> Result<(), String> {
     let current_handles_index = RefCell::new(0);
 
     {
-        let resources = (*spheres_scene_context.resources).borrow_mut();
+        let resources = (*scene_context.resources).borrow_mut();
 
         let mut cubemap_vec3 = resources.cubemap_vec3.borrow_mut();
 
@@ -151,10 +149,10 @@ fn main() -> Result<(), String> {
         }
     }
 
-    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     {
-        let scene_context = spheres_scene_context.borrow_mut();
+        let scene_context = scene_context.borrow_mut();
 
         let mut resources = (*scene_context.resources).borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
@@ -170,7 +168,7 @@ fn main() -> Result<(), String> {
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        spheres_scene_context.resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -178,7 +176,7 @@ fn main() -> Result<(), String> {
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    let spheres_scene_context_rc = RefCell::new(spheres_scene_context);
+    let scene_context_rc = RefCell::new(scene_context);
 
     let renderer_rc = RefCell::new(renderer);
 
@@ -189,7 +187,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let scene_context = spheres_scene_context_rc.borrow_mut();
+        let scene_context = scene_context_rc.borrow_mut();
 
         let mut resources = (*scene_context.resources).borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
@@ -286,7 +284,7 @@ fn main() -> Result<(), String> {
      -> Result<Vec<u32>, String> {
         // Render scene.
 
-        let scene_context = spheres_scene_context_rc.borrow();
+        let scene_context = scene_context_rc.borrow();
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];

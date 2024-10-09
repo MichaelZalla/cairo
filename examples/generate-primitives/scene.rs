@@ -11,6 +11,7 @@ use cairo::{
         light::{PointLight, SpotLight},
         node::{SceneNode, SceneNodeType},
     },
+    shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
     vec::vec3::Vec3,
 };
@@ -23,8 +24,9 @@ pub static POINT_LIGHTS_COUNT: usize = (LIGHT_GRID_SUBDIVISIONS + 1).pow(2);
 pub fn make_primitives_scene(
     aspect_ratio: f32,
     rendering_context: Option<&ApplicationRenderingContext>,
-) -> Result<SceneContext, String> {
+) -> Result<(SceneContext, ShaderContext), String> {
     let scene_context: SceneContext = Default::default();
+    let shader_context: ShaderContext = Default::default();
 
     {
         let resources = scene_context.resources.borrow_mut();
@@ -324,5 +326,5 @@ pub fn make_primitives_scene(
         scene.root.add_child(camera_node)?;
     }
 
-    Ok(scene_context)
+    Ok((scene_context, shader_context))
 }

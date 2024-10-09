@@ -19,7 +19,6 @@ use cairo::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
     },
-    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -62,7 +61,8 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let scene_context = make_empty_scene(framebuffer_rc.borrow().width_over_height)?;
+    let (scene_context, shader_context) =
+        make_empty_scene(framebuffer_rc.borrow().width_over_height)?;
 
     {
         let resources = scene_context.resources.borrow_mut();
@@ -245,7 +245,7 @@ fn main() -> Result<(), String> {
 
     // Shader context
 
-    let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     // Renderer
 
