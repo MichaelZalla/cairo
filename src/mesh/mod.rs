@@ -94,42 +94,14 @@ impl PostDeserialize for Mesh {
 }
 
 impl fmt::Display for Mesh {
-    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
-            v,
-            "Mesh (\"{}\")",
-            self.object_name.as_ref().unwrap_or(&"Unnamed".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Source: {}",
-            self.object_source
-                .as_ref()
-                .unwrap_or(&"No source".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Group name: {}",
-            self.group_name.as_ref().unwrap_or(&"No group".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Material source: {}",
-            self.material_source
-                .as_ref()
-                .unwrap_or(&"No material".to_string())
-        )?;
-
-        writeln!(
-            v,
-            "  > Material name: {}",
-            self.material_name
-                .as_ref()
-                .unwrap_or(&"Unnamed".to_string())
-        )
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Mesh")
+            .field("object_source", &self.object_source)
+            .field("object_name", &self.object_name)
+            .field("group_name", &self.group_name)
+            .field("material_source", &self.material_source)
+            .field("material_name", &self.material_name)
+            .finish()
     }
 }
 
