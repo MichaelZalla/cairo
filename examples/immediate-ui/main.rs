@@ -21,13 +21,11 @@ use cairo::{
 };
 
 use command::{Command, CommandBuffer};
-use font::load_system_font;
 use panel::{PanelInstance, SettingsPanel};
 use settings::Settings;
 use window::make_window_list;
 
 mod command;
-mod font;
 mod panel;
 mod settings;
 mod window;
@@ -208,7 +206,9 @@ fn main() -> Result<(), String> {
 
     // Load the font indicated by the CLI argument(s).
 
-    load_system_font(&app, args[1].to_string());
+    GLOBAL_UI_CONTEXT.with(|ctx| {
+        ctx.load_font(&app, args[1].to_string());
+    });
 
     // Define `update()` in the context of our app's main loop.
 

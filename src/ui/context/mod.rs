@@ -1,6 +1,7 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
+    app::App,
     color::Color,
     device::{
         game_controller::GameControllerState,
@@ -125,6 +126,19 @@ impl<'a> UIContext<'a> {
     with_style_applied!(fill_color);
     with_style_applied!(border_color);
     with_style_applied!(text_color);
+
+    pub fn load_font(&self, app: &App, font_path: String) {
+        self.font_cache
+            .borrow_mut()
+            .replace(FontCache::new(app.context.ttf_context));
+
+        {
+            let mut font_info = self.font_info.borrow_mut();
+
+            font_info.filepath = font_path;
+            font_info.point_size = 14;
+        }
+    }
 
     pub fn begin_frame(&self) {
         *self.cursor_kind.borrow_mut() = MouseCursorKind::Arrow;
