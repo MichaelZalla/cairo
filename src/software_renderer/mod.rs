@@ -314,10 +314,7 @@ impl SoftwareRenderer {
                     Ok(()) => {
                         self.framebuffer.clone_from(&framebuffer_option);
 
-                        self.viewport.width = framebuffer.width;
-                        self.viewport.width_over_2 = framebuffer.width as f32 / 2.0;
-                        self.viewport.height = framebuffer.height;
-                        self.viewport.height_over_2 = framebuffer.height as f32 / 2.0;
+                        self.viewport = RenderViewport::from_framebuffer(&framebuffer);
 
                         let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {
