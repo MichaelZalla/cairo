@@ -1,5 +1,7 @@
 use std::cell::RefCell;
 
+use sdl2::mouse::MouseButton;
+
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::Buffer2D,
@@ -17,7 +19,6 @@ use force::{Newtons, Point};
 use make_simulation::make_simulation;
 use renderable::Renderable;
 use rigid_body_simulation_state::RigidBodySimulationState;
-use sdl2::mouse::MouseButton;
 
 mod coordinates;
 mod force;
