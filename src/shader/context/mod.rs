@@ -11,7 +11,7 @@ pub struct ShaderContext {
     pub world_view_transform: Mat4,
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
-    pub active_material: Option<String>,
+    pub active_material: Option<Handle>,
     pub active_uv_test_texture_map: Option<Handle>,
     pub active_hdr_map: Option<Handle>,
     pub ambient_radiance_map: Option<Handle>,
@@ -165,7 +165,7 @@ impl ShaderContext {
         &mut self.spot_lights
     }
 
-    pub fn set_active_material(&mut self, optional_handle: Option<String>) {
+    pub fn set_active_material(&mut self, optional_handle: Option<Handle>) {
         self.active_material = optional_handle;
     }
 

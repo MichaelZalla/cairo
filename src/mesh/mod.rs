@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use self::geometry::Geometry;
 
-use crate::{physics::collision::aabb::AABB, serde::PostDeserialize, vec::vec3::Vec3};
+use crate::{
+    physics::collision::aabb::AABB, resource::handle::Handle, serde::PostDeserialize,
+    vec::vec3::Vec3,
+};
 
 pub mod geometry;
 pub mod obj;
@@ -80,7 +83,7 @@ pub struct Mesh {
     pub object_name: Option<String>,
     pub group_name: Option<String>,
     pub material_source: Option<String>,
-    pub material_name: Option<String>,
+    pub material: Option<Handle>,
     pub geometry: Rc<Geometry>,
     pub faces: Vec<Face>,
     #[serde(skip)]
@@ -100,7 +103,7 @@ impl fmt::Display for Mesh {
             .field("object_name", &self.object_name)
             .field("group_name", &self.group_name)
             .field("material_source", &self.material_source)
-            .field("material_name", &self.material_name)
+            .field("material", &self.material)
             .finish()
     }
 }
@@ -182,7 +185,7 @@ impl Mesh {
     pub fn new(
         geometry: Rc<Geometry>,
         partial_faces: Vec<PartialFace>,
-        material_name: Option<String>,
+        material: Option<Handle>,
     ) -> Self {
         let faces = get_processed_faces(&geometry, &partial_faces);
 
@@ -191,7 +194,7 @@ impl Mesh {
             object_name: None,
             group_name: None,
             material_source: None,
-            material_name,
+            material,
             geometry,
             faces,
             aabb: Default::default(),

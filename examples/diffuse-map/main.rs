@@ -67,23 +67,28 @@ fn main() -> Result<(), String> {
 
         // Customize the cube material.
 
-        let cube_albedo_map_handle = resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
-                "./data/obj/cobblestone.png",
-                cairo::texture::map::TextureMapStorageFormat::RGB24,
-            ),
-        );
+        let mut cube_material = {
+            let cube_albedo_map_handle = resources.texture_u8.borrow_mut().insert(
+                Uuid::new_v4(),
+                TextureMap::new(
+                    "./data/obj/cobblestone.png",
+                    cairo::texture::map::TextureMapStorageFormat::RGB24,
+                ),
+            );
 
-        let mut cube_material = Material {
-            name: "cube".to_string(),
-            albedo_map: Some(cube_albedo_map_handle),
-            ..Default::default()
+            Material {
+                name: "cube".to_string(),
+                albedo_map: Some(cube_albedo_map_handle),
+                ..Default::default()
+            }
         };
 
         cube_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
-        resources.material.borrow_mut().insert(cube_material);
+        let cube_material_handle = resources
+            .material
+            .borrow_mut()
+            .insert(Uuid::new_v4(), cube_material);
 
         let cube_entity_handle = scene
             .root
@@ -95,7 +100,7 @@ fn main() -> Result<(), String> {
             Ok(entry) => {
                 let cube_entity = &mut entry.item;
 
-                cube_entity.material = Some("cube".to_string());
+                cube_entity.material = Some(cube_material_handle);
             }
             _ => panic!(),
         }

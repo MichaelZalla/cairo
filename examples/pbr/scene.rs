@@ -77,6 +77,7 @@ pub fn make_sphere_grid_scene(
 
         let result = load_obj(
             "./examples/pbr/assets/sphere.obj",
+            &mut resources.material.borrow_mut(),
             &mut resources.texture_u8.borrow_mut(),
         );
 
@@ -104,29 +105,27 @@ pub fn make_sphere_grid_scene(
             for grid_index_x in 0..GRID_COLUMNS {
                 let alpha_x = grid_index_x as f32 / (GRID_COLUMNS as f32 - 1.0);
 
-                let (material_name, material) = {
-                    let name = format!("instance_x{}_y{}", grid_index_x, grid_index_y).to_string();
+                let name = format!("instance_x{}_y{}", grid_index_x, grid_index_y).to_string();
 
-                    (
-                        name.clone(),
-                        Material {
-                            name,
-                            albedo: color::RED.to_vec3() / 255.0,
-                            roughness: (alpha_x * 0.75).max(0.075),
-                            metallic: alpha_y,
-                            sheen: 0.0,
-                            clearcoat_thickness: 0.0,
-                            clearcoat_roughness: 0.0,
-                            anisotropy: 0.0,
-                            anisotropy_rotation: 0.0,
-                            ..Default::default()
-                        },
-                    )
+                let material = Material {
+                    name,
+                    albedo: color::RED.to_vec3() / 255.0,
+                    roughness: (alpha_x * 0.75).max(0.075),
+                    metallic: alpha_y,
+                    sheen: 0.0,
+                    clearcoat_thickness: 0.0,
+                    clearcoat_roughness: 0.0,
+                    anisotropy: 0.0,
+                    anisotropy_rotation: 0.0,
+                    ..Default::default()
                 };
 
-                resources.material.borrow_mut().insert(material);
+                let material_handle = resources
+                    .material
+                    .borrow_mut()
+                    .insert(Uuid::new_v4(), material);
 
-                let entity = Entity::new(mesh_handle, Some(material_name.clone()));
+                let entity = Entity::new(mesh_handle, Some(material_handle));
 
                 let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 

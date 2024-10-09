@@ -10,10 +10,12 @@ pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
         // Check if this fragment can be discarded.
 
         match &context.active_material {
-            Some(name) => {
-                if let Some(material) = resources.material.borrow().get(name) {
-                    if let Some(handle) = material.alpha_map {
-                        match resources.texture_u8.borrow().get(&handle) {
+            Some(material_handle) => {
+                if let Ok(entry) = resources.material.borrow().get(material_handle) {
+                    let material = &entry.item;
+
+                    if let Some(alpha_map_handle) = material.alpha_map {
+                        match resources.texture_u8.borrow().get(&alpha_map_handle) {
                             Ok(entry) => {
                                 let map = &entry.item;
 
@@ -27,7 +29,10 @@ pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
                                 }
                             }
                             Err(err) => {
-                                panic!("Failed to get TextureMap from Arena: {:?}: {}", name, err)
+                                panic!(
+                                    "Failed to get TextureMap from Arena: {:?}: {}",
+                                    material_handle, err
+                                )
                             }
                         }
                     }

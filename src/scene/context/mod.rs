@@ -46,12 +46,14 @@ impl SceneContext {
 
         // Load all texture map data from materials.
 
-        let mut materials = resources.material.borrow_mut();
+        let mut materials_arena = resources.material.borrow_mut();
 
-        for material in materials.values_mut() {
-            let arena = &mut *textures;
+        for entry in materials_arena.entries.iter_mut().flatten() {
+            let material = &mut entry.item;
 
-            material.load_all_maps(arena, rendering_context)?;
+            let texture_arena = &mut *textures;
+
+            material.load_all_maps(texture_arena, rendering_context)?;
         }
 
         // Load all texture map data from cubemaps.

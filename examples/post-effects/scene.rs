@@ -21,7 +21,7 @@ pub fn make_scene(
 ) -> Result<(), String> {
     // Add a textured ground plane to our scene.
 
-    {
+    let checkerboard_material_handle = {
         let mut materials = resources.material.borrow_mut();
 
         let checkerboard_material = {
@@ -48,17 +48,17 @@ pub fn make_scene(
             material
         };
 
-        materials.insert(checkerboard_material);
-    }
+        materials.insert(Uuid::new_v4(), checkerboard_material)
+    };
 
     let mut plane_entity_node = {
         let mut mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
 
-        mesh.material_name = Some("checkerboard".to_string());
+        mesh.material = Some(checkerboard_material_handle);
 
         let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-        let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
+        let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
         let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -79,7 +79,7 @@ pub fn make_scene(
 
     // Add a container (cube) to our scene.
 
-    {
+    let emissive_material_handle = {
         let mut materials = resources.material.borrow_mut();
 
         let emissive_material = {
@@ -108,15 +108,15 @@ pub fn make_scene(
             material
         };
 
-        materials.insert(emissive_material);
-    }
+        materials.insert(Uuid::new_v4(), emissive_material)
+    };
 
     let cube_entity_node = {
         let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
         let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-        let entity = Entity::new(mesh_handle, Some("emissive".to_string()));
+        let entity = Entity::new(mesh_handle, Some(emissive_material_handle));
 
         let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 

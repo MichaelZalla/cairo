@@ -3,16 +3,19 @@ use std::{path::Path, str::SplitWhitespace};
 use uuid::Uuid;
 
 use crate::{
-    resource::arena::Arena,
-    texture::map::TextureMapStorageFormat,
-    {fs::read_lines, texture::map::TextureMap, vec::vec3::Vec3},
+    fs::read_lines,
+    resource::{arena::Arena, handle::Handle},
+    texture::map::{TextureMap, TextureMapStorageFormat},
+    vec::vec3::Vec3,
 };
-
-use super::cache::MaterialCache;
 
 use super::Material;
 
-pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> MaterialCache {
+pub fn load_mtl(
+    filepath: &str,
+    material_arena: &mut Arena<Material>,
+    texture_arena: &mut Arena<TextureMap>,
+) {
     let mtl_file_path = Path::new(&filepath);
     let mtl_file_path_display = mtl_file_path.display();
 
@@ -21,9 +24,9 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
         Ok(lines) => lines,
     };
 
-    let mut cache: MaterialCache = Default::default();
+    let mut parsed_materials_count: usize = 0;
 
-    let mut current_material_name: Option<String> = None;
+    let mut current_material: Option<Handle> = None;
 
     for line in lines {
         match line {
@@ -47,13 +50,14 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let name = line_tokens.next().unwrap().to_string();
 
-                                current_material_name = Some(name.clone());
-
                                 let mut material = Material::new(name.clone());
 
                                 material.material_source = Some(source);
 
-                                cache.insert(material);
+                                current_material
+                                    .replace(material_arena.insert(Uuid::new_v4(), material));
+
+                                parsed_materials_count += 1;
                             }
 
                             // Illumination model
@@ -63,10 +67,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // illum 2
                                 let value = line_tokens.next().unwrap().parse::<u8>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .illumination_model = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.illumination_model = value;
+                                }
                             }
 
                             // Common attributes
@@ -80,14 +87,16 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // Kd 0.5880 0.5880 0.5880
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                let color = next_rgb(&mut line_tokens);
+                                    let color = next_rgb(&mut line_tokens);
 
-                                material.diffuse_color = color;
-                                material.albedo = color;
+                                    material.diffuse_color = color;
+                                    material.albedo = color;
+                                }
                             }
 
                             // Diffuse / albedo map
@@ -107,12 +116,14 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.diffuse_color_map = Some(texture_map_handle);
-                                material.albedo_map = Some(texture_map_handle);
+                                    material.diffuse_color_map = Some(texture_map_handle);
+                                    material.albedo_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Emissive color
@@ -121,10 +132,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // Ke 0.0000 0.0000 0.0000
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .emissive_color = next_rgb(&mut line_tokens);
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.emissive_color = next_rgb(&mut line_tokens);
+                                }
                             }
 
                             // Emissive color map
@@ -144,11 +158,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.emissive_color_map = Some(texture_map_handle);
+                                    material.emissive_color_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Dissolve (opaqueness)
@@ -159,10 +175,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .dissolve = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.dissolve = value;
+                                }
                             }
 
                             // Alpha map
@@ -182,11 +201,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.alpha_map = Some(texture_map_handle);
+                                    material.alpha_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Transparency
@@ -197,10 +218,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .transparency = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.transparency = value;
+                                }
                             }
 
                             // Transparency map
@@ -220,11 +244,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.transparency_map = Some(texture_map_handle);
+                                    material.transparency_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Translucency (transmission filter color)
@@ -233,10 +259,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // Tf 1.0000 1.0000 1.0000
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .translucency = next_rgb(&mut line_tokens);
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.translucency = next_rgb(&mut line_tokens);
+                                }
                             }
 
                             // Bump map
@@ -256,11 +285,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.bump_map = Some(texture_map_handle);
+                                    material.bump_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Normal map
@@ -280,11 +311,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.normal_map = Some(texture_map_handle);
+                                    material.normal_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Displacement (height) map
@@ -304,11 +337,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.displacement_map = Some(texture_map_handle);
+                                    material.displacement_map = Some(texture_map_handle);
+                                }
                             }
 
                             //
@@ -321,10 +356,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // Ka 0.0000 0.0000 0.0000
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .ambient_color = next_rgb(&mut line_tokens);
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.ambient_color = next_rgb(&mut line_tokens);
+                                }
                             }
 
                             // Ambient color map
@@ -344,11 +382,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.ambient_color_map = Some(texture_map_handle);
+                                    material.ambient_color_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Specular exponent
@@ -359,10 +399,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .specular_exponent = value as u8;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.specular_exponent = value as u8;
+                                }
                             }
 
                             // Specular exponent map
@@ -382,11 +425,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.specular_exponent_map = Some(texture_map_handle);
+                                    material.specular_exponent_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Specular color
@@ -395,10 +440,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                 // Example:
                                 // Ks 0.0000 0.0000 0.0000
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .specular_color = next_rgb(&mut line_tokens);
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.specular_color = next_rgb(&mut line_tokens);
+                                }
                             }
 
                             // Specular color map
@@ -418,11 +466,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.specular_color_map = Some(texture_map_handle);
+                                    material.specular_color_map = Some(texture_map_handle);
+                                }
                             }
 
                             //
@@ -437,10 +487,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .roughness = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.roughness = value;
+                                }
                             }
 
                             // Roughness (map)
@@ -460,11 +513,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.roughness_map = Some(texture_map_handle);
+                                    material.roughness_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Metallic
@@ -475,10 +530,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .metallic = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.metallic = value;
+                                }
                             }
 
                             // Metallic (map)
@@ -498,11 +556,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.metallic_map = Some(texture_map_handle);
+                                    material.metallic_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Sheen
@@ -513,10 +573,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .sheen = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.sheen = value;
+                                }
                             }
 
                             // Sheen (map)
@@ -536,11 +599,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.sheen_map = Some(texture_map_handle);
+                                    material.sheen_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Clearcoat thickness
@@ -551,10 +616,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .clearcoat_thickness = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.clearcoat_thickness = value;
+                                }
                             }
 
                             // Clearcoat roughness
@@ -565,10 +633,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .clearcoat_roughness = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.clearcoat_roughness = value;
+                                }
                             }
 
                             // Anisotropy
@@ -579,10 +650,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .anisotropy = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.anisotropy = value;
+                                }
                             }
 
                             // Anisotropy rotation
@@ -593,10 +667,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .anisotropy_rotation = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.anisotropy_rotation = value;
+                                }
                             }
 
                             //
@@ -611,10 +688,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
 
                                 let value = line_tokens.next().unwrap().parse::<f32>().unwrap();
 
-                                cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap()
-                                    .index_of_refraction = value;
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
+
+                                    material.index_of_refraction = value;
+                                }
                             }
 
                             // Stencil (decal) map
@@ -634,11 +714,13 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
                                     ),
                                 );
 
-                                let material = cache
-                                    .get_mut(current_material_name.as_ref().unwrap())
-                                    .unwrap();
+                                if let Ok(entry) =
+                                    material_arena.get_mut(&current_material.unwrap())
+                                {
+                                    let material = &mut entry.item;
 
-                                material.decal_map = Some(texture_map_handle);
+                                    material.decal_map = Some(texture_map_handle);
+                                }
                             }
 
                             // Unrecognized prefix
@@ -652,16 +734,12 @@ pub fn load_mtl(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> Materi
         }
     }
 
-    let count = cache.len();
-
     println!(
         "Parsed {} material{} from \"{}\".",
-        count,
-        if count > 1 { "s" } else { "" },
+        parsed_materials_count,
+        if parsed_materials_count > 1 { "s" } else { "" },
         mtl_file_path_display
     );
-
-    cache
 }
 
 fn next_rgb(line_tokens: &mut SplitWhitespace<'_>) -> Vec3 {

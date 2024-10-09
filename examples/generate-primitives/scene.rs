@@ -35,7 +35,7 @@ pub fn make_primitives_scene(
 
         // Add a textured ground plane to our scene.
 
-        {
+        let checkerboard_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
             let checkerboard_material = {
@@ -73,17 +73,17 @@ pub fn make_primitives_scene(
                 material
             };
 
-            materials.insert(checkerboard_material);
-        }
+            materials.insert(Uuid::new_v4(), checkerboard_material)
+        };
 
         let plane_entity_node = {
             let mut mesh = mesh::primitive::plane::generate(32.0, 32.0, 1, 1);
 
-            mesh.material_name = Some("checkerboard".to_string());
+            mesh.material = Some(checkerboard_material_handle);
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
+            let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -111,7 +111,7 @@ pub fn make_primitives_scene(
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
+            let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -139,7 +139,7 @@ pub fn make_primitives_scene(
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
+            let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -167,7 +167,7 @@ pub fn make_primitives_scene(
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
+            let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -210,11 +210,11 @@ pub fn make_primitives_scene(
             material
         };
 
-        {
+        let _point_light_decal_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(point_light_decal_material);
-        }
+            materials.insert(Uuid::new_v4(), point_light_decal_material)
+        };
 
         {
             let mut point_light_arena = resources.point_light.borrow_mut();
@@ -266,11 +266,11 @@ pub fn make_primitives_scene(
             material
         };
 
-        {
+        let _spot_light_decal_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(spot_light_decal_material);
-        }
+            materials.insert(Uuid::new_v4(), spot_light_decal_material)
+        };
 
         let spot_light_node = {
             let mut spot_light = SpotLight::new();

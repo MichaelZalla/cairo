@@ -2,7 +2,7 @@ use std::{fmt, io::Error, mem, path::Path, rc::Rc};
 
 use crate::{
     fs::read_lines,
-    material::{cache::MaterialCache, mtl::load_mtl},
+    material::{mtl::load_mtl, Material},
     mesh::{
         geometry::Geometry,
         obj::parse::{
@@ -15,7 +15,7 @@ use crate::{
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
-pub struct LoadObjResult(pub Rc<Geometry>, pub Vec<Mesh>, pub Option<MaterialCache>);
+pub struct LoadObjResult(pub Rc<Geometry>, pub Vec<Mesh>);
 
 #[derive(Default, Debug)]
 struct ObjDataTypeCounts {
@@ -42,7 +42,11 @@ struct PartialMesh {
     material_name: Option<String>,
 }
 
-pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadObjResult {
+pub fn load_obj(
+    filepath: &str,
+    material_arena: &mut Arena<Material>,
+    texture_arena: &mut Arena<TextureMap>,
+) -> LoadObjResult {
     let path = Path::new(&filepath);
 
     let parent_path = path.parent().unwrap();
@@ -202,6 +206,11 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
         }
     }
 
+    match &material_source {
+        Some(src) => load_mtl(src, material_arena, texture_arena),
+        None => (),
+    }
+
     let geometry = Geometry {
         vertices: vertices.into_boxed_slice(),
         normals: normals.into_boxed_slice(),
@@ -213,11 +222,20 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
     let mut meshes: Vec<Mesh> = vec![];
 
     for partial_mesh in partial_meshes {
-        let mut mesh = Mesh::new(
-            geometry_rc.clone(),
-            partial_mesh.partial_faces,
-            partial_mesh.material_name.to_owned(),
-        );
+        let material = partial_mesh.material_name.as_ref().and_then(|name| {
+            let material_slot_index = material_arena.entries.iter().position(|slot| match slot {
+                Some(entry) => {
+                    let material = &entry.item;
+
+                    material.name == *name
+                }
+                None => false,
+            });
+
+            material_slot_index.map(|index| material_arena.get_handle(index).unwrap())
+        });
+
+        let mut mesh = Mesh::new(geometry_rc.clone(), partial_mesh.partial_faces, material);
 
         partial_mesh.object_name.clone_into(&mut mesh.object_name);
 
@@ -231,12 +249,5 @@ pub fn load_obj(filepath: &str, texture_arena: &mut Arena<TextureMap>) -> LoadOb
     println!("{}", counts);
     println!("Parsed {} meshes.", meshes.len());
 
-    let mut materials: Option<MaterialCache> = None;
-
-    match &material_source {
-        Some(src) => materials = Some(load_mtl(src, texture_arena)),
-        None => (),
-    }
-
-    LoadObjResult(geometry_rc, meshes, materials)
+    LoadObjResult(geometry_rc, meshes)
 }

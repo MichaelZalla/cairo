@@ -12,6 +12,7 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh,
+    resource::handle::Handle,
     scene::{
         context::utils::make_empty_scene,
         light::{PointLight, SpotLight},
@@ -70,6 +71,8 @@ fn main() -> Result<(), String> {
 
         // Add a textured ground plane to our scene.
 
+        let checkerboard_material_handle: Handle;
+
         {
             let mut materials = resources.material.borrow_mut();
 
@@ -97,17 +100,17 @@ fn main() -> Result<(), String> {
                 material
             };
 
-            materials.insert(checkerboard_material);
+            checkerboard_material_handle = materials.insert(Uuid::new_v4(), checkerboard_material);
         }
 
         let mut plane_entity_node = {
             let mut mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
 
-            mesh.material_name = Some("checkerboard".to_string());
+            mesh.material = Some(checkerboard_material_handle);
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("checkerboard".to_string()));
+            let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -127,6 +130,8 @@ fn main() -> Result<(), String> {
         };
 
         // Add a container (cube) to our scene.
+
+        let cube_material_handle: Handle;
 
         {
             let mut materials = resources.material.borrow_mut();
@@ -157,7 +162,7 @@ fn main() -> Result<(), String> {
                 material
             };
 
-            materials.insert(container_material);
+            cube_material_handle = materials.insert(Uuid::new_v4(), container_material);
         }
 
         let cube_entity_node = {
@@ -165,7 +170,7 @@ fn main() -> Result<(), String> {
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("container".to_string()));
+            let entity = Entity::new(mesh_handle, Some(cube_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 

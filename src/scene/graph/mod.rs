@@ -252,33 +252,15 @@ impl SceneGraph {
                             return Ok(());
                         }
 
-                        let camera_arena = resources.camera.borrow();
                         let point_light_arena = resources.point_light.borrow();
 
                         match point_light_arena.get(point_light_handle) {
                             Ok(entry) => {
                                 let point_light = &entry.item;
 
-                                match active_camera_handle {
-                                    Some(camera_handle) => match camera_arena.get(&camera_handle) {
-                                        Ok(entry) => {
-                                            let active_camera = &entry.item;
+                                renderer.render_point_light(point_light);
 
-                                            renderer.render_point_light(
-                                                point_light,
-                                                Some(active_camera),
-                                                Some(&mut resources.material.borrow_mut()),
-                                            );
-
-                                            Ok(())
-                                        }
-                                        Err(err) => panic!(
-                                            "Failed to get Camera from Arena with Handle {:?}: {}",
-                                            handle, err
-                                        ),
-                                    },
-                                    None => Ok(()),
-                                }
+                                Ok(())
                             }
                             Err(err) => panic!(
                                 "Failed to get PointLight from Arena with Handle {:?}: {}",
@@ -297,39 +279,20 @@ impl SceneGraph {
                             return Ok(());
                         }
 
-                        let camera_arena = resources.camera.borrow();
-                        let mut materials = resources.material.borrow_mut();
                         let spot_light_arena = resources.spot_light.borrow();
 
-                        match active_camera_handle {
-                            Some(camera_handle) => match camera_arena.get(&camera_handle) {
-                                Ok(entry) => {
-                                    let active_camera = &entry.item;
+                        match spot_light_arena.get(spot_light_handle) {
+                            Ok(entry) => {
+                                let spot_light = &entry.item;
 
-                                    match spot_light_arena.get(spot_light_handle) {
-                                                Ok(entry) => {
-                                                    let spot_light = &entry.item;
+                                renderer.render_spot_light(spot_light);
 
-                                                    renderer.render_spot_light(
-                                                        spot_light,
-                                                        Some(active_camera),
-                                                        Some(&mut materials),
-                                                    );
-
-                                                    Ok(())
-                                                }
-                                                Err(err) => panic!(
-                                                    "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                                    handle, err
-                                                ),
-                                            }
-                                }
-                                Err(err) => panic!(
-                                    "Failed to get Camera from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
-                            },
-                            None => Ok(()),
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
                         }
                     }
                     (_, None) => {

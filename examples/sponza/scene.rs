@@ -30,39 +30,38 @@ pub fn make_sponza_scene(
         // Sponza meshes and materials
 
         let obj_result = {
+            let mut material_arena = resources.material.borrow_mut();
             let mut texture_arena = resources.texture_u8.borrow_mut();
 
-            mesh::obj::load::load_obj("./examples/sponza/assets/sponza.obj", &mut texture_arena)
+            mesh::obj::load::load_obj(
+                "./examples/sponza/assets/sponza.obj",
+                &mut material_arena,
+                &mut texture_arena,
+            )
         };
 
         let _atrium_geometry = obj_result.0;
         let atrium_meshes = obj_result.1;
-        let mut atrium_materials = obj_result.2;
 
-        // Load texture maps.
+        {
+            let mut material_arena = resources.material.borrow_mut();
+            let mut texture_arena = resources.texture_u8.borrow_mut();
 
-        match &mut atrium_materials {
-            Some(cache) => {
-                let mut materials = resources.material.borrow_mut();
-                let mut texture_arena = resources.texture_u8.borrow_mut();
+            for entry in material_arena.entries.iter_mut().flatten() {
+                let material = &mut entry.item;
 
-                for material in cache.values_mut() {
-                    material.load_all_maps(&mut texture_arena, rendering_context)?;
+                material.roughness = 1.0;
+                material.metallic = 0.0;
+                material.metallic_map = material.specular_exponent_map;
 
-                    material.roughness = 1.0;
-                    material.metallic = 0.0;
-                    material.metallic_map = material.specular_exponent_map;
-
-                    materials.insert(material.to_owned());
-                }
+                material.load_all_maps(&mut texture_arena, rendering_context)?;
             }
-            None => (),
         }
 
         // Assign the meshes to entities
 
         for mesh in atrium_meshes {
-            let material_name = mesh.material_name.clone();
+            let material_handle = mesh.material;
 
             let mut mesh_arena = resources.mesh.borrow_mut();
 
@@ -71,7 +70,7 @@ pub fn make_sponza_scene(
             let mut entity_arena = resources.entity.borrow_mut();
 
             let entity_handle =
-                entity_arena.insert(Uuid::new_v4(), Entity::new(mesh_handle, material_name));
+                entity_arena.insert(Uuid::new_v4(), Entity::new(mesh_handle, material_handle));
 
             scene.root.add_child(SceneNode::new(
                 SceneNodeType::Entity,

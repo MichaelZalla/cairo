@@ -13,6 +13,7 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh,
+    resource::handle::Handle,
     scene::{
         context::utils::make_empty_scene,
         light::{PointLight, SpotLight},
@@ -79,6 +80,8 @@ fn main() -> Result<(), String> {
 
         // Add a textured ground plane to our scene.
 
+        let checkerboard_material_handle: Handle;
+
         {
             let mut materials = resources.material.borrow_mut();
 
@@ -102,20 +105,20 @@ fn main() -> Result<(), String> {
                 material
             };
 
-            materials.insert(checkerboard_material);
+            checkerboard_material_handle = materials.insert(Uuid::new_v4(), checkerboard_material);
         }
 
         let mut plane_entity_node = {
             let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
 
-            plane_mesh.material_name = Some("checkerboard".to_string());
+            plane_mesh.material = Some(checkerboard_material_handle);
 
             let plane_mesh_handle = resources
                 .mesh
                 .borrow_mut()
                 .insert(Uuid::new_v4(), plane_mesh);
 
-            let plane_entity = Entity::new(plane_mesh_handle, Some("checkerboard".to_string()));
+            let plane_entity = Entity::new(plane_mesh_handle, Some(checkerboard_material_handle));
 
             let plane_entity_handle = resources
                 .entity
@@ -140,13 +143,15 @@ fn main() -> Result<(), String> {
         let mut blue_cube_material = Material::new("blue".to_string());
         blue_cube_material.albedo = color::BLUE.to_vec3() / 255.0;
 
-        {
+        let (red_cube_material_handle, green_cube_material_handle, blue_cube_material_handle) = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(red_cube_material);
-            materials.insert(green_cube_material);
-            materials.insert(blue_cube_material);
-        }
+            (
+                materials.insert(Uuid::new_v4(), red_cube_material),
+                materials.insert(Uuid::new_v4(), green_cube_material),
+                materials.insert(Uuid::new_v4(), blue_cube_material),
+            )
+        };
 
         // Blue cube (1x1)
 
@@ -156,11 +161,12 @@ fn main() -> Result<(), String> {
             let mut mesh = cube_mesh.clone();
 
             mesh.object_name = Some("blue_cube".to_string());
-            mesh.material_name = Some("blue".to_string());
+
+            mesh.material = Some(blue_cube_material_handle);
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("blue".to_string()));
+            let entity = Entity::new(mesh_handle, Some(blue_cube_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -188,11 +194,12 @@ fn main() -> Result<(), String> {
             let mut mesh = cube_mesh.clone();
 
             mesh.object_name = Some("green_cube".to_string());
-            mesh.material_name = Some("green".to_string());
+
+            mesh.material = Some(green_cube_material_handle);
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("green".to_string()));
+            let entity = Entity::new(mesh_handle, Some(green_cube_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -220,11 +227,12 @@ fn main() -> Result<(), String> {
             let mut mesh = cube_mesh.clone();
 
             mesh.object_name = Some("red_cube".to_string());
-            mesh.material_name = Some("red".to_string());
+
+            mesh.material = Some(red_cube_material_handle);
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("red".to_string()));
+            let entity = Entity::new(mesh_handle, Some(red_cube_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 

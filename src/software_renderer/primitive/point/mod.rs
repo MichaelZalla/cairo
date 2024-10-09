@@ -1,6 +1,12 @@
 use crate::{
-    color::Color, material::cache::MaterialCache, mesh, scene::camera::Camera,
-    software_renderer::SoftwareRenderer, transform::Transform3D, vec::vec3::Vec3,
+    color::Color,
+    material::Material,
+    mesh,
+    resource::{arena::Arena, handle::Handle},
+    scene::camera::Camera,
+    software_renderer::SoftwareRenderer,
+    transform::Transform3D,
+    vec::vec3::Vec3,
 };
 
 impl SoftwareRenderer {
@@ -9,8 +15,8 @@ impl SoftwareRenderer {
         point_world_space: Vec3,
         color: &Color,
         camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-        material_name: Option<String>,
+        materials: Option<&mut Arena<Material>>,
+        material: Option<Handle>,
         scale: Option<f32>,
     ) {
         let point_ndc_space: Vec3;
@@ -32,8 +38,9 @@ impl SoftwareRenderer {
 
         let color_u32 = color.to_u32();
 
-        if let Some(materials) = material_cache {
-            let mat_name = material_name.unwrap();
+        if let Some(materials) = materials {
+            let material_handle = material.unwrap();
+
             let billboard_scale = scale.unwrap();
 
             let mut billboard_mesh = mesh::primitive::billboard::generate(
@@ -43,12 +50,12 @@ impl SoftwareRenderer {
                 billboard_scale,
             );
 
-            let billboard_mat = materials.get_mut(&mat_name);
+            if let Ok(billboard_material_entry) = materials.get_mut(&material_handle) {
+                let material = &mut billboard_material_entry.item;
 
-            if let Some(material) = billboard_mat {
                 material.diffuse_color = color.to_vec3() / 255.0;
 
-                billboard_mesh.material_name = Some(mat_name.clone());
+                billboard_mesh.material = Some(material_handle);
 
                 let transform: Transform3D = Default::default();
 

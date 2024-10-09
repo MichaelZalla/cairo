@@ -278,20 +278,23 @@ fn render_specular_prefiltered_environment_to_cubemap(
     shader_context_rc: &RefCell<ShaderContext>,
     renderer_rc: &RefCell<SoftwareRenderer>,
 ) -> CubeMap<Vec3> {
-    let material_name = "specular_roughness".to_string();
+    let material_handle: Handle;
 
     {
         // Setup
 
         let material = Material {
-            name: material_name.clone(),
+            name: "specular_roughness".to_string(),
             roughness: 0.0,
             ..Default::default()
         };
 
-        let resources = (*scene_context.resources).borrow_mut();
+        let resources = (*scene_context.resources).borrow();
 
-        resources.material.borrow_mut().insert(material);
+        material_handle = resources
+            .material
+            .borrow_mut()
+            .insert(Uuid::new_v4(), material);
 
         //
 
@@ -307,7 +310,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
         if let Ok(entry) = resources.entity.borrow_mut().get_mut(&cube_entity_handle) {
             let entity = &mut entry.item;
 
-            entity.material = Some(material_name.clone());
+            entity.material = Some(material_handle);
         }
 
         //
@@ -344,7 +347,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
             let mut materials = resources.material.borrow_mut();
 
-            let material = materials.get_mut(&material_name).unwrap();
+            let material = &mut materials.get_mut(&material_handle).unwrap().item;
 
             material.roughness = mipmap_level_alpha;
 

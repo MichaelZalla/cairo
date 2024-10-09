@@ -100,11 +100,11 @@ fn main() -> Result<(), String> {
 
         brick_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
-        {
+        let brick_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(brick_material);
-        }
+            materials.insert(Uuid::new_v4(), brick_material)
+        };
 
         // Add a brick wall to our scene.
 
@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), brick_wall_mesh);
 
-        let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
+        let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some(brick_material_handle));
 
         let brick_wall_entity_handle = resources
             .entity

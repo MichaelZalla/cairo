@@ -12,6 +12,7 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh,
+    resource::handle::Handle,
     scene::{
         context::utils::make_empty_scene,
         light::{PointLight, SpotLight},
@@ -134,11 +135,14 @@ fn main() -> Result<(), String> {
 
         // Collect materials
 
+        let brick_material_handle: Handle;
+        let box_material_handle: Handle;
+
         {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(brick_material);
-            materials.insert(box_material);
+            brick_material_handle = materials.insert(Uuid::new_v4(), brick_material);
+            box_material_handle = materials.insert(Uuid::new_v4(), box_material);
         }
 
         // Add a brick wall to our scene.
@@ -150,7 +154,7 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), brick_wall_mesh);
 
-        let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some("brick".to_string()));
+        let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some(brick_material_handle));
 
         let brick_wall_entity_handle = resources
             .entity
@@ -182,7 +186,7 @@ fn main() -> Result<(), String> {
             .borrow_mut()
             .insert(Uuid::new_v4(), wooden_box_mesh);
 
-        let wooden_box_entity = Entity::new(wooden_box_mesh_handle, Some("box".to_string()));
+        let wooden_box_entity = Entity::new(wooden_box_mesh_handle, Some(box_material_handle));
 
         let wooden_box_entity_handle = resources
             .entity

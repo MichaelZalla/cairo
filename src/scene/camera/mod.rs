@@ -9,7 +9,10 @@ use crate::{
     serde::PostDeserialize,
     time::TimingInfo,
     transform::look_vector::LookVector,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 use self::frustum::{Frustum, FAR_PLANE_POINTS_CLIP_SPACE, NEAR_PLANE_POINTS_CLIP_SPACE};
@@ -64,6 +67,19 @@ pub struct Camera {
     pub look_vector: LookVector,
     #[serde(skip)]
     frustum: Frustum,
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self::new(
+            CameraProjectionKind::Perspective,
+            Default::default(),
+            vec3::FORWARD,
+            Some(90.0),
+            Some(16.0 / 9.0),
+            None,
+        )
+    }
 }
 
 impl PostDeserialize for Camera {

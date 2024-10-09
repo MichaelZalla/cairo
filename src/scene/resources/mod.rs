@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::Entity,
-    material::cache::MaterialCache,
+    material::Material,
     mesh::Mesh,
     resource::arena::Arena,
     serde::PostDeserialize,
@@ -19,7 +19,7 @@ use super::{
     skybox::Skybox,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneResources {
     pub camera: RefCell<Arena<Camera>>,
     pub environment: RefCell<Arena<Environment>>,
@@ -30,7 +30,7 @@ pub struct SceneResources {
     pub spot_light: RefCell<Arena<SpotLight>>,
     pub mesh: RefCell<Arena<Mesh>>,
     pub entity: RefCell<Arena<Entity>>,
-    pub material: RefCell<MaterialCache>,
+    pub material: RefCell<Arena<Material>>,
     pub texture_u8: RefCell<Arena<TextureMap>>,
     pub texture_vec2: RefCell<Arena<TextureMap<Vec2>>>,
     pub texture_vec3: RefCell<Arena<TextureMap<Vec3>>>,
@@ -57,28 +57,5 @@ impl PostDeserialize for SceneResources {
         self.cubemap_u8.borrow_mut().post_deserialize();
         self.cubemap_f32.borrow_mut().post_deserialize();
         self.cubemap_vec3.borrow_mut().post_deserialize();
-    }
-}
-
-impl Default for SceneResources {
-    fn default() -> Self {
-        Self {
-            camera: RefCell::new(Arena::<_>::new()),
-            environment: RefCell::new(Arena::<_>::new()),
-            skybox: RefCell::new(Arena::<_>::new()),
-            ambient_light: RefCell::new(Arena::<_>::new()),
-            directional_light: RefCell::new(Arena::<_>::new()),
-            point_light: RefCell::new(Arena::<_>::new()),
-            spot_light: RefCell::new(Arena::<_>::new()),
-            mesh: RefCell::new(Arena::<_>::new()),
-            entity: RefCell::new(Arena::<_>::new()),
-            material: RefCell::new(Default::default()),
-            texture_u8: RefCell::new(Arena::<_>::new()),
-            texture_vec2: RefCell::new(Arena::<_>::new()),
-            texture_vec3: RefCell::new(Arena::<_>::new()),
-            cubemap_u8: RefCell::new(Arena::<_>::new()),
-            cubemap_f32: RefCell::new(Arena::<_>::new()),
-            cubemap_vec3: RefCell::new(Arena::<_>::new()),
-        }
     }
 }

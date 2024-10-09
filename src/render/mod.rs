@@ -1,10 +1,10 @@
 use crate::{
     color::Color,
     entity::Entity,
-    material::cache::MaterialCache,
+    material::Material,
     matrix::Mat4,
     mesh::Mesh,
-    resource::arena::Arena,
+    resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera},
         light::{PointLight, SpotLight},
@@ -27,8 +27,8 @@ pub trait Renderer {
         point_world_space: Vec3,
         color: &Color,
         camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-        material_name: Option<String>,
+        materials: Option<&mut Arena<Material>>,
+        material: Option<Handle>,
         scale: Option<f32>,
     );
 
@@ -44,25 +44,15 @@ pub trait Renderer {
 
     fn render_camera(&mut self, camera: &Camera, color: Option<&Color>);
 
-    fn render_point_light(
-        &mut self,
-        light: &PointLight,
-        camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-    );
+    fn render_point_light(&mut self, light: &PointLight);
 
-    fn render_spot_light(
-        &mut self,
-        light: &SpotLight,
-        camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-    );
+    fn render_spot_light(&mut self, light: &SpotLight);
 
     fn render_entity_aabb(
         &mut self,
         entity: &Entity,
         world_transform: &Mat4,
-        mesh_arena: &Arena<Mesh>,
+        meshes: &Arena<Mesh>,
         color: &Color,
     );
 
@@ -71,11 +61,13 @@ pub trait Renderer {
         world_transform: &Mat4,
         clipping_camera_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
-        entity_material_name: &Option<String>,
+        entity_material: &Option<Handle>,
     ) -> bool;
 
+    // @TODO Skybox holds a Transform.
     fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera, skybox_rotation: Option<Mat4>);
 
+    // @TODO Skybox holds a Transform.
     fn render_skybox_hdr(
         &mut self,
         skybox_hdr: &CubeMap<Vec3>,

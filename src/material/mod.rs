@@ -9,7 +9,6 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-pub mod cache;
 pub mod mtl;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

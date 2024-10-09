@@ -131,10 +131,8 @@ fn main() -> Result<(), String> {
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    renderer.shader_options.base_color_mapping_active = false;
-
+    renderer.shader_options.base_color_mapping_active = true;
     renderer.shader_options.specular_exponent_mapping_active = true;
-
     renderer.shader_options.normal_mapping_active = true;
 
     let renderer_rc = RefCell::new(renderer);

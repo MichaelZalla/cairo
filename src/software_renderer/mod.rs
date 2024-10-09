@@ -7,7 +7,7 @@ use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     entity::Entity,
-    material::cache::MaterialCache,
+    material::Material,
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
     render::{
@@ -15,7 +15,7 @@ use crate::{
         viewport::RenderViewport,
         Renderer,
     },
-    resource::arena::Arena,
+    resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera},
         light::{PointLight, SpotLight},
@@ -162,18 +162,11 @@ impl Renderer for SoftwareRenderer {
         point_world_space: Vec3,
         color: &Color,
         camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-        material_name: Option<String>,
+        materials: Option<&mut Arena<Material>>,
+        material: Option<Handle>,
         scale: Option<f32>,
     ) {
-        self._render_point(
-            point_world_space,
-            color,
-            camera,
-            material_cache,
-            material_name,
-            scale,
-        )
+        self._render_point(point_world_space, color, camera, materials, material, scale)
     }
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: &Color) {
@@ -200,22 +193,12 @@ impl Renderer for SoftwareRenderer {
         self._render_camera(camera, color)
     }
 
-    fn render_point_light(
-        &mut self,
-        light: &PointLight,
-        camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-    ) {
-        self._render_point_light(light, camera, material_cache)
+    fn render_point_light(&mut self, light: &PointLight) {
+        self._render_point_light(light)
     }
 
-    fn render_spot_light(
-        &mut self,
-        light: &SpotLight,
-        camera: Option<&Camera>,
-        material_cache: Option<&mut MaterialCache>,
-    ) {
-        self._render_spot_light(light, camera, material_cache)
+    fn render_spot_light(&mut self, light: &SpotLight) {
+        self._render_spot_light(light)
     }
 
     fn render_entity_aabb(
@@ -233,13 +216,13 @@ impl Renderer for SoftwareRenderer {
         world_transform: &Mat4,
         clipping_camera_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
-        entity_material_name: &Option<String>,
+        entity_material: &Option<Handle>,
     ) -> bool {
         self._render_entity(
             world_transform,
             clipping_camera_frustum,
             entity_mesh,
-            entity_material_name,
+            entity_material,
         )
     }
 

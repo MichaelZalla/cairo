@@ -1,6 +1,6 @@
 use crate::{
-    matrix::Mat4, mesh::Mesh, physics::collision::aabb::AABB, scene::camera::frustum::Frustum,
-    software_renderer::SoftwareRenderer, vec::vec4::Vec4,
+    matrix::Mat4, mesh::Mesh, physics::collision::aabb::AABB, resource::handle::Handle,
+    scene::camera::frustum::Frustum, software_renderer::SoftwareRenderer, vec::vec4::Vec4,
 };
 
 impl SoftwareRenderer {
@@ -9,7 +9,7 @@ impl SoftwareRenderer {
         world_transform: &Mat4,
         clipping_camera_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
-        entity_material_name: &Option<String>,
+        entity_material: &Option<Handle>,
     ) -> bool {
         let mut should_cull = false;
 
@@ -25,9 +25,9 @@ impl SoftwareRenderer {
             {
                 let mut context = self.shader_context.borrow_mut();
 
-                match &entity_material_name {
-                    Some(name) => {
-                        context.set_active_material(Some(name.clone()));
+                match &entity_material {
+                    Some(handle) => {
+                        context.set_active_material(Some(*handle));
 
                         did_set_active_material = true;
                     }

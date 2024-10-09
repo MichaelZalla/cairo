@@ -58,14 +58,17 @@ pub fn make_cubes_scene(
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            resources.material.borrow_mut().insert(Material {
-                name: "plane".to_string(),
-                albedo: vec3::ONES,
-                roughness: 0.0,
-                ..Default::default()
-            });
+            let plane_material_handle = resources.material.borrow_mut().insert(
+                Uuid::new_v4(),
+                Material {
+                    name: "plane".to_string(),
+                    albedo: vec3::ONES,
+                    roughness: 0.0,
+                    ..Default::default()
+                },
+            );
 
-            let entity = Entity::new(mesh_handle, Some("plane".to_string()));
+            let entity = Entity::new(mesh_handle, Some(plane_material_handle));
 
             let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
 
@@ -85,12 +88,15 @@ pub fn make_cubes_scene(
 
         // Add cubes to our scene.
 
-        resources.material.borrow_mut().insert(Material {
-            name: "green".to_string(),
-            albedo: color::GREEN.to_vec3() / 255.0,
-            roughness: 0.0,
-            ..Default::default()
-        });
+        let green_material_handle = resources.material.borrow_mut().insert(
+            Uuid::new_v4(),
+            Material {
+                name: "green".to_string(),
+                albedo: color::GREEN.to_vec3() / 255.0,
+                roughness: 0.0,
+                ..Default::default()
+            },
+        );
 
         static CUBE_ROWS: usize = 3;
         static CUBE_COLUMNS: usize = 3;
@@ -103,7 +109,7 @@ pub fn make_cubes_scene(
 
             let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
 
-            let entity = Entity::new(mesh_handle, Some("green".to_string()));
+            let entity = Entity::new(mesh_handle, Some(green_material_handle));
 
             resources.entity.borrow_mut().insert(Uuid::new_v4(), entity)
         };
