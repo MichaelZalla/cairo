@@ -214,7 +214,7 @@ impl TextureMap {
         match sdl2::image::init(InitFlag::JPG) {
             Ok(_) => {
                 println!(
-                    "Initialized SDL_TTF v{}.",
+                    "Initialized SDL_Image v{}.",
                     sdl2::image::get_linked_version()
                 );
             }
