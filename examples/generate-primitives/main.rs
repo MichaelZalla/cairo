@@ -448,7 +448,7 @@ fn main() -> Result<(), String> {
             ));
 
             debug_message_buffer.write(format!(
-                "Culling window order: {:?}",
+                "Culling winding order: {:?}",
                 renderer.options.face_culling_strategy.winding_order
             ));
 

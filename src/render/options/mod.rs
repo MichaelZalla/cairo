@@ -115,7 +115,7 @@ impl RenderOptions {
                     );
                 }
                 (Keycode::Num9, _) => {
-                    // Cycle window orders.
+                    // Cycle winding order.
 
                     self.face_culling_strategy.winding_order =
                         match self.face_culling_strategy.winding_order {
@@ -128,7 +128,7 @@ impl RenderOptions {
                         };
 
                     println!(
-                        "Face culling window order: {:?}",
+                        "Face culling winding order: {:?}",
                         self.face_culling_strategy.winding_order
                     );
                 }
