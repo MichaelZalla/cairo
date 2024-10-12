@@ -102,13 +102,13 @@ impl PanelInstance for SettingsPanel {
                             .mouse_interaction_in_bounds
                             .was_left_pressed
                         {
-                            pending_queue.push_back(
-                                format!(
-                                    "set_setting clicked_count {}",
-                                    current_settings.clicked_count + 1
-                                )
-                                .to_string(),
-                            );
+                            let cmd_str = format!(
+                                "set_setting clicked_count {}",
+                                current_settings.clicked_count + 1
+                            )
+                            .to_string();
+
+                            pending_queue.push_back(cmd_str);
                         }
 
                         tree.push(spacer(18))?;
