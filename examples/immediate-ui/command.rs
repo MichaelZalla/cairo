@@ -16,6 +16,8 @@ pub struct Command<'a> {
     pub is_undo: bool,
 }
 
+pub type PendingCommand = (String, bool);
+
 #[derive(Default, Debug, Clone)]
 pub struct ExecutedCommand {
     pub kind: String,
@@ -25,7 +27,7 @@ pub struct ExecutedCommand {
 
 #[derive(Default, Clone)]
 pub struct CommandBuffer {
-    pub pending_commands: RefCell<LinkedList<(String, bool)>>,
+    pub pending_commands: RefCell<LinkedList<PendingCommand>>,
     pub executed_commands: RefCell<LinkedList<ExecutedCommand>>,
 }
 
@@ -121,7 +123,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
 type ProcessCommandsResult = Result<(Option<Resolution>, Option<AppWindowingMode>), String>;
 
 pub(crate) fn process_commands(
-    pending_commands: &mut LinkedList<(String, bool)>,
+    pending_commands: &mut LinkedList<PendingCommand>,
     executed_commands: &mut LinkedList<ExecutedCommand>,
 ) -> ProcessCommandsResult {
     let mut result: (Option<Resolution>, Option<AppWindowingMode>) = (None, None);
