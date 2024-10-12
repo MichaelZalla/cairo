@@ -27,7 +27,9 @@ use cairo::{
 };
 
 use command::{process_commands, CommandBuffer};
-use panels::{settings_panel::SettingsPanel, PanelInstance};
+use panels::{
+    render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel, PanelInstance,
+};
 use settings::Settings;
 use window::make_window_list;
 
@@ -127,13 +129,34 @@ fn main() -> Result<(), String> {
         },
     );
 
+    let render_options_panel_arena_rc =
+        Box::leak(Box::new(RefCell::new(Arena::<RenderOptionsPanel>::new())));
+
+    let render_options_panel_render_callback: PanelRenderCallback = Rc::new(
+        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+            let mut render_options_panel_arena = render_options_panel_arena_rc.borrow_mut();
+
+            if let Ok(entry) = render_options_panel_arena.get_mut(panel_instance) {
+                let panel = &mut entry.item;
+
+                panel.render(tree).unwrap();
+            }
+
+            Ok(())
+        },
+    );
+
     let window_list_rc = {
         let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
+        let mut render_options_panel_arena = render_options_panel_arena_rc.borrow_mut();
+
         let resolution = window_info.window_resolution;
 
         let list = make_window_list(
             &mut settings_panel_arena,
             settings_panel_render_callback,
+            &mut render_options_panel_arena,
+            render_options_panel_render_callback,
             resolution,
         )?;
 

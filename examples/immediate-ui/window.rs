@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use cairo::{
     app::resolution::Resolution,
-    resource::arena::Arena,
+    resource::{arena::Arena, handle::Handle},
     ui::{
         panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
         ui_box::UILayoutDirection,
@@ -10,7 +10,7 @@ use cairo::{
     },
 };
 
-use crate::panels::settings_panel::SettingsPanel;
+use crate::panels::{render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel};
 
 fn make_settings_panel(
     id: &str,
@@ -33,6 +33,8 @@ fn make_settings_panel(
 pub(crate) fn make_window_list<'a>(
     settings_panel_arena: &mut Arena<SettingsPanel>,
     settings_panel_render_callback: PanelRenderCallback,
+    render_options_panel_arena: &mut Arena<RenderOptionsPanel>,
+    render_options_panel_render_callback: PanelRenderCallback,
     resolution: Resolution,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
@@ -67,20 +69,46 @@ pub(crate) fn make_window_list<'a>(
 
     // Builds a few non-native, "floating" windows that we can drag around.
 
-    for i in 0..3 {
+    for i in 0..2 {
         let window_id = format!("floating_window_{}", i);
-        let window_title = "Settings".to_string();
 
+        let window_title;
         let mut window_panel_tree = PanelTree::from_id(&window_id);
 
-        let panel_id = format!("{}_SettingsPanel", window_id);
+        let panel_id;
+        let panel_instance_data;
 
-        let panel_instance_data = PanelInstanceData {
-            panel_instance: settings_panel_arena
-                .insert(Uuid::new_v4(), SettingsPanel::from_id(panel_id.as_str())),
-            render: Some(settings_panel_render_callback.clone()),
-            custom_render_callback: None,
-        };
+        if i == 0 {
+            window_title = "Settings".to_string();
+
+            panel_id = format!("{}_SettingsPanel", window_id);
+
+            panel_instance_data = PanelInstanceData {
+                panel_instance: settings_panel_arena
+                    .insert(Uuid::new_v4(), SettingsPanel::from_id(panel_id.as_str())),
+                render: Some(settings_panel_render_callback.clone()),
+                custom_render_callback: None,
+            };
+        } else {
+            window_title = "Render Options".to_string();
+
+            panel_id = format!("{}_RenderOptionsPanel", window_id);
+            panel_instance_data = PanelInstanceData {
+                panel_instance: render_options_panel_arena.insert(
+                    Uuid::new_v4(),
+                    RenderOptionsPanel::new(
+                        panel_id.as_str(),
+                        Handle {
+                            uuid: Uuid::new_v4(),
+                            index: 0,
+                        },
+                    ),
+                ),
+                render: Some(render_options_panel_render_callback.clone()),
+                custom_render_callback: None,
+            };
+        }
+
         let panel = Panel::new(
             1.0,
             Some(panel_instance_data),
