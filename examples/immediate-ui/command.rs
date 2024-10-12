@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{any::TypeId, cell::RefCell, str::FromStr};
 
 use cairo::mem::linked_list::LinkedList;
 
@@ -15,18 +15,36 @@ pub struct CommandBuffer {
     pub executed_commands: RefCell<LinkedList<String>>,
 }
 
+fn parse_or_map_err<T: 'static + FromStr>(arg: &String) -> Result<T, String> {
+    arg.parse::<T>().map_err(|_err| {
+        format!(
+            "Failed to parse a `{:?}` from argument string '{}'.",
+            TypeId::of::<T>(),
+            arg
+        )
+        .to_string()
+    })
+}
+
 pub(crate) fn process_command(command: Command) -> Result<(), String> {
-    if command.kind == "set_setting" {
-        let (setting_key, new_value) = (&command.args[0], &command.args[1]);
+    match command.kind.as_str() {
+        "set_setting" => {
+            let (setting_key, value_str) = (&command.args[0], &command.args[1]);
 
-        if setting_key == "clicked_count" {
-            SETTINGS.with(|settings| {
-                *settings.clicked_count.borrow_mut() = new_value.parse::<usize>().unwrap();
-            });
+            SETTINGS.with(|settings| -> Result<(), String> {
+                match setting_key.as_str() {
+                    "clicked_count" => {
+                        *settings.clicked_count.borrow_mut() =
+                            parse_or_map_err::<usize>(value_str)?;
+
+                        Ok(())
+                    }
+                    _ => Err(format!("Unknown settings key `{}`.", setting_key).to_string()),
+                }
+            })
         }
+        _ => Err(format!("Unknown command kind `{}`.", command.kind).to_string()),
     }
-
-    Ok(())
 }
 
 pub(crate) fn process_commands(
