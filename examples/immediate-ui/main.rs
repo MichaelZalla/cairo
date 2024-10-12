@@ -27,13 +27,13 @@ use cairo::{
 };
 
 use command::{process_commands, CommandBuffer};
-use panel::{PanelInstance, SettingsPanel};
+use panels::{settings_panel::SettingsPanel, PanelInstance};
 use settings::Settings;
 use window::make_window_list;
 
 mod checkbox;
 mod command;
-mod panel;
+mod panels;
 mod radio;
 mod settings;
 mod stack;

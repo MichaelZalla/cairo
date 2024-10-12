@@ -21,9 +21,7 @@ use crate::{
     COMMAND_BUFFER, SETTINGS,
 };
 
-pub trait PanelInstance {
-    fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String>;
-}
+use super::PanelInstance;
 
 #[derive(Clone)]
 pub(crate) struct SettingsPanel {

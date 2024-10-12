@@ -10,7 +10,7 @@ use cairo::{
     },
 };
 
-use crate::SettingsPanel;
+use crate::panels::settings_panel::SettingsPanel;
 
 pub(crate) fn make_window_list<'a>(
     settings_panel_arena: &mut Arena<SettingsPanel>,
