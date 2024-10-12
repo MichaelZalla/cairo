@@ -176,8 +176,6 @@ fn main() -> Result<(), String> {
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    let scene_context_rc = RefCell::new(scene_context);
-
     let renderer_rc = RefCell::new(renderer);
 
     // App update and render callbacks
@@ -187,8 +185,6 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let scene_context = scene_context_rc.borrow_mut();
-
         let mut resources = (*scene_context.resources).borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
@@ -284,7 +280,6 @@ fn main() -> Result<(), String> {
      -> Result<Vec<u32>, String> {
         // Render scene.
 
-        let scene_context = scene_context_rc.borrow();
         let resources = (*scene_context.resources).borrow();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
