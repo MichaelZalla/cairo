@@ -614,7 +614,9 @@ impl UIBox {
 
             let border_color = if draw_box_boundaries {
                 Some(&color::BLUE)
-            } else if self.styles.border_color.is_some() {
+            } else if self.features.contains(UIBoxFeatureFlag::DrawBorder)
+                && self.styles.border_color.is_some()
+            {
                 self.styles.border_color.as_ref()
             } else {
                 None
