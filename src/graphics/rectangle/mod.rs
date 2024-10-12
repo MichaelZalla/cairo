@@ -29,39 +29,108 @@ impl Graphics {
         // Render a fill.
 
         if let Some(fill_color) = fill {
-            for current_y in y_start..y_end_inclusive + 1 {
-                buffer.horizontal_line_unsafe(
-                    x_start,
-                    x_end_inclusive,
-                    current_y,
-                    fill_color.to_u32(),
-                )
+            if fill_color.a < 255.0 {
+                for current_y in y_start..y_end_inclusive + 1 {
+                    buffer.horizontal_line_blended_unsafe(
+                        x_start,
+                        x_end_inclusive,
+                        current_y,
+                        fill_color,
+                    )
+                }
+            } else {
+                let fill_color_u32 = fill_color.to_u32();
+
+                for current_y in y_start..y_end_inclusive + 1 {
+                    buffer.horizontal_line_unsafe(
+                        x_start,
+                        x_end_inclusive,
+                        current_y,
+                        fill_color_u32,
+                    )
+                }
             }
         }
 
         // Render a border.
 
         if let Some(border_color) = border {
-            let color_u32 = border_color.to_u32();
+            let border_color_u32 = border_color.to_u32();
 
             if y_start == y {
                 // Top edge was not clipped.
-                buffer.horizontal_line_unsafe(x_start, x_end_inclusive, y_start, color_u32);
+                if border_color.a < 255.0 {
+                    buffer.horizontal_line_blended_unsafe(
+                        x_start,
+                        x_end_inclusive,
+                        y_start,
+                        border_color,
+                    );
+                } else {
+                    buffer.horizontal_line_unsafe(
+                        x_start,
+                        x_end_inclusive,
+                        y_start,
+                        border_color_u32,
+                    );
+                }
             }
 
             if y_end_inclusive == y + height - 1 {
                 // Bottom edge was not clipped.
-                buffer.horizontal_line_unsafe(x_start, x_end_inclusive, y_end_inclusive, color_u32);
+                if border_color.a < 255.0 {
+                    buffer.horizontal_line_blended_unsafe(
+                        x_start,
+                        x_end_inclusive,
+                        y_end_inclusive,
+                        border_color,
+                    );
+                } else {
+                    buffer.horizontal_line_unsafe(
+                        x_start,
+                        x_end_inclusive,
+                        y_end_inclusive,
+                        border_color_u32,
+                    );
+                }
             }
 
             if x_start == x {
                 // Left edge was not clipped.
-                buffer.vertical_line_unsafe(x_start, y_start, y_end_inclusive, color_u32);
+                if border_color.a < 255.0 {
+                    buffer.vertical_line_blended_unsafe(
+                        x_start,
+                        y_start,
+                        y_end_inclusive,
+                        border_color,
+                    );
+                } else {
+                    buffer.vertical_line_unsafe(
+                        x_start,
+                        y_start,
+                        y_end_inclusive,
+                        border_color_u32,
+                    );
+                }
             }
 
             if x_end_inclusive == x + width - 1 {
                 // Right edge was not clipped.
-                buffer.vertical_line_unsafe(x_end_inclusive, y_start, y_end_inclusive, color_u32);
+                if border_color.a < 255.0 {
+                    buffer.vertical_line_blended_unsafe(
+                        x_end_inclusive,
+                        y_start,
+                        y_end_inclusive,
+                        border_color,
+                    );
+                } else {
+                    buffer.vertical_line_unsafe(
+                        x_end_inclusive,
+                        y_start,
+                        y_end_inclusive,
+                        border_color_u32,
+                    );
+                }
             }
         }
     }

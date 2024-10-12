@@ -4,7 +4,11 @@ use std::{
 };
 
 use crate::{
-    color::blend::{self, blend, BlendMode},
+    animation::lerp,
+    color::{
+        blend::{self, blend, BlendMode},
+        Color,
+    },
     vec::vec3::Vec3,
 };
 
@@ -235,11 +239,45 @@ impl Buffer2D<u32> {
         }
     }
 
+    pub fn horizontal_line_blended_unsafe(&mut self, x1: u32, x2: u32, y: u32, color: &Color) {
+        // Assumes all coordinate arguments lie inside the buffer boundary.
+
+        static ONE_OVER_255: f32 = 1.0 / 255.0;
+
+        let rhs = color.to_vec3() * ONE_OVER_255;
+
+        let alpha = color.a * ONE_OVER_255;
+
+        for x in x1..x2 + 1 {
+            let lhs = Color::from_u32(*self.get(x, y)).to_vec3() * ONE_OVER_255;
+
+            let blended = lerp(lhs, rhs, alpha);
+
+            self.set(x, y, Color::from_vec3(blended * 255.0).to_u32());
+        }
+    }
+
     pub fn vertical_line_unsafe(&mut self, x: u32, y1: u32, y2: u32, value: u32) {
         // Assumes all coordinate arguments lie inside the buffer boundary.
 
         for y in y1..y2 + 1 {
             self.set(x, y, value);
+        }
+    }
+
+    pub fn vertical_line_blended_unsafe(&mut self, x: u32, y1: u32, y2: u32, color: &Color) {
+        // Assumes all coordinate arguments lie inside the buffer boundary.
+
+        static ONE_OVER_255: f32 = 1.0 / 255.0;
+
+        let rhs = color.to_vec3() * ONE_OVER_255;
+
+        for y in y1..y2 + 1 {
+            let lhs = Color::from_u32(*self.get(x, y)).to_vec3() * ONE_OVER_255;
+
+            let blended = lerp(lhs, rhs, color.a);
+
+            self.set(x, y, Color::from_vec3(blended * 255.0).to_u32());
         }
     }
 }
