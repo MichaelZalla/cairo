@@ -59,7 +59,7 @@ thread_local! {
 
 pub struct EditorPanelRenderCallbacks {
     pub outline: PanelRenderCallback,
-    pub viewport_3d: (PanelRenderCallback, Rc<UIBoxCustomRenderCallback>),
+    pub viewport_3d: (PanelRenderCallback, UIBoxCustomRenderCallback),
     pub asset_browser: PanelRenderCallback,
     pub console: PanelRenderCallback,
     pub inspector: PanelRenderCallback,
@@ -220,7 +220,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.5,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
-                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
                     Viewport3DPanel::new(
@@ -239,7 +239,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.5,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
-                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
                     Viewport3DPanel::new(
@@ -269,7 +269,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.5,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
-                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
                     Viewport3DPanel::new(
@@ -288,7 +288,7 @@ pub fn build_main_window_panel_tree<'a>(
             0.5,
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
-                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1.clone()),
+                custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
                 panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
                     Uuid::new_v4(),
                     Viewport3DPanel::new(

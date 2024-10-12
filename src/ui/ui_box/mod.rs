@@ -95,7 +95,9 @@ pub enum UIBoxDragHandle {
 }
 
 pub type UIBoxCustomRenderCallback =
-    dyn Fn(&Handle, &ScreenExtent, &mut Buffer2D) -> Result<(), String>;
+    fn(&Option<Handle>, &ScreenExtent, &mut Buffer2D) -> Result<(), String>;
+
+pub type UIBoxCustomRenderCallbackWithContextHandle = (UIBoxCustomRenderCallback, Option<Handle>);
 
 // An immediate-mode data structure, doubling as a cache entry for persistent
 // UIBox's across frames; computed fields from the previous frame as used to
@@ -134,7 +136,7 @@ pub struct UIBox {
     #[serde(skip)]
     pub last_read_at_frame: u32,
     #[serde(skip)]
-    pub custom_render_callback: Option<(Handle, Rc<UIBoxCustomRenderCallback>)>,
+    pub custom_render_callback: Option<UIBoxCustomRenderCallbackWithContextHandle>,
 }
 
 impl Debug for UIBox {
@@ -173,7 +175,7 @@ impl UIBox {
         mut features: UIBoxFeatureMask,
         layout_direction: UILayoutDirection,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
-        custom_render_callback: Option<(Handle, Rc<UIBoxCustomRenderCallback>)>,
+        custom_render_callback: Option<UIBoxCustomRenderCallbackWithContextHandle>,
     ) -> Self {
         let key = UIKey::from_string(id.clone());
 

@@ -25,7 +25,7 @@ pub struct PanelInstanceData {
     #[serde(skip)]
     pub render: Option<PanelRenderCallback>,
     #[serde(skip)]
-    pub custom_render_callback: Option<Rc<UIBoxCustomRenderCallback>>,
+    pub custom_render_callback: Option<UIBoxCustomRenderCallback>,
 }
 
 impl fmt::Debug for PanelInstanceData {
@@ -128,6 +128,14 @@ impl Panel {
                 UIBoxFeatureFlag::Null
             };
 
+        let custom_render_callback = if let Some(data) = &self.instance_data {
+            data.custom_render_callback
+                .as_ref()
+                .map(|callback| (*callback, Some(data.panel_instance)))
+        } else {
+            None
+        };
+
         let panel_ui_box = UIBox::new(
             panel_ui_box_id.to_string(),
             ui_box_feature_flags,
@@ -149,13 +157,7 @@ impl Panel {
                     strictness: 1.0,
                 },
             ],
-            if let Some(data) = &self.instance_data {
-                data.custom_render_callback
-                    .as_ref()
-                    .map(|callback| (data.panel_instance, callback.clone()))
-            } else {
-                None
-            },
+            custom_render_callback,
         );
 
         Ok(panel_ui_box)

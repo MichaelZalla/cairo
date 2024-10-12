@@ -50,6 +50,24 @@ thread_local! {
     pub static EDITOR_SCENE_CONTEXT: SceneContext = Default::default();
 }
 
+fn viewport_3d_panel_custom_render_callback(
+    panel_instance: &Option<Handle>,
+    extent: &ScreenExtent,
+    target: &mut Buffer2D,
+) -> Result<(), String> {
+    EDITOR_PANEL_ARENAS.with(|arenas| {
+        let mut viewport_3d_arena = arenas.viewport_3d.borrow_mut();
+
+        if let Ok(entry) = viewport_3d_arena.get_mut(&panel_instance.unwrap()) {
+            let panel = &mut entry.item;
+
+            panel.custom_render_callback(extent, target).unwrap();
+        }
+    });
+
+    Ok(())
+}
+
 fn main() -> Result<(), String> {
     let title = format!(
         "Cairo Engine - {} (build {})",
@@ -137,24 +155,7 @@ fn main() -> Result<(), String> {
                     Ok(())
                 },
             ),
-            Rc::new(
-                |panel_instance: &Handle,
-                 extent: &ScreenExtent,
-                 target: &mut Buffer2D|
-                 -> Result<(), String> {
-                    EDITOR_PANEL_ARENAS.with(|arenas| {
-                        let mut viewport_3d_arena = arenas.viewport_3d.borrow_mut();
-
-                        if let Ok(entry) = viewport_3d_arena.get_mut(panel_instance) {
-                            let panel = &mut entry.item;
-
-                            panel.custom_render_callback(extent, target).unwrap();
-                        }
-                    });
-
-                    Ok(())
-                },
-            ),
+            viewport_3d_panel_custom_render_callback,
         ),
         asset_browser: Rc::new(
             |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
