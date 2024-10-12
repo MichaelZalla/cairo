@@ -1,6 +1,9 @@
 extern crate sdl2;
 
-use sdl2::mouse::Cursor;
+use sdl2::{
+    keyboard::{Keycode, Mod},
+    mouse::Cursor,
+};
 
 use std::{cell::RefCell, env, rc::Rc};
 
@@ -208,12 +211,85 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Processes any pending commands.
 
-        COMMAND_BUFFER.with(|buffer| {
+        COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
             let mut pending_commands = buffer.pending_commands.borrow_mut();
             let mut executed_commands = buffer.executed_commands.borrow_mut();
 
+            // Extract keyboard shortcut commands.
+
+            keyboard_state
+                .keys_pressed
+                .retain(|(keycode, modifiers)| match keycode {
+                    Keycode::V => {
+                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
+                            SETTINGS.with(|settings_rc| {
+                                let current_settings = settings_rc.borrow();
+
+                                let vsync = current_settings.vsync;
+
+                                let cmd_str = format!(
+                                    "set_setting vsync {}",
+                                    if vsync { "false" } else { "true " }
+                                )
+                                .to_string();
+
+                                pending_commands.push_back(cmd_str);
+                            });
+
+                            false
+                        } else {
+                            true
+                        }
+                    }
+                    Keycode::H => {
+                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
+                            SETTINGS.with(|settings_rc| {
+                                let current_settings = settings_rc.borrow();
+
+                                let hdr = current_settings.hdr;
+
+                                let cmd_str = format!(
+                                    "set_setting hdr {}",
+                                    if hdr { "false" } else { "true " }
+                                )
+                                .to_string();
+
+                                pending_commands.push_back(cmd_str);
+                            });
+
+                            false
+                        } else {
+                            true
+                        }
+                    }
+                    Keycode::B => {
+                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
+                            SETTINGS.with(|settings_rc| {
+                                let current_settings = settings_rc.borrow();
+
+                                let bloom = current_settings.bloom;
+
+                                let cmd_str = format!(
+                                    "set_setting bloom {}",
+                                    if bloom { "false" } else { "true " }
+                                )
+                                .to_string();
+
+                                pending_commands.push_back(cmd_str);
+                            });
+
+                            false
+                        } else {
+                            true
+                        }
+                    }
+                    _ => true,
+                });
+
             process_commands(&mut pending_commands, &mut executed_commands).unwrap();
-        });
+
+            Ok(())
+        })?;
 
         // Binds the latest user inputs (and time delta) to the global UI context.
 
