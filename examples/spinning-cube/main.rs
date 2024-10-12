@@ -146,13 +146,9 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
-
     // Scene context
 
-    let (scene_context, shader_context) = make_spinning_cube_scene(
-        window_info.canvas_resolution.width as f32 / window_info.canvas_resolution.height as f32,
-    )?;
+    let (scene_context, shader_context) = make_spinning_cube_scene(framebuffer.width_over_height)?;
 
     // Shader context
 
@@ -167,6 +163,8 @@ fn main() -> Result<(), String> {
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
