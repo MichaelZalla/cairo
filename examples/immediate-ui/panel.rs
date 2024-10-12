@@ -113,18 +113,12 @@ impl PanelInstance for SettingsPanel {
 
                         tree.push(spacer(18))?;
 
-                        let clicked_count_text = {
-                            let mut ui_box = text(
-                                format!("SettingsPanel{}_settings.clicked_count.text", self.id)
-                                    .to_string(),
-                                format!("Clicked count: {}", current_settings.clicked_count)
-                                    .to_string(),
-                            );
-
-                            ui_box.features |= UIBoxFeatureFlag::SkipTextCaching;
-
-                            ui_box
-                        };
+                        let clicked_count_text = text(
+                            format!("SettingsPanel{}_settings.clicked_count.text", self.id)
+                                .to_string(),
+                            format!("Clicked count: {}", current_settings.clicked_count)
+                                .to_string(),
+                        );
 
                         tree.push(clicked_count_text)?;
 
