@@ -170,7 +170,7 @@ impl Debug for UIBox {
 impl UIBox {
     pub fn new(
         id: String,
-        features: UIBoxFeatureMask,
+        mut features: UIBoxFeatureMask,
         layout_direction: UILayoutDirection,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
         custom_render_callback: Option<(Handle, Rc<UIBoxCustomRenderCallback>)>,
@@ -206,6 +206,10 @@ impl UIBox {
             border_color,
             text_color,
         };
+
+        if custom_render_callback.is_some() {
+            features |= UIBoxFeatureFlag::DrawCustomRender;
+        }
 
         Self {
             id,
