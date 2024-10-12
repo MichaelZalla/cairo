@@ -97,7 +97,7 @@ impl Graphics {
         }
     }
 
-    pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], color: &Color) {
+    pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], closed: bool, color: &Color) {
         if p.is_empty() {
             return;
         }
@@ -115,14 +115,16 @@ impl Graphics {
             );
         }
 
-        Graphics::line(
-            buffer,
-            p[last_index].x as i32,
-            p[last_index].y as i32,
-            p[0].x as i32,
-            p[0].y as i32,
-            color,
-        );
+        if closed {
+            Graphics::line(
+                buffer,
+                p[last_index].x as i32,
+                p[last_index].y as i32,
+                p[0].x as i32,
+                p[0].y as i32,
+                color,
+            );
+        }
     }
 }
 

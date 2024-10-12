@@ -1,11 +1,19 @@
-use cairo::ui::{
-    context::GLOBAL_UI_CONTEXT,
-    ui_box::{
-        tree::UIBoxTree,
-        utils::{container, spacer, text},
-        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+use cairo::{
+    buffer::Buffer2D,
+    color,
+    graphics::Graphics,
+    resource::handle::Handle,
+    ui::{
+        context::GLOBAL_UI_CONTEXT,
+        extent::ScreenExtent,
+        ui_box::{
+            tree::UIBoxTree,
+            utils::{container, spacer, text},
+            UIBox, UIBoxFeatureFlag, UILayoutDirection,
+        },
+        UISize, UISizeWithStrictness,
     },
-    UISize, UISizeWithStrictness,
+    vec::vec2::Vec2,
 };
 
 use crate::stack::stack;
@@ -58,6 +66,58 @@ pub fn checkbox_group(
     Ok(toggled_indices)
 }
 
+static CHECKMARK_SIZE: u32 = 9;
+
+static CHECKBOX_SIZE: u32 = 2 + CHECKMARK_SIZE + 2;
+
+static CHECKBOX_UI_SIZE: UISizeWithStrictness = UISizeWithStrictness {
+    size: UISize::Pixels(CHECKBOX_SIZE),
+    strictness: 1.0,
+};
+
+fn render_checkmark(
+    _: &Option<Handle>,
+    extent: &ScreenExtent,
+    target: &mut Buffer2D,
+) -> Result<(), String> {
+    static OFFSET: Vec2 = Vec2 {
+        x: 2.0,
+        y: 2.0,
+        z: 0.0,
+    };
+
+    let mut points: Vec<Vec2> = [
+        Vec2 {
+            x: extent.left as f32,
+            y: (extent.top + 4) as f32,
+            z: 0.0,
+        },
+        Vec2 {
+            x: (extent.left + 4) as f32,
+            y: (extent.top + 8) as f32,
+            z: 0.0,
+        },
+        Vec2 {
+            x: (extent.left + 8) as f32,
+            y: extent.top as f32,
+            z: 0.0,
+        },
+    ]
+    .iter()
+    .map(|p| *p + OFFSET)
+    .collect();
+
+    Graphics::poly_line(target, &points, false, &color::WHITE);
+
+    for point in points.iter_mut() {
+        point.x += 1.0;
+    }
+
+    Graphics::poly_line(target, &points, false, &color::WHITE);
+
+    Ok(())
+}
+
 pub fn checkbox(
     id: &String,
     index: usize,
@@ -91,19 +151,14 @@ pub fn checkbox(
                     ctx.fill_color(fill_color, || -> Result<UIBox, String> {
                         Ok(UIBox::new(
                             format!("{}.checkbox_{}_checked", id, index).to_string(),
-                            UIBoxFeatureMask::from(UIBoxFeatureFlag::DrawFill),
+                            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
                             UILayoutDirection::LeftToRight,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(14),
-                                    strictness: 1.0,
-                                },
-                                UISizeWithStrictness {
-                                    size: UISize::MaxOfSiblings,
-                                    strictness: 1.0,
-                                },
-                            ],
-                            None,
+                            [CHECKBOX_UI_SIZE, CHECKBOX_UI_SIZE],
+                            if item.is_checked {
+                                Some((render_checkmark, None))
+                            } else {
+                                None
+                            },
                         ))
                     })
                 })

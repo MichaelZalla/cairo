@@ -278,7 +278,7 @@ fn draw_dropdown(
     let carat_points = [carat_top_left, carat_bottom_mid, carat_top_right];
 
     if !is_open {
-        Graphics::poly_line(parent_buffer, &carat_points, &theme.text);
+        Graphics::poly_line(parent_buffer, &carat_points, true, &theme.text);
     }
 
     let dropdown_top_left = (dropdown_x, dropdown_y);

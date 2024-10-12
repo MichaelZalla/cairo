@@ -101,6 +101,7 @@ fn draw_image(
                     z: 0.0,
                 },
             ],
+            true,
             &color,
         )
     }
