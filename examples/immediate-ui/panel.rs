@@ -43,31 +43,31 @@ impl PanelInstance for SettingsPanel {
         SETTINGS.with(|settings| -> Result<(), String> {
             let current_settings = settings.borrow();
 
-            // Setting: `clicked_count`
+            COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
+                let mut pending_queue = buffer.pending_commands.borrow_mut();
 
-            tree.with_parent(
-                container(
-                    format!("SettingsPanel{}_settings.clicked_count.container", self.id),
-                    UILayoutDirection::LeftToRight,
-                    None,
-                ),
-                |tree| {
-                    if tree
-                        .push(button(
-                            format!(
-                                "SettingsPanel{}_settings.clicked_count.incrementButton",
-                                self.id
-                            )
-                            .to_string(),
-                            "Click".to_string(),
-                            None,
-                        ))?
-                        .mouse_interaction_in_bounds
-                        .was_left_pressed
-                    {
-                        COMMAND_BUFFER.with(|buffer| {
-                            let mut pending_queue = buffer.pending_commands.borrow_mut();
+                // Setting: `clicked_count`
 
+                tree.with_parent(
+                    container(
+                        format!("SettingsPanel{}_settings.clicked_count.container", self.id),
+                        UILayoutDirection::LeftToRight,
+                        None,
+                    ),
+                    |tree| {
+                        if tree
+                            .push(button(
+                                format!(
+                                    "SettingsPanel{}_settings.clicked_count.incrementButton",
+                                    self.id
+                                )
+                                .to_string(),
+                                "Click".to_string(),
+                                None,
+                            ))?
+                            .mouse_interaction_in_bounds
+                            .was_left_pressed
+                        {
                             pending_queue.push_back(
                                 format!(
                                     "set_setting clicked_count {}",
@@ -75,33 +75,31 @@ impl PanelInstance for SettingsPanel {
                                 )
                                 .to_string(),
                             );
-                        });
-                    }
+                        }
 
-                    tree.push(spacer(18))?;
+                        tree.push(spacer(18))?;
 
-                    let clicked_count_text = {
-                        let mut ui_box = text(
-                            format!("SettingsPanel{}_settings.clicked_count.text", self.id)
-                                .to_string(),
-                            format!("Clicked count: {}", current_settings.clicked_count)
-                                .to_string(),
-                        );
+                        let clicked_count_text = {
+                            let mut ui_box = text(
+                                format!("SettingsPanel{}_settings.clicked_count.text", self.id)
+                                    .to_string(),
+                                format!("Clicked count: {}", current_settings.clicked_count)
+                                    .to_string(),
+                            );
 
-                        ui_box.features |= UIBoxFeatureFlag::SkipTextCaching;
+                            ui_box.features |= UIBoxFeatureFlag::SkipTextCaching;
 
-                        ui_box
-                    };
+                            ui_box
+                        };
 
-                    tree.push(clicked_count_text)?;
+                        tree.push(clicked_count_text)?;
 
-                    Ok(())
-                },
-            )?;
+                        Ok(())
+                    },
+                )?;
 
-            // Done
-
-            Ok(())
+                Ok(())
+            })
         })
     }
 }
