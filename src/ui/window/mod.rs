@@ -508,7 +508,7 @@ fn render_titlebar(
                 None,
             );
 
-            close_button.features ^= UIBoxFeatureFlag::EmbossAndDeboss;
+            close_button.features ^= UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::EmbossAndDeboss;
 
             let close_button_interaction = tree.push(close_button)?;
 
