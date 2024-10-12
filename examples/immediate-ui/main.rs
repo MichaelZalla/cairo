@@ -15,7 +15,6 @@ use cairo::{
         keyboard::KeyboardState,
         mouse::{self, cursor::MouseCursorKind, MouseState},
     },
-    mem::linked_list::LinkedList,
     resource::{arena::Arena, handle::Handle},
     ui::{
         context::GLOBAL_UI_CONTEXT, panel::PanelRenderCallback, ui_box::tree::UIBoxTree,
@@ -23,7 +22,7 @@ use cairo::{
     },
 };
 
-use command::{Command, CommandBuffer};
+use command::{process_commands, CommandBuffer};
 use panel::{PanelInstance, SettingsPanel};
 use settings::Settings;
 use window::make_window_list;
@@ -59,37 +58,6 @@ fn resize_framebuffer(
     // window) resolution.
 
     window_list.rebuild_ui_trees(resolution);
-}
-
-fn process_command(command: Command) -> Result<(), String> {
-    if command.kind == "set_setting" {
-        let (setting_key, new_value) = (&command.args[0], &command.args[1]);
-
-        if setting_key == "clicked_count" {
-            SETTINGS.with(|settings| {
-                *settings.clicked_count.borrow_mut() = new_value.parse::<usize>().unwrap();
-            });
-        }
-    }
-
-    Ok(())
-}
-
-fn process_commands(
-    pending_commands: &mut LinkedList<String>,
-    executed_commands: &mut LinkedList<String>,
-) -> Result<(), String> {
-    while let Some(cmd) = pending_commands.pop_front() {
-        let components: Vec<String> = cmd.split(' ').map(|s| s.to_string()).collect();
-
-        if let Some((kind, args)) = components.split_first() {
-            process_command(Command { kind, args })?;
-        }
-
-        executed_commands.push_back(cmd);
-    }
-
-    Ok(())
 }
 
 fn main() -> Result<(), String> {
