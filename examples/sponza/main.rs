@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, env, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -43,6 +43,15 @@ static SPONZA_CENTER: Vec3 = Vec3 {
 };
 
 fn main() -> Result<(), String> {
+    // Validates command line arguments.
+
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        println!("Usage: cargo run --example sponza /path/to/your-font.fon");
+        return Ok(());
+    }
+
     let mut window_info = AppWindowInfo {
         title: "examples/sponza".to_string(),
         window_resolution: RESOLUTION_960_BY_540,
@@ -62,8 +71,8 @@ fn main() -> Result<(), String> {
     // Fonts
 
     let font_info = Box::leak(Box::new(FontInfo {
-        filepath: "C:/Windows/Fonts/vgasys.fon".to_string(),
-        point_size: 16,
+        filepath: args[1].to_string(),
+        point_size: 14,
     }));
 
     let font_cache_rc = Box::leak(Box::new(RefCell::new(FontCache::new(

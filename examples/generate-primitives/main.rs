@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, env, f32::consts::PI, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -38,6 +38,15 @@ use scene::{make_primitives_scene, POINT_LIGHTS_COUNT};
 mod scene;
 
 fn main() -> Result<(), String> {
+    // Validates command line arguments.
+
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        println!("Usage: cargo run --example generate-primitives /path/to/your-font.fon");
+        return Ok(());
+    }
+
     let current_resolution_index_rc: RefCell<usize> = RefCell::new(2);
 
     let resolution = RESOLUTIONS_16X9[*current_resolution_index_rc.borrow()];
@@ -62,8 +71,8 @@ fn main() -> Result<(), String> {
     // Fonts
 
     let font_info = Box::leak(Box::new(FontInfo {
-        filepath: "C:/Windows/Fonts/vgasys.fon".to_string(),
-        point_size: 16,
+        filepath: args[1].to_string(),
+        point_size: 14,
     }));
 
     // Debug messages
