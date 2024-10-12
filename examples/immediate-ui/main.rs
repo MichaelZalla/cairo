@@ -220,6 +220,16 @@ fn main() -> Result<(), String> {
             keyboard_state
                 .keys_pressed
                 .retain(|(keycode, modifiers)| match keycode {
+                    #[cfg(debug_assertions)]
+                    Keycode::F7 => {
+                        GLOBAL_UI_CONTEXT.with(|ctx| {
+                            let mut debug_options = ctx.debug.borrow_mut();
+
+                            debug_options.draw_box_boundaries = !debug_options.draw_box_boundaries;
+                        });
+
+                        false
+                    }
                     Keycode::V => {
                         if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
                             SETTINGS.with(|settings_rc| {
