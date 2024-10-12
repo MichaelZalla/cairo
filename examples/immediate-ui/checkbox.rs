@@ -1,14 +1,11 @@
-use cairo::{
-    color,
-    ui::{
-        context::GLOBAL_UI_CONTEXT,
-        ui_box::{
-            tree::UIBoxTree,
-            utils::{container, spacer, text},
-            UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
-        },
-        UISize, UISizeWithStrictness,
+use cairo::ui::{
+    context::GLOBAL_UI_CONTEXT,
+    ui_box::{
+        tree::UIBoxTree,
+        utils::{container, spacer, text},
+        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
+    UISize, UISizeWithStrictness,
 };
 
 use crate::stack::stack;
@@ -83,10 +80,12 @@ pub fn checkbox(
         .with_parent(checkbox_option_container, |tree| {
             let checkbox_checked_indicator = {
                 GLOBAL_UI_CONTEXT.with(|ctx| -> Result<UIBox, String> {
+                    let theme = ctx.theme.borrow();
+
                     let fill_color = if item.is_checked {
-                        color::BLUE
+                        theme.checkbox_background_selected
                     } else {
-                        color::GREEN
+                        theme.checkbox_background
                     };
 
                     ctx.fill_color(fill_color, || -> Result<UIBox, String> {
