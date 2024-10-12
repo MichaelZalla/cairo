@@ -178,11 +178,16 @@ impl Panel {
                     Ok(())
                 }
             },
-            None => render_debug_interaction_result(ui_box_tree, panel_interaction_result),
+            None =>
+            {
+                #[cfg(debug_assertions)]
+                render_debug_interaction_result(ui_box_tree, panel_interaction_result)
+            }
         }
     }
 }
 
+#[cfg(debug_assertions)]
 fn render_debug_interaction_result(
     ui_box_tree: &mut UIBoxTree,
     interaction_result: &UIBoxInteraction,
