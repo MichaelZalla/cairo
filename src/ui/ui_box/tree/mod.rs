@@ -284,6 +284,11 @@ impl<'a> UIBoxTree<'a> {
 
                                 let text_content = ui_box.text_content.as_ref().expect("Found a UIBox with `DrawText` feature enabled, with no `text_content` set!");
 
+                                debug_assert!(
+                                    !text_content.is_empty(),
+                                    "UIBox with TextContent feature enabled, but `self.text_content` is empty! ({})", ui_box.id
+                                );
+
                                 cache_text(font_cache, &mut text_cache, &font_info, text_content)
                             });
 
