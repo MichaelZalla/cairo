@@ -81,7 +81,7 @@ pub static RESOLUTION_2560_BY_1440: Resolution = Resolution {
     height: 1440,
 };
 
-pub static RESOLUTIONS_16X9: [Resolution; 10] = [
+pub static RESOLUTIONS_16X9: [Resolution; 11] = [
     RESOLUTION_320_BY_180,
     RESOLUTION_640_BY_320,
     RESOLUTION_800_BY_450,
@@ -90,6 +90,7 @@ pub static RESOLUTIONS_16X9: [Resolution; 10] = [
     RESOLUTION_1200_BY_675,
     RESOLUTION_1280_BY_720,
     RESOLUTION_1366_BY_768,
+    RESOLUTION_1600_BY_900,
     RESOLUTION_1920_BY_1080,
     RESOLUTION_2560_BY_1440,
 ];
