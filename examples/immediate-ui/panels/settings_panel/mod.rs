@@ -29,15 +29,6 @@ pub(crate) struct SettingsPanel {
     fps_average: f32,
 }
 
-impl SettingsPanel {
-    pub fn from_id(id: &str) -> Self {
-        Self {
-            id: id.to_string(),
-            fps_average: 0.0,
-        }
-    }
-}
-
 impl Debug for SettingsPanel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SettingsPanel")
@@ -52,6 +43,13 @@ impl PostDeserialize for SettingsPanel {
 }
 
 impl SettingsPanel {
+    pub fn from_id(id: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            fps_average: 0.0,
+        }
+    }
+
     fn fps_counter(&self) -> UIBox {
         let mut counter = text(
             format!("SettingsPanel{}_fps_counter", self.id),
