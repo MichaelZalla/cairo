@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::buffer::Buffer2D;
 
 pub static MAX_DEPTH: f32 = 1.0;
@@ -13,6 +15,25 @@ pub enum DepthTestMethod {
     Greater, // Passes if the fragment's depth is greater than the stored depth.
     NotEqual, // Passes if the fragment's depth is not equal to the stored depth.
     GreaterThanOrEqual, // Passes if the fragment's depth is greater than or equal to the stored depth.
+}
+
+impl Display for DepthTestMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                DepthTestMethod::Always => "Always",
+                DepthTestMethod::Never => "Never",
+                DepthTestMethod::Less => "Less",
+                DepthTestMethod::Equal => "Equal",
+                DepthTestMethod::LessThanOrEqual => "LessThanOrEqual",
+                DepthTestMethod::Greater => "Greater",
+                DepthTestMethod::NotEqual => "NotEqual",
+                DepthTestMethod::GreaterThanOrEqual => "GreaterThanOrEqual",
+            }
+        )
+    }
 }
 
 #[derive(Default, Debug, Clone)]
