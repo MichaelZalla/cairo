@@ -74,7 +74,7 @@ pub(crate) fn make_window_list<'a>(
 
     // Builds a few non-native, "floating" windows that we can drag around.
 
-    for i in 0..2 {
+    for i in 0..3 {
         let window_id = format!("floating_window_{}", i);
 
         let window_title;
