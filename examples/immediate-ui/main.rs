@@ -33,7 +33,7 @@ mod settings;
 mod window;
 
 thread_local! {
-    pub static SETTINGS: Settings = Default::default();
+    pub static SETTINGS: RefCell<Settings> = Default::default();
     pub static COMMAND_BUFFER: CommandBuffer = Default::default();
 }
 

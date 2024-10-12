@@ -41,6 +41,8 @@ impl PostDeserialize for SettingsPanel {
 impl PanelInstance for SettingsPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
         SETTINGS.with(|settings| -> Result<(), String> {
+            let current_settings = settings.borrow();
+
             // Setting: `clicked_count`
 
             tree.with_parent(
@@ -69,7 +71,7 @@ impl PanelInstance for SettingsPanel {
                             pending_queue.push_back(
                                 format!(
                                     "set_setting clicked_count {}",
-                                    *settings.clicked_count.borrow() + 1
+                                    current_settings.clicked_count + 1
                                 )
                                 .to_string(),
                             );
@@ -82,7 +84,7 @@ impl PanelInstance for SettingsPanel {
                         let mut ui_box = text(
                             format!("SettingsPanel{}_settings.clicked_count.text", self.id)
                                 .to_string(),
-                            format!("Clicked count: {}", settings.clicked_count.borrow())
+                            format!("Clicked count: {}", current_settings.clicked_count)
                                 .to_string(),
                         );
 

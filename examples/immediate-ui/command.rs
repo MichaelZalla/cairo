@@ -32,10 +32,11 @@ pub(crate) fn process_command(command: Command) -> Result<(), String> {
             let (setting_key, value_str) = (&command.args[0], &command.args[1]);
 
             SETTINGS.with(|settings| -> Result<(), String> {
+                let mut current_settings = settings.borrow_mut();
+
                 match setting_key.as_str() {
                     "clicked_count" => {
-                        *settings.clicked_count.borrow_mut() =
-                            parse_or_map_err::<usize>(value_str)?;
+                        current_settings.clicked_count = parse_or_map_err::<usize>(value_str)?;
 
                         Ok(())
                     }
