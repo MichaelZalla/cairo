@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use cairo::{
+    mem::linked_list::LinkedList,
     serde::PostDeserialize,
     ui::{
         context::GLOBAL_UI_CONTEXT,
@@ -12,7 +13,7 @@ use cairo::{
     },
 };
 
-use crate::{COMMAND_BUFFER, SETTINGS};
+use crate::{command::ExecutedCommand, COMMAND_BUFFER, SETTINGS};
 
 pub trait PanelInstance {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String>;
@@ -56,6 +57,57 @@ impl SettingsPanel {
         counter.features |= UIBoxFeatureFlag::SkipTextCaching;
 
         counter
+    }
+
+    fn command_history(
+        &self,
+        executed_queue: &LinkedList<ExecutedCommand>,
+        tree: &mut UIBoxTree,
+    ) -> Result<(), String> {
+        tree.push(text(
+            format!("SettingsPanel{}_settings.command_history.label", self.id).to_string(),
+            format!(
+                "Command history{}",
+                if executed_queue.is_empty() {
+                    "".to_string()
+                } else {
+                    format!(" ({})", executed_queue.len())
+                }
+            )
+            .to_string(),
+        ))?;
+
+        static RECENT_COMMANDS_COUNT: usize = 3;
+
+        if executed_queue.is_empty() {
+            tree.push(text(
+                format!(
+                    "SettingsPanel{}_settings.command_history.most_recent_empty",
+                    self.id,
+                )
+                .to_string(),
+                "No history.".to_string(),
+            ))?;
+        } else {
+            for (index, cmd) in executed_queue.iter().rev().enumerate() {
+                let cmd_serialized = format!("{} {}", cmd.kind, cmd.args.join(" ")).to_string();
+
+                tree.push(text(
+                    format!(
+                        "SettingsPanel{}_settings.command_history.most_recent_{}",
+                        self.id, index
+                    )
+                    .to_string(),
+                    format!("{}: {}", index, cmd_serialized).to_string(),
+                ))?;
+
+                if index > RECENT_COMMANDS_COUNT {
+                    break;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -125,6 +177,16 @@ impl PanelInstance for SettingsPanel {
                         Ok(())
                     },
                 )?;
+
+                // Spacer
+
+                tree.push(spacer(18))?;
+
+                // Command history
+
+                let executed_queue = buffer.executed_commands.borrow();
+
+                self.command_history(&executed_queue, tree)?;
 
                 Ok(())
             })
