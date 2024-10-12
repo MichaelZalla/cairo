@@ -15,6 +15,7 @@ use super::{
     extent::ScreenExtent,
     panel::tree::PanelTree,
     ui_box::{
+        interaction::UIBoxInteraction,
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
         utils::{button, container, greedy_spacer, text},
         UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
@@ -172,6 +173,8 @@ impl<'a> Window<'a> {
 
         let mut root_ui_box: UIBox = Default::default();
 
+        let mut root_ui_box_result: UIBoxInteraction = Default::default();
+
         let theme = ctx.theme.borrow();
 
         ctx.fill_color(theme.panel_background, || {
@@ -184,8 +187,7 @@ impl<'a> Window<'a> {
                         | if self.docked {
                             UIBoxFeatureMask::none()
                         } else {
-                            UIBoxFeatureFlag::DrawBorder
-                                | UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
+                            UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
                                 | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
                                 | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
                                 | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis
@@ -206,48 +208,49 @@ impl<'a> Window<'a> {
 
                 Ok(())
             })?;
+            {
+                *ctx.global_offset.borrow_mut() = self.position;
+            }
+
+            {
+                let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
+
+                root_ui_box_result = ui_box_tree.push_parent(root_ui_box)?;
+            }
+
+            if self.with_titlebar {
+                let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
+
+                render_titlebar_result.replace(render_titlebar(
+                    &self.id,
+                    &self.title,
+                    self.dragging,
+                    &root_ui_box_result
+                        .mouse_interaction_in_bounds
+                        .active_drag_handle,
+                    ui_box_tree,
+                )?);
+            }
+
+            {
+                let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
+
+                match &self.render_header_callback {
+                    Some(render) => render(ui_box_tree),
+                    None => Ok(()),
+                }?;
+            }
+
+            {
+                // Builds UI from the current editor panel tree.
+
+                let panel_tree = &mut self.panel_tree.borrow_mut();
+
+                panel_tree.render(self)?;
+            }
 
             Ok(())
         })?;
-
-        {
-            *ctx.global_offset.borrow_mut() = self.position;
-        }
-
-        let root_ui_box_result;
-
-        {
-            let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
-
-            root_ui_box_result = ui_box_tree.push_parent(root_ui_box)?;
-        }
-
-        if self.with_titlebar {
-            let ui_box_tree = &mut self.ui_trees.base.borrow_mut();
-
-            render_titlebar_result.replace(render_titlebar(
-                &self.id,
-                &self.title,
-                self.dragging,
-                &root_ui_box_result
-                    .mouse_interaction_in_bounds
-                    .active_drag_handle,
-                ui_box_tree,
-            )?);
-
-            match &self.render_header_callback {
-                Some(render) => render(ui_box_tree),
-                None => Ok(()),
-            }?;
-        }
-
-        {
-            // Builds UI from the current editor panel tree.
-
-            let panel_tree = &mut self.panel_tree.borrow_mut();
-
-            panel_tree.render(self)?;
-        }
 
         // Commit this UI tree for the current frame.
 
