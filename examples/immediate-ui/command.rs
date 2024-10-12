@@ -56,13 +56,6 @@ fn process_command(command: Command) -> ProcessCommandResult {
                 let mut current_settings = settings_rc.borrow_mut();
 
                 match setting_key.as_str() {
-                    "clicked_count" => {
-                        prev_value_str.replace(current_settings.clicked_count.to_string());
-
-                        current_settings.clicked_count = parse_or_map_err::<usize>(value_str)?;
-
-                        Ok(())
-                    }
                     "windowing_mode" => {
                         let value = parse_or_map_err::<usize>(value_str)?;
 

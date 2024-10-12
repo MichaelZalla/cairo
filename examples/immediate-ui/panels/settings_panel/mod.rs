@@ -8,8 +8,8 @@ use cairo::{
         context::GLOBAL_UI_CONTEXT,
         ui_box::{
             tree::UIBoxTree,
-            utils::{button, container, spacer, text},
-            UIBox, UIBoxFeatureFlag, UILayoutDirection,
+            utils::{spacer, text},
+            UIBox, UIBoxFeatureFlag,
         },
     },
 };
@@ -127,54 +127,6 @@ impl PanelInstance for SettingsPanel {
                 };
 
                 tree.push(self.fps_counter())?;
-
-                tree.push(spacer(18))?;
-
-                // Setting: `clicked_count`
-
-                tree.with_parent(
-                    container(
-                        format!("SettingsPanel{}_settings.clicked_count.container", self.id),
-                        UILayoutDirection::LeftToRight,
-                        None,
-                    ),
-                    |tree| {
-                        if tree
-                            .push(button(
-                                format!(
-                                    "SettingsPanel{}_settings.clicked_count.incrementButton",
-                                    self.id
-                                )
-                                .to_string(),
-                                "Click".to_string(),
-                                None,
-                            ))?
-                            .mouse_interaction_in_bounds
-                            .was_left_pressed
-                        {
-                            let cmd_str = format!(
-                                "set_setting clicked_count {}",
-                                current_settings.clicked_count + 1
-                            )
-                            .to_string();
-
-                            pending_queue.push_back((cmd_str, false));
-                        }
-
-                        tree.push(spacer(18))?;
-
-                        let clicked_count_text = text(
-                            format!("SettingsPanel{}_settings.clicked_count.text", self.id)
-                                .to_string(),
-                            format!("Clicked count: {}", current_settings.clicked_count)
-                                .to_string(),
-                        );
-
-                        tree.push(clicked_count_text)?;
-
-                        Ok(())
-                    },
-                )?;
 
                 tree.push(spacer(18))?;
 
