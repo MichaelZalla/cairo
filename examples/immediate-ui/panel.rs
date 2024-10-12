@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use cairo::{
+    app::resolution::RESOLUTIONS_16X9,
     mem::linked_list::LinkedList,
     serde::PostDeserialize,
     ui::{
@@ -16,6 +17,7 @@ use cairo::{
 use crate::{
     checkbox::{checkbox_group, Checkbox},
     command::ExecutedCommand,
+    radio::{radio_group, RadioOption},
     COMMAND_BUFFER, SETTINGS,
 };
 
@@ -181,6 +183,35 @@ impl PanelInstance for SettingsPanel {
                         Ok(())
                     },
                 )?;
+
+                // Spacer
+
+                tree.push(spacer(18))?;
+
+                // Setting: `resolution`
+
+                tree.push(text(
+                    format!("SettingsPanel{}_settings.resolution.label", self.id).to_string(),
+                    "Resolution".to_string(),
+                ))?;
+
+                let resolution_options: Vec<RadioOption> = RESOLUTIONS_16X9
+                    .iter()
+                    .map(|resolution| RadioOption {
+                        label: format!("{}x{}", resolution.width, resolution.height),
+                    })
+                    .collect();
+
+                if let Some(index) = radio_group(
+                    format!("SettingsPanel{}_settings.resolution", self.id).to_string(),
+                    &resolution_options,
+                    current_settings.resolution,
+                    tree,
+                )? {
+                    let cmd_str = format!("set_setting resolution {}", index).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
 
                 // Spacer
 

@@ -7,10 +7,7 @@ use sdl2::{
     Sdl,
 };
 
-use crate::{
-    app::{resolution::RESOLUTION_640_BY_480, AppWindowInfo},
-    device::game_controller::GameController,
-};
+use crate::{app::AppWindowInfo, device::game_controller::GameController};
 
 use super::resolution::Resolution;
 
@@ -135,11 +132,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     }
 
     match window_builder.build() {
-        Ok(mut window) => {
-            window
-                .set_minimum_size(RESOLUTION_640_BY_480.width, RESOLUTION_640_BY_480.height)
-                .unwrap();
-
+        Ok(window) => {
             let screen_width = window.size().0;
             let screen_height = window.size().1;
 

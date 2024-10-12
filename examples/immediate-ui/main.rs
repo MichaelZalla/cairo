@@ -9,7 +9,7 @@ use std::{cell::RefCell, env, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1280_BY_720},
+        resolution::{Resolution, RESOLUTIONS_16X9, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -33,6 +33,7 @@ use window::make_window_list;
 mod checkbox;
 mod command;
 mod panel;
+mod radio;
 mod settings;
 mod stack;
 mod window;
@@ -87,6 +88,11 @@ fn main() -> Result<(), String> {
 
     SETTINGS.with(|settings_rc| {
         let mut settings = settings_rc.borrow_mut();
+
+        settings.resolution = RESOLUTIONS_16X9
+            .iter()
+            .position(|r| *r == DEFAULT_WINDOW_RESOLUTION)
+            .unwrap();
 
         settings.hdr = true;
     });
@@ -209,135 +215,182 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
+        // Check if the app's native window has been resized.
+
+        {
+            let window_info = app.window_info.borrow();
+            let mut framebuffer = framebuffer_rc.borrow_mut();
+
+            if window_info.window_resolution.width != framebuffer.width
+                || window_info.window_resolution.height != framebuffer.height
+            {
+                // Resize our framebuffer to match the new window resolution.
+
+                let mut canvas = app.context.rendering_context.canvas.borrow_mut();
+                let window = canvas.window_mut();
+                let mut window_list = window_list_rc.borrow_mut();
+
+                resize_framebuffer(
+                    Resolution::new(window.size()),
+                    &mut framebuffer,
+                    &mut window_list,
+                );
+            }
+        }
+
         // Processes any pending commands.
 
         COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
-            let mut pending_commands = buffer.pending_commands.borrow_mut();
-            let mut executed_commands = buffer.executed_commands.borrow_mut();
+            let new_resolution: Option<Resolution>;
 
-            // Extract keyboard shortcut commands.
+            {
+                let mut pending_commands = buffer.pending_commands.borrow_mut();
+                let mut executed_commands = buffer.executed_commands.borrow_mut();
 
-            keyboard_state
-                .keys_pressed
-                .retain(|(keycode, modifiers)| match keycode {
-                    #[cfg(debug_assertions)]
-                    Keycode::F7 => {
-                        GLOBAL_UI_CONTEXT.with(|ctx| {
-                            let mut debug_options = ctx.debug.borrow_mut();
+                // Extract keyboard shortcut commands.
 
-                            debug_options.draw_box_boundaries = !debug_options.draw_box_boundaries;
-                        });
+                keyboard_state
+                    .keys_pressed
+                    .retain(|(keycode, modifiers)| match keycode {
+                        #[cfg(debug_assertions)]
+                        Keycode::F7 => {
+                            GLOBAL_UI_CONTEXT.with(|ctx| {
+                                let mut debug_options = ctx.debug.borrow_mut();
 
-                        false
-                    }
-                    Keycode::Z => {
-                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
-                            if let Some(executed_command) = executed_commands.pop_back() {
-                                let (new_pending_command, is_undo) = {
-                                    if modifiers.contains(Mod::LSHIFTMOD)
-                                        | modifiers.contains(Mod::RSHIFTMOD)
-                                    {
-                                        (
-                                            format!(
-                                                "{} {}",
-                                                executed_command.kind,
-                                                executed_command.args.join(" ")
-                                            ),
-                                            false,
-                                        )
-                                    } else if let Some(prev_value) = executed_command.prev_value {
-                                        (
-                                            format!(
-                                                "{} {} {}",
-                                                executed_command.kind,
-                                                executed_command.args[0],
-                                                prev_value
+                                debug_options.draw_box_boundaries =
+                                    !debug_options.draw_box_boundaries;
+                            });
+
+                            false
+                        }
+                        Keycode::Z => {
+                            if modifiers.contains(Mod::LCTRLMOD)
+                                || modifiers.contains(Mod::RCTRLMOD)
+                            {
+                                if let Some(executed_command) = executed_commands.pop_back() {
+                                    let (new_pending_command, is_undo) = {
+                                        if modifiers.contains(Mod::LSHIFTMOD)
+                                            | modifiers.contains(Mod::RSHIFTMOD)
+                                        {
+                                            (
+                                                format!(
+                                                    "{} {}",
+                                                    executed_command.kind,
+                                                    executed_command.args.join(" ")
+                                                ),
+                                                false,
                                             )
-                                            .to_string(),
-                                            true,
-                                        )
-                                    } else {
-                                        panic!()
-                                    }
-                                };
+                                        } else if let Some(prev_value) = executed_command.prev_value
+                                        {
+                                            (
+                                                format!(
+                                                    "{} {} {}",
+                                                    executed_command.kind,
+                                                    executed_command.args[0],
+                                                    prev_value
+                                                )
+                                                .to_string(),
+                                                true,
+                                            )
+                                        } else {
+                                            panic!()
+                                        }
+                                    };
 
-                                pending_commands.push_back((new_pending_command, is_undo));
+                                    pending_commands.push_back((new_pending_command, is_undo));
+                                }
+
+                                false
+                            } else {
+                                true
                             }
-
-                            false
-                        } else {
-                            true
                         }
-                    }
-                    Keycode::V => {
-                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
-                            SETTINGS.with(|settings_rc| {
-                                let current_settings = settings_rc.borrow();
+                        Keycode::V => {
+                            if modifiers.contains(Mod::LCTRLMOD)
+                                || modifiers.contains(Mod::RCTRLMOD)
+                            {
+                                SETTINGS.with(|settings_rc| {
+                                    let current_settings = settings_rc.borrow();
 
-                                let vsync = current_settings.vsync;
+                                    let vsync = current_settings.vsync;
 
-                                let cmd_str = format!(
-                                    "set_setting vsync {}",
-                                    if vsync { "false" } else { "true " }
-                                )
-                                .to_string();
+                                    let cmd_str = format!(
+                                        "set_setting vsync {}",
+                                        if vsync { "false" } else { "true " }
+                                    )
+                                    .to_string();
 
-                                pending_commands.push_back((cmd_str, false));
-                            });
+                                    pending_commands.push_back((cmd_str, false));
+                                });
 
-                            false
-                        } else {
-                            true
+                                false
+                            } else {
+                                true
+                            }
                         }
-                    }
-                    Keycode::H => {
-                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
-                            SETTINGS.with(|settings_rc| {
-                                let current_settings = settings_rc.borrow();
+                        Keycode::H => {
+                            if modifiers.contains(Mod::LCTRLMOD)
+                                || modifiers.contains(Mod::RCTRLMOD)
+                            {
+                                SETTINGS.with(|settings_rc| {
+                                    let current_settings = settings_rc.borrow();
 
-                                let hdr = current_settings.hdr;
+                                    let hdr = current_settings.hdr;
 
-                                let cmd_str = format!(
-                                    "set_setting hdr {}",
-                                    if hdr { "false" } else { "true " }
-                                )
-                                .to_string();
+                                    let cmd_str = format!(
+                                        "set_setting hdr {}",
+                                        if hdr { "false" } else { "true " }
+                                    )
+                                    .to_string();
 
-                                pending_commands.push_back((cmd_str, false));
-                            });
+                                    pending_commands.push_back((cmd_str, false));
+                                });
 
-                            false
-                        } else {
-                            true
+                                false
+                            } else {
+                                true
+                            }
                         }
-                    }
-                    Keycode::B => {
-                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
-                            SETTINGS.with(|settings_rc| {
-                                let current_settings = settings_rc.borrow();
+                        Keycode::B => {
+                            if modifiers.contains(Mod::LCTRLMOD)
+                                || modifiers.contains(Mod::RCTRLMOD)
+                            {
+                                SETTINGS.with(|settings_rc| {
+                                    let current_settings = settings_rc.borrow();
 
-                                let bloom = current_settings.bloom;
+                                    let bloom = current_settings.bloom;
 
-                                let cmd_str = format!(
-                                    "set_setting bloom {}",
-                                    if bloom { "false" } else { "true " }
-                                )
-                                .to_string();
+                                    let cmd_str = format!(
+                                        "set_setting bloom {}",
+                                        if bloom { "false" } else { "true " }
+                                    )
+                                    .to_string();
 
-                                pending_commands.push_back((cmd_str, false));
-                            });
+                                    pending_commands.push_back((cmd_str, false));
+                                });
 
-                            false
-                        } else {
-                            true
+                                false
+                            } else {
+                                true
+                            }
                         }
-                    }
-                    _ => true,
-                });
+                        _ => true,
+                    });
 
-            process_commands(&mut pending_commands, &mut executed_commands).unwrap();
+                new_resolution =
+                    process_commands(&mut pending_commands, &mut executed_commands).unwrap();
+            }
 
-            Ok(())
+            let mut framebuffer = framebuffer_rc.borrow_mut();
+            let mut window_list = window_list_rc.borrow_mut();
+
+            if let Some(resolution) = new_resolution {
+                resize_framebuffer(resolution, &mut framebuffer, &mut window_list);
+
+                app.resize_window(resolution)
+            } else {
+                Ok(())
+            }
         })?;
 
         // Binds the latest user inputs (and time delta) to the global UI context.

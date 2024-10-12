@@ -58,6 +58,7 @@ impl Default for AppWindowInfo {
 
 pub struct App {
     pub window_info: Rc<RefCell<AppWindowInfo>>,
+    pub is_resizing_self: Rc<RefCell<bool>>,
     pub context: ApplicationContext,
     pub canvas_texture: Rc<RefCell<Texture>>,
     pub timing_info: TimingInfo,
@@ -92,11 +93,15 @@ impl App {
         let event_subsystem = context.sdl_context.event().unwrap();
 
         let resizable = window_info.resizable;
+
         let window_info_rc = Rc::new(RefCell::new(window_info));
         let window_info_rc_clone = window_info_rc.clone();
 
         let canvas_texture_rc = Rc::new(RefCell::new(canvas_texture));
         let canvas_texture_rc_clone = canvas_texture_rc.clone();
+
+        let is_resizing_self_rc = Rc::new(RefCell::new(false));
+        let is_resizing_self_rc_clone = is_resizing_self_rc.clone();
 
         let event_watch = if resizable {
             let watch =
@@ -109,6 +114,12 @@ impl App {
                             | WindowEvent::SizeChanged(width, height),
                     } = event
                     {
+                        let is_resizing_self = is_resizing_self_rc_clone.borrow();
+
+                        if *is_resizing_self {
+                            return;
+                        }
+
                         let mut canvas_window = (*canvas_window_rc).borrow_mut();
                         let mut window_info = (*window_info_rc_clone).borrow_mut();
                         let mut canvas_texture = (*canvas_texture_rc_clone).borrow_mut();
@@ -147,6 +158,7 @@ impl App {
             window_info: window_info_rc,
             context,
             canvas_texture: canvas_texture_rc,
+            is_resizing_self: is_resizing_self_rc,
             timing_info,
             are_updates_paused: false,
             #[cfg(feature = "debug_cycle_counts")]
@@ -166,6 +178,29 @@ impl App {
 
     pub fn toggle_updates(&mut self) {
         self.are_updates_paused = !self.are_updates_paused;
+    }
+
+    pub fn resize_window(&mut self, resolution: Resolution) -> Result<(), String> {
+        let mut canvas = self.context.rendering_context.canvas.borrow_mut();
+        let mut window_info = self.window_info.borrow_mut();
+        let mut canvas_texture = self.canvas_texture.borrow_mut();
+
+        {
+            *self.is_resizing_self.borrow_mut() = true;
+        }
+
+        handle_window_resize_event(
+            &mut canvas,
+            &mut window_info,
+            &mut canvas_texture,
+            resolution,
+        )?;
+
+        {
+            *self.is_resizing_self.borrow_mut() = false;
+        }
+
+        Ok(())
     }
 
     pub fn run<U, R>(mut self, update: &mut U, render: &R) -> Result<(), String>
@@ -675,9 +710,7 @@ pub fn handle_window_resize_event(
     new_resolution: Resolution,
 ) -> Result<(), String> {
     resize_window(canvas, window_info, new_resolution)?;
-    resize_canvas(canvas, window_info, canvas_texture, new_resolution)?;
-
-    Ok(())
+    resize_canvas(canvas, window_info, canvas_texture, new_resolution)
 }
 
 fn render_and_present(

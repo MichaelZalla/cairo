@@ -1,6 +1,9 @@
 use std::{any::TypeId, cell::RefCell, str::FromStr};
 
-use cairo::mem::linked_list::LinkedList;
+use cairo::{
+    app::resolution::{Resolution, RESOLUTIONS_16X9},
+    mem::linked_list::LinkedList,
+};
 
 use crate::SETTINGS;
 
@@ -34,14 +37,15 @@ fn parse_or_map_err<T: 'static + FromStr>(arg: &String) -> Result<T, String> {
     })
 }
 
-type ProcessCommandResult = Result<Option<String>, String>;
+type ProcessCommandResult = Result<(Option<String>, Option<Resolution>), String>;
 
-pub(crate) fn process_command(command: Command) -> ProcessCommandResult {
+fn process_command(command: Command) -> ProcessCommandResult {
     match command.kind.as_str() {
         "set_setting" => {
             let (setting_key, value_str) = (&command.args[0], &command.args[1]);
 
             let mut prev_value_str: Option<String> = None;
+            let mut new_resolution: Option<Resolution> = None;
 
             SETTINGS.with(|settings_rc| -> Result<(), String> {
                 let mut current_settings = settings_rc.borrow_mut();
@@ -51,6 +55,21 @@ pub(crate) fn process_command(command: Command) -> ProcessCommandResult {
                         prev_value_str.replace(current_settings.clicked_count.to_string());
 
                         current_settings.clicked_count = parse_or_map_err::<usize>(value_str)?;
+
+                        Ok(())
+                    }
+                    "resolution" => {
+                        let value = parse_or_map_err::<usize>(value_str)?;
+
+                        let requested_resolution = value;
+
+                        if requested_resolution != current_settings.resolution {
+                            prev_value_str.replace(current_settings.resolution.to_string());
+
+                            current_settings.resolution = requested_resolution;
+
+                            new_resolution.replace(RESOLUTIONS_16X9[requested_resolution]);
+                        }
 
                         Ok(())
                     }
@@ -79,16 +98,20 @@ pub(crate) fn process_command(command: Command) -> ProcessCommandResult {
                 }
             })?;
 
-            Ok(prev_value_str)
+            Ok((prev_value_str, new_resolution))
         }
         _ => Err(format!("Unknown command kind `{}`.", command.kind).to_string()),
     }
 }
 
+type ProcessCommandsResult = Result<Option<Resolution>, String>;
+
 pub(crate) fn process_commands(
     pending_commands: &mut LinkedList<(String, bool)>,
     executed_commands: &mut LinkedList<ExecutedCommand>,
-) -> Result<(), String> {
+) -> ProcessCommandsResult {
+    let mut new_resolution: Option<Resolution> = None;
+
     while let Some((cmd, is_undo)) = pending_commands.pop_front() {
         let components: Vec<String> = cmd.split(' ').map(|s| s.to_string()).collect();
 
@@ -99,7 +122,13 @@ pub(crate) fn process_commands(
                 is_undo,
             };
 
-            let prev_value = process_command(command)?;
+            let process_command_result = process_command(command)?;
+
+            let prev_value = process_command_result.0;
+
+            if let Some(resolution) = process_command_result.1 {
+                new_resolution.replace(resolution);
+            }
 
             let executed_command = ExecutedCommand {
                 kind: kind.to_string(),
@@ -115,5 +144,5 @@ pub(crate) fn process_commands(
         }
     }
 
-    Ok(())
+    Ok(new_resolution)
 }
