@@ -206,7 +206,7 @@ fn main() -> Result<(), String> {
     // Load the font indicated by the CLI argument(s).
 
     GLOBAL_UI_CONTEXT.with(|ctx| {
-        ctx.load_font(&app, args[1].to_string());
+        ctx.load_font(&app, args[1].to_string(), 12);
     });
 
     // Define `update()` in the context of our app's main loop.

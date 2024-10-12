@@ -127,7 +127,7 @@ impl<'a> UIContext<'a> {
     with_style_applied!(border_color);
     with_style_applied!(text_color);
 
-    pub fn load_font(&self, app: &App, font_path: String) {
+    pub fn load_font(&self, app: &App, font_path: String, point_size: u16) {
         self.font_cache
             .borrow_mut()
             .replace(FontCache::new(app.context.ttf_context));
@@ -136,7 +136,7 @@ impl<'a> UIContext<'a> {
             let mut font_info = self.font_info.borrow_mut();
 
             font_info.filepath = font_path;
-            font_info.point_size = 14;
+            font_info.point_size = point_size;
         }
     }
 
