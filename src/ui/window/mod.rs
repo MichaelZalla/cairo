@@ -338,7 +338,7 @@ impl<'a> Window<'a> {
         self.get_computed_size_of_root_child(1)
     }
 
-    fn get_computed_size(&self) -> (u32, u32) {
+    fn get_minimum_size_to_fit_contents(&self) -> (u32, u32) {
         // Computes the minimum extent needed to fit the titlebar (height) and panel tree content.
         // Note: The titlebar's width is always equal to this window's width.
 
@@ -372,7 +372,7 @@ impl<'a> Window<'a> {
         // Restricts the resize deltas to protect the minimum size needed for
         // the window's inner content.
 
-        let minimum_size = self.get_computed_size();
+        let minimum_size = self.get_minimum_size_to_fit_contents();
 
         let buffer = (
             self.size.0.max(minimum_size.0) as i32 - minimum_size.0 as i32,
