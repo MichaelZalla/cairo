@@ -7,6 +7,7 @@ use crate::SETTINGS;
 pub struct Command<'a> {
     pub kind: &'a String,
     pub args: &'a [String],
+    pub is_undo: bool,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -18,7 +19,7 @@ pub struct ExecutedCommand {
 
 #[derive(Default, Clone)]
 pub struct CommandBuffer {
-    pub pending_commands: RefCell<LinkedList<String>>,
+    pub pending_commands: RefCell<LinkedList<(String, bool)>>,
     pub executed_commands: RefCell<LinkedList<ExecutedCommand>>,
 }
 
@@ -85,14 +86,18 @@ pub(crate) fn process_command(command: Command) -> ProcessCommandResult {
 }
 
 pub(crate) fn process_commands(
-    pending_commands: &mut LinkedList<String>,
+    pending_commands: &mut LinkedList<(String, bool)>,
     executed_commands: &mut LinkedList<ExecutedCommand>,
 ) -> Result<(), String> {
-    while let Some(cmd) = pending_commands.pop_front() {
+    while let Some((cmd, is_undo)) = pending_commands.pop_front() {
         let components: Vec<String> = cmd.split(' ').map(|s| s.to_string()).collect();
 
         if let Some((kind, args)) = components.split_first() {
-            let command = Command { kind, args };
+            let command = Command {
+                kind,
+                args,
+                is_undo,
+            };
 
             let prev_value = process_command(command)?;
 
@@ -102,7 +107,9 @@ pub(crate) fn process_commands(
                 prev_value,
             };
 
-            executed_commands.push_back(executed_command);
+            if !is_undo {
+                executed_commands.push_back(executed_command);
+            }
         } else {
             println!("Unrecognized command: '{}'", cmd);
         }

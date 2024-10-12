@@ -164,7 +164,7 @@ impl PanelInstance for SettingsPanel {
                             )
                             .to_string();
 
-                            pending_queue.push_back(cmd_str);
+                            pending_queue.push_back((cmd_str, false));
                         }
 
                         tree.push(spacer(18))?;
@@ -212,7 +212,7 @@ impl PanelInstance for SettingsPanel {
                         format!("set_setting {} {}", checkbox.value, !checkbox.is_checked)
                             .to_string();
 
-                    pending_queue.push_back(cmd_str);
+                    pending_queue.push_back((cmd_str, false));
                 }
 
                 // Spacer

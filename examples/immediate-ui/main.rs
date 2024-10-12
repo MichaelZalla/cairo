@@ -230,6 +230,45 @@ fn main() -> Result<(), String> {
 
                         false
                     }
+                    Keycode::Z => {
+                        if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
+                            if let Some(executed_command) = executed_commands.pop_back() {
+                                let (new_pending_command, is_undo) = {
+                                    if modifiers.contains(Mod::LSHIFTMOD)
+                                        | modifiers.contains(Mod::RSHIFTMOD)
+                                    {
+                                        (
+                                            format!(
+                                                "{} {}",
+                                                executed_command.kind,
+                                                executed_command.args.join(" ")
+                                            ),
+                                            false,
+                                        )
+                                    } else if let Some(prev_value) = executed_command.prev_value {
+                                        (
+                                            format!(
+                                                "{} {} {}",
+                                                executed_command.kind,
+                                                executed_command.args[0],
+                                                prev_value
+                                            )
+                                            .to_string(),
+                                            true,
+                                        )
+                                    } else {
+                                        panic!()
+                                    }
+                                };
+
+                                pending_commands.push_back((new_pending_command, is_undo));
+                            }
+
+                            false
+                        } else {
+                            true
+                        }
+                    }
                     Keycode::V => {
                         if modifiers.contains(Mod::LCTRLMOD) || modifiers.contains(Mod::RCTRLMOD) {
                             SETTINGS.with(|settings_rc| {
@@ -243,7 +282,7 @@ fn main() -> Result<(), String> {
                                 )
                                 .to_string();
 
-                                pending_commands.push_back(cmd_str);
+                                pending_commands.push_back((cmd_str, false));
                             });
 
                             false
@@ -264,7 +303,7 @@ fn main() -> Result<(), String> {
                                 )
                                 .to_string();
 
-                                pending_commands.push_back(cmd_str);
+                                pending_commands.push_back((cmd_str, false));
                             });
 
                             false
@@ -285,7 +324,7 @@ fn main() -> Result<(), String> {
                                 )
                                 .to_string();
 
-                                pending_commands.push_back(cmd_str);
+                                pending_commands.push_back((cmd_str, false));
                             });
 
                             false
