@@ -35,7 +35,6 @@ use cairo::{
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/normal-map".to_string(),
-        full_screen: false,
         vertical_sync: true,
         relative_mouse_mode: true,
         window_resolution: RESOLUTION_1200_BY_675,

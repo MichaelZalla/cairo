@@ -1,7 +1,10 @@
 use std::{any::TypeId, cell::RefCell, str::FromStr};
 
 use cairo::{
-    app::resolution::{Resolution, RESOLUTIONS_16X9},
+    app::{
+        resolution::{Resolution, RESOLUTIONS_16X9},
+        window::{AppWindowingMode, APP_WINDOWING_MODES},
+    },
     mem::linked_list::LinkedList,
 };
 
@@ -37,7 +40,8 @@ fn parse_or_map_err<T: 'static + FromStr>(arg: &String) -> Result<T, String> {
     })
 }
 
-type ProcessCommandResult = Result<(Option<String>, Option<Resolution>), String>;
+type ProcessCommandResult =
+    Result<(Option<String>, Option<Resolution>, Option<AppWindowingMode>), String>;
 
 fn process_command(command: Command) -> ProcessCommandResult {
     match command.kind.as_str() {
@@ -46,6 +50,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
             let mut prev_value_str: Option<String> = None;
             let mut new_resolution: Option<Resolution> = None;
+            let mut new_windowing_mode: Option<AppWindowingMode> = None;
 
             SETTINGS.with(|settings_rc| -> Result<(), String> {
                 let mut current_settings = settings_rc.borrow_mut();
@@ -55,6 +60,22 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         prev_value_str.replace(current_settings.clicked_count.to_string());
 
                         current_settings.clicked_count = parse_or_map_err::<usize>(value_str)?;
+
+                        Ok(())
+                    }
+                    "windowing_mode" => {
+                        let value = parse_or_map_err::<usize>(value_str)?;
+
+                        let requested_mode = APP_WINDOWING_MODES[value];
+
+                        if requested_mode != current_settings.windowing_mode {
+                            prev_value_str
+                                .replace((current_settings.windowing_mode as usize).to_string());
+
+                            current_settings.windowing_mode = requested_mode;
+
+                            new_windowing_mode.replace(current_settings.windowing_mode);
+                        }
 
                         Ok(())
                     }
@@ -98,19 +119,19 @@ fn process_command(command: Command) -> ProcessCommandResult {
                 }
             })?;
 
-            Ok((prev_value_str, new_resolution))
+            Ok((prev_value_str, new_resolution, new_windowing_mode))
         }
         _ => Err(format!("Unknown command kind `{}`.", command.kind).to_string()),
     }
 }
 
-type ProcessCommandsResult = Result<Option<Resolution>, String>;
+type ProcessCommandsResult = Result<(Option<Resolution>, Option<AppWindowingMode>), String>;
 
 pub(crate) fn process_commands(
     pending_commands: &mut LinkedList<(String, bool)>,
     executed_commands: &mut LinkedList<ExecutedCommand>,
 ) -> ProcessCommandsResult {
-    let mut new_resolution: Option<Resolution> = None;
+    let mut result: (Option<Resolution>, Option<AppWindowingMode>) = (None, None);
 
     while let Some((cmd, is_undo)) = pending_commands.pop_front() {
         let components: Vec<String> = cmd.split(' ').map(|s| s.to_string()).collect();
@@ -126,15 +147,25 @@ pub(crate) fn process_commands(
 
             let prev_value = process_command_result.0;
 
-            if let Some(resolution) = process_command_result.1 {
-                new_resolution.replace(resolution);
-            }
-
             let executed_command = ExecutedCommand {
                 kind: kind.to_string(),
                 args: args.iter().map(|s| s.to_string()).collect(),
                 prev_value,
             };
+
+            match process_command_result {
+                (_, Some(new_resolution), None) => {
+                    result.0.replace(new_resolution);
+                }
+                (_, None, Some(new_windowing_mode)) => {
+                    result.1.replace(new_windowing_mode);
+                }
+                (_, Some(new_resolution), Some(new_windowing_mode)) => {
+                    result.0.replace(new_resolution);
+                    result.1.replace(new_windowing_mode);
+                }
+                _ => (),
+            }
 
             if !is_undo {
                 executed_commands.push_back(executed_command);
@@ -144,5 +175,5 @@ pub(crate) fn process_commands(
         }
     }
 
-    Ok(new_resolution)
+    Ok(result)
 }

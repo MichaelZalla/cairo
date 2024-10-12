@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use cairo::{
-    app::resolution::RESOLUTIONS_16X9,
+    app::{resolution::RESOLUTIONS_16X9, window::APP_WINDOWING_MODES},
     mem::linked_list::LinkedList,
     serde::PostDeserialize,
     ui::{
@@ -184,7 +184,32 @@ impl PanelInstance for SettingsPanel {
                     },
                 )?;
 
-                // Spacer
+                tree.push(spacer(18))?;
+
+                // Setting: `windowing_mode`
+
+                tree.push(text(
+                    format!("SettingsPanel{}_settings.windowing_mode.label", self.id).to_string(),
+                    "Windowing mode".to_string(),
+                ))?;
+
+                let windowing_mode_options: Vec<RadioOption> = APP_WINDOWING_MODES
+                    .iter()
+                    .map(|mode| RadioOption {
+                        label: mode.to_string(),
+                    })
+                    .collect();
+
+                if let Some(index) = radio_group(
+                    format!("SettingsPanel{}_settings.windowing_mode", self.id).to_string(),
+                    &windowing_mode_options,
+                    current_settings.windowing_mode as usize,
+                    tree,
+                )? {
+                    let cmd_str = format!("set_setting windowing_mode {}", index).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
 
                 tree.push(spacer(18))?;
 
@@ -212,8 +237,6 @@ impl PanelInstance for SettingsPanel {
 
                     pending_queue.push_back((cmd_str, false));
                 }
-
-                // Spacer
 
                 tree.push(spacer(18))?;
 
@@ -245,8 +268,6 @@ impl PanelInstance for SettingsPanel {
 
                     pending_queue.push_back((cmd_str, false));
                 }
-
-                // Spacer
 
                 tree.push(spacer(18))?;
 

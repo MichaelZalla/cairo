@@ -10,6 +10,7 @@ use std::{cell::RefCell, env, rc::Rc};
 use cairo::{
     app::{
         resolution::{Resolution, RESOLUTIONS_16X9, RESOLUTION_1280_BY_720},
+        window::AppWindowingMode,
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -242,6 +243,7 @@ fn main() -> Result<(), String> {
 
         COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
             let new_resolution: Option<Resolution>;
+            let new_windowing_mode: Option<AppWindowingMode>;
 
             {
                 let mut pending_commands = buffer.pending_commands.borrow_mut();
@@ -377,7 +379,7 @@ fn main() -> Result<(), String> {
                         _ => true,
                     });
 
-                new_resolution =
+                (new_resolution, new_windowing_mode) =
                     process_commands(&mut pending_commands, &mut executed_commands).unwrap();
             }
 
@@ -389,6 +391,19 @@ fn main() -> Result<(), String> {
 
                 app.resize_window(resolution)
             } else {
+                if let Some(mode) = new_windowing_mode {
+                    app.set_windowing_mode(mode)?;
+
+                    let mut canvas = app.context.rendering_context.canvas.borrow_mut();
+                    let window = canvas.window_mut();
+
+                    resize_framebuffer(
+                        Resolution::new(window.size()),
+                        &mut framebuffer,
+                        &mut window_list,
+                    );
+                }
+
                 Ok(())
             }
         })?;

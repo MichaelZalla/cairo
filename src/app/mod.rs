@@ -7,7 +7,7 @@ use sdl2::event::{EventWatch, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::render::Canvas;
-use sdl2::video::Window;
+use sdl2::video::{FullscreenType, Window};
 use sdl2::{event::Event, render::Texture};
 
 use crate::{
@@ -20,6 +20,8 @@ use crate::{
     time::TimingInfo,
 };
 
+use window::AppWindowingMode;
+
 use context::{make_application_context, make_canvas_texture, ApplicationContext};
 use profile::AppCycleCounter;
 use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
@@ -28,13 +30,14 @@ mod profile;
 
 pub mod context;
 pub mod resolution;
+pub mod window;
 
 #[derive(Debug, Clone)]
 pub struct AppWindowInfo {
     pub title: String,
     pub canvas_resolution: Resolution,
     pub window_resolution: Resolution,
-    pub full_screen: bool,
+    pub windowing_mode: AppWindowingMode,
     pub show_cursor: bool,
     pub relative_mouse_mode: bool,
     pub vertical_sync: bool,
@@ -48,7 +51,7 @@ impl Default for AppWindowInfo {
             window_resolution: DEFAULT_WINDOW_RESOLUTION,
             canvas_resolution: DEFAULT_WINDOW_RESOLUTION,
             show_cursor: true,
-            full_screen: false,
+            windowing_mode: Default::default(),
             relative_mouse_mode: false,
             vertical_sync: false,
             resizable: false,
@@ -178,6 +181,38 @@ impl App {
 
     pub fn toggle_updates(&mut self) {
         self.are_updates_paused = !self.are_updates_paused;
+    }
+
+    pub fn set_windowing_mode(&mut self, windowing_mode: AppWindowingMode) -> Result<(), String> {
+        let mut canvas = self.context.rendering_context.canvas.borrow_mut();
+        let mut window_info = self.window_info.borrow_mut();
+        let mut canvas_texture = self.canvas_texture.borrow_mut();
+
+        {
+            *self.is_resizing_self.borrow_mut() = true;
+        }
+
+        handle_set_window_mode_event(
+            &mut canvas,
+            &mut window_info,
+            &mut canvas_texture,
+            windowing_mode,
+        )?;
+
+        if windowing_mode == AppWindowingMode::Windowed {
+            handle_window_resize_event(
+                &mut canvas,
+                &mut window_info,
+                &mut canvas_texture,
+                DEFAULT_WINDOW_RESOLUTION,
+            )?;
+        }
+
+        {
+            *self.is_resizing_self.borrow_mut() = false;
+        }
+
+        Ok(())
     }
 
     pub fn resize_window(&mut self, resolution: Resolution) -> Result<(), String> {
@@ -406,6 +441,19 @@ impl App {
                         Keycode::Space { .. } => self.toggle_updates(),
                         Keycode::F8 { .. } => self.toggle_updates(),
                         Keycode::F9 { .. } => should_update_step_forward = true,
+                        Keycode::F11 { .. } => {
+                            let windowing_mode = self.window_info.borrow().windowing_mode;
+
+                            match windowing_mode {
+                                AppWindowingMode::Windowed => {
+                                    self.set_windowing_mode(AppWindowingMode::FullScreenWindowed)?;
+                                }
+                                AppWindowingMode::FullScreen
+                                | AppWindowingMode::FullScreenWindowed => {
+                                    self.set_windowing_mode(AppWindowingMode::Windowed)?;
+                                }
+                            }
+                        }
                         _ => {
                             keyboard_state.keys_pressed.push((keycode, modifiers));
                         }
@@ -711,6 +759,35 @@ pub fn handle_window_resize_event(
 ) -> Result<(), String> {
     resize_window(canvas, window_info, new_resolution)?;
     resize_canvas(canvas, window_info, canvas_texture, new_resolution)
+}
+
+pub fn handle_set_window_mode_event(
+    canvas: &mut Canvas<Window>,
+    window_info: &mut AppWindowInfo,
+    canvas_texture: &mut Texture,
+    windowing_mode: AppWindowingMode,
+) -> Result<(), String> {
+    let fullscreen_type = match windowing_mode {
+        AppWindowingMode::FullScreen => FullscreenType::True,
+        AppWindowingMode::Windowed => FullscreenType::Off,
+        AppWindowingMode::FullScreenWindowed => FullscreenType::Desktop,
+    };
+
+    let window = canvas.window_mut();
+
+    window
+        .set_fullscreen(fullscreen_type)
+        .map_err(|e| format!("Failed to set the display mode: {}", e))?;
+
+    // Update window info.
+
+    window_info.windowing_mode = windowing_mode;
+
+    // Resize our canvas.
+
+    let resolution = Resolution::new(window.size());
+
+    resize_canvas(canvas, window_info, canvas_texture, resolution)
 }
 
 fn render_and_present(

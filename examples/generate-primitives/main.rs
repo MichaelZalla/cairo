@@ -44,7 +44,6 @@ fn main() -> Result<(), String> {
 
     let mut window_info = AppWindowInfo {
         title: "examples/generate-primitives".to_string(),
-        full_screen: false,
         vertical_sync: true,
         relative_mouse_mode: true,
         window_resolution: resolution,

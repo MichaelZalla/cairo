@@ -7,7 +7,9 @@ use sdl2::{
     Sdl,
 };
 
-use crate::{app::AppWindowInfo, device::game_controller::GameController};
+use crate::{
+    app::window::AppWindowingMode, app::AppWindowInfo, device::game_controller::GameController,
+};
 
 use super::resolution::Resolution;
 
@@ -125,10 +127,22 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
         window_builder.resizable();
     }
 
-    if window_info.full_screen {
-        // Will override `canvas_resolution.width` and `canvas_resolution.height` for the current
-        // desktop resolution;
-        window_builder.fullscreen_desktop();
+    match window_info.windowing_mode {
+        AppWindowingMode::Windowed => {
+            // Do nothing.
+        }
+        AppWindowingMode::FullScreen => {
+            // Will override `canvas_resolution.width` and
+            // `canvas_resolution.height` for the current desktop resolution;
+
+            window_builder.fullscreen();
+        }
+        AppWindowingMode::FullScreenWindowed => {
+            // Will override `canvas_resolution.width` and
+            // `canvas_resolution.height` for the current desktop resolution;
+
+            window_builder.fullscreen_desktop();
+        }
     }
 
     match window_builder.build() {
