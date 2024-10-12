@@ -1,5 +1,4 @@
-use std::rc::Rc;
-use std::{cell::RefCell, fmt::Debug};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use cairo::buffer::Buffer2D;
 use cairo::scene::graph::SceneGraphRenderOptions;
