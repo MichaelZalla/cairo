@@ -17,7 +17,10 @@ use cairo::{
     },
     mem::linked_list::LinkedList,
     resource::{arena::Arena, handle::Handle},
-    ui::{context::GLOBAL_UI_CONTEXT, panel::PanelRenderCallback, ui_box::tree::UIBoxTree},
+    ui::{
+        context::GLOBAL_UI_CONTEXT, panel::PanelRenderCallback, ui_box::tree::UIBoxTree,
+        window::list::WindowList,
+    },
 };
 
 use command::{Command, CommandBuffer};
@@ -41,6 +44,21 @@ fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
     let cursor = mouse::cursor::set_cursor(cursor_kind).unwrap();
 
     retained.replace(cursor);
+}
+
+fn resize_framebuffer(
+    resolution: Resolution,
+    framebuffer: &mut Framebuffer,
+    window_list: &mut WindowList,
+) {
+    // Resize our framebuffer to match the native window's new resolution.
+
+    framebuffer.resize(resolution.width, resolution.height, true);
+
+    // Rebuild each window's UI tree(s), in response to the new (native
+    // window) resolution.
+
+    window_list.rebuild_ui_trees(resolution);
 }
 
 fn process_command(command: Command) -> Result<(), String> {
@@ -177,14 +195,7 @@ fn main() -> Result<(), String> {
         // Check if our application window was just resized...
 
         if let Some(resolution) = new_resolution {
-            // Resize our framebuffer to match the native window's new resolution.
-
-            framebuffer.resize(resolution.width, resolution.height, true);
-
-            // Rebuild each window's UI tree(s), in response to the new (native
-            // window) resolution.
-
-            window_list.rebuild_ui_trees(resolution);
+            resize_framebuffer(resolution, &mut framebuffer, &mut window_list);
         }
 
         let mut color_buffer = framebuffer.attachments.color.as_mut().unwrap().borrow_mut();
