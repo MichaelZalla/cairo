@@ -92,51 +92,51 @@ impl Graphics {
                 if global_y >= 0 && global_y < buffer.height as i32 {
                     // Border.
 
-                    if global_x >= 0 && global_x < buffer.width as i32 {
+                    if global_x >= 0 && global_x < buffer.width as i32 && border.is_some() {
                         buffer.set(global_x as u32, global_y as u32, border_u32);
                     }
 
                     // Fill.
 
-                    let (mut x1, mut x2) = (center_x as i32 - local_x, global_x);
+                    if fill.is_some() {
+                        let (mut x1, mut x2) = (center_x as i32 - local_x, global_x);
 
-                    if x1 == x2 {
-                        continue;
-                    }
+                        if x1 == x2 {
+                            continue;
+                        }
 
-                    if x2 < x1 {
-                        mem::swap(&mut x1, &mut x2);
-                    }
+                        if x2 < x1 {
+                            mem::swap(&mut x1, &mut x2);
+                        }
 
-                    x1 = x1.clamp(0, buffer_width_minus_one as i32);
-                    x2 = x2.clamp(0, buffer_width_minus_one as i32);
+                        x1 = x1.clamp(0, buffer_width_minus_one as i32);
+                        x2 = x2.clamp(0, buffer_width_minus_one as i32);
 
-                    let x2_minus_one = x2 - 1;
-
-                    if local_x == x && (local_y == y || local_y == -y) {
-                        buffer.horizontal_line_unsafe(
-                            x1 as u32,
-                            x2_minus_one as u32,
-                            global_y as u32,
-                            fill_u32,
-                        );
-                    } else if local_x == y && (local_y == x || local_y == -x) {
-                        if local_y == x {
-                            if global_y > 0 {
+                        if local_x == x && (local_y == y || local_y == -y) {
+                            buffer.horizontal_line_unsafe(
+                                x1 as u32,
+                                x2 as u32 - 1,
+                                global_y as u32,
+                                fill_u32,
+                            );
+                        } else if local_x == y && (local_y == x || local_y == -x) {
+                            if local_y == x {
+                                if global_y > 0 {
+                                    buffer.horizontal_line_unsafe(
+                                        x1 as u32,
+                                        x2 as u32,
+                                        (global_y - 1) as u32,
+                                        fill_u32,
+                                    );
+                                }
+                            } else if global_y < buffer_height_minus_one as i32 {
                                 buffer.horizontal_line_unsafe(
                                     x1 as u32,
-                                    x2_minus_one as u32,
-                                    (global_y - 1) as u32,
+                                    x2 as u32,
+                                    (global_y + 1) as u32,
                                     fill_u32,
                                 );
                             }
-                        } else if global_y < buffer_height_minus_one as i32 {
-                            buffer.horizontal_line_unsafe(
-                                x1 as u32,
-                                x2_minus_one as u32,
-                                (global_y + 1) as u32,
-                                fill_u32,
-                            );
                         }
                     }
                 }

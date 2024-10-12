@@ -1,11 +1,17 @@
-use cairo::ui::{
-    context::GLOBAL_UI_CONTEXT,
-    ui_box::{
-        tree::UIBoxTree,
-        utils::{container, spacer, text},
-        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+use cairo::{
+    buffer::Buffer2D,
+    graphics::Graphics,
+    resource::handle::Handle,
+    ui::{
+        context::GLOBAL_UI_CONTEXT,
+        extent::ScreenExtent,
+        ui_box::{
+            tree::UIBoxTree,
+            utils::{container, spacer, text},
+            UIBox, UIBoxFeatureFlag, UILayoutDirection,
+        },
+        UISize, UISizeWithStrictness,
     },
-    UISize, UISizeWithStrictness,
 };
 
 use crate::stack::stack;
@@ -51,6 +57,36 @@ pub fn radio_group(
     Ok(result)
 }
 
+static RADIO_SELECTED_INDICATOR_SIZE: u32 = 8;
+
+static RADIO_SIZE: u32 = 4 + RADIO_SELECTED_INDICATOR_SIZE + 4;
+
+static RADIO_UI_SIZE: UISizeWithStrictness = UISizeWithStrictness {
+    size: UISize::Pixels(RADIO_SIZE),
+    strictness: 1.0,
+};
+
+fn render_selected_indicator(
+    _: &Option<Handle>,
+    extent: &ScreenExtent,
+    target: &mut Buffer2D,
+) -> Result<(), String> {
+    GLOBAL_UI_CONTEXT.with(|ctx| {
+        let theme = ctx.theme.borrow();
+
+        Graphics::circle(
+            target,
+            extent.left + 8,
+            extent.top + 8,
+            5,
+            Some(&theme.checkbox_background_selected),
+            Some(&theme.checkbox_background_selected),
+        );
+    });
+
+    Ok(())
+}
+
 pub fn radio(
     id: &String,
     index: usize,
@@ -82,23 +118,26 @@ pub fn radio(
                         theme.checkbox_background
                     };
 
-                    ctx.fill_color(fill_color, || -> Result<UIBox, String> {
-                        Ok(UIBox::new(
-                            format!("{}.radio_option_{}_selected", id, index).to_string(),
-                            UIBoxFeatureMask::from(UIBoxFeatureFlag::DrawFill),
-                            UILayoutDirection::LeftToRight,
-                            [
-                                UISizeWithStrictness {
-                                    size: UISize::Pixels(14),
-                                    strictness: 1.0,
+                    let border_color = if is_selected {
+                        theme.checkbox_background_selected
+                    } else {
+                        theme.checkbox_background
+                    };
+
+                    ctx.fill_color(fill_color, || {
+                        ctx.border_color(border_color, || -> Result<UIBox, String> {
+                            Ok(UIBox::new(
+                                format!("{}.radio_option_{}_selected", id, index).to_string(),
+                                UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::MaskCircle,
+                                UILayoutDirection::LeftToRight,
+                                [RADIO_UI_SIZE, RADIO_UI_SIZE],
+                                if is_selected {
+                                    Some((render_selected_indicator, None))
+                                } else {
+                                    None
                                 },
-                                UISizeWithStrictness {
-                                    size: UISize::MaxOfSiblings,
-                                    strictness: 1.0,
-                                },
-                            ],
-                            None,
-                        ))
+                            ))
+                        })
                     })
                 })
             }?;

@@ -52,6 +52,7 @@ bitmask! {
         ResizableMaxExtentOnSecondaryAxis = (1 << 10),
         DrawChildDividers = (1 << 11),
         DrawCustomRender = (1 << 12),
+        MaskCircle = (1 << 13),
     }
 }
 
@@ -472,7 +473,21 @@ impl UIBox {
                 }
             };
 
-            Graphics::rectangle(target, x, y, width, height, fill_color.as_ref(), None);
+            if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
+                let radius = (width.min(height) as f32 / 2.0).floor();
+                let center = (x + width / 2, y + height / 2);
+
+                Graphics::circle(
+                    target,
+                    center.0,
+                    center.1,
+                    radius as u32,
+                    fill_color.as_ref(),
+                    None,
+                );
+            } else {
+                Graphics::rectangle(target, x, y, width, height, fill_color.as_ref(), None);
+            }
         }
 
         if self.features.contains(UIBoxFeatureFlag::DrawText) {
@@ -628,7 +643,21 @@ impl UIBox {
                 None
             };
 
-            Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
+            if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
+                let radius = width.min(height) as f32 / 2.0;
+                let center = (x + width / 2, y + height / 2);
+
+                Graphics::circle(
+                    target,
+                    center.0,
+                    center.1,
+                    radius as u32,
+                    fill_color,
+                    border_color,
+                );
+            } else {
+                Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
+            }
 
             if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
                 let (mut top_left, mut bottom_right) = (color::WHITE, color::BLACK);
