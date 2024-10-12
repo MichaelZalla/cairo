@@ -165,22 +165,6 @@ where
         self
     }
 
-    pub fn horizontal_line_unsafe(&mut self, x1: u32, x2: u32, y: u32, value: T) {
-        // Assumes all coordinate arguments lie inside the buffer boundary.
-
-        for x in x1..x2 + 1 {
-            self.set(x, y, value);
-        }
-    }
-
-    pub fn vertical_line_unsafe(&mut self, x: u32, y1: u32, y2: u32, value: T) {
-        // Assumes all coordinate arguments lie inside the buffer boundary.
-
-        for y in y1..y2 + 1 {
-            self.set(x, y, value);
-        }
-    }
-
     pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &[T]) {
         self.blit_blended(left, top, width, height, data, None, None)
     }
@@ -239,5 +223,23 @@ where
             blend_mode,
             blend_mode_max_value,
         )
+    }
+}
+
+impl Buffer2D<u32> {
+    pub fn horizontal_line_unsafe(&mut self, x1: u32, x2: u32, y: u32, value: u32) {
+        // Assumes all coordinate arguments lie inside the buffer boundary.
+
+        for x in x1..x2 + 1 {
+            self.set(x, y, value);
+        }
+    }
+
+    pub fn vertical_line_unsafe(&mut self, x: u32, y1: u32, y2: u32, value: u32) {
+        // Assumes all coordinate arguments lie inside the buffer boundary.
+
+        for y in y1..y2 + 1 {
+            self.set(x, y, value);
+        }
     }
 }
