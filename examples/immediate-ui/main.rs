@@ -27,9 +27,11 @@ use panel::{PanelInstance, SettingsPanel};
 use settings::Settings;
 use window::make_window_list;
 
+mod checkbox;
 mod command;
 mod panel;
 mod settings;
+mod stack;
 mod window;
 
 thread_local! {
@@ -79,6 +81,12 @@ fn main() -> Result<(), String> {
         resizable: true,
         ..Default::default()
     };
+
+    SETTINGS.with(|settings_rc| {
+        let mut settings = settings_rc.borrow_mut();
+
+        settings.hdr = true;
+    });
 
     // Allocates a default framebuffer.
 

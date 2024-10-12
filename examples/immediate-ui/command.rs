@@ -53,6 +53,27 @@ pub(crate) fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
+                    "vsync" => {
+                        prev_value_str.replace(current_settings.vsync.to_string());
+
+                        current_settings.vsync = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "hdr" => {
+                        prev_value_str.replace(current_settings.hdr.to_string());
+
+                        current_settings.hdr = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "bloom" => {
+                        prev_value_str.replace(current_settings.bloom.to_string());
+
+                        current_settings.bloom = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
                     _ => Err(format!("Unknown settings key `{}`.", setting_key).to_string()),
                 }
             })?;

@@ -13,7 +13,11 @@ use cairo::{
     },
 };
 
-use crate::{command::ExecutedCommand, COMMAND_BUFFER, SETTINGS};
+use crate::{
+    checkbox::{checkbox_group, Checkbox},
+    command::ExecutedCommand,
+    COMMAND_BUFFER, SETTINGS,
+};
 
 pub trait PanelInstance {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String>;
@@ -177,6 +181,39 @@ impl PanelInstance for SettingsPanel {
                         Ok(())
                     },
                 )?;
+
+                // Spacer
+
+                tree.push(spacer(18))?;
+
+                // Setting: `vsync`, `hdr`, `bloom`
+
+                tree.push(text(
+                    format!("SettingsPanel{}_settings.postprocessing.label", self.id).to_string(),
+                    "Postprocessing".to_string(),
+                ))?;
+
+                let checkboxes = vec![
+                    Checkbox::new("vsync", "Enable V-sync", current_settings.vsync),
+                    Checkbox::new("hdr", "Enable HDR", current_settings.hdr),
+                    Checkbox::new("bloom", "Bloom", current_settings.bloom),
+                ];
+
+                let toggled_indices = checkbox_group(
+                    format!("SettingsPanel{}_settings.checkboxes", self.id).to_string(),
+                    &checkboxes,
+                    tree,
+                )?;
+
+                for index in toggled_indices {
+                    let checkbox = &checkboxes[index];
+
+                    let cmd_str =
+                        format!("set_setting {} {}", checkbox.value, !checkbox.is_checked)
+                            .to_string();
+
+                    pending_queue.push_back(cmd_str);
+                }
 
                 // Spacer
 
