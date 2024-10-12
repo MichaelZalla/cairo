@@ -66,8 +66,10 @@ impl SettingsPanel {
         executed_queue: &LinkedList<ExecutedCommand>,
         tree: &mut UIBoxTree,
     ) -> Result<(), String> {
+        static RECENT_COMMANDS_COUNT: usize = 3;
+
         tree.push(text(
-            format!("SettingsPanel{}_settings.command_history.label", self.id).to_string(),
+            format!("SettingsPanel{}.command_history.label", self.id).to_string(),
             format!(
                 "Command history{}",
                 if executed_queue.is_empty() {
@@ -79,15 +81,9 @@ impl SettingsPanel {
             .to_string(),
         ))?;
 
-        static RECENT_COMMANDS_COUNT: usize = 3;
-
         if executed_queue.is_empty() {
             tree.push(text(
-                format!(
-                    "SettingsPanel{}_settings.command_history.most_recent_empty",
-                    self.id,
-                )
-                .to_string(),
+                format!("SettingsPanel{}.command_history.most_recent_empty", self.id,).to_string(),
                 "No history.".to_string(),
             ))?;
         } else {
@@ -96,7 +92,7 @@ impl SettingsPanel {
 
                 tree.push(text(
                     format!(
-                        "SettingsPanel{}_settings.command_history.most_recent_{}",
+                        "SettingsPanel{}.command_history.most_recent_{}",
                         self.id, index
                     )
                     .to_string(),
@@ -182,10 +178,10 @@ impl PanelInstance for SettingsPanel {
 
                 tree.push(spacer(18))?;
 
-                // Setting: `windowing_mode`
+                // Windowing mode.
 
                 tree.push(text(
-                    format!("SettingsPanel{}_settings.windowing_mode.label", self.id).to_string(),
+                    format!("SettingsPanel{}.windowing_mode.label", self.id).to_string(),
                     "Windowing mode".to_string(),
                 ))?;
 
@@ -197,7 +193,7 @@ impl PanelInstance for SettingsPanel {
                     .collect();
 
                 if let Some(index) = radio_group(
-                    format!("SettingsPanel{}_settings.windowing_mode", self.id).to_string(),
+                    format!("SettingsPanel{}.windowing_mode.radio_group", self.id).to_string(),
                     &windowing_mode_options,
                     current_settings.windowing_mode as usize,
                     tree,
@@ -209,10 +205,10 @@ impl PanelInstance for SettingsPanel {
 
                 tree.push(spacer(18))?;
 
-                // Setting: `resolution`
+                // Window resolution
 
                 tree.push(text(
-                    format!("SettingsPanel{}_settings.resolution.label", self.id).to_string(),
+                    format!("SettingsPanel{}.resolution.label", self.id).to_string(),
                     "Resolution".to_string(),
                 ))?;
 
@@ -224,7 +220,7 @@ impl PanelInstance for SettingsPanel {
                     .collect();
 
                 if let Some(index) = radio_group(
-                    format!("SettingsPanel{}_settings.resolution", self.id).to_string(),
+                    format!("SettingsPanel{}.resolution.radio_group", self.id).to_string(),
                     &resolution_options,
                     current_settings.resolution,
                     tree,
@@ -236,21 +232,20 @@ impl PanelInstance for SettingsPanel {
 
                 tree.push(spacer(18))?;
 
-                // Setting: `vsync`, `hdr`, `bloom`
+                // Postprocessing flags
 
                 tree.push(text(
-                    format!("SettingsPanel{}_settings.postprocessing.label", self.id).to_string(),
+                    format!("SettingsPanel{}.postprocessing.label", self.id).to_string(),
                     "Postprocessing".to_string(),
                 ))?;
 
                 let checkboxes = vec![
                     Checkbox::new("vsync", "Enable V-sync", current_settings.vsync),
                     Checkbox::new("hdr", "Enable HDR", current_settings.hdr),
-                    Checkbox::new("bloom", "Bloom", current_settings.bloom),
                 ];
 
                 let toggled_indices = checkbox_group(
-                    format!("SettingsPanel{}_settings.checkboxes", self.id).to_string(),
+                    format!("SettingsPanel{}.postprocessing.checkbox_group", self.id).to_string(),
                     &checkboxes,
                     tree,
                 )?;
@@ -271,9 +266,7 @@ impl PanelInstance for SettingsPanel {
 
                 let executed_queue = buffer.executed_commands.borrow();
 
-                self.command_history(&executed_queue, tree)?;
-
-                Ok(())
+                self.command_history(&executed_queue, tree)
             })
         })
     }
