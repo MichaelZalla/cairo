@@ -10,7 +10,10 @@ use cairo::{
     },
 };
 
-use crate::panels::{render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel};
+use crate::panels::{
+    render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
+    shader_options_panel::ShaderOptionsPanel,
+};
 
 fn make_settings_panel(
     id: &str,
@@ -35,6 +38,8 @@ pub(crate) fn make_window_list<'a>(
     settings_panel_render_callback: PanelRenderCallback,
     render_options_panel_arena: &mut Arena<RenderOptionsPanel>,
     render_options_panel_render_callback: PanelRenderCallback,
+    shader_options_panel_arena: &mut Arena<ShaderOptionsPanel>,
+    shader_options_panel_render_callback: PanelRenderCallback,
     resolution: Resolution,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
@@ -89,7 +94,7 @@ pub(crate) fn make_window_list<'a>(
                 render: Some(settings_panel_render_callback.clone()),
                 custom_render_callback: None,
             };
-        } else {
+        } else if i == 1 {
             window_title = "Render Options".to_string();
 
             panel_id = format!("{}_RenderOptionsPanel", window_id);
@@ -105,6 +110,24 @@ pub(crate) fn make_window_list<'a>(
                     ),
                 ),
                 render: Some(render_options_panel_render_callback.clone()),
+                custom_render_callback: None,
+            };
+        } else {
+            window_title = "Shader Options".to_string();
+
+            panel_id = format!("{}_ShaderOptionsPanel", window_id);
+            panel_instance_data = PanelInstanceData {
+                panel_instance: shader_options_panel_arena.insert(
+                    Uuid::new_v4(),
+                    ShaderOptionsPanel::new(
+                        panel_id.as_str(),
+                        Handle {
+                            uuid: Uuid::new_v4(),
+                            index: 0,
+                        },
+                    ),
+                ),
+                render: Some(shader_options_panel_render_callback.clone()),
                 custom_render_callback: None,
             };
         }

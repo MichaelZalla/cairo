@@ -1,11 +1,11 @@
 extern crate sdl2;
 
+use std::{cell::RefCell, env, rc::Rc};
+
 use sdl2::{
     keyboard::{Keycode, Mod},
     mouse::Cursor,
 };
-
-use std::{cell::RefCell, env, rc::Rc};
 
 use cairo::{
     app::{
@@ -28,7 +28,8 @@ use cairo::{
 
 use command::{process_commands, CommandBuffer};
 use panels::{
-    render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel, PanelInstance,
+    render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
+    shader_options_panel::ShaderOptionsPanel, PanelInstance,
 };
 use settings::Settings;
 use window::make_window_list;
@@ -146,9 +147,27 @@ fn main() -> Result<(), String> {
         },
     );
 
+    let shader_options_panel_arena_rc =
+        Box::leak(Box::new(RefCell::new(Arena::<ShaderOptionsPanel>::new())));
+
+    let shader_options_panel_render_callback: PanelRenderCallback = Rc::new(
+        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+            let mut shader_options_panel_arena = shader_options_panel_arena_rc.borrow_mut();
+
+            if let Ok(entry) = shader_options_panel_arena.get_mut(panel_instance) {
+                let panel = &mut entry.item;
+
+                panel.render(tree).unwrap();
+            }
+
+            Ok(())
+        },
+    );
+
     let window_list_rc = {
         let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
         let mut render_options_panel_arena = render_options_panel_arena_rc.borrow_mut();
+        let mut shader_options_panel_arena = shader_options_panel_arena_rc.borrow_mut();
 
         let resolution = window_info.window_resolution;
 
@@ -157,6 +176,8 @@ fn main() -> Result<(), String> {
             settings_panel_render_callback,
             &mut render_options_panel_arena,
             render_options_panel_render_callback,
+            &mut shader_options_panel_arena,
+            shader_options_panel_render_callback,
             resolution,
         )?;
 
