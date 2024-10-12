@@ -35,6 +35,8 @@ thread_local! {
     pub static COMMAND_BUFFER: CommandBuffer = Default::default();
 }
 
+static DEFAULT_WINDOW_RESOLUTION: Resolution = RESOLUTION_1280_BY_720;
+
 fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
     let cursor = mouse::cursor::set_cursor(cursor_kind).unwrap();
 
@@ -86,8 +88,8 @@ fn main() -> Result<(), String> {
 
     let mut window_info = AppWindowInfo {
         title: "examples/immediate-ui".to_string(),
-        window_resolution: RESOLUTION_1280_BY_720,
-        canvas_resolution: RESOLUTION_1280_BY_720,
+        window_resolution: DEFAULT_WINDOW_RESOLUTION,
+        canvas_resolution: DEFAULT_WINDOW_RESOLUTION,
         resizable: true,
         ..Default::default()
     };
