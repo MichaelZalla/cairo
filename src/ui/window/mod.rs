@@ -303,12 +303,22 @@ impl<'a> Window<'a> {
         Ok(window_render_result)
     }
 
-    pub fn render(&self, frame_index: u32, framebuffer: &mut Buffer2D) -> Result<(), String> {
-        let base_ui_tree = &mut self.ui_trees.base.borrow_mut();
+    pub fn render(&mut self, frame_index: u32, framebuffer: &mut Buffer2D) -> Result<(), String> {
+        {
+            // Render the window's base UI tree into the framebuffer for the
+            // current frame.
 
-        // Render the window's base UI tree into the framebuffer for the current frame.
+            let base_ui_tree = &mut self.ui_trees.base.borrow_mut();
 
-        base_ui_tree.render_frame(frame_index, framebuffer)
+            base_ui_tree.render_frame(frame_index, framebuffer)?;
+        }
+
+        let minimum_size = self.get_minimum_size_to_fit_contents();
+
+        self.size.0 = self.size.0.max(minimum_size.0);
+        self.size.1 = self.size.1.max(minimum_size.1);
+
+        Ok(())
     }
 
     fn get_computed_size_of_root_child(&self, index: usize) -> Option<(u32, u32)> {

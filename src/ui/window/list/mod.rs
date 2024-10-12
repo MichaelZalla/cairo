@@ -74,8 +74,8 @@ impl<'a> WindowList<'a> {
         self.0.retain(|window| window.active);
     }
 
-    pub fn render(&self, frame_index: u32, framebuffer: &mut Buffer2D) -> Result<(), String> {
-        for window in self.0.iter() {
+    pub fn render(&mut self, frame_index: u32, framebuffer: &mut Buffer2D) -> Result<(), String> {
+        for window in self.0.iter_mut() {
             window.render(frame_index, framebuffer)?;
         }
 
