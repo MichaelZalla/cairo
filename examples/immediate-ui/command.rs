@@ -105,6 +105,13 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
+                    "render.fragment_shader" => {
+                        prev_value_str.replace(current_settings.fragment_shader.to_string());
+
+                        current_settings.fragment_shader = parse_or_map_err::<usize>(value_str)?;
+
+                        Ok(())
+                    }
                     "render_options.do_rasterization" => {
                         prev_value_str
                             .replace(current_settings.render_options.do_rasterization.to_string());

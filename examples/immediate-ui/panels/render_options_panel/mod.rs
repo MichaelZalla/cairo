@@ -98,6 +98,48 @@ impl PanelInstance for RenderOptionsPanel {
 
                 tree.push(spacer(18))?;
 
+                // Shaders
+
+                tree.push(text(
+                    format!("{}.shaders.label", self.id).to_string(),
+                    "Shaders".to_string(),
+                ))?;
+
+                tree.push(text(
+                    format!("{}.shaders.fragment.label", self.id).to_string(),
+                    "Fragment shader".to_string(),
+                ))?;
+
+                let fragment_shader_options: Vec<RadioOption> = [
+                    "Default",
+                    "Debug - Albedo",
+                    "Debug - Depth",
+                    "Debug - Normal",
+                    "Debug - UV",
+                ]
+                .iter()
+                .map(|label| RadioOption {
+                    label: label.to_string(),
+                })
+                .collect();
+
+                if let Some(new_selected_fragment_shader_index) = radio_group(
+                    format!("{}.shaders.fragment.radio_group", self.id).to_string(),
+                    &fragment_shader_options,
+                    current_settings.fragment_shader,
+                    tree,
+                )? {
+                    let cmd_str = format!(
+                        "set render.fragment_shader {}",
+                        new_selected_fragment_shader_index
+                    )
+                    .to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
                 // Shadows
 
                 tree.push(text(
