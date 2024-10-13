@@ -402,7 +402,11 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
-                    _ => Err(format!("Unknown settings key `{}`.", setting_key).to_string()),
+                    _ => {
+                        println!("Unknown settings key `{}`.", setting_key);
+
+                        Ok(())
+                    }
                 }
             })?;
 
