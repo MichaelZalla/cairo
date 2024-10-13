@@ -327,12 +327,12 @@ impl<'a> Window<'a> {
 
         if let Some(root_rc) = root_rc_option {
             let root = root_rc.as_ref().borrow();
-            let titlebar_root = &root.children[index].borrow().data;
+            let data_for_child_at_index = &root.children[index].borrow().data;
 
             GLOBAL_UI_CONTEXT.with(|ctx| {
                 ctx.cache
                     .borrow()
-                    .get(&titlebar_root.key)
+                    .get(&data_for_child_at_index.key)
                     .map(|cached_ui_box| cached_ui_box.get_computed_pixel_size())
             })
         } else {
@@ -341,18 +341,26 @@ impl<'a> Window<'a> {
     }
 
     fn get_computed_size_of_titlebar(&self) -> Option<(u32, u32)> {
+        debug_assert!(self.with_titlebar);
+
         self.get_computed_size_of_root_child(0)
     }
 
     fn get_computed_size_of_panel_tree(&self) -> Option<(u32, u32)> {
-        self.get_computed_size_of_root_child(1)
+        self.get_computed_size_of_root_child(if self.with_titlebar { 1 } else { 0 })
     }
 
     fn get_minimum_size_to_fit_contents(&self) -> (u32, u32) {
         // Computes the minimum extent needed to fit the titlebar (height) and panel tree content.
-        // Note: The titlebar's width is always equal to this window's width.
 
-        let titlebar_computed_size = self.get_computed_size_of_titlebar().unwrap_or_default();
+        // Note: A titlebar's width is always equal to the window's width.
+
+        let titlebar_computed_size = if self.docked {
+            (self.size.0, 0)
+        } else {
+            self.get_computed_size_of_titlebar().unwrap_or_default()
+        };
+
         let panel_tree_computed_size = self.get_computed_size_of_panel_tree().unwrap_or_default();
 
         (
