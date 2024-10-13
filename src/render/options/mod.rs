@@ -2,7 +2,7 @@ use sdl2::keyboard::Keycode;
 
 use crate::{
     color::{self, Color},
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    device::keyboard::KeyboardState,
     render::culling::{FaceCullingReject, FaceCullingWindingOrder},
 };
 
@@ -40,12 +40,7 @@ impl Default for RenderOptions {
 }
 
 impl RenderOptions {
-    pub fn update(
-        &mut self,
-        keyboard_state: &KeyboardState,
-        _mouse_state: &MouseState,
-        game_controller_state: &GameControllerState,
-    ) {
+    pub fn update(&mut self, keyboard_state: &KeyboardState) {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 (Keycode::Num1, _) => {
@@ -128,12 +123,6 @@ impl RenderOptions {
                 }
                 _ => {}
             }
-        }
-
-        if game_controller_state.buttons.x {
-            self.draw_wireframe = !self.draw_wireframe;
-        } else if game_controller_state.buttons.y {
-            self.draw_normals = !self.draw_normals;
         }
     }
 }

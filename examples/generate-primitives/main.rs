@@ -427,9 +427,7 @@ fn main() -> Result<(), String> {
             &mut update_scene_graph_node,
         )?;
 
-        renderer
-            .options
-            .update(keyboard_state, mouse_state, game_controller_state);
+        renderer.options.update(keyboard_state);
 
         debug_message_buffer.write(format!(
             "Wireframe: {}",

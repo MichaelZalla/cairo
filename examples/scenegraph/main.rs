@@ -632,9 +632,7 @@ fn main() -> Result<(), String> {
 
         renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        renderer
-            .options
-            .update(keyboard_state, mouse_state, game_controller_state);
+        renderer.options.update(keyboard_state);
 
         renderer
             .shader_options

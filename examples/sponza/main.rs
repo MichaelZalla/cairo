@@ -335,9 +335,7 @@ fn main() -> Result<(), String> {
 
         let mut renderer = renderer_rc.borrow_mut();
 
-        renderer
-            .options
-            .update(keyboard_state, mouse_state, game_controller_state);
+        renderer.options.update(keyboard_state);
 
         debug_message_buffer.write(format!(
             "Wireframe: {}",
