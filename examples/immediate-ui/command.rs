@@ -104,10 +104,61 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
-                    "bloom" => {
-                        prev_value_str.replace(current_settings.bloom.to_string());
+                    "render_options.do_rasterization" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.do_rasterization.to_string());
 
-                        current_settings.bloom = parse_or_map_err::<bool>(value_str)?;
+                        current_settings.render_options.do_rasterization =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.do_lighting" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.do_lighting.to_string());
+
+                        current_settings.render_options.do_lighting =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.do_deferred_lighting" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .render_options
+                                .do_deferred_lighting
+                                .to_string(),
+                        );
+
+                        current_settings.render_options.do_deferred_lighting =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.do_bloom" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.do_bloom.to_string());
+
+                        current_settings.render_options.do_bloom =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.draw_normals" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.draw_normals.to_string());
+
+                        current_settings.render_options.draw_normals =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.draw_wireframe" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.draw_wireframe.to_string());
+
+                        current_settings.render_options.draw_wireframe =
+                            parse_or_map_err::<bool>(value_str)?;
 
                         Ok(())
                     }

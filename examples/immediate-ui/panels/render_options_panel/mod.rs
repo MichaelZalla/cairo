@@ -63,11 +63,26 @@ impl PanelInstance for RenderOptionsPanel {
                 ))?;
 
                 let render_pass_flags = vec![
-                    // Checkbox::new("wireframe", "Wireframe", false),
-                    Checkbox::new("rasterization", "Rasterization", true),
-                    Checkbox::new("lighting", "Lighting", true),
-                    Checkbox::new("deferredLighting", "Deferred lighting", false),
-                    Checkbox::new("bloom", "Bloom", current_settings.bloom),
+                    Checkbox::new(
+                        "render_options.do_rasterization",
+                        "Rasterization",
+                        current_settings.render_options.do_rasterization,
+                    ),
+                    Checkbox::new(
+                        "render_options.do_lighting",
+                        "Lighting",
+                        current_settings.render_options.do_lighting,
+                    ),
+                    Checkbox::new(
+                        "render_options.do_deferred_lighting",
+                        "Deferred lighting",
+                        current_settings.render_options.do_deferred_lighting,
+                    ),
+                    Checkbox::new(
+                        "render_options.do_bloom",
+                        "Bloom",
+                        current_settings.render_options.do_bloom,
+                    ),
                 ];
 
                 for flag in render_pass_flags {
@@ -145,11 +160,13 @@ impl PanelInstance for RenderOptionsPanel {
                     "Debug".to_string(),
                 ))?;
 
-                let draw_wireframe = true;
+                // Wireframe
+
+                let draw_wireframe = current_settings.render_options.draw_wireframe;
 
                 setting_checkbox(
-                    &format!("{}.drawWireframe", self.id),
-                    "drawWireframe",
+                    &format!("{}.debug.drawWireframe", self.id),
+                    "render_options.draw_wireframe",
                     "Draw wireframe",
                     draw_wireframe,
                     tree,
@@ -160,21 +177,21 @@ impl PanelInstance for RenderOptionsPanel {
                     // Wireframe color.
 
                     tree.push(text(
-                        format!("{}.wireframe_color.label", self.id).to_string(),
+                        format!("{}.debug.wireframe_color.label", self.id).to_string(),
                         "Wireframe color".to_string(),
                     ))?;
 
                     tree.push(text(
-                        format!("{}.wireframe_color", self.id).to_string(),
+                        format!("{}.debug.wireframe_color", self.id).to_string(),
                         "[_____________]".to_string(),
                     ))?;
                 }
 
-                let draw_normals = true;
+                let draw_normals = current_settings.render_options.draw_normals;
 
                 setting_checkbox(
-                    &format!("{}.drawNormals", self.id),
-                    "drawNormals",
+                    &format!("{}.debug.drawNormals", self.id),
+                    "render_options.draw_normals",
                     "Draw normals",
                     draw_normals,
                     tree,

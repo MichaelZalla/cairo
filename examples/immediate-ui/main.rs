@@ -426,10 +426,10 @@ fn main() -> Result<(), String> {
                                 SETTINGS.with(|settings_rc| {
                                     let current_settings = settings_rc.borrow();
 
-                                    let bloom = current_settings.bloom;
+                                    let bloom = current_settings.render_options.do_bloom;
 
                                     let cmd_str = format!(
-                                        "set bloom {}",
+                                        "set render_options.do_bloom {}",
                                         if bloom { "false" } else { "true " }
                                     )
                                     .to_string();
