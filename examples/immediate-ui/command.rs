@@ -6,6 +6,7 @@ use cairo::{
         window::{AppWindowingMode, APP_WINDOWING_MODES},
     },
     mem::linked_list::LinkedList,
+    software_renderer::zbuffer::DEPTH_TEST_METHODS,
 };
 
 use crate::SETTINGS;
@@ -107,6 +108,15 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         prev_value_str.replace(current_settings.bloom.to_string());
 
                         current_settings.bloom = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "depth_test_method" => {
+                        prev_value_str.replace(current_settings.depth_test_method.to_string());
+
+                        let new_index = parse_or_map_err::<usize>(value_str)?;
+
+                        current_settings.depth_test_method = DEPTH_TEST_METHODS[new_index];
 
                         Ok(())
                     }

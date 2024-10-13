@@ -1,4 +1,7 @@
-use cairo::{app::window::AppWindowingMode, render::options::shader::RenderShaderOptions};
+use cairo::{
+    app::window::AppWindowingMode, render::options::shader::RenderShaderOptions,
+    software_renderer::zbuffer::DepthTestMethod,
+};
 
 #[derive(Default, Debug, Clone)]
 pub(crate) struct Settings {
@@ -8,4 +11,5 @@ pub(crate) struct Settings {
     pub hdr: bool,
     pub bloom: bool,
     pub shader_options: RenderShaderOptions,
+    pub depth_test_method: DepthTestMethod,
 }

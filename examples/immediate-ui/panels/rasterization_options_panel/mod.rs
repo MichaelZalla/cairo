@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
-    software_renderer::zbuffer::DepthTestMethod,
+    software_renderer::zbuffer::DEPTH_TEST_METHODS,
     ui::ui_box::{
         tree::UIBoxTree,
         utils::{spacer, text},
@@ -109,21 +109,14 @@ impl PanelInstance for RasterizationOptionsPanel {
 
                 // Depth test method
 
+                let depth_test_method_index = current_settings.depth_test_method as usize;
+
                 tree.push(text(
                     format!("RenderOptionsPanel{}.depthTestingMethod.label", self.id).to_string(),
                     "Depth test".to_string(),
                 ))?;
 
-                let depth_testing_method_options: Vec<RadioOption> = [
-                    DepthTestMethod::Always,
-                    DepthTestMethod::Never,
-                    DepthTestMethod::Less,
-                    DepthTestMethod::Equal,
-                    DepthTestMethod::LessThanOrEqual,
-                    DepthTestMethod::Greater,
-                    DepthTestMethod::NotEqual,
-                    DepthTestMethod::GreaterThanOrEqual,
-                ]
+                let depth_testing_method_options: Vec<RadioOption> = DEPTH_TEST_METHODS
                 .iter()
                 .map(|label| RadioOption {
                     label: label.to_string(),
@@ -137,10 +130,10 @@ impl PanelInstance for RasterizationOptionsPanel {
                     )
                     .to_string(),
                     &depth_testing_method_options,
-                    2,
+                    depth_test_method_index,
                     tree,
                 )? {
-                    let cmd_str = format!("set depthTestingMethod {}", index).to_string();
+                    let cmd_str = format!("set depth_test_method {}", index).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }

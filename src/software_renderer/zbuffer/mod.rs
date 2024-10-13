@@ -6,15 +6,23 @@ pub static MAX_DEPTH: f32 = 1.0;
 
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub enum DepthTestMethod {
-    Always, // Always passes.
-    Never,  // Never passes.
     #[default]
-    Less, // Passes if the fragment's depth is less than the stored depth.
-    Equal,  // Passes if the fragment's depth is equal to the stored depth.
-    LessThanOrEqual, // Passes if the fragment's depth is less than or equal to the stored depth.
-    Greater, // Passes if the fragment's depth is greater than the stored depth.
-    NotEqual, // Passes if the fragment's depth is not equal to the stored depth.
-    GreaterThanOrEqual, // Passes if the fragment's depth is greater than or equal to the stored depth.
+    // Passes if the fragment's depth is less than the stored depth.
+    Less = 0,
+    // Passes if the fragment's depth is equal to the stored depth.
+    Equal = 1,
+    // Passes if the fragment's depth is less than or equal to the stored depth.
+    LessThanOrEqual = 2,
+    // Passes if the fragment's depth is greater than the stored depth.
+    Greater = 3,
+    // Passes if the fragment's depth is not equal to the stored depth.
+    NotEqual = 4,
+    // Passes if the fragment's depth is greater than or equal to the stored depth.
+    GreaterThanOrEqual = 5,
+    // Always passes.
+    Always = 6,
+    // Never passes.
+    Never = 7,
 }
 
 impl Display for DepthTestMethod {
@@ -23,14 +31,14 @@ impl Display for DepthTestMethod {
             f,
             "{}",
             match self {
-                DepthTestMethod::Always => "Always",
-                DepthTestMethod::Never => "Never",
                 DepthTestMethod::Less => "Less",
                 DepthTestMethod::Equal => "Equal",
                 DepthTestMethod::LessThanOrEqual => "LessThanOrEqual",
                 DepthTestMethod::Greater => "Greater",
                 DepthTestMethod::NotEqual => "NotEqual",
                 DepthTestMethod::GreaterThanOrEqual => "GreaterThanOrEqual",
+                DepthTestMethod::Always => "Always",
+                DepthTestMethod::Never => "Never",
             }
         )
     }
@@ -136,3 +144,14 @@ impl ZBuffer {
         self.buffer.iter()
     }
 }
+
+pub static DEPTH_TEST_METHODS: [DepthTestMethod; 8] = [
+    DepthTestMethod::Less,
+    DepthTestMethod::Equal,
+    DepthTestMethod::LessThanOrEqual,
+    DepthTestMethod::Greater,
+    DepthTestMethod::NotEqual,
+    DepthTestMethod::GreaterThanOrEqual,
+    DepthTestMethod::Always,
+    DepthTestMethod::Never,
+];

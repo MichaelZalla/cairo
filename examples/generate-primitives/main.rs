@@ -28,7 +28,7 @@ use cairo::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    software_renderer::{zbuffer::DepthTestMethod, SoftwareRenderer},
+    software_renderer::{zbuffer::DEPTH_TEST_METHODS, SoftwareRenderer},
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };
@@ -500,29 +500,18 @@ fn main() -> Result<(), String> {
                         let mut depth_buffer =
                             framebuffer.attachments.depth.as_ref().unwrap().borrow_mut();
 
-                        let methods = [
-                            DepthTestMethod::Always,
-                            DepthTestMethod::Never,
-                            DepthTestMethod::Less,
-                            DepthTestMethod::Equal,
-                            DepthTestMethod::LessThanOrEqual,
-                            DepthTestMethod::Greater,
-                            DepthTestMethod::NotEqual,
-                            DepthTestMethod::GreaterThanOrEqual,
-                        ];
-
-                        let mut index = methods
+                        let mut index = DEPTH_TEST_METHODS
                             .iter()
                             .position(|&method| method == *(depth_buffer.get_depth_test_method()))
                             .unwrap();
 
-                        index = if index == (methods.len() - 1) {
+                        index = if index == (DEPTH_TEST_METHODS.len() - 1) {
                             0
                         } else {
                             index + 1
                         };
 
-                        depth_buffer.set_depth_test_method(methods[index])
+                        depth_buffer.set_depth_test_method(DEPTH_TEST_METHODS[index])
                     }
                     (Keycode::H, _) => {
                         *active_fragment_shader_index += 1;
