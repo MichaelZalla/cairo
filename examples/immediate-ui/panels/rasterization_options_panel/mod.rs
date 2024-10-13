@@ -50,6 +50,31 @@ impl PanelInstance for RasterizationOptionsPanel {
         COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
             let mut pending_queue = buffer.pending_commands.borrow_mut();
 
+            // Face winding
+
+            tree.push(text(
+                format!("RenderOptionsPanel{}.faceWinding.label", self.id).to_string(),
+                "Face winding".to_string(),
+            ))?;
+
+            let reject_faces_options: Vec<RadioOption> = ["Counter-clockwise", "Clockwise"]
+                .iter()
+                .map(|label| RadioOption {
+                    label: label.to_string(),
+                })
+                .collect();
+
+            if let Some(index) = radio_group(
+                format!("RenderOptionsPanel{}.faceWinding.radio_group", self.id).to_string(),
+                &reject_faces_options,
+                0,
+                tree,
+            )? {
+                let cmd_str = format!("set_setting faceWinding {}", index).to_string();
+
+                pending_queue.push_back((cmd_str, false));
+            }
+
             // Face culling
 
             tree.push(text(
@@ -117,31 +142,6 @@ impl PanelInstance for RasterizationOptionsPanel {
             }
 
             tree.push(spacer(18))?;
-
-            // Face winding
-
-            tree.push(text(
-                format!("RenderOptionsPanel{}.faceWinding.label", self.id).to_string(),
-                "Face winding".to_string(),
-            ))?;
-
-            let reject_faces_options: Vec<RadioOption> = ["Counter-clockwise", "Clockwise"]
-                .iter()
-                .map(|label| RadioOption {
-                    label: label.to_string(),
-                })
-                .collect();
-
-            if let Some(index) = radio_group(
-                format!("RenderOptionsPanel{}.faceWinding.radio_group", self.id).to_string(),
-                &reject_faces_options,
-                0,
-                tree,
-            )? {
-                let cmd_str = format!("set_setting faceWinding {}", index).to_string();
-
-                pending_queue.push_back((cmd_str, false));
-            }
 
             Ok(())
         })

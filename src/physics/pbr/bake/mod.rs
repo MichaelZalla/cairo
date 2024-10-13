@@ -179,7 +179,11 @@ fn render_radiance_to_cubemap(
 
         renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::None;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::None;
 
         shader_context_rc
             .borrow_mut()
@@ -209,7 +213,11 @@ fn render_radiance_to_cubemap(
 
         renderer.bind_framebuffer(None);
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::Backfaces;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::Backfaces;
 
         shader_context_rc.borrow_mut().set_active_hdr_map(None);
     }
@@ -233,7 +241,11 @@ fn render_irradiance_to_cubemap(
 
         renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::None;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::None;
 
         shader_context_rc
             .borrow_mut()
@@ -261,7 +273,11 @@ fn render_irradiance_to_cubemap(
 
         renderer.bind_framebuffer(None);
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::Backfaces;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::Backfaces;
 
         shader_context_rc
             .borrow_mut()
@@ -322,7 +338,11 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         renderer.set_fragment_shader(HdrSpecularPrefilteredEnvironmentFragmentShader);
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::None;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::None;
 
         shader_context_rc
             .borrow_mut()
@@ -385,7 +405,11 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         renderer.bind_framebuffer(None);
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::Backfaces;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::Backfaces;
 
         shader_context_rc
             .borrow_mut()

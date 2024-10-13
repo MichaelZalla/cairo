@@ -115,7 +115,11 @@ fn main() -> Result<(), String> {
 
         renderer.set_geometry_shader(PointShadowMapGeometryShader);
 
-        renderer.options.face_culling_strategy.reject = FaceCullingReject::Frontfaces;
+        renderer
+            .options
+            .rasterizer_options
+            .face_culling_strategy
+            .reject = FaceCullingReject::Frontfaces;
 
         renderer.bind_framebuffer(Some(point_shadow_map_framebuffer_rc.clone()));
 

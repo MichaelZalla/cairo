@@ -6,17 +6,19 @@ use crate::{
     render::culling::{FaceCullingReject, FaceCullingWindingOrder},
 };
 
-use super::culling::FaceCullingStrategy;
+use rasterizer::RasterizerOptions;
 
+pub mod rasterizer;
 pub mod shader;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RenderOptions {
     pub do_rasterization: bool,
+    pub rasterizer_options: RasterizerOptions,
     pub do_lighting: bool,
     pub do_deferred_lighting: bool,
     pub do_bloom: bool,
-    pub face_culling_strategy: FaceCullingStrategy,
+    // User debug
     pub draw_wireframe: bool,
     // User debug
     pub wireframe_color: Color,
@@ -27,10 +29,11 @@ impl Default for RenderOptions {
     fn default() -> Self {
         Self {
             do_rasterization: true,
+            rasterizer_options: Default::default(),
             do_lighting: true,
             do_deferred_lighting: true,
             do_bloom: false,
-            face_culling_strategy: Default::default(),
+            // User debug
             draw_wireframe: false,
             // User debug
             wireframe_color: color::WHITE,
@@ -76,22 +79,23 @@ impl RenderOptions {
                 (Keycode::Num5, _) => {
                     // Cycle culling reject settings.
 
-                    self.face_culling_strategy.reject = match self.face_culling_strategy.reject {
-                        FaceCullingReject::None => FaceCullingReject::Backfaces,
-                        FaceCullingReject::Backfaces => FaceCullingReject::Frontfaces,
-                        FaceCullingReject::Frontfaces => FaceCullingReject::None,
-                    };
+                    self.rasterizer_options.face_culling_strategy.reject =
+                        match self.rasterizer_options.face_culling_strategy.reject {
+                            FaceCullingReject::None => FaceCullingReject::Backfaces,
+                            FaceCullingReject::Backfaces => FaceCullingReject::Frontfaces,
+                            FaceCullingReject::Frontfaces => FaceCullingReject::None,
+                        };
 
                     println!(
                         "Face culling - Reject: {:?}",
-                        self.face_culling_strategy.reject
+                        self.rasterizer_options.face_culling_strategy.reject
                     );
                 }
                 (Keycode::Num6, _) => {
                     // Cycle winding order.
 
-                    self.face_culling_strategy.winding_order =
-                        match self.face_culling_strategy.winding_order {
+                    self.rasterizer_options.face_culling_strategy.winding_order =
+                        match self.rasterizer_options.face_culling_strategy.winding_order {
                             FaceCullingWindingOrder::Clockwise => {
                                 FaceCullingWindingOrder::CounterClockwise
                             }
@@ -102,7 +106,7 @@ impl RenderOptions {
 
                     println!(
                         "Face culling - Winding order: {:?}",
-                        self.face_culling_strategy.winding_order
+                        self.rasterizer_options.face_culling_strategy.winding_order
                     );
                 }
                 (Keycode::Num7, _) => {

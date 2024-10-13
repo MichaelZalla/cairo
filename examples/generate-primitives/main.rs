@@ -450,12 +450,20 @@ fn main() -> Result<(), String> {
         if renderer.options.do_rasterization {
             debug_message_buffer.write(format!(
                 "Culling reject mask: {:?}",
-                renderer.options.face_culling_strategy.reject
+                renderer
+                    .options
+                    .rasterizer_options
+                    .face_culling_strategy
+                    .reject
             ));
 
             debug_message_buffer.write(format!(
                 "Culling winding order: {:?}",
-                renderer.options.face_culling_strategy.winding_order
+                renderer
+                    .options
+                    .rasterizer_options
+                    .face_culling_strategy
+                    .winding_order
             ));
 
             {

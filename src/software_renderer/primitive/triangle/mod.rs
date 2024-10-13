@@ -38,7 +38,12 @@ impl SoftwareRenderer {
             let mut v1 = projection_space_vertices[face_index * 3 + 1];
             let mut v2 = projection_space_vertices[face_index * 3 + 2];
 
-            match self.options.face_culling_strategy.winding_order {
+            match self
+                .options
+                .rasterizer_options
+                .face_culling_strategy
+                .winding_order
+            {
                 FaceCullingWindingOrder::Clockwise => {
                     (v0, v1, v2) = (v2, v1, v0);
                 }
@@ -47,7 +52,7 @@ impl SoftwareRenderer {
                 }
             }
 
-            match self.options.face_culling_strategy.reject {
+            match self.options.rasterizer_options.face_culling_strategy.reject {
                 FaceCullingReject::None => {
                     // Render all faces.
                 }

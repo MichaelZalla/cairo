@@ -5,7 +5,7 @@ use crate::{
     mesh::Mesh,
     render::{
         culling::{FaceCullingReject, FaceCullingStrategy},
-        options::RenderOptions,
+        options::{rasterizer::RasterizerOptions, RenderOptions},
     },
     resource::arena::Arena,
     software_renderer::SoftwareRenderer,
@@ -31,9 +31,11 @@ impl SoftwareRenderer {
                     do_rasterization: false,
                     do_lighting: false,
                     do_deferred_lighting: false,
-                    face_culling_strategy: FaceCullingStrategy {
-                        reject: FaceCullingReject::None,
-                        ..Default::default()
+                    rasterizer_options: RasterizerOptions {
+                        face_culling_strategy: FaceCullingStrategy {
+                            reject: FaceCullingReject::None,
+                            ..Default::default()
+                        },
                     },
                     ..Default::default()
                 };
