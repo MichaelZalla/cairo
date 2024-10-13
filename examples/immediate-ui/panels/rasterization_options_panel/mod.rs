@@ -12,7 +12,7 @@ use cairo::{
 
 use crate::{
     radio::{radio_group, RadioOption},
-    COMMAND_BUFFER,
+    COMMAND_BUFFER, SETTINGS,
 };
 
 use super::PanelInstance;
@@ -47,103 +47,108 @@ impl RasterizationOptionsPanel {
 
 impl PanelInstance for RasterizationOptionsPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
-        COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
-            let mut pending_queue = buffer.pending_commands.borrow_mut();
+        SETTINGS.with(|settings| -> Result<(), String> {
+            #[allow(unused)]
+            let current_settings = settings.borrow();
 
-            // Face winding
+            COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
+                let mut pending_queue = buffer.pending_commands.borrow_mut();
 
-            tree.push(text(
-                format!("RenderOptionsPanel{}.faceWinding.label", self.id).to_string(),
-                "Face winding".to_string(),
-            ))?;
+                // Face winding
 
-            let reject_faces_options: Vec<RadioOption> = ["Counter-clockwise", "Clockwise"]
-                .iter()
-                .map(|label| RadioOption {
-                    label: label.to_string(),
-                })
-                .collect();
+                tree.push(text(
+                    format!("RenderOptionsPanel{}.faceWinding.label", self.id).to_string(),
+                    "Face winding".to_string(),
+                ))?;
 
-            if let Some(index) = radio_group(
-                format!("RenderOptionsPanel{}.faceWinding.radio_group", self.id).to_string(),
-                &reject_faces_options,
-                0,
-                tree,
-            )? {
-                let cmd_str = format!("set faceWinding {}", index).to_string();
-
-                pending_queue.push_back((cmd_str, false));
-            }
-
-            // Face culling
-
-            tree.push(text(
-                format!("RenderOptionsPanel{}.faceCulling.label", self.id).to_string(),
-                "Face culling".to_string(),
-            ))?;
-
-            let reject_faces_options: Vec<RadioOption> =
-                ["Reject backfaces", "Reject frontfaces", "Disabled"]
+                let reject_faces_options: Vec<RadioOption> = ["Counter-clockwise", "Clockwise"]
                     .iter()
                     .map(|label| RadioOption {
                         label: label.to_string(),
                     })
                     .collect();
 
-            if let Some(index) = radio_group(
-                format!("RenderOptionsPanel{}.faceCulling.radio_group", self.id).to_string(),
-                &reject_faces_options,
-                0,
-                tree,
-            )? {
-                let cmd_str = format!("set faceCulling {}", index).to_string();
+                if let Some(index) = radio_group(
+                    format!("RenderOptionsPanel{}.faceWinding.radio_group", self.id).to_string(),
+                    &reject_faces_options,
+                    0,
+                    tree,
+                )? {
+                    let cmd_str = format!("set faceWinding {}", index).to_string();
 
-                pending_queue.push_back((cmd_str, false));
-            }
+                    pending_queue.push_back((cmd_str, false));
+                }
 
-            tree.push(spacer(18))?;
+                // Face culling
 
-            // Depth test method
+                tree.push(text(
+                    format!("RenderOptionsPanel{}.faceCulling.label", self.id).to_string(),
+                    "Face culling".to_string(),
+                ))?;
 
-            tree.push(text(
-                format!("RenderOptionsPanel{}.depthTestingMethod.label", self.id).to_string(),
-                "Depth test".to_string(),
-            ))?;
+                let reject_faces_options: Vec<RadioOption> =
+                    ["Reject backfaces", "Reject frontfaces", "Disabled"]
+                        .iter()
+                        .map(|label| RadioOption {
+                            label: label.to_string(),
+                        })
+                        .collect();
 
-            let depth_testing_method_options: Vec<RadioOption> = [
-                DepthTestMethod::Always,
-                DepthTestMethod::Never,
-                DepthTestMethod::Less,
-                DepthTestMethod::Equal,
-                DepthTestMethod::LessThanOrEqual,
-                DepthTestMethod::Greater,
-                DepthTestMethod::NotEqual,
-                DepthTestMethod::GreaterThanOrEqual,
-            ]
-            .iter()
-            .map(|label| RadioOption {
-                label: label.to_string(),
+                if let Some(index) = radio_group(
+                    format!("RenderOptionsPanel{}.faceCulling.radio_group", self.id).to_string(),
+                    &reject_faces_options,
+                    0,
+                    tree,
+                )? {
+                    let cmd_str = format!("set faceCulling {}", index).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
+                // Depth test method
+
+                tree.push(text(
+                    format!("RenderOptionsPanel{}.depthTestingMethod.label", self.id).to_string(),
+                    "Depth test".to_string(),
+                ))?;
+
+                let depth_testing_method_options: Vec<RadioOption> = [
+                    DepthTestMethod::Always,
+                    DepthTestMethod::Never,
+                    DepthTestMethod::Less,
+                    DepthTestMethod::Equal,
+                    DepthTestMethod::LessThanOrEqual,
+                    DepthTestMethod::Greater,
+                    DepthTestMethod::NotEqual,
+                    DepthTestMethod::GreaterThanOrEqual,
+                ]
+                .iter()
+                .map(|label| RadioOption {
+                    label: label.to_string(),
+                })
+                .collect();
+
+                if let Some(index) = radio_group(
+                    format!(
+                        "RenderOptionsPanel{}.depthTestingMethod.radio_group",
+                        self.id
+                    )
+                    .to_string(),
+                    &depth_testing_method_options,
+                    2,
+                    tree,
+                )? {
+                    let cmd_str = format!("set depthTestingMethod {}", index).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
+                Ok(())
             })
-            .collect();
-
-            if let Some(index) = radio_group(
-                format!(
-                    "RenderOptionsPanel{}.depthTestingMethod.radio_group",
-                    self.id
-                )
-                .to_string(),
-                &depth_testing_method_options,
-                2,
-                tree,
-            )? {
-                let cmd_str = format!("set depthTestingMethod {}", index).to_string();
-
-                pending_queue.push_back((cmd_str, false));
-            }
-
-            tree.push(spacer(18))?;
-
-            Ok(())
         })
     }
 }
