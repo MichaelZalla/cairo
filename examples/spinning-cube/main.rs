@@ -212,9 +212,7 @@ fn main() -> Result<(), String> {
 
         renderer.options.update(keyboard_state);
 
-        renderer
-            .shader_options
-            .update(keyboard_state, mouse_state, game_controller_state);
+        renderer.shader_options.update(keyboard_state);
 
         Ok(())
     };

@@ -1,10 +1,8 @@
-use crate::device::{
-    game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState,
-};
+use crate::device::keyboard::KeyboardState;
 
 use sdl2::keyboard::Keycode;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct RenderShaderOptions {
     pub bilinear_active: bool,
     pub trilinear_active: bool,
@@ -36,12 +34,7 @@ impl Default for RenderShaderOptions {
 }
 
 impl RenderShaderOptions {
-    pub fn update(
-        &mut self,
-        keyboard_state: &KeyboardState,
-        _mouse_state: &MouseState,
-        _game_controller_state: &GameControllerState,
-    ) {
+    pub fn update(&mut self, keyboard_state: &KeyboardState) {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 (Keycode::B, _) => {

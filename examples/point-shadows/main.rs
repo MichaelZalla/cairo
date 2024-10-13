@@ -199,7 +199,7 @@ fn main() -> Result<(), String> {
 
         renderer
             .shader_options
-            .update(keyboard_state, mouse_state, game_controller_state);
+            .update(keyboard_state);
 
         Ok(())
     };
