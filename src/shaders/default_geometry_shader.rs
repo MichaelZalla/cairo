@@ -155,7 +155,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 }
             }
 
-            // Surface normal mapping.
+            // Surface normal mapping
             if let (Some(normal_map_handle), true) =
                 (&material.normal_map, options.normal_mapping_active)
             {
@@ -194,7 +194,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                 }
             }
 
-            // Ambient occlusion mapping.
+            // Ambient occlusion mapping
             if let (Some(ambient_occlusion_map_handle), true) = (
                 &material.ambient_occlusion_map,
                 options.ambient_occlusion_mapping_active,
