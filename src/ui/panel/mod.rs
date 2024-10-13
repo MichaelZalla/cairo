@@ -3,10 +3,12 @@ use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{color::Color, resource::handle::Handle};
+use crate::resource::handle::Handle;
+
+#[cfg(debug_assertions)]
+use crate::color::Color;
 
 use super::{
-    context::GLOBAL_UI_CONTEXT,
     ui_box::{
         interaction::UIBoxInteraction, tree::UIBoxTree, utils::text, UIBox,
         UIBoxCustomRenderCallback, UIBoxFeatureFlag, UILayoutDirection,
@@ -14,6 +16,9 @@ use super::{
     window::Window,
     UISize, UISizeWithStrictness,
 };
+
+#[cfg(debug_assertions)]
+use super::context::GLOBAL_UI_CONTEXT;
 
 pub mod tree;
 
@@ -166,7 +171,7 @@ impl Panel {
     pub fn render_leaf_panel_contents(
         &self,
         ui_box_tree: &mut UIBoxTree,
-        panel_interaction_result: &UIBoxInteraction,
+        #[allow(unused)] panel_interaction_result: &UIBoxInteraction,
     ) -> Result<(), String> {
         match &self.instance_data {
             Some(instance_data) => match &instance_data.render {
@@ -180,10 +185,12 @@ impl Panel {
                     Ok(())
                 }
             },
-            None =>
-            {
+            None => {
                 #[cfg(debug_assertions)]
-                render_debug_interaction_result(ui_box_tree, panel_interaction_result)
+                return render_debug_interaction_result(ui_box_tree, panel_interaction_result);
+
+                #[cfg(not(debug_assertions))]
+                Ok(())
             }
         }
     }
