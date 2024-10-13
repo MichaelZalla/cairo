@@ -4,7 +4,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::framebuffer::Framebuffer,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     effect::Effect,
@@ -269,9 +269,7 @@ fn main() -> Result<(), String> {
 
         renderer.options.update(keyboard_state);
 
-        renderer
-            .shader_options
-            .update(keyboard_state);
+        renderer.shader_options.update(keyboard_state);
 
         Ok(())
     };
@@ -291,17 +289,9 @@ fn main() -> Result<(), String> {
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+                        let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                        let prepost_u32 = color_buffer.get_all().clone();
-
-                        // Perform a post-processing pass by applying the dilation effect.
-
-                        let mut buffer = Buffer2D::from_data(
-                            window_info.canvas_resolution.width,
-                            window_info.canvas_resolution.height,
-                            prepost_u32,
-                        );
+                        // Perform a post-processing pass.
 
                         let effects: Vec<&dyn Effect> = vec![
                             // &outline_effect,
@@ -313,12 +303,12 @@ fn main() -> Result<(), String> {
                         ];
 
                         for effect in effects {
-                            effect.apply(&mut buffer);
+                            effect.apply(&mut color_buffer);
                         }
 
                         // Return the post-processed pixels.
 
-                        Ok(buffer.get_all().clone())
+                        Ok(color_buffer.get_all().clone())
                     }
                     None => panic!(),
                 }
