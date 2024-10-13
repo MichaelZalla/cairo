@@ -110,6 +110,137 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
+                    "shader_options.texture_filtering" => {
+                        prev_value_str
+                            .replace(current_settings.shader_options.bilinear_active.to_string());
+
+                        current_settings.shader_options.bilinear_active = false;
+                        current_settings.shader_options.trilinear_active = false;
+
+                        let selected_index = parse_or_map_err::<usize>(value_str)?;
+
+                        match selected_index {
+                            0 => {}
+                            1 => {
+                                current_settings.shader_options.bilinear_active = true;
+                            }
+                            2 => {
+                                current_settings.shader_options.trilinear_active = true;
+                            }
+                            _ => (),
+                        }
+
+                        Ok(())
+                    }
+                    "shader_options.diffuse_color_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .base_color_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings.shader_options.base_color_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.ambient_occlusion_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .ambient_occlusion_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings
+                            .shader_options
+                            .ambient_occlusion_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.roughness_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .roughness_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings.shader_options.roughness_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.metallic_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .metallic_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings.shader_options.metallic_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.normal_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .normal_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings.shader_options.normal_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.displacement_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .displacement_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings.shader_options.displacement_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.specular_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .specular_exponent_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings
+                            .shader_options
+                            .specular_exponent_mapping_active =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "shader_options.emissive_maps" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .shader_options
+                                .emissive_color_mapping_active
+                                .to_string(),
+                        );
+
+                        current_settings
+                            .shader_options
+                            .emissive_color_mapping_active = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
                     _ => Err(format!("Unknown settings key `{}`.", setting_key).to_string()),
                 }
             })?;

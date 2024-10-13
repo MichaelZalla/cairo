@@ -65,7 +65,6 @@ impl PanelInstance for ShaderOptionsPanel {
                     "Nearest neighbors",
                     "Bilinear filtering",
                     "Trilinear filtering",
-                    "Anisotropic filtering",
                 ]
                 .iter()
                 .map(|label| RadioOption {
@@ -73,14 +72,25 @@ impl PanelInstance for ShaderOptionsPanel {
                 })
                 .collect();
 
+                let selected_index = match (
+                    current_settings.shader_options.bilinear_active,
+                    current_settings.shader_options.trilinear_active,
+                ) {
+                    (true, true) => panic!(),
+                    (true, false) => 1,
+                    (false, true) => 2,
+                    (false, false) => 0,
+                };
+
                 if let Some(index) = radio_group(
                     format!("ShaderOptionsPanel{}.textureFiltering.radioGroup", self.id)
                         .to_string(),
                     &texture_filtering_options,
-                    1,
+                    selected_index,
                     tree,
                 )? {
-                    let cmd_str = format!("set texture_filtering {}", index).to_string();
+                    let cmd_str =
+                        format!("set shader_options.texture_filtering {}", index).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }
@@ -95,14 +105,52 @@ impl PanelInstance for ShaderOptionsPanel {
                 ))?;
 
                 let checkboxes = vec![
-                    Checkbox::new("diffuseColorMapping", "Diffuse color maps", false),
-                    Checkbox::new("ambientOcclusionMapping", "Ambient occlusion maps", true),
-                    Checkbox::new("roughnessMapping", "Roughness maps", false),
-                    Checkbox::new("metallicMapping", "Metallic maps", false),
-                    Checkbox::new("normalMapping", "Normal maps", true),
-                    Checkbox::new("displacementMapping", "Displacement maps", true),
-                    Checkbox::new("specularMapping", "Specular maps", false),
-                    Checkbox::new("emissiveMapping", "Emissive maps", true),
+                    Checkbox::new(
+                        "shader_options.diffuse_color_maps",
+                        "Diffuse color maps",
+                        current_settings.shader_options.base_color_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.ambient_occlusion_maps",
+                        "Ambient occlusion maps",
+                        current_settings
+                            .shader_options
+                            .ambient_occlusion_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.roughness_maps",
+                        "Roughness maps",
+                        current_settings.shader_options.roughness_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.metallic_maps",
+                        "Metallic maps",
+                        current_settings.shader_options.metallic_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.normal_maps",
+                        "Normal maps",
+                        current_settings.shader_options.normal_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.displacement_maps",
+                        "Displacement maps",
+                        current_settings.shader_options.displacement_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.specular_maps",
+                        "Specular maps",
+                        current_settings
+                            .shader_options
+                            .specular_exponent_mapping_active,
+                    ),
+                    Checkbox::new(
+                        "shader_options.emissive_maps",
+                        "Emissive maps",
+                        current_settings
+                            .shader_options
+                            .emissive_color_mapping_active,
+                    ),
                 ];
 
                 let toggled_indices = checkbox_group(
