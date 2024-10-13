@@ -1,7 +1,6 @@
 use uuid::Uuid;
 
 use cairo::{
-    app::resolution::Resolution,
     resource::{arena::Arena, handle::Handle},
     ui::{
         panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
@@ -16,6 +15,7 @@ use crate::panels::{
     shader_options_panel::ShaderOptionsPanel,
 };
 
+#[allow(unused)]
 fn make_settings_panel(
     id: &str,
     arena: &mut Arena<SettingsPanel>,
@@ -44,37 +44,8 @@ pub(crate) fn make_window_list<'a>(
     shader_options_panel_render_callback: PanelRenderCallback,
     rasterization_options_panel_arena: &mut Arena<RasterizationOptionsPanel>,
     rasterization_options_panel_render_callback: PanelRenderCallback,
-    resolution: Resolution,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
-
-    // Builds a main "window" that encompasses our app's native OS window.
-
-    let docked_window = {
-        let window_id = "docked_window".to_string();
-        let window_title = "Settings".to_string();
-        let mut window_panel_tree = PanelTree::from_id(&window_id);
-
-        let panel_id = format!("{}_SettingsPanel", window_id);
-
-        let panel = make_settings_panel(
-            panel_id.as_str(),
-            settings_panel_arena,
-            settings_panel_render_callback.clone(),
-        );
-
-        window_panel_tree.push(panel_id.as_str(), panel)?;
-
-        Window::new(
-            window_id,
-            window_title,
-            WindowOptions::docked(resolution),
-            None,
-            window_panel_tree,
-        )
-    };
-
-    list.0.push_back(docked_window);
 
     // Builds a few non-native, "floating" windows that we can drag around.
 

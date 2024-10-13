@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, rc::Rc};
+use std::{cell::RefCell, env, f32::consts::PI, rc::Rc};
 
 use sdl2::{
     keyboard::{Keycode, Mod},
@@ -9,21 +9,47 @@ use sdl2::{
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTIONS_16X9, RESOLUTION_1280_BY_720},
+        resolution::{Resolution, RESOLUTIONS_16X9, RESOLUTION_1600_BY_900},
         window::AppWindowingMode,
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
+    color::{self, Color},
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
         mouse::{self, cursor::MouseCursorKind, MouseState},
     },
+    effect::Effect,
+    effects::{
+        dilation_effect::DilationEffect, grayscale_effect::GrayscaleEffect,
+        invert_effect::InvertEffect, kernel_effect::KernelEffect,
+    },
+    matrix::Mat4,
     resource::{arena::Arena, handle::Handle},
+    scene::{
+        context::utils::make_cube_scene,
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
+    },
+    shader::context::ShaderContext,
+    shaders::{
+        debug_shaders::{
+            albedo_fragment_shader::AlbedoFragmentShader,
+            depth_fragment_shader::DepthFragmentShader,
+            normal_fragment_shader::NormalFragmentShader,
+            uv_test_fragment_shader::UvTestFragmentShader,
+        },
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
+        default_vertex_shader::DEFAULT_VERTEX_SHADER,
+    },
+    software_renderer::SoftwareRenderer,
+    transform::quaternion::Quaternion,
     ui::{
         context::GLOBAL_UI_CONTEXT, panel::PanelRenderCallback, ui_box::tree::UIBoxTree,
         window::list::WindowList,
     },
+    vec::vec3,
 };
 
 use command::{process_commands, CommandBuffer};
@@ -39,6 +65,7 @@ mod checkbox;
 mod command;
 mod panels;
 mod radio;
+mod scene;
 mod settings;
 mod stack;
 mod window;
@@ -48,7 +75,7 @@ thread_local! {
     pub static COMMAND_BUFFER: CommandBuffer = Default::default();
 }
 
-static DEFAULT_WINDOW_RESOLUTION: Resolution = RESOLUTION_1280_BY_720;
+static DEFAULT_WINDOW_RESOLUTION: Resolution = RESOLUTION_1600_BY_900;
 
 fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
     let cursor = mouse::cursor::set_cursor(cursor_kind).unwrap();
@@ -58,12 +85,21 @@ fn retain_cursor(cursor_kind: &MouseCursorKind, retained: &mut Option<Cursor>) {
 
 fn resize_framebuffer(
     resolution: Resolution,
-    framebuffer: &mut Framebuffer,
+    framebuffer_rc: &Rc<RefCell<Framebuffer>>,
+    renderer: &mut SoftwareRenderer,
     window_list: &mut WindowList,
 ) {
-    // Resize our framebuffer to match the native window's new resolution.
+    {
+        // Resize our framebuffer to match the native window's new resolution.
 
-    framebuffer.resize(resolution.width, resolution.height, true);
+        let mut framebuffer = framebuffer_rc.borrow_mut();
+
+        framebuffer.resize(resolution.width, resolution.height, true);
+    }
+
+    // Re-binds the (resized) framebuffer.
+
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     // Rebuild each window's UI tree(s), in response to the new (native
     // window) resolution.
@@ -98,8 +134,6 @@ fn main() -> Result<(), String> {
             .iter()
             .position(|r| *r == DEFAULT_WINDOW_RESOLUTION)
             .unwrap();
-
-        settings.hdr = true;
     });
 
     // Allocates a default framebuffer.
@@ -111,7 +145,29 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let framebuffer_rc = RefCell::new(framebuffer);
+    // Initializes a 3D scene context (default cube scene).
+
+    let (scene_context, shader_context) = make_cube_scene(framebuffer.width_over_height)?;
+
+    // Initializes a shader context.
+
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
+
+    // Initializes a software renderer (pipeline).
+
+    let mut renderer = SoftwareRenderer::new(
+        shader_context_rc.clone(),
+        scene_context.resources.clone(),
+        DEFAULT_VERTEX_SHADER,
+        DEFAULT_FRAGMENT_SHADER,
+        Default::default(),
+    );
+
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
+
+    let renderer_rc = RefCell::new(renderer);
 
     // Builds a list of windows containing our UI.
 
@@ -191,8 +247,6 @@ fn main() -> Result<(), String> {
         let mut rasterization_options_panel_arena =
             rasterization_options_panel_arena_rc.borrow_mut();
 
-        let resolution = window_info.window_resolution;
-
         let list = make_window_list(
             &mut settings_panel_arena,
             settings_panel_render_callback,
@@ -202,7 +256,6 @@ fn main() -> Result<(), String> {
             shader_options_panel_render_callback,
             &mut rasterization_options_panel_arena,
             rasterization_options_panel_render_callback,
-            resolution,
         )?;
 
         Rc::new(RefCell::new(list))
@@ -218,6 +271,15 @@ fn main() -> Result<(), String> {
     // (deallocated), and we won't see our custom cursor take effect.
 
     let retained_cursor_rc: RefCell<Option<Cursor>> = Default::default();
+
+    // Create several screen-space post-processing effects.
+
+    let outline_effect = DilationEffect::new(Color::rgb(234, 182, 118), color::BLACK, Some(3));
+    let invert_effect = InvertEffect {};
+    let grayscale_effect = GrayscaleEffect {};
+    let sharpen_kernel_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
+    let blur_kernel_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(5));
+    let edge_detection_kernel_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);
 
     // Primary function for rendering the UI tree to `framebuffer`; this
     // function is called when either (1) the main loop executes, or (2) the
@@ -242,16 +304,70 @@ fn main() -> Result<(), String> {
 
         let frame_index = *current_frame_index_rc.borrow();
 
-        let mut framebuffer = framebuffer_rc.borrow_mut();
         let mut window_list = window_list_rc.borrow_mut();
-        let mut retained_cursor = retained_cursor_rc.borrow_mut();
 
         // Check if our application window was just resized...
 
         if let Some(resolution) = new_resolution {
-            resize_framebuffer(resolution, &mut framebuffer, &mut window_list);
+            let mut renderer = renderer_rc.borrow_mut();
+
+            resize_framebuffer(resolution, &framebuffer_rc, &mut renderer, &mut window_list);
+        } else {
+            // Clear the framebuffer before rendering this frame.
+            let mut framebuffer = framebuffer_rc.borrow_mut();
+
+            framebuffer.clear();
         }
 
+        {
+            // Render scene.
+
+            let resources = (*scene_context.resources).borrow();
+            let mut scenes = scene_context.scenes.borrow_mut();
+            let scene = &mut scenes[0];
+
+            scene.render(&resources, &renderer_rc, None)?;
+        }
+
+        {
+            let framebuffer = framebuffer_rc.borrow_mut();
+
+            if let Some(color_buffer_rc) = &framebuffer.attachments.color {
+                let mut color_buffer = color_buffer_rc.borrow_mut();
+
+                SETTINGS.with(|settings_rc| {
+                    let current_settings = settings_rc.borrow();
+
+                    if current_settings.effects.outline {
+                        outline_effect.apply(&mut color_buffer);
+                    }
+
+                    if current_settings.effects.invert {
+                        invert_effect.apply(&mut color_buffer);
+                    }
+
+                    if current_settings.effects.grayscale {
+                        grayscale_effect.apply(&mut color_buffer);
+                    }
+
+                    if current_settings.effects.sharpen_kernel {
+                        sharpen_kernel_effect.apply(&mut color_buffer);
+                    }
+
+                    if current_settings.effects.blur_kernel {
+                        blur_kernel_effect.apply(&mut color_buffer);
+                    }
+
+                    if current_settings.effects.edge_detection_kernel {
+                        edge_detection_kernel_effect.apply(&mut color_buffer);
+                    }
+                });
+            }
+        }
+
+        //
+
+        let mut framebuffer = framebuffer_rc.borrow_mut();
         let mut color_buffer = framebuffer.attachments.color.as_mut().unwrap().borrow_mut();
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
@@ -259,6 +375,8 @@ fn main() -> Result<(), String> {
 
             {
                 let cursor_kind = ctx.cursor_kind.borrow();
+
+                let mut retained_cursor = retained_cursor_rc.borrow_mut();
 
                 retain_cursor(&cursor_kind, &mut retained_cursor);
             }
@@ -279,6 +397,38 @@ fn main() -> Result<(), String> {
 
     // Define `update()` in the context of our app's main loop.
 
+    #[allow(clippy::too_many_arguments)]
+    fn update_node(
+        _current_world_transform: &Mat4,
+        node: &mut SceneNode,
+        _resources: &SceneResources,
+        app: &App,
+        _mouse_state: &MouseState,
+        _keyboard_state: &KeyboardState,
+        _game_controller_state: &GameControllerState,
+        _shader_context: &mut ShaderContext,
+    ) -> Result<bool, String> {
+        let uptime = app.timing_info.uptime_seconds;
+
+        let (node_type, _handle) = (node.get_type(), node.get_handle());
+
+        match node_type {
+            SceneNodeType::Entity => {
+                let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
+
+                let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+
+                node.get_transform_mut().set_rotation(q);
+
+                Ok(true)
+            }
+            SceneNodeType::Camera => Ok(true),
+            _ => Ok(false),
+        }
+    }
+
+    let update_node_rc = Rc::new(update_node);
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -288,20 +438,20 @@ fn main() -> Result<(), String> {
 
         {
             let window_info = app.window_info.borrow();
-            let mut framebuffer = framebuffer_rc.borrow_mut();
-
-            if window_info.window_resolution.width != framebuffer.width
-                || window_info.window_resolution.height != framebuffer.height
+            if window_info.window_resolution.width != framebuffer_rc.borrow().width
+                || window_info.window_resolution.height != framebuffer_rc.borrow().height
             {
                 // Resize our framebuffer to match the new window resolution.
 
+                let mut renderer = renderer_rc.borrow_mut();
                 let mut canvas = app.context.rendering_context.canvas.borrow_mut();
                 let window = canvas.window_mut();
                 let mut window_list = window_list_rc.borrow_mut();
 
                 resize_framebuffer(
                     Resolution::new(window.size()),
-                    &mut framebuffer,
+                    &framebuffer_rc,
+                    &mut renderer,
                     &mut window_list,
                 );
             }
@@ -449,11 +599,11 @@ fn main() -> Result<(), String> {
                     process_commands(&mut pending_commands, &mut executed_commands).unwrap();
             }
 
-            let mut framebuffer = framebuffer_rc.borrow_mut();
+            let mut renderer = renderer_rc.borrow_mut();
             let mut window_list = window_list_rc.borrow_mut();
 
             if let Some(resolution) = new_resolution {
-                resize_framebuffer(resolution, &mut framebuffer, &mut window_list);
+                resize_framebuffer(resolution, &framebuffer_rc, &mut renderer, &mut window_list);
 
                 app.resize_window(resolution)
             } else {
@@ -465,7 +615,8 @@ fn main() -> Result<(), String> {
 
                     resize_framebuffer(
                         Resolution::new(window.size()),
-                        &mut framebuffer,
+                        &framebuffer_rc,
+                        &mut renderer,
                         &mut window_list,
                     );
                 }
@@ -473,6 +624,62 @@ fn main() -> Result<(), String> {
                 Ok(())
             }
         })?;
+
+        // Update our scene graph, shader context, and rendering and shading
+        // options.
+
+        {
+            let resources = scene_context.resources.borrow_mut();
+            let mut scenes = scene_context.scenes.borrow_mut();
+            let mut shader_context = (*shader_context_rc).borrow_mut();
+
+            shader_context.set_ambient_light(None);
+            shader_context.set_directional_light(None);
+            shader_context.get_point_lights_mut().clear();
+            shader_context.get_spot_lights_mut().clear();
+
+            // Traverse the scene graph and update its nodes.
+
+            scenes[0].update(
+                &resources,
+                &mut shader_context,
+                app,
+                mouse_state,
+                keyboard_state,
+                game_controller_state,
+                Some(update_node_rc.clone()),
+            )?;
+
+            let mut renderer = renderer_rc.borrow_mut();
+
+            SETTINGS.with(|settings_rc| {
+                let current_settings = settings_rc.borrow();
+
+                renderer.options = current_settings.render_options;
+
+                let shader = [
+                    DEFAULT_FRAGMENT_SHADER,
+                    AlbedoFragmentShader,
+                    DepthFragmentShader,
+                    NormalFragmentShader,
+                    UvTestFragmentShader,
+                ][current_settings.fragment_shader];
+
+                renderer.set_fragment_shader(shader);
+
+                let framebuffer = framebuffer_rc.borrow_mut();
+
+                if let Some(depth_buffer_rc) = &framebuffer.attachments.depth {
+                    let mut depth_buffer = depth_buffer_rc.borrow_mut();
+
+                    depth_buffer.set_depth_test_method(current_settings.depth_test_method);
+                }
+            });
+
+            // renderer.options.update(keyboard_state);
+
+            renderer.shader_options.update(keyboard_state);
+        }
 
         // Binds the latest user inputs (and time delta) to the global UI context.
 
