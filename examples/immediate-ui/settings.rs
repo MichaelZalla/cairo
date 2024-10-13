@@ -5,6 +5,16 @@ use cairo::{
 };
 
 #[derive(Default, Debug, Clone)]
+pub struct ActiveEffects {
+    pub outline: bool,
+    pub invert: bool,
+    pub grayscale: bool,
+    pub sharpen_kernel: bool,
+    pub blur_kernel: bool,
+    pub edge_detection_kernel: bool,
+}
+
+#[derive(Default, Debug, Clone)]
 pub(crate) struct Settings {
     pub windowing_mode: AppWindowingMode,
     pub resolution: usize,
@@ -15,4 +25,5 @@ pub(crate) struct Settings {
     pub depth_test_method: DepthTestMethod,
     pub fragment_shader: usize,
     pub tone_mapping: usize,
+    pub effects: ActiveEffects,
 }

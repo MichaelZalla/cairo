@@ -357,6 +357,51 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
+                    "postprocessing.effects.outline" => {
+                        prev_value_str.replace(current_settings.effects.outline.to_string());
+
+                        current_settings.effects.outline = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "postprocessing.effects.invert" => {
+                        prev_value_str.replace(current_settings.effects.invert.to_string());
+
+                        current_settings.effects.invert = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "postprocessing.effects.grayscale" => {
+                        prev_value_str.replace(current_settings.effects.grayscale.to_string());
+
+                        current_settings.effects.grayscale = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "postprocessing.effects.sharpen_kernel" => {
+                        prev_value_str.replace(current_settings.effects.sharpen_kernel.to_string());
+
+                        current_settings.effects.sharpen_kernel =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "postprocessing.effects.blur_kernel" => {
+                        prev_value_str.replace(current_settings.effects.blur_kernel.to_string());
+
+                        current_settings.effects.blur_kernel = parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "postprocessing.effects.edge_detection_kernel" => {
+                        prev_value_str
+                            .replace(current_settings.effects.edge_detection_kernel.to_string());
+
+                        current_settings.effects.edge_detection_kernel =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
                     _ => Err(format!("Unknown settings key `{}`.", setting_key).to_string()),
                 }
             })?;

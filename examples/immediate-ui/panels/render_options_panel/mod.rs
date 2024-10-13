@@ -11,7 +11,7 @@ use cairo::{
 };
 
 use crate::{
-    checkbox::{checkbox, Checkbox},
+    checkbox::{checkbox, checkbox_group, Checkbox},
     command::PendingCommand,
     radio::{radio_group, RadioOption},
     COMMAND_BUFFER, SETTINGS,
@@ -227,7 +227,64 @@ impl PanelInstance for RenderOptionsPanel {
 
                 tree.push(spacer(18))?;
 
-                // Render passes
+                // Post-processing
+
+                tree.push(text(
+                    format!("{}.postprocessing.label", self.id).to_string(),
+                    "Postprocessing".to_string(),
+                ))?;
+
+                let checkboxes = vec![
+                    Checkbox::new(
+                        "postprocessing.effects.outline",
+                        "Outline",
+                        current_settings.effects.outline,
+                    ),
+                    Checkbox::new(
+                        "postprocessing.effects.invert",
+                        "Invert",
+                        current_settings.effects.invert,
+                    ),
+                    Checkbox::new(
+                        "postprocessing.effects.grayscale",
+                        "Grayscale",
+                        current_settings.effects.grayscale,
+                    ),
+                    Checkbox::new(
+                        "postprocessing.effects.sharpen_kernel",
+                        "Sharpen",
+                        current_settings.effects.sharpen_kernel,
+                    ),
+                    Checkbox::new(
+                        "postprocessing.effects.blur_kernel",
+                        "Blur",
+                        current_settings.effects.blur_kernel,
+                    ),
+                    Checkbox::new(
+                        "postprocessing.effects.edge_detection_kernel",
+                        "Edge detection",
+                        current_settings.effects.edge_detection_kernel,
+                    ),
+                ];
+
+                let toggled_indices = checkbox_group(
+                    format!("{}.postprocessing.effects", self.id),
+                    &checkboxes,
+                    tree,
+                )?;
+
+                for index in toggled_indices {
+                    let checkbox = &checkboxes[index];
+
+                    let cmd_str =
+                        format!("set {} {}", checkbox.value, !checkbox.is_checked).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
+                // User debug
 
                 tree.push(text(
                     format!("{}.debug.label", self.id).to_string(),
