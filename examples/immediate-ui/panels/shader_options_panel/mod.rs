@@ -75,7 +75,7 @@ impl PanelInstance for ShaderOptionsPanel {
                 1,
                 tree,
             )? {
-                let cmd_str = format!("set_setting texture_filtering {}", index).to_string();
+                let cmd_str = format!("set texture_filtering {}", index).to_string();
 
                 pending_queue.push_back((cmd_str, false));
             }
@@ -110,7 +110,7 @@ impl PanelInstance for ShaderOptionsPanel {
                 let checkbox = &checkboxes[index];
 
                 let cmd_str =
-                    format!("set_setting {} {}", checkbox.value, !checkbox.is_checked).to_string();
+                    format!("set {} {}", checkbox.value, !checkbox.is_checked).to_string();
 
                 pending_queue.push_back((cmd_str, false));
             }

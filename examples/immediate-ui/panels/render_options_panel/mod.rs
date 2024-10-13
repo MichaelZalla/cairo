@@ -201,7 +201,7 @@ fn setting_checkbox(
         &Checkbox::new(setting, label, is_checked),
         tree,
     )? {
-        let cmd_str = format!("set_setting {} {}", setting, !is_checked).to_string();
+        let cmd_str = format!("set {} {}", setting, !is_checked).to_string();
 
         pending_queue.push_back((cmd_str, false));
     }
@@ -234,8 +234,7 @@ fn shadow_map_resolution_radio_group(
         selected_resolution_index,
         tree,
     )? {
-        let cmd_str =
-            format!("set_setting {} {}", setting, new_selected_resolution_index).to_string();
+        let cmd_str = format!("set {} {}", setting, new_selected_resolution_index).to_string();
 
         pending_queue.push_back((cmd_str, false));
     }

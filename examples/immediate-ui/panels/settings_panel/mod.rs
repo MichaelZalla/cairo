@@ -150,7 +150,7 @@ impl PanelInstance for SettingsPanel {
                     current_settings.windowing_mode as usize,
                     tree,
                 )? {
-                    let cmd_str = format!("set_setting windowing_mode {}", index).to_string();
+                    let cmd_str = format!("set windowing_mode {}", index).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }
@@ -177,7 +177,7 @@ impl PanelInstance for SettingsPanel {
                     current_settings.resolution,
                     tree,
                 )? {
-                    let cmd_str = format!("set_setting resolution {}", index).to_string();
+                    let cmd_str = format!("set resolution {}", index).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }
@@ -206,8 +206,7 @@ impl PanelInstance for SettingsPanel {
                     let checkbox = &checkboxes[index];
 
                     let cmd_str =
-                        format!("set_setting {} {}", checkbox.value, !checkbox.is_checked)
-                            .to_string();
+                        format!("set {} {}", checkbox.value, !checkbox.is_checked).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }

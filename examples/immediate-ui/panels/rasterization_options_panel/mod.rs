@@ -70,7 +70,7 @@ impl PanelInstance for RasterizationOptionsPanel {
                 0,
                 tree,
             )? {
-                let cmd_str = format!("set_setting faceWinding {}", index).to_string();
+                let cmd_str = format!("set faceWinding {}", index).to_string();
 
                 pending_queue.push_back((cmd_str, false));
             }
@@ -96,7 +96,7 @@ impl PanelInstance for RasterizationOptionsPanel {
                 0,
                 tree,
             )? {
-                let cmd_str = format!("set_setting faceCulling {}", index).to_string();
+                let cmd_str = format!("set faceCulling {}", index).to_string();
 
                 pending_queue.push_back((cmd_str, false));
             }
@@ -136,7 +136,7 @@ impl PanelInstance for RasterizationOptionsPanel {
                 2,
                 tree,
             )? {
-                let cmd_str = format!("set_setting depthTestingMethod {}", index).to_string();
+                let cmd_str = format!("set depthTestingMethod {}", index).to_string();
 
                 pending_queue.push_back((cmd_str, false));
             }

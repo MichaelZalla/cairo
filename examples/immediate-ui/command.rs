@@ -47,7 +47,7 @@ type ProcessCommandResult =
 
 fn process_command(command: Command) -> ProcessCommandResult {
     match command.kind.as_str() {
-        "set_setting" => {
+        "set" => {
             let (setting_key, value_str) = (&command.args[0], &command.args[1]);
 
             let mut prev_value_str: Option<String> = None;

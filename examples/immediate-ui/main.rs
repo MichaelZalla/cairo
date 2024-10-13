@@ -385,7 +385,7 @@ fn main() -> Result<(), String> {
                                     let vsync = current_settings.vsync;
 
                                     let cmd_str = format!(
-                                        "set_setting vsync {}",
+                                        "set vsync {}",
                                         if vsync { "false" } else { "true " }
                                     )
                                     .to_string();
@@ -407,11 +407,9 @@ fn main() -> Result<(), String> {
 
                                     let hdr = current_settings.hdr;
 
-                                    let cmd_str = format!(
-                                        "set_setting hdr {}",
-                                        if hdr { "false" } else { "true " }
-                                    )
-                                    .to_string();
+                                    let cmd_str =
+                                        format!("set hdr {}", if hdr { "false" } else { "true " })
+                                            .to_string();
 
                                     pending_commands.push_back((cmd_str, false));
                                 });
@@ -431,7 +429,7 @@ fn main() -> Result<(), String> {
                                     let bloom = current_settings.bloom;
 
                                     let cmd_str = format!(
-                                        "set_setting bloom {}",
+                                        "set bloom {}",
                                         if bloom { "false" } else { "true " }
                                     )
                                     .to_string();
