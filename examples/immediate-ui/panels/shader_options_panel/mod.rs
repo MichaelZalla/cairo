@@ -82,11 +82,11 @@ impl PanelInstance for ShaderOptionsPanel {
 
             tree.push(spacer(18))?;
 
-            // Texture mapping.
+            // Texture maps.
 
             tree.push(text(
-                format!("ShaderOptionsPanel{}.textureMapping.label", self.id).to_string(),
-                "Texture mapping".to_string(),
+                format!("ShaderOptionsPanel{}.textureMaps.label", self.id).to_string(),
+                "Texture maps".to_string(),
             ))?;
 
             let checkboxes = vec![
@@ -101,11 +101,7 @@ impl PanelInstance for ShaderOptionsPanel {
             ];
 
             let toggled_indices = checkbox_group(
-                format!(
-                    "RenderOptionsPanel{}.textureMapping.checkbox_group",
-                    self.id
-                )
-                .to_string(),
+                format!("RenderOptionsPanel{}.textureMaps.checkbox_group", self.id).to_string(),
                 &checkboxes,
                 tree,
             )?;

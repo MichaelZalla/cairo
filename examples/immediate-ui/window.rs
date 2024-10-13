@@ -11,6 +11,7 @@ use cairo::{
 };
 
 use crate::panels::{
+    rasterization_options_panel::RasterizationOptionsPanel,
     render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
     shader_options_panel::ShaderOptionsPanel,
 };
@@ -33,6 +34,7 @@ fn make_settings_panel(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn make_window_list<'a>(
     settings_panel_arena: &mut Arena<SettingsPanel>,
     settings_panel_render_callback: PanelRenderCallback,
@@ -40,6 +42,8 @@ pub(crate) fn make_window_list<'a>(
     render_options_panel_render_callback: PanelRenderCallback,
     shader_options_panel_arena: &mut Arena<ShaderOptionsPanel>,
     shader_options_panel_render_callback: PanelRenderCallback,
+    rasterization_options_panel_arena: &mut Arena<RasterizationOptionsPanel>,
+    rasterization_options_panel_render_callback: PanelRenderCallback,
     resolution: Resolution,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
@@ -74,7 +78,7 @@ pub(crate) fn make_window_list<'a>(
 
     // Builds a few non-native, "floating" windows that we can drag around.
 
-    for i in 0..3 {
+    for i in 0..4 {
         let window_id = format!("floating_window_{}", i);
 
         let window_title;
@@ -83,53 +87,76 @@ pub(crate) fn make_window_list<'a>(
         let panel_id;
         let panel_instance_data;
 
-        if i == 0 {
-            window_title = "Settings".to_string();
+        match i {
+            0 => {
+                window_title = "Settings".to_string();
 
-            panel_id = format!("{}_SettingsPanel", window_id);
+                panel_id = format!("{}_SettingsPanel", window_id);
 
-            panel_instance_data = PanelInstanceData {
-                panel_instance: settings_panel_arena
-                    .insert(Uuid::new_v4(), SettingsPanel::from_id(panel_id.as_str())),
-                render: Some(settings_panel_render_callback.clone()),
-                custom_render_callback: None,
-            };
-        } else if i == 1 {
-            window_title = "Render Options".to_string();
+                panel_instance_data = PanelInstanceData {
+                    panel_instance: settings_panel_arena
+                        .insert(Uuid::new_v4(), SettingsPanel::from_id(panel_id.as_str())),
+                    render: Some(settings_panel_render_callback.clone()),
+                    custom_render_callback: None,
+                };
+            }
+            1 => {
+                window_title = "Render Options".to_string();
 
-            panel_id = format!("{}_RenderOptionsPanel", window_id);
-            panel_instance_data = PanelInstanceData {
-                panel_instance: render_options_panel_arena.insert(
-                    Uuid::new_v4(),
-                    RenderOptionsPanel::new(
-                        panel_id.as_str(),
-                        Handle {
-                            uuid: Uuid::new_v4(),
-                            index: 0,
-                        },
+                panel_id = format!("{}_RenderOptionsPanel", window_id);
+                panel_instance_data = PanelInstanceData {
+                    panel_instance: render_options_panel_arena.insert(
+                        Uuid::new_v4(),
+                        RenderOptionsPanel::new(
+                            panel_id.as_str(),
+                            Handle {
+                                uuid: Uuid::new_v4(),
+                                index: 0,
+                            },
+                        ),
                     ),
-                ),
-                render: Some(render_options_panel_render_callback.clone()),
-                custom_render_callback: None,
-            };
-        } else {
-            window_title = "Shader Options".to_string();
+                    render: Some(render_options_panel_render_callback.clone()),
+                    custom_render_callback: None,
+                };
+            }
+            2 => {
+                window_title = "Texture Options".to_string();
 
-            panel_id = format!("{}_ShaderOptionsPanel", window_id);
-            panel_instance_data = PanelInstanceData {
-                panel_instance: shader_options_panel_arena.insert(
-                    Uuid::new_v4(),
-                    ShaderOptionsPanel::new(
-                        panel_id.as_str(),
-                        Handle {
-                            uuid: Uuid::new_v4(),
-                            index: 0,
-                        },
+                panel_id = format!("{}_ShaderOptionsPanel", window_id);
+                panel_instance_data = PanelInstanceData {
+                    panel_instance: shader_options_panel_arena.insert(
+                        Uuid::new_v4(),
+                        ShaderOptionsPanel::new(
+                            panel_id.as_str(),
+                            Handle {
+                                uuid: Uuid::new_v4(),
+                                index: 0,
+                            },
+                        ),
                     ),
-                ),
-                render: Some(shader_options_panel_render_callback.clone()),
-                custom_render_callback: None,
-            };
+                    render: Some(shader_options_panel_render_callback.clone()),
+                    custom_render_callback: None,
+                };
+            }
+            _ => {
+                window_title = "Raserization Options".to_string();
+
+                panel_id = format!("{}_RaserizationOptionsPanel", window_id);
+                panel_instance_data = PanelInstanceData {
+                    panel_instance: rasterization_options_panel_arena.insert(
+                        Uuid::new_v4(),
+                        RasterizationOptionsPanel::new(
+                            panel_id.as_str(),
+                            Handle {
+                                uuid: Uuid::new_v4(),
+                                index: 0,
+                            },
+                        ),
+                    ),
+                    render: Some(rasterization_options_panel_render_callback.clone()),
+                    custom_render_callback: None,
+                };
+            }
         }
 
         let panel = Panel::new(

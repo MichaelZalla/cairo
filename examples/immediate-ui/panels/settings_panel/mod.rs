@@ -184,11 +184,11 @@ impl PanelInstance for SettingsPanel {
 
                 tree.push(spacer(18))?;
 
-                // Postprocessing flags
+                // Miscellaneous flags
 
                 tree.push(text(
-                    format!("SettingsPanel{}.postprocessing.label", self.id).to_string(),
-                    "Postprocessing".to_string(),
+                    format!("SettingsPanel{}.miscellaneous.label", self.id).to_string(),
+                    "Miscellaneous".to_string(),
                 ))?;
 
                 let checkboxes = vec![
@@ -197,7 +197,7 @@ impl PanelInstance for SettingsPanel {
                 ];
 
                 let toggled_indices = checkbox_group(
-                    format!("SettingsPanel{}.postprocessing.checkbox_group", self.id).to_string(),
+                    format!("SettingsPanel{}.miscellaneous.checkbox_group", self.id).to_string(),
                     &checkboxes,
                     tree,
                 )?;

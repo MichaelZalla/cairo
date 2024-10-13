@@ -13,7 +13,7 @@ impl fmt::Display for AppWindowingMode {
         match self {
             AppWindowingMode::Windowed => write!(f, "Windowed"),
             AppWindowingMode::FullScreen => write!(f, "Fullscreen"),
-            AppWindowingMode::FullScreenWindowed => write!(f, "Fullscreen (windowed)"),
+            AppWindowingMode::FullScreenWindowed => write!(f, "Fullscreen windowed"),
         }
     }
 }

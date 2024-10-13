@@ -28,6 +28,7 @@ use cairo::{
 
 use command::{process_commands, CommandBuffer};
 use panels::{
+    rasterization_options_panel::RasterizationOptionsPanel,
     render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
     shader_options_panel::ShaderOptionsPanel, PanelInstance,
 };
@@ -164,10 +165,31 @@ fn main() -> Result<(), String> {
         },
     );
 
+    let rasterization_options_panel_arena_rc = Box::leak(Box::new(RefCell::new(Arena::<
+        RasterizationOptionsPanel,
+    >::new())));
+
+    let rasterization_options_panel_render_callback: PanelRenderCallback = Rc::new(
+        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
+            let mut rasterization_options_panel_arena =
+                rasterization_options_panel_arena_rc.borrow_mut();
+
+            if let Ok(entry) = rasterization_options_panel_arena.get_mut(panel_instance) {
+                let panel = &mut entry.item;
+
+                panel.render(tree).unwrap();
+            }
+
+            Ok(())
+        },
+    );
+
     let window_list_rc = {
         let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
         let mut render_options_panel_arena = render_options_panel_arena_rc.borrow_mut();
         let mut shader_options_panel_arena = shader_options_panel_arena_rc.borrow_mut();
+        let mut rasterization_options_panel_arena =
+            rasterization_options_panel_arena_rc.borrow_mut();
 
         let resolution = window_info.window_resolution;
 
@@ -178,6 +200,8 @@ fn main() -> Result<(), String> {
             render_options_panel_render_callback,
             &mut shader_options_panel_arena,
             shader_options_panel_render_callback,
+            &mut rasterization_options_panel_arena,
+            rasterization_options_panel_render_callback,
             resolution,
         )?;
 

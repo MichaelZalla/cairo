@@ -4,7 +4,6 @@ use cairo::{
     mem::linked_list::LinkedList,
     resource::handle::Handle,
     serde::PostDeserialize,
-    software_renderer::zbuffer::DepthTestMethod,
     ui::ui_box::{
         tree::UIBoxTree,
         utils::{spacer, text},
@@ -63,39 +62,11 @@ impl PanelInstance for RenderOptionsPanel {
                     "Render passes".to_string(),
                 ))?;
 
-                let wireframe_enabled = true;
-
-                setting_checkbox(
-                    &format!("{}.render_pass.wireframe", self.id),
-                    "wireframe",
-                    "Wireframe",
-                    wireframe_enabled,
-                    tree,
-                    &mut pending_queue,
-                )?;
-
-                if wireframe_enabled {
-                    // Wireframe color.
-
-                    tree.push(text(
-                        format!("{}.render_pass.wireframe_color.label", self.id).to_string(),
-                        "Wireframe color".to_string(),
-                    ))?;
-
-                    tree.push(text(
-                        format!("{}.render_pass.wireframe_color", self.id).to_string(),
-                        "[_____________]".to_string(),
-                    ))?;
-                }
-
-                tree.push(spacer(18))?;
-
                 let render_pass_flags = vec![
                     // Checkbox::new("wireframe", "Wireframe", false),
                     Checkbox::new("rasterization", "Rasterization", true),
                     Checkbox::new("lighting", "Lighting", true),
                     Checkbox::new("deferredLighting", "Deferred lighting", false),
-                    Checkbox::new("visualizeNormals", "Visualize normals", false),
                     Checkbox::new("bloom", "Bloom", current_settings.bloom),
                 ];
 
@@ -108,101 +79,6 @@ impl PanelInstance for RenderOptionsPanel {
                         tree,
                         &mut pending_queue,
                     )?;
-                }
-
-                tree.push(spacer(18))?;
-
-                // Face culling
-
-                tree.push(text(
-                    format!("RenderOptionsPanel{}.faceCulling.label", self.id).to_string(),
-                    "Face culling".to_string(),
-                ))?;
-
-                let reject_faces_options: Vec<RadioOption> =
-                    ["Reject backfaces", "Reject frontfaces", "Disabled"]
-                        .iter()
-                        .map(|label| RadioOption {
-                            label: label.to_string(),
-                        })
-                        .collect();
-
-                if let Some(index) = radio_group(
-                    format!("RenderOptionsPanel{}.faceCulling.radio_group", self.id).to_string(),
-                    &reject_faces_options,
-                    0,
-                    tree,
-                )? {
-                    let cmd_str = format!("set_setting faceCulling {}", index).to_string();
-
-                    pending_queue.push_back((cmd_str, false));
-                }
-
-                tree.push(spacer(18))?;
-
-                // Depth test method
-
-                tree.push(text(
-                    format!("RenderOptionsPanel{}.depthTestingMethod.label", self.id).to_string(),
-                    "Depth test".to_string(),
-                ))?;
-
-                let depth_testing_method_options: Vec<RadioOption> = [
-                    DepthTestMethod::Always,
-                    DepthTestMethod::Never,
-                    DepthTestMethod::Less,
-                    DepthTestMethod::Equal,
-                    DepthTestMethod::LessThanOrEqual,
-                    DepthTestMethod::Greater,
-                    DepthTestMethod::NotEqual,
-                    DepthTestMethod::GreaterThanOrEqual,
-                ]
-                .iter()
-                .map(|label| RadioOption {
-                    label: label.to_string(),
-                })
-                .collect();
-
-                if let Some(index) = radio_group(
-                    format!(
-                        "RenderOptionsPanel{}.depthTestingMethod.radio_group",
-                        self.id
-                    )
-                    .to_string(),
-                    &depth_testing_method_options,
-                    2,
-                    tree,
-                )? {
-                    let cmd_str = format!("set_setting depthTestingMethod {}", index).to_string();
-
-                    pending_queue.push_back((cmd_str, false));
-                }
-
-                tree.push(spacer(18))?;
-
-                // Face winding
-
-                tree.push(text(
-                    format!("RenderOptionsPanel{}.faceWinding.label", self.id).to_string(),
-                    "Face winding".to_string(),
-                ))?;
-
-                let reject_faces_options: Vec<RadioOption> = ["Counter-clockwise", "Clockwise"]
-                    .iter()
-                    .map(|label| RadioOption {
-                        label: label.to_string(),
-                    })
-                    .collect();
-
-                if let Some(index) = radio_group(
-                    format!("RenderOptionsPanel{}.faceWinding.radio_group", self.id).to_string(),
-                    &reject_faces_options,
-                    0,
-                    tree,
-                )? {
-                    let cmd_str = format!("set_setting faceWinding {}", index).to_string();
-
-                    pending_queue.push_back((cmd_str, false));
                 }
 
                 tree.push(spacer(18))?;
@@ -259,6 +135,51 @@ impl PanelInstance for RenderOptionsPanel {
                         &mut pending_queue,
                     )?;
                 }
+
+                tree.push(spacer(18))?;
+
+                // Render passes
+
+                tree.push(text(
+                    format!("{}.debug.label", self.id).to_string(),
+                    "Debug".to_string(),
+                ))?;
+
+                let draw_wireframe = true;
+
+                setting_checkbox(
+                    &format!("{}.drawWireframe", self.id),
+                    "drawWireframe",
+                    "Draw wireframe",
+                    draw_wireframe,
+                    tree,
+                    &mut pending_queue,
+                )?;
+
+                if draw_wireframe {
+                    // Wireframe color.
+
+                    tree.push(text(
+                        format!("{}.wireframe_color.label", self.id).to_string(),
+                        "Wireframe color".to_string(),
+                    ))?;
+
+                    tree.push(text(
+                        format!("{}.wireframe_color", self.id).to_string(),
+                        "[_____________]".to_string(),
+                    ))?;
+                }
+
+                let draw_normals = true;
+
+                setting_checkbox(
+                    &format!("{}.drawNormals", self.id),
+                    "drawNormals",
+                    "Draw normals",
+                    draw_normals,
+                    tree,
+                    &mut pending_queue,
+                )?;
 
                 Ok(())
             })
