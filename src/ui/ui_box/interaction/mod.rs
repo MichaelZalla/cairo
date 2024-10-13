@@ -96,90 +96,89 @@ impl UIBoxInteraction {
             }
         }
 
-        mouse_interaction_in_bounds.hot_drag_handle = match ui_box_previous_frame {
-            Some(previous_frame) => {
-                if features.intersects(
-                    UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
-                        | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
-                        | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
-                        | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis,
-                ) {
-                    // Set drag cursor if it's within epislon.
+        mouse_interaction_in_bounds.hot_drag_handle = match (
+            ui_box_previous_frame,
+            features.intersects(
+                UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
+                    | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
+                    | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
+                    | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis,
+            ),
+        ) {
+            (None, _) | (Some(_), false) => None,
+            (Some(previous_frame), true) => {
+                // Set drag cursor if it's within epislon.
 
-                    let mouse_position = input_events.mouse.position;
+                let mouse_position = input_events.mouse.position;
 
-                    let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
+                let (mouse_x, mouse_y) = (mouse_position.0, mouse_position.1);
 
-                    let (min_primary, max_primary, min_secondary, max_secondary) =
-                        match previous_frame.parent_layout_direction {
-                            UILayoutDirection::TopToBottom => (
-                                previous_frame.global_bounds.top as i32,
-                                previous_frame.global_bounds.bottom as i32,
-                                previous_frame.global_bounds.left as i32,
-                                previous_frame.global_bounds.right as i32,
-                            ),
-                            UILayoutDirection::LeftToRight => (
-                                previous_frame.global_bounds.left as i32,
-                                previous_frame.global_bounds.right as i32,
-                                previous_frame.global_bounds.top as i32,
-                                previous_frame.global_bounds.bottom as i32,
-                            ),
-                        };
-
-                    let (mouse_primary, mouse_secondary) =
-                        match previous_frame.parent_layout_direction {
-                            UILayoutDirection::TopToBottom => (mouse_y, mouse_x),
-                            UILayoutDirection::LeftToRight => (mouse_x, mouse_y),
-                        };
-
-                    let (
-                        drag_handle_min_primary,
-                        drag_handle_max_primary,
-                        drag_handle_min_secondary,
-                        drag_handle_max_secondary,
-                    ) = match previous_frame.parent_layout_direction {
+                let (min_primary, max_primary, min_secondary, max_secondary) =
+                    match previous_frame.parent_layout_direction {
                         UILayoutDirection::TopToBottom => (
-                            UIBoxDragHandle::Top,
-                            UIBoxDragHandle::Bottom,
-                            UIBoxDragHandle::Left,
-                            UIBoxDragHandle::Right,
+                            previous_frame.global_bounds.top as i32,
+                            previous_frame.global_bounds.bottom as i32,
+                            previous_frame.global_bounds.left as i32,
+                            previous_frame.global_bounds.right as i32,
                         ),
                         UILayoutDirection::LeftToRight => (
-                            UIBoxDragHandle::Left,
-                            UIBoxDragHandle::Right,
-                            UIBoxDragHandle::Top,
-                            UIBoxDragHandle::Bottom,
+                            previous_frame.global_bounds.left as i32,
+                            previous_frame.global_bounds.right as i32,
+                            previous_frame.global_bounds.top as i32,
+                            previous_frame.global_bounds.bottom as i32,
                         ),
                     };
 
-                    if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis)
-                        && within_epsilon(mouse_primary, min_primary)
-                        && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
-                    {
-                        Some(drag_handle_min_primary)
-                    } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis)
-                        && within_epsilon(mouse_primary, max_primary)
-                        && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
-                    {
-                        Some(drag_handle_max_primary)
-                    } else if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis)
-                        && within_epsilon(mouse_secondary, min_secondary)
-                        && (min_primary..max_primary + 1).contains(&mouse_primary)
-                    {
-                        Some(drag_handle_min_secondary)
-                    } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis)
-                        && within_epsilon(mouse_secondary, max_secondary)
-                        && (min_primary..max_primary + 1).contains(&mouse_primary)
-                    {
-                        Some(drag_handle_max_secondary)
-                    } else {
-                        None
-                    }
+                let (mouse_primary, mouse_secondary) = match previous_frame.parent_layout_direction
+                {
+                    UILayoutDirection::TopToBottom => (mouse_y, mouse_x),
+                    UILayoutDirection::LeftToRight => (mouse_x, mouse_y),
+                };
+
+                let (
+                    drag_handle_min_primary,
+                    drag_handle_max_primary,
+                    drag_handle_min_secondary,
+                    drag_handle_max_secondary,
+                ) = match previous_frame.parent_layout_direction {
+                    UILayoutDirection::TopToBottom => (
+                        UIBoxDragHandle::Top,
+                        UIBoxDragHandle::Bottom,
+                        UIBoxDragHandle::Left,
+                        UIBoxDragHandle::Right,
+                    ),
+                    UILayoutDirection::LeftToRight => (
+                        UIBoxDragHandle::Left,
+                        UIBoxDragHandle::Right,
+                        UIBoxDragHandle::Top,
+                        UIBoxDragHandle::Bottom,
+                    ),
+                };
+
+                if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis)
+                    && within_epsilon(mouse_primary, min_primary)
+                    && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
+                {
+                    Some(drag_handle_min_primary)
+                } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis)
+                    && within_epsilon(mouse_primary, max_primary)
+                    && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
+                {
+                    Some(drag_handle_max_primary)
+                } else if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis)
+                    && within_epsilon(mouse_secondary, min_secondary)
+                    && (min_primary..max_primary + 1).contains(&mouse_primary)
+                {
+                    Some(drag_handle_min_secondary)
+                } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis)
+                    && within_epsilon(mouse_secondary, max_secondary)
+                    && (min_primary..max_primary + 1).contains(&mouse_primary)
+                {
+                    Some(drag_handle_max_secondary)
                 } else {
                     None
                 }
             }
-            None => None,
         };
 
         mouse_interaction_in_bounds.active_drag_handle = match ui_box_previous_frame {
