@@ -139,9 +139,9 @@ pub(crate) fn make_window_list<'a>(
                 };
             }
             _ => {
-                window_title = "Raserization Options".to_string();
+                window_title = "Rasterization Options".to_string();
 
-                panel_id = format!("{}_RaserizationOptionsPanel", window_id);
+                panel_id = format!("{}_RasterizationOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
                     panel_instance: rasterization_options_panel_arena.insert(
                         Uuid::new_v4(),
