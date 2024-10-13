@@ -140,6 +140,38 @@ impl PanelInstance for RenderOptionsPanel {
 
                 tree.push(spacer(18))?;
 
+                // Tone mapping
+
+                tree.push(text(
+                    format!("{}.render.tone_mapping.label", self.id).to_string(),
+                    "Tone mapping".to_string(),
+                ))?;
+
+                let tone_mapping_options: Vec<RadioOption> =
+                    ["Reinhard", "Exposure", "ACES Filmic", "AGX"]
+                        .iter()
+                        .map(|label| RadioOption {
+                            label: label.to_string(),
+                        })
+                        .collect();
+
+                if let Some(new_selected_tone_mapping_index) = radio_group(
+                    format!("{}.render.tone_mapping.radio_group", self.id).to_string(),
+                    &tone_mapping_options,
+                    current_settings.tone_mapping,
+                    tree,
+                )? {
+                    let cmd_str = format!(
+                        "set render.tone_mapping {}",
+                        new_selected_tone_mapping_index
+                    )
+                    .to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
                 // Shadows
 
                 tree.push(text(

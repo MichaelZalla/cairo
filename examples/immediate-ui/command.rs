@@ -210,6 +210,13 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
+                    "render.tone_mapping" => {
+                        prev_value_str.replace(current_settings.tone_mapping.to_string());
+
+                        current_settings.tone_mapping = parse_or_map_err::<usize>(value_str)?;
+
+                        Ok(())
+                    }
                     "depth_test_method" => {
                         prev_value_str.replace(current_settings.depth_test_method.to_string());
 

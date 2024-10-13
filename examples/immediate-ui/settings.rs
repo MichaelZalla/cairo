@@ -14,4 +14,5 @@ pub(crate) struct Settings {
     pub shader_options: RenderShaderOptions,
     pub depth_test_method: DepthTestMethod,
     pub fragment_shader: usize,
+    pub tone_mapping: usize,
 }
