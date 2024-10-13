@@ -56,12 +56,17 @@ impl PanelInstance for RasterizationOptionsPanel {
 
                 // Face winding
 
+                let selected_winding_order_index = current_settings.render_options.rasterizer_options.face_culling_strategy.winding_order as usize;
+
                 tree.push(text(
                     format!("RenderOptionsPanel{}.faceWinding.label", self.id).to_string(),
                     "Face winding".to_string(),
                 ))?;
 
-                let reject_faces_options: Vec<RadioOption> = ["Counter-clockwise", "Clockwise"]
+                let reject_faces_options: Vec<RadioOption> = [
+                    "Counter-clockwise", 
+                    "Clockwise"
+                ]
                     .iter()
                     .map(|label| RadioOption {
                         label: label.to_string(),
@@ -71,15 +76,19 @@ impl PanelInstance for RasterizationOptionsPanel {
                 if let Some(index) = radio_group(
                     format!("RenderOptionsPanel{}.faceWinding.radio_group", self.id).to_string(),
                     &reject_faces_options,
-                    0,
+                    selected_winding_order_index,
                     tree,
                 )? {
-                    let cmd_str = format!("set faceWinding {}", index).to_string();
+                    let cmd_str = format!("set render_options.rasterizer_options.face_culling_strategy.winding_order {}", index).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }
 
+                tree.push(spacer(18))?;
+
                 // Face culling
+
+                let selected_reject_index = current_settings.render_options.rasterizer_options.face_culling_strategy.reject as usize;
 
                 tree.push(text(
                     format!("RenderOptionsPanel{}.faceCulling.label", self.id).to_string(),
@@ -97,10 +106,10 @@ impl PanelInstance for RasterizationOptionsPanel {
                 if let Some(index) = radio_group(
                     format!("RenderOptionsPanel{}.faceCulling.radio_group", self.id).to_string(),
                     &reject_faces_options,
-                    0,
+                    selected_reject_index,
                     tree,
                 )? {
-                    let cmd_str = format!("set faceCulling {}", index).to_string();
+                    let cmd_str = format!("set render_options.rasterizer_options.face_culling_strategy.reject {}", index).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }

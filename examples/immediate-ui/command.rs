@@ -6,6 +6,7 @@ use cairo::{
         window::{AppWindowingMode, APP_WINDOWING_MODES},
     },
     mem::linked_list::LinkedList,
+    render::culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
 };
 
@@ -110,6 +111,46 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         current_settings.render_options.do_rasterization =
                             parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.rasterizer_options.face_culling_strategy.winding_order" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .render_options
+                                .rasterizer_options
+                                .face_culling_strategy
+                                .winding_order
+                                .to_string(),
+                        );
+
+                        let new_index = parse_or_map_err::<usize>(value_str)?;
+
+                        current_settings
+                            .render_options
+                            .rasterizer_options
+                            .face_culling_strategy
+                            .winding_order = FACE_CULLING_WINDING_ORDER[new_index];
+
+                        Ok(())
+                    }
+                    "render_options.rasterizer_options.face_culling_strategy.reject" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .render_options
+                                .rasterizer_options
+                                .face_culling_strategy
+                                .reject
+                                .to_string(),
+                        );
+
+                        let new_index = parse_or_map_err::<usize>(value_str)?;
+
+                        current_settings
+                            .render_options
+                            .rasterizer_options
+                            .face_culling_strategy
+                            .reject = FACE_CULLING_REJECT[new_index];
 
                         Ok(())
                     }
