@@ -341,7 +341,7 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Wireframe: {}",
-            if renderer.options.do_wireframe {
+            if renderer.options.draw_wireframe {
                 "On"
             } else {
                 "Off"
@@ -350,14 +350,14 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Rasterized geometry: {}",
-            if renderer.options.do_rasterized_geometry {
+            if renderer.options.do_rasterization {
                 "On"
             } else {
                 "Off"
             }
         ));
 
-        if renderer.options.do_rasterized_geometry {
+        if renderer.options.do_rasterization {
             debug_message_buffer.write(format!(
                 "Culling reject mask: {:?}",
                 renderer.options.face_culling_strategy.reject

@@ -27,8 +27,8 @@ impl SoftwareRenderer {
 
                 self.options = RenderOptions {
                     wireframe_color: *color,
-                    do_wireframe: true,
-                    do_rasterized_geometry: false,
+                    draw_wireframe: true,
+                    do_rasterization: false,
                     do_lighting: false,
                     do_deferred_lighting: false,
                     face_culling_strategy: FaceCullingStrategy {

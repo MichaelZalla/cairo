@@ -143,7 +143,7 @@ impl SoftwareRenderer {
         // Interpolate entire vertex (all attributes) when drawing (scanline
         // interpolant)
 
-        if self.options.do_rasterized_geometry {
+        if self.options.do_rasterization {
             self.triangle_fill(
                 ndc_space_vertices[0],
                 ndc_space_vertices[1],
@@ -153,7 +153,7 @@ impl SoftwareRenderer {
             );
         }
 
-        if self.options.do_wireframe {
+        if self.options.draw_wireframe {
             for i in 0..3 {
                 self.render_line(
                     projection_space_vertices[i].world_pos,
@@ -163,7 +163,7 @@ impl SoftwareRenderer {
             }
         }
 
-        if self.options.do_visualize_normals {
+        if self.options.draw_normals {
             static NORMALS_SCALE: f32 = 0.05;
 
             for vertex in &projection_space_vertices {

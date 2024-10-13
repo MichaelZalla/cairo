@@ -12,27 +12,29 @@ pub mod shader;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RenderOptions {
-    pub wireframe_color: Color,
-    pub do_wireframe: bool,
-    pub do_rasterized_geometry: bool,
+    pub do_rasterization: bool,
     pub do_lighting: bool,
     pub do_deferred_lighting: bool,
     pub do_bloom: bool,
-    pub do_visualize_normals: bool,
     pub face_culling_strategy: FaceCullingStrategy,
+    pub draw_wireframe: bool,
+    // User debug
+    pub wireframe_color: Color,
+    pub draw_normals: bool,
 }
 
 impl Default for RenderOptions {
     fn default() -> Self {
         Self {
-            wireframe_color: color::WHITE,
-            do_wireframe: false,
-            do_rasterized_geometry: true,
+            do_rasterization: true,
             do_lighting: true,
             do_deferred_lighting: true,
             do_bloom: false,
-            do_visualize_normals: false,
             face_culling_strategy: Default::default(),
+            draw_wireframe: false,
+            // User debug
+            wireframe_color: color::WHITE,
+            draw_normals: false,
         }
     }
 }
@@ -47,31 +49,19 @@ impl RenderOptions {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 (Keycode::Num1, _) => {
-                    self.do_wireframe = !self.do_wireframe;
+                    self.do_rasterization = !self.do_rasterization;
 
                     println!(
-                        "Wireframe: {}",
-                        if self.do_wireframe { "On" } else { "Off" }
+                        "Rasterization: {}",
+                        if self.do_rasterization { "On" } else { "Off" }
                     );
                 }
                 (Keycode::Num2, _) => {
-                    self.do_rasterized_geometry = !self.do_rasterized_geometry;
-
-                    println!(
-                        "Rasterized geometry: {}",
-                        if self.do_rasterized_geometry {
-                            "On"
-                        } else {
-                            "Off"
-                        }
-                    );
-                }
-                (Keycode::Num3, _) => {
                     self.do_lighting = !self.do_lighting;
 
                     println!("Lighting: {}", if self.do_lighting { "On" } else { "Off" });
                 }
-                (Keycode::Num4, _) => {
+                (Keycode::Num3, _) => {
                     self.do_deferred_lighting = !self.do_deferred_lighting;
 
                     println!(
@@ -83,24 +73,12 @@ impl RenderOptions {
                         }
                     );
                 }
-                (Keycode::Num5, _) => {
-                    self.do_visualize_normals = !self.do_visualize_normals;
-
-                    println!(
-                        "Visualize normals: {}",
-                        if self.do_visualize_normals {
-                            "On"
-                        } else {
-                            "Off"
-                        }
-                    );
-                }
-                (Keycode::Num7, _) => {
+                (Keycode::Num4, _) => {
                     self.do_bloom = !self.do_bloom;
 
                     println!("Bloom pass: {}", if self.do_bloom { "On" } else { "Off" });
                 }
-                (Keycode::Num8, _) => {
+                (Keycode::Num5, _) => {
                     // Cycle culling reject settings.
 
                     self.face_culling_strategy.reject = match self.face_culling_strategy.reject {
@@ -110,11 +88,11 @@ impl RenderOptions {
                     };
 
                     println!(
-                        "Face culling reject: {:?}",
+                        "Face culling - Reject: {:?}",
                         self.face_culling_strategy.reject
                     );
                 }
-                (Keycode::Num9, _) => {
+                (Keycode::Num6, _) => {
                     // Cycle winding order.
 
                     self.face_culling_strategy.winding_order =
@@ -128,8 +106,24 @@ impl RenderOptions {
                         };
 
                     println!(
-                        "Face culling winding order: {:?}",
+                        "Face culling - Winding order: {:?}",
                         self.face_culling_strategy.winding_order
+                    );
+                }
+                (Keycode::Num7, _) => {
+                    self.draw_wireframe = !self.draw_wireframe;
+
+                    println!(
+                        "Draw wireframe: {}",
+                        if self.draw_wireframe { "On" } else { "Off" }
+                    );
+                }
+                (Keycode::Num8, _) => {
+                    self.draw_normals = !self.draw_normals;
+
+                    println!(
+                        "Draw normals: {}",
+                        if self.draw_normals { "On" } else { "Off" }
                     );
                 }
                 _ => {}
@@ -137,9 +131,9 @@ impl RenderOptions {
         }
 
         if game_controller_state.buttons.x {
-            self.do_wireframe = !self.do_wireframe;
+            self.draw_wireframe = !self.draw_wireframe;
         } else if game_controller_state.buttons.y {
-            self.do_visualize_normals = !self.do_visualize_normals;
+            self.draw_normals = !self.draw_normals;
         }
     }
 }

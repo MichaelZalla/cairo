@@ -81,7 +81,7 @@ impl Renderer for SoftwareRenderer {
             framebuffer.clear();
         }
 
-        if self.options.do_rasterized_geometry {
+        if self.options.do_rasterization {
             if let Some(g_buffer) = self.g_buffer.as_mut() {
                 g_buffer.clear();
             }
@@ -93,7 +93,7 @@ impl Renderer for SoftwareRenderer {
     }
 
     fn end_frame(&mut self) {
-        if self.options.do_rasterized_geometry && self.options.do_deferred_lighting {
+        if self.options.do_rasterization && self.options.do_deferred_lighting {
             self.do_deferred_lighting_pass();
 
             // Bloom pass over the deferred (HDR) buffer.
@@ -108,7 +108,7 @@ impl Renderer for SoftwareRenderer {
         if let Some(rc) = &self.framebuffer {
             let framebuffer = rc.borrow_mut();
 
-            if self.options.do_rasterized_geometry {
+            if self.options.do_rasterization {
                 if let (Some(color_buffer_lock), Some(deferred_buffer_lock)) = (
                     framebuffer.attachments.color.as_ref(),
                     framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
