@@ -1,4 +1,4 @@
-use std::{any::TypeId, cell::RefCell, str::FromStr};
+use std::{any::TypeId, cell::RefCell, fmt::Display, str::FromStr};
 
 use cairo::{
     app::{
@@ -16,6 +16,18 @@ pub struct Command<'a> {
     pub kind: &'a String,
     pub args: &'a [String],
     pub is_undo: bool,
+}
+
+impl<'a> Display for Command<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} {}{}",
+            self.kind,
+            self.args.join(" "),
+            if self.is_undo { " (undo)" } else { "" }
+        )
+    }
 }
 
 pub type PendingCommand = (String, bool);
