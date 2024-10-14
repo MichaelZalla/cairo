@@ -5,7 +5,7 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
-        fastpath::{spacer::spacer, text::text},
+        fastpath::{container::collapsible_container, spacer::spacer, text::text},
         ui_box::tree::UIBoxTree,
     },
 };
@@ -174,58 +174,68 @@ impl PanelInstance for RenderOptionsPanel {
 
                 // Shadows
 
-                tree.push(text(
-                    format!("{}.shadows.label", self.id).to_string(),
+                collapsible_container(
+                    format!("{}.shadows", self.id).to_string(),
                     "Shadows".to_string(),
-                ))?;
-
-                // Directional shadows
-
-                let directional_shadows_enabled = true;
-
-                setting_checkbox(
-                    &format!("{}.shadows.directionalShadows", self.id),
-                    "directionalShadows",
-                    "Directional shadows",
-                    directional_shadows_enabled,
                     tree,
-                    &mut pending_queue,
+                    |tree| -> Result<(), String> {
+                        // Directional shadows
+
+                        let directional_shadows_enabled = true;
+
+                        setting_checkbox(
+                            &format!("{}.shadows.directionalShadows", self.id),
+                            "directionalShadows",
+                            "Directional shadows",
+                            directional_shadows_enabled,
+                            tree,
+                            &mut pending_queue,
+                        )?;
+
+                        tree.push(spacer(18))?;
+
+                        if directional_shadows_enabled {
+                            shadow_map_resolution_radio_group(
+                                &format!("{}.shadows.directionalShadows", self.id),
+                                "directionalShadowMapResolution",
+                                0,
+                                tree,
+                                &mut pending_queue,
+                            )?;
+
+                            tree.push(spacer(18))?;
+                        }
+
+                        // Point shadows
+
+                        let point_shadows_enabled = true;
+
+                        setting_checkbox(
+                            &format!("{}.shadows.pointShadows", self.id),
+                            "pointShadows",
+                            "Point shadows",
+                            point_shadows_enabled,
+                            tree,
+                            &mut pending_queue,
+                        )?;
+
+                        if point_shadows_enabled {
+                            tree.push(spacer(18))?;
+
+                            shadow_map_resolution_radio_group(
+                                &format!("{}.shadows.pointShadows", self.id),
+                                "pointShadowMapResolution",
+                                0,
+                                tree,
+                                &mut pending_queue,
+                            )?;
+                        }
+
+                        tree.push(spacer(18))?;
+
+                        Ok(())
+                    },
                 )?;
-
-                if directional_shadows_enabled {
-                    shadow_map_resolution_radio_group(
-                        &format!("{}.shadows.directionalShadows", self.id),
-                        "directionalShadowMapResolution",
-                        0,
-                        tree,
-                        &mut pending_queue,
-                    )?;
-                }
-
-                // Point shadows
-
-                let point_shadows_enabled = true;
-
-                setting_checkbox(
-                    &format!("{}.shadows.pointShadows", self.id),
-                    "pointShadows",
-                    "Point shadows",
-                    point_shadows_enabled,
-                    tree,
-                    &mut pending_queue,
-                )?;
-
-                if point_shadows_enabled {
-                    shadow_map_resolution_radio_group(
-                        &format!("{}.shadows.pointShadows", self.id),
-                        "pointShadowMapResolution",
-                        0,
-                        tree,
-                        &mut pending_queue,
-                    )?;
-                }
-
-                tree.push(spacer(18))?;
 
                 // Post-processing
 
