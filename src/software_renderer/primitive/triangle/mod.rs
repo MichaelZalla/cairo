@@ -159,11 +159,13 @@ impl SoftwareRenderer {
         }
 
         if self.options.draw_wireframe {
+            let color = self.options.wireframe_color;
+
             for i in 0..3 {
                 self.render_line(
                     projection_space_vertices[i].world_pos,
                     projection_space_vertices[if i == 2 { 0 } else { i + 1 }].world_pos,
-                    &color::WHITE,
+                    &color,
                 );
             }
         }

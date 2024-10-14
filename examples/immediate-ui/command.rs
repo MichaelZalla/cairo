@@ -5,6 +5,7 @@ use cairo::{
         resolution::{Resolution, RESOLUTIONS_16X9},
         window::{AppWindowingMode, APP_WINDOWING_MODES},
     },
+    color::Color,
     mem::linked_list::LinkedList,
     render::culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
@@ -233,6 +234,15 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         current_settings.render_options.draw_wireframe =
                             parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.wireframe_color" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.wireframe_color.to_string());
+
+                        current_settings.render_options.wireframe_color =
+                            parse_or_map_err::<Color>(value_str)?;
 
                         Ok(())
                     }

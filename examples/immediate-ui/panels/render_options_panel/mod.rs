@@ -5,7 +5,10 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
-        fastpath::{container::collapsible_container, spacer::spacer, text::text},
+        fastpath::{
+            color::color_picker, container::collapsible_container, slider::SliderOptions,
+            spacer::spacer, text::text,
+        },
         ui_box::tree::UIBoxTree,
     },
 };
@@ -317,15 +320,35 @@ impl PanelInstance for RenderOptionsPanel {
                 if draw_wireframe {
                     // Wireframe color.
 
+                    let current_color = current_settings.render_options.wireframe_color;
+
                     tree.push(text(
                         format!("{}.debug.wireframe_color.label", self.id).to_string(),
                         "Wireframe color".to_string(),
                     ))?;
 
-                    tree.push(text(
-                        format!("{}.debug.wireframe_color", self.id).to_string(),
-                        "[_____________]".to_string(),
-                    ))?;
+                    let color_picker_result = color_picker(
+                        format!("{}.debug.wireframe_color", self.id),
+                        current_color,
+                        SliderOptions {
+                            min: 0.0,
+                            max: 255.0,
+                            ..Default::default()
+                        },
+                        tree,
+                    )?;
+
+                    if let Some(new_color) = color_picker_result {
+                        let cmd_str = format!(
+                            "set render_options.wireframe_color ({:.2},{:.2},{:.2})",
+                            new_color.r, new_color.g, new_color.b
+                        )
+                        .to_string();
+
+                        pending_queue.push_back((cmd_str, false));
+                    }
+
+                    tree.push(spacer(18))?;
                 }
 
                 let draw_normals = current_settings.render_options.draw_normals;

@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
@@ -36,6 +36,37 @@ impl fmt::Display for Color {
             "(r={}, g={}, b={}, a={})",
             self.r, self.g, self.b, self.a
         )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseColorError;
+
+impl FromStr for Color {
+    type Err = ParseColorError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let channels: Vec<String> = s
+            .strip_prefix('(')
+            .and_then(|s| s.strip_suffix(')'))
+            .map(|s| s.splitn(4, ','))
+            .map(|s| s.map(|c| c.to_string()))
+            .map(|s| s.collect())
+            .ok_or(ParseColorError)?;
+
+        debug_assert!(channels.len() >= 3);
+
+        let r = channels[0].parse::<f32>().map_err(|_| ParseColorError)?;
+        let g = channels[1].parse::<f32>().map_err(|_| ParseColorError)?;
+        let b = channels[2].parse::<f32>().map_err(|_| ParseColorError)?;
+
+        let a = if channels.len() > 3 {
+            channels[3].parse::<f32>().map_err(|_| ParseColorError)?
+        } else {
+            255.0
+        };
+
+        Ok(Color { r, g, b, a })
     }
 }
 
