@@ -26,7 +26,7 @@ use cairo::{
         invert_effect::InvertEffect, kernel_effect::KernelEffect,
     },
     matrix::Mat4,
-    resource::{arena::Arena, handle::Handle},
+    resource::handle::Handle,
     scene::{
         context::utils::make_cube_scene,
         node::{SceneNode, SceneNodeType},
@@ -45,19 +45,12 @@ use cairo::{
     },
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    ui::{
-        context::GLOBAL_UI_CONTEXT, panel::PanelRenderCallback, ui_box::tree::UIBoxTree,
-        window::list::WindowList,
-    },
+    ui::{context::GLOBAL_UI_CONTEXT, ui_box::tree::UIBoxTree, window::list::WindowList},
     vec::vec3,
 };
 
 use command::{process_commands, CommandBuffer};
-use panels::{
-    rasterization_options_panel::RasterizationOptionsPanel,
-    render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
-    shader_options_panel::ShaderOptionsPanel, PanelInstance,
-};
+use panels::{PanelArenas, PanelInstance, PanelRenderCallbacks};
 use settings::Settings;
 use window::make_window_list;
 
@@ -171,95 +164,18 @@ fn main() -> Result<(), String> {
 
     // Builds a list of windows containing our UI.
 
-    let settings_panel_arena_rc = Box::leak(Box::new(RefCell::new(Arena::<SettingsPanel>::new())));
+    let panel_arenas: PanelArenas = Default::default();
 
-    let settings_panel_render_callback: PanelRenderCallback = Rc::new(
-        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
-            let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
-
-            if let Ok(entry) = settings_panel_arena.get_mut(panel_instance) {
-                let panel = &mut entry.item;
-
-                panel.render(tree).unwrap();
-            }
-
-            Ok(())
-        },
-    );
-
-    let render_options_panel_arena_rc =
-        Box::leak(Box::new(RefCell::new(Arena::<RenderOptionsPanel>::new())));
-
-    let render_options_panel_render_callback: PanelRenderCallback = Rc::new(
-        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
-            let mut render_options_panel_arena = render_options_panel_arena_rc.borrow_mut();
-
-            if let Ok(entry) = render_options_panel_arena.get_mut(panel_instance) {
-                let panel = &mut entry.item;
-
-                panel.render(tree).unwrap();
-            }
-
-            Ok(())
-        },
-    );
-
-    let shader_options_panel_arena_rc =
-        Box::leak(Box::new(RefCell::new(Arena::<ShaderOptionsPanel>::new())));
-
-    let shader_options_panel_render_callback: PanelRenderCallback = Rc::new(
-        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
-            let mut shader_options_panel_arena = shader_options_panel_arena_rc.borrow_mut();
-
-            if let Ok(entry) = shader_options_panel_arena.get_mut(panel_instance) {
-                let panel = &mut entry.item;
-
-                panel.render(tree).unwrap();
-            }
-
-            Ok(())
-        },
-    );
-
-    let rasterization_options_panel_arena_rc = Box::leak(Box::new(RefCell::new(Arena::<
-        RasterizationOptionsPanel,
-    >::new())));
-
-    let rasterization_options_panel_render_callback: PanelRenderCallback = Rc::new(
-        |panel_instance: &Handle, tree: &mut UIBoxTree| -> Result<(), String> {
-            let mut rasterization_options_panel_arena =
-                rasterization_options_panel_arena_rc.borrow_mut();
-
-            if let Ok(entry) = rasterization_options_panel_arena.get_mut(panel_instance) {
-                let panel = &mut entry.item;
-
-                panel.render(tree).unwrap();
-            }
-
-            Ok(())
-        },
-    );
-
-    let window_list_rc = {
-        let mut settings_panel_arena = settings_panel_arena_rc.borrow_mut();
-        let mut render_options_panel_arena = render_options_panel_arena_rc.borrow_mut();
-        let mut shader_options_panel_arena = shader_options_panel_arena_rc.borrow_mut();
-        let mut rasterization_options_panel_arena =
-            rasterization_options_panel_arena_rc.borrow_mut();
-
-        let list = make_window_list(
-            &mut settings_panel_arena,
-            settings_panel_render_callback,
-            &mut render_options_panel_arena,
-            render_options_panel_render_callback,
-            &mut shader_options_panel_arena,
-            shader_options_panel_render_callback,
-            &mut rasterization_options_panel_arena,
-            rasterization_options_panel_render_callback,
-        )?;
-
-        Rc::new(RefCell::new(list))
+    let panel_render_callbacks = PanelRenderCallbacks {
+        settings: Rc::new(panel_render_callback!(panel_arenas, settings)),
+        render_options: Rc::new(panel_render_callback!(panel_arenas, render_options)),
+        shader_options: Rc::new(panel_render_callback!(panel_arenas, shader_options)),
+        rasterization_options: Rc::new(panel_render_callback!(panel_arenas, rasterization_options)),
     };
+
+    let window_list = make_window_list(panel_arenas, panel_render_callbacks)?;
+
+    let window_list_rc = Rc::new(RefCell::new(window_list));
 
     // We'll need to remember the index of the last rendered frame.
 
