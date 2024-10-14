@@ -103,6 +103,20 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
+                    "brightness" => {
+                        prev_value_str.replace(current_settings.brightness.to_string());
+
+                        current_settings.brightness = parse_or_map_err::<f32>(value_str)?;
+
+                        Ok(())
+                    }
+                    "gamma" => {
+                        prev_value_str.replace(current_settings.gamma.to_string());
+
+                        current_settings.gamma = parse_or_map_err::<f32>(value_str)?;
+
+                        Ok(())
+                    }
                     "vsync" => {
                         prev_value_str.replace(current_settings.vsync.to_string());
 

@@ -1,6 +1,12 @@
+use std::mem;
+
 use sdl2::mouse::MouseButton;
 
-use crate::{device::mouse::MouseEventKind, ui::context::UIInputEvents};
+use crate::{
+    device::mouse::{MouseDragEvent, MouseEventKind},
+    graphics::{self},
+    ui::context::UIInputEvents,
+};
 
 use super::{
     UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
@@ -28,6 +34,11 @@ pub struct UIMouseInteraction {
     pub is_right_down: bool,
     pub was_right_released: bool,
     // pub was_right_double_clicked: bool,
+
+    // Drag event
+    pub drag_event: Option<MouseDragEvent>,
+
+    // Drag handles
     pub hot_drag_handle: Option<UIBoxDragHandle>,
     pub active_drag_handle: Option<UIBoxDragHandle>,
 }
@@ -96,6 +107,60 @@ impl UIBoxInteraction {
                 }
             }
         }
+
+        // Drag events
+
+        {
+            let mouse = &input_events.mouse;
+
+            if let (Some(_), Some(ui_box_prev)) = (&mouse.drag_event, ui_box_previous_frame) {
+                // Check that the drag event originated from inside the UIBox's extent.
+
+                if ui_box_prev.contains_screen_pixel(mouse.prev_position.0, mouse.prev_position.1) {
+                    let drag_start_relative = (
+                        mouse.prev_position.0 - ui_box_prev.global_bounds.left as i32,
+                        mouse.prev_position.1 - ui_box_prev.global_bounds.top as i32,
+                    );
+
+                    let drag_end_relative = (
+                        mouse.position.0 - ui_box_prev.global_bounds.left as i32,
+                        mouse.position.1 - ui_box_prev.global_bounds.top as i32,
+                    );
+
+                    // Clip the drag delta to this UIBox's screen extent.
+
+                    let container_width = ui_box_prev.computed_size[0] as u32;
+                    let container_height = ui_box_prev.computed_size[1] as u32;
+
+                    if let Some(result) = graphics::line::clip_line(
+                        container_width,
+                        container_height,
+                        drag_start_relative.0,
+                        drag_start_relative.1,
+                        drag_end_relative.0,
+                        drag_end_relative.1,
+                    ) {
+                        let mut clipped_start = result.left;
+                        let mut clipped_end = result.right;
+
+                        if result.did_swap {
+                            mem::swap(&mut clipped_start, &mut clipped_end);
+                        }
+
+                        let clipped_drag_delta = (
+                            clipped_end.0 - clipped_start.0,
+                            clipped_end.1 - clipped_start.1,
+                        );
+
+                        mouse_interaction_in_bounds.drag_event = Some(MouseDragEvent {
+                            delta: clipped_drag_delta,
+                        })
+                    }
+                }
+            }
+        }
+
+        // Drag handles
 
         mouse_interaction_in_bounds.hot_drag_handle = match (
             ui_box_previous_frame,

@@ -1,6 +1,6 @@
 mod circle;
 mod crosshair;
-mod line;
+pub mod line;
 mod rectangle;
 pub mod text;
 

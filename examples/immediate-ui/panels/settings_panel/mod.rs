@@ -8,7 +8,7 @@ use cairo::{
         context::GLOBAL_UI_CONTEXT,
         ui_box::{
             tree::UIBoxTree,
-            utils::{spacer, text},
+            utils::{slider, spacer, text, SliderOptions},
             UIBox, UIBoxFeatureFlag,
         },
     },
@@ -178,6 +178,54 @@ impl PanelInstance for SettingsPanel {
                     tree,
                 )? {
                     let cmd_str = format!("set resolution {}", index).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
+                // Brightness
+
+                tree.push(text(
+                    format!("SettingsPanel{}.brightness.label", self.id).to_string(),
+                    "Brightness".to_string(),
+                ))?;
+
+                if let Some(new_value) = slider(
+                    format!("SettingsPanel{}.brightness", self.id),
+                    current_settings.brightness,
+                    SliderOptions {
+                        min: 0.0,
+                        max: 1.0,
+                        ..Default::default()
+                    },
+                    tree,
+                )? {
+                    let cmd_str = format!("set brightness {}", new_value).to_string();
+
+                    pending_queue.push_back((cmd_str, false));
+                }
+
+                tree.push(spacer(18))?;
+
+                // Gamma
+
+                tree.push(text(
+                    format!("SettingsPanel{}.gamma.label", self.id).to_string(),
+                    "Gamma".to_string(),
+                ))?;
+
+                if let Some(new_value) = slider(
+                    format!("SettingsPanel{}.gamma", self.id),
+                    current_settings.gamma,
+                    SliderOptions {
+                        min: 0.1,
+                        max: 8.0,
+                        ..Default::default()
+                    },
+                    tree,
+                )? {
+                    let cmd_str = format!("set gamma {}", new_value).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }

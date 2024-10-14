@@ -134,9 +134,10 @@ impl Graphics {
 pub struct ClipLineResult {
     pub left: (i32, i32),
     pub right: (i32, i32),
+    pub did_swap: bool,
 }
 
-fn clip_line(
+pub fn clip_line(
     container_width: u32,
     container_height: u32,
     mut x1: i32,
@@ -144,10 +145,14 @@ fn clip_line(
     mut x2: i32,
     mut y2: i32,
 ) -> Option<ClipLineResult> {
-    if x1 > x2 {
+    let did_swap = if x1 > x2 {
         mem::swap(&mut x1, &mut x2);
         mem::swap(&mut y1, &mut y2);
-    }
+
+        true
+    } else {
+        false
+    };
 
     // m = (y2 - y1) / (x2 - x1)
     let slope: f32 = (y2 - y1) as f32 / (x2 - x1) as f32;
@@ -172,6 +177,7 @@ fn clip_line(
         return Some(ClipLineResult {
             left: (x1, y1),
             right: (x2, y2),
+            did_swap,
         });
     }
 
@@ -227,6 +233,7 @@ fn clip_line(
         Some(ClipLineResult {
             left: (x1, y1),
             right: (x2, y2),
+            did_swap,
         })
     } else {
         None

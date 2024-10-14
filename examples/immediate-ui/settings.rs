@@ -14,16 +14,37 @@ pub struct ActiveEffects {
     pub edge_detection_kernel: bool,
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct Settings {
     pub windowing_mode: AppWindowingMode,
     pub resolution: usize,
     pub vsync: bool,
     pub hdr: bool,
+    pub brightness: f32,
+    pub gamma: f32,
     pub render_options: RenderOptions,
     pub shader_options: RenderShaderOptions,
     pub depth_test_method: DepthTestMethod,
     pub fragment_shader: usize,
     pub tone_mapping: usize,
     pub effects: ActiveEffects,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            windowing_mode: Default::default(),
+            resolution: Default::default(),
+            vsync: true,
+            hdr: true,
+            brightness: 0.8,
+            gamma: 2.2,
+            render_options: Default::default(),
+            shader_options: Default::default(),
+            depth_test_method: Default::default(),
+            fragment_shader: Default::default(),
+            tone_mapping: 1,
+            effects: Default::default(),
+        }
+    }
 }
