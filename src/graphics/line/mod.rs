@@ -1,4 +1,7 @@
-use std::cmp::{max, min};
+use std::{
+    cmp::{max, min},
+    mem,
+};
 
 use crate::{buffer::Buffer2D, color::Color, vec::vec2};
 
@@ -19,11 +22,11 @@ impl Graphics {
             || y2 as u32 >= buffer.height
         {
             match clip_line(buffer.width, buffer.height, x1, y1, x2, y2) {
-                Some((_x1, _y1, _x2, _y2)) => {
-                    x1 = _x1;
-                    y1 = _y1;
-                    x2 = _x2;
-                    y2 = _y2;
+                Some(result) => {
+                    x1 = result.left.0;
+                    y1 = result.left.1;
+                    x2 = result.right.0;
+                    y2 = result.right.1;
                 }
                 None => return,
             }
@@ -128,6 +131,11 @@ impl Graphics {
     }
 }
 
+pub struct ClipLineResult {
+    pub left: (i32, i32),
+    pub right: (i32, i32),
+}
+
 fn clip_line(
     container_width: u32,
     container_height: u32,
@@ -135,11 +143,10 @@ fn clip_line(
     mut y1: i32,
     mut x2: i32,
     mut y2: i32,
-) -> Option<(i32, i32, i32, i32)> {
+) -> Option<ClipLineResult> {
     if x1 > x2 {
-        let temp = (x2, y2);
-        (x2, y2) = (x1, y1);
-        (x1, y1) = temp;
+        mem::swap(&mut x1, &mut x2);
+        mem::swap(&mut y1, &mut y2);
     }
 
     // m = (y2 - y1) / (x2 - x1)
@@ -162,7 +169,10 @@ fn clip_line(
             (y2.max(0)).min(container_height as i32 - 1),
         );
 
-        return Some((x1, y1, x2, y2));
+        return Some(ClipLineResult {
+            left: (x1, y1),
+            right: (x2, y2),
+        });
     }
 
     if x1 >= container_width as i32 {
@@ -214,8 +224,11 @@ fn clip_line(
         && y2 >= 0
         && y2 < container_height as i32
     {
-        return Some((x1, y1, x2, y2));
+        Some(ClipLineResult {
+            left: (x1, y1),
+            right: (x2, y2),
+        })
+    } else {
+        None
     }
-
-    None
 }
