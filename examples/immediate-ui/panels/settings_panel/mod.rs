@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use cairo::{
     app::{resolution::RESOLUTIONS_16X9, window::APP_WINDOWING_MODES},
-    mem::linked_list::LinkedList,
     serde::PostDeserialize,
     ui::{
         context::GLOBAL_UI_CONTEXT,
@@ -17,7 +16,6 @@ use cairo::{
 
 use crate::{
     checkbox::{checkbox_group, Checkbox},
-    command::ExecutedCommand,
     radio::{radio_group, RadioOption},
     COMMAND_BUFFER, SETTINGS,
 };
@@ -60,53 +58,6 @@ impl SettingsPanel {
         counter.features |= UIBoxFeatureFlag::SkipTextCaching;
 
         counter
-    }
-
-    fn command_history(
-        &self,
-        executed_queue: &LinkedList<ExecutedCommand>,
-        tree: &mut UIBoxTree,
-    ) -> Result<(), String> {
-        static RECENT_COMMANDS_COUNT: usize = 3;
-
-        tree.push(text(
-            format!("SettingsPanel{}.command_history.label", self.id).to_string(),
-            format!(
-                "Command history{}",
-                if executed_queue.is_empty() {
-                    "".to_string()
-                } else {
-                    format!(" ({})", executed_queue.len())
-                }
-            )
-            .to_string(),
-        ))?;
-
-        if executed_queue.is_empty() {
-            tree.push(text(
-                format!("SettingsPanel{}.command_history.most_recent_empty", self.id,).to_string(),
-                "No history.".to_string(),
-            ))?;
-        } else {
-            for (index, cmd) in executed_queue.iter().rev().enumerate() {
-                let cmd_serialized = format!("{} {}", cmd.kind, cmd.args.join(" ")).to_string();
-
-                tree.push(text(
-                    format!(
-                        "SettingsPanel{}.command_history.most_recent_{}",
-                        self.id, index
-                    )
-                    .to_string(),
-                    format!("{}: {}", index, cmd_serialized).to_string(),
-                ))?;
-
-                if index > RECENT_COMMANDS_COUNT {
-                    break;
-                }
-            }
-        }
-
-        Ok(())
     }
 }
 
@@ -262,11 +213,7 @@ impl PanelInstance for SettingsPanel {
 
                 tree.push(spacer(18))?;
 
-                // Command history
-
-                let executed_queue = buffer.executed_commands.borrow();
-
-                self.command_history(&executed_queue, tree)
+                Ok(())
             })
         })
     }
