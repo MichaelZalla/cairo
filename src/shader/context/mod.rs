@@ -92,10 +92,9 @@ impl ShaderContext {
     pub fn set_world_transform(&mut self, mat: Mat4) {
         self.world_transform = mat;
 
-        self.world_view_transform = self.world_transform * self.view_inverse_transform;
+        self.recompute_world_view_transform();
 
-        self.world_view_projection_transform =
-            self.world_view_transform * self.projection_transform;
+        self.recompute_world_view_projection_transform();
     }
 
     pub fn set_view_position(&mut self, position: Vec4) {
@@ -105,10 +104,9 @@ impl ShaderContext {
     pub fn set_view_inverse_transform(&mut self, mat: Mat4) {
         self.view_inverse_transform = mat;
 
-        self.world_view_transform = self.world_transform * self.view_inverse_transform;
+        self.recompute_world_view_transform();
 
-        self.world_view_projection_transform =
-            self.world_view_transform * self.projection_transform;
+        self.recompute_world_view_projection_transform();
     }
 
     pub fn get_projection(&self) -> Mat4 {
@@ -118,8 +116,7 @@ impl ShaderContext {
     pub fn set_projection(&mut self, projection_transform: Mat4) {
         self.projection_transform = projection_transform;
 
-        self.world_view_projection_transform =
-            self.world_view_transform * self.projection_transform;
+        self.recompute_world_view_projection_transform();
     }
 
     pub fn to_ndc_space(&self, world_space_position: Vec3) -> Vec3 {
@@ -198,5 +195,14 @@ impl ShaderContext {
 
     pub fn set_skybox_transform(&mut self, optional_transform: Option<Mat4>) {
         self.skybox_transform = optional_transform;
+    }
+
+    fn recompute_world_view_transform(&mut self) {
+        self.world_view_transform = self.world_transform * self.view_inverse_transform;
+    }
+
+    fn recompute_world_view_projection_transform(&mut self) {
+        self.world_view_projection_transform =
+            self.world_view_transform * self.projection_transform;
     }
 }
