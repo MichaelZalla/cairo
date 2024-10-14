@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 use uuid::Uuid;
@@ -8,4 +10,15 @@ pub struct Handle {
     pub uuid: Uuid,
 }
 
-impl Handle {}
+impl Handle {
+    pub fn from_uuid(index: usize, uuid: &Uuid) -> Self {
+        Self { index, uuid: *uuid }
+    }
+
+    pub fn from_uuid_str(index: usize, uuid: &str) -> Result<Self, String> {
+        match Uuid::from_str(uuid) {
+            Ok(uuid) => Ok(Self { index, uuid }),
+            Err(_) => Err(format!("Failed to parse a UUID from string '{}'.", uuid)),
+        }
+    }
+}
