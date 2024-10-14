@@ -23,6 +23,7 @@ pub struct RenderOptions {
     // User debug
     pub wireframe_color: Color,
     pub draw_normals: bool,
+    pub draw_normals_scale: f32,
 }
 
 impl Default for RenderOptions {
@@ -38,6 +39,7 @@ impl Default for RenderOptions {
             // User debug
             wireframe_color: color::WHITE,
             draw_normals: false,
+            draw_normals_scale: 0.05,
         }
     }
 }

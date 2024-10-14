@@ -192,7 +192,7 @@ impl PanelInstance for SettingsPanel {
                     "Brightness".to_string(),
                 ))?;
 
-                if let Some(new_value) = slider(
+                if let Some(new_brightness) = slider(
                     format!("SettingsPanel{}.brightness", self.id),
                     current_settings.brightness,
                     SliderOptions {
@@ -202,7 +202,7 @@ impl PanelInstance for SettingsPanel {
                     },
                     tree,
                 )? {
-                    let cmd_str = format!("set brightness {}", new_value).to_string();
+                    let cmd_str = format!("set brightness {}", new_brightness).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }
@@ -216,7 +216,7 @@ impl PanelInstance for SettingsPanel {
                     "Gamma".to_string(),
                 ))?;
 
-                if let Some(new_value) = slider(
+                if let Some(new_gamma) = slider(
                     format!("SettingsPanel{}.gamma", self.id),
                     current_settings.gamma,
                     SliderOptions {
@@ -226,7 +226,7 @@ impl PanelInstance for SettingsPanel {
                     },
                     tree,
                 )? {
-                    let cmd_str = format!("set gamma {}", new_value).to_string();
+                    let cmd_str = format!("set gamma {}", new_gamma).to_string();
 
                     pending_queue.push_back((cmd_str, false));
                 }

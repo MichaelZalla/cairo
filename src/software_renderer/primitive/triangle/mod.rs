@@ -171,24 +171,22 @@ impl SoftwareRenderer {
         }
 
         if self.options.draw_normals {
-            static NORMALS_SCALE: f32 = 0.05;
-
             for vertex in &projection_space_vertices {
                 self.render_line(
                     vertex.world_pos,
-                    vertex.world_pos + vertex.normal.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos + vertex.normal.to_vec3() * self.options.draw_normals_scale,
                     &color::BLUE,
                 );
 
                 self.render_line(
                     vertex.world_pos,
-                    vertex.world_pos + vertex.tangent.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos + vertex.tangent.to_vec3() * self.options.draw_normals_scale,
                     &color::RED,
                 );
 
                 self.render_line(
                     vertex.world_pos,
-                    vertex.world_pos + vertex.bitangent.to_vec3() * NORMALS_SCALE,
+                    vertex.world_pos + vertex.bitangent.to_vec3() * self.options.draw_normals_scale,
                     &color::GREEN,
                 );
             }

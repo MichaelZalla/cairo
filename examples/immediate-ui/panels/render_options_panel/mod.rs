@@ -6,8 +6,11 @@ use cairo::{
     serde::PostDeserialize,
     ui::{
         fastpath::{
-            color::color_picker, container::collapsible_container, slider::SliderOptions,
-            spacer::spacer, text::text,
+            color::color_picker,
+            container::collapsible_container,
+            slider::{slider, SliderOptions},
+            spacer::spacer,
+            text::text,
         },
         ui_box::tree::UIBoxTree,
     },
@@ -361,6 +364,35 @@ impl PanelInstance for RenderOptionsPanel {
                     tree,
                     &mut pending_queue,
                 )?;
+
+                if draw_normals {
+                    // Draw normals scale
+
+                    tree.push(text(
+                        format!("SettingsPanel{}.debug.draw_normals_scale.label", self.id)
+                            .to_string(),
+                        "Scale".to_string(),
+                    ))?;
+
+                    if let Some(new_scale) = slider(
+                        format!("SettingsPanel{}.debug.draw_normals_scale", self.id),
+                        current_settings.render_options.draw_normals_scale,
+                        SliderOptions {
+                            min: 0.01,
+                            max: 1.0,
+                            ..Default::default()
+                        },
+                        tree,
+                    )? {
+                        let cmd_str =
+                            format!("set render_options.draw_normals_scale {}", new_scale)
+                                .to_string();
+
+                        pending_queue.push_back((cmd_str, false));
+                    }
+
+                    tree.push(spacer(18))?;
+                }
 
                 Ok(())
             })

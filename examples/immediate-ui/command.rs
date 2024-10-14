@@ -219,15 +219,6 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
-                    "render_options.draw_normals" => {
-                        prev_value_str
-                            .replace(current_settings.render_options.draw_normals.to_string());
-
-                        current_settings.render_options.draw_normals =
-                            parse_or_map_err::<bool>(value_str)?;
-
-                        Ok(())
-                    }
                     "render_options.draw_wireframe" => {
                         prev_value_str
                             .replace(current_settings.render_options.draw_wireframe.to_string());
@@ -243,6 +234,28 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         current_settings.render_options.wireframe_color =
                             parse_or_map_err::<Color>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.draw_normals" => {
+                        prev_value_str
+                            .replace(current_settings.render_options.draw_normals.to_string());
+
+                        current_settings.render_options.draw_normals =
+                            parse_or_map_err::<bool>(value_str)?;
+
+                        Ok(())
+                    }
+                    "render_options.draw_normals_scale" => {
+                        prev_value_str.replace(
+                            current_settings
+                                .render_options
+                                .draw_normals_scale
+                                .to_string(),
+                        );
+
+                        current_settings.render_options.draw_normals_scale =
+                            parse_or_map_err::<f32>(value_str)?;
 
                         Ok(())
                     }
