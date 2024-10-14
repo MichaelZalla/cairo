@@ -18,7 +18,7 @@ impl Graphics {
             || y1 as u32 >= buffer.height
             || y2 as u32 >= buffer.height
         {
-            match clip_line(buffer, x1, y1, x2, y2) {
+            match clip_line(buffer.width, buffer.height, x1, y1, x2, y2) {
                 Some((_x1, _y1, _x2, _y2)) => {
                     x1 = _x1;
                     y1 = _y1;
@@ -129,7 +129,8 @@ impl Graphics {
 }
 
 fn clip_line(
-    buffer: &Buffer2D,
+    container_width: u32,
+    container_height: u32,
     mut x1: i32,
     mut y1: i32,
     mut x2: i32,
@@ -151,17 +152,22 @@ fn clip_line(
     if slope == f32::INFINITY {
         // Vertical line, safe to simply crop coordinates.
 
-        return Some((
-            (x1.max(0)).min(buffer.width as i32 - 1),
-            (y1.max(0)).min(buffer.height as i32 - 1),
-            (x2.max(0)).min(buffer.width as i32 - 1),
-            (y2.max(0)).min(buffer.height as i32 - 1),
-        ));
+        let (x1, y1) = (
+            (x1.max(0)).min(container_width as i32 - 1),
+            (y1.max(0)).min(container_height as i32 - 1),
+        );
+
+        let (x2, y2) = (
+            (x2.max(0)).min(container_width as i32 - 1),
+            (y2.max(0)).min(container_height as i32 - 1),
+        );
+
+        return Some((x1, y1, x2, y2));
     }
 
-    if x1 >= buffer.width as i32 {
+    if x1 >= container_width as i32 {
         // y = mx + b
-        x1 = (buffer.width - 1) as i32;
+        x1 = (container_width - 1) as i32;
         y1 = (slope * x1 as f32 + bias) as i32;
     } else if x1 < 0 {
         // y = mx + b
@@ -169,9 +175,9 @@ fn clip_line(
         y1 = (slope * x1 as f32 + bias) as i32;
     }
 
-    if x2 >= buffer.width as i32 {
+    if x2 >= container_width as i32 {
         // y = mx + b
-        x2 = (buffer.width - 1) as i32;
+        x2 = (container_width - 1) as i32;
         y2 = (slope * x2 as f32 + bias) as i32;
     } else if x2 < 0 {
         // y = mx + b
@@ -179,9 +185,9 @@ fn clip_line(
         y2 = (slope * x2 as f32 + bias) as i32;
     }
 
-    if y1 >= buffer.height as i32 {
+    if y1 >= container_height as i32 {
         // x = (y - b) / m
-        y1 = (buffer.height - 1) as i32;
+        y1 = (container_height - 1) as i32;
         x1 = ((y1 as f32 - bias) / slope) as i32;
     } else if y1 < 0 {
         // x = (y - b) / m
@@ -189,9 +195,9 @@ fn clip_line(
         x1 = ((y1 as f32 - bias) / slope) as i32;
     }
 
-    if y2 >= buffer.height as i32 {
+    if y2 >= container_height as i32 {
         // x = (y - b) / m
-        y2 = (buffer.height - 1) as i32;
+        y2 = (container_height - 1) as i32;
         x2 = ((y2 as f32 - bias) / slope) as i32;
     } else if y2 < 0 {
         // x = (y - b) / m
@@ -200,13 +206,13 @@ fn clip_line(
     }
 
     if x1 >= 0
-        && x1 < buffer.width as i32
+        && x1 < container_width as i32
         && x2 >= 0
-        && x2 < buffer.width as i32
+        && x2 < container_width as i32
         && y1 >= 0
-        && y1 < buffer.height as i32
+        && y1 < container_height as i32
         && y2 >= 0
-        && y2 < buffer.height as i32
+        && y2 < container_height as i32
     {
         return Some((x1, y1, x2, y2));
     }
