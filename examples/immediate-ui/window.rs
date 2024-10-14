@@ -1,9 +1,9 @@
 use uuid::Uuid;
 
 use cairo::{
-    resource::{arena::Arena, handle::Handle},
+    resource::handle::Handle,
     ui::{
-        panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
+        panel::{tree::PanelTree, Panel, PanelInstanceData},
         ui_box::UILayoutDirection,
         window::{list::WindowList, Window, WindowOptions},
     },
@@ -15,26 +15,6 @@ use crate::panels::{
     shader_options_panel::ShaderOptionsPanel, PanelArenas, PanelRenderCallbacks,
 };
 
-#[allow(unused)]
-fn make_settings_panel(
-    id: &str,
-    arena: &mut Arena<SettingsPanel>,
-    render_callback: PanelRenderCallback,
-) -> Panel {
-    let settings_panel_instance_data = PanelInstanceData {
-        panel_instance: arena.insert(Uuid::new_v4(), SettingsPanel::from_id(id)),
-        render: Some(render_callback.clone()),
-        custom_render_callback: None,
-    };
-
-    Panel::new(
-        1.0,
-        Some(settings_panel_instance_data),
-        UILayoutDirection::TopToBottom,
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn make_window_list<'a>(
     panel_arenas: PanelArenas,
     panel_render_callbacks: PanelRenderCallbacks,
