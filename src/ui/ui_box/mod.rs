@@ -459,11 +459,25 @@ impl UIBox {
         let is_active_transitioning = self.hot_transition < 0.999;
         let is_hot_transitioning = self.hot_transition < 0.999;
 
-        if is_active_transitioning
-            || is_hot_transitioning
-            || self.features.contains(UIBoxFeatureFlag::DrawFill)
-        {
-            let fill_color = {
+        #[cfg(debug_assertions)]
+        let draw_active_hover_indicators =
+            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_active_hover_indicator);
+
+        #[cfg(not(debug_assertions))]
+        let draw_active_hover_indicators = false;
+
+        let should_draw_fill = {
+            let has_fill_feature = self.features.contains(UIBoxFeatureFlag::DrawFill);
+
+            if draw_active_hover_indicators {
+                has_fill_feature || is_active_transitioning || is_hot_transitioning
+            } else {
+                has_fill_feature
+            }
+        };
+
+        if should_draw_fill {
+            let fill_color = if draw_active_hover_indicators {
                 let end = self.styles.fill_color.unwrap_or_default();
 
                 if is_active_transitioning {
@@ -475,6 +489,8 @@ impl UIBox {
                 } else {
                     self.styles.fill_color
                 }
+            } else {
+                self.styles.fill_color
             };
 
             if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
