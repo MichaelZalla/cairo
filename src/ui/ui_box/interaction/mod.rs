@@ -43,11 +43,12 @@ impl UIBoxInteraction {
         ui_box_previous_frame: Option<&UIBox>,
         input_events: &UIInputEvents,
     ) -> Self {
+        let mouse = &input_events.mouse;
+
         let is_hovering = match ui_box_previous_frame {
-            Some(ui_box_prev) => ui_box_prev.global_bounds.contains(
-                input_events.mouse.position.0 as u32,
-                input_events.mouse.position.1 as u32,
-            ),
+            Some(ui_box_prev) => {
+                ui_box_prev.contains_screen_pixel(mouse.position.0, mouse.position.1)
+            }
             None => false,
         };
 

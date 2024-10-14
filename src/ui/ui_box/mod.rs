@@ -240,6 +240,10 @@ impl UIBox {
         (self.computed_size[0] as u32, self.computed_size[1] as u32)
     }
 
+    pub fn contains_screen_pixel(&self, x: i32, y: i32) -> bool {
+        self.global_bounds.contains(x as u32, y as u32)
+    }
+
     pub fn update_hot_state(
         &mut self,
         seconds_since_last_update: f32,
