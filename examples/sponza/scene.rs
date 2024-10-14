@@ -103,7 +103,7 @@ pub fn make_sponza_scene(
 
                 camera.movement_speed = 300.0;
 
-                camera.set_projection_z_far(10000.0);
+                camera.set_projection_z_far(10_000.0);
             }
         }
 

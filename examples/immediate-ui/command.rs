@@ -1,5 +1,7 @@
 use std::{any::TypeId, cell::RefCell, fmt::Display, str::FromStr};
 
+use uuid::Uuid;
+
 use cairo::{
     app::{
         resolution::{Resolution, RESOLUTIONS_16X9},
@@ -8,10 +10,12 @@ use cairo::{
     color::Color,
     mem::linked_list::LinkedList,
     render::culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
+    resource::handle::Handle,
+    scene::camera::{CameraProjectionKind, CAMERA_PROJECTION_KINDS},
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
 };
 
-use crate::SETTINGS;
+use crate::{SCENE_CONTEXT, SETTINGS};
 
 pub struct Command<'a> {
     pub kind: &'a String,
@@ -450,6 +454,83 @@ fn process_command(command: Command) -> ProcessCommandResult {
                             parse_or_map_err::<bool>(value_str)?;
 
                         Ok(())
+                    }
+                    "camera" => {
+                        debug_assert!(command.args.len() >= 5);
+
+                        let uuid = parse_or_map_err::<Uuid>(&command.args[1])?;
+                        let index = parse_or_map_err::<usize>(&command.args[2])?;
+
+                        SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
+                            let resources = ctx.resources.borrow();
+
+                            let mut camera_arena = resources.camera.borrow_mut();
+
+                            let camera_handle = Handle { index, uuid };
+
+                            match camera_arena.get_mut(&camera_handle) {
+                                Ok(entry) => {
+                                    let camera = &mut entry.item;
+
+                                    let attribute = &command.args[3];
+
+                                    match attribute.as_str() {
+                                        "kind" => {
+                                            let new_kind_index =
+                                                parse_or_map_err::<usize>(&command.args[4])?;
+
+                                            let new_kind = CAMERA_PROJECTION_KINDS[new_kind_index];
+
+                                            match new_kind {
+                                                CameraProjectionKind::Perspective => {
+                                                    // TODO
+                                                    todo!()
+                                                }
+                                                CameraProjectionKind::Orthographic => {
+                                                    // TODO
+                                                    todo!()
+                                                }
+                                            }
+                                        }
+                                        "perspective.field_of_view" => {
+                                            let new_fov =
+                                                parse_or_map_err::<f32>(&command.args[4])?;
+
+                                            camera.set_field_of_view(Some(new_fov));
+                                        }
+                                        "projection_z_near" => {
+                                            let new_z_near =
+                                                parse_or_map_err::<f32>(&command.args[4])?;
+
+                                            camera.set_projection_z_near(
+                                                new_z_near.min(camera.get_projection_z_far()),
+                                            );
+                                        }
+                                        "projection_z_far" => {
+                                            let new_z_far =
+                                                parse_or_map_err::<f32>(&command.args[4])?;
+
+                                            camera.set_projection_z_far(
+                                                new_z_far.max(camera.get_projection_z_near()),
+                                            );
+                                        }
+                                        _ => {
+                                            println!(
+                                                "Unrecognized camera attribute '{}'!",
+                                                attribute
+                                            );
+                                        }
+                                    }
+
+                                    Ok(())
+                                }
+                                Err(_) => Err(format!(
+                                    "Camera not found for Handle {}!",
+                                    camera_handle.uuid
+                                )
+                                .to_string()),
+                            }
+                        })
                     }
                     _ => {
                         println!("Unknown settings key `{}`.", setting_key);

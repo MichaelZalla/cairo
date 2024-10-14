@@ -2,6 +2,7 @@ use uuid::Uuid;
 
 use cairo::{
     resource::handle::Handle,
+    scene::context::SceneContext,
     ui::{
         panel::{tree::PanelTree, Panel, PanelInstanceData},
         ui_box::UILayoutDirection,
@@ -10,20 +11,22 @@ use cairo::{
 };
 
 use crate::panels::{
+    camera_attributes_panel::CameraAttributesPanel,
     rasterization_options_panel::RasterizationOptionsPanel,
     render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
     shader_options_panel::ShaderOptionsPanel, PanelArenas, PanelRenderCallbacks,
 };
 
 pub(crate) fn make_window_list<'a>(
-    panel_arenas: PanelArenas,
+    scene_context: &SceneContext,
+    panel_arenas: &PanelArenas,
     panel_render_callbacks: PanelRenderCallbacks,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
 
     // Builds a few non-native, "floating" windows that we can drag around.
 
-    for i in 0..4 {
+    for i in 0..5 {
         let window_id = format!("floating_window_{}", i);
 
         let window_title;
@@ -32,27 +35,27 @@ pub(crate) fn make_window_list<'a>(
 
         match i {
             0 => {
-                let mut arena = panel_arenas.settings.borrow_mut();
+                let mut panel_arena = panel_arenas.settings.borrow_mut();
 
                 window_title = "Settings".to_string();
 
                 panel_id = format!("{}_SettingsPanel", window_id);
 
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: arena
+                    panel_instance: panel_arena
                         .insert(Uuid::new_v4(), SettingsPanel::from_id(panel_id.as_str())),
                     render: Some(panel_render_callbacks.settings.clone()),
                     custom_render_callback: None,
                 };
             }
             1 => {
-                let mut arena = panel_arenas.render_options.borrow_mut();
+                let mut panel_arena = panel_arenas.render_options.borrow_mut();
 
                 window_title = "Render Options".to_string();
 
                 panel_id = format!("{}_RenderOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: arena.insert(
+                    panel_instance: panel_arena.insert(
                         Uuid::new_v4(),
                         RenderOptionsPanel::new(
                             panel_id.as_str(),
@@ -67,13 +70,13 @@ pub(crate) fn make_window_list<'a>(
                 };
             }
             2 => {
-                let mut arena = panel_arenas.shader_options.borrow_mut();
+                let mut panel_arena = panel_arenas.shader_options.borrow_mut();
 
                 window_title = "Texture Options".to_string();
 
                 panel_id = format!("{}_ShaderOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: arena.insert(
+                    panel_instance: panel_arena.insert(
                         Uuid::new_v4(),
                         ShaderOptionsPanel::new(
                             panel_id.as_str(),
@@ -87,14 +90,14 @@ pub(crate) fn make_window_list<'a>(
                     custom_render_callback: None,
                 };
             }
-            _ => {
-                let mut arena = panel_arenas.rasterization_options.borrow_mut();
+            3 => {
+                let mut panel_arena = panel_arenas.rasterization_options.borrow_mut();
 
                 window_title = "Rasterization Options".to_string();
 
                 panel_id = format!("{}_RasterizationOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: arena.insert(
+                    panel_instance: panel_arena.insert(
                         Uuid::new_v4(),
                         RasterizationOptionsPanel::new(
                             panel_id.as_str(),
@@ -107,6 +110,34 @@ pub(crate) fn make_window_list<'a>(
                     render: Some(panel_render_callbacks.rasterization_options.clone()),
                     custom_render_callback: None,
                 };
+            }
+            _ => {
+                let scene_resources = scene_context.resources.borrow();
+
+                let camera_arena = scene_resources.camera.borrow();
+
+                if let Some(entry) = &camera_arena.entries[0] {
+                    let camera_handle = Handle {
+                        index: 0,
+                        uuid: entry.uuid,
+                    };
+
+                    let mut panel_arena = panel_arenas.camera_attributes.borrow_mut();
+
+                    window_title = "Camera".to_string();
+
+                    panel_id = format!("{}_CameraAttributesPanel", window_id);
+                    panel_instance_data = PanelInstanceData {
+                        panel_instance: panel_arena.insert(
+                            Uuid::new_v4(),
+                            CameraAttributesPanel::new(panel_id.as_str(), camera_handle),
+                        ),
+                        render: Some(panel_render_callbacks.camera_attributes.clone()),
+                        custom_render_callback: None,
+                    };
+                } else {
+                    panic!()
+                }
             }
         }
 

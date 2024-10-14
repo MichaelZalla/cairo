@@ -19,7 +19,7 @@ use self::frustum::{Frustum, FAR_PLANE_POINTS_CLIP_SPACE, NEAR_PLANE_POINTS_CLIP
 
 pub mod frustum;
 
-#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CameraProjectionKind {
     #[default]
     Perspective,
@@ -30,7 +30,7 @@ impl fmt::Display for CameraProjectionKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "CameraProjectionKind ({})",
+            "{}",
             match self {
                 CameraProjectionKind::Perspective => "Perspective",
                 CameraProjectionKind::Orthographic => "Orthographic",
@@ -38,6 +38,11 @@ impl fmt::Display for CameraProjectionKind {
         )
     }
 }
+
+pub static CAMERA_PROJECTION_KINDS: [CameraProjectionKind; 2] = [
+    CameraProjectionKind::Perspective,
+    CameraProjectionKind::Orthographic,
+];
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct CameraOrthographicExtent {

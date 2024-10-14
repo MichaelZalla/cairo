@@ -28,7 +28,7 @@ use cairo::{
     matrix::Mat4,
     resource::handle::Handle,
     scene::{
-        context::utils::make_cube_scene,
+        context::{utils::make_cube_scene, SceneContext},
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -46,7 +46,7 @@ use cairo::{
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
     ui::{context::GLOBAL_UI_CONTEXT, ui_box::tree::UIBoxTree, window::list::WindowList},
-    vec::vec3,
+    vec::{vec3, vec4::Vec4},
 };
 
 use command::{process_commands, CommandBuffer};
@@ -65,6 +65,7 @@ mod window;
 
 thread_local! {
     pub static SETTINGS: RefCell<Settings> = Default::default();
+    pub static SCENE_CONTEXT: SceneContext = Default::default();
     pub static COMMAND_BUFFER: CommandBuffer = Default::default();
 }
 
@@ -140,7 +141,16 @@ fn main() -> Result<(), String> {
 
     // Initializes a 3D scene context (default cube scene).
 
-    let (scene_context, shader_context) = make_cube_scene(framebuffer.width_over_height)?;
+    let shader_context = {
+        let (scene_context, shader_context) = make_cube_scene(framebuffer.width_over_height)?;
+
+        SCENE_CONTEXT.with(|ctx| {
+            RefCell::swap(&ctx.resources, &scene_context.resources);
+            RefCell::swap(&ctx.scenes, &scene_context.scenes);
+        });
+
+        shader_context
+    };
 
     // Initializes a shader context.
 
@@ -148,13 +158,17 @@ fn main() -> Result<(), String> {
 
     // Initializes a software renderer (pipeline).
 
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
+    let mut renderer = {
+        let scene_resources = SCENE_CONTEXT.with(|ctx| ctx.resources.clone());
+
+        SoftwareRenderer::new(
+            shader_context_rc.clone(),
+            scene_resources,
+            DEFAULT_VERTEX_SHADER,
+            DEFAULT_FRAGMENT_SHADER,
+            Default::default(),
+        )
+    };
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
@@ -171,9 +185,14 @@ fn main() -> Result<(), String> {
         render_options: Rc::new(panel_render_callback!(panel_arenas, render_options)),
         shader_options: Rc::new(panel_render_callback!(panel_arenas, shader_options)),
         rasterization_options: Rc::new(panel_render_callback!(panel_arenas, rasterization_options)),
+        camera_attributes: Rc::new(panel_render_callback!(panel_arenas, camera_attributes)),
     };
 
-    let window_list = make_window_list(panel_arenas, panel_render_callbacks)?;
+    let window_list = {
+        SCENE_CONTEXT.with(|ctx| -> Result<WindowList, String> {
+            make_window_list(ctx, &panel_arenas, panel_render_callbacks)
+        })
+    }?;
 
     let window_list_rc = Rc::new(RefCell::new(window_list));
 
@@ -238,11 +257,13 @@ fn main() -> Result<(), String> {
         {
             // Render scene.
 
-            let resources = (*scene_context.resources).borrow();
-            let mut scenes = scene_context.scenes.borrow_mut();
-            let scene = &mut scenes[0];
+            SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
+                let resources = ctx.resources.borrow();
+                let mut scenes = ctx.scenes.borrow_mut();
+                let scene = &mut scenes[0];
 
-            scene.render(&resources, &renderer_rc, None)?;
+                scene.render(&resources, &renderer_rc, None)
+            })?;
         }
 
         {
@@ -317,16 +338,16 @@ fn main() -> Result<(), String> {
     fn update_node(
         _current_world_transform: &Mat4,
         node: &mut SceneNode,
-        _resources: &SceneResources,
+        resources: &SceneResources,
         app: &App,
         _mouse_state: &MouseState,
         _keyboard_state: &KeyboardState,
         _game_controller_state: &GameControllerState,
-        _shader_context: &mut ShaderContext,
+        shader_context: &mut ShaderContext,
     ) -> Result<bool, String> {
         let uptime = app.timing_info.uptime_seconds;
 
-        let (node_type, _handle) = (node.get_type(), node.get_handle());
+        let (node_type, handle) = (node.get_type(), node.get_handle());
 
         match node_type {
             SceneNodeType::Entity => {
@@ -338,7 +359,23 @@ fn main() -> Result<(), String> {
 
                 Ok(true)
             }
-            SceneNodeType::Camera => Ok(true),
+            SceneNodeType::Camera => {
+                let camera_arena = resources.camera.borrow();
+                let camera_handle = handle.unwrap();
+
+                if let Ok(entry) = camera_arena.get(&camera_handle) {
+                    let camera = &entry.item;
+
+                    shader_context
+                        .set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
+
+                    shader_context.set_view_inverse_transform(camera.get_view_inverse_transform());
+
+                    shader_context.set_projection(camera.get_projection());
+                }
+
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }
@@ -544,9 +581,9 @@ fn main() -> Result<(), String> {
         // Update our scene graph, shader context, and rendering and shading
         // options.
 
-        {
-            let resources = scene_context.resources.borrow_mut();
-            let mut scenes = scene_context.scenes.borrow_mut();
+        SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
+            let resources = ctx.resources.borrow_mut();
+            let mut scenes = ctx.scenes.borrow_mut();
             let mut shader_context = (*shader_context_rc).borrow_mut();
 
             shader_context.set_ambient_light(None);
@@ -595,7 +632,9 @@ fn main() -> Result<(), String> {
             // renderer.options.update(keyboard_state);
 
             renderer.shader_options.update(keyboard_state);
-        }
+
+            Ok(())
+        })?;
 
         // Binds the latest user inputs (and time delta) to the global UI context.
 
