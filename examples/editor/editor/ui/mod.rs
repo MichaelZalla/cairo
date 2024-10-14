@@ -1,10 +1,11 @@
 use cairo::ui::{
     context::UIContext,
-    ui_box::{
-        tree::UIBoxTree,
-        utils::{button, container, greedy_container, spacer},
-        UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+    fastpath::{
+        button::button,
+        container::{container, greedy_container},
+        spacer::spacer,
     },
+    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 

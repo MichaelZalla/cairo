@@ -1,4 +1,4 @@
-use cairo::ui::ui_box::{tree::UIBoxTree, utils::spacer};
+use cairo::ui::{fastpath::spacer::spacer, ui_box::tree::UIBoxTree};
 
 pub fn stack<C, I>(
     items: &[I],

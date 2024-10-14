@@ -4,9 +4,9 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
-    ui::ui_box::{
-        tree::UIBoxTree,
-        utils::{spacer, text},
+    ui::{
+        fastpath::{spacer::spacer, text::text},
+        ui_box::tree::UIBoxTree,
     },
 };
 

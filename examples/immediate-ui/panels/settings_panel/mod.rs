@@ -6,11 +6,12 @@ use cairo::{
     serde::PostDeserialize,
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        ui_box::{
-            tree::UIBoxTree,
-            utils::{slider, spacer, text, SliderOptions},
-            UIBox, UIBoxFeatureFlag,
+        fastpath::{
+            slider::{slider, SliderOptions},
+            spacer::spacer,
+            text::text,
         },
+        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag},
     },
 };
 

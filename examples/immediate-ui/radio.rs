@@ -5,11 +5,8 @@ use cairo::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        ui_box::{
-            tree::UIBoxTree,
-            utils::{container, spacer, text},
-            UIBox, UIBoxFeatureFlag, UILayoutDirection,
-        },
+        fastpath::{container::container, spacer::spacer, text::text},
+        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };

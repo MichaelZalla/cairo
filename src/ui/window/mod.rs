@@ -13,11 +13,11 @@ use crate::{
 use super::{
     context::{UIContext, GLOBAL_UI_CONTEXT},
     extent::ScreenExtent,
+    fastpath::{button::button, container::container, spacer::greedy_spacer, text::text},
     panel::tree::PanelTree,
     ui_box::{
         interaction::UIBoxInteraction,
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        utils::{button, container, greedy_spacer, text},
         UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,

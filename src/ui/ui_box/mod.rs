@@ -31,7 +31,6 @@ pub mod interaction;
 pub mod key;
 pub mod styles;
 pub mod tree;
-pub mod utils;
 
 bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
@@ -485,7 +484,7 @@ impl UIBox {
             GLOBAL_UI_CONTEXT.with(|ctx| -> Result<(), String> { self.draw_text(ctx, target) })?;
         }
 
-        // Set cursor based on any active drag handle.
+        // Sets cursor based on any active drag handle.
 
         match &self.hot_drag_handle {
             Some(handle) => {

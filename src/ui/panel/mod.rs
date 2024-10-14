@@ -9,9 +9,10 @@ use crate::resource::handle::Handle;
 use crate::color::Color;
 
 use super::{
+    fastpath::text::text,
     ui_box::{
-        interaction::UIBoxInteraction, tree::UIBoxTree, utils::text, UIBox,
-        UIBoxCustomRenderCallback, UIBoxFeatureFlag, UILayoutDirection,
+        interaction::UIBoxInteraction, tree::UIBoxTree, UIBox, UIBoxCustomRenderCallback,
+        UIBoxFeatureFlag, UILayoutDirection,
     },
     window::Window,
     UISize, UISizeWithStrictness,

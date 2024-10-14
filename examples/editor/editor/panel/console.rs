@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use cairo::{
     serde::PostDeserialize,
-    ui::ui_box::{tree::UIBoxTree, utils::text},
+    ui::{fastpath::text::text, ui_box::tree::UIBoxTree},
 };
 
 use super::PanelInstance;
