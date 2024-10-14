@@ -52,6 +52,7 @@ pub struct UIInputEvents {
 pub struct UIContextDebugOptions {
     pub draw_box_boundaries: bool,
     pub draw_active_hover_indicator: bool,
+    pub draw_drag_handles: bool,
 }
 
 pub struct UIContext<'a> {

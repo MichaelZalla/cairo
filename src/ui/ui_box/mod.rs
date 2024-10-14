@@ -1,7 +1,6 @@
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
-    mem,
     rc::Rc,
 };
 
@@ -15,9 +14,7 @@ use crate::{
     animation::{exponential, lerp},
     buffer::Buffer2D,
     collections::tree::node::Node,
-    color::{self, Color},
     device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
-    graphics::{text::TextOperation, Graphics},
     resource::handle::Handle,
     ui::context::GLOBAL_UI_CONTEXT,
 };
@@ -29,6 +26,7 @@ use tree::FocusedTransitionInfo;
 
 use super::{extent::ScreenExtent, UISizeWithStrictness, UI_2D_AXIS_COUNT};
 
+pub mod feature;
 pub mod interaction;
 pub mod key;
 pub mod styles;
@@ -77,9 +75,6 @@ impl fmt::Display for UILayoutDirection {
 }
 
 pub static UI_BOX_SPACER_ID: &str = "__SPACER__";
-
-pub static UI_BOX_HOT_COLOR: Color = color::RED;
-pub static UI_BOX_ACTIVE_COLOR: Color = color::YELLOW;
 
 pub static UI_BOX_HOT_TRANSITION_RATE: f32 = 15.0;
 pub static UI_BOX_ACTIVE_TRANSITION_RATE: f32 = 15.0;
@@ -453,9 +448,6 @@ impl UIBox {
     }
 
     pub fn render_preorder(&self, target: &mut Buffer2D) -> Result<(), String> {
-        let (x, y) = self.get_pixel_coordinates();
-        let (width, height) = self.get_computed_pixel_size();
-
         let is_active_transitioning = self.hot_transition < 0.999;
         let is_hot_transitioning = self.hot_transition < 0.999;
 
@@ -476,64 +468,21 @@ impl UIBox {
             }
         };
 
+        // DrawFill path.
+
         if should_draw_fill {
-            let fill_color = if draw_active_hover_indicators {
-                let end = self.styles.fill_color.unwrap_or_default();
-
-                if is_active_transitioning {
-                    let with_hot = UI_BOX_HOT_COLOR.lerp_linear(end, self.hot_transition);
-
-                    Some(UI_BOX_ACTIVE_COLOR.lerp_linear(with_hot, self.active_transition))
-                } else if is_hot_transitioning {
-                    Some(UI_BOX_HOT_COLOR.lerp_linear(end, 0.5 + self.hot_transition / 2.0))
-                } else {
-                    self.styles.fill_color
-                }
-            } else {
-                self.styles.fill_color
-            };
-
-            if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
-                let radius = (width.min(height) as f32 / 2.0).floor();
-                let center = (x + width / 2, y + height / 2);
-
-                Graphics::circle(
-                    target,
-                    center.0,
-                    center.1,
-                    radius as u32,
-                    fill_color.as_ref(),
-                    None,
-                );
-            } else {
-                Graphics::rectangle(target, x, y, width, height, fill_color.as_ref(), None);
-            }
+            self.draw_fill(
+                is_hot_transitioning,
+                is_active_transitioning,
+                draw_active_hover_indicators,
+                target,
+            );
         }
 
+        // DrawText path.
+
         if self.features.contains(UIBoxFeatureFlag::DrawText) {
-            let text_content = self.text_content.as_ref().expect("Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!");
-
-            let text_color = self.styles.text_color.unwrap_or_default();
-
-            GLOBAL_UI_CONTEXT.with(|ctx| {
-                let mut text_cache = ctx.text_cache.borrow_mut();
-                let font_info = ctx.font_info.borrow();
-                let mut font_cache_rc = ctx.font_cache.borrow_mut();
-                let font_cache = font_cache_rc.as_mut().expect("Found a UIBox with `DrawText` feature enabled when `GLOBAL_UI_CONTEXT.font_cache` is `None`!");
-
-                Graphics::text(
-                    target,
-                    font_cache,
-                    if self.features.contains(UIBoxFeatureFlag::SkipTextCaching) { None } else { Some(&mut text_cache) },
-                    &font_info,
-                    &TextOperation {
-                        text: text_content,
-                        x,
-                        y,
-                        color: text_color
-                    }
-                ).unwrap();
-            });
+            GLOBAL_UI_CONTEXT.with(|ctx| -> Result<(), String> { self.draw_text(ctx, target) })?;
         }
 
         // Set cursor based on any active drag handle.
@@ -562,188 +511,41 @@ impl UIBox {
         children: &[Rc<RefCell<Node<UIBox>>>],
         target: &mut Buffer2D,
     ) -> Result<(), String> {
-        if self.features.contains(UIBoxFeatureFlag::DrawChildDividers) && !children.is_empty() {
-            let divider_color = self.styles.border_color.unwrap_or_default();
+        // DrawChildDividers path.
 
-            if children.len() > 1 {
-                for i in 0..(children.len() - 1) {
-                    let (child_a_rc, child_b_rc) = (&children[i], &children[i + 1]);
-
-                    let (x1, y1, x2, y2) = {
-                        let child_a_node = &*child_a_rc.borrow();
-                        let child_a_ui_box = &child_a_node.data;
-
-                        let child_b_node = &*child_b_rc.borrow();
-                        let child_b_ui_box = &child_b_node.data;
-
-                        let min_top = child_a_ui_box
-                            .global_bounds
-                            .top
-                            .min(child_b_ui_box.global_bounds.top)
-                            as i32;
-
-                        let max_bottom = child_a_ui_box
-                            .global_bounds
-                            .bottom
-                            .max(child_b_ui_box.global_bounds.bottom)
-                            as i32;
-
-                        let min_left = child_a_ui_box
-                            .global_bounds
-                            .left
-                            .min(child_b_ui_box.global_bounds.left)
-                            as i32;
-
-                        let max_right = child_a_ui_box
-                            .global_bounds
-                            .right
-                            .max(child_b_ui_box.global_bounds.right)
-                            as i32;
-
-                        match self.layout_direction {
-                            UILayoutDirection::TopToBottom => {
-                                // Draw a horizontal line across the top of this child.
-
-                                (
-                                    min_left,
-                                    child_b_ui_box.global_bounds.top as i32,
-                                    max_right,
-                                    child_b_ui_box.global_bounds.top as i32,
-                                )
-                            }
-                            UILayoutDirection::LeftToRight => {
-                                // Draw a vertical line along the left of this child.
-
-                                (
-                                    child_b_ui_box.global_bounds.left as i32,
-                                    min_top,
-                                    child_b_ui_box.global_bounds.left as i32,
-                                    max_bottom,
-                                )
-                            }
-                        }
-                    };
-
-                    Graphics::line(target, x1, y1, x2, y2, &divider_color);
-                }
-            }
+        if self.features.contains(UIBoxFeatureFlag::DrawChildDividers) && children.len() > 1 {
+            self.draw_child_dividers(children, target);
         }
 
-        #[cfg(debug_assertions)]
-        let draw_box_boundaries =
-            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_box_boundaries);
+        // DrawBorder path.
 
-        #[cfg(not(debug_assertions))]
-        let draw_box_boundaries = false;
+        let draw_box_boundaries = if cfg!(debug_assertions) {
+            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_box_boundaries)
+        } else {
+            false
+        };
 
         if self.features.contains(UIBoxFeatureFlag::DrawBorder) || draw_box_boundaries {
-            let (x, y) = self.get_pixel_coordinates();
-            let (width, height) = self.get_computed_pixel_size();
+            self.draw_border(draw_box_boundaries, target);
+        }
 
-            let (x1, y1, x2, y2) = (
-                x as i32,
-                y as i32,
-                (x + width - 1) as i32,
-                (y + height - 1) as i32,
-            );
+        // EmbossAndDeboss path.
 
-            let border_color = if draw_box_boundaries {
-                Some(&color::BLUE)
-            } else if self.features.contains(UIBoxFeatureFlag::DrawBorder)
-                && self.styles.border_color.is_some()
-            {
-                self.styles.border_color.as_ref()
-            } else {
-                None
-            };
+        if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
+            self.emboss_and_deboss(target);
+        }
 
-            let fill_color = if draw_box_boundaries && self.is_spacer() {
-                Some(&color::RED)
-            } else {
-                None
-            };
+        // DrawDebugDragHandles path.
 
-            if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
-                let radius = width.min(height) as f32 / 2.0;
-                let center = (x + width / 2, y + height / 2);
+        let draw_drag_handles = if cfg!(debug_assertions) {
+            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_drag_handles)
+        } else {
+            false
+        };
 
-                Graphics::circle(
-                    target,
-                    center.0,
-                    center.1,
-                    radius as u32,
-                    fill_color,
-                    border_color,
-                );
-            } else {
-                Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
-            }
-
-            if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
-                let (mut top_left, mut bottom_right) = (color::WHITE, color::BLACK);
-
-                // Emboss-deboss.
-
-                if self.active {
-                    mem::swap(&mut top_left, &mut bottom_right);
-                }
-
-                // Top edge.
-                target.horizontal_line_unsafe(x1 as u32, x2 as u32, y1 as u32, top_left.to_u32());
-
-                // Bottom edge.
-                target.horizontal_line_unsafe(
-                    x1 as u32,
-                    x2 as u32,
-                    y2 as u32,
-                    bottom_right.to_u32(),
-                );
-
-                // Left edge.
-                target.vertical_line_unsafe(x1 as u32, y1 as u32, y2 as u32, top_left.to_u32());
-
-                // Right edge.
-                target.vertical_line_unsafe(x2 as u32, y1 as u32, y2 as u32, bottom_right.to_u32());
-            }
-
-            // Drag handles
-
-            #[cfg(debug_assertions)]
-            {
-                if draw_box_boundaries {
-                    let handle = match &self.active_drag_handle {
-                        Some(active_handle) => Some(active_handle),
-                        None => match &self.hot_drag_handle {
-                            Some(hot_handle) => Some(hot_handle),
-                            None => None,
-                        },
-                    };
-
-                    let color = match &self.active_drag_handle {
-                        Some(_) => color::BLUE.to_u32(),
-                        None => match &self.hot_drag_handle {
-                            Some(_) => color::RED.to_u32(),
-                            None => 0,
-                        },
-                    };
-
-                    match &handle {
-                        Some(handle) => {
-                            match handle {
-                                UIBoxDragHandle::Top => target
-                                    .horizontal_line_unsafe(x1 as u32, x2 as u32, y1 as u32, color),
-                                UIBoxDragHandle::Bottom => target
-                                    .horizontal_line_unsafe(x1 as u32, x2 as u32, y2 as u32, color),
-                                UIBoxDragHandle::Left => target
-                                    .vertical_line_unsafe(x1 as u32, y1 as u32, y2 as u32, color),
-                                UIBoxDragHandle::Right => target
-                                    .vertical_line_unsafe(x2 as u32, y1 as u32, y2 as u32, color),
-                            }
-                        }
-                        None => (),
-                    }
-                }
-            }
+        #[cfg(debug_assertions)]
+        if draw_drag_handles {
+            self.draw_debug_drag_handles(target);
         }
 
         Ok(())
