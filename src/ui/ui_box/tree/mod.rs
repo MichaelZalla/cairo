@@ -992,6 +992,8 @@ fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_i
 
         cached_ui_box.global_bounds = ui_box.global_bounds;
 
+        cached_ui_box.expanded = ui_box.expanded;
+
         cached_ui_box.hot = ui_box.hot;
         cached_ui_box.hot_transition = ui_box.hot_transition;
 
@@ -1002,6 +1004,8 @@ fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_i
 
         cached_ui_box.hot_drag_handle = ui_box.hot_drag_handle;
         cached_ui_box.active_drag_handle = ui_box.active_drag_handle;
+
+        cached_ui_box.expanded = ui_box.expanded;
 
         cached_ui_box.last_read_at_frame = frame_index;
     } else if !ui_box.key.is_null() {

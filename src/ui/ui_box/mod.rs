@@ -108,6 +108,7 @@ pub struct UIBox {
     pub parent_layout_direction: UILayoutDirection,
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     pub styles: UIBoxStyles,
+    pub expanded: bool,
     #[serde(skip)]
     pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
     #[serde(skip)]
@@ -145,6 +146,7 @@ impl Debug for UIBox {
             .field("parent_layout_direction", &self.parent_layout_direction)
             .field("semantic_sizes", &self.semantic_sizes)
             .field("styles", &self.styles)
+            .field("expanded", &self.expanded)
             .field(
                 "computed_relative_position",
                 &self.computed_relative_position,

@@ -4,7 +4,7 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
-        fastpath::{spacer::spacer, text::text},
+        fastpath::{container::collapsible_container, spacer::spacer, text::text},
         ui_box::tree::UIBoxTree,
     },
 };
@@ -99,76 +99,81 @@ impl PanelInstance for ShaderOptionsPanel {
 
                 // Texture maps.
 
-                tree.push(text(
-                    format!("ShaderOptionsPanel{}.textureMaps.label", self.id).to_string(),
-                    "Texture maps".to_string(),
-                ))?;
-
-                let checkboxes = vec![
-                    Checkbox::new(
-                        "shader_options.diffuse_color_maps",
-                        "Diffuse color maps",
-                        current_settings.shader_options.base_color_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.ambient_occlusion_maps",
-                        "Ambient occlusion maps",
-                        current_settings
-                            .shader_options
-                            .ambient_occlusion_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.roughness_maps",
-                        "Roughness maps",
-                        current_settings.shader_options.roughness_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.metallic_maps",
-                        "Metallic maps",
-                        current_settings.shader_options.metallic_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.normal_maps",
-                        "Normal maps",
-                        current_settings.shader_options.normal_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.displacement_maps",
-                        "Displacement maps",
-                        current_settings.shader_options.displacement_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.specular_maps",
-                        "Specular maps",
-                        current_settings
-                            .shader_options
-                            .specular_exponent_mapping_active,
-                    ),
-                    Checkbox::new(
-                        "shader_options.emissive_maps",
-                        "Emissive maps",
-                        current_settings
-                            .shader_options
-                            .emissive_color_mapping_active,
-                    ),
-                ];
-
-                let toggled_indices = checkbox_group(
-                    format!("RenderOptionsPanel{}.textureMaps.checkbox_group", self.id).to_string(),
-                    &checkboxes,
+                collapsible_container(
+                    format!("ShaderOptionsPanel{}.textureMaps", self.id).to_string(),
+                    "Texture mapping".to_string(),
                     tree,
-                )?;
+                    |tree| -> Result<(), String> {
+                        let checkboxes = vec![
+                            Checkbox::new(
+                                "shader_options.diffuse_color_maps",
+                                "Diffuse color maps",
+                                current_settings.shader_options.base_color_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.ambient_occlusion_maps",
+                                "Ambient occlusion maps",
+                                current_settings
+                                    .shader_options
+                                    .ambient_occlusion_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.roughness_maps",
+                                "Roughness maps",
+                                current_settings.shader_options.roughness_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.metallic_maps",
+                                "Metallic maps",
+                                current_settings.shader_options.metallic_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.normal_maps",
+                                "Normal maps",
+                                current_settings.shader_options.normal_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.displacement_maps",
+                                "Displacement maps",
+                                current_settings.shader_options.displacement_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.specular_maps",
+                                "Specular maps",
+                                current_settings
+                                    .shader_options
+                                    .specular_exponent_mapping_active,
+                            ),
+                            Checkbox::new(
+                                "shader_options.emissive_maps",
+                                "Emissive maps",
+                                current_settings
+                                    .shader_options
+                                    .emissive_color_mapping_active,
+                            ),
+                        ];
 
-                for index in toggled_indices {
-                    let checkbox = &checkboxes[index];
+                        let toggled_indices = checkbox_group(
+                            format!("ShaderOptionsPanel{}.textureMaps.checkbox_group", self.id)
+                                .to_string(),
+                            &checkboxes,
+                            tree,
+                        )
+                        .unwrap();
 
-                    let cmd_str =
-                        format!("set {} {}", checkbox.value, !checkbox.is_checked).to_string();
+                        for index in toggled_indices {
+                            let checkbox = &checkboxes[index];
 
-                    pending_queue.push_back((cmd_str, false));
-                }
+                            let cmd_str =
+                                format!("set {} {}", checkbox.value, !checkbox.is_checked)
+                                    .to_string();
 
-                Ok(())
+                            pending_queue.push_back((cmd_str, false));
+                        }
+
+                        Ok(())
+                    },
+                )
             })
         })
     }
