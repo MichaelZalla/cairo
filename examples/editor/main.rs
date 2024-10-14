@@ -253,7 +253,7 @@ fn main() -> Result<(), String> {
 
                 let main_window = Window::new(
                     main_window_id,
-                    "".to_string(),
+                    "Main window".to_string(),
                     WindowOptions::docked(window_info.window_resolution),
                     Some(render_main_window_header),
                     main_window_panel_tree,
