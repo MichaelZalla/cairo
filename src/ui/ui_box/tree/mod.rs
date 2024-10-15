@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
+use std::{cell::RefCell, fmt, rc::Rc};
 
 use crate::{
     buffer::Buffer2D,
@@ -950,7 +950,7 @@ impl<'a> UIBoxTree<'a> {
                 GLOBAL_UI_CONTEXT.with(|ctx| {
                     let mut cache = ctx.cache.borrow_mut();
 
-                    update_cache_entry(&mut cache, ui_box, frame_index);
+                    ui_box.cache(&mut cache, frame_index);
                 });
 
                 // Return the rendering result.
@@ -983,32 +983,5 @@ impl<'a> UIBoxTree<'a> {
         }
 
         Ok(())
-    }
-}
-
-fn update_cache_entry(cache: &mut HashMap<UIKey, UIBox>, ui_box: &UIBox, frame_index: u32) {
-    if cache.contains_key(&ui_box.key) {
-        let cached_ui_box = cache.get_mut(&ui_box.key).unwrap();
-
-        cached_ui_box.global_bounds = ui_box.global_bounds;
-
-        cached_ui_box.expanded = ui_box.expanded;
-
-        cached_ui_box.hot = ui_box.hot;
-        cached_ui_box.hot_transition = ui_box.hot_transition;
-
-        cached_ui_box.active = ui_box.active;
-        cached_ui_box.active_transition = ui_box.active_transition;
-
-        cached_ui_box.focused = ui_box.focused;
-
-        cached_ui_box.hot_drag_handle = ui_box.hot_drag_handle;
-        cached_ui_box.active_drag_handle = ui_box.active_drag_handle;
-
-        cached_ui_box.expanded = ui_box.expanded;
-
-        cached_ui_box.last_read_at_frame = frame_index;
-    } else if !ui_box.key.is_null() {
-        cache.insert(ui_box.key.clone(), ui_box.clone());
     }
 }

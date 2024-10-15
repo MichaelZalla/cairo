@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    collections::HashMap,
     fmt::{self, Debug},
     rc::Rc,
 };
@@ -550,6 +551,25 @@ impl UIBox {
         }
 
         Ok(())
+    }
+
+    pub(self) fn cache(&self, cache: &mut HashMap<UIKey, UIBox>, frame_index: u32) {
+        if cache.contains_key(&self.key) {
+            let cached = cache.get_mut(&self.key).unwrap();
+
+            cached.global_bounds = self.global_bounds;
+            cached.expanded = self.expanded;
+            cached.hot = self.hot;
+            cached.hot_transition = self.hot_transition;
+            cached.active = self.active;
+            cached.active_transition = self.active_transition;
+            cached.focused = self.focused;
+            cached.hot_drag_handle = self.hot_drag_handle;
+            cached.active_drag_handle = self.active_drag_handle;
+            cached.last_read_at_frame = frame_index;
+        } else if !self.key.is_null() {
+            cache.insert(self.key.clone(), self.clone());
+        }
     }
 }
 
