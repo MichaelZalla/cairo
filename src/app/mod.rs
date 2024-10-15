@@ -92,8 +92,6 @@ impl App {
         let canvas_texture =
             make_canvas_texture(window_info.canvas_resolution, &texture_creator, None).unwrap();
 
-        let event_subsystem = context.sdl_context.event().unwrap();
-
         let resizable = window_info.resizable;
 
         let window_info_rc = Rc::new(RefCell::new(window_info));
@@ -107,7 +105,7 @@ impl App {
 
         let event_watch = if resizable {
             let watch =
-                event_subsystem.add_event_watch(move |event| {
+                context.event_subsystem.add_event_watch(move |event| {
                     if let Event::Window {
                         timestamp: _timestamp,
                         window_id: _window_id,

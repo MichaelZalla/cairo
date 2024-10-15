@@ -4,7 +4,7 @@ use sdl2::{
     render::{BlendMode, Canvas, Texture, TextureCreator},
     ttf::Sdl2TtfContext,
     video::{Window, WindowContext},
-    Sdl,
+    EventSubsystem, Sdl,
 };
 
 use crate::{
@@ -19,6 +19,7 @@ pub struct ApplicationContext {
     pub sdl_context: Sdl,
     pub rendering_context: ApplicationRenderingContext,
     pub ttf_context: &'static Sdl2TtfContext,
+    pub event_subsystem: EventSubsystem,
     pub screen_width: u32,
     pub screen_height: u32,
     pub game_controllers: Vec<Option<GameController>>,
@@ -32,6 +33,8 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     let sdl_context = sdl2::init()?;
 
     println!("Initialized SDL v{}.", sdl2::version::version());
+
+    let event_subsystem = sdl_context.event().unwrap();
 
     sdl_context.mouse().show_cursor(window_info.show_cursor);
 
@@ -168,6 +171,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
 
             Ok(ApplicationContext {
                 sdl_context,
+                event_subsystem,
                 screen_width,
                 screen_height,
                 rendering_context,
