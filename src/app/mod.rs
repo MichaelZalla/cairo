@@ -293,11 +293,11 @@ impl App {
 
             let mut should_update_step_forward = false;
 
-            #[cfg(feature = "print_timing_info")]
-            println!(
-                "Slept for {} ticks, {}s, {}ms!",
-                ticks_slept, seconds_slept, self.timing_info.milliseconds_slept
-            );
+            // #[cfg(feature = "print_timing_info")]
+            // println!(
+            //     "Slept for {} ticks, {}s, {}ms!",
+            //     ticks_slept, seconds_slept, self.timing_info.milliseconds_slept
+            // );
 
             // Event polling
 
@@ -584,32 +584,32 @@ impl App {
 
             // Update current scene
 
-            let ticks_since_last_update: u64 =
-                timer_subsystem.performance_counter() - last_update_tick;
-
-            self.timing_info.seconds_since_last_update =
-                ticks_since_last_update as f32 / ticks_per_second as f32;
-
-            self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
-
             if !self.are_updates_paused || should_update_step_forward {
-                #[cfg(feature = "debug_cycle_counts")]
-                self.cycle_counters
-                    .get_mut(AppCycleCounter::UpdateCallback as usize)
-                    .start();
+                let ticks_since_last_update: u64 =
+                    timer_subsystem.performance_counter() - last_update_tick;
 
-                update(
-                    &mut self,
-                    &mut keyboard_state,
-                    &mut mouse_state,
-                    &mut game_controller.state,
-                )?;
+                self.timing_info.seconds_since_last_update =
+                    ticks_since_last_update as f32 / ticks_per_second as f32;
 
-                #[cfg(feature = "debug_cycle_counts")]
-                self.cycle_counters
-                    .get_mut(AppCycleCounter::UpdateCallback as usize)
-                    .end();
+                self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
             }
+
+            #[cfg(feature = "debug_cycle_counts")]
+            self.cycle_counters
+                .get_mut(AppCycleCounter::UpdateCallback as usize)
+                .start();
+
+            update(
+                &mut self,
+                &mut keyboard_state,
+                &mut mouse_state,
+                &mut game_controller.state,
+            )?;
+
+            #[cfg(feature = "debug_cycle_counts")]
+            self.cycle_counters
+                .get_mut(AppCycleCounter::UpdateCallback as usize)
+                .end();
 
             prev_mouse_position = mouse_state.position;
             prev_mouse_ndc_position = mouse_state.ndc_position;
@@ -671,14 +671,14 @@ impl App {
 
             #[cfg(feature = "print_timing_info")]
             if frames_rendered % 50 == 0 {
-                println!("timing_info={}", self.timing_info);
+                println!("FPS: {}", self.timing_info.frames_per_second);
             }
 
             frame_start = timer_subsystem.performance_counter();
 
             // Sleep if we can...
 
-            timer_subsystem.delay(self.timing_info.unused_milliseconds.floor() as u32);
+            // timer_subsystem.delay(self.timing_info.unused_milliseconds.floor() as u32);
 
             // @NOTE(mzalla) Will overflow, and that's okay.
             frames_rendered += 1;
