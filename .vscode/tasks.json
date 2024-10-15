@@ -54,10 +54,19 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
-        "kind": "build"
+        "kind": "build",
+        "isDefault": true
       },
       "label": "Rust: cargo run --example basic-window",
-      "command": "cargo run --example basic-window"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "basic-window",
+        "--features",
+        "print_timing_info",
+        "--release",
+      ]
     },
     {
       "type": "shell",
