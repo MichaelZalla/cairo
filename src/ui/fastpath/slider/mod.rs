@@ -1,10 +1,13 @@
-use crate::ui::{
-    context::GLOBAL_UI_CONTEXT,
-    ui_box::{
-        interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag,
-        UILayoutDirection,
+use crate::{
+    device::mouse::cursor::MouseCursorKind,
+    ui::{
+        context::GLOBAL_UI_CONTEXT,
+        ui_box::{
+            interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag,
+            UILayoutDirection,
+        },
+        UISize, UISizeWithStrictness,
     },
-    UISize, UISizeWithStrictness,
 };
 
 use super::{spacer::greedy_spacer, text::text};
@@ -92,6 +95,12 @@ pub fn slider(
                 Ok(())
             })
         })?;
+
+    if interaction_result.mouse_interaction_in_bounds.is_hovering {
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            *ctx.cursor_kind.borrow_mut() = MouseCursorKind::DragLeftRight;
+        });
+    }
 
     let slider_result: Option<f32> = GLOBAL_UI_CONTEXT.with(|ctx| -> Option<f32> {
         let cache = ctx.cache.borrow();
