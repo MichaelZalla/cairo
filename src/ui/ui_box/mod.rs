@@ -110,6 +110,7 @@ pub struct UIBox {
     pub semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
     pub styles: UIBoxStyles,
     pub expanded: bool,
+    pub selected_item_index: usize,
     #[serde(skip)]
     pub computed_relative_position: [f32; UI_2D_AXIS_COUNT], // Position relative to parent, in pixels.
     #[serde(skip)]
@@ -148,6 +149,7 @@ impl Debug for UIBox {
             .field("semantic_sizes", &self.semantic_sizes)
             .field("styles", &self.styles)
             .field("expanded", &self.expanded)
+            .field("selected_item_index", &self.selected_item_index)
             .field(
                 "computed_relative_position",
                 &self.computed_relative_position,
@@ -559,6 +561,7 @@ impl UIBox {
 
             cached.global_bounds = self.global_bounds;
             cached.expanded = self.expanded;
+            cached.selected_item_index = self.selected_item_index;
             cached.hot = self.hot;
             cached.hot_transition = self.hot_transition;
             cached.active = self.active;
