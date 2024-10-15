@@ -159,14 +159,10 @@ where
         self.data.iter_mut()
     }
 
-    pub fn clear(&mut self, value: Option<T>) -> &Self {
+    pub fn clear(&mut self, value: Option<T>) {
         let fill_value: T = value.unwrap_or_default();
 
-        for i in 0..self.data.len() {
-            self.data[i] = fill_value;
-        }
-
-        self
+        self.data.fill(fill_value);
     }
 
     pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, data: &[T]) {
