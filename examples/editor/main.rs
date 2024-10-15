@@ -334,8 +334,9 @@ fn main() -> Result<(), String> {
     // user is actively resizing the main application window.
 
     let render = |frame_index: Option<u32>,
-                  new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
+                  new_resolution: Option<Resolution>,
+                  canvas: &mut [u8]|
+     -> Result<(), String> {
         let mut current_frame_index = current_frame_index_rc.borrow_mut();
 
         if let Some(index) = frame_index {
@@ -378,7 +379,9 @@ fn main() -> Result<(), String> {
             }
         });
 
-        Ok(framebuffer.get_all().clone())
+        framebuffer.copy_to(canvas);
+
+        Ok(())
     };
 
     let (app, _event_watch) = App::new(&mut window_info, &render);

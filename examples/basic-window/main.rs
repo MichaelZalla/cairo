@@ -29,24 +29,28 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = RefCell::new(framebuffer);
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   canvas: &mut [u8]|
+     -> Result<(), String> {
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
         // Clears pixel buffer
 
         framebuffer.clear(None);
 
-        // @TODO Write some pixel data to the pixel buffer,
-        //       based on some borrowed state.
+        // @TODO Draw some things onto the main framebuffer.
 
-        return Ok(framebuffer.get_all().clone());
+        // Blit our framebuffer to the native window's surface.
+
+        framebuffer.copy_to(canvas);
+
+        Ok(())
     };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    // Create and run our app.
 
-    // Set up our app
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     let mut update = |_app: &mut App,
                       _keyboard_state: &mut KeyboardState,
@@ -54,7 +58,7 @@ fn main() -> Result<(), String> {
                       _game_controller_state: &mut GameControllerState|
      -> Result<(), String> { Ok(()) };
 
-    app.run(&mut update, &render_scene_to_framebuffer)?;
+    app.run(&mut update, &render_to_window_canvas)?;
 
     Ok(())
 }

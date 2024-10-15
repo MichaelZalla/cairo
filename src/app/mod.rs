@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::ptr;
 use std::rc::Rc;
 
 use sdl2::event::{EventWatch, WindowEvent};
@@ -73,7 +72,7 @@ pub struct App {
 impl App {
     pub fn new<'a>(
         window_info: &mut AppWindowInfo,
-        rod: &'a impl Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
+        rod: &'a impl Fn(Option<u32>, Option<Resolution>, &mut [u8]) -> Result<(), String>,
     ) -> (Self, Option<EventWatch<'a, impl Fn(Event) + 'a>>) {
         let context = make_application_context(window_info).unwrap();
 
@@ -246,7 +245,7 @@ impl App {
             &mut MouseState,
             &mut GameControllerState,
         ) -> Result<(), String>,
-        R: Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
+        R: Fn(Option<u32>, Option<Resolution>, &mut [u8]) -> Result<(), String>,
     {
         let timer_subsystem = self.context.sdl_context.timer()?;
 
@@ -796,48 +795,37 @@ fn render_and_present(
     mut cycle_counters: Option<&mut CycleCounters>,
     current_frame_index: Option<u32>,
     new_resolution: Option<Resolution>,
-    render: &impl Fn(Option<u32>, Option<Resolution>) -> Result<Vec<u32>, String>,
+    render: &impl Fn(Option<u32>, Option<Resolution>, &mut [u8]) -> Result<(), String>,
 ) -> Result<(), String> {
-    if let Some(counters) = cycle_counters.as_mut() {
-        counters
-            .get_mut(AppCycleCounter::RenderAndPresent as usize)
-            .start();
-        counters
-            .get_mut(AppCycleCounter::RenderCallback as usize)
-            .start();
-    }
-
-    let render_result = render(current_frame_index, new_resolution);
-
-    if let Some(counters) = cycle_counters.as_mut() {
-        counters
-            .get_mut(AppCycleCounter::RenderCallback as usize)
-            .end();
-
-        counters
-            .get_mut(AppCycleCounter::CopyAndPresent as usize)
-            .start();
-    }
-
-    canvas_texture
-        .with_lock(None, |write_only_byte_array, _pitch| {
+    canvas_texture.with_lock(
+        None,
+        |write_only_byte_array, _pitch| -> Result<(), String> {
             // Render current scene
 
-            match render_result {
-                Ok(pixels_as_u32_slice) => unsafe {
-                    let pixels_as_u8_slice: &[u8] = &*(ptr::slice_from_raw_parts(
-                        pixels_as_u32_slice.as_ptr() as *const u8,
-                        pixels_as_u32_slice.len() * 4,
-                    ));
-
-                    write_only_byte_array.copy_from_slice(pixels_as_u8_slice);
-                },
-                Err(_e) => {
-                    // Do nothing?
-                }
+            if let Some(counters) = cycle_counters.as_mut() {
+                counters
+                    .get_mut(AppCycleCounter::RenderAndPresent as usize)
+                    .start();
+                counters
+                    .get_mut(AppCycleCounter::RenderCallback as usize)
+                    .start();
             }
-        })
-        .unwrap();
+
+            render(current_frame_index, new_resolution, write_only_byte_array)?;
+
+            if let Some(counters) = cycle_counters.as_mut() {
+                counters
+                    .get_mut(AppCycleCounter::RenderCallback as usize)
+                    .end();
+
+                counters
+                    .get_mut(AppCycleCounter::CopyAndPresent as usize)
+                    .start();
+            }
+
+            Ok(())
+        },
+    )??;
 
     // Flip buffers
 

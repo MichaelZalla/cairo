@@ -39,11 +39,12 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   _canvas: &mut [u8]|
+     -> Result<(), String> { Ok(()) };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -423,14 +424,15 @@ fn main() -> Result<(), String> {
 
         renderer.options.update(keyboard_state);
 
-        renderer
-            .shader_options
-            .update(keyboard_state);
+        renderer.shader_options.update(keyboard_state);
 
         Ok(())
     };
 
-    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
+    let render = |_frame_index: Option<u32>,
+                  _new_resolution: Option<Resolution>,
+                  canvas: &mut [u8]|
+     -> Result<(), String> {
         // Render scene.
 
         let resources = scene_context_rc.resources.borrow();
@@ -447,7 +449,9 @@ fn main() -> Result<(), String> {
                     Some(color_buffer_lock) => {
                         let color_buffer = color_buffer_lock.borrow();
 
-                        Ok(color_buffer.get_all().clone())
+                        color_buffer.copy_to(canvas);
+
+                        Ok(())
                     }
                     None => panic!(),
                 }

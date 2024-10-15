@@ -60,11 +60,12 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let render_scene_to_framebuffer = |_frame_index,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
+    let render_to_window_canvas = |_frame_index,
+                                   _new_resolution: Option<Resolution>,
+                                   _canvas: &mut [u8]|
+     -> Result<(), String> { Ok(()) };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -556,7 +557,10 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let render = |frame_index, new_resolution: Option<Resolution>| -> Result<Vec<u32>, String> {
+    let render = |frame_index: Option<u32>,
+                  new_resolution: Option<Resolution>,
+                  canvas: &mut [u8]|
+     -> Result<(), String> {
         if let Some(index) = frame_index {
             let mut current_frame_index = current_frame_index_rc.borrow_mut();
 
@@ -607,7 +611,9 @@ fn main() -> Result<(), String> {
                         //     );
                         // }
 
-                        Ok(color_buffer.get_all().clone())
+                        color_buffer.copy_to(canvas);
+
+                        Ok(())
                     }
                     None => panic!(),
                 }

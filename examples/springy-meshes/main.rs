@@ -15,7 +15,6 @@ use draw_wind_velocity::draw_wind_velocity;
 use make_simulation::make_simulation;
 use renderable::Renderable;
 
-mod static_line_segment_collider;
 mod coordinates;
 mod draw_collider;
 mod draw_wind_velocity;
@@ -26,6 +25,7 @@ mod renderable;
 mod simulation;
 mod springy_mesh;
 mod state_vector;
+mod static_line_segment_collider;
 mod strut;
 
 fn main() -> Result<(), String> {
@@ -57,9 +57,10 @@ fn main() -> Result<(), String> {
 
     let simulation_rc = RefCell::new(simulation);
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   new_resolution: Option<Resolution>,
+                                   canvas: &mut [u8]|
+     -> Result<(), String> {
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
         let simulation = simulation_rc.borrow();
@@ -84,10 +85,12 @@ fn main() -> Result<(), String> {
             draw_collider(collider, &mut framebuffer, &framebuffer_center);
         }
 
-        Ok(framebuffer.get_all().clone())
+        framebuffer.copy_to(canvas);
+
+        Ok(())
     };
 
-    let (mut app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (mut app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     app.pause_updates();
 
@@ -118,11 +121,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let render = |frame_index, new_resolution| -> Result<Vec<u32>, String> {
-        render_scene_to_framebuffer(frame_index, new_resolution)
-    };
-
-    app.run(&mut update, &render)?;
+    app.run(&mut update, &render_to_window_canvas)?;
 
     Ok(())
 }

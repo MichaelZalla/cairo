@@ -44,11 +44,12 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   _canvas: &mut [u8]|
+     -> Result<(), String> { Ok(()) };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     // Default framebuffer
 
@@ -197,14 +198,15 @@ fn main() -> Result<(), String> {
 
         renderer.options.update(keyboard_state);
 
-        renderer
-            .shader_options
-            .update(keyboard_state);
+        renderer.shader_options.update(keyboard_state);
 
         Ok(())
     };
 
-    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
+    let render = |_frame_index: Option<u32>,
+                  _new_resolution: Option<Resolution>,
+                  canvas: &mut [u8]|
+     -> Result<(), String> {
         // Render point shadow map.
 
         update_point_light_shadow_maps(
@@ -258,7 +260,9 @@ fn main() -> Result<(), String> {
                         //     }
                         // }
 
-                        Ok(color_buffer.get_all().clone())
+                        color_buffer.copy_to(canvas);
+
+                        Ok(())
                     }
                     None => panic!(),
                 }

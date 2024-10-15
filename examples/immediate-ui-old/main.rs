@@ -49,13 +49,40 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
+    // Initialize framebuffer with attachments
+
+    let framebuffer = Framebuffer::new(
+        window_info.window_resolution.width,
+        window_info.window_resolution.height,
+    );
+
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+
+    framebuffer_rc
+        .borrow_mut()
+        .create_attachment(FramebufferAttachmentKind::Color, None, None);
+
     // Initialize an app.
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   canvas: &mut [u8]|
+     -> Result<(), String> {
+        let framebuffer = framebuffer_rc.borrow_mut();
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+        match framebuffer.attachments.color.as_ref() {
+            Some(rc) => {
+                let color_buffer = rc.borrow();
+
+                color_buffer.copy_to(canvas);
+
+                Ok(())
+            }
+            None => Err("Framebuffer has no color attachment!".to_string()),
+        }
+    };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     let rendering_context = &app.context.rendering_context;
 
@@ -73,19 +100,6 @@ fn main() -> Result<(), String> {
         filepath: args[1].to_string(),
         point_size: 16,
     };
-
-    // Initialize framebuffer with attachments
-
-    let framebuffer = Framebuffer::new(
-        window_info.window_resolution.width,
-        window_info.window_resolution.height,
-    );
-
-    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
-
-    framebuffer_rc
-        .borrow_mut()
-        .create_attachment(FramebufferAttachmentKind::Color, None, None);
 
     // Global UI context
 
@@ -324,20 +338,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let render = |_frame_index: Option<u32>,
-                  _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
-        match framebuffer_rc.borrow_mut().attachments.color.as_ref() {
-            Some(rc) => {
-                let color_buffer = rc.borrow();
-
-                Ok(color_buffer.get_all().clone())
-            }
-            None => Err("Framebuffer has no color attachment!".to_string()),
-        }
-    };
-
-    app.run(&mut update, &render)?;
+    app.run(&mut update, &render_to_window_canvas)?;
 
     Ok(())
 }

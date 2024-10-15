@@ -55,11 +55,12 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       _new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> { Ok(vec![]) };
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   _canvas: &mut [u8]|
+     -> Result<(), String> { Ok(()) };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     // Set up our app
 
@@ -180,7 +181,10 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let render = |_frame_index, _new_resolution| -> Result<Vec<u32>, String> {
+    let render = |_frame_index: Option<u32>,
+                  _new_resolution: Option<Resolution>,
+                  canvas: &mut [u8]|
+     -> Result<(), String> {
         let pool = sim.pool.borrow();
 
         let mut framebuffer = framebuffer_rc.borrow_mut();
@@ -243,7 +247,9 @@ fn main() -> Result<(), String> {
             draw_quadtree(&quadtree, &mut framebuffer, &framebuffer_center);
         }
 
-        Ok(framebuffer.get_all().clone())
+        framebuffer.copy_to(canvas);
+
+        Ok(())
     };
 
     app.run(&mut update, &render)?;

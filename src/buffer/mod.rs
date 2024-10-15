@@ -1,6 +1,8 @@
 use std::{
     fmt::Debug,
+    mem::size_of,
     ops::{Add, Div, Mul, Sub},
+    ptr,
 };
 
 use crate::{
@@ -227,6 +229,30 @@ where
 }
 
 impl Buffer2D<u32> {
+    pub fn as_cast_slice<T, C>(&self, mut callback: C)
+    where
+        C: FnMut(&[T]),
+    {
+        let pixels_u32 = self.get_all().as_slice();
+
+        unsafe {
+            let pixels_t_const = ptr::slice_from_raw_parts(
+                pixels_u32.as_ptr() as *const T,
+                pixels_u32.len() * (size_of::<u32>() / size_of::<T>()),
+            );
+
+            let pixels_t_slice = &(*pixels_t_const);
+
+            callback(pixels_t_slice);
+        }
+    }
+
+    pub fn copy_to<T: Copy>(&self, target: &mut [T]) {
+        self.as_cast_slice(|data| {
+            target.copy_from_slice(data);
+        });
+    }
+
     pub fn horizontal_line_unsafe(&mut self, x1: u32, x2: u32, y: u32, value: u32) {
         // Assumes all coordinate arguments lie inside the buffer boundary.
 

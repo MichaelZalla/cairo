@@ -217,9 +217,10 @@ fn main() -> Result<(), String> {
     // function is called when either (1) the main loop executes, or (2) the
     // user is actively resizing the main (native) application window.
 
-    let render = |frame_index: Option<u32>,
-                  new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
+    let render_to_window_canvas = |frame_index: Option<u32>,
+                                   new_resolution: Option<Resolution>,
+                                   canvas: &mut [u8]|
+     -> Result<(), String> {
         if let Some(index) = frame_index {
             // Cache the index of the last-rendered frame.
 
@@ -316,12 +317,14 @@ fn main() -> Result<(), String> {
             }
         });
 
-        Ok(color_buffer.get_all().clone())
+        color_buffer.copy_to(canvas);
+
+        Ok(())
     };
 
     // Instantiate our app, using the rendering callback we defined above.
 
-    let (app, _event_watch) = App::new(&mut window_info, &render);
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     // Load the font indicated by the CLI argument(s).
 
@@ -661,7 +664,7 @@ fn main() -> Result<(), String> {
 
     // Start the main loop...
 
-    app.run(&mut update, &render)?;
+    app.run(&mut update, &render_to_window_canvas)?;
 
     Ok(())
 }

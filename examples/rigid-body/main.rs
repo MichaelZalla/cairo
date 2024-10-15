@@ -60,9 +60,10 @@ fn main() -> Result<(), String> {
 
     let force_creation_state_rc = RefCell::new(ForceCreationState::default());
 
-    let render_scene_to_framebuffer = |_frame_index: Option<u32>,
-                                       new_resolution: Option<Resolution>|
-     -> Result<Vec<u32>, String> {
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   new_resolution: Option<Resolution>,
+                                   canvas: &mut [u8]|
+     -> Result<(), String> {
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
         if let Some(resolution) = &new_resolution {
@@ -104,10 +105,12 @@ fn main() -> Result<(), String> {
             );
         }
 
-        Ok(framebuffer.get_all().clone())
+        framebuffer.copy_to(canvas);
+
+        Ok(())
     };
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_scene_to_framebuffer);
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     let mut update = |app: &mut App,
                       _keyboard_state: &mut KeyboardState,
@@ -184,11 +187,7 @@ fn main() -> Result<(), String> {
         Ok(())
     };
 
-    let render = |frame_index, new_resolution| -> Result<Vec<u32>, String> {
-        render_scene_to_framebuffer(frame_index, new_resolution)
-    };
-
-    app.run(&mut update, &render)?;
+    app.run(&mut update, &render_to_window_canvas)?;
 
     Ok(())
 }
