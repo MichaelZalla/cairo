@@ -830,12 +830,7 @@ fn render_and_present(
                         pixels_as_u32_slice.len() * 4,
                     ));
 
-                    let mut index = 0;
-
-                    while index < pixels_as_u8_slice.len() {
-                        write_only_byte_array[index] = pixels_as_u8_slice[index];
-                        index += 1;
-                    }
+                    write_only_byte_array.copy_from_slice(pixels_as_u8_slice);
                 },
                 Err(_e) => {
                     // Do nothing?
