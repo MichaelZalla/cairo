@@ -81,20 +81,6 @@ impl SoftwareRenderer {
                 },
                 if i == 0 { &color::GREEN } else { &color::WHITE },
             );
-
-            // Y-axis
-
-            self.render_line(
-                Vec3 {
-                    y: -10.0 * scale,
-                    ..Default::default()
-                },
-                Vec3 {
-                    y: 10.0 * scale,
-                    ..Default::default()
-                },
-                &color::BLUE,
-            );
         }
     }
 
