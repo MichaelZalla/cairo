@@ -6,6 +6,8 @@ use cairo::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         fastpath::{
+            checkbox::{checkbox_group, Checkbox},
+            radio::{radio_group, RadioOption},
             slider::{slider, SliderOptions},
             spacer::spacer,
             text::text,
@@ -14,11 +16,7 @@ use cairo::{
     },
 };
 
-use crate::{
-    checkbox::{checkbox_group, Checkbox},
-    radio::{radio_group, RadioOption},
-    COMMAND_BUFFER, SETTINGS,
-};
+use crate::{COMMAND_BUFFER, SETTINGS};
 
 use super::PanelInstance;
 

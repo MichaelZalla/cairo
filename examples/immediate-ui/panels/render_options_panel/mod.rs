@@ -6,8 +6,10 @@ use cairo::{
     serde::PostDeserialize,
     ui::{
         fastpath::{
+            checkbox::{checkbox, checkbox_group, Checkbox},
             color::color_picker,
             container::collapsible_container,
+            radio::{radio_group, RadioOption},
             slider::{slider, SliderOptions},
             spacer::spacer,
             text::text,
@@ -16,12 +18,7 @@ use cairo::{
     },
 };
 
-use crate::{
-    checkbox::{checkbox, checkbox_group, Checkbox},
-    command::PendingCommand,
-    radio::{radio_group, RadioOption},
-    COMMAND_BUFFER, SETTINGS,
-};
+use crate::{command::PendingCommand, COMMAND_BUFFER, SETTINGS};
 
 use super::PanelInstance;
 

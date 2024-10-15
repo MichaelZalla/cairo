@@ -5,15 +5,16 @@ use cairo::{
     serde::PostDeserialize,
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
     ui::{
-        fastpath::{spacer::spacer, text::text},
+        fastpath::{
+            radio::{radio_group, RadioOption},
+            spacer::spacer,
+            text::text,
+        },
         ui_box::tree::UIBoxTree,
     },
 };
 
-use crate::{
-    radio::{radio_group, RadioOption},
-    COMMAND_BUFFER, SETTINGS,
-};
+use crate::{COMMAND_BUFFER, SETTINGS};
 
 use super::PanelInstance;
 

@@ -54,13 +54,10 @@ use panels::{PanelArenas, PanelInstance, PanelRenderCallbacks};
 use settings::Settings;
 use window::make_window_list;
 
-mod checkbox;
 mod command;
 mod panels;
-mod radio;
 mod scene;
 mod settings;
-mod stack;
 mod window;
 
 thread_local! {

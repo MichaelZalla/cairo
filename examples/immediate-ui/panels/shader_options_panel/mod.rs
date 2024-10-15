@@ -4,16 +4,18 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
-        fastpath::{container::collapsible_container, spacer::spacer, text::text},
+        fastpath::{
+            checkbox::{checkbox_group, Checkbox},
+            container::collapsible_container,
+            radio::{radio_group, RadioOption},
+            spacer::spacer,
+            text::text,
+        },
         ui_box::tree::UIBoxTree,
     },
 };
 
-use crate::{
-    checkbox::{checkbox_group, Checkbox},
-    radio::{radio_group, RadioOption},
-    COMMAND_BUFFER, SETTINGS,
-};
+use crate::{COMMAND_BUFFER, SETTINGS};
 
 use super::PanelInstance;
 

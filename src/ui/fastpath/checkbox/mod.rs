@@ -1,4 +1,4 @@
-use cairo::{
+use crate::{
     buffer::Buffer2D,
     color,
     graphics::Graphics,
@@ -6,16 +6,14 @@ use cairo::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        fastpath::{container::container, spacer::spacer, text::text},
+        fastpath::{container::container, spacer::spacer, stack::stack, text::text},
         ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
     vec::vec2::Vec2,
 };
 
-use crate::stack::stack;
-
-pub(crate) struct Checkbox {
+pub struct Checkbox {
     pub value: String,
     pub label: String,
     pub is_checked: bool,

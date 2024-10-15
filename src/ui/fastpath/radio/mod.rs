@@ -1,17 +1,16 @@
-use cairo::{
+use crate::{
     buffer::Buffer2D,
     graphics::Graphics,
     resource::handle::Handle,
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        fastpath::{container::container, spacer::spacer, text::text},
         ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };
 
-use crate::stack::stack;
+use super::{container::container, spacer::spacer, stack::stack, text::text};
 
 pub struct RadioOption {
     pub label: String,
