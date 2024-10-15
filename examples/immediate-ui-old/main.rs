@@ -203,13 +203,16 @@ fn main() -> Result<(), String> {
 
             {
                 for (keycode, _) in &keyboard_state.keys_pressed {
-                    if let Keycode::L { .. } = keycode {
-                        let mut layout_direction = layout_direction_rc.borrow_mut();
+                    match *keycode {
+                        Keycode::L => {
+                            let mut layout_direction = layout_direction_rc.borrow_mut();
 
-                        *layout_direction = match *layout_direction {
-                            UILayoutDirection::LeftToRight => UILayoutDirection::TopToBottom,
-                            UILayoutDirection::TopToBottom => UILayoutDirection::LeftToRight,
+                            *layout_direction = match *layout_direction {
+                                UILayoutDirection::LeftToRight => UILayoutDirection::TopToBottom,
+                                UILayoutDirection::TopToBottom => UILayoutDirection::LeftToRight,
+                            }
                         }
+                        _ => (),
                     }
                 }
             }

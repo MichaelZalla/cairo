@@ -39,7 +39,7 @@ features = [
     features = ["serde_derive", "rc"]
 
 [dependencies.sdl2]
-version = "0.36.0"
+version = "0.37.0"
 default-features = false
 features = ["ttf","unsafe_textures", "image"]
 

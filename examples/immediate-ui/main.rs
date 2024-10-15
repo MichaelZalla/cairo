@@ -424,7 +424,7 @@ fn main() -> Result<(), String> {
 
                 keyboard_state
                     .keys_pressed
-                    .retain(|(keycode, modifiers)| match keycode {
+                    .retain(|(keycode, modifiers)| match *keycode {
                         #[cfg(debug_assertions)]
                         Keycode::F7 => {
                             GLOBAL_UI_CONTEXT.with(|ctx| {

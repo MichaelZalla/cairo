@@ -434,11 +434,11 @@ impl App {
                         keymod: modifiers,
                         ..
                     } => match keycode {
-                        Keycode::Escape { .. } => break 'main,
-                        Keycode::Space { .. } => self.toggle_updates(),
-                        Keycode::F8 { .. } => self.toggle_updates(),
-                        Keycode::F9 { .. } => should_update_step_forward = true,
-                        Keycode::F11 { .. } => {
+                        Keycode::Escape => break 'main,
+                        Keycode::Space => self.toggle_updates(),
+                        Keycode::F8 => self.toggle_updates(),
+                        Keycode::F9 => should_update_step_forward = true,
+                        Keycode::F11 => {
                             let windowing_mode = self.window_info.borrow().windowing_mode;
 
                             match windowing_mode {
