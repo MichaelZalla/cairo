@@ -13,6 +13,9 @@ pub struct UITheme {
     pub panel_titlebar_background: Color,
     pub panel_border: Color,
 
+    // Selection state
+    pub background_selected: Color,
+
     // Button
     pub button_background: Color,
 
@@ -24,7 +27,6 @@ pub struct UITheme {
 
     // Checkbox
     pub checkbox_background: Color,
-    pub checkbox_background_selected: Color,
 
     // Dropdown
     pub dropdown_background: Color,
@@ -48,6 +50,9 @@ impl Default for UITheme {
             panel_titlebar_background: Color::rgba(45, 45, 45, 220),
             panel_border: Color::rgba(35, 35, 35, 220),
 
+            // Selection state
+            background_selected: Color::rgb(71, 114, 179),
+
             // Button
             button_background: Color::rgb(45, 45, 45),
 
@@ -59,7 +64,6 @@ impl Default for UITheme {
 
             // Checkbox
             checkbox_background: Color::rgb(84, 84, 84),
-            checkbox_background_selected: Color::rgb(71, 114, 179),
 
             // Dropdown
             dropdown_background: Color::rgb(40, 40, 40),

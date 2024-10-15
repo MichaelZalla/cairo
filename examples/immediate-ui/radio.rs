@@ -76,8 +76,8 @@ fn render_selected_indicator(
             extent.left + 8,
             extent.top + 8,
             5,
-            Some(&theme.checkbox_background_selected),
-            Some(&theme.checkbox_background_selected),
+            Some(&theme.background_selected),
+            Some(&theme.background_selected),
         );
     });
 
@@ -110,13 +110,13 @@ pub fn radio(
                     let theme = ctx.theme.borrow();
 
                     let fill_color = if is_selected {
-                        theme.checkbox_background_selected
+                        theme.background_selected
                     } else {
                         theme.checkbox_background
                     };
 
                     let border_color = if is_selected {
-                        theme.checkbox_background_selected
+                        theme.background_selected
                     } else {
                         theme.checkbox_background
                     };

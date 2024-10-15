@@ -140,7 +140,7 @@ pub fn checkbox(
                     let theme = ctx.theme.borrow();
 
                     let fill_color = if item.is_checked {
-                        theme.checkbox_background_selected
+                        theme.background_selected
                     } else {
                         theme.checkbox_background
                     };

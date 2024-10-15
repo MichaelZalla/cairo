@@ -30,7 +30,7 @@ pub fn tab_selector(id: String, tabs: Vec<&str>, tree: &mut UIBoxTree) -> Result
                 let theme = ctx.theme.borrow();
 
                 let fill_color = if tab_index == selected_tab_index {
-                    Some(theme.checkbox_background_selected)
+                    Some(theme.background_selected)
                 } else {
                     None
                 };
