@@ -13,10 +13,7 @@ use crate::{
     serde::PostDeserialize, vec::vec2::Vec2, vec::vec3::Vec3,
 };
 
-use super::get_half_scaled_u8;
-use super::get_half_scaled_vec3;
-
-use super::sample::sample_trilinear_u8;
+use super::{get_half_scaled_u8, get_half_scaled_vec3, sample::sample_trilinear_u8};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct TextureBuffer<T: Default + Debug + Copy + PartialEq = u8>(pub Buffer2D<T>);
