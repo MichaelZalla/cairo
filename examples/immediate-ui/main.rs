@@ -118,15 +118,6 @@ fn main() -> Result<(), String> {
         ..Default::default()
     };
 
-    SETTINGS.with(|settings_rc| {
-        let mut settings = settings_rc.borrow_mut();
-
-        settings.resolution = RESOLUTIONS_16X9
-            .iter()
-            .position(|r| *r == DEFAULT_WINDOW_RESOLUTION)
-            .unwrap();
-    });
-
     // Allocates a default framebuffer.
 
     let mut framebuffer = Framebuffer::new(
@@ -166,6 +157,18 @@ fn main() -> Result<(), String> {
             Default::default(),
         )
     };
+
+    SETTINGS.with(|settings_rc| {
+        let mut settings = settings_rc.borrow_mut();
+
+        settings.resolution = RESOLUTIONS_16X9
+            .iter()
+            .position(|r| *r == window_info.window_resolution)
+            .unwrap();
+
+        settings.render_options = renderer.options;
+        settings.shader_options = renderer.shader_options;
+    });
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
