@@ -48,6 +48,24 @@ impl<T: PostDeserialize> Arena<T> {
         self.entries.is_empty()
     }
 
+    pub fn get_handle(&self, index: usize) -> Result<Handle, String> {
+        assert!(index < self.entries.len());
+
+        if let Some(entry) = &self.entries[index] {
+            let handle = Handle {
+                index,
+                uuid: entry.uuid,
+            };
+
+            Ok(handle)
+        } else {
+            Err(format!(
+                "Called Arena::get_handle() on invalid index `{}`!",
+                index
+            ))
+        }
+    }
+
     pub fn get(&self, handle: &Handle) -> Result<&ArenaEntry<T>, String> {
         match self.validate_handle(handle) {
             Ok(index) => {
