@@ -8,6 +8,14 @@ use crate::{
 
 use super::map::{TextureMap, TextureMapSamplingOptions};
 
+#[derive(Default, Debug, Copy, Clone)]
+pub enum TextureSamplingMethod {
+    #[default]
+    NearestNeighbor,
+    Bilinear,
+    Trilinear,
+}
+
 fn apply_wrapping_options<T: Default + Debug + Copy + PartialEq>(
     uv: Vec2,
     map: &TextureMap<T>,

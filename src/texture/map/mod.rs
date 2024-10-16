@@ -13,7 +13,10 @@ use crate::{
     serde::PostDeserialize, vec::vec2::Vec2, vec::vec3::Vec3,
 };
 
-use super::{get_half_scaled_u8, get_half_scaled_vec3, sample::sample_trilinear_u8};
+use super::{
+    get_half_scaled_u8, get_half_scaled_vec3,
+    sample::{sample_bilinear_u8, sample_nearest_u8, sample_trilinear_u8, TextureSamplingMethod},
+};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct TextureBuffer<T: Default + Debug + Copy + PartialEq = u8>(pub Buffer2D<T>);
@@ -356,15 +359,10 @@ impl TextureMap {
         Ok(())
     }
 
-    pub fn blit_resized(
-        &self,
-        top: u32,
-        left: u32,
-        width: u32,
-        height: u32,
-        target: &mut Buffer2D,
-    ) {
-        // Blit a scaled version of `self` to `target`, positioned at `(left, top)`.
+    fn get_near_far_alpha(&self, width: u32) -> (usize, Option<usize>, Option<f32>) {
+        if !self.is_mipmapped {
+            return (0, None, None);
+        }
 
         let mut near_level_index = 0;
         let mut far_level_index = 0;
@@ -377,17 +375,71 @@ impl TextureMap {
             near_level_index = far_level_index - 1;
         }
 
+        let near = near_level_index;
+
+        let far = if far_level_index != near_level_index {
+            Some(far_level_index)
+        } else {
+            None
+        };
+
         let alpha = if far_level_index > near_level_index {
             let near_width = self.levels[near_level_index].0.width;
             let far_width = self.levels[far_level_index].0.width;
 
             // 1.0 - (req - near) / (far - near)
 
-            1.0 - (width - far_width) as f32 / (near_width - far_width) as f32
+            Some(1.0 - (width - far_width) as f32 / (near_width - far_width) as f32)
         } else {
-            0.0
+            None
         };
 
+        (near, far, alpha)
+    }
+
+    pub fn blit_resized(
+        &self,
+        top: u32,
+        left: u32,
+        width: u32,
+        height: u32,
+        sampling_method: TextureSamplingMethod,
+        target: &mut Buffer2D,
+    ) {
+        // Blits a scaled version of `self` to `target`.
+
+        match sampling_method {
+            TextureSamplingMethod::NearestNeighbor => {
+                self.blit_resized_nearest(top, left, width, height, 0, target);
+            }
+            TextureSamplingMethod::Bilinear => {
+                let (near_index, _, _) = self.get_near_far_alpha(width);
+
+                self.blit_resized_bilinear(top, left, width, height, near_index, target);
+            }
+            TextureSamplingMethod::Trilinear => match self.get_near_far_alpha(width) {
+                (near_index, None, _) => {
+                    self.blit_resized_bilinear(top, left, width, height, near_index, target);
+                }
+                (near_index, Some(far_index), Some(alpha)) => {
+                    self.blit_resized_trilinear(
+                        top, left, width, height, near_index, far_index, alpha, target,
+                    );
+                }
+                _ => panic!(),
+            },
+        }
+    }
+
+    fn blit_resized_nearest(
+        &self,
+        top: u32,
+        left: u32,
+        width: u32,
+        height: u32,
+        level_index: usize,
+        target: &mut Buffer2D,
+    ) {
         for sample_y in 0..height {
             for sample_x in 0..width {
                 let uv = Vec2 {
@@ -396,8 +448,73 @@ impl TextureMap {
                     z: 0.0,
                 };
 
-                let sample =
-                    sample_trilinear_u8(uv, self, near_level_index, far_level_index, alpha);
+                let sample = sample_nearest_u8(uv, self, Some(level_index));
+
+                let (screen_x, screen_y) = (left + sample_x, top + sample_y);
+
+                if screen_x < target.width && screen_y < target.height {
+                    target.set(
+                        screen_x,
+                        screen_y,
+                        Color::rgb(sample.0, sample.1, sample.2).to_u32(),
+                    )
+                }
+            }
+        }
+    }
+
+    fn blit_resized_bilinear(
+        &self,
+        top: u32,
+        left: u32,
+        width: u32,
+        height: u32,
+        level_index: usize,
+        target: &mut Buffer2D,
+    ) {
+        for sample_y in 0..height {
+            for sample_x in 0..width {
+                let uv = Vec2 {
+                    x: sample_x as f32 / width as f32,
+                    y: 1.0 - sample_y as f32 / height as f32,
+                    z: 0.0,
+                };
+
+                let sample = sample_bilinear_u8(uv, self, Some(level_index));
+
+                let (screen_x, screen_y) = (left + sample_x, top + sample_y);
+
+                if screen_x < target.width && screen_y < target.height {
+                    target.set(
+                        screen_x,
+                        screen_y,
+                        Color::rgb(sample.0, sample.1, sample.2).to_u32(),
+                    )
+                }
+            }
+        }
+    }
+
+    fn blit_resized_trilinear(
+        &self,
+        top: u32,
+        left: u32,
+        width: u32,
+        height: u32,
+        near_index: usize,
+        far_index: usize,
+        alpha: f32,
+        target: &mut Buffer2D,
+    ) {
+        for sample_y in 0..height {
+            for sample_x in 0..width {
+                let uv = Vec2 {
+                    x: sample_x as f32 / width as f32,
+                    y: 1.0 - sample_y as f32 / height as f32,
+                    z: 0.0,
+                };
+
+                let sample = sample_trilinear_u8(uv, self, near_index, far_index, alpha);
 
                 let (screen_x, screen_y) = (left + sample_x, top + sample_y);
 

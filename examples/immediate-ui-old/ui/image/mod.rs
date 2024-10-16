@@ -1,7 +1,11 @@
 use std::cell::RefMut;
 
 use cairo::{
-    buffer::Buffer2D, color::Color, graphics::Graphics, texture::map::TextureMap, vec::vec2::Vec2,
+    buffer::Buffer2D,
+    color::Color,
+    graphics::Graphics,
+    texture::{map::TextureMap, sample::TextureSamplingMethod},
+    vec::vec2::Vec2,
 };
 
 use super::{
@@ -71,6 +75,7 @@ fn draw_image(
         cursor.x,
         options.width,
         options.height,
+        TextureSamplingMethod::Trilinear,
         parent_buffer,
     );
 
