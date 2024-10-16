@@ -1,5 +1,6 @@
 use std::{cell::RefCell, fmt, rc::Rc};
 
+#[allow(unused_imports)]
 use crate::{
     buffer::Buffer2D,
     collections::tree::{
@@ -959,27 +960,30 @@ impl<'a> UIBoxTree<'a> {
             },
         )?;
 
-        let focused_rect = self.focused_transition.borrow().current_rect;
+        #[cfg(debug_assertions)]
+        {
+            let focused_rect = self.focused_transition.borrow().current_rect;
 
-        if focused_rect.left != focused_rect.right {
-            let (x, y, width, height) = (
-                focused_rect.left,
-                focused_rect.top,
-                focused_rect.right - focused_rect.left,
-                focused_rect.bottom - focused_rect.top,
-            );
+            if focused_rect.left != focused_rect.right {
+                let (x, y, width, height) = (
+                    focused_rect.left,
+                    focused_rect.top,
+                    focused_rect.right - focused_rect.left,
+                    focused_rect.bottom - focused_rect.top,
+                );
 
-            Graphics::rectangle(target, x, y, width, height, None, Some(&color::RED));
+                Graphics::rectangle(target, x, y, width, height, None, Some(&color::RED));
 
-            Graphics::rectangle(
-                target,
-                x + 1,
-                y + 1,
-                width - 2,
-                height - 2,
-                None,
-                Some(&color::RED),
-            );
+                Graphics::rectangle(
+                    target,
+                    x + 1,
+                    y + 1,
+                    width - 2,
+                    height - 2,
+                    None,
+                    Some(&color::RED),
+                );
+            }
         }
 
         Ok(())
