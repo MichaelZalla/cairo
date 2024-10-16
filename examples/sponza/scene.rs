@@ -12,8 +12,10 @@ use cairo::{
         context::{utils::make_empty_scene, SceneContext},
         light::{PointLight, SpotLight},
         node::{SceneNode, SceneNodeType},
+        skybox::Skybox,
     },
     shader::context::ShaderContext,
+    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
     vec::vec3::{self, Vec3},
 };
 
@@ -170,6 +172,45 @@ pub fn make_sponza_scene(
         };
 
         scene.root.add_child(spot_light_node)?;
+
+        // Add a skybox to our scene.
+
+        let skybox_node = {
+            let mut skybox_cubemap: CubeMap = CubeMap::cross(
+                "examples/sponza/assets/horizontal_cross.png",
+                TextureMapStorageFormat::RGB24,
+            );
+
+            skybox_cubemap.load(rendering_context).unwrap();
+
+            let skybox_cubemap_handle = resources
+                .cubemap_u8
+                .borrow_mut()
+                .insert(Uuid::new_v4(), skybox_cubemap);
+
+            let skybox = Skybox {
+                is_hdr: false,
+                radiance: Some(skybox_cubemap_handle),
+                irradiance: None,
+                specular_prefiltered_environment: None,
+            };
+
+            let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+
+            SceneNode::new(
+                SceneNodeType::Skybox,
+                Default::default(),
+                Some(skybox_handle),
+            )
+        };
+
+        for node in scene.root.children_mut().as_mut().unwrap() {
+            if *node.get_type() == SceneNodeType::Environment {
+                node.add_child(skybox_node)?;
+
+                break;
+            }
+        }
     }
 
     Ok((scene_context, shader_context))
