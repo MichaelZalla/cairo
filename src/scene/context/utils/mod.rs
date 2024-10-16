@@ -1,5 +1,6 @@
 use crate::{
     entity::Entity,
+    material::Material,
     mesh::{self},
     scene::{
         camera::Camera,
@@ -131,16 +132,23 @@ pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, Shader
 
         let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
+        let cube_material = Material::new("cube_material".to_string());
+
         let cube_entity_handle = {
             let cube_mesh_handle = resources
                 .mesh
                 .borrow_mut()
                 .insert(Uuid::new_v4(), cube_mesh);
 
-            resources
-                .entity
+            let cube_material_handle = resources
+                .material
                 .borrow_mut()
-                .insert(Uuid::new_v4(), Entity::new(cube_mesh_handle, None))
+                .insert(Uuid::new_v4(), cube_material);
+
+            resources.entity.borrow_mut().insert(
+                Uuid::new_v4(),
+                Entity::new(cube_mesh_handle, Some(cube_material_handle)),
+            )
         };
 
         let cube_entity_node = SceneNode::new(
