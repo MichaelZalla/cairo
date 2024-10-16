@@ -1,9 +1,29 @@
-use core::fmt;
+use std::{
+    fmt,
+    ops::{Mul, MulAssign},
+};
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Resolution {
     pub width: u32,
     pub height: u32,
+}
+
+impl MulAssign<f32> for Resolution {
+    fn mul_assign(&mut self, scale: f32) {
+        self.width = (self.width as f32 * scale) as u32;
+        self.height = (self.height as f32 * scale) as u32;
+    }
+}
+
+impl Mul<f32> for Resolution {
+    type Output = Self;
+
+    fn mul(self, scale: f32) -> Self::Output {
+        let mut cloned = self;
+        cloned *= scale;
+        cloned
+    }
 }
 
 impl Resolution {

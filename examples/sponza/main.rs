@@ -6,7 +6,7 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_960_BY_540},
+        resolution::{Resolution, RESOLUTION_640_BY_480},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -54,8 +54,8 @@ fn main() -> Result<(), String> {
 
     let mut window_info = AppWindowInfo {
         title: "examples/sponza".to_string(),
-        window_resolution: RESOLUTION_960_BY_540,
-        canvas_resolution: RESOLUTION_960_BY_540,
+        window_resolution: RESOLUTION_640_BY_480 * 2.0,
+        canvas_resolution: RESOLUTION_640_BY_480,
         relative_mouse_mode: true,
         ..Default::default()
     };
