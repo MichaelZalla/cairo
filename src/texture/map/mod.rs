@@ -366,21 +366,27 @@ impl TextureMap {
     ) {
         // Blit a scaled version of `self` to `target`, positioned at `(left, top)`.
 
-        let mut far_level_index = 0;
         let mut near_level_index = 0;
+        let mut far_level_index = 0;
 
-        if !self.levels.is_empty() {
-            while self.levels[near_level_index].0.width >= width
-                && near_level_index < self.levels.len() - 1
-            {
-                near_level_index += 1;
-            }
+        while self.levels[far_level_index].0.width >= width
+            && far_level_index < self.levels.len() - 1
+        {
+            far_level_index += 1;
 
-            far_level_index = near_level_index - 1;
+            near_level_index = far_level_index - 1;
         }
 
-        let alpha = (width - self.levels[near_level_index].0.width) as f32
-            / (self.levels[far_level_index].0.width - self.levels[near_level_index].0.width) as f32;
+        let alpha = if far_level_index > near_level_index {
+            let near_width = self.levels[near_level_index].0.width;
+            let far_width = self.levels[far_level_index].0.width;
+
+            // 1.0 - (req - near) / (far - near)
+
+            1.0 - (width - far_width) as f32 / (near_width - far_width) as f32
+        } else {
+            0.0
+        };
 
         for sample_y in 0..height {
             for sample_x in 0..width {
