@@ -7,6 +7,7 @@ use crate::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     serde::PostDeserialize,
+    shader::context::ShaderContext,
     time::TimingInfo,
     transform::look_vector::LookVector,
     vec::{
@@ -483,5 +484,13 @@ impl Camera {
         }
 
         self.recompute_world_space_frustum();
+    }
+
+    pub fn update_shader_context(&self, ctx: &mut ShaderContext) {
+        ctx.set_view_position(Vec4::new(self.look_vector.get_position(), 1.0));
+
+        ctx.set_view_inverse_transform(self.get_view_inverse_transform());
+
+        ctx.set_projection(self.get_projection());
     }
 }

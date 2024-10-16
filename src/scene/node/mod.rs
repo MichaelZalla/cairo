@@ -10,7 +10,6 @@ use crate::{
     serde::PostDeserialize,
     shader::context::ShaderContext,
     transform::Transform3D,
-    vec::vec4::Vec4,
 };
 
 use super::resources::SceneResources;
@@ -439,17 +438,7 @@ impl SceneNode {
 
                             camera.recompute_world_space_frustum();
 
-                            let camera_view_inverse_transform = camera.get_view_inverse_transform();
-
-                            shader_context.set_view_position(Vec4::new(
-                                camera.look_vector.get_position(),
-                                1.0,
-                            ));
-
-                            shader_context
-                                .set_view_inverse_transform(camera_view_inverse_transform);
-
-                            shader_context.set_projection(camera.get_projection());
+                            camera.update_shader_context(shader_context);
 
                             Ok(())
                         }

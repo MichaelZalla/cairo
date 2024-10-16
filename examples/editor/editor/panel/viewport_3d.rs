@@ -1,15 +1,11 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
-use cairo::buffer::Buffer2D;
-use cairo::scene::graph::SceneGraphRenderOptions;
-use cairo::software_renderer::SoftwareRenderer;
-use cairo::ui::extent::ScreenExtent;
-use cairo::vec::vec4::Vec4;
 use serde::{Deserialize, Serialize};
 
 use cairo::{
-    buffer::framebuffer::Framebuffer, resource::handle::Handle, serde::PostDeserialize,
-    ui::ui_box::tree::UIBoxTree,
+    buffer::framebuffer::Framebuffer, buffer::Buffer2D, resource::handle::Handle,
+    scene::graph::SceneGraphRenderOptions, serde::PostDeserialize,
+    software_renderer::SoftwareRenderer, ui::extent::ScreenExtent, ui::ui_box::tree::UIBoxTree,
 };
 
 use crate::EDITOR_SCENE_CONTEXT;
@@ -94,16 +90,9 @@ impl PanelInstance for Viewport3DPanel {
                 if let Ok(entry) = camera_arena.get(&self.active_camera) {
                     let camera = &entry.item;
 
-                    let camera_view_inverse_transform = camera.get_view_inverse_transform();
-
                     let mut shader_context = (*renderer.shader_context).borrow_mut();
 
-                    shader_context
-                        .set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
-
-                    shader_context.set_view_inverse_transform(camera_view_inverse_transform);
-
-                    shader_context.set_projection(camera.get_projection());
+                    camera.update_shader_context(&mut shader_context);
                 }
             }
 

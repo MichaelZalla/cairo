@@ -47,11 +47,7 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, Shade
 
             camera.recompute_world_space_frustum();
 
-            shader_context.set_view_position(Vec4::new(camera.look_vector.get_position(), 1.0));
-
-            shader_context.set_view_inverse_transform(camera.get_view_inverse_transform());
-
-            shader_context.set_projection(camera.get_projection());
+            camera.update_shader_context(&mut shader_context);
 
             resources.camera.borrow_mut().insert(Uuid::new_v4(), camera)
         };

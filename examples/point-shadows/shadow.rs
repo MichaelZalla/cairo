@@ -15,7 +15,7 @@ use cairo::{
         cubemap::{CubeMap, Side, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
         map::{TextureMap, TextureMapWrapping},
     },
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::vec3::Vec3,
 };
 
 pub fn blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target: &mut Buffer2D) {
@@ -90,12 +90,7 @@ fn render_point_shadows_to_cubemap(
     {
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.set_view_position(Vec4::new(
-            cubemap_face_camera.look_vector.get_position(),
-            1.0,
-        ));
-
-        shader_context.set_projection(cubemap_face_camera.get_projection());
+        cubemap_face_camera.update_shader_context(&mut shader_context);
     }
 
     for side in CUBE_MAP_SIDES {

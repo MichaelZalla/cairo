@@ -362,15 +362,7 @@ impl CubeMap<Vec3> {
             {
                 let mut shader_context = (*shader_context_rc).borrow_mut();
 
-                shader_context.set_view_position(Vec4::new(
-                    cubemap_face_camera.look_vector.get_position(),
-                    1.0,
-                ));
-
-                shader_context
-                    .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
-
-                shader_context.set_projection(cubemap_face_camera.get_projection());
+                cubemap_face_camera.update_shader_context(&mut shader_context);
             }
 
             let resources = (*scene_context.resources).borrow();
