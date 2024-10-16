@@ -53,7 +53,7 @@ impl SettingsPanel {
             format!("FPS: {:.0}", self.fps_average),
         );
 
-        counter.features |= UIBoxFeatureFlag::SkipTextCaching;
+        counter.features ^= UIBoxFeatureFlag::SkipTextCaching;
 
         counter
     }
