@@ -1,5 +1,3 @@
-use std::slice::Iter;
-
 use serde::{Deserialize, Serialize};
 
 use uuid::Uuid;
@@ -150,14 +148,5 @@ impl<T: PostDeserialize> Arena<T> {
             }
             None => Err(format!("Entry at index {} is None!", handle.index)),
         }
-    }
-}
-
-impl<'a, T: PostDeserialize> IntoIterator for &'a Arena<T> {
-    type Item = &'a Option<ArenaEntry<T>>;
-    type IntoIter = Iter<'a, Option<ArenaEntry<T>>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.entries.iter()
     }
 }
