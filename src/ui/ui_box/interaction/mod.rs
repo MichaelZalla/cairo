@@ -45,6 +45,9 @@ pub struct UIMouseInteraction {
 
 #[derive(Default, Debug, Clone)]
 pub struct UIBoxInteraction {
+    pub was_active: bool,
+    pub was_focused: bool,
+    pub was_hot: bool,
     pub mouse_interaction_in_bounds: UIMouseInteraction,
 }
 
@@ -291,7 +294,16 @@ impl UIBoxInteraction {
             None => None,
         };
 
+        let (was_active, was_focused, was_hot) = if let Some(prev_frame) = ui_box_previous_frame {
+            (prev_frame.active, prev_frame.focused, prev_frame.hot)
+        } else {
+            (false, false, false)
+        };
+
         Self {
+            was_active,
+            was_focused,
+            was_hot,
             mouse_interaction_in_bounds,
         }
     }
