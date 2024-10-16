@@ -25,7 +25,7 @@ use crate::{
 
 use super::{
     map::{TextureMap, TextureMapStorageFormat},
-    sample::{sample_nearest_f32, sample_nearest_vec3, sample_trilinear_vec3},
+    sample::{sample_bilinear_u8, sample_nearest_f32, sample_nearest_vec3, sample_trilinear_vec3},
 };
 
 static SIDES: usize = 6;
@@ -514,6 +514,20 @@ impl CubeMap {
         }
 
         let (r, g, b) = sample_nearest_u8(uv, map, level_index);
+
+        Color::rgb(r, g, b)
+    }
+
+    pub fn sample_bilinear(&self, direction: &Vec4, level_index: Option<usize>) -> Color {
+        let (side, uv) = self.get_uv_for_direction(direction);
+
+        let map = &self.sides[side as usize];
+
+        if !map.is_loaded {
+            return CUBEMAP_SIDE_COLORS[side as usize];
+        }
+
+        let (r, g, b) = sample_bilinear_u8(uv, map, level_index);
 
         Color::rgb(r, g, b)
     }

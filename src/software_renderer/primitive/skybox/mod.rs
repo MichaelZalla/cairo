@@ -48,7 +48,11 @@ impl SoftwareRenderer {
 
                         // Sample the cubemap using our world-space direction-offset.
 
-                        let skybox_color = skybox.sample_nearest(&normal, None);
+                        let skybox_color = if self.shader_options.bilinear_active {
+                            skybox.sample_bilinear(&normal, None)
+                        } else {
+                            skybox.sample_nearest(&normal, None)
+                        };
 
                         forward_buffer.set(screen_x, screen_y, skybox_color.to_u32());
                     }
