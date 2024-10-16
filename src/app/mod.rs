@@ -435,7 +435,6 @@ impl App {
                         ..
                     } => match keycode {
                         Keycode::Escape => break 'main,
-                        Keycode::Space => self.toggle_updates(),
                         Keycode::F8 => self.toggle_updates(),
                         Keycode::F9 => should_update_step_forward = true,
                         Keycode::F11 => {
@@ -452,6 +451,10 @@ impl App {
                             }
                         }
                         _ => {
+                            if keycode == Keycode::SPACE {
+                                self.toggle_updates();
+                            }
+
                             keyboard_state.keys_pressed.push((keycode, modifiers));
                         }
                     },
