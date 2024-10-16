@@ -19,9 +19,9 @@ impl SoftwareRenderer {
             }
         }
 
-        let mut did_set_active_material = false;
-
         if !should_cull {
+            let mut did_set_active_material = false;
+
             {
                 let mut context = self.shader_context.borrow_mut();
 
@@ -36,14 +36,14 @@ impl SoftwareRenderer {
             }
 
             self.render_entity_mesh(entity_mesh, world_transform);
-        }
 
-        if did_set_active_material {
-            // Reset the shader context's original active material.
+            if did_set_active_material {
+                // Reset the shader context's original active material.
 
-            let mut context = self.shader_context.borrow_mut();
+                let mut context = self.shader_context.borrow_mut();
 
-            context.set_active_material(None);
+                context.set_active_material(None);
+            }
         }
 
         !should_cull
