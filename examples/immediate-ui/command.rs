@@ -301,15 +301,15 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         Ok(())
                     }
-                    "shader_options.diffuse_color_maps" => {
+                    "shader_options.albedo_color_maps" => {
                         prev_value_str.replace(
                             current_settings
                                 .shader_options
-                                .base_color_mapping_active
+                                .albedo_mapping_active
                                 .to_string(),
                         );
 
-                        current_settings.shader_options.base_color_mapping_active =
+                        current_settings.shader_options.albedo_mapping_active =
                             parse_or_map_err::<bool>(value_str)?;
 
                         Ok(())

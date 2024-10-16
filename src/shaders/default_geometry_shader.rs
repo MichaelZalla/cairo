@@ -221,10 +221,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
             }
 
             // Diffuse color
-            match (
-                &material.diffuse_color_map,
-                options.base_color_mapping_active,
-            ) {
+            match (&material.diffuse_color_map, options.albedo_mapping_active) {
                 (Some(diffuse_color_map_handle), true) => {
                     match resources.texture_u8.borrow().get(diffuse_color_map_handle) {
                         Ok(entry) => {
@@ -363,7 +360,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
             }
 
             // Albedo color
-            match (options.base_color_mapping_active, material.albedo_map) {
+            match (options.albedo_mapping_active, material.albedo_map) {
                 (true, Some(albedo_map_handle)) => {
                     match resources.texture_u8.borrow().get(&albedo_map_handle) {
                         Ok(entry) => {

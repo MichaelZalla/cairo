@@ -94,8 +94,8 @@ pub fn load_mtl(
 
                                     let color = next_rgb(&mut line_tokens);
 
-                                    material.diffuse_color = color;
                                     material.albedo = color;
+                                    material.diffuse_color = color;
                                 }
                             }
 
@@ -121,8 +121,8 @@ pub fn load_mtl(
                                 {
                                     let material = &mut entry.item;
 
-                                    material.diffuse_color_map = Some(texture_map_handle);
                                     material.albedo_map = Some(texture_map_handle);
+                                    material.diffuse_color_map = Some(texture_map_handle);
                                 }
                             }
 

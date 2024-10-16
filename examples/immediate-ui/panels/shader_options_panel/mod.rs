@@ -108,9 +108,9 @@ impl PanelInstance for ShaderOptionsPanel {
                     |tree| -> Result<(), String> {
                         let checkboxes = vec![
                             Checkbox::new(
-                                "shader_options.diffuse_color_maps",
-                                "Diffuse color maps",
-                                current_settings.shader_options.base_color_mapping_active,
+                                "shader_options.albedo_color_maps",
+                                "Albedo color maps",
+                                current_settings.shader_options.albedo_mapping_active,
                             ),
                             Checkbox::new(
                                 "shader_options.ambient_occlusion_maps",

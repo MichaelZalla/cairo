@@ -7,7 +7,7 @@ pub struct RenderShaderOptions {
     pub bilinear_active: bool,
     pub trilinear_active: bool,
     pub ambient_occlusion_mapping_active: bool,
-    pub base_color_mapping_active: bool,
+    pub albedo_mapping_active: bool,
     pub roughness_mapping_active: bool,
     pub metallic_mapping_active: bool,
     pub normal_mapping_active: bool,
@@ -22,7 +22,7 @@ impl Default for RenderShaderOptions {
             bilinear_active: false,
             trilinear_active: false,
             ambient_occlusion_mapping_active: false,
-            base_color_mapping_active: true,
+            albedo_mapping_active: true,
             roughness_mapping_active: true,
             metallic_mapping_active: true,
             normal_mapping_active: false,
@@ -56,11 +56,11 @@ impl RenderShaderOptions {
                     )
                 }
                 (Keycode::P, _) => {
-                    self.base_color_mapping_active = !self.base_color_mapping_active;
+                    self.albedo_mapping_active = !self.albedo_mapping_active;
 
                     println!(
-                        "Diffuse color mapping: {}",
-                        if self.base_color_mapping_active {
+                        "Albedo color mapping: {}",
+                        if self.albedo_mapping_active {
                             "On"
                         } else {
                             "Off"
