@@ -161,6 +161,8 @@ impl Framebuffer {
         self.width = width;
         self.height = height;
 
+        self.width_over_height = self.width as f32 / self.height as f32;
+
         if let Some(lock) = self.attachments.stencil.as_mut() {
             let mut buffer = lock.borrow_mut();
 
