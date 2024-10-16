@@ -609,6 +609,7 @@ fn main() -> Result<(), String> {
                 let current_settings = settings_rc.borrow();
 
                 renderer.options = current_settings.render_options;
+                renderer.shader_options = current_settings.shader_options;
 
                 let shader = [
                     DEFAULT_FRAGMENT_SHADER,
