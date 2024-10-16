@@ -93,6 +93,14 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         }
     }
 
+    pub fn get_aspect_ratio(&self) -> Option<f32> {
+        if self.is_loaded {
+            Some(self.levels[0].0.width_over_height)
+        } else {
+            None
+        }
+    }
+
     pub fn from_buffer(width: u32, height: u32, buffer: Buffer2D<T>) -> Self {
         let buffer_samples_per_pixel = buffer.data.len() as u32 / width / height;
 
