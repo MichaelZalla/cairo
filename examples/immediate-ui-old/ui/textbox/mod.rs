@@ -5,7 +5,7 @@ use sdl2::keyboard::Keycode;
 use cairo::{
     buffer::Buffer2D,
     device::{
-        keyboard::{keycode::get_alpha_numeric, KeyboardState},
+        keyboard::{keycode::to_ascii_char, KeyboardState},
         mouse::MouseState,
     },
     graphics::{
@@ -43,6 +43,7 @@ pub struct DoTextboxResult {
     pub did_edit: bool,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn do_textbox(
     ctx: &mut RefMut<'_, UIContext>,
     layout: &mut UILayoutContext,
@@ -112,7 +113,7 @@ pub fn do_textbox(
 
     if let Some(target_id) = ctx.get_focus_target() {
         if target_id == id {
-            for (keycode, _) in &keyboard_state.keys_pressed {
+            for (keycode, modifiers) in &keyboard_state.keys_pressed {
                 match *keycode {
                     Keycode::Backspace | Keycode::Delete => {
                         // Remove one character from the model value, if possible.
@@ -129,13 +130,15 @@ pub fn do_textbox(
                         }
                     }
                     _ => {
-                        match get_alpha_numeric(keycode) {
+                        match to_ascii_char(keycode, modifiers) {
                             Some(char) => {
                                 // Add this character to the model value (string).
 
                                 match &mut model_entry {
                                     Entry::Occupied(o) => {
-                                        *o.get_mut() += char;
+                                        let s = o.get_mut();
+
+                                        *s += char.to_string().as_str();
 
                                         did_edit = true;
                                     }
@@ -180,6 +183,7 @@ pub fn do_textbox(
     result
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_textbox(
     ctx: &mut RefMut<'_, UIContext>,
     id: &UIID,

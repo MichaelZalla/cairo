@@ -1,45 +1,91 @@
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 
-pub fn get_alpha_numeric(code: &Keycode) -> Option<&'static str> {
-    match *code {
-        Keycode::Space => Some(" "),
-        Keycode::Period => Some("."),
-        Keycode::A => Some("A"),
-        Keycode::B => Some("B"),
-        Keycode::C => Some("C"),
-        Keycode::D => Some("D"),
-        Keycode::E => Some("E"),
-        Keycode::F => Some("F"),
-        Keycode::G => Some("G"),
-        Keycode::H => Some("H"),
-        Keycode::I => Some("I"),
-        Keycode::J => Some("J"),
-        Keycode::K => Some("K"),
-        Keycode::L => Some("L"),
-        Keycode::M => Some("M"),
-        Keycode::N => Some("N"),
-        Keycode::O => Some("O"),
-        Keycode::P => Some("P"),
-        Keycode::Q => Some("Q"),
-        Keycode::R => Some("R"),
-        Keycode::S => Some("S"),
-        Keycode::T => Some("T"),
-        Keycode::U => Some("U"),
-        Keycode::V => Some("V"),
-        Keycode::W => Some("W"),
-        Keycode::X => Some("X"),
-        Keycode::Y => Some("Y"),
-        Keycode::Z => Some("Z"),
-        Keycode::Num0 => Some("0"),
-        Keycode::Num1 => Some("1"),
-        Keycode::Num2 => Some("2"),
-        Keycode::Num3 => Some("3"),
-        Keycode::Num4 => Some("4"),
-        Keycode::Num5 => Some("5"),
-        Keycode::Num6 => Some("6"),
-        Keycode::Num7 => Some("7"),
-        Keycode::Num8 => Some("8"),
-        Keycode::Num9 => Some("9"),
+pub fn to_ascii_char(keycode: &Keycode, modifiers: &Mod) -> Option<char> {
+    match *keycode {
+        Keycode::SPACE => Some(' '),
+        Keycode::TAB => Some('\t'),
+        Keycode::PERIOD => Some('.'),
+        Keycode::EXCLAIM => Some('!'),
+        Keycode::QUOTEDBL => Some('"'),
+        Keycode::HASH => Some('#'),
+        Keycode::DOLLAR => Some('$'),
+        Keycode::PERCENT => Some('%'),
+        Keycode::AMPERSAND => Some('&'),
+        Keycode::QUOTE => Some('\''),
+        Keycode::LEFTPAREN => Some('('),
+        Keycode::RIGHTPAREN => Some(')'),
+        Keycode::ASTERISK => Some('*'),
+        Keycode::PLUS => Some('+'),
+        Keycode::COMMA => Some(','),
+        Keycode::MINUS => Some('-'),
+        Keycode::SLASH => Some('/'),
+        Keycode::NUM_0 => Some('0'),
+        Keycode::NUM_1 => Some('1'),
+        Keycode::NUM_2 => Some('2'),
+        Keycode::NUM_3 => Some('3'),
+        Keycode::NUM_4 => Some('4'),
+        Keycode::NUM_5 => Some('5'),
+        Keycode::NUM_6 => Some('6'),
+        Keycode::NUM_7 => Some('7'),
+        Keycode::NUM_8 => Some('8'),
+        Keycode::NUM_9 => Some('9'),
+        Keycode::COLON => Some(':'),
+        Keycode::SEMICOLON => Some(';'),
+        Keycode::LESS => Some('<'),
+        Keycode::EQUALS => Some('='),
+        Keycode::GREATER => Some('>'),
+        Keycode::QUESTION => Some('?'),
+        Keycode::AT => Some('@'),
+        Keycode::LEFTBRACKET => Some('{'),
+        Keycode::BACKSLASH => Some('\\'),
+        Keycode::RIGHTBRACKET => Some('}'),
+        Keycode::CARET => Some('^'),
+        Keycode::UNDERSCORE => Some('_'),
+        Keycode::BACKQUOTE => Some('`'),
+        // Keycode::TILDE => Some('~'),
+        Keycode::A
+        | Keycode::B
+        | Keycode::C
+        | Keycode::D
+        | Keycode::E
+        | Keycode::F
+        | Keycode::G
+        | Keycode::H
+        | Keycode::I
+        | Keycode::J
+        | Keycode::K
+        | Keycode::L
+        | Keycode::M
+        | Keycode::N
+        | Keycode::O
+        | Keycode::P
+        | Keycode::Q
+        | Keycode::R
+        | Keycode::S
+        | Keycode::T
+        | Keycode::U
+        | Keycode::V
+        | Keycode::W
+        | Keycode::X
+        | Keycode::Y
+        | Keycode::Z => {
+            let char = keycode.name().chars().next().unwrap();
+
+            let mut uppercase =
+                modifiers.contains(Mod::LSHIFTMOD) || modifiers.contains(Mod::RSHIFTMOD);
+
+            if modifiers.contains(Mod::CAPSMOD) {
+                uppercase = !uppercase;
+            }
+
+            if uppercase {
+                Some(char)
+            } else {
+                let lowercase = char.to_lowercase().next().unwrap();
+
+                Some(lowercase)
+            }
+        }
         _ => None,
     }
 }
