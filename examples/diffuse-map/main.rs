@@ -2,15 +2,16 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use scene::make_textured_cube_scene;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    scene::node::{
-        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    scene::{
+        context::{utils::make_textured_cube_scene, SceneContext},
+        node::{
+            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+        },
     },
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
@@ -20,8 +21,6 @@ use cairo::{
     transform::quaternion::Quaternion,
     vec::vec3::{self},
 };
-
-mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -57,8 +56,43 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) =
-        make_textured_cube_scene(camera_aspect_ratio, rendering_context)?;
+    let scene_context = SceneContext::default();
+
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+
+        make_textured_cube_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+            &mut point_light_arena,
+            &mut spot_light_arena,
+            &mut texture_u8_arena,
+            rendering_context,
+        )
+    }?;
+
+    {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.push(scene);
+    }
 
     // Shader context
 
@@ -88,7 +122,9 @@ fn main() -> Result<(), String> {
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
-        let resources = scene_context.resources.borrow_mut();
+
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
@@ -145,7 +181,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = (*scene_context.resources).borrow();
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 

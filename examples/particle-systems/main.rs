@@ -1,7 +1,5 @@
 extern crate sdl2;
 
-use core::f32;
-
 use std::{cell::RefCell, rc::Rc};
 
 use sdl2::{keyboard::Keycode, mouse::MouseButton};

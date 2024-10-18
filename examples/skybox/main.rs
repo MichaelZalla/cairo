@@ -8,22 +8,23 @@ use cairo::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     scene::{
-        context::utils::make_cube_scene,
-        light::{PointLight, SpotLight},
+        context::SceneContext,
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
-        skybox::Skybox,
     },
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    texture::{cubemap::CubeMap, map::TextureMapStorageFormat},
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };
+
+use scene::make_scene;
+
+mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -56,104 +57,39 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) = make_cube_scene(camera_aspect_ratio)?;
+    let scene_context = SceneContext::default();
+
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+        let mut cubemap_u8_arena = resources.cubemap_u8.borrow_mut();
+        let mut skybox_arena = resources.skybox.borrow_mut();
+
+        make_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut point_light_arena,
+            &mut spot_light_arena,
+            rendering_context,
+            &mut cubemap_u8_arena,
+            &mut skybox_arena,
+        )
+    }?;
 
     {
-        let resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+        let mut scenes = scene_context.scenes.borrow_mut();
 
-        // Add a skybox to our scene.
-
-        let skybox_node = {
-            // Option 1. Cubemap as a set of 6 separate textures.
-
-            let mut skybox_cubemap: CubeMap = CubeMap::new(
-                [
-                    "examples/skybox/assets/sides/front.jpg",
-                    "examples/skybox/assets/sides/back.jpg",
-                    "examples/skybox/assets/sides/top.jpg",
-                    "examples/skybox/assets/sides/bottom.jpg",
-                    "examples/skybox/assets/sides/left.jpg",
-                    "examples/skybox/assets/sides/right.jpg",
-                ],
-                TextureMapStorageFormat::RGB24,
-            );
-
-            // Option 2. Cubemap as one horizontal cross texture.
-
-            // let mut skybox_cubemap: CubeMap = CubeMap::cross(
-            //     "examples/skybox/assets/cross/horizontal_cross.png",
-            //     TextureMapStorageFormat::RGB24,
-            // );
-
-            // Option 3. Cubemap as one vertical cross texture.
-
-            // let mut skybox_cubemap: CubeMap = CubeMap::cross(
-            //     "examples/skybox/assets/cross/vertical_cross.png",
-            //     TextureMapStorageFormat::RGB24,
-            // );
-
-            skybox_cubemap.load(rendering_context).unwrap();
-
-            let skybox_cubemap_handle = resources.cubemap_u8.borrow_mut().insert(skybox_cubemap);
-
-            let skybox = Skybox {
-                is_hdr: false,
-                radiance: Some(skybox_cubemap_handle),
-                irradiance: None,
-                specular_prefiltered_environment: None,
-            };
-
-            let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
-
-            SceneNode::new(
-                SceneNodeType::Skybox,
-                Default::default(),
-                Some(skybox_handle),
-            )
-        };
-
-        for node in scene.root.children_mut().as_mut().unwrap() {
-            if *node.get_type() == SceneNodeType::Environment {
-                node.add_child(skybox_node)?;
-
-                break;
-            }
-        }
-
-        // Add a point light to our scene.
-
-        let mut point_light = PointLight::new();
-
-        point_light.intensities = Vec3::ones() * 0.4;
-
-        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
-
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        // Add a spot light to our scene.
-
-        let mut spot_light = SpotLight::new();
-
-        spot_light.look_vector.set_position(Vec3 {
-            y: 10.0,
-            ..spot_light.look_vector.get_position()
-        });
-
-        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
-
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        ))?;
+        scenes.push(scene);
     }
-
-    let scene_context_rc = Rc::new(scene_context);
 
     // Shader context
 
@@ -163,7 +99,7 @@ fn main() -> Result<(), String> {
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        scene_context_rc.resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -180,8 +116,9 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = scene_context_rc.resources.borrow_mut();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.clear_lights();
@@ -301,8 +238,9 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = (*scene_context_rc.resources).borrow();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
         match scene.render(&resources, &renderer_rc, None) {

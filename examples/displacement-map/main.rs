@@ -6,14 +6,9 @@ use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    entity::Entity,
-    material::Material,
     matrix::Mat4,
-    mesh,
-    resource::handle::Handle,
     scene::{
-        context::utils::make_empty_scene,
-        light::{PointLight, SpotLight},
+        context::SceneContext,
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
@@ -23,10 +18,13 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    texture::map::{TextureMap, TextureMapStorageFormat},
     transform::quaternion::Quaternion,
-    vec::vec3::{self, Vec3},
+    vec::vec3,
 };
+
+use scene::make_scene;
+
+mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -60,161 +58,43 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
+    let scene_context = SceneContext::default();
+
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+        make_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut texture_u8_arena,
+            rendering_context,
+            &mut material_arena,
+            &mut mesh_arena,
+            &mut entity_arena,
+            &mut point_light_arena,
+            &mut spot_light_arena,
+        )
+    }?;
 
     {
-        let resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+        let mut scenes = scene_context.scenes.borrow_mut();
 
-        // Bricks material
-
-        let mut brick_material = Material::new("brick".to_string());
-
-        brick_material.albedo_map =
-            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
-                "./examples/displacement-map/assets/bricks2.jpg",
-                TextureMapStorageFormat::RGB24,
-            )));
-
-        brick_material.normal_map =
-            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
-                "./examples/displacement-map/assets/bricks2_normal.jpg",
-                TextureMapStorageFormat::RGB24,
-            )));
-
-        brick_material.displacement_map =
-            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
-                "./examples/displacement-map/assets/bricks2_disp.jpg",
-                TextureMapStorageFormat::Index8(0),
-            )));
-
-        brick_material.displacement_scale = 0.05;
-
-        brick_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
-
-        // Box material
-
-        let mut box_material = Material::new("box".to_string());
-
-        box_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
-            "./examples/displacement-map/assets/wood.png",
-            TextureMapStorageFormat::RGB24,
-        )));
-
-        box_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
-            "./examples/displacement-map/assets/toy_box_normal.png",
-            TextureMapStorageFormat::RGB24,
-        )));
-
-        box_material.displacement_map =
-            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
-                "./examples/displacement-map/assets/toy_box_disp.png",
-                TextureMapStorageFormat::Index8(0),
-            )));
-
-        box_material.displacement_scale = 0.05;
-
-        box_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
-
-        // Collect materials
-
-        let brick_material_handle: Handle;
-        let box_material_handle: Handle;
-
-        {
-            let mut materials = resources.material.borrow_mut();
-
-            brick_material_handle = materials.insert(brick_material);
-            box_material_handle = materials.insert(box_material);
-        }
-
-        // Add a brick wall to our scene.
-
-        let brick_wall_mesh = mesh::primitive::cube::generate(1.5, 1.5, 1.5);
-
-        let brick_wall_mesh_handle = resources.mesh.borrow_mut().insert(brick_wall_mesh);
-
-        let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some(brick_material_handle));
-
-        let brick_wall_entity_handle = resources.entity.borrow_mut().insert(brick_wall_entity);
-
-        let mut brick_wall_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(brick_wall_entity_handle),
-        );
-
-        brick_wall_entity_node
-            .get_transform_mut()
-            .set_translation(Vec3 {
-                x: -2.0,
-                y: 0.0,
-                z: 4.0,
-            });
-
-        scene.root.add_child(brick_wall_entity_node)?;
-
-        // Add a wooden box to our scene.
-
-        let wooden_box_mesh = mesh::primitive::cube::generate(1.5, 1.5, 1.5);
-
-        let wooden_box_mesh_handle = resources.mesh.borrow_mut().insert(wooden_box_mesh);
-
-        let wooden_box_entity = Entity::new(wooden_box_mesh_handle, Some(box_material_handle));
-
-        let wooden_box_entity_handle = resources.entity.borrow_mut().insert(wooden_box_entity);
-
-        let mut wooden_box_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(wooden_box_entity_handle),
-        );
-
-        wooden_box_entity_node
-            .get_transform_mut()
-            .set_translation(Vec3 {
-                x: 2.0,
-                y: 0.0,
-                z: 4.0,
-            });
-
-        scene.root.add_child(wooden_box_entity_node)?;
-
-        // Add a point light to our scene.
-
-        let mut point_light = PointLight::new();
-
-        point_light.position.y = 0.0;
-        point_light.position.z = -4.0;
-
-        point_light.intensities = Vec3::ones() * 10.0;
-
-        point_light.constant_attenuation = 1.0;
-        point_light.linear_attenuation = 0.35;
-        point_light.quadratic_attenuation = 0.44;
-
-        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
-
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        // Add a spot light to our scene.
-
-        let spot_light = SpotLight::new();
-
-        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
-
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        ))?;
+        scenes.push(scene);
     }
-
-    let scene_context_rc = Rc::new(scene_context);
 
     // Shader context
 
@@ -224,7 +104,7 @@ fn main() -> Result<(), String> {
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        scene_context_rc.resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -244,8 +124,9 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = scene_context_rc.resources.borrow_mut();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.clear_lights();
@@ -303,8 +184,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = scene_context_rc.resources.borrow();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+        let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
         match scene.render(&resources, &renderer_rc, None) {

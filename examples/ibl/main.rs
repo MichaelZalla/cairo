@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, path::Path, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI, path::Path, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -12,12 +12,12 @@ use cairo::{
     },
     resource::handle::Handle,
     scene::{
+        context::SceneContext,
         graph::SceneGraph,
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
         resources::SceneResources,
-        skybox::Skybox,
     },
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
@@ -27,6 +27,8 @@ use cairo::{
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };
+
+use scene::make_sphere_grid_scene;
 
 pub mod scene;
 
@@ -66,38 +68,41 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
-    let (mut scene_context, shader_context) =
-        scene::make_sphere_grid_scene(camera_aspect_ratio).unwrap();
+    let scene_context = SceneContext::default();
+
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut skybox_arena = resources.skybox.borrow_mut();
+
+        make_sphere_grid_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+            &mut texture_u8_arena,
+            &mut point_light_arena,
+            &mut skybox_arena,
+        )
+    }?;
 
     {
-        let resources = (*scene_context.resources).borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+        let mut scenes = scene_context.scenes.borrow_mut();
 
-        // Add a skybox to our scene.
-
-        for node in scene.root.children_mut().as_mut().unwrap() {
-            if node.is_type(SceneNodeType::Environment) {
-                let skybox_node = {
-                    // No handles for now.
-                    let skybox = Skybox {
-                        is_hdr: true,
-                        radiance: None,
-                        irradiance: None,
-                        specular_prefiltered_environment: None,
-                    };
-
-                    let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
-
-                    SceneNode::new(
-                        SceneNodeType::Skybox,
-                        Default::default(),
-                        Some(skybox_handle),
-                    )
-                };
-
-                node.add_child(skybox_node)?;
-            }
-        }
+        scenes.push(scene);
     }
 
     // Generate a common BRDF integration map, approximating the integral formed
@@ -106,7 +111,8 @@ fn main() -> Result<(), String> {
     let specular_brdf_integration_map_handle: Handle;
 
     {
-        let resources = (*scene_context.resources).borrow_mut();
+        let resources = scene_context.resources.borrow();
+
         let mut texture_vec2 = resources.texture_vec2.borrow_mut();
 
         let specular_brdf_integration_map = generate_specular_brdf_integration_map(512);
@@ -123,7 +129,7 @@ fn main() -> Result<(), String> {
     let current_handles_index = RefCell::new(0);
 
     {
-        let resources = (*scene_context.resources).borrow_mut();
+        let resources = scene_context.resources.borrow();
 
         let mut cubemap_vec3 = resources.cubemap_vec3.borrow_mut();
 
@@ -149,9 +155,8 @@ fn main() -> Result<(), String> {
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     {
-        let scene_context = scene_context.borrow_mut();
+        let resources = scene_context.resources.borrow();
 
-        let mut resources = (*scene_context.resources).borrow_mut();
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
@@ -160,7 +165,7 @@ fn main() -> Result<(), String> {
         shader_context
             .set_ambient_specular_brdf_integration_map(Some(specular_brdf_integration_map_handle));
 
-        set_ibl_map_handles(&mut resources, scene, &radiance_irradiance_handles[0]);
+        set_ibl_map_handles(&resources, scene, &radiance_irradiance_handles[0]);
     }
 
     let mut renderer = SoftwareRenderer::new(
@@ -182,7 +187,8 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let mut resources = (*scene_context.resources).borrow_mut();
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
@@ -247,7 +253,7 @@ fn main() -> Result<(), String> {
                 println!("{}", current_index);
 
                 set_ibl_map_handles(
-                    &mut resources,
+                    &resources,
                     scene,
                     &radiance_irradiance_handles[*current_index],
                 );
@@ -269,7 +275,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = (*scene_context.resources).borrow();
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
@@ -300,7 +307,7 @@ fn main() -> Result<(), String> {
 }
 
 fn set_ibl_map_handles(
-    resources: &mut SceneResources,
+    resources: &SceneResources,
     scene: &mut SceneGraph,
     handles: &(Handle, Handle, Handle),
 ) {

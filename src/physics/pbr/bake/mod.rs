@@ -39,7 +39,36 @@ pub struct HDRBakeResult {
 pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBakeResult, String> {
     // Set up a simple cube scene, that we can use to render each side of a cubemap.
 
-    let (scene_context, _shader_context) = make_cube_scene(1.0).unwrap();
+    let scene_context = SceneContext::default();
+
+    let (scene, _shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+
+        make_cube_scene(
+            &mut camera_arena,
+            1.0,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+        )
+    }?;
+
+    {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.push(scene);
+    }
 
     // Load the HDR image data into a texture.
 

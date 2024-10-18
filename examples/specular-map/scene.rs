@@ -2,7 +2,10 @@ use cairo::{
     app::context::ApplicationRenderingContext,
     entity::Entity,
     material::Material,
-    mesh::{self, Mesh},
+    mesh::{
+        primitive::{cube, plane},
+        Mesh,
+    },
     resource::arena::Arena,
     scene::{
         camera::Camera,
@@ -17,7 +20,9 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-pub fn make_scene(
+use crate::MAX_POINT_LIGHT_INTENSITY;
+
+pub(crate) fn make_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -67,7 +72,7 @@ pub fn make_scene(
     };
 
     let mut plane_entity_node = {
-        let mut mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+        let mut mesh = plane::generate(80.0, 80.0, 8, 8);
 
         mesh.material = Some(checkerboard_material_handle);
 
@@ -94,17 +99,17 @@ pub fn make_scene(
 
     // Add a container (cube) to our scene.
 
-    let emissive_material_handle = {
-        let emissive_material = {
-            let mut material = Material::new("emissive".to_string());
+    let cube_material_handle = {
+        let container_material = {
+            let mut material = Material::new("container".to_string());
 
             material.albedo_map = Some(texture_u8_arena.insert(TextureMap::new(
-                "./examples/post-effects/assets/lava.png",
+                "./examples/specular-map/assets/container2.png",
                 TextureMapStorageFormat::RGB24,
             )));
 
-            material.emissive_color_map = Some(texture_u8_arena.insert(TextureMap::new(
-                "./examples/post-effects/assets/lava_emissive.png",
+            material.specular_exponent_map = Some(texture_u8_arena.insert(TextureMap::new(
+                "./examples/specular-map/assets/container2_specular.png",
                 TextureMapStorageFormat::Index8(0),
             )));
 
@@ -115,15 +120,15 @@ pub fn make_scene(
             material
         };
 
-        material_arena.insert(emissive_material)
+        material_arena.insert(container_material)
     };
 
     let cube_entity_node = {
-        let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+        let mesh = cube::generate(2.0, 2.0, 2.0);
 
         let mesh_handle = mesh_arena.insert(mesh);
 
-        let entity = Entity::new(mesh_handle, Some(emissive_material_handle));
+        let entity = Entity::new(mesh_handle, Some(cube_material_handle));
 
         let entity_handle = entity_arena.insert(entity);
 
@@ -141,7 +146,11 @@ pub fn make_scene(
         node
     };
 
+    // Add the container as a child of the ground plane.
+
     plane_entity_node.add_child(cube_entity_node)?;
+
+    // Add the ground plane to our scene.
 
     scene.root.add_child(plane_entity_node)?;
 
@@ -150,14 +159,18 @@ pub fn make_scene(
     let point_light_node = {
         let mut light = PointLight::new();
 
-        light.intensities = Vec3::ones() * 0.8;
+        light.intensities = Vec3::ones() * MAX_POINT_LIGHT_INTENSITY;
 
-        let light_handle = point_light_arena.insert(light);
+        light.constant_attenuation = 1.0;
+        light.linear_attenuation = 0.22;
+        light.quadratic_attenuation = 0.2;
+
+        let point_light_handle = point_light_arena.insert(light);
 
         SceneNode::new(
             SceneNodeType::PointLight,
             Default::default(),
-            Some(light_handle),
+            Some(point_light_handle),
         )
     };
 
@@ -166,21 +179,21 @@ pub fn make_scene(
     // Add a spot light to our scene.
 
     let spot_light_node = {
-        let mut light = SpotLight::new();
+        let mut spot_light = SpotLight::new();
 
-        light.intensities = Vec3::ones() * 0.1;
+        spot_light.intensities = Vec3::ones() * 0.0;
 
-        light.look_vector.set_position(Vec3 {
-            y: 30.0,
-            ..light.look_vector.get_position()
+        spot_light.look_vector.set_position(Vec3 {
+            y: 10.0,
+            ..spot_light.look_vector.get_position()
         });
 
-        let light_handle = spot_light_arena.insert(light);
+        let spot_light_handle = spot_light_arena.insert(spot_light);
 
         SceneNode::new(
             SceneNodeType::SpotLight,
             Default::default(),
-            Some(light_handle),
+            Some(spot_light_handle),
         )
     };
 

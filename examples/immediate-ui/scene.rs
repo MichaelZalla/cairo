@@ -1,95 +1,87 @@
 use cairo::{
-    app::context::ApplicationRenderingContext,
-    buffer::framebuffer::Framebuffer,
+    entity::Entity,
     material::Material,
+    mesh::Mesh,
+    resource::arena::Arena,
     scene::{
-        context::{utils::make_cube_scene, SceneContext},
-        light::{PointLight, SpotLight},
+        camera::Camera,
+        context::utils::make_cube_scene,
+        environment::Environment,
+        graph::SceneGraph,
+        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         node::{SceneNode, SceneNodeType},
     },
     shader::context::ShaderContext,
-    texture::map::{TextureMap, TextureMapStorageFormat},
+    transform::Transform3D,
     vec::vec3::Vec3,
 };
 
-#[allow(unused)]
-pub(crate) fn make_textured_cube_scene(
-    rendering_context: &ApplicationRenderingContext,
-    framebuffer: &Framebuffer,
-) -> Result<(SceneContext, ShaderContext), String> {
-    let (scene_context, shader_context) = make_cube_scene(framebuffer.width_over_height).unwrap();
+pub(crate) fn make_scene(
+    camera_arena: &mut Arena<Camera>,
+    camera_aspect_ratio: f32,
+    environment_arena: &mut Arena<Environment>,
+    ambient_light_arena: &mut Arena<AmbientLight>,
+    directional_light_arena: &mut Arena<DirectionalLight>,
+    mesh_arena: &mut Arena<Mesh>,
+    material_arena: &mut Arena<Material>,
+    entity_arena: &mut Arena<Entity>,
+    point_light_arena: &mut Arena<PointLight>,
+    spot_light_arena: &mut Arena<SpotLight>,
+) -> Result<(SceneGraph, ShaderContext), String> {
+    let (mut scene, shader_context) = make_cube_scene(
+        camera_arena,
+        camera_aspect_ratio,
+        environment_arena,
+        ambient_light_arena,
+        directional_light_arena,
+        mesh_arena,
+        material_arena,
+        entity_arena,
+    )?;
 
-    {
-        let mut resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+    // Add a point light to our scene.
 
-        // Customize the cube material.
+    let mut point_light = PointLight::new();
 
-        let var_name = {
-            let cube_albedo_map_handle = resources.texture_u8.borrow_mut().insert(TextureMap::new(
-                "./data/obj/cobblestone.png",
-                TextureMapStorageFormat::RGB24,
-            ));
+    point_light.intensities = Vec3::ones() * 0.7;
 
-            Material {
-                name: "cube".to_string(),
-                albedo_map: Some(cube_albedo_map_handle),
-                ..Default::default()
-            }
-        };
-        let mut cube_material = var_name;
+    let point_light_handle = point_light_arena.insert(point_light);
 
-        cube_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
+    let mut point_light_node_transform = Transform3D::default();
 
-        let cube_material_handle = resources.material.borrow_mut().insert(cube_material);
+    point_light_node_transform.set_translation(Vec3 {
+        x: 0.0,
+        y: 6.0,
+        z: 0.0,
+    });
 
-        let cube_entity_handle = scene
-            .root
-            .find(&mut |node| *node.get_type() == SceneNodeType::Entity)
-            .unwrap()
-            .unwrap();
+    scene.root.add_child(SceneNode::new(
+        SceneNodeType::PointLight,
+        point_light_node_transform,
+        Some(point_light_handle),
+    ))?;
 
-        match resources.entity.get_mut().get_mut(&cube_entity_handle) {
-            Ok(entry) => {
-                let cube_entity = &mut entry.item;
+    // Add a spot light to our scene.
 
-                cube_entity.material = Some(cube_material_handle);
-            }
-            _ => panic!(),
-        }
+    let mut spot_light = SpotLight::new();
 
-        // Add a point light to our scene.
+    spot_light.look_vector.set_target_position(Vec3::default());
 
-        let mut point_light = PointLight::new();
+    let spot_light_handle = spot_light_arena.insert(spot_light);
 
-        point_light.intensities = Vec3::ones() * 0.7;
+    let mut spot_light_node_transform = Transform3D::default();
 
-        point_light.position = Vec3 {
-            x: 0.0,
-            y: 4.0,
-            z: 0.0,
-        };
+    spot_light_node_transform.set_translation(Vec3 {
+        x: 0.0,
+        y: 3.0,
+        z: -3.0,
+    });
 
-        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
+    scene.root.add_child(SceneNode::new(
+        SceneNodeType::SpotLight,
+        spot_light_node_transform,
+        Some(spot_light_handle),
+    ))?;
 
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        ))?;
-
-        // Add a spot light to our scene.
-
-        let spot_light = SpotLight::new();
-
-        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
-
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        ))?;
-    }
-
-    Ok((scene_context, shader_context))
+    Ok((scene, shader_context))
 }

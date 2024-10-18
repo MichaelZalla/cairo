@@ -1,84 +1,83 @@
 use crate::{
+    app::context::ApplicationRenderingContext,
     entity::Entity,
     material::Material,
-    mesh::{self},
+    mesh::{self, Mesh},
+    resource::arena::Arena,
     scene::{
         camera::Camera,
-        context::SceneContext,
         environment::Environment,
-        light::{AmbientLight, DirectionalLight},
+        graph::SceneGraph,
+        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
         node::{SceneNode, SceneNodeType},
     },
     shader::context::ShaderContext,
+    texture::map::{TextureMap, TextureMapStorageFormat},
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
     },
 };
 
-pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, ShaderContext), String> {
-    let scene_context: SceneContext = Default::default();
+pub fn make_empty_scene(
+    camera_arena: &mut Arena<Camera>,
+    camera_aspect_ratio: f32,
+    environment_arena: &mut Arena<Environment>,
+    ambient_light_arena: &mut Arena<AmbientLight>,
+    directional_light_arena: &mut Arena<DirectionalLight>,
+) -> Result<(SceneGraph, ShaderContext), String> {
+    let mut scene: SceneGraph = Default::default();
 
     let mut shader_context: ShaderContext = Default::default();
 
-    {
-        let resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+    // Create resource handles from our arenas.
 
-        let environment: Environment = Default::default();
+    let camera_handle = {
+        let mut camera: Camera = Camera::from_perspective(
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -5.0,
+            },
+            vec3::FORWARD,
+            75.0,
+            camera_aspect_ratio,
+        );
 
-        // Create resource handles from our arenas.
+        camera.is_active = true;
 
-        let camera_handle = {
-            let mut camera: Camera = Camera::from_perspective(
-                Vec3 {
-                    x: 0.0,
-                    y: 0.0,
-                    z: -5.0,
-                },
-                vec3::FORWARD,
-                75.0,
-                camera_aspect_ratio,
-            );
+        camera.update_shader_context(&mut shader_context);
 
-            camera.is_active = true;
+        camera_arena.insert(camera)
+    };
 
-            camera.recompute_world_space_frustum();
+    let environment_handle = environment_arena.insert(Default::default());
 
-            camera.update_shader_context(&mut shader_context);
-
-            resources.camera.borrow_mut().insert(camera)
+    let ambient_light_handle = {
+        let ambient_light = AmbientLight {
+            intensities: Vec3::ones() * 0.15,
         };
 
-        let environment_handle = resources.environment.borrow_mut().insert(environment);
+        ambient_light_arena.insert(ambient_light)
+    };
 
-        let ambient_light_handle = {
-            let ambient_light = AmbientLight {
-                intensities: Vec3::ones() * 0.15,
-            };
-
-            resources.ambient_light.borrow_mut().insert(ambient_light)
+    let directional_light_handle = {
+        let directional_light = DirectionalLight {
+            intensities: Vec3::ones() * 0.15,
+            direction: Vec4 {
+                x: 0.25,
+                y: -1.0,
+                z: -0.25,
+                w: 1.0,
+            }
+            .as_normal(),
+            shadow_map_cameras: None,
         };
 
-        let directional_light_handle = {
-            let directional_light = DirectionalLight {
-                intensities: Vec3::ones() * 0.15,
-                direction: Vec4 {
-                    x: 0.25,
-                    y: -1.0,
-                    z: -0.25,
-                    w: 1.0,
-                }
-                .as_normal(),
-                shadow_map_cameras: None,
-            };
+        directional_light_arena.insert(directional_light)
+    };
 
-            resources
-                .directional_light
-                .borrow_mut()
-                .insert(directional_light)
-        };
-
+    let environment_node = {
         let mut environment_node = SceneNode::new(
             SceneNodeType::Environment,
             Default::default(),
@@ -97,50 +96,155 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, Shade
             Some(directional_light_handle),
         ))?;
 
-        scene.root.add_child(environment_node)?;
+        environment_node
+    };
 
-        let camera_node = SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        );
+    scene.root.add_child(environment_node)?;
 
-        scene.root.add_child(camera_node)?;
-    }
+    let camera_node = SceneNode::new(
+        SceneNodeType::Camera,
+        Default::default(),
+        Some(camera_handle),
+    );
 
-    Ok((scene_context, shader_context))
+    scene.root.add_child(camera_node)?;
+
+    Ok((scene, shader_context))
 }
 
-pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, ShaderContext), String> {
-    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
+pub fn make_cube_scene(
+    camera_arena: &mut Arena<Camera>,
+    camera_aspect_ratio: f32,
+    environment_arena: &mut Arena<Environment>,
+    ambient_light_arena: &mut Arena<AmbientLight>,
+    directional_light_arena: &mut Arena<DirectionalLight>,
+    mesh_arena: &mut Arena<Mesh>,
+    material_arena: &mut Arena<Material>,
+    entity_arena: &mut Arena<Entity>,
+) -> Result<(SceneGraph, ShaderContext), String> {
+    let (mut scene, shader_context) = make_empty_scene(
+        camera_arena,
+        camera_aspect_ratio,
+        environment_arena,
+        ambient_light_arena,
+        directional_light_arena,
+    )?;
 
-    {
-        let resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+    let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
 
-        let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);
+    let cube_material = Material::new("cube_material".to_string());
 
-        let cube_material = Material::new("cube_material".to_string());
+    let cube_entity_handle = {
+        let cube_mesh_handle = mesh_arena.insert(cube_mesh);
 
-        let cube_entity_handle = {
-            let cube_mesh_handle = resources.mesh.borrow_mut().insert(cube_mesh);
+        let cube_material_handle = material_arena.insert(cube_material);
 
-            let cube_material_handle = resources.material.borrow_mut().insert(cube_material);
+        entity_arena.insert(Entity::new(cube_mesh_handle, Some(cube_material_handle)))
+    };
 
-            resources
-                .entity
-                .borrow_mut()
-                .insert(Entity::new(cube_mesh_handle, Some(cube_material_handle)))
+    let cube_entity_node = SceneNode::new(
+        SceneNodeType::Entity,
+        Default::default(),
+        Some(cube_entity_handle),
+    );
+
+    scene.root.add_child(cube_entity_node)?;
+
+    Ok((scene, shader_context))
+}
+
+pub fn make_textured_cube_scene(
+    camera_arena: &mut Arena<Camera>,
+    camera_aspect_ratio: f32,
+    environment_arena: &mut Arena<Environment>,
+    ambient_light_arena: &mut Arena<AmbientLight>,
+    directional_light_arena: &mut Arena<DirectionalLight>,
+    mesh_arena: &mut Arena<Mesh>,
+    material_arena: &mut Arena<Material>,
+    entity_arena: &mut Arena<Entity>,
+    point_light_arena: &mut Arena<PointLight>,
+    spot_light_arena: &mut Arena<SpotLight>,
+    texture_u8_arena: &mut Arena<TextureMap>,
+    rendering_context: &ApplicationRenderingContext,
+) -> Result<(SceneGraph, ShaderContext), String> {
+    let (mut scene, shader_context) = make_cube_scene(
+        camera_arena,
+        camera_aspect_ratio,
+        environment_arena,
+        ambient_light_arena,
+        directional_light_arena,
+        mesh_arena,
+        material_arena,
+        entity_arena,
+    )?;
+
+    // Customize the cube material.
+
+    let cube_material_handle = {
+        let mut cube_material = {
+            let cube_albedo_map_handle = texture_u8_arena.insert(TextureMap::new(
+                "./data/obj/cobblestone.png",
+                TextureMapStorageFormat::RGB24,
+            ));
+
+            Material {
+                name: "cube".to_string(),
+                albedo_map: Some(cube_albedo_map_handle),
+                ..Default::default()
+            }
         };
 
-        let cube_entity_node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(cube_entity_handle),
-        );
+        cube_material.load_all_maps(texture_u8_arena, rendering_context)?;
 
-        scene.root.add_child(cube_entity_node)?;
+        material_arena.insert(cube_material)
+    };
+
+    let cube_entity_handle = scene
+        .root
+        .find(&mut |node| *node.get_type() == SceneNodeType::Entity)
+        .unwrap()
+        .unwrap();
+
+    match entity_arena.get_mut(&cube_entity_handle) {
+        Ok(entry) => {
+            let cube_entity = &mut entry.item;
+
+            cube_entity.material = Some(cube_material_handle);
+        }
+        _ => panic!(),
     }
 
-    Ok((scene_context, shader_context))
+    // Add a point light to our scene.
+
+    let mut point_light = PointLight::new();
+
+    point_light.intensities = Vec3::ones() * 0.7;
+
+    point_light.position = Vec3 {
+        x: 0.0,
+        y: 4.0,
+        z: 0.0,
+    };
+
+    let point_light_handle = point_light_arena.insert(point_light);
+
+    scene.root.add_child(SceneNode::new(
+        SceneNodeType::PointLight,
+        Default::default(),
+        Some(point_light_handle),
+    ))?;
+
+    // Add a spot light to our scene.
+
+    let spot_light = SpotLight::new();
+
+    let spot_light_handle = spot_light_arena.insert(spot_light);
+
+    scene.root.add_child(SceneNode::new(
+        SceneNodeType::SpotLight,
+        Default::default(),
+        Some(spot_light_handle),
+    ))?;
+
+    Ok((scene, shader_context))
 }

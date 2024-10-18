@@ -10,7 +10,10 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    scene::node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
+    scene::{
+        context::SceneContext,
+        node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
+    },
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -51,7 +54,40 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) = make_sphere_grid_scene(camera_aspect_ratio)?;
+    let scene_context = SceneContext::default();
+
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+
+        make_sphere_grid_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+            &mut texture_u8_arena,
+            &mut point_light_arena,
+        )
+    }?;
+
+    {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.push(scene);
+    }
 
     // ShaderContext
 
@@ -78,7 +114,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = (*(scene_context.resources)).borrow_mut();
+        let resources = scene_context.resources.borrow();
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
@@ -122,7 +158,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = (*scene_context.resources).borrow();
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 

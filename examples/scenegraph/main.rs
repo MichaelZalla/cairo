@@ -5,33 +5,26 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
-    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    entity::Entity,
-    material::Material,
     matrix::Mat4,
-    mesh,
-    resource::handle::Handle,
     scene::{
-        context::utils::make_empty_scene,
-        light::{PointLight, SpotLight},
+        context::SceneContext,
         node::{
             SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
         },
-        skybox::Skybox,
     },
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    texture::{
-        cubemap::CubeMap,
-        map::{TextureMap, TextureMapStorageFormat},
-    },
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };
+
+use scene::make_scene;
+
+mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -69,297 +62,46 @@ fn main() -> Result<(), String> {
     static BLUE_CUBE_ORIGINAL_UNIFORM_SCALE: f32 =
         GREEN_CUBE_ORIGINAL_UNIFORM_SCALE * GREEN_CUBE_ORIGINAL_UNIFORM_SCALE;
 
-    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
+    let scene_context = SceneContext::default();
+
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+        let mut cubemap_u8_arena = resources.cubemap_u8.borrow_mut();
+        let mut skybox_arena = resources.skybox.borrow_mut();
+
+        make_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+            &mut texture_u8_arena,
+            rendering_context,
+            &mut point_light_arena,
+            &mut spot_light_arena,
+            &mut cubemap_u8_arena,
+            &mut skybox_arena,
+        )
+    }?;
 
     {
-        let resources = scene_context.resources.borrow_mut();
-        let scene = &mut scene_context.scenes.borrow_mut()[0];
+        let mut scenes = scene_context.scenes.borrow_mut();
 
-        // Add a textured ground plane to our scene.
-
-        let checkerboard_material_handle: Handle;
-
-        {
-            let mut materials = resources.material.borrow_mut();
-
-            let checkerboard_material = {
-                let mut material = Material::new("checkerboard".to_string());
-
-                let mut checkerboard_albedo_map = TextureMap::new(
-                    "./assets/textures/checkerboard.jpg",
-                    TextureMapStorageFormat::Index8(0),
-                );
-
-                checkerboard_albedo_map.load(rendering_context)?;
-
-                let checkerboard_albedo_map_handle = resources
-                    .texture_u8
-                    .borrow_mut()
-                    .insert(checkerboard_albedo_map);
-
-                material.albedo_map = Some(checkerboard_albedo_map_handle);
-
-                material
-            };
-
-            checkerboard_material_handle = materials.insert(checkerboard_material);
-        }
-
-        let mut plane_entity_node = {
-            let mut plane_mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
-
-            plane_mesh.material = Some(checkerboard_material_handle);
-
-            let plane_mesh_handle = resources.mesh.borrow_mut().insert(plane_mesh);
-
-            let plane_entity = Entity::new(plane_mesh_handle, Some(checkerboard_material_handle));
-
-            let plane_entity_handle = resources.entity.borrow_mut().insert(plane_entity);
-
-            SceneNode::new(
-                SceneNodeType::Entity,
-                Default::default(),
-                Some(plane_entity_handle),
-            )
-        };
-
-        // Add some cubes to our scene.
-
-        let mut red_cube_material = Material::new("red".to_string());
-        red_cube_material.albedo = color::RED.to_vec3() / 255.0;
-
-        let mut green_cube_material = Material::new("green".to_string());
-        green_cube_material.albedo = color::GREEN.to_vec3() / 255.0;
-
-        let mut blue_cube_material = Material::new("blue".to_string());
-        blue_cube_material.albedo = color::BLUE.to_vec3() / 255.0;
-
-        let (red_cube_material_handle, green_cube_material_handle, blue_cube_material_handle) = {
-            let mut materials = resources.material.borrow_mut();
-
-            (
-                materials.insert(red_cube_material),
-                materials.insert(green_cube_material),
-                materials.insert(blue_cube_material),
-            )
-        };
-
-        // Blue cube (1x1)
-
-        let cube_mesh = mesh::primitive::cube::generate(3.0, 3.0, 3.0);
-
-        let blue_cube_entity_node = {
-            let mut mesh = cube_mesh.clone();
-
-            mesh.object_name = Some("blue_cube".to_string());
-
-            mesh.material = Some(blue_cube_material_handle);
-
-            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
-
-            let entity = Entity::new(mesh_handle, Some(blue_cube_material_handle));
-
-            let entity_handle = resources.entity.borrow_mut().insert(entity);
-
-            let mut node = SceneNode::new(
-                SceneNodeType::Entity,
-                Default::default(),
-                Some(entity_handle),
-            );
-
-            let mut scale = *(node.get_transform().scale());
-            let mut translate = *(node.get_transform().translation());
-
-            scale *= 2.0 / 3.0;
-            translate.y = 4.0;
-
-            node.get_transform_mut().set_translation(translate);
-            node.get_transform_mut().set_scale(scale);
-
-            node
-        };
-
-        // Green cube (2x2)
-
-        let mut green_cube_entity_node = {
-            let mut mesh = cube_mesh.clone();
-
-            mesh.object_name = Some("green_cube".to_string());
-
-            mesh.material = Some(green_cube_material_handle);
-
-            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
-
-            let entity = Entity::new(mesh_handle, Some(green_cube_material_handle));
-
-            let entity_handle = resources.entity.borrow_mut().insert(entity);
-
-            let mut node = SceneNode::new(
-                SceneNodeType::Entity,
-                Default::default(),
-                Some(entity_handle),
-            );
-
-            let mut scale = *(node.get_transform().scale());
-            let mut translate = *(node.get_transform().translation());
-
-            scale *= 2.0 / 3.0;
-            translate.y = 4.0;
-
-            node.get_transform_mut().set_translation(translate);
-            node.get_transform_mut().set_scale(scale);
-
-            node
-        };
-
-        // Red cube (3x3)
-
-        let mut red_cube_entity_node = {
-            let mut mesh = cube_mesh.clone();
-
-            mesh.object_name = Some("red_cube".to_string());
-
-            mesh.material = Some(red_cube_material_handle);
-
-            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
-
-            let entity = Entity::new(mesh_handle, Some(red_cube_material_handle));
-
-            let entity_handle = resources.entity.borrow_mut().insert(entity);
-
-            let mut node = SceneNode::new(
-                SceneNodeType::Entity,
-                Default::default(),
-                Some(entity_handle),
-            );
-
-            let mut translate = *(node.get_transform().translation());
-
-            translate.y = 3.0;
-
-            node.get_transform_mut().set_translation(translate);
-
-            node
-        };
-
-        // Add a skybox to our scene.
-
-        let skybox_node = {
-            let mut skybox_cubemap = CubeMap::new(
-                [
-                    "examples/skybox/assets/sides/front.jpg",
-                    "examples/skybox/assets/sides/back.jpg",
-                    "examples/skybox/assets/sides/top.jpg",
-                    "examples/skybox/assets/sides/bottom.jpg",
-                    "examples/skybox/assets/sides/left.jpg",
-                    "examples/skybox/assets/sides/right.jpg",
-                ],
-                TextureMapStorageFormat::RGB24,
-            );
-
-            skybox_cubemap.load(rendering_context).unwrap();
-
-            let skybox_cubemap_handle = resources.cubemap_u8.borrow_mut().insert(skybox_cubemap);
-
-            let skybox = Skybox {
-                is_hdr: false,
-                radiance: Some(skybox_cubemap_handle),
-                irradiance: None,
-                specular_prefiltered_environment: None,
-            };
-
-            let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
-
-            SceneNode::new(
-                SceneNodeType::Skybox,
-                Default::default(),
-                Some(skybox_handle),
-            )
-        };
-
-        for node in scene.root.children_mut().as_mut().unwrap() {
-            if *node.get_type() == SceneNodeType::Environment {
-                node.add_child(skybox_node)?;
-
-                break;
-            }
-        }
-
-        // Add a point light to our scene.
-
-        let point_light = PointLight::new();
-
-        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
-
-        let point_light_node = SceneNode::new(
-            SceneNodeType::PointLight,
-            Default::default(),
-            Some(point_light_handle),
-        );
-
-        plane_entity_node.add_child(point_light_node)?;
-
-        // Add a spot light to our scene.
-
-        let mut spot_light = SpotLight::new();
-
-        spot_light
-            .look_vector
-            .set_target_position(Default::default());
-
-        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
-
-        let mut spot_light_node = SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        );
-
-        // Add a spot light as a child of the green cube.
-
-        spot_light_node.get_transform_mut().set_translation(Vec3 {
-            x: 0.0,
-            y: 10.0,
-            z: 0.0,
-        });
-
-        green_cube_entity_node.add_child(spot_light_node)?;
-
-        // Add the blue cube as a child of the green cube.
-
-        green_cube_entity_node.add_child(blue_cube_entity_node)?;
-
-        // Add the green cube as a child of the red cube.
-
-        red_cube_entity_node.add_child(green_cube_entity_node)?;
-
-        // Add the red cube as a child of the ground plane.
-
-        plane_entity_node.add_child(red_cube_entity_node)?;
-
-        scene.root.add_child(plane_entity_node)?;
-
-        // Adjust our scene's default camera.
-
-        if let Some(camera_handle) = scene
-            .root
-            .find(&mut |node| *node.get_type() == SceneNodeType::Camera)
-            .unwrap()
-        {
-            let mut camera_arena = resources.camera.borrow_mut();
-
-            if let Ok(entry) = camera_arena.get_mut(&camera_handle) {
-                let camera = &mut entry.item;
-
-                camera.look_vector.set_position(Vec3 {
-                    x: 0.0,
-                    y: 24.0,
-                    z: -32.0,
-                });
-
-                camera.look_vector.set_target_position(Default::default());
-            }
-        }
+        scenes.push(scene);
     }
 
     // ShaderContext
@@ -387,7 +129,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
 
-        let resources = scene_context.resources.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
@@ -581,7 +324,8 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = (*scene_context.resources).borrow();
+        let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 

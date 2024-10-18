@@ -2,7 +2,10 @@ use cairo::{
     app::context::ApplicationRenderingContext,
     entity::Entity,
     material::Material,
-    mesh::{self, Mesh},
+    mesh::{
+        primitive::{cube, plane},
+        Mesh,
+    },
     resource::arena::Arena,
     scene::{
         camera::Camera,
@@ -17,7 +20,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-pub fn make_scene(
+pub(crate) fn make_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -26,10 +29,10 @@ pub fn make_scene(
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
-    texture_u8_arena: &mut Arena<TextureMap>,
-    rendering_context: &ApplicationRenderingContext,
     point_light_arena: &mut Arena<PointLight>,
     spot_light_arena: &mut Arena<SpotLight>,
+    texture_u8_arena: &mut Arena<TextureMap>,
+    rendering_context: &ApplicationRenderingContext,
 ) -> Result<(SceneGraph, ShaderContext), String> {
     let (mut scene, shader_context) = make_empty_scene(
         camera_arena,
@@ -67,7 +70,7 @@ pub fn make_scene(
     };
 
     let mut plane_entity_node = {
-        let mut mesh = mesh::primitive::plane::generate(80.0, 80.0, 8, 8);
+        let mut mesh = plane::generate(80.0, 80.0, 8, 8);
 
         mesh.material = Some(checkerboard_material_handle);
 
@@ -119,7 +122,7 @@ pub fn make_scene(
     };
 
     let cube_entity_node = {
-        let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
+        let mesh = cube::generate(2.0, 2.0, 2.0);
 
         let mesh_handle = mesh_arena.insert(mesh);
 

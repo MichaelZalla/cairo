@@ -8,19 +8,10 @@ use super::{graph::SceneGraph, resources::SceneResources};
 
 pub mod utils;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneContext {
     pub resources: Rc<RefCell<SceneResources>>,
     pub scenes: RefCell<Vec<SceneGraph>>,
-}
-
-impl Default for SceneContext {
-    fn default() -> Self {
-        Self {
-            resources: Default::default(),
-            scenes: RefCell::new(vec![Default::default()]),
-        }
-    }
 }
 
 impl PostDeserialize for SceneContext {

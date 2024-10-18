@@ -15,8 +15,11 @@ use cairo::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
     matrix::Mat4,
-    scene::node::{
-        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    scene::{
+        context::SceneContext,
+        node::{
+            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+        },
     },
     shaders::{
         debug_shaders::{
@@ -99,10 +102,43 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) =
-        make_primitives_scene(camera_aspect_ratio, Some(rendering_context))?;
+    let scene_context = SceneContext::default();
 
-    let scene_context_rc = Rc::new(scene_context);
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+        make_primitives_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+            &mut texture_u8_arena,
+            rendering_context,
+            &mut point_light_arena,
+            &mut spot_light_arena,
+        )
+    }?;
+
+    {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.push(scene);
+    }
 
     // Shader context
 
@@ -112,7 +148,7 @@ fn main() -> Result<(), String> {
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        scene_context_rc.resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -153,8 +189,9 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let mut renderer = renderer_rc.borrow_mut();
 
-        let resources = scene_context_rc.resources.borrow_mut();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.clear_lights();
@@ -580,8 +617,9 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        let resources = scene_context_rc.resources.borrow();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
         match scene.render(&resources, &renderer_rc, None) {

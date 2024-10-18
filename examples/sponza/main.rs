@@ -15,8 +15,11 @@ use cairo::{
     font::{cache::FontCache, FontInfo},
     graphics::Graphics,
     matrix::Mat4,
-    scene::node::{
-        SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+    scene::{
+        context::SceneContext,
+        node::{
+            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
+        },
     },
     shaders::{
         debug_shaders::{
@@ -101,10 +104,47 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) =
-        make_sponza_scene(camera_aspect_ratio, rendering_context)?;
+    let scene_context = SceneContext::default();
 
-    let scene_context_rc = Rc::new(scene_context);
+    let (scene, shader_context) = {
+        let resources = scene_context.resources.borrow();
+
+        let mut camera_arena = resources.camera.borrow_mut();
+        let mut environment_arena = resources.environment.borrow_mut();
+        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+        let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut mesh_arena = resources.mesh.borrow_mut();
+        let mut material_arena = resources.material.borrow_mut();
+        let mut entity_arena = resources.entity.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+        let mut cubemap_u8_arena = resources.cubemap_u8.borrow_mut();
+        let mut skybox_arena = resources.skybox.borrow_mut();
+
+        make_sponza_scene(
+            &mut camera_arena,
+            camera_aspect_ratio,
+            &mut environment_arena,
+            &mut ambient_light_arena,
+            &mut directional_light_arena,
+            &mut mesh_arena,
+            &mut material_arena,
+            &mut entity_arena,
+            &mut texture_u8_arena,
+            rendering_context,
+            &mut point_light_arena,
+            &mut spot_light_arena,
+            &mut cubemap_u8_arena,
+            &mut skybox_arena,
+        )
+    }?;
+
+    {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.push(scene);
+    }
 
     // Shader context
 
@@ -126,7 +166,7 @@ fn main() -> Result<(), String> {
 
     let mut renderer = SoftwareRenderer::new(
         shader_context_rc.clone(),
-        scene_context_rc.resources.clone(),
+        scene_context.resources.clone(),
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
@@ -162,8 +202,9 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!("Seconds ellapsed: {:.*}", 2, uptime));
 
-        let resources = scene_context_rc.resources.borrow_mut();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         shader_context.clear_lights();
@@ -456,8 +497,9 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = scene_context_rc.resources.borrow();
-        let mut scenes = scene_context_rc.scenes.borrow_mut();
+        let resources = scene_context.resources.borrow();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
         match scene.render(&resources, &renderer_rc, None) {

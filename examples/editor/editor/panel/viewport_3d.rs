@@ -78,6 +78,7 @@ impl PanelInstance for Viewport3DPanel {
 
         EDITOR_SCENE_CONTEXT.with(|scene_context| {
             let resources = scene_context.resources.borrow();
+
             let scenes = scene_context.scenes.borrow();
             let scene = &scenes[0];
 

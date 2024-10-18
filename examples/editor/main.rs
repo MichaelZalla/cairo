@@ -21,8 +21,9 @@ use cairo::{
     resource::handle::Handle,
     scene::{
         context::{utils::make_cube_scene, SceneContext},
-        resources::SceneResources,
+        graph::SceneGraph,
     },
+    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -98,18 +99,33 @@ fn main() -> Result<(), String> {
 
     let current_frame_index_rc = RefCell::new(0_u32);
 
-    let mut scene_resources_rc: Option<Rc<RefCell<SceneResources>>> = None;
+    let (scene, shader_context) = EDITOR_SCENE_CONTEXT.with(
+        |scene_context| -> Result<(SceneGraph, ShaderContext), String> {
+            let resources = scene_context.resources.borrow();
 
-    EDITOR_SCENE_CONTEXT.with(|sc| {
-        let (cube_scene_context, _shader_context) = make_cube_scene(camera_aspect_ratio).unwrap();
+            let mut camera_arena = resources.camera.borrow_mut();
+            let mut environment_arena = resources.environment.borrow_mut();
+            let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+            let mut directional_light_arena = resources.directional_light.borrow_mut();
+            let mut mesh_arena = resources.mesh.borrow_mut();
+            let mut material_arena = resources.material.borrow_mut();
+            let mut entity_arena = resources.entity.borrow_mut();
 
-        let resources = RefCell::into_inner(Rc::try_unwrap(cube_scene_context.resources).unwrap());
-        let scenes = RefCell::into_inner(cube_scene_context.scenes);
+            make_cube_scene(
+                &mut camera_arena,
+                camera_aspect_ratio,
+                &mut environment_arena,
+                &mut ambient_light_arena,
+                &mut directional_light_arena,
+                &mut mesh_arena,
+                &mut material_arena,
+                &mut entity_arena,
+            )
+        },
+    )?;
 
-        *sc.resources.borrow_mut() = resources;
-        *sc.scenes.borrow_mut() = scenes;
-
-        scene_resources_rc.replace(sc.resources.clone());
+    EDITOR_SCENE_CONTEXT.with(|scene_context| {
+        scene_context.scenes.borrow_mut().push(scene);
     });
 
     // Panel rendering callbacks.
@@ -222,9 +238,14 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
+    let scene_resources_rc =
+        EDITOR_SCENE_CONTEXT.with(|scene_context| scene_context.resources.clone());
+
+    let shader_context_rc = Rc::new(RefCell::new(shader_context));
+
     let renderer = SoftwareRenderer::new(
-        Default::default(),
-        scene_resources_rc.unwrap(),
+        shader_context_rc,
+        scene_resources_rc,
         DEFAULT_VERTEX_SHADER,
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),

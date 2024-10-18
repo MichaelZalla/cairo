@@ -28,7 +28,8 @@ use cairo::{
     matrix::Mat4,
     resource::handle::Handle,
     scene::{
-        context::{utils::make_cube_scene, SceneContext},
+        context::SceneContext,
+        graph::SceneGraph,
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -51,6 +52,7 @@ use cairo::{
 
 use command::{process_commands, CommandBuffer};
 use panels::{PanelArenas, PanelInstance, PanelRenderCallbacks};
+use scene::make_scene;
 use settings::Settings;
 use window::make_window_list;
 
@@ -148,18 +150,42 @@ fn main() -> Result<(), String> {
 
     let camera_aspect_ratio = framebuffer.width_over_height;
 
-    // Initializes a 3D scene context (default cube scene).
+    // Makes a 3D scene and a preconfigured shader context.
 
-    let shader_context = {
-        let (scene_context, shader_context) = make_cube_scene(camera_aspect_ratio)?;
+    let (scene, shader_context) = SCENE_CONTEXT.with(
+        |scene_context| -> Result<(SceneGraph, ShaderContext), String> {
+            let resources = scene_context.resources.borrow();
 
-        SCENE_CONTEXT.with(|ctx| {
-            RefCell::swap(&ctx.resources, &scene_context.resources);
-            RefCell::swap(&ctx.scenes, &scene_context.scenes);
-        });
+            let mut camera_arena = resources.camera.borrow_mut();
+            let mut environment_arena = resources.environment.borrow_mut();
+            let mut ambient_light_arena = resources.ambient_light.borrow_mut();
+            let mut directional_light_arena = resources.directional_light.borrow_mut();
+            let mut mesh_arena = resources.mesh.borrow_mut();
+            let mut material_arena = resources.material.borrow_mut();
+            let mut entity_arena = resources.entity.borrow_mut();
+            let mut point_light_arena = resources.point_light.borrow_mut();
+            let mut spot_light_arena = resources.spot_light.borrow_mut();
 
-        shader_context
-    };
+            make_scene(
+                &mut camera_arena,
+                camera_aspect_ratio,
+                &mut environment_arena,
+                &mut ambient_light_arena,
+                &mut directional_light_arena,
+                &mut mesh_arena,
+                &mut material_arena,
+                &mut entity_arena,
+                &mut point_light_arena,
+                &mut spot_light_arena,
+            )
+        },
+    )?;
+
+    SCENE_CONTEXT.with(|scene_context| {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.push(scene);
+    });
 
     // Initializes a shader context.
 
@@ -281,6 +307,7 @@ fn main() -> Result<(), String> {
 
             SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
                 let resources = ctx.resources.borrow();
+
                 let mut scenes = ctx.scenes.borrow_mut();
                 let scene = &mut scenes[0];
 
@@ -601,7 +628,8 @@ fn main() -> Result<(), String> {
         // options.
 
         SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-            let resources = ctx.resources.borrow_mut();
+            let resources = ctx.resources.borrow();
+
             let mut scenes = ctx.scenes.borrow_mut();
             let mut shader_context = (*shader_context_rc).borrow_mut();
 

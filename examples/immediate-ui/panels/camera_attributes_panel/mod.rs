@@ -219,6 +219,7 @@ impl PanelInstance for CameraAttributesPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
         SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
             let resources = ctx.resources.borrow();
+
             let camera_arena = resources.camera.borrow();
 
             if let Ok(entry) = camera_arena.get(&self.camera_handle) {
