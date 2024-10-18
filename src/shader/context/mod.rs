@@ -162,6 +162,13 @@ impl ShaderContext {
         &mut self.spot_lights
     }
 
+    pub fn clear_lights(&mut self) {
+        self.set_ambient_light(None);
+        self.set_directional_light(None);
+        self.get_point_lights_mut().clear();
+        self.get_spot_lights_mut().clear();
+    }
+
     pub fn set_active_material(&mut self, optional_handle: Option<Handle>) {
         self.active_material = optional_handle;
     }

@@ -157,6 +157,8 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context_rc.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
+        shader_context.clear_lights();
+
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 (Keycode::R, _) => {
@@ -223,11 +225,6 @@ fn main() -> Result<(), String> {
         debug_message_buffer.write(format!("FPS: {:.*}", 0, app.timing_info.frames_per_second));
 
         debug_message_buffer.write(format!("Seconds ellapsed: {:.*}", 2, uptime));
-
-        shader_context.set_ambient_light(None);
-        shader_context.set_directional_light(None);
-        shader_context.get_point_lights_mut().clear();
-        shader_context.get_spot_lights_mut().clear();
 
         // Traverse the scene graph and update its nodes.
 

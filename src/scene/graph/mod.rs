@@ -70,6 +70,8 @@ impl SceneGraph {
         game_controller_state: &GameControllerState,
         mut update_node: Option<Rc<UpdateSceneGraphNodeCallback>>,
     ) -> Result<(), String> {
+        shader_context.clear_lights();
+
         self.root.visit_mut(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),

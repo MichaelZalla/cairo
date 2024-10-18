@@ -78,8 +78,7 @@ fn main() -> Result<(), String> {
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.get_point_lights_mut().clear();
-        shader_context.get_spot_lights_mut().clear();
+        shader_context.clear_lights();
 
         let mut update_scene_graph_node = |_current_depth: usize,
                                            current_world_transform: Mat4,

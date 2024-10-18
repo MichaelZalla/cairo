@@ -280,10 +280,7 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.set_ambient_light(None);
-        shader_context.set_directional_light(None);
-        shader_context.get_point_lights_mut().clear();
-        shader_context.get_spot_lights_mut().clear();
+        shader_context.clear_lights();
 
         let uptime = app.timing_info.uptime_seconds;
 
