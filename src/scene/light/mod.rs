@@ -488,7 +488,12 @@ impl SpotLight {
             },
             look_vector: LookVector::new(
                 default_light_position,
-                default_light_position + vec3::UP * -1.0,
+                default_light_position
+                    + Vec3 {
+                        x: 0.001,
+                        y: -1.0,
+                        z: 0.001,
+                    },
             ),
             inner_cutoff_angle: (PI / 12.0),
             outer_cutoff_angle: (PI / 8.0),
