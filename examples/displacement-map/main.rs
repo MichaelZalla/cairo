@@ -27,10 +27,7 @@ use cairo::{
     software_renderer::SoftwareRenderer,
     texture::map::{TextureMap, TextureMapStorageFormat},
     transform::quaternion::Quaternion,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::{self, Vec3},
 };
 
 fn main() -> Result<(), String> {
@@ -294,7 +291,7 @@ fn main() -> Result<(), String> {
                                            current_world_transform: Mat4,
                                            node: &mut SceneNode|
          -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
+            let (node_type, _handle) = (node.get_type(), node.get_handle());
 
             match node_type {
                 SceneNodeType::Entity => {
@@ -306,68 +303,6 @@ fn main() -> Result<(), String> {
 
                     Ok(())
                 }
-                SceneNodeType::PointLight => match handle {
-                    Some(handle) => {
-                        let mut point_light_arena = resources.point_light.borrow_mut();
-
-                        match point_light_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let point_light = &mut entry.item;
-
-                                let orbital_radius: f32 = 6.0;
-
-                                point_light.position = Vec3 {
-                                    x: 4.0 + orbital_radius * uptime.sin(),
-                                    y: orbital_radius * uptime.cos(),
-                                    z: -4.0,
-                                };
-
-                                shader_context.get_point_lights_mut().push(*handle);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::SpotLight => match handle {
-                    Some(handle) => {
-                        let mut spot_light_arena = resources.spot_light.borrow_mut();
-
-                        match spot_light_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let spot_light = &mut entry.item;
-
-                                spot_light.look_vector.set_position(
-                                    (Vec4::new(Default::default(), 1.0) * current_world_transform)
-                                        .to_vec3(),
-                                );
-
-                                spot_light.look_vector.set_target_position(
-                                    (Vec4::new(vec3::UP * -1.0, 1.0) * current_world_transform)
-                                        .to_vec3(),
-                                );
-
-                                shader_context.get_spot_lights_mut().push(*handle);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `SpotLight` node with no resource handle!")
-                    }
-                },
                 _ => node.update(
                     &current_world_transform,
                     &resources,

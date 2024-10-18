@@ -10,6 +10,7 @@ use crate::{
     serde::PostDeserialize,
     shader::context::ShaderContext,
     transform::Transform3D,
+    vec::vec4::Vec4,
 };
 
 use super::resources::SceneResources;
@@ -502,20 +503,59 @@ impl SceneNode {
                     panic!("Encountered a `DirectionalLight` node with no resource handle!")
                 }
             },
-            SceneNodeType::PointLight => {
-                shader_context
-                    .get_point_lights_mut()
-                    .push(self.get_handle().unwrap());
+            SceneNodeType::PointLight => match handle {
+                Some(handle) => {
+                    let mut point_light_arena = resources.point_light.borrow_mut();
 
-                Ok(())
-            }
-            SceneNodeType::SpotLight => {
-                shader_context
-                    .get_spot_lights_mut()
-                    .push(self.get_handle().unwrap());
+                    match point_light_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let point_light = &mut entry.item;
 
-                Ok(())
-            }
+                            point_light.position = (Vec4::new(Default::default(), 1.0)
+                                * (*current_world_transform))
+                                .to_vec3();
+
+                            shader_context.get_point_lights_mut().push(*handle);
+
+                            Ok(())
+                        }
+                        Err(err) => panic!(
+                            "Failed to get PointLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `PointLight` node with no resource handle!")
+                }
+            },
+            SceneNodeType::SpotLight => match handle {
+                Some(handle) => {
+                    let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+                    match spot_light_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let spot_light = &mut entry.item;
+
+                            spot_light.look_vector.set_position(
+                                (Vec4::new(Default::default(), 1.0) * (*current_world_transform))
+                                    .to_vec3(),
+                            );
+
+                            shader_context.get_spot_lights_mut().push(*handle);
+
+                            Ok(())
+                        }
+                        Err(err) => panic!(
+                            "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `SpotLight` node with no resource handle!")
+                }
+            },
             _ => Ok(()),
         }
     }

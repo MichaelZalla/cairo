@@ -27,10 +27,7 @@ use cairo::{
     software_renderer::SoftwareRenderer,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
     transform::quaternion::Quaternion,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::{self, Vec3},
 };
 
 fn main() -> Result<(), String> {
@@ -345,14 +342,6 @@ fn main() -> Result<(), String> {
                                         + 0.5,
                                 } * MAX_POINT_LIGHT_INTENSITY;
 
-                                let orbital_radius: f32 = 3.0;
-
-                                point_light.position = Vec3 {
-                                    x: orbital_radius * uptime.sin(),
-                                    y: 3.0,
-                                    z: orbital_radius * uptime.cos(),
-                                };
-
                                 shader_context.get_point_lights_mut().push(*handle);
 
                                 Ok(())
@@ -365,38 +354,6 @@ fn main() -> Result<(), String> {
                     }
                     None => {
                         panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::SpotLight => match handle {
-                    Some(handle) => {
-                        let mut spot_light_arena = resources.spot_light.borrow_mut();
-
-                        match spot_light_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let spot_light = &mut entry.item;
-
-                                spot_light.look_vector.set_position(
-                                    (Vec4::new(Default::default(), 1.0) * current_world_transform)
-                                        .to_vec3(),
-                                );
-
-                                spot_light.look_vector.set_target_position(
-                                    (Vec4::new(vec3::UP * -1.0, 1.0) * current_world_transform)
-                                        .to_vec3(),
-                                );
-
-                                shader_context.get_spot_lights_mut().push(*handle);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `SpotLight` node with no resource handle!")
                     }
                 },
                 _ => node.update(
