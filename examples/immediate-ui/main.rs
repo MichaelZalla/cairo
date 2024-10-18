@@ -86,6 +86,25 @@ fn resize_framebuffer(
         let mut framebuffer = framebuffer_rc.borrow_mut();
 
         framebuffer.resize(resolution.width, resolution.height, true);
+
+        SCENE_CONTEXT.with(|ctx| {
+            let resources = ctx.resources.borrow();
+
+            let mut camera_arena = resources.camera.borrow_mut();
+
+            for entry in camera_arena.entries.iter_mut().flatten() {
+                let camera = &mut entry.item;
+
+                if camera
+                    .set_aspect_ratio(framebuffer.width_over_height)
+                    .is_ok()
+                {
+                    let mut shader_context = renderer.shader_context.borrow_mut();
+
+                    camera.update_shader_context(&mut shader_context);
+                }
+            }
+        })
     }
 
     // Re-binds the (resized) framebuffer.
