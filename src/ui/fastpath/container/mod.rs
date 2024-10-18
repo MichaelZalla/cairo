@@ -6,7 +6,7 @@ use crate::ui::{
     UISize, UISizeWithStrictness,
 };
 
-use super::{button::button, spacer::greedy_spacer, text::text};
+use super::{button::button, spacer::greedy_spacer};
 
 pub fn container(
     id: String,
@@ -51,7 +51,7 @@ pub fn greedy_container(id: String, layout_direction: UILayoutDirection) -> UIBo
 
 pub fn collapsible_container<C>(
     id: String,
-    label: String,
+    label_box: UIBox,
     tree: &mut UIBoxTree,
     callback: C,
 ) -> Result<(), String>
@@ -136,7 +136,7 @@ where
 
         tree.with_parent(right, |tree| {
             // Container label
-            tree.push(text(format!("{}.label", id).to_string(), label.to_string()))?;
+            tree.push(label_box)?;
 
             if was_expanded {
                 callback(tree)?;

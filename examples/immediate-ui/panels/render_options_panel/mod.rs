@@ -177,9 +177,14 @@ impl PanelInstance for RenderOptionsPanel {
 
                 // Shadows
 
+                let label_box = text(
+                    format!("{}.shadows.directionalShadows.label", self.id),
+                    "Shadows".to_string(),
+                );
+
                 collapsible_container(
                     format!("{}.shadows", self.id).to_string(),
-                    "Shadows".to_string(),
+                    label_box,
                     tree,
                     |tree| -> Result<(), String> {
                         // Directional shadows

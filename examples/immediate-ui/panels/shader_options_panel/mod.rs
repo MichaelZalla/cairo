@@ -101,9 +101,14 @@ impl PanelInstance for ShaderOptionsPanel {
 
                 // Texture maps.
 
+                let label_box = text(
+                    format!("ShaderOptionsPanel{}.textureMaps.label", self.id,),
+                    "Texture mapping".to_string(),
+                );
+
                 collapsible_container(
                     format!("ShaderOptionsPanel{}.textureMaps", self.id).to_string(),
-                    "Texture mapping".to_string(),
+                    label_box,
                     tree,
                     |tree| -> Result<(), String> {
                         let checkboxes = vec![
@@ -175,7 +180,9 @@ impl PanelInstance for ShaderOptionsPanel {
 
                         Ok(())
                     },
-                )
+                )?;
+
+                Ok(())
             })
         })
     }
