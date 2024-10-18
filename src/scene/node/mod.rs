@@ -31,7 +31,21 @@ pub enum SceneNodeType {
 
 impl Display for SceneNodeType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(
+            f,
+            "{}",
+            match self {
+                SceneNodeType::Scene => "Scene",
+                SceneNodeType::Environment => "Environment",
+                SceneNodeType::AmbientLight => "Ambient light",
+                SceneNodeType::DirectionalLight => "Directional light",
+                SceneNodeType::Skybox => "Skybox",
+                SceneNodeType::Camera => "Camera",
+                SceneNodeType::PointLight => "Point light",
+                SceneNodeType::SpotLight => "Spot light",
+                SceneNodeType::Entity => "Entity",
+            }
+        )
     }
 }
 
