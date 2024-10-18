@@ -2,17 +2,20 @@ use std::fmt::Debug;
 
 use cairo::{
     app::{resolution::RESOLUTIONS_16X9, window::APP_WINDOWING_MODES},
+    resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
         context::GLOBAL_UI_CONTEXT,
         fastpath::{
             checkbox::{checkbox_group, Checkbox},
+            image::image,
             radio::{radio_group, RadioOption},
             slider::{slider, SliderOptions},
             spacer::spacer,
             text::text,
         },
         ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag},
+        UISize, UISizeWithStrictness,
     },
 };
 
@@ -24,6 +27,7 @@ use super::PanelInstance;
 pub(crate) struct SettingsPanel {
     id: String,
     fps_average: f32,
+    test_image_handle: Handle,
 }
 
 impl Debug for SettingsPanel {
@@ -31,6 +35,7 @@ impl Debug for SettingsPanel {
         f.debug_struct("SettingsPanel")
             .field("id", &self.id)
             .field("fps_average", &self.fps_average)
+            .field("test_image_handle", &self.test_image_handle)
             .finish()
     }
 }
@@ -40,10 +45,11 @@ impl PostDeserialize for SettingsPanel {
 }
 
 impl SettingsPanel {
-    pub fn from_id(id: &str) -> Self {
+    pub fn new(id: &str, test_image_handle: Handle) -> Self {
         Self {
             id: id.to_string(),
             fps_average: 0.0,
+            test_image_handle,
         }
     }
 
@@ -210,6 +216,23 @@ impl PanelInstance for SettingsPanel {
                 }
 
                 tree.push(spacer(18))?;
+
+                // Test image
+
+                tree.push(image(
+                    format!("SettingsPanel{}.test_image1", self.id),
+                    self.test_image_handle,
+                    Some([
+                        UISizeWithStrictness {
+                            size: UISize::Pixels(192),
+                            strictness: 0.0,
+                        },
+                        UISizeWithStrictness {
+                            size: UISize::Pixels(192),
+                            strictness: 0.0,
+                        },
+                    ]),
+                ))?;
 
                 Ok(())
             })

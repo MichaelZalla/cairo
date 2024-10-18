@@ -45,6 +45,7 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
+    texture::map::{TextureMap, TextureMapStorageFormat},
     transform::quaternion::Quaternion,
     ui::{context::GLOBAL_UI_CONTEXT, ui_box::tree::UIBoxTree, window::list::WindowList},
     vec::vec3,
@@ -150,6 +151,27 @@ fn main() -> Result<(), String> {
 
     let camera_aspect_ratio = framebuffer.width_over_height;
 
+    // Load a test texture.
+
+    let uv_test_gradient_texture_handle = SCENE_CONTEXT.with(|ctx| -> Result<Handle, String> {
+        let resources = ctx.resources.borrow_mut();
+
+        GLOBAL_UI_CONTEXT.with(|ctx| {
+            let mut image_arena = ctx.image_arena.borrow_mut();
+
+            image_arena.replace(resources.texture_u8.clone());
+        });
+
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+
+        let texture: TextureMap<u8> = TextureMap::new(
+            "./assets/textures/uv-test-gradient.png",
+            TextureMapStorageFormat::RGB24,
+        );
+
+        Ok(texture_u8_arena.insert(texture))
+    })?;
+
     // Makes a 3D scene and a preconfigured shader context.
 
     let (scene, shader_context) = SCENE_CONTEXT.with(
@@ -237,7 +259,12 @@ fn main() -> Result<(), String> {
 
     let window_list = {
         SCENE_CONTEXT.with(|ctx| -> Result<WindowList, String> {
-            make_window_list(ctx, &panel_arenas, panel_render_callbacks)
+            make_window_list(
+                ctx,
+                &panel_arenas,
+                panel_render_callbacks,
+                &uv_test_gradient_texture_handle,
+            )
         })
     }?;
 
@@ -382,6 +409,27 @@ fn main() -> Result<(), String> {
     GLOBAL_UI_CONTEXT.with(|ctx| {
         ctx.load_font(&app, args[1].to_string(), 12);
     });
+
+    // Use the rendering context to load any images in our texture arena.
+
+    SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
+        let resources = ctx.resources.borrow_mut();
+
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+
+        for texture in texture_u8_arena
+            .entries
+            .iter_mut()
+            .flatten()
+            .map(|entry| &mut entry.item)
+        {
+            texture.load(&app.context.rendering_context)?;
+
+            texture.generate_mipmaps()?;
+        }
+
+        Ok(())
+    })?;
 
     // Define `update()` in the context of our app's main loop.
 

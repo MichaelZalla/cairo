@@ -21,6 +21,7 @@ pub(crate) fn make_window_list<'a>(
     scene_context: &SceneContext,
     panel_arenas: &PanelArenas,
     panel_render_callbacks: PanelRenderCallbacks,
+    uv_test_gradient_texture_handle: &Handle,
 ) -> Result<WindowList<'a>, String> {
     let mut list: WindowList = Default::default();
 
@@ -42,7 +43,10 @@ pub(crate) fn make_window_list<'a>(
                 panel_id = format!("{}_SettingsPanel", window_id);
 
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: panel_arena.insert(SettingsPanel::from_id(panel_id.as_str())),
+                    panel_instance: panel_arena.insert(SettingsPanel::new(
+                        panel_id.as_str(),
+                        *uv_test_gradient_texture_handle,
+                    )),
                     render: Some(panel_render_callbacks.settings.clone()),
                     custom_render_callback: None,
                 };
