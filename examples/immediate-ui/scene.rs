@@ -1,5 +1,3 @@
-use uuid::Uuid;
-
 use cairo::{
     app::context::ApplicationRenderingContext,
     buffer::framebuffer::Framebuffer,
@@ -28,10 +26,10 @@ pub(crate) fn make_textured_cube_scene(
         // Customize the cube material.
 
         let var_name = {
-            let cube_albedo_map_handle = resources.texture_u8.borrow_mut().insert(
-                Uuid::new_v4(),
-                TextureMap::new("./data/obj/cobblestone.png", TextureMapStorageFormat::RGB24),
-            );
+            let cube_albedo_map_handle = resources.texture_u8.borrow_mut().insert(TextureMap::new(
+                "./data/obj/cobblestone.png",
+                TextureMapStorageFormat::RGB24,
+            ));
 
             Material {
                 name: "cube".to_string(),
@@ -43,10 +41,7 @@ pub(crate) fn make_textured_cube_scene(
 
         cube_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
-        let cube_material_handle = resources
-            .material
-            .borrow_mut()
-            .insert(Uuid::new_v4(), cube_material);
+        let cube_material_handle = resources.material.borrow_mut().insert(cube_material);
 
         let cube_entity_handle = scene
             .root
@@ -75,10 +70,7 @@ pub(crate) fn make_textured_cube_scene(
             z: 0.0,
         };
 
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
+        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::PointLight,
@@ -90,10 +82,7 @@ pub(crate) fn make_textured_cube_scene(
 
         let spot_light = SpotLight::new();
 
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
+        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::SpotLight,

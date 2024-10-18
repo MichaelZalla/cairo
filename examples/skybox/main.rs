@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
@@ -96,10 +94,7 @@ fn main() -> Result<(), String> {
 
             skybox_cubemap.load(rendering_context).unwrap();
 
-            let skybox_cubemap_handle = resources
-                .cubemap_u8
-                .borrow_mut()
-                .insert(Uuid::new_v4(), skybox_cubemap);
+            let skybox_cubemap_handle = resources.cubemap_u8.borrow_mut().insert(skybox_cubemap);
 
             let skybox = Skybox {
                 is_hdr: false,
@@ -108,7 +103,7 @@ fn main() -> Result<(), String> {
                 specular_prefiltered_environment: None,
             };
 
-            let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+            let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
 
             SceneNode::new(
                 SceneNodeType::Skybox,
@@ -131,10 +126,7 @@ fn main() -> Result<(), String> {
 
         point_light.intensities = Vec3::ones() * 0.4;
 
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
+        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::PointLight,
@@ -151,10 +143,7 @@ fn main() -> Result<(), String> {
             ..spot_light.look_vector.get_position()
         });
 
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
+        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::SpotLight,

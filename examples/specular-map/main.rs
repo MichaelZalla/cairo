@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
@@ -88,17 +86,14 @@ fn main() -> Result<(), String> {
 
                 albedo_map.load(rendering_context)?;
 
-                let albedo_map_handle = resources
-                    .texture_u8
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), albedo_map);
+                let albedo_map_handle = resources.texture_u8.borrow_mut().insert(albedo_map);
 
                 material.albedo_map = Some(albedo_map_handle);
 
                 material
             };
 
-            checkerboard_material_handle = materials.insert(Uuid::new_v4(), checkerboard_material);
+            checkerboard_material_handle = materials.insert(checkerboard_material);
         }
 
         let mut plane_entity_node = {
@@ -106,11 +101,11 @@ fn main() -> Result<(), String> {
 
             mesh.material = Some(checkerboard_material_handle);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -137,21 +132,17 @@ fn main() -> Result<(), String> {
             let container_material = {
                 let mut material = Material::new("container".to_string());
 
-                material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    TextureMap::new(
+                material.albedo_map =
+                    Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                         "./examples/specular-map/assets/container2.png",
                         TextureMapStorageFormat::RGB24,
-                    ),
-                ));
+                    )));
 
-                material.specular_exponent_map = Some(resources.texture_u8.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    TextureMap::new(
+                material.specular_exponent_map =
+                    Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                         "./examples/specular-map/assets/container2_specular.png",
                         TextureMapStorageFormat::Index8(0),
-                    ),
-                ));
+                    )));
 
                 material
                     .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
@@ -160,17 +151,17 @@ fn main() -> Result<(), String> {
                 material
             };
 
-            cube_material_handle = materials.insert(Uuid::new_v4(), container_material);
+            cube_material_handle = materials.insert(container_material);
         }
 
         let cube_entity_node = {
             let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(cube_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -205,10 +196,7 @@ fn main() -> Result<(), String> {
             light.linear_attenuation = 0.22;
             light.quadratic_attenuation = 0.2;
 
-            let point_light_handle = resources
-                .point_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
+            let point_light_handle = resources.point_light.borrow_mut().insert(light);
 
             SceneNode::new(
                 SceneNodeType::PointLight,
@@ -231,10 +219,7 @@ fn main() -> Result<(), String> {
                 ..spot_light.look_vector.get_position()
             });
 
-            let spot_light_handle = resources
-                .spot_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), spot_light);
+            let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
             SceneNode::new(
                 SceneNodeType::SpotLight,

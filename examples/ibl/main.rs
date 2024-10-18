@@ -1,7 +1,5 @@
 use std::{borrow::BorrowMut, cell::RefCell, f32::consts::PI, path::Path, rc::Rc};
 
-use uuid::Uuid;
-
 use sdl2::keyboard::Keycode;
 
 use cairo::{
@@ -86,8 +84,7 @@ fn main() -> Result<(), String> {
                         specular_prefiltered_environment: None,
                     };
 
-                    let skybox_handle =
-                        resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+                    let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
 
                     SceneNode::new(
                         SceneNodeType::Skybox,
@@ -113,7 +110,7 @@ fn main() -> Result<(), String> {
         let specular_brdf_integration_map = generate_specular_brdf_integration_map(512);
 
         specular_brdf_integration_map_handle =
-            texture_vec2.insert(Uuid::new_v4(), specular_brdf_integration_map.to_owned());
+            texture_vec2.insert(specular_brdf_integration_map.to_owned());
     }
 
     // For each HDR image, generate a corresponding radiance-irradiance cubemap
@@ -131,16 +128,13 @@ fn main() -> Result<(), String> {
         for hdr_path in hdr_paths {
             let bake_result = bake_diffuse_and_specular_from_hdri(hdr_path).unwrap();
 
-            let radiance_cubemap_handle =
-                cubemap_vec3.insert(Uuid::new_v4(), bake_result.radiance.to_owned());
+            let radiance_cubemap_handle = cubemap_vec3.insert(bake_result.radiance.to_owned());
 
             let irradiance_cubemap_handle =
-                cubemap_vec3.insert(Uuid::new_v4(), bake_result.diffuse_irradiance.to_owned());
+                cubemap_vec3.insert(bake_result.diffuse_irradiance.to_owned());
 
-            let specular_prefiltered_environment_cubemap_handle = cubemap_vec3.insert(
-                Uuid::new_v4(),
-                bake_result.specular_prefiltered_environment.to_owned(),
-            );
+            let specular_prefiltered_environment_cubemap_handle =
+                cubemap_vec3.insert(bake_result.specular_prefiltered_environment.to_owned());
 
             radiance_irradiance_handles.push((
                 radiance_cubemap_handle,

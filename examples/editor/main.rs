@@ -4,8 +4,6 @@ use std::{cell::RefCell, env, rc::Rc};
 
 use current_platform::CURRENT_PLATFORM;
 
-use uuid::Uuid;
-
 use sdl2::mouse::Cursor;
 
 use cairo::{
@@ -273,21 +271,21 @@ fn main() -> Result<(), String> {
                     (
                         format!("Outline {}", i),
                         "Outline".to_string(),
-                        outline_arena.insert(Uuid::new_v4(), Default::default()),
+                        outline_arena.insert(Default::default()),
                         editor_panel_render_callbacks.outline.clone(),
                     )
                 } else if i == 1 {
                     (
                         format!("Console {}", i),
                         "Console".to_string(),
-                        console_arena.insert(Uuid::new_v4(), Default::default()),
+                        console_arena.insert(Default::default()),
                         editor_panel_render_callbacks.console.clone(),
                     )
                 } else {
                     (
                         format!("Inspector {}", i),
                         "Inspector".to_string(),
-                        inspector_arena.insert(Uuid::new_v4(), Default::default()),
+                        inspector_arena.insert(Default::default()),
                         editor_panel_render_callbacks.inspector.clone(),
                     )
                 };

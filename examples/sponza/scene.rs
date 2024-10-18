@@ -1,7 +1,5 @@
 use std::borrow::BorrowMut;
 
-use uuid::Uuid;
-
 use cairo::{
     app::context::ApplicationRenderingContext,
     buffer::framebuffer::Framebuffer,
@@ -67,12 +65,11 @@ pub fn make_sponza_scene(
 
             let mut mesh_arena = resources.mesh.borrow_mut();
 
-            let mesh_handle = mesh_arena.insert(Uuid::new_v4(), mesh.to_owned());
+            let mesh_handle = mesh_arena.insert(mesh.to_owned());
 
             let mut entity_arena = resources.entity.borrow_mut();
 
-            let entity_handle =
-                entity_arena.insert(Uuid::new_v4(), Entity::new(mesh_handle, material_handle));
+            let entity_handle = entity_arena.insert(Entity::new(mesh_handle, material_handle));
 
             scene.root.add_child(SceneNode::new(
                 SceneNodeType::Entity,
@@ -126,10 +123,7 @@ pub fn make_sponza_scene(
             light.linear_attenuation = 0.0014;
             light.quadratic_attenuation = 0.000007;
 
-            let point_light_handle = resources
-                .point_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
+            let point_light_handle = resources.point_light.borrow_mut().insert(light);
 
             SceneNode::new(
                 SceneNodeType::PointLight,
@@ -159,10 +153,7 @@ pub fn make_sponza_scene(
             light.linear_attenuation = 0.007;
             light.quadratic_attenuation = 0.0002;
 
-            let light_handle = resources
-                .spot_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
+            let light_handle = resources.spot_light.borrow_mut().insert(light);
 
             SceneNode::new(
                 SceneNodeType::SpotLight,
@@ -183,10 +174,7 @@ pub fn make_sponza_scene(
 
             skybox_cubemap.load(rendering_context).unwrap();
 
-            let skybox_cubemap_handle = resources
-                .cubemap_u8
-                .borrow_mut()
-                .insert(Uuid::new_v4(), skybox_cubemap);
+            let skybox_cubemap_handle = resources.cubemap_u8.borrow_mut().insert(skybox_cubemap);
 
             let skybox = Skybox {
                 is_hdr: false,
@@ -195,7 +183,7 @@ pub fn make_sponza_scene(
                 specular_prefiltered_environment: None,
             };
 
-            let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+            let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
 
             SceneNode::new(
                 SceneNodeType::Skybox,

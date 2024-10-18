@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
@@ -71,29 +69,23 @@ fn main() -> Result<(), String> {
 
         let mut brick_material = Material::new("brick".to_string());
 
-        brick_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        brick_material.albedo_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/displacement-map/assets/bricks2.jpg",
                 TextureMapStorageFormat::RGB24,
-            ),
-        ));
+            )));
 
-        brick_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        brick_material.normal_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/displacement-map/assets/bricks2_normal.jpg",
                 TextureMapStorageFormat::RGB24,
-            ),
-        ));
+            )));
 
-        brick_material.displacement_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        brick_material.displacement_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/displacement-map/assets/bricks2_disp.jpg",
                 TextureMapStorageFormat::Index8(0),
-            ),
-        ));
+            )));
 
         brick_material.displacement_scale = 0.05;
 
@@ -103,29 +95,21 @@ fn main() -> Result<(), String> {
 
         let mut box_material = Material::new("box".to_string());
 
-        box_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
-                "./examples/displacement-map/assets/wood.png",
-                TextureMapStorageFormat::RGB24,
-            ),
-        ));
+        box_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
+            "./examples/displacement-map/assets/wood.png",
+            TextureMapStorageFormat::RGB24,
+        )));
 
-        box_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
-                "./examples/displacement-map/assets/toy_box_normal.png",
-                TextureMapStorageFormat::RGB24,
-            ),
-        ));
+        box_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
+            "./examples/displacement-map/assets/toy_box_normal.png",
+            TextureMapStorageFormat::RGB24,
+        )));
 
-        box_material.displacement_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        box_material.displacement_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/displacement-map/assets/toy_box_disp.png",
                 TextureMapStorageFormat::Index8(0),
-            ),
-        ));
+            )));
 
         box_material.displacement_scale = 0.05;
 
@@ -139,25 +123,19 @@ fn main() -> Result<(), String> {
         {
             let mut materials = resources.material.borrow_mut();
 
-            brick_material_handle = materials.insert(Uuid::new_v4(), brick_material);
-            box_material_handle = materials.insert(Uuid::new_v4(), box_material);
+            brick_material_handle = materials.insert(brick_material);
+            box_material_handle = materials.insert(box_material);
         }
 
         // Add a brick wall to our scene.
 
         let brick_wall_mesh = mesh::primitive::cube::generate(1.5, 1.5, 1.5);
 
-        let brick_wall_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), brick_wall_mesh);
+        let brick_wall_mesh_handle = resources.mesh.borrow_mut().insert(brick_wall_mesh);
 
         let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some(brick_material_handle));
 
-        let brick_wall_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), brick_wall_entity);
+        let brick_wall_entity_handle = resources.entity.borrow_mut().insert(brick_wall_entity);
 
         let mut brick_wall_entity_node = SceneNode::new(
             SceneNodeType::Entity,
@@ -179,17 +157,11 @@ fn main() -> Result<(), String> {
 
         let wooden_box_mesh = mesh::primitive::cube::generate(1.5, 1.5, 1.5);
 
-        let wooden_box_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), wooden_box_mesh);
+        let wooden_box_mesh_handle = resources.mesh.borrow_mut().insert(wooden_box_mesh);
 
         let wooden_box_entity = Entity::new(wooden_box_mesh_handle, Some(box_material_handle));
 
-        let wooden_box_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), wooden_box_entity);
+        let wooden_box_entity_handle = resources.entity.borrow_mut().insert(wooden_box_entity);
 
         let mut wooden_box_entity_node = SceneNode::new(
             SceneNodeType::Entity,
@@ -220,10 +192,7 @@ fn main() -> Result<(), String> {
         point_light.linear_attenuation = 0.35;
         point_light.quadratic_attenuation = 0.44;
 
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
+        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::PointLight,
@@ -235,10 +204,7 @@ fn main() -> Result<(), String> {
 
         let spot_light = SpotLight::new();
 
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
+        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::SpotLight,

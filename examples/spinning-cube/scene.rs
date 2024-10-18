@@ -1,5 +1,3 @@
-use uuid::Uuid;
-
 use cairo::{
     scene::{
         context::{utils::make_cube_scene, SceneContext},
@@ -25,10 +23,7 @@ pub fn make_spinning_cube_scene(
 
         point_light.intensities = Vec3::ones() * 0.4;
 
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
+        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
 
         let mut point_light_node = SceneNode::new(
             SceneNodeType::PointLight,
@@ -48,10 +43,7 @@ pub fn make_spinning_cube_scene(
 
         let spot_light = SpotLight::new();
 
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
+        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
         let mut spot_light_node = SceneNode::new(
             SceneNodeType::SpotLight,

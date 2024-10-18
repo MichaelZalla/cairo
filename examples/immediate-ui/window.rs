@@ -42,8 +42,7 @@ pub(crate) fn make_window_list<'a>(
                 panel_id = format!("{}_SettingsPanel", window_id);
 
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: panel_arena
-                        .insert(Uuid::new_v4(), SettingsPanel::from_id(panel_id.as_str())),
+                    panel_instance: panel_arena.insert(SettingsPanel::from_id(panel_id.as_str())),
                     render: Some(panel_render_callbacks.settings.clone()),
                     custom_render_callback: None,
                 };
@@ -55,16 +54,13 @@ pub(crate) fn make_window_list<'a>(
 
                 panel_id = format!("{}_RenderOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: panel_arena.insert(
-                        Uuid::new_v4(),
-                        RenderOptionsPanel::new(
-                            panel_id.as_str(),
-                            Handle {
-                                uuid: Uuid::new_v4(),
-                                index: 0,
-                            },
-                        ),
-                    ),
+                    panel_instance: panel_arena.insert(RenderOptionsPanel::new(
+                        panel_id.as_str(),
+                        Handle {
+                            uuid: Uuid::new_v4(),
+                            index: 0,
+                        },
+                    )),
                     render: Some(panel_render_callbacks.render_options.clone()),
                     custom_render_callback: None,
                 };
@@ -76,16 +72,13 @@ pub(crate) fn make_window_list<'a>(
 
                 panel_id = format!("{}_ShaderOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: panel_arena.insert(
-                        Uuid::new_v4(),
-                        ShaderOptionsPanel::new(
-                            panel_id.as_str(),
-                            Handle {
-                                uuid: Uuid::new_v4(),
-                                index: 0,
-                            },
-                        ),
-                    ),
+                    panel_instance: panel_arena.insert(ShaderOptionsPanel::new(
+                        panel_id.as_str(),
+                        Handle {
+                            uuid: Uuid::new_v4(),
+                            index: 0,
+                        },
+                    )),
                     render: Some(panel_render_callbacks.shader_options.clone()),
                     custom_render_callback: None,
                 };
@@ -97,16 +90,13 @@ pub(crate) fn make_window_list<'a>(
 
                 panel_id = format!("{}_RasterizationOptionsPanel", window_id);
                 panel_instance_data = PanelInstanceData {
-                    panel_instance: panel_arena.insert(
-                        Uuid::new_v4(),
-                        RasterizationOptionsPanel::new(
-                            panel_id.as_str(),
-                            Handle {
-                                uuid: Uuid::new_v4(),
-                                index: 0,
-                            },
-                        ),
-                    ),
+                    panel_instance: panel_arena.insert(RasterizationOptionsPanel::new(
+                        panel_id.as_str(),
+                        Handle {
+                            uuid: Uuid::new_v4(),
+                            index: 0,
+                        },
+                    )),
                     render: Some(panel_render_callbacks.rasterization_options.clone()),
                     custom_render_callback: None,
                 };
@@ -128,10 +118,8 @@ pub(crate) fn make_window_list<'a>(
 
                     panel_id = format!("{}_CameraAttributesPanel", window_id);
                     panel_instance_data = PanelInstanceData {
-                        panel_instance: panel_arena.insert(
-                            Uuid::new_v4(),
-                            CameraAttributesPanel::new(panel_id.as_str(), camera_handle),
-                        ),
+                        panel_instance: panel_arena
+                            .insert(CameraAttributesPanel::new(panel_id.as_str(), camera_handle)),
                         render: Some(panel_render_callbacks.camera_attributes.clone()),
                         custom_render_callback: None,
                     };

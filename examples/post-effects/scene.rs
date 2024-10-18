@@ -12,7 +12,6 @@ use cairo::{
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
     vec::vec3::Vec3,
 };
-use uuid::Uuid;
 
 pub fn make_scene(
     resources: &SceneResources,
@@ -38,17 +37,14 @@ pub fn make_scene(
 
             albedo_map.load(rendering_context)?;
 
-            let albedo_map_handle = resources
-                .texture_u8
-                .borrow_mut()
-                .insert(Uuid::new_v4(), albedo_map);
+            let albedo_map_handle = resources.texture_u8.borrow_mut().insert(albedo_map);
 
             material.albedo_map = Some(albedo_map_handle);
 
             material
         };
 
-        materials.insert(Uuid::new_v4(), checkerboard_material)
+        materials.insert(checkerboard_material)
     };
 
     let mut plane_entity_node = {
@@ -56,11 +52,11 @@ pub fn make_scene(
 
         mesh.material = Some(checkerboard_material_handle);
 
-        let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+        let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
         let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
-        let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+        let entity_handle = resources.entity.borrow_mut().insert(entity);
 
         let mut node = SceneNode::new(
             SceneNodeType::Entity,
@@ -85,21 +81,16 @@ pub fn make_scene(
         let emissive_material = {
             let mut material = Material::new("emissive".to_string());
 
-            material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
-                Uuid::new_v4(),
-                TextureMap::new(
-                    "./examples/post-effects/assets/lava.png",
-                    TextureMapStorageFormat::RGB24,
-                ),
-            ));
+            material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
+                "./examples/post-effects/assets/lava.png",
+                TextureMapStorageFormat::RGB24,
+            )));
 
-            material.emissive_color_map = Some(resources.texture_u8.borrow_mut().insert(
-                Uuid::new_v4(),
-                TextureMap::new(
+            material.emissive_color_map =
+                Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                     "./examples/post-effects/assets/lava_emissive.png",
                     TextureMapStorageFormat::Index8(0),
-                ),
-            ));
+                )));
 
             material
                 .load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)
@@ -108,17 +99,17 @@ pub fn make_scene(
             material
         };
 
-        materials.insert(Uuid::new_v4(), emissive_material)
+        materials.insert(emissive_material)
     };
 
     let cube_entity_node = {
         let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
-        let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+        let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
         let entity = Entity::new(mesh_handle, Some(emissive_material_handle));
 
-        let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+        let entity_handle = resources.entity.borrow_mut().insert(entity);
 
         let mut node = SceneNode::new(
             SceneNodeType::Entity,
@@ -145,10 +136,7 @@ pub fn make_scene(
 
         light.intensities = Vec3::ones() * 0.8;
 
-        let light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), light);
+        let light_handle = resources.point_light.borrow_mut().insert(light);
 
         SceneNode::new(
             SceneNodeType::PointLight,
@@ -171,10 +159,7 @@ pub fn make_scene(
             ..light.look_vector.get_position()
         });
 
-        let light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), light);
+        let light_handle = resources.spot_light.borrow_mut().insert(light);
 
         SceneNode::new(
             SceneNodeType::SpotLight,

@@ -13,8 +13,6 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use uuid::Uuid;
-
 pub fn make_sphere_grid_scene(
     camera_aspect_ratio: f32,
 ) -> Result<(SceneContext, ShaderContext), String> {
@@ -61,10 +59,7 @@ pub fn make_sphere_grid_scene(
             light.linear_attenuation = 0.09;
             light.quadratic_attenuation = 0.032;
 
-            let point_light_handle = resources
-                .point_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
+            let point_light_handle = resources.point_light.borrow_mut().insert(light);
 
             let point_light_node = SceneNode::new(
                 SceneNodeType::PointLight,
@@ -84,7 +79,7 @@ pub fn make_sphere_grid_scene(
         let _geometry = result.0;
         let meshes = result.1;
         let mesh = meshes[1].to_owned();
-        let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+        let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
         // Generate a grid of mesh instances.
 
@@ -118,14 +113,11 @@ pub fn make_sphere_grid_scene(
                     ..Default::default()
                 };
 
-                let material_handle = resources
-                    .material
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), material);
+                let material_handle = resources.material.borrow_mut().insert(material);
 
                 let entity = Entity::new(mesh_handle, Some(material_handle));
 
-                let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+                let entity_handle = resources.entity.borrow_mut().insert(entity);
 
                 let mut transform = base_transform;
 

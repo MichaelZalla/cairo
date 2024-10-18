@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
@@ -96,14 +94,14 @@ fn main() -> Result<(), String> {
                 let checkerboard_albedo_map_handle = resources
                     .texture_u8
                     .borrow_mut()
-                    .insert(Uuid::new_v4(), checkerboard_albedo_map);
+                    .insert(checkerboard_albedo_map);
 
                 material.albedo_map = Some(checkerboard_albedo_map_handle);
 
                 material
             };
 
-            checkerboard_material_handle = materials.insert(Uuid::new_v4(), checkerboard_material);
+            checkerboard_material_handle = materials.insert(checkerboard_material);
         }
 
         let mut plane_entity_node = {
@@ -111,17 +109,11 @@ fn main() -> Result<(), String> {
 
             plane_mesh.material = Some(checkerboard_material_handle);
 
-            let plane_mesh_handle = resources
-                .mesh
-                .borrow_mut()
-                .insert(Uuid::new_v4(), plane_mesh);
+            let plane_mesh_handle = resources.mesh.borrow_mut().insert(plane_mesh);
 
             let plane_entity = Entity::new(plane_mesh_handle, Some(checkerboard_material_handle));
 
-            let plane_entity_handle = resources
-                .entity
-                .borrow_mut()
-                .insert(Uuid::new_v4(), plane_entity);
+            let plane_entity_handle = resources.entity.borrow_mut().insert(plane_entity);
 
             SceneNode::new(
                 SceneNodeType::Entity,
@@ -145,9 +137,9 @@ fn main() -> Result<(), String> {
             let mut materials = resources.material.borrow_mut();
 
             (
-                materials.insert(Uuid::new_v4(), red_cube_material),
-                materials.insert(Uuid::new_v4(), green_cube_material),
-                materials.insert(Uuid::new_v4(), blue_cube_material),
+                materials.insert(red_cube_material),
+                materials.insert(green_cube_material),
+                materials.insert(blue_cube_material),
             )
         };
 
@@ -162,11 +154,11 @@ fn main() -> Result<(), String> {
 
             mesh.material = Some(blue_cube_material_handle);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(blue_cube_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -195,11 +187,11 @@ fn main() -> Result<(), String> {
 
             mesh.material = Some(green_cube_material_handle);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(green_cube_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -228,11 +220,11 @@ fn main() -> Result<(), String> {
 
             mesh.material = Some(red_cube_material_handle);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(red_cube_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -266,10 +258,7 @@ fn main() -> Result<(), String> {
 
             skybox_cubemap.load(rendering_context).unwrap();
 
-            let skybox_cubemap_handle = resources
-                .cubemap_u8
-                .borrow_mut()
-                .insert(Uuid::new_v4(), skybox_cubemap);
+            let skybox_cubemap_handle = resources.cubemap_u8.borrow_mut().insert(skybox_cubemap);
 
             let skybox = Skybox {
                 is_hdr: false,
@@ -278,7 +267,7 @@ fn main() -> Result<(), String> {
                 specular_prefiltered_environment: None,
             };
 
-            let skybox_handle = resources.skybox.borrow_mut().insert(Uuid::new_v4(), skybox);
+            let skybox_handle = resources.skybox.borrow_mut().insert(skybox);
 
             SceneNode::new(
                 SceneNodeType::Skybox,
@@ -299,10 +288,7 @@ fn main() -> Result<(), String> {
 
         let point_light = PointLight::new();
 
-        let point_light_handle = resources
-            .point_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), point_light);
+        let point_light_handle = resources.point_light.borrow_mut().insert(point_light);
 
         let point_light_node = SceneNode::new(
             SceneNodeType::PointLight,
@@ -320,10 +306,7 @@ fn main() -> Result<(), String> {
             .look_vector
             .set_target_position(Default::default());
 
-        let spot_light_handle = resources
-            .spot_light
-            .borrow_mut()
-            .insert(Uuid::new_v4(), spot_light);
+        let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
         let mut spot_light_node = SceneNode::new(
             SceneNodeType::SpotLight,

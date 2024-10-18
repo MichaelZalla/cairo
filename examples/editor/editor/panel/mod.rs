@@ -2,8 +2,6 @@ use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use uuid::Uuid;
-
 use cairo::{
     buffer::Buffer2D,
     resource::arena::Arena,
@@ -168,10 +166,7 @@ pub fn build_main_window_panel_tree<'a>(
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.outline.clone()),
                 custom_render_callback: None,
-                panel_instance: panel_arenas
-                    .outline
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), Default::default()),
+                panel_instance: panel_arenas.outline.borrow_mut().insert(Default::default()),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -189,7 +184,7 @@ pub fn build_main_window_panel_tree<'a>(
                 panel_instance: panel_arenas
                     .asset_browser
                     .borrow_mut()
-                    .insert(Uuid::new_v4(), Default::default()),
+                    .insert(Default::default()),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -221,13 +216,13 @@ pub fn build_main_window_panel_tree<'a>(
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
                 custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
-                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    Viewport3DPanel::new(
+                panel_instance: panel_arenas
+                    .viewport_3d
+                    .borrow_mut()
+                    .insert(Viewport3DPanel::new(
                         renderer.clone(),
-                        camera_arena.insert(Uuid::new_v4(), cameras[0]),
-                    ),
-                ),
+                        camera_arena.insert(cameras[0]),
+                    )),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -240,13 +235,13 @@ pub fn build_main_window_panel_tree<'a>(
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
                 custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
-                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    Viewport3DPanel::new(
+                panel_instance: panel_arenas
+                    .viewport_3d
+                    .borrow_mut()
+                    .insert(Viewport3DPanel::new(
                         renderer.clone(),
-                        camera_arena.insert(Uuid::new_v4(), cameras[1]),
-                    ),
-                ),
+                        camera_arena.insert(cameras[1]),
+                    )),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -270,13 +265,13 @@ pub fn build_main_window_panel_tree<'a>(
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
                 custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
-                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    Viewport3DPanel::new(
+                panel_instance: panel_arenas
+                    .viewport_3d
+                    .borrow_mut()
+                    .insert(Viewport3DPanel::new(
                         renderer.clone(),
-                        camera_arena.insert(Uuid::new_v4(), cameras[2]),
-                    ),
-                ),
+                        camera_arena.insert(cameras[2]),
+                    )),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -289,13 +284,13 @@ pub fn build_main_window_panel_tree<'a>(
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.viewport_3d.0.clone()),
                 custom_render_callback: Some(panel_render_callbacks.viewport_3d.1),
-                panel_instance: panel_arenas.viewport_3d.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    Viewport3DPanel::new(
+                panel_instance: panel_arenas
+                    .viewport_3d
+                    .borrow_mut()
+                    .insert(Viewport3DPanel::new(
                         renderer.clone(),
-                        camera_arena.insert(Uuid::new_v4(), cameras[3]),
-                    ),
-                ),
+                        camera_arena.insert(cameras[3]),
+                    )),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -318,10 +313,7 @@ pub fn build_main_window_panel_tree<'a>(
             Some(PanelInstanceData {
                 render: Some(panel_render_callbacks.console.clone()),
                 custom_render_callback: None,
-                panel_instance: panel_arenas
-                    .console
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), Default::default()),
+                panel_instance: panel_arenas.console.borrow_mut().insert(Default::default()),
             }),
             UILayoutDirection::TopToBottom,
         ),
@@ -343,7 +335,7 @@ pub fn build_main_window_panel_tree<'a>(
                 panel_instance: panel_arenas
                     .inspector
                     .borrow_mut()
-                    .insert(Uuid::new_v4(), Default::default()),
+                    .insert(Default::default()),
             }),
             UILayoutDirection::TopToBottom,
         ),

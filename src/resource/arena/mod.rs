@@ -86,7 +86,11 @@ impl<T: PostDeserialize> Arena<T> {
         }
     }
 
-    pub fn insert(&mut self, uuid: Uuid, item: T) -> Handle {
+    pub fn insert(&mut self, item: T) -> Handle {
+        self.insert_with(Uuid::new_v4(), item)
+    }
+
+    pub fn insert_with(&mut self, uuid: Uuid, item: T) -> Handle {
         let entry = ArenaEntry { uuid, item };
 
         let index = self.get_first_empty_index();

@@ -17,7 +17,6 @@ use cairo::{
     texture::cubemap::CubeMap,
     vec::vec3::{self, Vec3},
 };
-use uuid::Uuid;
 
 pub fn make_cubes_scene(
     camera_aspect_ratio: f32,
@@ -56,21 +55,18 @@ pub fn make_cubes_scene(
         let mut plane_entity_node = {
             let mesh = mesh::primitive::cube::generate(50.0, 1.0, 50.0);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
-            let plane_material_handle = resources.material.borrow_mut().insert(
-                Uuid::new_v4(),
-                Material {
-                    name: "plane".to_string(),
-                    albedo: vec3::ONES,
-                    roughness: 0.0,
-                    ..Default::default()
-                },
-            );
+            let plane_material_handle = resources.material.borrow_mut().insert(Material {
+                name: "plane".to_string(),
+                albedo: vec3::ONES,
+                roughness: 0.0,
+                ..Default::default()
+            });
 
             let entity = Entity::new(mesh_handle, Some(plane_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -88,15 +84,12 @@ pub fn make_cubes_scene(
 
         // Add cubes to our scene.
 
-        let green_material_handle = resources.material.borrow_mut().insert(
-            Uuid::new_v4(),
-            Material {
-                name: "green".to_string(),
-                albedo: color::GREEN.to_vec3() / 255.0,
-                roughness: 0.0,
-                ..Default::default()
-            },
-        );
+        let green_material_handle = resources.material.borrow_mut().insert(Material {
+            name: "green".to_string(),
+            albedo: color::GREEN.to_vec3() / 255.0,
+            roughness: 0.0,
+            ..Default::default()
+        });
 
         static CUBE_ROWS: usize = 3;
         static CUBE_COLUMNS: usize = 3;
@@ -107,11 +100,11 @@ pub fn make_cubes_scene(
         let cube_entity_handle = {
             let mesh = mesh::primitive::cube::generate(CUBE_WIDTH, CUBE_WIDTH, CUBE_WIDTH);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(green_material_handle));
 
-            resources.entity.borrow_mut().insert(Uuid::new_v4(), entity)
+            resources.entity.borrow_mut().insert(entity)
         };
 
         for x in 0..CUBE_COLUMNS {
@@ -153,34 +146,31 @@ pub fn make_cubes_scene(
         .iter()
         .enumerate()
         {
-            let point_light = {
-                let mut light = PointLight::new();
+            let point_light =
+                {
+                    let mut light = PointLight::new();
 
-                light.position.y = 8.0 + index as f32 * 2.0;
+                    light.position.y = 8.0 + index as f32 * 2.0;
 
-                light.intensities = (color.to_vec3() / 255.0) * 10.0;
+                    light.intensities = (color.to_vec3() / 255.0) * 10.0;
 
-                let shadow_map_handle = resources.cubemap_f32.borrow_mut().insert(
-                    Uuid::new_v4(),
-                    CubeMap::<f32>::from_framebuffer(&point_shadow_map_framebuffer_rc.borrow()),
-                );
+                    let shadow_map_handle = resources.cubemap_f32.borrow_mut().insert(
+                        CubeMap::<f32>::from_framebuffer(&point_shadow_map_framebuffer_rc.borrow()),
+                    );
 
-                light.shadow_map = Some(shadow_map_handle);
+                    light.shadow_map = Some(shadow_map_handle);
 
-                light.constant_attenuation = 1.0;
-                light.linear_attenuation = 0.09;
-                light.quadratic_attenuation = 0.032;
+                    light.constant_attenuation = 1.0;
+                    light.linear_attenuation = 0.09;
+                    light.quadratic_attenuation = 0.032;
 
-                light
-            };
+                    light
+                };
 
             let point_light_node = {
                 let light = point_light.clone();
 
-                let point_light_handle = resources
-                    .point_light
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), light);
+                let point_light_handle = resources.point_light.borrow_mut().insert(light);
 
                 SceneNode::new(
                     SceneNodeType::PointLight,

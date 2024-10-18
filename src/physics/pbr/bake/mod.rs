@@ -1,7 +1,5 @@
 use std::{cell::RefCell, path::Path, rc::Rc};
 
-use uuid::Uuid;
-
 use crate::{
     buffer::framebuffer::Framebuffer,
     hdr::load::load_hdr,
@@ -66,7 +64,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
         .borrow_mut()
         .texture_vec3
         .borrow_mut()
-        .insert(Uuid::new_v4(), hdr_texture);
+        .insert(hdr_texture);
 
     // Set up a renderer for cubemap rendering.
 
@@ -121,7 +119,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
                 .borrow_mut()
                 .cubemap_vec3
                 .borrow_mut()
-                .insert(Uuid::new_v4(), radiance.clone())
+                .insert(radiance.clone())
         };
     }
 
@@ -307,10 +305,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         let resources = (*scene_context.resources).borrow();
 
-        material_handle = resources
-            .material
-            .borrow_mut()
-            .insert(Uuid::new_v4(), material);
+        material_handle = resources.material.borrow_mut().insert(material);
 
         //
 

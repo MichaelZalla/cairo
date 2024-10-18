@@ -2,8 +2,6 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use uuid::Uuid;
-
 use cairo::{
     app::{
         resolution::{Resolution, RESOLUTION_1200_BY_675},
@@ -75,53 +73,41 @@ fn main() -> Result<(), String> {
 
         let mut brick_material = Material::new("brick".to_string());
 
-        brick_material.albedo_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        brick_material.albedo_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/normal-map/assets/Brick_OldDestroyed_1k_d.tga",
                 TextureMapStorageFormat::RGB24,
-            ),
-        ));
+            )));
 
-        brick_material.specular_exponent_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        brick_material.specular_exponent_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/normal-map/assets/Brick_OldDestroyed_1k_s.tga",
                 TextureMapStorageFormat::Index8(0),
-            ),
-        ));
+            )));
 
-        brick_material.normal_map = Some(resources.texture_u8.borrow_mut().insert(
-            Uuid::new_v4(),
-            TextureMap::new(
+        brick_material.normal_map =
+            Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
                 "./examples/normal-map/assets/Brick_OldDestroyed_1k_nY+.tga",
                 TextureMapStorageFormat::RGB24,
-            ),
-        ));
+            )));
 
         brick_material.load_all_maps(&mut resources.texture_u8.borrow_mut(), rendering_context)?;
 
         let brick_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(Uuid::new_v4(), brick_material)
+            materials.insert(brick_material)
         };
 
         // Add a brick wall to our scene.
 
         let brick_wall_mesh = mesh::primitive::cube::generate(1.5, 1.5, 1.5);
 
-        let brick_wall_mesh_handle = resources
-            .mesh
-            .borrow_mut()
-            .insert(Uuid::new_v4(), brick_wall_mesh);
+        let brick_wall_mesh_handle = resources.mesh.borrow_mut().insert(brick_wall_mesh);
 
         let brick_wall_entity = Entity::new(brick_wall_mesh_handle, Some(brick_material_handle));
 
-        let brick_wall_entity_handle = resources
-            .entity
-            .borrow_mut()
-            .insert(Uuid::new_v4(), brick_wall_entity);
+        let brick_wall_entity_handle = resources.entity.borrow_mut().insert(brick_wall_entity);
 
         scene.root.add_child(SceneNode::new(
             SceneNodeType::Entity,
@@ -143,10 +129,7 @@ fn main() -> Result<(), String> {
             light.linear_attenuation = 0.35;
             light.quadratic_attenuation = 0.44;
 
-            let point_light_handle = resources
-                .point_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
+            let point_light_handle = resources.point_light.borrow_mut().insert(light);
 
             SceneNode::new(
                 SceneNodeType::PointLight,
@@ -162,10 +145,7 @@ fn main() -> Result<(), String> {
         let spot_light_node = {
             let light = SpotLight::new();
 
-            let light_handle = resources
-                .spot_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), light);
+            let light_handle = resources.spot_light.borrow_mut().insert(light);
 
             SceneNode::new(
                 SceneNodeType::SpotLight,

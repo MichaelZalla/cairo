@@ -1,5 +1,3 @@
-use uuid::Uuid;
-
 use cairo::{
     app::context::ApplicationRenderingContext,
     entity::Entity,
@@ -63,17 +61,14 @@ pub fn make_primitives_scene(
                     (r, g, b)
                 })?;
 
-                let albedo_map_handle = resources
-                    .texture_u8
-                    .borrow_mut()
-                    .insert(Uuid::new_v4(), albedo_map);
+                let albedo_map_handle = resources.texture_u8.borrow_mut().insert(albedo_map);
 
                 material.albedo_map = Some(albedo_map_handle);
 
                 material
             };
 
-            materials.insert(Uuid::new_v4(), checkerboard_material)
+            materials.insert(checkerboard_material)
         };
 
         let plane_entity_node = {
@@ -81,11 +76,11 @@ pub fn make_primitives_scene(
 
             mesh.material = Some(checkerboard_material_handle);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -109,11 +104,11 @@ pub fn make_primitives_scene(
         let cube_entity_node = {
             let mesh = mesh::primitive::cube::generate(2.0, 2.0, 2.0);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -137,11 +132,11 @@ pub fn make_primitives_scene(
         let cone_entity_node = {
             let mesh = mesh::primitive::cone::generate(2.0, 2.0, 40);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -165,11 +160,11 @@ pub fn make_primitives_scene(
         let cylinder_entity_node = {
             let mesh = mesh::primitive::cylinder::generate(2.0, 2.0, 40);
 
-            let mesh_handle = resources.mesh.borrow_mut().insert(Uuid::new_v4(), mesh);
+            let mesh_handle = resources.mesh.borrow_mut().insert(mesh);
 
             let entity = Entity::new(mesh_handle, Some(checkerboard_material_handle));
 
-            let entity_handle = resources.entity.borrow_mut().insert(Uuid::new_v4(), entity);
+            let entity_handle = resources.entity.borrow_mut().insert(entity);
 
             let mut node = SceneNode::new(
                 SceneNodeType::Entity,
@@ -193,13 +188,10 @@ pub fn make_primitives_scene(
         let point_light_decal_material = {
             let mut material = Material::new("point_light_decal".to_string());
 
-            material.alpha_map = Some(resources.texture_u8.borrow_mut().insert(
-                Uuid::new_v4(),
-                TextureMap::new(
-                    "./assets/decals/point_light_small.png",
-                    TextureMapStorageFormat::Index8(0),
-                ),
-            ));
+            material.alpha_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
+                "./assets/decals/point_light_small.png",
+                TextureMapStorageFormat::Index8(0),
+            )));
 
             material.emissive_color_map = material.alpha_map;
 
@@ -213,7 +205,7 @@ pub fn make_primitives_scene(
         let _point_light_decal_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(Uuid::new_v4(), point_light_decal_material)
+            materials.insert(point_light_decal_material)
         };
 
         {
@@ -231,7 +223,7 @@ pub fn make_primitives_scene(
                             + (z as f32 / LIGHT_GRID_SUBDIVISIONS as f32) * LIGHT_GRID_SIZE,
                     };
 
-                    let point_light_handle = point_light_arena.insert(Uuid::new_v4(), light);
+                    let point_light_handle = point_light_arena.insert(light);
 
                     let point_light_node = SceneNode::new(
                         SceneNodeType::PointLight,
@@ -249,13 +241,10 @@ pub fn make_primitives_scene(
         let spot_light_decal_material = {
             let mut material = Material::new("spot_light_decal".to_string());
 
-            material.alpha_map = Some(resources.texture_u8.borrow_mut().insert(
-                Uuid::new_v4(),
-                TextureMap::new(
-                    "./assets/decals/spot_light_small.png",
-                    TextureMapStorageFormat::Index8(0),
-                ),
-            ));
+            material.alpha_map = Some(resources.texture_u8.borrow_mut().insert(TextureMap::new(
+                "./assets/decals/spot_light_small.png",
+                TextureMapStorageFormat::Index8(0),
+            )));
 
             material.emissive_color_map = material.alpha_map;
 
@@ -269,7 +258,7 @@ pub fn make_primitives_scene(
         let _spot_light_decal_material_handle = {
             let mut materials = resources.material.borrow_mut();
 
-            materials.insert(Uuid::new_v4(), spot_light_decal_material)
+            materials.insert(spot_light_decal_material)
         };
 
         let spot_light_node = {
@@ -281,10 +270,7 @@ pub fn make_primitives_scene(
                 z: -6.0,
             });
 
-            let spot_light_handle = resources
-                .spot_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), spot_light);
+            let spot_light_handle = resources.spot_light.borrow_mut().insert(spot_light);
 
             SceneNode::new(
                 SceneNodeType::SpotLight,
@@ -314,7 +300,7 @@ pub fn make_primitives_scene(
                 aspect_ratio,
             );
 
-            let camera_handle = resources.camera.borrow_mut().insert(Uuid::new_v4(), camera);
+            let camera_handle = resources.camera.borrow_mut().insert(camera);
 
             SceneNode::new(
                 SceneNodeType::Camera,

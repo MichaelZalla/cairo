@@ -1,7 +1,5 @@
 use std::{path::Path, str::SplitWhitespace};
 
-use uuid::Uuid;
-
 use crate::{
     fs::read_lines,
     resource::{arena::Arena, handle::Handle},
@@ -54,8 +52,7 @@ pub fn load_mtl(
 
                                 material.material_source = Some(source);
 
-                                current_material
-                                    .replace(material_arena.insert(Uuid::new_v4(), material));
+                                current_material.replace(material_arena.insert(material));
 
                                 parsed_materials_count += 1;
                             }
@@ -108,13 +105,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::RGB24,
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -150,13 +144,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::RGB24,
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -193,13 +184,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -236,13 +224,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -277,13 +262,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -303,13 +285,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::RGB24,
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -329,13 +308,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -374,13 +350,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::RGB24,
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -417,13 +390,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -458,13 +428,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::RGB24,
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -505,13 +472,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -548,13 +512,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -591,13 +552,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::Index8(0),
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::Index8(0),
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())
@@ -706,13 +664,10 @@ pub fn load_mtl(
                                 let mtl_relative_filepath =
                                     next_filepath(&mut line_tokens, mtl_file_path);
 
-                                let texture_map_handle = texture_arena.insert(
-                                    Uuid::new_v4(),
-                                    TextureMap::new(
-                                        mtl_relative_filepath.as_str(),
-                                        TextureMapStorageFormat::RGB24,
-                                    ),
-                                );
+                                let texture_map_handle = texture_arena.insert(TextureMap::new(
+                                    mtl_relative_filepath.as_str(),
+                                    TextureMapStorageFormat::RGB24,
+                                ));
 
                                 if let Ok(entry) =
                                     material_arena.get_mut(&current_material.unwrap())

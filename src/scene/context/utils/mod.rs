@@ -16,8 +16,6 @@ use crate::{
     },
 };
 
-use uuid::Uuid;
-
 pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, ShaderContext), String> {
     let scene_context: SceneContext = Default::default();
 
@@ -49,23 +47,17 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, Shade
 
             camera.update_shader_context(&mut shader_context);
 
-            resources.camera.borrow_mut().insert(Uuid::new_v4(), camera)
+            resources.camera.borrow_mut().insert(camera)
         };
 
-        let environment_handle = resources
-            .environment
-            .borrow_mut()
-            .insert(Uuid::new_v4(), environment);
+        let environment_handle = resources.environment.borrow_mut().insert(environment);
 
         let ambient_light_handle = {
             let ambient_light = AmbientLight {
                 intensities: Vec3::ones() * 0.15,
             };
 
-            resources
-                .ambient_light
-                .borrow_mut()
-                .insert(Uuid::new_v4(), ambient_light)
+            resources.ambient_light.borrow_mut().insert(ambient_light)
         };
 
         let directional_light_handle = {
@@ -84,7 +76,7 @@ pub fn make_empty_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, Shade
             resources
                 .directional_light
                 .borrow_mut()
-                .insert(Uuid::new_v4(), directional_light)
+                .insert(directional_light)
         };
 
         let mut environment_node = SceneNode::new(
@@ -131,20 +123,14 @@ pub fn make_cube_scene(camera_aspect_ratio: f32) -> Result<(SceneContext, Shader
         let cube_material = Material::new("cube_material".to_string());
 
         let cube_entity_handle = {
-            let cube_mesh_handle = resources
-                .mesh
-                .borrow_mut()
-                .insert(Uuid::new_v4(), cube_mesh);
+            let cube_mesh_handle = resources.mesh.borrow_mut().insert(cube_mesh);
 
-            let cube_material_handle = resources
-                .material
-                .borrow_mut()
-                .insert(Uuid::new_v4(), cube_material);
+            let cube_material_handle = resources.material.borrow_mut().insert(cube_material);
 
-            resources.entity.borrow_mut().insert(
-                Uuid::new_v4(),
-                Entity::new(cube_mesh_handle, Some(cube_material_handle)),
-            )
+            resources
+                .entity
+                .borrow_mut()
+                .insert(Entity::new(cube_mesh_handle, Some(cube_material_handle)))
         };
 
         let cube_entity_node = SceneNode::new(
