@@ -1,7 +1,8 @@
 use crate::ui::{
     context::GLOBAL_UI_CONTEXT,
     ui_box::{
-        key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+        interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag,
+        UIBoxFeatureMask, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
@@ -54,7 +55,7 @@ pub fn collapsible_container<C>(
     label_box: UIBox,
     tree: &mut UIBoxTree,
     callback: C,
-) -> Result<(), String>
+) -> Result<UIBoxInteraction, String>
 where
     C: FnOnce(&mut UIBoxTree) -> Result<(), String>,
 {
@@ -74,6 +75,8 @@ where
     let wrapper = container(container_id.clone(), UILayoutDirection::LeftToRight, None);
 
     let mut was_toggled = false;
+
+    let mut interaction_result: UIBoxInteraction = Default::default();
 
     tree.with_parent(wrapper, |tree| -> Result<(), String> {
         let left = container(
@@ -136,7 +139,7 @@ where
 
         tree.with_parent(right, |tree| {
             // Container label
-            tree.push(label_box)?;
+            interaction_result = tree.push(label_box)?;
 
             if was_expanded {
                 callback(tree)?;
@@ -162,5 +165,5 @@ where
         };
     }
 
-    Ok(())
+    Ok(interaction_result)
 }
