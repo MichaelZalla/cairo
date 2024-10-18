@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,22 +21,22 @@ use super::{
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneResources {
-    pub camera: RefCell<Arena<Camera>>,
-    pub environment: RefCell<Arena<Environment>>,
-    pub skybox: RefCell<Arena<Skybox>>,
-    pub ambient_light: RefCell<Arena<AmbientLight>>,
-    pub directional_light: RefCell<Arena<DirectionalLight>>,
-    pub point_light: RefCell<Arena<PointLight>>,
-    pub spot_light: RefCell<Arena<SpotLight>>,
-    pub mesh: RefCell<Arena<Mesh>>,
-    pub entity: RefCell<Arena<Entity>>,
-    pub material: RefCell<Arena<Material>>,
-    pub texture_u8: RefCell<Arena<TextureMap>>,
-    pub texture_vec2: RefCell<Arena<TextureMap<Vec2>>>,
-    pub texture_vec3: RefCell<Arena<TextureMap<Vec3>>>,
-    pub cubemap_u8: RefCell<Arena<CubeMap>>,
-    pub cubemap_f32: RefCell<Arena<CubeMap<f32>>>,
-    pub cubemap_vec3: RefCell<Arena<CubeMap<Vec3>>>,
+    pub camera: Rc<RefCell<Arena<Camera>>>,
+    pub environment: Rc<RefCell<Arena<Environment>>>,
+    pub skybox: Rc<RefCell<Arena<Skybox>>>,
+    pub ambient_light: Rc<RefCell<Arena<AmbientLight>>>,
+    pub directional_light: Rc<RefCell<Arena<DirectionalLight>>>,
+    pub point_light: Rc<RefCell<Arena<PointLight>>>,
+    pub spot_light: Rc<RefCell<Arena<SpotLight>>>,
+    pub mesh: Rc<RefCell<Arena<Mesh>>>,
+    pub entity: Rc<RefCell<Arena<Entity>>>,
+    pub material: Rc<RefCell<Arena<Material>>>,
+    pub texture_u8: Rc<RefCell<Arena<TextureMap>>>,
+    pub texture_vec2: Rc<RefCell<Arena<TextureMap<Vec2>>>>,
+    pub texture_vec3: Rc<RefCell<Arena<TextureMap<Vec3>>>>,
+    pub cubemap_u8: Rc<RefCell<Arena<CubeMap>>>,
+    pub cubemap_f32: Rc<RefCell<Arena<CubeMap<f32>>>>,
+    pub cubemap_vec3: Rc<RefCell<Arena<CubeMap<Vec3>>>>,
 }
 
 impl PostDeserialize for SceneResources {
