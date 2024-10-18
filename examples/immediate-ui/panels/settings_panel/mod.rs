@@ -5,7 +5,6 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
-        context::GLOBAL_UI_CONTEXT,
         fastpath::{
             checkbox::{checkbox_group, Checkbox},
             image::image,
@@ -13,8 +12,9 @@ use cairo::{
             slider::{slider, SliderOptions},
             spacer::spacer,
             text::text,
+            text_input::text_input,
         },
-        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag},
+        ui_box::tree::UIBoxTree,
         UISize, UISizeWithStrictness,
     },
 };
@@ -27,6 +27,7 @@ use super::PanelInstance;
 pub(crate) struct SettingsPanel {
     id: String,
     fps_average: f32,
+    test_text: String,
     test_image_handle: Handle,
 }
 
@@ -35,6 +36,7 @@ impl Debug for SettingsPanel {
         f.debug_struct("SettingsPanel")
             .field("id", &self.id)
             .field("fps_average", &self.fps_average)
+            .field("test_text", &self.test_text)
             .field("test_image_handle", &self.test_image_handle)
             .finish()
     }
@@ -45,23 +47,13 @@ impl PostDeserialize for SettingsPanel {
 }
 
 impl SettingsPanel {
-    pub fn new(id: &str, test_image_handle: Handle) -> Self {
+    pub fn new(id: &str, test_text: String, test_image_handle: Handle) -> Self {
         Self {
             id: id.to_string(),
             fps_average: 0.0,
+            test_text,
             test_image_handle,
         }
-    }
-
-    fn fps_counter(&self) -> UIBox {
-        let mut counter = text(
-            format!("SettingsPanel{}_fps_counter", self.id),
-            format!("FPS: {:.0}", self.fps_average),
-        );
-
-        counter.features ^= UIBoxFeatureFlag::SkipTextCaching;
-
-        counter
     }
 }
 
@@ -73,16 +65,20 @@ impl PanelInstance for SettingsPanel {
             COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
                 let mut pending_queue = buffer.pending_commands.borrow_mut();
 
-                // FPS counter
+                // Test text input
 
-                self.fps_average = {
-                    let new_fps =
-                        GLOBAL_UI_CONTEXT.with(|ctx| ctx.timing_info.borrow().frames_per_second);
+                tree.push(text(
+                    format!("SettingsPanel{}.test_text_input.label", self.id).to_string(),
+                    "A text input:".to_string(),
+                ))?;
 
-                    0.99 * self.fps_average + 0.01 * new_fps
-                };
-
-                tree.push(self.fps_counter())?;
+                if let Some(new_value) = text_input(
+                    format!("SettingsPanel{}.test_text_input", self.id),
+                    &self.test_text,
+                    tree,
+                )? {
+                    self.test_text = new_value;
+                }
 
                 tree.push(spacer(18))?;
 

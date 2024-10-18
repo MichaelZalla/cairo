@@ -45,6 +45,7 @@ pub(crate) fn make_window_list<'a>(
                 panel_instance_data = PanelInstanceData {
                     panel_instance: panel_arena.insert(SettingsPanel::new(
                         panel_id.as_str(),
+                        "Hello, world!".to_string(),
                         *uv_test_gradient_texture_handle,
                     )),
                     render: Some(panel_render_callbacks.settings.clone()),

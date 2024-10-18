@@ -17,6 +17,10 @@ impl UIBox {
             "Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!",
         );
 
+        if text_content.is_empty() {
+            return Ok(());
+        }
+
         let text_color = self.styles.text_color.unwrap_or_default();
 
         let should_cache = !self.features.contains(UIBoxFeatureFlag::SkipTextCaching);

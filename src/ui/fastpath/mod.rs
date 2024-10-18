@@ -9,3 +9,4 @@ pub mod spacer;
 pub mod stack;
 pub mod tab_selector;
 pub mod text;
+pub mod text_input;
