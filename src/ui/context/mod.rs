@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     app::App,
@@ -10,6 +10,8 @@ use crate::{
     },
     font::{cache::FontCache, FontInfo},
     graphics::text::cache::TextCache,
+    resource::arena::Arena,
+    texture::map::TextureMap,
     time::TimingInfo,
 };
 
@@ -59,6 +61,7 @@ pub struct UIContext<'a> {
     pub font_cache: RefCell<Option<FontCache<'a>>>,
     pub font_info: RefCell<FontInfo>,
     pub text_cache: RefCell<TextCache>,
+    pub image_arena: Option<Rc<RefCell<Arena<TextureMap>>>>,
     pub theme: RefCell<UITheme>,
     pub styles: RefCell<UIBoxStylesContext>,
     pub global_offset: RefCell<(u32, u32)>,
@@ -86,6 +89,7 @@ impl<'a> Default for UIContext<'a> {
             font_cache: Default::default(),
             font_info: Default::default(),
             text_cache: Default::default(),
+            image_arena: None,
             theme: RefCell::new(default_theme),
             styles: RefCell::new(styles),
             global_offset: Default::default(),
