@@ -1,5 +1,4 @@
-use core::fmt;
-use std::f32::consts::PI;
+use std::{f32::consts::PI, fmt};
 
 use serde::{Deserialize, Serialize};
 
