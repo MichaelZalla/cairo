@@ -101,9 +101,11 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
     // Scene context
 
-    let (scene_context, shader_context) = make_spinning_cube_scene(framebuffer.width_over_height)?;
+    let (scene_context, shader_context) = make_spinning_cube_scene(camera_aspect_ratio)?;
 
     // Shader context
 

@@ -58,6 +58,8 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     // Scene context
@@ -67,8 +69,7 @@ fn main() -> Result<(), String> {
     static BLUE_CUBE_ORIGINAL_UNIFORM_SCALE: f32 =
         GREEN_CUBE_ORIGINAL_UNIFORM_SCALE * GREEN_CUBE_ORIGINAL_UNIFORM_SCALE;
 
-    let (scene_context, shader_context) =
-        make_empty_scene(framebuffer_rc.borrow().width_over_height)?;
+    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
 
     {
         let resources = scene_context.resources.borrow_mut();

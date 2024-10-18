@@ -1,6 +1,5 @@
 use cairo::{
     app::context::ApplicationRenderingContext,
-    buffer::framebuffer::Framebuffer,
     material::Material,
     scene::{
         context::{utils::make_cube_scene, SceneContext},
@@ -13,10 +12,10 @@ use cairo::{
 };
 
 pub(crate) fn make_textured_cube_scene(
+    camera_aspect_ratio: f32,
     rendering_context: &ApplicationRenderingContext,
-    framebuffer: &Framebuffer,
 ) -> Result<(SceneContext, ShaderContext), String> {
-    let (scene_context, shader_context) = make_cube_scene(framebuffer.width_over_height).unwrap();
+    let (scene_context, shader_context) = make_cube_scene(camera_aspect_ratio)?;
 
     {
         let mut resources = scene_context.resources.borrow_mut();

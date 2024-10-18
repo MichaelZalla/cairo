@@ -62,10 +62,12 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     let (mut scene_context, shader_context) =
-        scene::make_sphere_grid_scene(framebuffer_rc.borrow().width_over_height).unwrap();
+        scene::make_sphere_grid_scene(camera_aspect_ratio).unwrap();
 
     {
         let resources = (*scene_context.resources).borrow_mut();

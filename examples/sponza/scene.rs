@@ -2,7 +2,6 @@ use std::borrow::BorrowMut;
 
 use cairo::{
     app::context::ApplicationRenderingContext,
-    buffer::framebuffer::Framebuffer,
     color,
     entity::Entity,
     mesh,
@@ -18,10 +17,10 @@ use cairo::{
 };
 
 pub fn make_sponza_scene(
+    camera_aspect_ratio: f32,
     rendering_context: &ApplicationRenderingContext,
-    framebuffer: &Framebuffer,
 ) -> Result<(SceneContext, ShaderContext), String> {
-    let (scene_context, shader_context) = make_empty_scene(framebuffer.width_over_height)?;
+    let (scene_context, shader_context) = make_empty_scene(camera_aspect_ratio)?;
 
     {
         let resources = (*scene_context.resources).borrow_mut();

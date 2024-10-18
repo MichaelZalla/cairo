@@ -60,6 +60,8 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     // Point shadow map framebuffer
@@ -76,10 +78,8 @@ fn main() -> Result<(), String> {
 
     // Scene context
 
-    let (scene_context, shader_context) = make_cubes_scene(
-        framebuffer_rc.borrow().width_over_height,
-        point_shadow_map_framebuffer_rc.clone(),
-    )?;
+    let (scene_context, shader_context) =
+        make_cubes_scene(camera_aspect_ratio, point_shadow_map_framebuffer_rc.clone())?;
 
     let scene_context_rc = Rc::new(scene_context);
 

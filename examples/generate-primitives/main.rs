@@ -89,7 +89,7 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
-    let aspect_ratio = framebuffer.width_over_height;
+    let camera_aspect_ratio = framebuffer.width_over_height;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
@@ -100,7 +100,7 @@ fn main() -> Result<(), String> {
     // Scene context
 
     let (scene_context, shader_context) =
-        make_primitives_scene(aspect_ratio, Some(rendering_context))?;
+        make_primitives_scene(camera_aspect_ratio, Some(rendering_context))?;
 
     let scene_context_rc = Rc::new(scene_context);
 

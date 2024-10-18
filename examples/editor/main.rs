@@ -86,19 +86,22 @@ fn main() -> Result<(), String> {
 
     // Default render framebuffer.
 
-    let framebuffer_rc = RefCell::new(Buffer2D::new(
+    let framebuffer = Buffer2D::new(
         window_info.window_resolution.width,
         window_info.window_resolution.height,
         None,
-    ));
+    );
+
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
+    let framebuffer_rc = RefCell::new(framebuffer);
 
     let current_frame_index_rc = RefCell::new(0_u32);
 
     let mut scene_resources_rc: Option<Rc<RefCell<SceneResources>>> = None;
 
     EDITOR_SCENE_CONTEXT.with(|sc| {
-        let (cube_scene_context, _shader_context) =
-            make_cube_scene(framebuffer_rc.borrow().width_over_height).unwrap();
+        let (cube_scene_context, _shader_context) = make_cube_scene(camera_aspect_ratio).unwrap();
 
         let resources = RefCell::into_inner(Rc::try_unwrap(cube_scene_context.resources).unwrap());
         let scenes = RefCell::into_inner(cube_scene_context.scenes);

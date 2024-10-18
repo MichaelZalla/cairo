@@ -146,10 +146,12 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
     // Initializes a 3D scene context (default cube scene).
 
     let shader_context = {
-        let (scene_context, shader_context) = make_cube_scene(framebuffer.width_over_height)?;
+        let (scene_context, shader_context) = make_cube_scene(camera_aspect_ratio)?;
 
         SCENE_CONTEXT.with(|ctx| {
             RefCell::swap(&ctx.resources, &scene_context.resources);

@@ -36,8 +36,6 @@ fn main() -> Result<(), String> {
 
     let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
-    let (scene_context, shader_context) = make_sphere_grid_scene(16.0 / 9.0)?;
-
     // Default framebuffer
 
     let mut framebuffer = Framebuffer::new(
@@ -47,7 +45,13 @@ fn main() -> Result<(), String> {
 
     framebuffer.complete(0.3, 100.0);
 
+    let camera_aspect_ratio = framebuffer.width_over_height;
+
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+
+    // Scene context
+
+    let (scene_context, shader_context) = make_sphere_grid_scene(camera_aspect_ratio)?;
 
     // ShaderContext
 
