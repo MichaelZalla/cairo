@@ -13,8 +13,9 @@ use cairo::{
 use crate::panels::{
     camera_attributes_panel::CameraAttributesPanel,
     rasterization_options_panel::RasterizationOptionsPanel,
-    render_options_panel::RenderOptionsPanel, settings_panel::SettingsPanel,
-    shader_options_panel::ShaderOptionsPanel, PanelArenas, PanelRenderCallbacks,
+    render_options_panel::RenderOptionsPanel, scene_graph_panel::SceneGraphPanel,
+    settings_panel::SettingsPanel, shader_options_panel::ShaderOptionsPanel, PanelArenas,
+    PanelRenderCallbacks,
 };
 
 pub(crate) fn make_window_list<'a>(
@@ -27,7 +28,7 @@ pub(crate) fn make_window_list<'a>(
 
     // Builds a few non-native, "floating" windows that we can drag around.
 
-    for i in 0..5 {
+    for i in 0..6 {
         let window_id = format!("floating_window_{}", i);
 
         let window_title;
@@ -106,7 +107,7 @@ pub(crate) fn make_window_list<'a>(
                     custom_render_callback: None,
                 };
             }
-            _ => {
+            4 => {
                 let scene_resources = scene_context.resources.borrow();
 
                 let camera_arena = scene_resources.camera.borrow();
@@ -132,6 +133,21 @@ pub(crate) fn make_window_list<'a>(
                     panic!()
                 }
             }
+            _ => {
+                let mut panel_arena = panel_arenas.scene_graph.borrow_mut();
+
+                let scene_index = 0;
+
+                window_title = format!("Scene {}", scene_index + 1);
+
+                panel_id = format!("{}_SceneGraphPanel", window_id);
+                panel_instance_data = PanelInstanceData {
+                    panel_instance: panel_arena
+                        .insert(SceneGraphPanel::new(panel_id.as_str(), scene_index)),
+                    render: Some(panel_render_callbacks.scene_graph.clone()),
+                    custom_render_callback: None,
+                };
+            }
         }
 
         let mut window_panel_tree = PanelTree::from_id(&window_id);
@@ -150,7 +166,7 @@ pub(crate) fn make_window_list<'a>(
             window_title,
             WindowOptions {
                 with_titlebar: true,
-                position: (50 + i * 250, 50),
+                position: (50 + i * 225, 50),
                 ..Default::default()
             },
             None,

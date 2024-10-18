@@ -255,6 +255,7 @@ fn main() -> Result<(), String> {
         shader_options: Rc::new(panel_render_callback!(panel_arenas, shader_options)),
         rasterization_options: Rc::new(panel_render_callback!(panel_arenas, rasterization_options)),
         camera_attributes: Rc::new(panel_render_callback!(panel_arenas, camera_attributes)),
+        scene_graph: Rc::new(panel_render_callback!(panel_arenas, scene_graph)),
     };
 
     let window_list = {

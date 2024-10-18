@@ -8,12 +8,14 @@ use cairo::{
 use camera_attributes_panel::CameraAttributesPanel;
 use rasterization_options_panel::RasterizationOptionsPanel;
 use render_options_panel::RenderOptionsPanel;
+use scene_graph_panel::SceneGraphPanel;
 use settings_panel::SettingsPanel;
 use shader_options_panel::ShaderOptionsPanel;
 
 pub mod camera_attributes_panel;
 pub mod rasterization_options_panel;
 pub mod render_options_panel;
+pub mod scene_graph_panel;
 pub mod settings_panel;
 pub mod shader_options_panel;
 
@@ -27,6 +29,7 @@ pub struct PanelArenas {
     pub shader_options: &'static RefCell<Arena<ShaderOptionsPanel>>,
     pub rasterization_options: &'static RefCell<Arena<RasterizationOptionsPanel>>,
     pub camera_attributes: &'static RefCell<Arena<CameraAttributesPanel>>,
+    pub scene_graph: &'static RefCell<Arena<SceneGraphPanel>>,
 }
 
 macro_rules! leak_arena {
@@ -43,6 +46,7 @@ impl Default for PanelArenas {
             shader_options: leak_arena!(ShaderOptionsPanel),
             rasterization_options: leak_arena!(RasterizationOptionsPanel),
             camera_attributes: leak_arena!(CameraAttributesPanel),
+            scene_graph: leak_arena!(SceneGraphPanel),
         }
     }
 }
@@ -53,6 +57,7 @@ pub struct PanelRenderCallbacks {
     pub shader_options: PanelRenderCallback,
     pub rasterization_options: PanelRenderCallback,
     pub camera_attributes: PanelRenderCallback,
+    pub scene_graph: PanelRenderCallback,
 }
 
 #[macro_export]

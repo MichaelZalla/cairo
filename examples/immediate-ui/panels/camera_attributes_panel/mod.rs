@@ -10,7 +10,6 @@ use cairo::{
             radio::{radio_group, RadioOption},
             slider::{slider, SliderOptions},
             spacer::spacer,
-            tab_selector::tab_selector,
             text::text,
         },
         ui_box::tree::UIBoxTree,
@@ -64,34 +63,6 @@ impl CameraAttributesPanel {
         tree: &mut UIBoxTree,
         pending_queue: &mut LinkedList<PendingCommand>,
     ) -> Result<(), String> {
-        let tabs = vec!["Tab A", "Tab B", "Tab C"];
-
-        match tab_selector(format!("{}.tab_test", self.id), tabs, tree)? {
-            0 => {
-                // Tab A
-                tree.push(text(
-                    format!("{}.tab_test.tab_a.label", self.id).to_string(),
-                    "Tab A stuff.".to_string(),
-                ))?;
-            }
-            1 => {
-                // Tab B
-                tree.push(text(
-                    format!("{}.tab_test.tab_b.label", self.id).to_string(),
-                    "Tab B stuff.".to_string(),
-                ))?;
-            }
-            _ => {
-                // Tab C
-                tree.push(text(
-                    format!("{}.tab_test.tab_c.label", self.id).to_string(),
-                    "Tab C stuff.".to_string(),
-                ))?;
-            }
-        }
-
-        tree.push(spacer(18))?;
-
         // Projection kind
 
         tree.push(text(

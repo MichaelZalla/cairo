@@ -2,6 +2,8 @@ use std::{collections::VecDeque, fmt::Display};
 
 use serde::{Deserialize, Serialize};
 
+use uuid::Uuid;
+
 use crate::{
     app::App,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -65,6 +67,7 @@ pub enum SceneNodeLocalTraversalMethod {
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneNode {
+    uuid: Uuid,
     node_type: SceneNodeType,
     transform: Transform3D,
     handle: Option<Handle>,
@@ -80,11 +83,16 @@ impl PostDeserialize for SceneNode {
 impl SceneNode {
     pub fn new(node_type: SceneNodeType, transform: Transform3D, handle: Option<Handle>) -> Self {
         Self {
+            uuid: Uuid::new_v4(),
             node_type,
             transform,
             handle,
             children: None,
         }
+    }
+
+    pub fn get_uuid(&self) -> &Uuid {
+        &self.uuid
     }
 
     pub fn is_type(&self, node_type: SceneNodeType) -> bool {
@@ -116,7 +124,10 @@ impl SceneNode {
     }
 
     pub fn has_children(&self) -> bool {
-        self.children.is_some()
+        match self.children() {
+            Some(children) => !children.is_empty(),
+            None => false,
+        }
     }
 
     pub fn children(&self) -> &Option<Vec<Self>> {
