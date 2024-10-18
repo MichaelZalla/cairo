@@ -4,6 +4,7 @@ use cairo::{
     resource::arena::Arena,
     ui::{panel::PanelRenderCallback, ui_box::tree::UIBoxTree},
 };
+
 use camera_attributes_panel::CameraAttributesPanel;
 use rasterization_options_panel::RasterizationOptionsPanel;
 use render_options_panel::RenderOptionsPanel;
@@ -28,18 +29,20 @@ pub struct PanelArenas {
     pub camera_attributes: &'static RefCell<Arena<CameraAttributesPanel>>,
 }
 
+macro_rules! leak_arena {
+    ($T: ident) => {{
+        Box::leak(Box::new(RefCell::new(Arena::<$T>::new())))
+    }};
+}
+
 impl Default for PanelArenas {
     fn default() -> Self {
         Self {
-            settings: Box::leak(Box::new(RefCell::new(Arena::<SettingsPanel>::new()))),
-            render_options: Box::leak(Box::new(RefCell::new(Arena::<RenderOptionsPanel>::new()))),
-            shader_options: Box::leak(Box::new(RefCell::new(Arena::<ShaderOptionsPanel>::new()))),
-            rasterization_options: Box::leak(Box::new(RefCell::new(Arena::<
-                RasterizationOptionsPanel,
-            >::new()))),
-            camera_attributes: Box::leak(Box::new(RefCell::new(
-                Arena::<CameraAttributesPanel>::new(),
-            ))),
+            settings: leak_arena!(SettingsPanel),
+            render_options: leak_arena!(RenderOptionsPanel),
+            shader_options: leak_arena!(ShaderOptionsPanel),
+            rasterization_options: leak_arena!(RasterizationOptionsPanel),
+            camera_attributes: leak_arena!(CameraAttributesPanel),
         }
     }
 }
