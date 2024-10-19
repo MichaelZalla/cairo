@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use serde::Deserialize;
 use serde::Serialize;
 
-use sdl2::image::InitFlag;
 use sdl2::image::LoadTexture;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::render::TextureAccess;
@@ -222,16 +221,6 @@ impl TextureMap {
         // Load the map's native-sized pixel data on-demand.
 
         let mut canvas = rendering_context.canvas.borrow_mut();
-
-        match sdl2::image::init(InitFlag::JPG) {
-            Ok(_) => {
-                println!(
-                    "Initialized SDL_Image v{}.",
-                    sdl2::image::get_linked_version()
-                );
-            }
-            Err(_) => panic!("Failed to initialize SDL_Image library from DLL."),
-        }
 
         let texture_creator = canvas.texture_creator();
 

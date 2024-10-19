@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use sdl2::{
+    image::InitFlag,
     render::{BlendMode, Canvas, Texture, TextureCreator},
     ttf::Sdl2TtfContext,
     video::{Window, WindowContext},
@@ -33,6 +34,16 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
     let sdl_context = sdl2::init()?;
 
     println!("Initialized SDL v{}.", sdl2::version::version());
+
+    match sdl2::image::init(InitFlag::JPG | InitFlag::PNG) {
+        Ok(_) => {
+            println!(
+                "Initialized SDL_Image v{}.",
+                sdl2::image::get_linked_version()
+            );
+        }
+        Err(_) => return Err("Failed to initialize SDL_Image library from DLL.".to_string()),
+    }
 
     let event_subsystem = sdl_context.event().unwrap();
 
