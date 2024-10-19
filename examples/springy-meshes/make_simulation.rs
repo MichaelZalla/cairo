@@ -2,11 +2,11 @@ use sdl2::sys::SDL_STANDARD_GRAVITY;
 
 use cairo::vec::vec3::Vec3;
 
-use crate::static_line_segment_collider::StaticLineSegmentCollider;
 use crate::force::{Force, Newtons};
 use crate::simulation::Simulation;
 use crate::springy_mesh::SpringyMesh;
 use crate::state_vector::StateVector;
+use crate::static_line_segment_collider::StaticLineSegmentCollider;
 
 static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| -> Newtons {
     Vec3 {
