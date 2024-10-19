@@ -33,7 +33,7 @@ pub fn do_image(
         item: ctx.next_id(),
     };
 
-    if !map.is_mipmapped && map.validate_for_mipmapping().is_ok() {
+    if !map.has_mipmaps_generated && map.validate_for_mipmapping().is_ok() {
         map.generate_mipmaps().unwrap();
     }
 

@@ -63,7 +63,7 @@ pub struct TextureMap<T: Default + Debug + Copy + PartialEq = u8> {
     #[serde(skip, default)]
     pub is_loaded: bool,
     #[serde(skip, default)]
-    pub is_mipmapped: bool,
+    pub has_mipmaps_generated: bool,
     #[serde(skip, default)]
     pub width: u32,
     #[serde(skip, default)]
@@ -87,7 +87,7 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
                 storage_format,
             },
             is_loaded: false,
-            is_mipmapped: false,
+            has_mipmaps_generated: false,
             width: 0,
             height: 0,
             levels: vec![],
@@ -125,7 +125,7 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
                 },
             },
             is_loaded: true,
-            is_mipmapped: false,
+            has_mipmaps_generated: false,
             width,
             height,
             levels: vec![TextureBuffer(buffer)],
@@ -144,9 +144,11 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
             ));
         }
 
-        if self.is_mipmapped {
+        if self.has_mipmaps_generated {
             #[cfg(feature = "print_warnings")]
-            println!("Called Texture::validate_for_mipmapping() on a Texture that already has mipmapping enabled!");
+            println!(
+                "Called Texture::validate_for_mipmapping() on a Texture that already has mipmaps created."
+            );
 
             return Ok(());
         }
@@ -322,7 +324,7 @@ impl TextureMap {
 
         self.is_loaded = true;
 
-        if self.is_mipmapped && self.levels.is_empty() {
+        if self.has_mipmaps_generated && self.levels.is_empty() {
             self.generate_mipmaps()?
         }
 
@@ -347,13 +349,13 @@ impl TextureMap {
             )));
         }
 
-        self.is_mipmapped = true;
+        self.has_mipmaps_generated = true;
 
         Ok(())
     }
 
     fn get_near_far_alpha(&self, width: u32) -> (usize, Option<usize>, Option<f32>) {
-        if !self.is_mipmapped {
+        if !self.has_mipmaps_generated {
             return (0, None, None);
         }
 
@@ -542,7 +544,7 @@ impl TextureMap<Vec3> {
             )));
         }
 
-        self.is_mipmapped = true;
+        self.has_mipmaps_generated = true;
 
         Ok(())
     }
