@@ -27,14 +27,14 @@ impl SoftwareRenderer {
         faces: &[Face],
         projection_space_vertices: &[DefaultVertexOut],
     ) {
-        let mut triangles: Vec<Triangle<DefaultVertexOut>> = Vec::with_capacity(faces.len());
-
         for face_index in 0..faces.len() {
             // Cull backfaces
 
-            let mut v0 = projection_space_vertices[face_index * 3];
-            let mut v1 = projection_space_vertices[face_index * 3 + 1];
-            let mut v2 = projection_space_vertices[face_index * 3 + 2];
+            let vertex_index = face_index * 3;
+
+            let mut v0 = projection_space_vertices[vertex_index];
+            let mut v1 = projection_space_vertices[vertex_index + 1];
+            let mut v2 = projection_space_vertices[vertex_index + 2];
 
             match self
                 .options
@@ -70,11 +70,7 @@ impl SoftwareRenderer {
                 }
             }
 
-            triangles.push(Triangle { v0, v1, v2 });
-        }
-
-        for triangle in triangles.as_slice() {
-            self.process_triangle(triangle);
+            self.process_triangle(&Triangle { v0, v1, v2 });
         }
     }
 
