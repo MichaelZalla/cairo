@@ -47,7 +47,12 @@ impl<T: PostDeserialize> Arena<T> {
     }
 
     pub fn get_handle(&self, index: usize) -> Result<Handle, String> {
-        assert!(index < self.entries.len());
+        assert!(
+            index < self.entries.len(),
+            "Invalid index {} passed to Arena::get_handle() for Arena with {} entries!",
+            index,
+            self.entries.len()
+        );
 
         if let Some(entry) = &self.entries[index] {
             let handle = Handle {
