@@ -310,7 +310,7 @@ pub(crate) fn make_scene(
 
     if let Some(camera_handle) = scene
         .root
-        .find(&mut |node| *node.get_type() == SceneNodeType::Camera)
+        .find(|node| *node.get_type() == SceneNodeType::Camera)
         .unwrap()
     {
         if let Ok(entry) = camera_arena.get_mut(&camera_handle) {

@@ -343,7 +343,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         let cube_entity_handle = scene
             .root
-            .find(&mut |node| *node.get_type() == SceneNodeType::Entity)
+            .find(|node| *node.get_type() == SceneNodeType::Entity)
             .unwrap()
             .unwrap();
 

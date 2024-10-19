@@ -203,7 +203,7 @@ impl SceneNode {
         Ok(())
     }
 
-    pub fn find<P>(&self, predicate: &mut P) -> Result<Option<Handle>, String>
+    pub fn find<P>(&self, predicate: P) -> Result<Option<Handle>, String>
     where
         P: Fn(&SceneNode) -> bool,
     {
