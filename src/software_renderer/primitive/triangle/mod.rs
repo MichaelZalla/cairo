@@ -25,7 +25,7 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn process_triangles(
         &mut self,
         faces: &[Face],
-        projection_space_vertices: Vec<DefaultVertexOut>,
+        projection_space_vertices: &[DefaultVertexOut],
     ) {
         let mut triangles: Vec<Triangle<DefaultVertexOut>> = Vec::with_capacity(faces.len());
 

@@ -370,11 +370,11 @@ impl SoftwareRenderer {
         }
     }
 
-    fn render_mesh_geometry(&mut self, geometry: &Geometry, faces: &Vec<Face>) {
+    fn render_mesh_geometry(&mut self, geometry: &Geometry, faces: &[Face]) {
         self.process_object_space_vertices(geometry, faces);
     }
 
-    fn process_object_space_vertices(&mut self, geometry: &Geometry, faces: &Vec<Face>) {
+    fn process_object_space_vertices(&mut self, geometry: &Geometry, faces: &[Face]) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
         let mut vertices_in: Vec<DefaultVertexIn> = Vec::with_capacity(faces.len() * 3);
@@ -399,7 +399,7 @@ impl SoftwareRenderer {
                 .collect();
         }
 
-        self.process_triangles(faces, projection_space_vertices);
+        self.process_triangles(faces, projection_space_vertices.as_slice());
     }
 
     fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {
