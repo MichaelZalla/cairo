@@ -26,8 +26,6 @@ impl SoftwareRenderer {
         &mut self,
         faces: &[Face],
         projection_space_vertices: Vec<DefaultVertexOut>,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
     ) {
         let mut triangles: Vec<Triangle<DefaultVertexOut>> = Vec::with_capacity(faces.len());
 
@@ -129,12 +127,7 @@ impl SoftwareRenderer {
         false
     }
 
-    fn post_process_triangle_vertices(
-        &mut self,
-        triangle: &Triangle<DefaultVertexOut>,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
-    ) {
+    fn post_process_triangle_vertices(&mut self, triangle: &Triangle<DefaultVertexOut>) {
         // World-space to screen-space (NDC) transform
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
@@ -153,8 +146,6 @@ impl SoftwareRenderer {
                 ndc_space_vertices[0],
                 ndc_space_vertices[1],
                 ndc_space_vertices[2],
-                // shader_context,
-                // scene_resources,
             );
         }
 
@@ -193,13 +184,7 @@ impl SoftwareRenderer {
         }
     }
 
-    fn is_backface(
-        &mut self,
-        v0: Vec4,
-        v1: Vec4,
-        v2: Vec4,
-        // shader_context: &ShaderContext,
-    ) -> bool {
+    fn is_backface(&mut self, v0: Vec4, v1: Vec4, v2: Vec4) -> bool {
         let vertices = [
             Vec3 {
                 x: v0.x,
@@ -243,12 +228,7 @@ impl SoftwareRenderer {
         false
     }
 
-    fn process_triangle(
-        &mut self,
-        triangle: &Triangle<DefaultVertexOut>,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
-    ) {
+    fn process_triangle(&mut self, triangle: &Triangle<DefaultVertexOut>) {
         // @TODO(mzalla) Geometry shader?
 
         if self.should_cull_from_homogeneous_space(triangle) {
@@ -262,14 +242,7 @@ impl SoftwareRenderer {
         }
     }
 
-    fn triangle_fill(
-        &mut self,
-        v0: DefaultVertexOut,
-        v1: DefaultVertexOut,
-        v2: DefaultVertexOut,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
-    ) {
+    fn triangle_fill(&mut self, v0: DefaultVertexOut, v1: DefaultVertexOut, v2: DefaultVertexOut) {
         let mut tri = [v0, v1, v2];
 
         // Sorts points by y-value (highest-to-lowest)
@@ -321,39 +294,15 @@ impl SoftwareRenderer {
                 // split_point cannot have the same x-value; therefore, sort tri[1]
                 // and split_point by x-value;
 
-                self.flat_bottom_triangle_fill(
-                    tri[0],
-                    tri[1],
-                    split_vertex,
-                    // shader_context,
-                    // scene_resources,
-                );
+                self.flat_bottom_triangle_fill(tri[0], tri[1], split_vertex);
 
-                self.flat_top_triangle_fill(
-                    tri[1],
-                    split_vertex,
-                    tri[2],
-                    // shader_context,
-                    // scene_resources,
-                );
+                self.flat_top_triangle_fill(tri[1], split_vertex, tri[2]);
             } else {
                 // Major left
 
-                self.flat_bottom_triangle_fill(
-                    tri[0],
-                    split_vertex,
-                    tri[1],
-                    // shader_context,
-                    // scene_resources,
-                );
+                self.flat_bottom_triangle_fill(tri[0], split_vertex, tri[1]);
 
-                self.flat_top_triangle_fill(
-                    split_vertex,
-                    tri[1],
-                    tri[2],
-                    // shader_context,
-                    // scene_resources,
-                );
+                self.flat_top_triangle_fill(split_vertex, tri[1], tri[2]);
             }
         }
     }
@@ -363,8 +312,6 @@ impl SoftwareRenderer {
         top_left: DefaultVertexOut,
         top_right: DefaultVertexOut,
         bottom: DefaultVertexOut,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
     ) {
         let delta_y = bottom.position.y - top_left.position.y;
 
@@ -378,13 +325,10 @@ impl SoftwareRenderer {
 
         self.flat_triangle_fill(
             &top_left,
-            // &top_right,
             &bottom,
             &top_left_step,
             &top_right_step,
             &mut right_edge_interpolant,
-            // shader_context,
-            // scene_resources,
         );
     }
 
@@ -393,8 +337,6 @@ impl SoftwareRenderer {
         top: DefaultVertexOut,
         bottom_left: DefaultVertexOut,
         bottom_right: DefaultVertexOut,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
     ) {
         let delta_y = bottom_right.position.y - top.position.y;
 
@@ -408,26 +350,20 @@ impl SoftwareRenderer {
 
         self.flat_triangle_fill(
             &top,
-            // &bottom_left,
             &bottom_right,
             &bottom_left_step,
             &bottom_right_step,
             &mut right_edge_interpolant,
-            // shader_context,
-            // scene_resources,
         );
     }
 
     fn flat_triangle_fill(
         &mut self,
         it0: &DefaultVertexOut,
-        // it1: &DefaultVertexOut,
         it2: &DefaultVertexOut,
         left_step: &DefaultVertexOut,
         right_step: &DefaultVertexOut,
         right_edge_interpolant: &mut DefaultVertexOut,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
     ) {
         // it0 will always be a top vertex.
         // it1 is either a top or a bottom vertex.
@@ -483,13 +419,7 @@ impl SoftwareRenderer {
                 line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.position.x);
 
             for x in x_start..x_end {
-                self.test_and_set_z_buffer(
-                    x,
-                    y,
-                    &mut line_interpolant,
-                    // shader_context,
-                    // scene_resources,
-                );
+                self.test_and_set_z_buffer(x, y, &mut line_interpolant);
 
                 line_interpolant += line_interpolant_step;
             }
