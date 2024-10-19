@@ -137,7 +137,7 @@ pub fn make_sponza_scene(
 
     let skybox_node = {
         let mut skybox_cubemap: CubeMap = CubeMap::cross(
-            "examples/sponza/assets/horizontal_cross.png",
+            "examples/skybox/assets/cross/skybox_texture.jpg",
             TextureMapStorageFormat::RGB24,
         );
 
