@@ -1,6 +1,6 @@
 use cairo::{
     app::context::ApplicationRenderingContext,
-    color,
+    color::Color,
     entity::Entity,
     material::Material,
     mesh::{
@@ -112,7 +112,7 @@ pub fn make_sponza_scene(
             z: 0.0,
         };
 
-        light.intensities = color::BLUE.to_vec3() / 255.0 * 5.0;
+        light.intensities = Color::rgb(255, 205, 185).to_vec3() / 255.0 * 25.0;
 
         light.constant_attenuation = 1.0;
         light.linear_attenuation = 0.0014;
@@ -142,7 +142,7 @@ pub fn make_sponza_scene(
 
         light.look_vector.set_target_position(Default::default());
 
-        light.intensities = color::RED.to_vec3() / 255.0 * 3.0;
+        light.intensities = vec3::ONES * 22.0;
 
         light.constant_attenuation = 1.0;
         light.linear_attenuation = 0.007;
