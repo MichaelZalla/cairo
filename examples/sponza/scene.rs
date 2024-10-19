@@ -22,6 +22,7 @@ use cairo::{
         cubemap::CubeMap,
         map::{TextureMap, TextureMapStorageFormat},
     },
+    transform::Transform3D,
     vec::vec3::{self, Vec3},
 };
 
@@ -106,11 +107,13 @@ pub fn make_sponza_scene(
     let point_light_node = {
         let mut light = PointLight::new();
 
-        light.position = Vec3 {
+        let mut point_light_node_transform = Transform3D::default();
+
+        point_light_node_transform.set_translation(Vec3 {
             x: 300.0,
             y: 300.0,
             z: 0.0,
-        };
+        });
 
         light.intensities = Color::rgb(255, 205, 185).to_vec3() / 255.0 * 25.0;
 
@@ -122,7 +125,7 @@ pub fn make_sponza_scene(
 
         SceneNode::new(
             SceneNodeType::PointLight,
-            Default::default(),
+            point_light_node_transform,
             Some(point_light_handle),
         )
     };
@@ -134,13 +137,22 @@ pub fn make_sponza_scene(
     let spot_light_node = {
         let mut light = SpotLight::new();
 
-        light.look_vector.set_position(Vec3 {
+        let mut point_light_node_transform = Transform3D::default();
+
+        point_light_node_transform.set_translation(Vec3 {
             x: 300.0,
             y: 900.0,
             z: 0.0,
         });
 
-        light.look_vector.set_target_position(Default::default());
+        light.look_vector.set_target_position(
+            light.look_vector.get_position()
+                + Vec3 {
+                    x: 0.001,
+                    y: -1.0,
+                    z: 0.001,
+                },
+        );
 
         light.intensities = vec3::ONES * 22.0;
 
@@ -152,7 +164,7 @@ pub fn make_sponza_scene(
 
         SceneNode::new(
             SceneNodeType::SpotLight,
-            Default::default(),
+            point_light_node_transform,
             Some(light_handle),
         )
     };
