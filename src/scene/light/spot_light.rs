@@ -72,11 +72,7 @@ impl SpotLight {
             outer_cutoff_angle: (PI / 8.0),
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
             outer_cutoff_angle_cos: (PI / 8.0).cos(),
-            attenuation: LightAttenuation {
-                constant: 1.0,
-                linear: 0.09,
-                quadratic: 0.032,
-            },
+            attenuation: LightAttenuation::new(1.0, 0.09, 0.032),
             influence_distance: 0.0,
         };
 

@@ -2,12 +2,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct LightAttenuation {
-    pub constant: f32,
-    pub linear: f32,
-    pub quadratic: f32,
+    constant: f32,
+    linear: f32,
+    quadratic: f32,
 }
 
 impl LightAttenuation {
+    pub fn new(constant: f32, linear: f32, quadratic: f32) -> Self {
+        Self {
+            constant,
+            linear,
+            quadratic,
+        }
+    }
+
     pub fn attenuate_for_distance(&self, distance: f32) -> f32 {
         1.0 / (self.quadratic * distance * distance + self.linear * distance + self.constant)
     }

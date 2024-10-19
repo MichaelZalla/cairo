@@ -15,8 +15,8 @@ use cairo::{
         environment::Environment,
         graph::SceneGraph,
         light::{
-            ambient_light::AmbientLight, directional_light::DirectionalLight,
-            point_light::PointLight,
+            ambient_light::AmbientLight, attenuation::LightAttenuation,
+            directional_light::DirectionalLight, point_light::PointLight,
         },
         node::{SceneNode, SceneNodeType},
     },
@@ -175,9 +175,7 @@ pub fn make_scene(
 
             light.shadow_map = Some(shadow_map_handle);
 
-            light.attenuation.constant = 1.0;
-            light.attenuation.linear = 0.09;
-            light.attenuation.quadratic = 0.032;
+            light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
 
             light
         };

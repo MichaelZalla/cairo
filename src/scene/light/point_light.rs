@@ -53,11 +53,7 @@ impl PointLight {
                 y: 10.0,
                 z: 0.0,
             },
-            attenuation: LightAttenuation {
-                constant: 1.0,
-                linear: 0.35,
-                quadratic: 0.44,
-            },
+            attenuation: LightAttenuation::new(1.0, 0.35, 0.44),
             shadow_map: None,
             influence_distance: 0.0,
         };

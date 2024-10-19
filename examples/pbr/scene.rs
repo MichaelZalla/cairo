@@ -10,8 +10,8 @@ use cairo::{
         environment::Environment,
         graph::SceneGraph,
         light::{
-            ambient_light::AmbientLight, directional_light::DirectionalLight,
-            point_light::PointLight,
+            ambient_light::AmbientLight, attenuation::LightAttenuation,
+            directional_light::DirectionalLight, point_light::PointLight,
         },
         node::{SceneNode, SceneNodeType},
     },
@@ -67,9 +67,7 @@ pub fn make_sphere_grid_scene(
 
         light.intensities = Vec3::ones() * 1.0;
 
-        light.attenuation.constant = 1.0;
-        light.attenuation.linear = 0.09;
-        light.attenuation.quadratic = 0.032;
+        light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
 
         let point_light_handle = point_light_arena.insert(light);
 

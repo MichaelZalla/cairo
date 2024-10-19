@@ -120,11 +120,7 @@ pub fn make_sponza_scene(
 
         light.intensities = Color::rgb(255, 205, 185).to_vec3() / 255.0 * 25.0;
 
-        light.attenuation = LightAttenuation {
-            constant: 1.0,
-            linear: 0.007 / 2.0,
-            quadratic: 0.0002 / 2.0,
-        };
+        light.attenuation = LightAttenuation::new(1.0, 0.007 / 2.0, 0.0002 / 2.0);
 
         light.influence_distance = light.attenuation.get_approximate_influence_distance();
 
@@ -163,11 +159,7 @@ pub fn make_sponza_scene(
 
         light.intensities = vec3::ONES * 22.0;
 
-        light.attenuation = LightAttenuation {
-            constant: 1.0,
-            linear: 0.007 / 10.0,
-            quadratic: 0.0002 / 10.0,
-        };
+        light.attenuation = LightAttenuation::new(1.0, 0.007 / 10.0, 0.0002 / 10.0);
 
         light.influence_distance = light.attenuation.get_approximate_influence_distance();
 
