@@ -523,11 +523,12 @@ impl UIBox {
 
         // DrawBorder path.
 
-        let draw_box_boundaries = if cfg!(debug_assertions) {
-            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_box_boundaries)
-        } else {
-            false
-        };
+        #[cfg(debug_assertions)]
+        let draw_box_boundaries =
+            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_box_boundaries);
+
+        #[cfg(not(debug_assertions))]
+        let draw_box_boundaries = false;
 
         if self.features.contains(UIBoxFeatureFlag::DrawBorder) || draw_box_boundaries {
             self.draw_border(draw_box_boundaries, target);
@@ -541,11 +542,11 @@ impl UIBox {
 
         // DrawDebugDragHandles path.
 
-        let draw_drag_handles = if cfg!(debug_assertions) {
-            GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_drag_handles)
-        } else {
-            false
-        };
+        #[cfg(debug_assertions)]
+        let draw_drag_handles = GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_drag_handles);
+
+        #[cfg(not(debug_assertions))]
+        let draw_drag_handles = false;
 
         #[cfg(debug_assertions)]
         if draw_drag_handles {
