@@ -17,6 +17,8 @@ use crate::{
 
 use super::quaternion::Quaternion;
 
+static LOOK_SENSITIVITY: f32 = 1.0 / 100.0;
+
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct LookVector {
     position: Vec3,
@@ -107,8 +109,8 @@ impl LookVector {
             // Translate relative mouse movements to NDC values (in the
             // range [0, 1]).
 
-            let pitch_delta = mouse_state.relative_motion.0 as f32 / 400.0;
-            let yaw_delta = mouse_state.relative_motion.1 as f32 / 400.0;
+            let pitch_delta = mouse_state.relative_motion.0 as f32 * LOOK_SENSITIVITY;
+            let yaw_delta = mouse_state.relative_motion.1 as f32 * LOOK_SENSITIVITY;
 
             // Update camera pitch and yaw, based on mouse position deltas.
 
