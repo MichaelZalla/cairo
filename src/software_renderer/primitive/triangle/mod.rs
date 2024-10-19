@@ -78,45 +78,33 @@ impl SoftwareRenderer {
         &mut self,
         triangle: &Triangle<DefaultVertexOut>,
     ) -> bool {
-        if triangle.v0.position.x > triangle.v0.position.w
-            && triangle.v1.position.x > triangle.v1.position.w
-            && triangle.v2.position.x > triangle.v2.position.w
-        {
+        let (v0, v1, v2) = (
+            &triangle.v0.position,
+            &triangle.v1.position,
+            &triangle.v2.position,
+        );
+
+        if v0.x > v0.w && v1.x > v1.w && v2.x > v2.w {
             return true;
         }
 
-        if triangle.v0.position.x < -triangle.v0.position.w
-            && triangle.v1.position.x < -triangle.v1.position.w
-            && triangle.v2.position.x < -triangle.v2.position.w
-        {
+        if v0.x < -v0.w && v1.x < -v1.w && v2.x < -v2.w {
             return true;
         }
 
-        if triangle.v0.position.y > triangle.v0.position.w
-            && triangle.v1.position.y > triangle.v1.position.w
-            && triangle.v2.position.y > triangle.v2.position.w
-        {
+        if v0.y > v0.w && v1.y > v1.w && v2.y > v2.w {
             return true;
         }
 
-        if triangle.v0.position.y < -triangle.v0.position.w
-            && triangle.v1.position.y < -triangle.v1.position.w
-            && triangle.v2.position.y < -triangle.v2.position.w
-        {
+        if v0.y < -v0.w && v1.y < -v1.w && v2.y < -v2.w {
             return true;
         }
 
-        if triangle.v0.position.z > triangle.v0.position.w
-            && triangle.v1.position.z > triangle.v1.position.w
-            && triangle.v2.position.z > triangle.v2.position.w
-        {
+        if v0.z > v0.w && v1.z > v1.w && v2.z > v2.w {
             return true;
         }
 
-        if triangle.v0.position.z < 0.0
-            && triangle.v1.position.z < 0.0
-            && triangle.v2.position.z < 0.0
-        {
+        if v0.z < 0.0 && v1.z < 0.0 && v2.z < 0.0 {
             return true;
         }
 
