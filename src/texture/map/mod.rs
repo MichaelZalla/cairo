@@ -147,7 +147,7 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         if self.has_mipmaps_generated {
             #[cfg(feature = "print_warnings")]
             println!(
-                "Called Texture::validate_for_mipmapping() on a Texture that already has mipmaps created."
+                "Called TextureMap::validate_for_mipmapping() on a TextureMap that already has mipmaps created."
             );
 
             return Ok(());
@@ -323,10 +323,6 @@ impl TextureMap {
             .unwrap();
 
         self.is_loaded = true;
-
-        if self.has_mipmaps_generated && self.levels.is_empty() {
-            self.generate_mipmaps()?
-        }
 
         Ok(())
     }

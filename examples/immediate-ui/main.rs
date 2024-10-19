@@ -426,7 +426,7 @@ fn main() -> Result<(), String> {
         {
             texture.load(&app.context.rendering_context)?;
 
-            texture.generate_mipmaps()?;
+            if texture.generate_mipmaps().is_ok() {}
         }
 
         Ok(())

@@ -33,9 +33,7 @@ pub fn do_image(
         item: ctx.next_id(),
     };
 
-    if !map.has_mipmaps_generated && map.validate_for_mipmapping().is_ok() {
-        map.generate_mipmaps().unwrap();
-    }
+    let _ = !map.has_mipmaps_generated && map.generate_mipmaps().is_ok();
 
     let result = DoImageResult {};
 
