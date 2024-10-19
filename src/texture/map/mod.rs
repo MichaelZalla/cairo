@@ -215,6 +215,10 @@ impl TextureMap {
     }
 
     pub fn load(&mut self, rendering_context: &ApplicationRenderingContext) -> Result<(), String> {
+        if self.is_loaded {
+            return Ok(());
+        }
+
         // Load the map's native-sized pixel data on-demand.
 
         let mut canvas = rendering_context.canvas.borrow_mut();
