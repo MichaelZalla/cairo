@@ -49,40 +49,6 @@ pub fn make_sponza_scene(
         directional_light_arena,
     )?;
 
-    // Sponza meshes and materials
-
-    let LoadObjResult(_atrium_geometry, atrium_meshes) = load_obj(
-        "./examples/sponza/assets/sponza.obj",
-        material_arena,
-        texture_u8_arena,
-    );
-
-    for entry in material_arena.entries.iter_mut().flatten() {
-        let material = &mut entry.item;
-
-        material.roughness = 1.0;
-        material.metallic = 0.0;
-        material.metallic_map = material.specular_exponent_map;
-
-        material.load_all_maps(texture_u8_arena, rendering_context)?;
-    }
-
-    // Assign the meshes to entities
-
-    for mesh in atrium_meshes {
-        let material_handle = mesh.material;
-
-        let mesh_handle = mesh_arena.insert(mesh.to_owned());
-
-        let entity_handle = entity_arena.insert(Entity::new(mesh_handle, material_handle));
-
-        scene.root.add_child(SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(entity_handle),
-        ))?;
-    }
-
     // Adjust our scene's default camera.
 
     if let Some(camera_handle) = scene
@@ -201,6 +167,40 @@ pub fn make_sponza_scene(
 
             break;
         }
+    }
+
+    // Sponza meshes and materials
+
+    let LoadObjResult(_atrium_geometry, atrium_meshes) = load_obj(
+        "./examples/sponza/assets/sponza.obj",
+        material_arena,
+        texture_u8_arena,
+    );
+
+    for entry in material_arena.entries.iter_mut().flatten() {
+        let material = &mut entry.item;
+
+        material.roughness = 1.0;
+        material.metallic = 0.0;
+        material.metallic_map = material.specular_exponent_map;
+
+        material.load_all_maps(texture_u8_arena, rendering_context)?;
+    }
+
+    // Assign the meshes to entities
+
+    for mesh in atrium_meshes {
+        let material_handle = mesh.material;
+
+        let mesh_handle = mesh_arena.insert(mesh.to_owned());
+
+        let entity_handle = entity_arena.insert(Entity::new(mesh_handle, material_handle));
+
+        scene.root.add_child(SceneNode::new(
+            SceneNodeType::Entity,
+            Default::default(),
+            Some(entity_handle),
+        ))?;
     }
 
     Ok((scene, shader_context))
