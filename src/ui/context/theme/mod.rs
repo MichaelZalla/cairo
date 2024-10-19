@@ -10,7 +10,6 @@ pub struct UITheme {
 
     // Panel
     pub panel_background: Color,
-    pub panel_titlebar_background: Color,
     pub panel_border: Color,
 
     // Selection state
@@ -46,8 +45,7 @@ impl Default for UITheme {
             text_focus: color::WHITE,
 
             // Panel
-            panel_background: Color::rgba(56, 56, 56, 220),
-            panel_titlebar_background: Color::rgba(45, 45, 45, 220),
+            panel_background: Color::rgba(14, 14, 14, 220),
             panel_border: Color::rgba(35, 35, 35, 220),
 
             // Selection state

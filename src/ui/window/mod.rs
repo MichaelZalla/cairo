@@ -465,7 +465,7 @@ fn render_titlebar(
     GLOBAL_UI_CONTEXT.with(|ctx| {
         let theme = ctx.theme.borrow();
 
-        ctx.fill_color(theme.panel_titlebar_background, || {
+        ctx.fill_color(theme.panel_background, || {
             let titlebar_container = container(
                 format!("{}_WindowTitleBarContainer", id),
                 UILayoutDirection::LeftToRight,
