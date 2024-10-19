@@ -75,6 +75,32 @@ pub fn make_sponza_scene(
         }
     }
 
+    if let Some(ambient_light_handle) = scene
+        .root
+        .find(|node| *node.get_type() == SceneNodeType::AmbientLight)
+        .as_ref()
+        .unwrap()
+    {
+        if let Ok(entry) = ambient_light_arena.get_mut(ambient_light_handle) {
+            let ambient_light = &mut entry.item;
+
+            ambient_light.intensities = vec3::ONES * 0.005;
+        }
+    }
+
+    if let Some(directional_light_handle) = scene
+        .root
+        .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)
+        .as_ref()
+        .unwrap()
+    {
+        if let Ok(entry) = directional_light_arena.get_mut(directional_light_handle) {
+            let directional_light = &mut entry.item;
+
+            directional_light.intensities = vec3::ONES * 0.005;
+        }
+    }
+
     // Add a point light to our scene.
 
     let point_light_node = {
