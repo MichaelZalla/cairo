@@ -1,9 +1,8 @@
 #![allow(clippy::result_unit_err)]
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::f32::consts::PI;
 
 use cairo::{
-    buffer::framebuffer::Framebuffer,
     color,
     entity::Entity,
     material::Material,
@@ -21,7 +20,6 @@ use cairo::{
         node::{SceneNode, SceneNodeType},
     },
     shader::context::ShaderContext,
-    texture::cubemap::CubeMap,
     transform::Transform3D,
     vec::vec3::{self, Vec3},
 };
@@ -37,8 +35,6 @@ pub fn make_scene(
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
     point_light_arena: &mut Arena<PointLight>,
-    cubemap_f32_arena: &mut Arena<CubeMap<f32>>,
-    point_shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
 ) -> Result<(SceneGraph, ShaderContext), String> {
     let (mut scene, shader_context) = make_empty_scene(
         camera_arena,
@@ -76,12 +72,6 @@ pub fn make_scene(
                 let mut light = PointLight::new();
 
                 light.intensities = (color.to_vec3() / 255.0) * 10.0;
-
-                let shadow_map_handle = cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(
-                    &point_shadow_map_framebuffer_rc.borrow(),
-                ));
-
-                light.shadow_map = Some(shadow_map_handle);
 
                 light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
 
