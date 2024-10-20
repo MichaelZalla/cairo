@@ -18,7 +18,10 @@ use crate::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
     },
     software_renderer::SoftwareRenderer,
-    texture::{cubemap::{CubeMap, CUBE_MAP_SIDES}, map::TextureMap},
+    texture::{
+        cubemap::{CubeMap, CUBE_MAP_SIDES},
+        map::TextureMap,
+    },
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -35,14 +38,17 @@ pub struct ShadowMapRenderingContext {
 }
 
 impl ShadowMapRenderingContext {
-    pub fn new(shadow_map_size: u32, projection_z_far: f32, scene_resources: Rc<SceneResources>) -> Self {
+    pub fn new(
+        shadow_map_size: u32,
+        projection_z_far: f32,
+        scene_resources: Rc<SceneResources>,
+    ) -> Self {
         // Shadow map framebuffer.
-        
+
         let projection_z_near = POINT_LIGHT_SHADOW_CAMERA_NEAR;
 
         let framebuffer = {
-            let mut framebuffer =
-                Framebuffer::new(shadow_map_size, shadow_map_size);
+            let mut framebuffer = Framebuffer::new(shadow_map_size, shadow_map_size);
 
             framebuffer.complete(projection_z_near, projection_z_far);
 
@@ -63,15 +69,15 @@ impl ShadowMapRenderingContext {
                 PointShadowMapFragmentShader,
                 Default::default(),
             );
-    
+
             renderer.set_geometry_shader(PointShadowMapGeometryShader);
-    
+
             renderer
                 .options
                 .rasterizer_options
                 .face_culling_strategy
                 .reject = FaceCullingReject::Frontfaces;
-    
+
             renderer.bind_framebuffer(Some(framebuffer.clone()));
 
             RefCell::new(renderer)
@@ -137,8 +143,17 @@ impl PointLight {
         light
     }
 
-    pub fn enable_shadow_maps(&mut self, shadow_map_size: u32, projection_z_far: f32, scene_resources: Rc<SceneResources>) {
-        let shadow_map_rendering_context = ShadowMapRenderingContext::new(shadow_map_size, projection_z_far, scene_resources.clone());
+    pub fn enable_shadow_maps(
+        &mut self,
+        shadow_map_size: u32,
+        projection_z_far: f32,
+        scene_resources: Rc<SceneResources>,
+    ) {
+        let shadow_map_rendering_context = ShadowMapRenderingContext::new(
+            shadow_map_size,
+            projection_z_far,
+            scene_resources.clone(),
+        );
 
         let shadow_map_handle = {
             let mut cubemap_f32_arena = scene_resources.cubemap_f32.borrow_mut();
@@ -172,7 +187,9 @@ impl PointLight {
         {
             let mut shader_context = rendering_context.shader_context.borrow_mut();
 
-            shader_context.point_light_projection_z_far.replace(rendering_context.projection_z_far);
+            shader_context
+                .point_light_projection_z_far
+                .replace(rendering_context.projection_z_far);
         }
 
         {
@@ -289,7 +306,7 @@ impl PointLight {
 
     fn get_shadowing(&self, sample: &GeometrySample, shadow_map: &CubeMap<f32>) -> f32 {
         let context = self.shadow_map_rendering_context.as_ref().unwrap();
-        
+
         let light_to_fragment = sample.world_pos - self.position;
         let light_to_fragment_direction = light_to_fragment.as_normal();
 
@@ -297,8 +314,9 @@ impl PointLight {
 
         let (near, far) = (POINT_LIGHT_SHADOW_CAMERA_NEAR, context.projection_z_far);
 
-        let closest_depth = near + shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
-            * (far - near);
+        let closest_depth = near
+            + shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
+                * (far - near);
 
         if closest_depth == 0.0 {
             return 0.0;
@@ -332,46 +350,46 @@ impl PointLight {
 
         let mut cubemap_face_camera = {
             let mut camera = Camera::from_perspective(self.position, Default::default(), 90.0, 1.0);
-    
+
             // @NOTE(mzalla) Assumes the same near and far is set for the
             // framebuffer's depth attachment.
-    
+
             camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
             camera.set_projection_z_far(context.projection_z_far);
-    
+
             camera
         };
-    
+
         {
             let mut shader_context = context.shader_context.borrow_mut();
-    
+
             cubemap_face_camera.update_shader_context(&mut shader_context);
         }
-    
+
         for side in CUBE_MAP_SIDES {
             cubemap_face_camera
                 .look_vector
                 .set_target_position(self.position + side.get_direction());
-    
+
             {
                 let mut shader_context = context.shader_context.borrow_mut();
-    
+
                 shader_context
                     .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
             }
-    
+
             let resources = &scene_context.resources;
             let scenes = scene_context.scenes.borrow();
-    
+
             let scene = &scenes[0];
-    
+
             match scene.render(resources, &context.renderer, None) {
                 Ok(()) => {
                     // Blit our framebuffer's HDR attachment buffer to our
                     // cubemap's corresponding side (texture map).
-    
+
                     let framebuffer = context.framebuffer.borrow();
-    
+
                     match &framebuffer.attachments.forward_or_deferred_hdr {
                         Some(hdr_attachment_rc) => {
                             let hdr_attachment = hdr_attachment_rc.borrow();
@@ -384,10 +402,9 @@ impl PointLight {
                 Err(e) => panic!("{}", e),
             }
         }
-    
+
         Ok(())
     }
-    
 }
 
 fn blit_hdr_attachment_to_cubemap_side(
