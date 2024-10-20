@@ -74,28 +74,26 @@ pub fn make_scene(
     .iter()
     .enumerate()
     {
-        let point_light = {
-            let mut light = PointLight::new();
-
-            light.position.y = 8.0 + index as f32 * 2.0;
-
-            light.intensities = (color.to_vec3() / 255.0) * 10.0;
-
-            let shadow_map_handle = cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(
-                &point_shadow_map_framebuffer_rc.borrow(),
-            ));
-
-            light.shadow_map = Some(shadow_map_handle);
-
-            light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
-
-            light
-        };
-
         let point_light_node = {
-            let light = point_light.clone();
+            let point_light = {
+                let mut light = PointLight::new();
 
-            let point_light_handle = point_light_arena.insert(light);
+                light.position.y = 8.0 + index as f32 * 2.0;
+
+                light.intensities = (color.to_vec3() / 255.0) * 10.0;
+
+                let shadow_map_handle = cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(
+                    &point_shadow_map_framebuffer_rc.borrow(),
+                ));
+
+                light.shadow_map = Some(shadow_map_handle);
+
+                light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
+
+                light
+            };
+
+            let point_light_handle = point_light_arena.insert(point_light);
 
             SceneNode::new(
                 SceneNodeType::PointLight,
