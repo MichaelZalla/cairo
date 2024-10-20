@@ -95,6 +95,25 @@ impl LookVector {
         self.right
     }
 
+    pub fn apply_rotation(&mut self, q: Quaternion) {
+        let (forward, right, up) = (self.forward, self.right, self.up);
+
+        let rotation = *q.mat();
+
+        let new_forward = Vec4::new(forward, 1.0) * rotation;
+        let new_right = Vec4::new(right, 1.0) * rotation;
+        let new_up = Vec4::new(up, 1.0) * rotation;
+
+        let position_to_target = Vec4::new(self.target - self.position, 1.0);
+        let position_to_target_rotated = position_to_target * rotation;
+
+        self.forward = new_forward.to_vec3();
+        self.right = new_right.to_vec3();
+        self.up = new_up.to_vec3();
+
+        self.target = self.position + position_to_target_rotated.to_vec3();
+    }
+
     pub fn update(
         &mut self,
         timing_info: &TimingInfo,
@@ -198,24 +217,5 @@ impl LookVector {
         if yaw_delta != 0.0 {
             self.apply_rotation(Quaternion::new(self.right, yaw_delta));
         }
-    }
-
-    fn apply_rotation(&mut self, q: Quaternion) {
-        let (forward, right, up) = (self.forward, self.right, self.up);
-
-        let rotation = *q.mat();
-
-        let new_forward = Vec4::new(forward, 1.0) * rotation;
-        let new_right = Vec4::new(right, 1.0) * rotation;
-        let new_up = Vec4::new(up, 1.0) * rotation;
-
-        let position_to_target = Vec4::new(self.target - self.position, 1.0);
-        let position_to_target_rotated = position_to_target * rotation;
-
-        self.forward = new_forward.to_vec3();
-        self.right = new_right.to_vec3();
-        self.up = new_up.to_vec3();
-
-        self.target = self.position + position_to_target_rotated.to_vec3();
     }
 }
