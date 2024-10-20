@@ -108,9 +108,7 @@ pub(crate) fn make_window_list<'a>(
                 };
             }
             4 => {
-                let scene_resources = scene_context.resources.borrow();
-
-                let camera_arena = scene_resources.camera.borrow();
+                let camera_arena = scene_context.resources.camera.borrow();
 
                 if let Some(entry) = &camera_arena.entries[0] {
                     let camera_handle = Handle {

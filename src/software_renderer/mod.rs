@@ -58,7 +58,7 @@ pub struct SoftwareRenderer {
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
-    scene_resources: Rc<RefCell<SceneResources>>,
+    scene_resources: Rc<SceneResources>,
     vertex_shader: VertexShaderFn,
     alpha_shader: AlphaShaderFn,
     geometry_shader: GeometryShaderFn,
@@ -244,7 +244,7 @@ impl Renderer for SoftwareRenderer {
 impl SoftwareRenderer {
     pub fn new(
         shader_context: Rc<RefCell<ShaderContext>>,
-        scene_resources: Rc<RefCell<SceneResources>>,
+        scene_resources: Rc<SceneResources>,
         vertex_shader: VertexShaderFn,
         fragment_shader: FragmentShaderFn,
         options: RenderOptions,
@@ -441,11 +441,10 @@ impl SoftwareRenderer {
                             // Alpha shader test.
 
                             let shader_context = self.shader_context.borrow();
-                            let scene_resources = (*self.scene_resources).borrow();
 
                             if !(self.alpha_shader)(
                                 &shader_context,
-                                &scene_resources,
+                                &self.scene_resources,
                                 &linear_space_interpolant,
                             ) {
                                 return;
@@ -463,7 +462,7 @@ impl SoftwareRenderer {
 
                                 if let Some(sample) = (self.geometry_shader)(
                                     &shader_context,
-                                    &scene_resources,
+                                    &self.scene_resources,
                                     &self.shader_options,
                                     &linear_space_interpolant,
                                 ) {
@@ -492,7 +491,7 @@ impl SoftwareRenderer {
                                                 .get_tone_mapped_color_from_hdr(
                                                     self.get_hdr_color_for_sample(
                                                         &shader_context,
-                                                        &scene_resources,
+                                                        &self.scene_resources,
                                                         &sample,
                                                     ),
                                                 );

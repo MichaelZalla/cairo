@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
 
     let (scene, shader_context) = EDITOR_SCENE_CONTEXT.with(
         |scene_context| -> Result<(SceneGraph, ShaderContext), String> {
-            let resources = scene_context.resources.borrow();
+            let resources = &scene_context.resources;
 
             let mut camera_arena = resources.camera.borrow_mut();
             let mut environment_arena = resources.environment.borrow_mut();
@@ -261,12 +261,12 @@ fn main() -> Result<(), String> {
         let main_window_id = "main_window".to_string();
 
         EDITOR_SCENE_CONTEXT.with(|sc| {
-            let resource_arenas = sc.resources.borrow();
+            let resources = &sc.resources;
 
             EDITOR_PANEL_ARENAS.with(|panel_arenas| {
                 let main_window_panel_tree = editor::panel::build_main_window_panel_tree(
                     &main_window_id,
-                    &resource_arenas,
+                    &resources,
                     panel_arenas,
                     &editor_panel_render_callbacks,
                     &renderer_rc,

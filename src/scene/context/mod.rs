@@ -10,13 +10,13 @@ pub mod utils;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneContext {
-    pub resources: Rc<RefCell<SceneResources>>,
+    pub resources: Rc<SceneResources>,
     pub scenes: RefCell<Vec<SceneGraph>>,
 }
 
 impl PostDeserialize for SceneContext {
     fn post_deserialize(&mut self) {
-        self.resources.borrow_mut().post_deserialize();
+        self.resources.post_deserialize_non_mut();
 
         for scene in self.scenes.borrow_mut().iter_mut() {
             scene.post_deserialize();
@@ -31,27 +31,25 @@ impl SceneContext {
     ) -> Result<(), String> {
         // Loads all texture map data.
 
-        let resources = self.resources.borrow_mut();
-
-        let mut textures = resources.texture_u8.borrow_mut();
+        let mut texture_u8_arena = self.resources.texture_u8.borrow_mut();
 
         // Load all texture map data from materials.
 
-        let mut materials_arena = resources.material.borrow_mut();
+        let mut material_arena = self.resources.material.borrow_mut();
 
-        for entry in materials_arena.entries.iter_mut().flatten() {
+        for entry in material_arena.entries.iter_mut().flatten() {
             let material = &mut entry.item;
 
-            let texture_arena = &mut *textures;
+            let texture_arena = &mut *texture_u8_arena;
 
             material.load_all_maps(texture_arena, rendering_context)?;
         }
 
         // Load all texture map data from cubemaps.
 
-        let mut cubemaps = resources.cubemap_u8.borrow_mut();
+        let mut cubemap_u8_arena = self.resources.cubemap_u8.borrow_mut();
 
-        for slot in cubemaps.entries.iter_mut() {
+        for slot in cubemap_u8_arena.entries.iter_mut() {
             match slot {
                 Some(entry) => {
                     let cubemap = &mut entry.item;

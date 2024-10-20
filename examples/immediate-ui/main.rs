@@ -91,7 +91,7 @@ fn resize_framebuffer(
         framebuffer.resize(resolution.width, resolution.height, true);
 
         SCENE_CONTEXT.with(|ctx| {
-            let resources = ctx.resources.borrow();
+            let resources = &ctx.resources;
 
             let mut camera_arena = resources.camera.borrow_mut();
 
@@ -154,7 +154,7 @@ fn main() -> Result<(), String> {
     // Load a test texture.
 
     let uv_test_gradient_texture_handle = SCENE_CONTEXT.with(|ctx| -> Result<Handle, String> {
-        let resources = ctx.resources.borrow_mut();
+        let resources = &ctx.resources;
 
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let mut image_arena = ctx.image_arena.borrow_mut();
@@ -176,7 +176,7 @@ fn main() -> Result<(), String> {
 
     let (scene, shader_context) = SCENE_CONTEXT.with(
         |scene_context| -> Result<(SceneGraph, ShaderContext), String> {
-            let resources = scene_context.resources.borrow();
+            let resources = &scene_context.resources;
 
             let mut camera_arena = resources.camera.borrow_mut();
             let mut environment_arena = resources.environment.borrow_mut();
@@ -334,12 +334,12 @@ fn main() -> Result<(), String> {
             // Render scene.
 
             SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-                let resources = ctx.resources.borrow();
+                let resources = &ctx.resources;
 
                 let mut scenes = ctx.scenes.borrow_mut();
                 let scene = &mut scenes[0];
 
-                scene.render(&resources, &renderer_rc, None)
+                scene.render(resources, &renderer_rc, None)
             })?;
         }
 
@@ -414,7 +414,7 @@ fn main() -> Result<(), String> {
     // Use the rendering context to load any images in our texture arena.
 
     SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-        let resources = ctx.resources.borrow_mut();
+        let resources = &ctx.resources;
 
         let mut texture_u8_arena = resources.texture_u8.borrow_mut();
 
@@ -677,7 +677,7 @@ fn main() -> Result<(), String> {
         // options.
 
         SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-            let resources = ctx.resources.borrow();
+            let resources = &ctx.resources;
 
             let mut scenes = ctx.scenes.borrow_mut();
             let mut shader_context = (*shader_context_rc).borrow_mut();
@@ -687,7 +687,7 @@ fn main() -> Result<(), String> {
             // Traverse the scene graph and update its nodes.
 
             scenes[0].update(
-                &resources,
+                resources,
                 &mut shader_context,
                 app,
                 mouse_state,

@@ -160,7 +160,7 @@ impl SceneGraphPanel {
 impl PanelInstance for SceneGraphPanel {
     fn render(&mut self, tree: &mut UIBoxTree) -> Result<(), String> {
         SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-            let resources = ctx.resources.borrow();
+            let resources = &ctx.resources;
             let scenes = ctx.scenes.borrow();
 
             if self.scene_index < scenes.len() {
