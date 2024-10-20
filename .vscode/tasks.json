@@ -27,7 +27,11 @@
         "isDefault": true
       },
       "label": "Rust: cargo build --examples",
-      "command": "cargo build --examples"
+      "command": "cargo",
+      "args": [
+        "build",
+        "--examples"
+      ]
     },
     {
       "type": "shell",
@@ -39,7 +43,11 @@
         "isDefault": true
       },
       "label": "Rust: cargo test --lib",
-      "command": "cargo test --lib"
+      "command": "cargo",
+      "args": [
+        "test",
+        "--lib"
+      ]
     },
     {
       "type": "shell",
@@ -48,7 +56,12 @@
         "kind": "test"
       },
       "label": "Rust: cargo +nightly-x86_64-pc-windows-msvc miri test",
-      "command": "cargo +nightly-x86_64-pc-windows-msvc miri test"
+      "command": "cargo",
+      "args": [
+        "+nightly-x86_64-pc-windows-msvc",
+        "miri",
+        "test"
+      ]
     },
     {
       "type": "shell",
@@ -217,7 +230,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example scenegraph",
-      "command": "cargo run --example scenegraph"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "scenegraph",
+      ]
     },
     {
       "type": "shell",
@@ -228,7 +246,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example spinning-cube",
-      "command": "cargo run --example spinning-cube"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "spinning-cube",
+      ]
     },
     {
       "type": "shell",
@@ -239,7 +262,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example generate-primitives",
-      "command": "cargo run --example generate-primitives"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "generate-primitives",
+      ]
     },
     {
       "type": "shell",
@@ -250,9 +278,14 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example diffuse-map",
-      "command": "cargo run --example diffuse-map"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "diffuse-map",
+      ]
     },
-    {
+    { 
       "type": "shell",
       "problemMatcher": [
         "$rustc"
@@ -261,7 +294,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example normal-map",
-      "command": "cargo run --example normal-map"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "normal-map"
+      ]
     },
     {
       "type": "shell",
@@ -272,7 +310,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example displacement-map",
-      "command": "cargo run --example displacement-map"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "displacement-map"
+      ]
     },
     {
       "type": "shell",
@@ -283,7 +326,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example specular-map",
-      "command": "cargo run --example specular-map"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "specular-map"
+      ]
     },
     {
       "type": "shell",
@@ -294,7 +342,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example emissive-map",
-      "command": "cargo run --example emissive-map"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "emissive-map"
+      ]
     },
     {
       "type": "shell",
@@ -305,7 +358,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example skybox",
-      "command": "cargo run --example skybox"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "skybox"
+      ]
     },
     {
       "type": "shell",
@@ -316,7 +374,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example pbr",
-      "command": "cargo run --example pbr"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "pbr"
+      ]
     },
     {
       "type": "shell",
@@ -327,7 +390,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example ibl",
-      "command": "cargo run --example ibl"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "ibl"
+      ]
     },
     {
       "type": "shell",
@@ -338,7 +406,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example point-shadows",
-      "command": "cargo run --example point-shadows"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "point-shadows"
+      ]
     },
     {
       "type": "shell",
@@ -349,7 +422,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example post-effects",
-      "command": "cargo run --example post-effects"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "post-effects"
+      ]
     },
     {
       "type": "shell",
@@ -360,7 +438,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example sponza",
-      "command": "cargo run --example sponza"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "sponza",
+      ]
     },
     {
       "type": "shell",
@@ -371,7 +454,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example allocators",
-      "command": "cargo run --example allocators"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "allocators"
+      ]
     },
     {
       "type": "shell",
@@ -382,7 +470,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example particle-systems",
-      "command": "cargo run --example particle-systems"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "particle-systems"
+      ]
     },
     {
       "type": "shell",
@@ -393,7 +486,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example numerical-methods",
-      "command": "cargo run --example numerical-methods"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "numerical-methods"
+      ]
     },
     {
       "type": "shell",
@@ -404,7 +502,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example springy-meshes",
-      "command": "cargo run --example springy-meshes"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "springy-meshes"
+      ]
     },
     {
       "type": "shell",
@@ -415,7 +518,12 @@
         "kind": "build"
       },
       "label": "Rust: cargo run --example rigid-body",
-      "command": "cargo run --example rigid-body"
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "rigid-body"
+      ]
     },
   ]
 }
