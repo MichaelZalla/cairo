@@ -18,7 +18,7 @@ use crate::{
 pub struct LoadObjResult(pub Rc<Geometry>, pub Vec<Mesh>);
 
 #[derive(Default, Debug)]
-struct ObjDataTypeCounts {
+struct LoadObjStats {
     object: usize,
     group: usize,
     material_group: usize,
@@ -28,7 +28,7 @@ struct ObjDataTypeCounts {
     face: usize,
 }
 
-impl fmt::Display for ObjDataTypeCounts {
+impl fmt::Display for LoadObjStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Counted {} objects, {} groups, {} material groups, {} vertices, {} UVs, {} normals, and {} faces.", self.object, self.group, self.material_group, self.vertex, self.uv, self.normal, self.face)
     }
@@ -68,7 +68,7 @@ pub fn load_obj(
     let mut partial_faces: Vec<PartialFace> = vec![];
     let mut partial_meshes: Vec<PartialMesh> = vec![];
 
-    let mut counts: ObjDataTypeCounts = Default::default();
+    let mut counts: LoadObjStats = Default::default();
 
     let end_signal: std::vec::IntoIter<Result<String, Error>> =
         vec![(Ok("usemtl __sentinel__".to_string()))].into_iter();
