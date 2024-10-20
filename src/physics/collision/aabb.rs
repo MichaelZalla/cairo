@@ -3,7 +3,7 @@ use std::fmt::{self};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mesh::Mesh,
+    mesh::{geometry::Geometry, Mesh},
     vec::vec3::{self, Vec3},
 };
 
@@ -58,6 +58,12 @@ impl AABB {
             far: min.z,
             max_half_extent,
         }
+    }
+
+    pub fn from_geometry(geometry: &Geometry) -> Self {
+        let (min, max) = get_min_max_for_geometry(geometry);
+
+        AABB::from_min_max(min, max)
     }
 
     pub fn from_mesh(mesh: &Mesh) -> Self {
@@ -156,6 +162,33 @@ impl fmt::Display for AABB {
             self.center, self.left, self.right, self.bottom, self.top, self.near, self.far
         )
     }
+}
+
+fn get_min_max_for_geometry(geometry: &Geometry) -> (Vec3, Vec3) {
+    let mut min = vec3::MAX;
+    let mut max = vec3::MIN;
+
+    for v in geometry.vertices.iter() {
+        if v.x < min.x {
+            min.x = v.x;
+        } else if v.x > max.x {
+            max.x = v.x;
+        }
+
+        if v.y < min.y {
+            min.y = v.y;
+        } else if v.y > max.y {
+            max.y = v.y;
+        }
+
+        if v.z < min.z {
+            min.z = v.z;
+        } else if v.z > max.z {
+            max.z = v.z;
+        }
+    }
+
+    (min, max)
 }
 
 fn get_min_max_for_mesh(mesh: &Mesh) -> (Vec3, Vec3) {

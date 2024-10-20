@@ -87,6 +87,7 @@ pub fn make_sphere_grid_scene(
         "./examples/pbr/assets/sphere.obj",
         material_arena,
         texture_u8_arena,
+        None,
     );
 
     let _geometry = result.0;
