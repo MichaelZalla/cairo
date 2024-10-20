@@ -58,6 +58,10 @@ impl Display for DirectionalLight {
 }
 
 impl DirectionalLight {
+    pub fn get_direction(&mut self) -> &Vec4 {
+        &self.direction
+    }
+
     pub fn set_direction(&mut self, rotation: Quaternion) {
         let rotation_mat = *rotation.mat();
 
