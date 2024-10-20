@@ -6,12 +6,15 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    color,
     matrix::Mat4,
     scene::camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
     serde::PostDeserialize,
-    shader::geometry::sample::GeometrySample,
+    shader::{context::ShaderContext, geometry::sample::GeometrySample},
+    texture::{map::TextureMap, sample::sample_nearest_f32},
     transform::quaternion::Quaternion,
     vec::{
+        vec2::Vec2,
         vec3::{self, Vec3},
         vec4::{self, Vec4},
     },
@@ -181,13 +184,130 @@ impl DirectionalLight {
         self.intensities * 0.0_f32.max((*normal * -1.0).dot(direction_to_light))
     }
 
-    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+    pub fn contribute_pbr(
+        &self,
+        sample: &GeometrySample,
+        f0: &Vec3,
+        context: &ShaderContext,
+    ) -> Vec3 {
         let tangent_space_info = sample.tangent_space_info;
 
         let direction_to_light = (self.direction * -1.0 * tangent_space_info.tbn_inverse)
             .to_vec3()
             .as_normal();
 
-        contribute_pbr(sample, &self.intensities, &direction_to_light, f0)
+        // Compute an enshadowing term for this fragment/sample.
+
+        let (shadow_map_index, in_shadow) = self.get_shadowing(sample, context);
+
+        let _shadow_map_index_color = match shadow_map_index {
+            0 => color::RED.to_vec3() / 255.0,
+            1 => color::GREEN.to_vec3() / 255.0,
+            2 => color::BLUE.to_vec3() / 255.0,
+            _ => panic!(),
+        };
+
+        let intensity = self.intensities;
+
+        let contribution = contribute_pbr(sample, &intensity, &direction_to_light, f0);
+
+        contribution * (1.0 - in_shadow)
+    }
+
+    fn get_shadowing_for_map(
+        &self,
+        sample: &GeometrySample,
+        map: &TextureMap<f32>,
+        _far_z: f32,
+        transform: &Mat4,
+    ) -> f32 {
+        let sample_position_light_view_projection_space =
+            Vec4::new(sample.world_pos, 1.0) * *transform;
+
+        let sample_position_light_ndc_space = sample_position_light_view_projection_space
+            / sample_position_light_view_projection_space.w;
+
+        let current_depth = sample_position_light_ndc_space.z;
+
+        let uv = Vec2 {
+            x: 0.5 + sample_position_light_ndc_space.x / 2.0,
+            y: 0.5 + sample_position_light_ndc_space.y / 2.0,
+            z: 0.0,
+        };
+
+        let texel_size = 1.0 / map.width as f32;
+
+        let mut shadow = 0.0;
+
+        for y in -1..1 {
+            for x in -1..1 {
+                if uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 {
+                    continue;
+                }
+
+                let depth_sample = sample_nearest_f32(
+                    uv + Vec2 {
+                        x: x as f32,
+                        y: y as f32,
+                        z: 0.0,
+                    } * texel_size,
+                    map,
+                );
+
+                let closest_depth = depth_sample * 100.0;
+
+                if closest_depth == 0.0 {
+                    continue;
+                }
+
+                let bias = -0.01;
+
+                let is_in_shadow = current_depth + bias > closest_depth;
+
+                if is_in_shadow {
+                    shadow += 1.0;
+                }
+            }
+        }
+
+        shadow / 9.0
+    }
+
+    fn get_shadowing(&self, sample: &GeometrySample, context: &ShaderContext) -> (usize, f32) {
+        match (
+            &context.directional_light_shadow_maps,
+            &context.directional_light_view_projections,
+        ) {
+            (Some(maps), Some(transforms)) => {
+                let fragment_position_view_space =
+                    Vec4::new(sample.world_pos, 1.0) * context.view_inverse_transform;
+
+                let index = {
+                    let mut index = SHADOW_MAP_CAMERA_COUNT - 1;
+
+                    for (i, transform) in transforms.iter().enumerate() {
+                        let (far_z, _transform) = transform;
+
+                        if fragment_position_view_space.z.abs() < *far_z {
+                            index = i;
+
+                            break;
+                        }
+                    }
+
+                    index
+                };
+
+                let shadowing = self.get_shadowing_for_map(
+                    sample,
+                    &maps[index],
+                    transforms[index].0,
+                    &transforms[index].1,
+                );
+
+                (index, shadowing)
+            }
+            _ => (0, 0.0),
+        }
     }
 }

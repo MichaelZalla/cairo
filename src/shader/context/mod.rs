@@ -1,6 +1,8 @@
 use crate::{
     matrix::Mat4,
     resource::handle::Handle,
+    scene::light::directional_light::SHADOW_MAP_CAMERA_COUNT,
+    texture::map::TextureMap,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -26,6 +28,7 @@ pub struct ShaderContext {
     pub directional_light: Option<Handle>,
     pub directional_light_view_projections: Option<Vec<(f32, Mat4)>>,
     pub directional_light_view_projection_index: Option<usize>,
+    pub directional_light_shadow_maps: Option<[TextureMap<f32>; SHADOW_MAP_CAMERA_COUNT]>,
     pub point_lights: Vec<Handle>,
     pub spot_lights: Vec<Handle>,
 }
@@ -53,6 +56,7 @@ impl Default for ShaderContext {
             directional_light: None,
             directional_light_view_projections: None,
             directional_light_view_projection_index: None,
+            directional_light_shadow_maps: None,
             point_lights: vec![],
             spot_lights: vec![],
         }
@@ -127,6 +131,13 @@ impl ShaderContext {
 
     pub fn set_directional_light_view_projection_index(&mut self, index: Option<usize>) {
         self.directional_light_view_projection_index = index;
+    }
+
+    pub fn set_directional_light_shadow_maps(
+        &mut self,
+        maps: Option<[TextureMap<f32>; SHADOW_MAP_CAMERA_COUNT]>,
+    ) {
+        self.directional_light_shadow_maps = maps;
     }
 
     pub fn get_point_lights(&self) -> &Vec<Handle> {
