@@ -3,17 +3,14 @@
 use crate::{
     color::Color,
     render::options::shader::RenderShaderOptions,
-    scene::{light::point_light::POINT_LIGHT_SHADOW_CAMERA_FAR, resources::SceneResources},
+    scene::resources::SceneResources,
     shader::{
         context::ShaderContext,
         fragment::FragmentShaderFn,
         geometry::{sample::GeometrySample, GeometryShaderFn},
         vertex::VertexShaderFn,
     },
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3::Vec3, vec4::Vec4},
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -49,50 +46,23 @@ pub static PointShadowMapGeometryShader: GeometryShaderFn = |_context: &ShaderCo
     })
 };
 
+static DEFAULT_POINT_LIGHT_PROJECTION_Z_FAR: f32 = 1000.0;
+
 pub static PointShadowMapFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
 
         let distance_to_point_light = (sample.world_pos - context.view_position.to_vec3()).mag();
 
-        let distance_alpha = distance_to_point_light / POINT_LIGHT_SHADOW_CAMERA_FAR;
+        let projection_z_far = context
+            .point_light_projection_z_far
+            .unwrap_or(DEFAULT_POINT_LIGHT_PROJECTION_Z_FAR);
+
+        let distance_alpha = distance_to_point_light / projection_z_far;
 
         Color::from_vec3(Vec3 {
             x: distance_alpha,
             y: distance_alpha,
             z: distance_alpha,
         })
-    };
-
-pub static TestPointShadowMapFragmentShader: FragmentShaderFn =
-    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
-        // Emit only the linear depth value (in RGB space) for this fragment.
-
-        // @NOTE(mzalla) Hard-codes first point light handle.
-        let handle = context.point_lights[0];
-
-        if let Ok(entry) = resources.point_light.borrow().get(&handle) {
-            let point_light = &entry.item;
-
-            if let Some(handle) = &point_light.shadow_map {
-                if let Ok(entry) = resources.cubemap_f32.borrow().get(handle) {
-                    let cubemap = &entry.item;
-
-                    let light_to_fragment = sample.world_pos - point_light.position;
-
-                    let closest_depth =
-                        cubemap.sample_nearest(&Vec4::new(light_to_fragment.as_normal(), 1.0));
-
-                    let closest_depth_alpha = closest_depth / POINT_LIGHT_SHADOW_CAMERA_FAR;
-
-                    return Color::from_vec3(Vec3 {
-                        x: closest_depth_alpha,
-                        y: closest_depth_alpha,
-                        z: closest_depth_alpha,
-                    });
-                }
-            }
-        }
-
-        Color::from_vec3(vec3::ONES)
     };

@@ -24,28 +24,27 @@ use crate::{
 
 use super::{attenuation::LightAttenuation, contribute_pbr};
 
-pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.3;
-pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 50.0;
+pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.05;
 
 #[derive(Debug, Clone)]
 pub struct ShadowMapRenderingContext {
+    pub projection_z_far: f32,
     pub framebuffer: Rc<RefCell<Framebuffer>>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
     pub renderer: RefCell<SoftwareRenderer>,
 }
 
 impl ShadowMapRenderingContext {
-    pub fn new(shadow_map_size: u32, scene_resources: Rc<SceneResources>) -> Self {
+    pub fn new(shadow_map_size: u32, projection_z_far: f32, scene_resources: Rc<SceneResources>) -> Self {
         // Shadow map framebuffer.
+        
+        let projection_z_near = POINT_LIGHT_SHADOW_CAMERA_NEAR;
 
         let framebuffer = {
             let mut framebuffer =
                 Framebuffer::new(shadow_map_size, shadow_map_size);
 
-            framebuffer.complete(
-                POINT_LIGHT_SHADOW_CAMERA_NEAR,
-                POINT_LIGHT_SHADOW_CAMERA_FAR,
-            );
+            framebuffer.complete(projection_z_near, projection_z_far);
 
             Rc::new(RefCell::new(framebuffer))
         };
@@ -81,6 +80,7 @@ impl ShadowMapRenderingContext {
         // Shadow map rendering context.
 
         Self {
+            projection_z_far,
             renderer,
             shader_context,
             framebuffer,
@@ -137,8 +137,8 @@ impl PointLight {
         light
     }
 
-    pub fn enable_shadow_maps(&mut self, shadow_map_size: u32, scene_resources: Rc<SceneResources>) {
-        let shadow_map_rendering_context = ShadowMapRenderingContext::new(shadow_map_size, scene_resources.clone());
+    pub fn enable_shadow_maps(&mut self, shadow_map_size: u32, projection_z_far: f32, scene_resources: Rc<SceneResources>) {
+        let shadow_map_rendering_context = ShadowMapRenderingContext::new(shadow_map_size, projection_z_far, scene_resources.clone());
 
         let shadow_map_handle = {
             let mut cubemap_f32_arena = scene_resources.cubemap_f32.borrow_mut();
@@ -162,6 +162,18 @@ impl PointLight {
         } else {
             self.shadow_map.as_ref().unwrap()
         };
+
+        let rendering_context = if self.shadow_map_rendering_context.is_none() {
+            return Err("Called PointLight::update_shadow_map() on a light with no shadow map rendering context created!".to_string());
+        } else {
+            self.shadow_map_rendering_context.as_ref().unwrap()
+        };
+
+        {
+            let mut shader_context = rendering_context.shader_context.borrow_mut();
+
+            shader_context.point_light_projection_z_far.replace(rendering_context.projection_z_far);
+        }
 
         {
             let mut cubemap_f32_arena = scene_context.resources.cubemap_f32.borrow_mut();
@@ -276,13 +288,15 @@ impl PointLight {
     }
 
     fn get_shadowing(&self, sample: &GeometrySample, shadow_map: &CubeMap<f32>) -> f32 {
+        let context = self.shadow_map_rendering_context.as_ref().unwrap();
+        
         let light_to_fragment = sample.world_pos - self.position;
         let light_to_fragment_direction = light_to_fragment.as_normal();
 
         let current_depth = light_to_fragment.mag();
 
         let closest_depth = shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
-            * POINT_LIGHT_SHADOW_CAMERA_FAR;
+            * context.projection_z_far;
 
         if closest_depth == 0.0 {
             return 0.0;
@@ -321,7 +335,7 @@ impl PointLight {
             // framebuffer's depth attachment.
     
             camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
-            camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
+            camera.set_projection_z_far(context.projection_z_far);
     
             camera
         };
