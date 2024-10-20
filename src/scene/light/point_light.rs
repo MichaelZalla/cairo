@@ -6,20 +6,12 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    buffer::Buffer2D,
-    color,
-    resource::handle::Handle,
-    scene::{camera::Camera, context::SceneContext, resources::SceneResources},
-    serde::PostDeserialize,
-    shader::geometry::sample::GeometrySample,
-    shaders::shadow_shaders::point_shadows::{
+    buffer::Buffer2D, color, render::culling::FaceCullingReject, resource::handle::Handle, scene::{camera::Camera, context::SceneContext, resources::SceneResources}, serde::PostDeserialize, shader::geometry::sample::GeometrySample, shaders::shadow_shaders::point_shadows::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
-    },
-    texture::{
+    }, texture::{
         cubemap::{CubeMap, CUBE_MAP_SIDES},
         map::TextureMap,
-    },
-    vec::{vec3::Vec3, vec4::Vec4},
+    }, vec::{vec3::Vec3, vec4::Vec4}
 };
 
 use super::{
@@ -86,6 +78,7 @@ impl PointLight {
         let shadow_map_rendering_context = ShadowMapRenderingContext::new(
             shadow_map_size,
             projection_z_far,
+            FaceCullingReject::Frontfaces,
             PointShadowMapVertexShader,
             PointShadowMapGeometryShader,
             PointShadowMapFragmentShader,

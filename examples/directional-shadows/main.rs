@@ -5,12 +5,15 @@ use std::{cell::RefCell, f32, f32::consts::PI, rc::Rc};
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
+    color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
+    render::culling::FaceCullingReject,
     resource::handle::Handle,
     scene::{
         context::SceneContext,
         graph::SceneGraphRenderOptions,
+        light::directional_light::{SHADOW_MAP_CAMERA_COUNT, SHADOW_MAP_CAMERA_NEAR},
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -18,15 +21,23 @@ use cairo::{
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
+        directional_shadow_map_fragment_shader::DirectionalShadowMapFragmentShader,
+        directional_shadow_map_geometry_shader::DirectionalShadowMapGeometryShader,
+        directional_shadow_map_vertex_shader::DirectionalShadowMapVertexShader,
     },
     software_renderer::SoftwareRenderer,
+    texture::{map::TextureMap, sample::sample_nearest_f32},
     transform::quaternion::Quaternion,
-    vec::vec3,
+    vec::{vec2::Vec2, vec3},
 };
 
 use scene::make_scene;
+use shadow::render_shadow_maps;
 
 mod scene;
+mod shadow;
+
+static SHADOW_MAP_SIZE: u32 = 768;
 
 static USE_DEMO_CAMERA: bool = true;
 
@@ -49,6 +60,15 @@ fn main() -> Result<(), String> {
     let camera_aspect_ratio = framebuffer.width_over_height;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+
+    // Directional shadow map framebuffer
+
+    let mut directional_shadow_map_framebuffer = Framebuffer::new(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+
+    directional_shadow_map_framebuffer.complete(SHADOW_MAP_CAMERA_NEAR, 100.0);
+
+    let directional_shadow_map_framebuffer_rc =
+        Rc::new(RefCell::new(directional_shadow_map_framebuffer));
 
     // Scene context
 
@@ -87,6 +107,28 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
+    let directional_shadow_map_shader_context_rc = Rc::new(RefCell::new(ShaderContext::default()));
+
+    {
+        let resources = &scene_context.resources;
+
+        let mut shader_context = directional_shadow_map_shader_context_rc.borrow_mut();
+
+        let directional_light_arena = resources.directional_light.borrow();
+
+        let entry = directional_light_arena
+            .entries
+            .iter()
+            .flatten()
+            .next()
+            .unwrap();
+
+        shader_context.set_directional_light(Some(Handle {
+            index: 0,
+            uuid: entry.uuid,
+        }));
+    }
+
     // Renderer
 
     let mut renderer = SoftwareRenderer::new(
@@ -100,6 +142,29 @@ fn main() -> Result<(), String> {
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let renderer_rc = RefCell::new(renderer);
+
+    // Directional shadow map renderer
+
+    let mut directional_shadow_map_renderer = SoftwareRenderer::new(
+        directional_shadow_map_shader_context_rc.clone(),
+        scene_context.resources.clone(),
+        DirectionalShadowMapVertexShader,
+        DirectionalShadowMapFragmentShader,
+        Default::default(),
+    );
+
+    directional_shadow_map_renderer.set_geometry_shader(DirectionalShadowMapGeometryShader);
+
+    directional_shadow_map_renderer
+        .options
+        .rasterizer_options
+        .face_culling_strategy
+        .reject = FaceCullingReject::None;
+
+    directional_shadow_map_renderer
+        .bind_framebuffer(Some(directional_shadow_map_framebuffer_rc.clone()));
+
+    let directional_shadow_map_renderer_rc = RefCell::new(directional_shadow_map_renderer);
 
     // Render callback
 
@@ -290,6 +355,32 @@ fn main() -> Result<(), String> {
                   _new_resolution: Option<Resolution>,
                   canvas: &mut [u8]|
      -> Result<(), String> {
+        // Render directional shadow map.
+
+        let directional_light_shadow_maps: [TextureMap<f32>; SHADOW_MAP_CAMERA_COUNT] = {
+            let resources = &scene_context.resources;
+
+            let directional_light_arena = resources.directional_light.borrow();
+
+            let entry = directional_light_arena
+                .entries
+                .iter()
+                .flatten()
+                .next()
+                .unwrap();
+
+            let light = &entry.item;
+
+            render_shadow_maps(
+                light,
+                &scene_context,
+                &directional_shadow_map_shader_context_rc,
+                &directional_shadow_map_framebuffer_rc,
+                &directional_shadow_map_renderer_rc,
+            )
+            .unwrap()
+        };
+
         // Render scene.
 
         let resources = &scene_context.resources;
@@ -314,7 +405,36 @@ fn main() -> Result<(), String> {
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+                        let mut color_buffer = color_buffer_lock.borrow_mut();
+
+                        static SHADOW_MAP_THUMBNAIL_SIZE: u32 = 175;
+
+                        for (shadow_map_index, shadow_map) in
+                            directional_light_shadow_maps.iter().enumerate()
+                        {
+                            for y in 0..SHADOW_MAP_THUMBNAIL_SIZE {
+                                for x in 0..SHADOW_MAP_THUMBNAIL_SIZE {
+                                    static UV_STEP: f32 = 1.0 / SHADOW_MAP_THUMBNAIL_SIZE as f32;
+
+                                    let uv = Vec2 {
+                                        x: x as f32 * UV_STEP,
+                                        y: y as f32 * UV_STEP,
+                                        z: 0.0,
+                                    };
+
+                                    let sampled_depth = sample_nearest_f32(uv, shadow_map) * 100.0;
+
+                                    let sampled_depth_color =
+                                        Color::from_vec3(vec3::ONES * sampled_depth * 255.0);
+
+                                    color_buffer.set(
+                                        x,
+                                        y + (shadow_map_index as u32 * SHADOW_MAP_THUMBNAIL_SIZE),
+                                        sampled_depth_color.to_u32(),
+                                    );
+                                }
+                            }
+                        }
 
                         color_buffer.copy_to(canvas);
 

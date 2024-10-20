@@ -26,6 +26,7 @@ impl ShadowMapRenderingContext {
     pub fn new(
         shadow_map_size: u32,
         projection_z_far: f32,
+        reject: FaceCullingReject,
         vertex_shader: VertexShaderFn,
         geometry_shader: GeometryShaderFn,
         fragment_shader: FragmentShaderFn,
@@ -64,7 +65,7 @@ impl ShadowMapRenderingContext {
                 .options
                 .rasterizer_options
                 .face_culling_strategy
-                .reject = FaceCullingReject::Frontfaces;
+                .reject = reject;
 
             renderer.bind_framebuffer(Some(framebuffer.clone()));
 
