@@ -455,6 +455,10 @@ impl SceneNode {
                         Ok(entry) => {
                             let camera = &mut entry.item;
 
+                            if !camera.is_active {
+                                return Ok(());
+                            }
+
                             camera.update(
                                 &app.timing_info,
                                 keyboard_state,
