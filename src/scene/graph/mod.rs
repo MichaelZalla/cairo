@@ -156,10 +156,11 @@ impl SceneGraph {
 
                                 if camera.is_active && active_camera_handle.is_none() {
                                     active_camera_handle.replace(*handle);
+
                                     clipping_camera_handle.replace(*handle);
                                 } else if let Some(options) = &options {
                                     if options.draw_cameras {
-                                        renderer.render_camera(camera, Some(&color::YELLOW));
+                                        renderer.render_camera(camera, Some(&color::ORANGE));
                                     }
                                 }
                             }
