@@ -157,7 +157,7 @@ pub fn update_point_light_shadow_maps(
     shadow_map_renderer_rc: &RefCell<dyn Renderer>,
     shadow_map_shader_context_rc: &RefCell<ShaderContext>,
     shadow_map_framebuffer_rc: &Rc<RefCell<Framebuffer>>,
-) {
+) -> Result<(), String> {
     // Render point shadow map.
 
     let mut point_light_shadow_maps: Vec<(Handle, CubeMap<f32>)> = vec![];
@@ -177,8 +177,7 @@ pub fn update_point_light_shadow_maps(
                     shadow_map_renderer_rc,
                     shadow_map_shader_context_rc,
                     shadow_map_framebuffer_rc,
-                )
-                .unwrap();
+                )?;
 
                 point_light_shadow_maps.push((*handle, shadow_map));
             }
@@ -195,5 +194,7 @@ pub fn update_point_light_shadow_maps(
                 cubemap.clone_into(&mut entry.item);
             }
         }
+
+        Ok(())
     }
 }

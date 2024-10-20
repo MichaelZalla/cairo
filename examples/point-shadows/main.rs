@@ -244,7 +244,7 @@ fn main() -> Result<(), String> {
             &point_shadow_map_renderer_rc,
             &point_shadow_map_shader_context_rc,
             &point_shadow_map_framebuffer_rc,
-        );
+        )?;
 
         // Render scene.
 
