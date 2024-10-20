@@ -252,6 +252,24 @@ fn main() -> Result<(), String> {
                             let directional_light = &mut light_entry.item;
 
                             directional_light.update_shadow_map_cameras(view_camera);
+
+                            if let Some(shadow_map_cameras) =
+                                directional_light.shadow_map_cameras.as_ref()
+                            {
+                                let transforms = shadow_map_cameras
+                                    .iter()
+                                    .map(|(far_z, camera)| {
+                                        (
+                                            *far_z,
+                                            camera.get_view_inverse_transform()
+                                                * camera.get_projection(),
+                                        )
+                                    })
+                                    .collect();
+
+                                shader_context
+                                    .set_directional_light_view_projections(Some(transforms));
+                            }
                         }
                         _ => panic!(),
                     }

@@ -24,6 +24,7 @@ pub struct ShaderContext {
     pub skybox_transform: Option<Mat4>,
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
+    pub directional_light_view_projections: Option<Vec<(f32, Mat4)>>,
     pub point_lights: Vec<Handle>,
     pub spot_lights: Vec<Handle>,
 }
@@ -49,6 +50,7 @@ impl Default for ShaderContext {
             skybox_transform: None,
             ambient_light: None,
             directional_light: None,
+            directional_light_view_projections: None,
             point_lights: vec![],
             spot_lights: vec![],
         }
@@ -115,6 +117,10 @@ impl ShaderContext {
 
     pub fn set_directional_light(&mut self, light: Option<Handle>) {
         self.directional_light = light;
+    }
+
+    pub fn set_directional_light_view_projections(&mut self, transforms: Option<Vec<(f32, Mat4)>>) {
+        self.directional_light_view_projections = transforms;
     }
 
     pub fn get_point_lights(&self) -> &Vec<Handle> {
