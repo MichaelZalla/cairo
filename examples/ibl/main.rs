@@ -70,7 +70,7 @@ fn main() -> Result<(), String> {
     let scene_context = SceneContext::default();
 
     let (scene, shader_context) = {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut camera_arena = resources.camera.borrow_mut();
         let mut environment_arena = resources.environment.borrow_mut();
@@ -110,7 +110,7 @@ fn main() -> Result<(), String> {
     let specular_brdf_integration_map_handle: Handle;
 
     {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut texture_vec2 = resources.texture_vec2.borrow_mut();
 
@@ -128,7 +128,7 @@ fn main() -> Result<(), String> {
     let current_handles_index = RefCell::new(0);
 
     {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut cubemap_vec3 = resources.cubemap_vec3.borrow_mut();
 
@@ -154,7 +154,7 @@ fn main() -> Result<(), String> {
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
     {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
@@ -213,7 +213,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
@@ -271,12 +271,12 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        match scene.render(&resources, &renderer_rc, None) {
+        match scene.render(resources, &renderer_rc, None) {
             Ok(()) => {
                 // Write out.
 

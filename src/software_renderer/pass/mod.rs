@@ -18,7 +18,6 @@ impl SoftwareRenderer {
                 // Perform deferred lighting pass.
 
                 let shader_context = self.shader_context.borrow();
-                let scene_resources = self.scene_resources.borrow();
 
                 // Call the active fragment shader on every G-buffer sample that was
                 // written to by the rasterizer.
@@ -30,7 +29,7 @@ impl SoftwareRenderer {
 
                         let color = self.get_hdr_color_for_sample(
                             &shader_context,
-                            &scene_resources,
+                            &self.scene_resources,
                             sample,
                         );
 

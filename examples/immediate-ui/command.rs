@@ -463,7 +463,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         let index = parse_or_map_err::<usize>(&command.args[2])?;
 
                         SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-                            let resources = ctx.resources.borrow();
+                            let resources = &ctx.resources;
 
                             let mut arena = resources.camera.borrow_mut();
 

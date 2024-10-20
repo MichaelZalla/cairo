@@ -44,6 +44,14 @@ pub struct SceneResources {
 
 impl PostDeserialize for SceneResources {
     fn post_deserialize(&mut self) {
+        self._post_deserialize();
+    }
+}
+
+impl SceneResources {
+    // Avoids `post_deserialize()`, as it required `&mut Self`.
+
+    pub fn _post_deserialize(&self) {
         self.camera.borrow_mut().post_deserialize();
         self.environment.borrow_mut().post_deserialize();
         self.skybox.borrow_mut().post_deserialize();
@@ -60,5 +68,9 @@ impl PostDeserialize for SceneResources {
         self.cubemap_u8.borrow_mut().post_deserialize();
         self.cubemap_f32.borrow_mut().post_deserialize();
         self.cubemap_vec3.borrow_mut().post_deserialize();
+    }
+
+    pub fn post_deserialize_non_mut(&self) {
+        self._post_deserialize();
     }
 }

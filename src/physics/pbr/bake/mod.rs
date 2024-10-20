@@ -42,7 +42,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
     let scene_context = SceneContext::default();
 
     let (scene, _shader_context) = {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut camera_arena = resources.camera.borrow_mut();
         let mut environment_arena = resources.environment.borrow_mut();
@@ -89,8 +89,8 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     // Store the texture in our scene resources' HDR texture arena.
 
-    let hdr_texture_handle = (*scene_context.resources)
-        .borrow_mut()
+    let hdr_texture_handle = scene_context
+        .resources
         .texture_vec3
         .borrow_mut()
         .insert(hdr_texture);
@@ -144,8 +144,8 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     {
         radiance_cubemap_texture_handle = {
-            (*scene_context.resources)
-                .borrow_mut()
+            scene_context
+                .resources
                 .cubemap_vec3
                 .borrow_mut()
                 .insert(radiance.clone())
@@ -332,9 +332,11 @@ fn render_specular_prefiltered_environment_to_cubemap(
             ..Default::default()
         };
 
-        let resources = (*scene_context.resources).borrow();
+        material_handle = {
+            let mut material_arena = scene_context.resources.material.borrow_mut();
 
-        material_handle = resources.material.borrow_mut().insert(material);
+            material_arena.insert(material)
+        };
 
         //
 
@@ -347,10 +349,14 @@ fn render_specular_prefiltered_environment_to_cubemap(
             .unwrap()
             .unwrap();
 
-        if let Ok(entry) = resources.entity.borrow_mut().get_mut(&cube_entity_handle) {
-            let entity = &mut entry.item;
+        {
+            let mut entity_arena = scene_context.resources.entity.borrow_mut();
 
-            entity.material = Some(material_handle);
+            if let Ok(entry) = entity_arena.get_mut(&cube_entity_handle) {
+                let entity = &mut entry.item;
+
+                entity.material = Some(material_handle);
+            }
         }
 
         //
@@ -387,9 +393,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
         let mipmap_dimension = cubemap.sides[0].levels[mipmap_level].0.width;
 
         {
-            let resources = (*scene_context.resources).borrow_mut();
-
-            let mut materials = resources.material.borrow_mut();
+            let mut materials = scene_context.resources.material.borrow_mut();
 
             let material = &mut materials.get_mut(&material_handle).unwrap().item;
 

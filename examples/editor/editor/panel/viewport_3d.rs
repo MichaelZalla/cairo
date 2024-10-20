@@ -77,7 +77,7 @@ impl PanelInstance for Viewport3DPanel {
         }
 
         EDITOR_SCENE_CONTEXT.with(|scene_context| {
-            let resources = scene_context.resources.borrow();
+            let resources = &scene_context.resources;
 
             let scenes = scene_context.scenes.borrow();
             let scene = &scenes[0];
@@ -99,7 +99,7 @@ impl PanelInstance for Viewport3DPanel {
 
             scene
                 .render(
-                    &resources,
+                    resources,
                     renderer_rc.as_ref(),
                     Some(SceneGraphRenderOptions {
                         camera: Some(self.active_camera),

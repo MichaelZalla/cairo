@@ -59,7 +59,7 @@ fn main() -> Result<(), String> {
     let scene_context = SceneContext::default();
 
     let (scene, shader_context) = {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut camera_arena = resources.camera.borrow_mut();
         let mut environment_arena = resources.environment.borrow_mut();
@@ -148,7 +148,7 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
@@ -160,7 +160,7 @@ fn main() -> Result<(), String> {
         let update_node_rc = Rc::new(update_node);
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,
@@ -184,12 +184,12 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         // Render scene.
 
-        let resources = scene_context.resources.borrow();
+        let resources = &scene_context.resources;
 
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        match scene.render(&resources, &renderer_rc, None) {
+        match scene.render(resources, &renderer_rc, None) {
             Ok(()) => {
                 // Write out.
 
