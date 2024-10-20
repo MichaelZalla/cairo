@@ -24,7 +24,6 @@ use crate::{
 
 use super::{attenuation::LightAttenuation, contribute_pbr};
 
-pub static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 192;
 pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.3;
 pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 50.0;
 
@@ -36,12 +35,12 @@ pub struct ShadowMapRenderingContext {
 }
 
 impl ShadowMapRenderingContext {
-    pub fn new(scene_resources: Rc<SceneResources>) -> Self {
+    pub fn new(shadow_map_size: u32, scene_resources: Rc<SceneResources>) -> Self {
         // Shadow map framebuffer.
 
         let framebuffer = {
             let mut framebuffer =
-                Framebuffer::new(POINT_LIGHT_SHADOW_MAP_SIZE, POINT_LIGHT_SHADOW_MAP_SIZE);
+                Framebuffer::new(shadow_map_size, shadow_map_size);
 
             framebuffer.complete(
                 POINT_LIGHT_SHADOW_CAMERA_NEAR,
@@ -138,8 +137,8 @@ impl PointLight {
         light
     }
 
-    pub fn enable_shadow_maps(&mut self, scene_resources: Rc<SceneResources>) {
-        let shadow_map_rendering_context = ShadowMapRenderingContext::new(scene_resources.clone());
+    pub fn enable_shadow_maps(&mut self, shadow_map_size: u32, scene_resources: Rc<SceneResources>) {
+        let shadow_map_rendering_context = ShadowMapRenderingContext::new(shadow_map_size, scene_resources.clone());
 
         let shadow_map_handle = {
             let mut cubemap_f32_arena = scene_resources.cubemap_f32.borrow_mut();
