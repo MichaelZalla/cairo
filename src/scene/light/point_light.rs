@@ -24,7 +24,7 @@ use crate::{
 
 use super::{attenuation::LightAttenuation, contribute_pbr};
 
-pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.05;
+static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.05;
 
 #[derive(Debug, Clone)]
 pub struct ShadowMapRenderingContext {
@@ -295,8 +295,10 @@ impl PointLight {
 
         let current_depth = light_to_fragment.mag();
 
-        let closest_depth = shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
-            * context.projection_z_far;
+        let (near, far) = (POINT_LIGHT_SHADOW_CAMERA_NEAR, context.projection_z_far);
+
+        let closest_depth = near + shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
+            * (far - near);
 
         if closest_depth == 0.0 {
             return 0.0;
