@@ -61,9 +61,9 @@ fn blit_shadow_map_side(
 fn render_point_shadows_to_cubemap(
     light: &PointLight,
     scene_context: &SceneContext,
+    renderer_rc: &RefCell<dyn Renderer>,
     shader_context_rc: &RefCell<ShaderContext>,
-    framebuffer_rc: Rc<RefCell<Framebuffer>>,
-    shadow_map_renderer_rc: &RefCell<dyn Renderer>,
+    framebuffer_rc: &Rc<RefCell<Framebuffer>>,
 ) -> Result<CubeMap<f32>, String> {
     let mut shadow_map = {
         let mut shadow_map = CubeMap::<f32>::from_framebuffer(&framebuffer_rc.borrow());
@@ -112,9 +112,11 @@ fn render_point_shadows_to_cubemap(
         }
 
         let resources = scene_context.resources.borrow();
-        let scene = &scene_context.scenes.borrow()[0];
+        let scenes = scene_context.scenes.borrow();
 
-        match scene.render(&resources, shadow_map_renderer_rc, None) {
+        let scene = &scenes[0];
+
+        match scene.render(&resources, renderer_rc, None) {
             Ok(()) => {
                 // Blit our framebuffer's HDR attachment buffer to our cubemap's
                 // corresponding side (texture map).
@@ -154,7 +156,7 @@ pub fn update_point_light_shadow_maps(
     scene_context: &SceneContext,
     shadow_map_renderer_rc: &RefCell<dyn Renderer>,
     shadow_map_shader_context_rc: &RefCell<ShaderContext>,
-    shadow_map_framebuffer_rc: Rc<RefCell<Framebuffer>>,
+    shadow_map_framebuffer_rc: &Rc<RefCell<Framebuffer>>,
 ) {
     // Render point shadow map.
 
@@ -162,24 +164,23 @@ pub fn update_point_light_shadow_maps(
 
     {
         let resources = scene_context.resources.borrow();
-        let point_light_arena = resources.point_light.borrow();
 
-        // let mut point_shadow_map_renderer = shadow_map_renderer_rc.borrow_mut();
+        let point_light_arena = resources.point_light.borrow();
 
         for entry in point_light_arena.entries.iter().flatten() {
             let light = &entry.item;
 
-            if let Some(handle) = light.shadow_map {
+            if let Some(handle) = light.shadow_map.as_ref() {
                 let shadow_map = render_point_shadows_to_cubemap(
                     light,
                     scene_context,
-                    shadow_map_shader_context_rc,
-                    shadow_map_framebuffer_rc.clone(),
                     shadow_map_renderer_rc,
+                    shadow_map_shader_context_rc,
+                    shadow_map_framebuffer_rc,
                 )
                 .unwrap();
 
-                point_light_shadow_maps.push((handle, shadow_map));
+                point_light_shadow_maps.push((*handle, shadow_map));
             }
         }
     }
