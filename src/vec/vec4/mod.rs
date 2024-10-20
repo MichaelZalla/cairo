@@ -116,6 +116,15 @@ impl ops::Div<f32> for Vec4 {
     }
 }
 
+impl ops::DivAssign<f32> for Vec4 {
+    fn div_assign(&mut self, rhs: f32) {
+        self.x = self.x / rhs;
+        self.y = self.y / rhs;
+        self.z = self.z / rhs;
+        self.w = self.w / rhs;
+    }
+}
+
 impl ops::Div<Vec4> for Vec4 {
     type Output = Vec4;
     fn div(self, rhs: Vec4) -> Vec4 {
