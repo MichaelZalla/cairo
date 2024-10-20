@@ -2,7 +2,10 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::vec::{vec2::Vec2, vec3::Vec3};
+use crate::{
+    physics::collision::aabb::AABB,
+    vec::{vec2::Vec2, vec3::Vec3},
+};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Geometry {
@@ -17,5 +20,21 @@ impl fmt::Display for Geometry {
         writeln!(v, "  > Vertices: {}", self.vertices.len())?;
         writeln!(v, "  > UVs: {}", self.uvs.len())?;
         writeln!(v, "  > Normals: {}", self.normals.len())
+    }
+}
+
+impl Geometry {
+    pub fn center(&mut self) {
+        let aabb = AABB::from_geometry(self);
+
+        let center = aabb.center;
+
+        println!("World center: {}", center);
+
+        for vertex in self.vertices.iter_mut() {
+            vertex.x -= center.x;
+            vertex.y -= center.y;
+            vertex.z -= center.z;
+        }
     }
 }

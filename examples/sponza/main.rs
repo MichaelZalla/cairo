@@ -40,12 +40,6 @@ pub mod scene;
 
 use scene::make_sponza_scene;
 
-static SPONZA_CENTER: Vec3 = Vec3 {
-    x: -572.3847 + 500.0,
-    y: 233.06613,
-    z: -43.05618,
-};
-
 fn main() -> Result<(), String> {
     // Validates command line arguments.
 
@@ -226,12 +220,11 @@ fn main() -> Result<(), String> {
             SceneNodeType::PointLight => {
                 let transform = node.get_transform_mut();
 
-                let position = SPONZA_CENTER
-                    + Vec3 {
-                        x: 1000.0 * uptime.sin(),
-                        y: 300.0,
-                        z: 0.0,
-                    };
+                let position = Vec3 {
+                    x: 800.0 * (uptime / 20.0).sin(),
+                    y: 200.0,
+                    z: -75.0,
+                };
 
                 transform.set_translation(position);
 
@@ -240,12 +233,11 @@ fn main() -> Result<(), String> {
             SceneNodeType::SpotLight => {
                 let transform = node.get_transform_mut();
 
-                let position = SPONZA_CENTER
-                    + Vec3 {
-                        x: -1000.0 * uptime.sin(),
-                        y: 500.0,
-                        z: 0.0,
-                    };
+                let position = Vec3 {
+                    x: -800.0 * uptime.sin(),
+                    y: 500.0,
+                    z: 0.0,
+                };
 
                 transform.set_translation(position);
 

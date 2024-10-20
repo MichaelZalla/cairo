@@ -1,5 +1,9 @@
 use std::{fmt, io::Error, mem, path::Path, rc::Rc};
 
+use serde::{Deserialize, Serialize};
+
+use bitmask::bitmask;
+
 use crate::{
     fs::read_lines,
     material::{mtl::load_mtl, Material},
@@ -42,10 +46,19 @@ struct PartialMesh {
     material_name: Option<String>,
 }
 
+bitmask! {
+    #[derive(Default, Debug, Serialize, Deserialize)]
+    pub mask ProcessGeometryFlagMask: u32 where flags ProcessGeometryFlag {
+        Null = 0,
+        Center = (1 << 0),
+    }
+}
+
 pub fn load_obj(
     filepath: &str,
     material_arena: &mut Arena<Material>,
     texture_arena: &mut Arena<TextureMap>,
+    process_geometry_flags: Option<ProcessGeometryFlagMask>,
 ) -> LoadObjResult {
     let path = Path::new(&filepath);
 
@@ -211,11 +224,17 @@ pub fn load_obj(
         None => (),
     }
 
-    let geometry = Geometry {
+    let mut geometry = Geometry {
         vertices: vertices.into_boxed_slice(),
         normals: normals.into_boxed_slice(),
         uvs: uvs.into_boxed_slice(),
     };
+
+    if let Some(mask) = process_geometry_flags {
+        if mask.contains(ProcessGeometryFlag::Center) {
+            geometry.center();
+        }
+    }
 
     let geometry_rc = Rc::new(geometry);
 

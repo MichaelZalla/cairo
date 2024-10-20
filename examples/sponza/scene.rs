@@ -4,7 +4,7 @@ use cairo::{
     entity::Entity,
     material::Material,
     mesh::{
-        obj::load::{load_obj, LoadObjResult},
+        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
         Mesh,
     },
     resource::arena::Arena,
@@ -64,11 +64,7 @@ pub fn make_sponza_scene(
         if let Ok(entry) = camera_arena.get_mut(&camera_handle) {
             let camera = &mut entry.item;
 
-            camera.look_vector.set_position(Vec3 {
-                x: 1000.0,
-                y: 300.0,
-                z: 0.0,
-            });
+            camera.look_vector.set_position(Vec3::default());
 
             camera
                 .look_vector
@@ -122,9 +118,9 @@ pub fn make_sponza_scene(
         let mut transform = Transform3D::default();
 
         transform.set_translation(Vec3 {
-            x: 300.0,
-            y: 300.0,
-            z: 0.0,
+            x: 800.0 * (0.0_f32).sin(),
+            y: 200.00,
+            z: -75.0,
         });
 
         SceneNode::new(
@@ -161,8 +157,8 @@ pub fn make_sponza_scene(
         let mut transform = Transform3D::default();
 
         transform.set_translation(Vec3 {
-            x: 300.0,
-            y: 900.0,
+            x: 0.0,
+            y: 300.0,
             z: 0.0,
         });
 
@@ -213,6 +209,7 @@ pub fn make_sponza_scene(
         "./examples/sponza/assets/sponza.obj",
         material_arena,
         texture_u8_arena,
+        Some(ProcessGeometryFlag::Null | ProcessGeometryFlag::Center),
     );
 
     for entry in material_arena.entries.iter_mut().flatten() {
