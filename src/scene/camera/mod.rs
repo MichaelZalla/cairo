@@ -409,19 +409,7 @@ impl Camera {
         if let Some(event) = &mouse_state.wheel_event {
             match self.kind {
                 CameraProjectionKind::Perspective => {
-                    let mut current_field_of_view = match self.field_of_view {
-                        Some(field_of_view) => field_of_view,
-                        None => {
-                            self.field_of_view = Some(DEFAULT_CAMERA_FIELD_OF_VIEW);
-                            self.field_of_view.unwrap()
-                        }
-                    };
-
-                    current_field_of_view -= event.delta as f32;
-
-                    current_field_of_view = current_field_of_view.clamp(1.0, 120.0);
-
-                    self.field_of_view = Some(current_field_of_view);
+                    self.set_projection_z_far(self.get_projection_z_far() + event.delta as f32);
 
                     self.recompute_projections();
 
