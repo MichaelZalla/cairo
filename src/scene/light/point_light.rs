@@ -18,7 +18,7 @@ use crate::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
     },
     software_renderer::SoftwareRenderer,
-    texture::{cubemap::{CubeMap, Side, CUBE_MAP_SIDES}, map::TextureMap},
+    texture::{cubemap::{CubeMap, CUBE_MAP_SIDES}, map::TextureMap},
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -334,10 +334,6 @@ impl PointLight {
         }
     
         for side in CUBE_MAP_SIDES {
-            if let Side::Up = &side {
-                continue;
-            }
-    
             cubemap_face_camera
                 .look_vector
                 .set_target_position(self.position + side.get_direction());
