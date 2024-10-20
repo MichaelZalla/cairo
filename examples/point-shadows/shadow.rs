@@ -45,15 +45,15 @@ fn blit_shadow_map_side(
 ) {
     for y in 0..side.height {
         for x in 0..side.width {
-            let mut output = CUBEMAP_SIDE_COLORS[side_index];
+            let depth_sample = side.levels[0].0.get(x, y) * 255.0;
 
-            let sampled_depth = side.levels[0].0.get(x, y) * 255.0;
+            let color = if depth_sample > 0.0001 {
+                Color::from_vec3(Vec3::ones() * depth_sample)
+            } else {
+                CUBEMAP_SIDE_COLORS[side_index]
+            };
 
-            if sampled_depth > 0.0001 {
-                output = Color::from_vec3(Vec3::ones() * sampled_depth);
-            }
-
-            target.set(x + x_offset, y + y_offset, output.to_u32());
+            target.set(x + x_offset, y + y_offset, color.to_u32());
         }
     }
 }
