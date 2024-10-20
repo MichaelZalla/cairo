@@ -54,41 +54,6 @@ impl Default for ShaderContext {
 }
 
 impl ShaderContext {
-    pub fn new(
-        world_transform: Mat4,
-        view_position: Vec4,
-        view_inverse_transform: Mat4,
-        projection_transform: Mat4,
-        ambient_light: Option<Handle>,
-        directional_light: Option<Handle>,
-        point_lights: Vec<Handle>,
-        spot_lights: Vec<Handle>,
-    ) -> Self {
-        Self {
-            world_transform,
-            view_position,
-            view_inverse_transform,
-            projection_transform,
-            world_view_transform: world_transform * view_inverse_transform,
-            world_view_projection_transform: world_transform
-                * view_inverse_transform
-                * projection_transform,
-            active_material: None,
-            active_uv_test_texture_map: None,
-            active_hdr_map: None,
-            ambient_radiance_map: None,
-            ambient_diffuse_irradiance_map: None,
-            ambient_specular_prefiltered_environment_map: None,
-            ambient_specular_brdf_integration_map: None,
-            skybox_transform: None,
-            ambient_light,
-            directional_light,
-            point_lights,
-            point_light_projection_z_far: None,
-            spot_lights,
-        }
-    }
-
     pub fn get_world_transform(&mut self) -> Mat4 {
         self.world_transform
     }
