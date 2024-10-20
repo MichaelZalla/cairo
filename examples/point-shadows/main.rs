@@ -247,15 +247,9 @@ fn main() -> Result<(), String> {
         // Render scene.
 
         let resources = scene_context.resources.borrow();
-
         let mut scenes = scene_context.scenes.borrow_mut();
+
         let scene = &mut scenes[0];
-
-        {
-            let mut renderer = renderer_rc.borrow_mut();
-
-            renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
-        }
 
         match scene.render(&resources, &renderer_rc, None) {
             Ok(()) => {
