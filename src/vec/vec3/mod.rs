@@ -1,5 +1,9 @@
 use std::{cmp, fmt, ops, str::FromStr};
 
+use rand::rngs::ThreadRng;
+
+use rand_distr::{Distribution, Uniform};
+
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 
 use super::vec2::Vec2;
@@ -45,6 +49,14 @@ impl FromStr for Vec3 {
 impl Vec3 {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn uniform(rng: &mut ThreadRng, uniform: &Uniform<f32>) -> Self {
+        Self {
+            x: uniform.sample(rng),
+            y: uniform.sample(rng),
+            z: uniform.sample(rng),
+        }
     }
 
     pub fn from_x_y(x: f32, y: f32) -> Self {

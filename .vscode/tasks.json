@@ -440,6 +440,22 @@
     },
     {
       "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo run --example transparency",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "transparency",
+      ]
+    },
+    {
+      "type": "shell",
       "problemMatcher": [
         "$rustc"
       ],

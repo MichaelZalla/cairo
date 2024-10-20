@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f32::EPSILON, rc::Rc};
 
 #[cfg(feature = "debug_cycle_counts")]
 use profile::SoftwareRendererCycleCounter;
@@ -37,6 +37,7 @@ use crate::{
     stats::CycleCounters,
     texture::{cubemap::CubeMap, map::TextureMap},
     transform::quaternion::Quaternion,
+    vec::vec4::Vec4,
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
@@ -61,6 +62,8 @@ pub struct SoftwareRenderer {
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
+    alpha_accumulation_buffer: Buffer2D<Vec4>,
+    alpha_revealage_buffer: Buffer2D<f32>,
     pub ssao_buffer: Option<TextureMap<f32>>,
     ssao_blur_buffer: Option<TextureMap<f32>>,
     ssao_hemisphere_kernel: Option<[Vec3; KERNEL_SIZE]>,
@@ -76,6 +79,10 @@ pub struct SoftwareRenderer {
 impl Renderer for SoftwareRenderer {
     fn get_options(&self) -> &RenderOptions {
         &self.options
+    }
+
+    fn get_options_mut(&mut self) -> &mut RenderOptions {
+        &mut self.options
     }
 
     fn begin_frame(&mut self) {
@@ -106,6 +113,14 @@ impl Renderer for SoftwareRenderer {
             if let Some(g_buffer) = self.g_buffer.as_mut() {
                 g_buffer.clear();
             }
+
+            // Clear the accumulation buffer.
+
+            self.alpha_accumulation_buffer.clear(None);
+
+            // Clear the revealage buffer.
+
+            self.alpha_revealage_buffer.clear(Some(1.0));
 
             // Clear the SSAO buffer.
 
@@ -144,6 +159,10 @@ impl Renderer for SoftwareRenderer {
             // Deferred lighting pass.
 
             self.do_deferred_lighting_pass();
+
+            // Semi-transparent fragment pass.
+
+            self.do_weighted_blended_pass();
 
             // Bloom pass (with or without dirt mask).
 
@@ -334,6 +353,8 @@ impl SoftwareRenderer {
             ssao_blur_buffer: None,
             ssao_hemisphere_kernel: None,
             ssao_4x4_tangent_space_rotations: None,
+            alpha_accumulation_buffer: Default::default(),
+            alpha_revealage_buffer: Default::default(),
             shader_context,
             scene_resources,
             vertex_shader,
@@ -375,6 +396,10 @@ impl SoftwareRenderer {
                             }
                             None => true,
                         };
+
+                        self.alpha_accumulation_buffer.resize(width, height);
+
+                        self.alpha_revealage_buffer.resize(width, height);
 
                         let should_reallocate_ssao_buffers = match &self.ssao_buffer {
                             Some(ssao_buffer) => {
@@ -454,15 +479,17 @@ impl SoftwareRenderer {
 
             // Geometry shader.
 
-            if let Some(g_buffer) = self.g_buffer.as_mut() {
-                linear_space_interpolant.depth = depth_buffer.get_normalized(linear_space_z);
+            linear_space_interpolant.depth = depth_buffer.get_normalized(linear_space_z);
 
-                if let Some(sample) = (self.geometry_shader)(
-                    &shader_context,
-                    &self.scene_resources,
-                    &self.shader_options,
-                    &linear_space_interpolant,
-                ) {
+            if let Some(sample) = (self.geometry_shader)(
+                &shader_context,
+                &self.scene_resources,
+                &self.shader_options,
+                &linear_space_interpolant,
+            ) {
+                // Opaque vs. semi-transparent paths.
+
+                if sample.alpha > 1.0 - EPSILON {
                     // Write non-linear depth to the depth buffer.
 
                     depth_buffer.set(x, y, non_linear_z);
@@ -478,7 +505,9 @@ impl SoftwareRenderer {
                         .render_pass_flags
                         .contains(RenderPassFlag::DeferredLighting)
                     {
-                        g_buffer.set(x, y, sample);
+                        if let Some(g_buffer) = self.g_buffer.as_mut() {
+                            g_buffer.set(x, y, sample);
+                        }
                     } else if let Some(forward_buffer_rc) =
                         framebuffer.attachments.forward_ldr.as_ref()
                     {
@@ -496,9 +525,56 @@ impl SoftwareRenderer {
 
                         forward_buffer.set(x, y, ldr_color_u32);
                     }
+                } else {
+                    // Skip writing to the depth buffer.
+
+                    let (accumulation, revealage) =
+                        self.get_accumulation_and_revealage(&shader_context, sample);
+
+                    //  Write to the (color) accumulation buffer.
+
+                    let src = accumulation;
+                    let dest = *self.alpha_accumulation_buffer.get(x, y);
+
+                    // Source: GL_ONE, dest: GL_ONE
+                    let blended = dest + src; // 1.0 * dest + 1.0 * src
+
+                    self.alpha_accumulation_buffer.set(x, y, blended);
+
+                    //  Write to the (alpha) revealage buffer.
+
+                    let src = revealage;
+                    let dest = *self.alpha_revealage_buffer.get(x, y);
+
+                    // Source: GL_ZERO, dest: GL_ONE_MINUS_SRC_ALPHA
+
+                    let blended = (1.0 - src) * dest; // + 0.0 * src
+
+                    self.alpha_revealage_buffer.set(x, y, blended);
                 }
             }
         }
+    }
+
+    fn get_accumulation_and_revealage(
+        &self,
+        shader_context: &ShaderContext,
+        sample: GeometrySample,
+    ) -> (Vec4, f32) {
+        let hdr_color =
+            self.get_hdr_color_for_sample(shader_context, &self.scene_resources, &sample);
+
+        let alpha = sample.alpha;
+
+        let depth_abs = sample.depth.abs();
+
+        let weight = alpha * (1.0 - depth_abs * depth_abs * depth_abs);
+
+        let accumulation = Vec4::new(hdr_color * alpha, alpha) * weight;
+
+        let revealage = alpha;
+
+        (accumulation, revealage)
     }
 
     fn get_ldr_color(&self, hdr_color: Vec3) -> Color {
