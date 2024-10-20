@@ -13,6 +13,7 @@ use cairo::{
     render::culling::FaceCullingReject,
     scene::{
         context::SceneContext,
+        graph::SceneGraphRenderOptions,
         light::point_light::{
             POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
             POINT_LIGHT_SHADOW_MAP_SIZE,
@@ -248,11 +249,20 @@ fn main() -> Result<(), String> {
         // Render scene.
 
         let resources = scene_context.resources.borrow();
+
         let mut scenes = scene_context.scenes.borrow_mut();
 
         let scene = &mut scenes[0];
 
-        match scene.render(&resources, &renderer_rc, None) {
+        match scene.render(
+            &resources,
+            &renderer_rc,
+            Some(SceneGraphRenderOptions {
+                draw_lights: true,
+                draw_cameras: true,
+                camera: None,
+            }),
+        ) {
             Ok(()) => {
                 // Write out.
 
