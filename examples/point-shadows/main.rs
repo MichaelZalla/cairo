@@ -4,20 +4,15 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_960_BY_540},
+        resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::culling::FaceCullingReject,
     scene::{
         context::SceneContext,
         graph::SceneGraphRenderOptions,
-        light::point_light::{
-            POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
-            POINT_LIGHT_SHADOW_MAP_SIZE,
-        },
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -25,16 +20,13 @@ use cairo::{
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
-        shadow_shaders::point_shadows::{
-            PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
-        },
     },
     software_renderer::SoftwareRenderer,
     vec::vec3::Vec3,
 };
 
 use scene::make_scene;
-use shadow::{debug_blit_shadow_map_horizontal_cross, update_point_light_shadow_maps};
+use shadow::debug_blit_shadow_map_horizontal_cross;
 
 pub mod scene;
 pub mod shadow;
@@ -44,8 +36,8 @@ static DRAW_POINT_SHADOW_MAP_THUMBNAILS: bool = false;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/point-shadows".to_string(),
-        canvas_resolution: RESOLUTION_960_BY_540,
-        window_resolution: RESOLUTION_960_BY_540,
+        canvas_resolution: RESOLUTION_1280_BY_720,
+        window_resolution: RESOLUTION_1280_BY_720,
         ..Default::default()
     };
 
@@ -69,18 +61,6 @@ fn main() -> Result<(), String> {
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
-    // Point shadow map framebuffer
-
-    let mut point_shadow_map_framebuffer =
-        Framebuffer::new(POINT_LIGHT_SHADOW_MAP_SIZE, POINT_LIGHT_SHADOW_MAP_SIZE);
-
-    point_shadow_map_framebuffer.complete(
-        POINT_LIGHT_SHADOW_CAMERA_NEAR,
-        POINT_LIGHT_SHADOW_CAMERA_FAR,
-    );
-
-    let point_shadow_map_framebuffer_rc = Rc::new(RefCell::new(point_shadow_map_framebuffer));
-
     // Scene context
 
     let scene_context = SceneContext::default();
@@ -96,7 +76,6 @@ fn main() -> Result<(), String> {
         let mut material_arena = resources.material.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
         let mut point_light_arena = resources.point_light.borrow_mut();
-        let mut cubemap_f32_arena = resources.cubemap_f32.borrow_mut();
 
         make_scene(
             &mut camera_arena,
@@ -108,10 +87,20 @@ fn main() -> Result<(), String> {
             &mut material_arena,
             &mut entity_arena,
             &mut point_light_arena,
-            &mut cubemap_f32_arena,
-            point_shadow_map_framebuffer_rc.clone(),
         )
     }?;
+
+    // Enable shadow maps for all existing point lights.
+
+    {
+        let mut point_light_arena = scene_context.resources.point_light.borrow_mut();
+
+        for entry in point_light_arena.entries.iter_mut().flatten() {
+            let point_light = &mut entry.item;
+
+            point_light.enable_shadow_maps(scene_context.resources.clone());
+        }
+    }
 
     {
         let mut scenes = scene_context.scenes.borrow_mut();
@@ -122,8 +111,6 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
-
-    let point_shadow_map_shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
     // Renderer
 
@@ -137,28 +124,6 @@ fn main() -> Result<(), String> {
         );
 
         renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
-
-        RefCell::new(renderer)
-    };
-
-    let point_shadow_map_renderer_rc = {
-        let mut renderer = SoftwareRenderer::new(
-            point_shadow_map_shader_context_rc.clone(),
-            scene_context.resources.clone(),
-            PointShadowMapVertexShader,
-            PointShadowMapFragmentShader,
-            Default::default(),
-        );
-
-        renderer.set_geometry_shader(PointShadowMapGeometryShader);
-
-        renderer
-            .options
-            .rasterizer_options
-            .face_culling_strategy
-            .reject = FaceCullingReject::Frontfaces;
-
-        renderer.bind_framebuffer(Some(point_shadow_map_framebuffer_rc.clone()));
 
         RefCell::new(renderer)
     };
@@ -203,10 +168,9 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let resources = &scene_context.resources;
-
         let mut scenes = scene_context.scenes.borrow_mut();
-        let mut shader_context = (*shader_context_rc).borrow_mut();
+        let mut shader_context = shader_context_rc.borrow_mut();
+        let mut renderer = renderer_rc.borrow_mut();
 
         shader_context.clear_lights();
 
@@ -217,7 +181,7 @@ fn main() -> Result<(), String> {
         let scene = &mut scenes[0];
 
         scene.update(
-            &resources,
+            &scene_context.resources,
             &mut shader_context,
             app,
             mouse_state,
@@ -225,8 +189,6 @@ fn main() -> Result<(), String> {
             game_controller_state,
             Some(update_node_rc),
         )?;
-
-        let mut renderer = renderer_rc.borrow_mut();
 
         renderer.options.update(keyboard_state);
 
@@ -239,25 +201,28 @@ fn main() -> Result<(), String> {
                   _new_resolution: Option<Resolution>,
                   canvas: &mut [u8]|
      -> Result<(), String> {
-        // Render point shadow map.
+        let resources = &scene_context.resources;
 
-        update_point_light_shadow_maps(
-            &scene_context,
-            &point_shadow_map_renderer_rc,
-            &point_shadow_map_shader_context_rc,
-            &point_shadow_map_framebuffer_rc,
-        )?;
+        // Re-render point light shadow maps.
+
+        {
+            let mut point_light_arena = resources.point_light.borrow_mut();
+
+            for entry in point_light_arena.entries.iter_mut().flatten() {
+                let point_light = &mut entry.item;
+
+                point_light.update_shadow_map(&scene_context)?;
+            }
+        }
 
         // Render scene.
-
-        let resources = &scene_context.resources;
 
         let mut scenes = scene_context.scenes.borrow_mut();
 
         let scene = &mut scenes[0];
 
         match scene.render(
-            &resources,
+            resources,
             &renderer_rc,
             Some(SceneGraphRenderOptions {
                 draw_lights: true,

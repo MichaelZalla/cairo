@@ -1,13 +1,24 @@
-use std::fmt::{self, Display};
+use std::{
+    cell::RefCell,
+    fmt::{self, Display},
+    rc::Rc,
+};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     color,
+    render::culling::FaceCullingReject,
     resource::handle::Handle,
+    scene::{camera::Camera, context::SceneContext, resources::SceneResources},
     serde::PostDeserialize,
-    shader::geometry::sample::GeometrySample,
-    texture::cubemap::CubeMap,
+    shader::{context::ShaderContext, geometry::sample::GeometrySample},
+    shaders::shadow_shaders::point_shadows::{
+        PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
+    },
+    software_renderer::SoftwareRenderer,
+    texture::{cubemap::{CubeMap, Side, CUBE_MAP_SIDES}, map::TextureMap},
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -17,6 +28,67 @@ pub static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 192;
 pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.3;
 pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 50.0;
 
+#[derive(Debug, Clone)]
+pub struct ShadowMapRenderingContext {
+    pub framebuffer: Rc<RefCell<Framebuffer>>,
+    pub shader_context: Rc<RefCell<ShaderContext>>,
+    pub renderer: RefCell<SoftwareRenderer>,
+}
+
+impl ShadowMapRenderingContext {
+    pub fn new(scene_resources: Rc<SceneResources>) -> Self {
+        // Shadow map framebuffer.
+
+        let framebuffer = {
+            let mut framebuffer =
+                Framebuffer::new(POINT_LIGHT_SHADOW_MAP_SIZE, POINT_LIGHT_SHADOW_MAP_SIZE);
+
+            framebuffer.complete(
+                POINT_LIGHT_SHADOW_CAMERA_NEAR,
+                POINT_LIGHT_SHADOW_CAMERA_FAR,
+            );
+
+            Rc::new(RefCell::new(framebuffer))
+        };
+
+        // Shadow map shader context.
+
+        let shader_context = Rc::new(RefCell::new(ShaderContext::default()));
+
+        // Shadow map renderer.
+
+        let renderer = {
+            let mut renderer = SoftwareRenderer::new(
+                shader_context.clone(),
+                scene_resources,
+                PointShadowMapVertexShader,
+                PointShadowMapFragmentShader,
+                Default::default(),
+            );
+    
+            renderer.set_geometry_shader(PointShadowMapGeometryShader);
+    
+            renderer
+                .options
+                .rasterizer_options
+                .face_culling_strategy
+                .reject = FaceCullingReject::Frontfaces;
+    
+            renderer.bind_framebuffer(Some(framebuffer.clone()));
+
+            RefCell::new(renderer)
+        };
+
+        // Shadow map rendering context.
+
+        Self {
+            renderer,
+            shader_context,
+            framebuffer,
+        }
+    }
+}
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PointLight {
     pub intensities: Vec3,
@@ -24,6 +96,8 @@ pub struct PointLight {
     pub attenuation: LightAttenuation,
     #[serde(skip)]
     pub shadow_map: Option<Handle>,
+    #[serde(skip)]
+    pub shadow_map_rendering_context: Option<ShadowMapRenderingContext>,
     #[serde(skip)]
     pub influence_distance: f32,
 }
@@ -55,12 +129,52 @@ impl PointLight {
             },
             attenuation: LightAttenuation::new(1.0, 0.35, 0.44),
             shadow_map: None,
+            shadow_map_rendering_context: None,
             influence_distance: 0.0,
         };
 
         light.post_deserialize();
 
         light
+    }
+
+    pub fn enable_shadow_maps(&mut self, scene_resources: Rc<SceneResources>) {
+        let shadow_map_rendering_context = ShadowMapRenderingContext::new(scene_resources.clone());
+
+        let shadow_map_handle = {
+            let mut cubemap_f32_arena = scene_resources.cubemap_f32.borrow_mut();
+
+            let shadow_map_framebuffer = shadow_map_rendering_context.framebuffer.borrow();
+
+            cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(&shadow_map_framebuffer))
+        };
+
+        self.shadow_map.replace(shadow_map_handle);
+
+        self.shadow_map_rendering_context
+            .replace(shadow_map_rendering_context);
+    }
+
+    pub fn update_shadow_map(&mut self, scene_context: &SceneContext) -> Result<(), String> {
+        // Re-render shadow map for the latest scene.
+
+        let shadow_map_handle = if self.shadow_map.is_none() {
+            return Err("Called PointLight::update_shadow_map() on a light with no shadow map handle created!".to_string());
+        } else {
+            self.shadow_map.as_ref().unwrap()
+        };
+
+        {
+            let mut cubemap_f32_arena = scene_context.resources.cubemap_f32.borrow_mut();
+
+            if let Ok(entry) = cubemap_f32_arena.get_mut(shadow_map_handle) {
+                let map = &mut entry.item;
+
+                self.render_shadow_map_into(map, scene_context)?;
+            }
+        }
+
+        Ok(())
     }
 
     pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
@@ -187,6 +301,93 @@ impl PointLight {
             1.0
         } else {
             0.0
+        }
+    }
+
+    fn render_shadow_map_into(
+        &self,
+        shadow_map: &mut CubeMap<f32>,
+        scene_context: &SceneContext,
+    ) -> Result<(), String> {
+        let context = if self.shadow_map_rendering_context.is_none() {
+            return Err("Called PointLight::render_shadow_map() on a light with no shadow map rendering context created!".to_string());
+        } else {
+            self.shadow_map_rendering_context.as_ref().unwrap()
+        };
+
+        let mut cubemap_face_camera = {
+            let mut camera = Camera::from_perspective(self.position, Default::default(), 90.0, 1.0);
+    
+            // @NOTE(mzalla) Assumes the same near and far is set for the
+            // framebuffer's depth attachment.
+    
+            camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
+            camera.set_projection_z_far(POINT_LIGHT_SHADOW_CAMERA_FAR);
+    
+            camera
+        };
+    
+        {
+            let mut shader_context = context.shader_context.borrow_mut();
+    
+            cubemap_face_camera.update_shader_context(&mut shader_context);
+        }
+    
+        for side in CUBE_MAP_SIDES {
+            if let Side::Up = &side {
+                continue;
+            }
+    
+            cubemap_face_camera
+                .look_vector
+                .set_target_position(self.position + side.get_direction());
+    
+            {
+                let mut shader_context = context.shader_context.borrow_mut();
+    
+                shader_context
+                    .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
+            }
+    
+            let resources = &scene_context.resources;
+            let scenes = scene_context.scenes.borrow();
+    
+            let scene = &scenes[0];
+    
+            match scene.render(resources, &context.renderer, None) {
+                Ok(()) => {
+                    // Blit our framebuffer's HDR attachment buffer to our
+                    // cubemap's corresponding side (texture map).
+    
+                    let framebuffer = context.framebuffer.borrow();
+    
+                    match &framebuffer.attachments.forward_or_deferred_hdr {
+                        Some(hdr_attachment_rc) => {
+                            let hdr_attachment = hdr_attachment_rc.borrow();
+    
+                            blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]);
+                        }
+                        None => return Err("Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
+                    }
+                }
+                Err(e) => panic!("{}", e),
+            }
+        }
+    
+        Ok(())
+    }
+    
+}
+
+fn blit_hdr_attachment_to_cubemap_side(
+    hdr_buffer: &Buffer2D<Vec3>,
+    cubemap_side: &mut TextureMap<f32>,
+) {
+    let buffer = &mut cubemap_side.levels[0].0;
+
+    for y in 0..buffer.height {
+        for x in 0..buffer.width {
+            buffer.set(x, y, hdr_buffer.get(x, y).x);
         }
     }
 }
