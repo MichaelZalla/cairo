@@ -32,7 +32,8 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{scene::make_scene, shadow::update_point_light_shadow_maps};
+use scene::make_scene;
+use shadow::{blit_shadow_map_horizontal_cross, update_point_light_shadow_maps};
 
 pub mod scene;
 pub mod shadow;
@@ -259,29 +260,34 @@ fn main() -> Result<(), String> {
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow_mut();
+                        let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                        // for (index, entry) in resources
-                        //     .point_light
-                        //     .borrow()
-                        //     .entries
-                        //     .iter()
-                        //     .flatten()
-                        //     .enumerate()
-                        // {
-                        //     if index != 0 {
-                        //         continue;
-                        //     }
+                        let point_light_arena = resources.point_light.borrow();
 
-                        //     let light = &entry.item;
+                        for (index, entry) in point_light_arena.entries.iter().flatten().enumerate()
+                        {
+                            if index != 0 {
+                                continue;
+                            }
 
-                        //     match &light.shadow_map {
-                        //         Some(shadow_map) => {
-                        //             blit_shadow_map_horizontal_cross(shadow_map, &mut color_buffer)
-                        //         }
-                        //         None => (),
-                        //     }
-                        // }
+                            let light = &entry.item;
+
+                            match &light.shadow_map {
+                                Some(shadow_map_handle) => {
+                                    let cubemap_f32_arena = resources.cubemap_f32.borrow();
+
+                                    if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle) {
+                                        let shadow_map = &entry.item;
+
+                                        blit_shadow_map_horizontal_cross(
+                                            shadow_map,
+                                            &mut color_buffer,
+                                        )
+                                    }
+                                }
+                                None => (),
+                            }
+                        }
 
                         color_buffer.copy_to(canvas);
 
