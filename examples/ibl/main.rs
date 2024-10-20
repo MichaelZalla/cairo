@@ -14,18 +14,17 @@ use cairo::{
     scene::{
         context::SceneContext,
         graph::SceneGraph,
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
+    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::vec3::{self, Vec3},
+    vec::vec3,
 };
 
 use scene::make_sphere_grid_scene;
@@ -182,6 +181,33 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    let update_node = |_current_world_transform: &Mat4,
+                       node: &mut SceneNode,
+                       _resources: &SceneResources,
+                       app: &App,
+                       _mouse_state: &MouseState,
+                       _keyboard_state: &KeyboardState,
+                       _game_controller_state: &GameControllerState,
+                       _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        let uptime = app.timing_info.uptime_seconds;
+
+        let (node_type, _handle) = (node.get_type(), node.get_handle());
+
+        match node_type {
+            SceneNodeType::Entity => {
+                let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
+
+                let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+
+                node.get_transform_mut().set_rotation(q);
+
+                Ok(false)
+            }
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -189,53 +215,23 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let resources = scene_context.resources.borrow();
 
+        let mut shader_context = (*shader_context_rc).borrow_mut();
+
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        let mut shader_context = (*shader_context_rc).borrow_mut();
-
         // Traverse the scene graph and update its nodes.
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            match node.get_type() {
-                SceneNodeType::Skybox => {
-                    let uptime = app.timing_info.uptime_seconds;
+        let update_node_rc = Rc::new(update_node);
 
-                    static ROTATION_AXIS: Vec3 = vec3::UP;
-
-                    let q = Quaternion::new(ROTATION_AXIS, (uptime / 3.0) % (2.0 * PI));
-
-                    node.get_transform_mut().set_rotation(q);
-
-                    node.update(
-                        &current_world_transform,
-                        &resources,
-                        app,
-                        mouse_state,
-                        keyboard_state,
-                        game_controller_state,
-                        &mut shader_context,
-                    )
-                }
-                _ => node.update(
-                    &current_world_transform,
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
-            }
-        };
-
-        scene.root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            Some(update_node_rc),
         )?;
 
         for keycode in &keyboard_state.keys_pressed {

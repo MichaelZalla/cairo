@@ -35,7 +35,7 @@ fn update_node(
     _mouse_state: &MouseState,
     _keyboard_state: &KeyboardState,
     _game_controller_state: &GameControllerState,
-    shader_context: &mut ShaderContext,
+    _shader_context: &mut ShaderContext,
 ) -> Result<bool, String> {
     let uptime = app.timing_info.uptime_seconds;
 
@@ -68,9 +68,7 @@ fn update_node(
                             z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
                         } * MAX_POINT_LIGHT_INTENSITY;
 
-                        shader_context.get_point_lights_mut().push(*handle);
-
-                        Ok(true)
+                        Ok(false)
                     }
                     Err(err) => panic!(
                         "Failed to get PointLight from Arena with Handle {:?}: {}",

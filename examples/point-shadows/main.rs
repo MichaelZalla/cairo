@@ -17,9 +17,8 @@ use cairo::{
             POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
             POINT_LIGHT_SHADOW_MAP_SIZE,
         },
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
     shader::context::ShaderContext,
     shaders::{
@@ -161,6 +160,36 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    let update_node = |_current_world_transform: &Mat4,
+                       node: &mut SceneNode,
+                       resources: &SceneResources,
+                       app: &App,
+                       _mouse_state: &MouseState,
+                       _keyboard_state: &KeyboardState,
+                       _game_controller_state: &GameControllerState,
+                       _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        let uptime = app.timing_info.uptime_seconds;
+
+        match node.get_type() {
+            SceneNodeType::PointLight => {
+                let mut point_light_arena = resources.point_light.borrow_mut();
+
+                if let Ok(entry) = point_light_arena.get_mut(&node.get_handle().unwrap()) {
+                    let point_light = &mut entry.item;
+
+                    let index = (point_light.position.y - 5.0) / 2.0;
+
+                    point_light.position.x = 10.0 * (uptime + PI / 2.0 * index).sin();
+                    point_light.position.z = 10.0 * (uptime + PI / 2.0 * index).cos();
+                }
+
+                Ok(false)
+            }
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -173,55 +202,20 @@ fn main() -> Result<(), String> {
 
         shader_context.clear_lights();
 
-        let uptime = app.timing_info.uptime_seconds;
-
         // Traverse the scene graph and update its nodes.
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            match node.get_type() {
-                SceneNodeType::PointLight => {
-                    if let Ok(entry) = resources
-                        .point_light
-                        .borrow_mut()
-                        .get_mut(&node.get_handle().unwrap())
-                    {
-                        let point_light = &mut entry.item;
+        let update_node_rc = Rc::new(update_node);
 
-                        let index = (point_light.position.y - 5.0) / 2.0;
+        let scene = &mut scenes[0];
 
-                        point_light.position.x = 10.0 * (uptime + PI / 2.0 * index).sin();
-                        point_light.position.z = 10.0 * (uptime + PI / 2.0 * index).cos();
-                    }
-
-                    node.update(
-                        &current_world_transform,
-                        &resources,
-                        app,
-                        mouse_state,
-                        keyboard_state,
-                        game_controller_state,
-                        &mut shader_context,
-                    )
-                }
-                _ => node.update(
-                    &current_world_transform,
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
-            }
-        };
-
-        scenes[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            Some(update_node_rc),
         )?;
 
         let mut renderer = renderer_rc.borrow_mut();

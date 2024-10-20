@@ -25,6 +25,7 @@ static LIGHT_GRID_SIZE: f32 = 20.0;
 
 pub static POINT_LIGHTS_COUNT: usize = (LIGHT_GRID_SUBDIVISIONS + 1).pow(2);
 
+#[allow(clippy::too_many_arguments)]
 pub fn make_primitives_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,

@@ -9,10 +9,10 @@ use cairo::{
     matrix::Mat4,
     scene::{
         context::SceneContext,
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
+    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -119,6 +119,33 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    let update_node = |_current_world_transform: &Mat4,
+                       node: &mut SceneNode,
+                       _resources: &SceneResources,
+                       app: &App,
+                       _mouse_state: &MouseState,
+                       _keyboard_state: &KeyboardState,
+                       _game_controller_state: &GameControllerState,
+                       _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        let uptime = app.timing_info.uptime_seconds;
+
+        let (node_type, _handle) = (node.get_type(), node.get_handle());
+
+        match node_type {
+            SceneNodeType::Entity => {
+                let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
+
+                let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+
+                node.get_transform_mut().set_rotation(q);
+
+                Ok(false)
+            }
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -126,47 +153,23 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let resources = scene_context.resources.borrow();
 
-        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.clear_lights();
-
-        let uptime = app.timing_info.uptime_seconds;
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
         // Traverse the scene graph and update its nodes.
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            let (node_type, _handle) = (node.get_type(), node.get_handle());
+        let update_node_rc = Rc::new(update_node);
 
-            match node_type {
-                SceneNodeType::Entity => {
-                    let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
-
-                    let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
-
-                    node.get_transform_mut().set_rotation(q);
-
-                    Ok(())
-                }
-                _ => node.update(
-                    &current_world_transform,
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
-            }
-        };
-
-        scenes[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            Some(update_node_rc),
         )?;
 
         let mut renderer = renderer_rc.borrow_mut();

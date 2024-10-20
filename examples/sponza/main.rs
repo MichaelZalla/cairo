@@ -17,10 +17,10 @@ use cairo::{
     matrix::Mat4,
     scene::{
         context::SceneContext,
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
+    shader::context::ShaderContext,
     shaders::{
         debug_shaders::{
             albedo_fragment_shader::AlbedoFragmentShader,
@@ -97,7 +97,7 @@ fn main() -> Result<(), String> {
         window_info.canvas_resolution.height,
     );
 
-    framebuffer.complete(0.3, 100.0);
+    framebuffer.complete(0.3, 10_000.0);
 
     let camera_aspect_ratio = framebuffer.width_over_height;
 
@@ -183,6 +183,106 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    #[allow(clippy::too_many_arguments)]
+    let update_scene_graph_node = |_current_world_transform: &Mat4,
+                                   node: &mut SceneNode,
+                                   resources: &SceneResources,
+                                   app: &App,
+                                   _mouse_state: &MouseState,
+                                   _keyboard_state: &KeyboardState,
+                                   _game_controller_state: &GameControllerState,
+                                   _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        let (node_type, handle) = (node.get_type(), node.get_handle());
+
+        let uptime = app.timing_info.uptime_seconds;
+
+        match node_type {
+            SceneNodeType::DirectionalLight => match handle {
+                Some(handle) => {
+                    let mut arena = resources.directional_light.borrow_mut();
+
+                    match arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let light = &mut entry.item;
+
+                            light.set_direction(Quaternion::new(
+                                vec3::UP,
+                                uptime.rem_euclid(PI * 2.0),
+                            ));
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `DirectionalLight` node with no resource handle!")
+                }
+            },
+            SceneNodeType::PointLight => match handle {
+                Some(handle) => {
+                    let mut arena = resources.point_light.borrow_mut();
+
+                    match arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let light = &mut entry.item;
+
+                            light.position = SPONZA_CENTER
+                                + Vec3 {
+                                    x: 1000.0 * uptime.sin(),
+                                    y: 300.0,
+                                    z: 0.0,
+                                };
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get PointLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `PointLight` node with no resource handle!")
+                }
+            },
+            SceneNodeType::SpotLight => match handle {
+                Some(handle) => {
+                    let mut arena = resources.spot_light.borrow_mut();
+
+                    match arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let light = &mut entry.item;
+
+                            light.look_vector.set_position(
+                                SPONZA_CENTER
+                                    + Vec3 {
+                                        x: -1000.0 * uptime.sin(),
+                                        y: 500.0,
+                                        z: 0.0,
+                                    },
+                            );
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `SpotLight` node with no resource handle!")
+                }
+            },
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -205,169 +305,24 @@ fn main() -> Result<(), String> {
 
         let resources = scene_context.resources.borrow();
 
-        let mut scenes = scene_context.scenes.borrow_mut();
-        let mut shader_context = (*shader_context_rc).borrow_mut();
+        let mut shader_context = shader_context_rc.borrow_mut();
 
-        shader_context.clear_lights();
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        let scene = &mut scenes[0];
 
         // Traverse the scene graph and update its nodes.
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
+        let update_scene_graph_node_rc = Rc::new(update_scene_graph_node);
 
-            match node_type {
-                SceneNodeType::Camera => {
-                    match handle {
-                        Some(handle) => {
-                            let mut camera_arena = resources.camera.borrow_mut();
-
-                            match camera_arena.get_mut(handle) {
-                                Ok(entry) => {
-                                    let camera = &mut entry.item;
-
-                                    debug_message_buffer.write(format!(
-                                        "Camera position: {}",
-                                        camera.look_vector.get_position()
-                                    ));
-
-                                    let framebuffer = framebuffer_rc.borrow_mut();
-
-                                    if let Some(lock) = framebuffer.attachments.depth.as_ref() {
-                                        let mut depth_buffer = lock.borrow_mut();
-
-                                        depth_buffer
-                                            .set_projection_z_near(camera.get_projection_z_near());
-                                        depth_buffer
-                                            .set_projection_z_far(camera.get_projection_z_far());
-                                    }
-                                }
-                                Err(err) => panic!(
-                                    "Failed to get Camera from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
-                            }
-                        }
-                        None => {
-                            panic!("Encountered a `Camera` node with no resource handle!")
-                        }
-                    }
-
-                    node.update(
-                        &current_world_transform,
-                        &resources,
-                        app,
-                        mouse_state,
-                        keyboard_state,
-                        game_controller_state,
-                        &mut shader_context,
-                    )
-                }
-                SceneNodeType::DirectionalLight => match handle {
-                    Some(handle) => {
-                        let mut arena = resources.directional_light.borrow_mut();
-
-                        match arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                light.set_direction(Quaternion::new(
-                                    vec3::UP,
-                                    uptime.rem_euclid(PI * 2.0),
-                                ));
-
-                                shader_context.set_directional_light(Some(*handle));
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `DirectionalLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::PointLight => match handle {
-                    Some(handle) => {
-                        let mut arena = resources.point_light.borrow_mut();
-
-                        match arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                light.position = SPONZA_CENTER
-                                    + Vec3 {
-                                        x: 1000.0 * uptime.sin(),
-                                        y: 300.0,
-                                        z: 0.0,
-                                    };
-
-                                shader_context.get_point_lights_mut().push(*handle);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::SpotLight => match handle {
-                    Some(handle) => {
-                        let mut arena = resources.spot_light.borrow_mut();
-
-                        match arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                light.look_vector.set_position(
-                                    SPONZA_CENTER
-                                        + Vec3 {
-                                            x: -1000.0 * uptime.sin(),
-                                            y: 500.0,
-                                            z: 0.0,
-                                        },
-                                );
-
-                                shader_context.get_spot_lights_mut().push(*handle);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `SpotLight` node with no resource handle!")
-                    }
-                },
-                _ => node.update(
-                    &current_world_transform,
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
-            }
-        };
-
-        scenes[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            Some(update_scene_graph_node_rc),
         )?;
 
         let mut renderer = renderer_rc.borrow_mut();

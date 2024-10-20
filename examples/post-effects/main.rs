@@ -15,10 +15,10 @@ use cairo::{
     matrix::Mat4,
     scene::{
         context::SceneContext,
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
+    shader::context::ShaderContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -137,6 +137,90 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    let update_node = |_current_world_transform: &Mat4,
+                       node: &mut SceneNode,
+                       resources: &SceneResources,
+                       app: &App,
+                       _mouse_state: &MouseState,
+                       _keyboard_state: &KeyboardState,
+                       _game_controller_state: &GameControllerState,
+                       _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        let uptime = app.timing_info.uptime_seconds;
+
+        let (node_type, handle) = (node.get_type(), node.get_handle());
+
+        match node_type {
+            SceneNodeType::Entity => match handle {
+                Some(handle) => {
+                    let mesh_arena = resources.mesh.borrow();
+                    let mut entity_arena = resources.entity.borrow_mut();
+
+                    match entity_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let entity = &mut entry.item;
+
+                            if let Ok(entry) = mesh_arena.get(&entity.mesh) {
+                                let mesh = &entry.item;
+
+                                if let Some(object_name) = &mesh.object_name {
+                                    if object_name == "plane" {
+                                        return Ok(false);
+                                    }
+                                }
+                            }
+
+                            let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
+
+                            let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+
+                            node.get_transform_mut().set_rotation(q);
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get Entity from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `Entity` node with no resource handle!")
+                }
+            },
+            SceneNodeType::PointLight => match handle {
+                Some(handle) => {
+                    let mut point_light_arena = resources.point_light.borrow_mut();
+
+                    match point_light_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let point_light = &mut entry.item;
+
+                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+                            static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
+
+                            point_light.intensities = Vec3 {
+                                x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
+                                y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
+                                z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
+                            } * MAX_POINT_LIGHT_INTENSITY;
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get PointLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `PointLight` node with no resource handle!")
+                }
+            },
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -144,109 +228,23 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let resources = scene_context.resources.borrow();
 
-        let mut scenes = scene_context.scenes.borrow_mut();
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.clear_lights();
-
-        let uptime = app.timing_info.uptime_seconds;
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
         // Traverse the scene graph and update its nodes.
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
+        let update_node_rc = Rc::new(update_node);
 
-            match node_type {
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mesh_arena = resources.mesh.borrow();
-                        let mut entity_arena = resources.entity.borrow_mut();
-
-                        match entity_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let entity = &mut entry.item;
-
-                                if let Ok(entry) = mesh_arena.get(&entity.mesh) {
-                                    let mesh = &entry.item;
-
-                                    if let Some(object_name) = &mesh.object_name {
-                                        if object_name == "plane" {
-                                            return Ok(());
-                                        }
-                                    }
-                                }
-
-                                let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
-
-                                let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
-
-                                node.get_transform_mut().set_rotation(q);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::PointLight => match handle {
-                    Some(handle) => {
-                        let mut point_light_arena = resources.point_light.borrow_mut();
-
-                        match point_light_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let point_light = &mut entry.item;
-
-                                static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
-                                static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
-
-                                point_light.intensities = Vec3 {
-                                    x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
-                                        + 0.5,
-                                    y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
-                                        + 0.5,
-                                    z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0
-                                        + 0.5,
-                                } * MAX_POINT_LIGHT_INTENSITY;
-
-                                shader_context.get_point_lights_mut().push(*handle);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                _ => node.update(
-                    &current_world_transform,
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
-            }
-        };
-
-        scenes[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            Some(update_node_rc),
         )?;
 
         let mut renderer = renderer_rc.borrow_mut();

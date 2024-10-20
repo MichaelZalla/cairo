@@ -9,11 +9,7 @@ use cairo::{
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    matrix::Mat4,
-    scene::{
-        context::SceneContext,
-        node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod},
-    },
+    scene::context::SceneContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -118,27 +114,19 @@ fn main() -> Result<(), String> {
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
-        shader_context.clear_lights();
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            node.update(
-                &current_world_transform,
-                &resources,
-                app,
-                mouse_state,
-                keyboard_state,
-                game_controller_state,
-                &mut shader_context,
-            )
-        };
+        // Traverse the scene graph and update its nodes.
 
-        scene_context.scenes.borrow_mut()[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            None,
         )?;
 
         let mut renderer = renderer_rc.borrow_mut();

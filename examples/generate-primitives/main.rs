@@ -17,10 +17,10 @@ use cairo::{
     matrix::Mat4,
     scene::{
         context::SceneContext,
-        node::{
-            SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeLocalTraversalMethod, SceneNodeType,
-        },
+        node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
+    shader::context::ShaderContext,
     shaders::{
         debug_shaders::{
             albedo_fragment_shader::AlbedoFragmentShader,
@@ -182,6 +182,182 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    // let point_lights_visited_rc: RefCell<usize> = Default::default();
+    // let spot_lights_visited_rc: RefCell<usize> = Default::default();
+
+    let update_node = |_current_world_transform: &Mat4,
+                       node: &mut SceneNode,
+                       resources: &SceneResources,
+                       app: &App,
+                       _mouse_state: &MouseState,
+                       _keyboard_state: &KeyboardState,
+                       _game_controller_state: &GameControllerState,
+                       _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        static COLOR_CHANNEL_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+
+        let uptime = app.timing_info.uptime_seconds;
+
+        let (node_type, handle) = (node.get_type(), node.get_handle());
+
+        match node_type {
+            SceneNodeType::Entity => match handle {
+                Some(handle) => {
+                    let mut entity_arena = resources.entity.borrow_mut();
+
+                    match entity_arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let entity = &mut entry.item;
+
+                            if let Ok(entry) = resources.mesh.borrow_mut().get(&entity.mesh) {
+                                let mesh = &entry.item;
+
+                                if let Some(object_name) = &mesh.object_name {
+                                    if object_name == "plane" {
+                                        return Ok(false);
+                                    }
+                                }
+                            }
+
+                            let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
+
+                            let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+
+                            node.get_transform_mut().set_rotation(q);
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get Entity from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `Entity` node with no resource handle!")
+                }
+            },
+            // SceneNodeType::Camera => {
+            //     match handle {
+            //         Some(handle) => {
+            //             let mut camera_arena = resources.camera.borrow_mut();
+
+            //             match camera_arena.get_mut(handle) {
+            //                 Ok(entry) => {
+            //                     let camera = &mut entry.item;
+
+            //                     debug_message_buffer.write(format!(
+            //                         "Camera position: {}",
+            //                         camera.look_vector.get_position()
+            //                     ));
+            //                 }
+            //                 Err(err) => panic!(
+            //                     "Failed to get Camera from Arena with Handle {:?}: {}",
+            //                     handle, err
+            //                 ),
+            //             }
+            //         }
+            //         None => {
+            //             panic!("Encountered a `Camera` node with no resource handle!")
+            //         }
+            //     }
+
+            //     Ok(false)
+            // }
+            SceneNodeType::PointLight => match handle {
+                Some(handle) => {
+                    let mut arena = resources.point_light.borrow_mut();
+
+                    match arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let light = &mut entry.item;
+
+                            let point_lights_visited = 0;
+
+                            static LIGHT_SPEED_FACTOR: f32 = 0.66;
+                            static ORBIT_RADIUS: f32 = 12.0;
+                            static MAX_POINT_LIGHT_INTENSITY: f32 = 25.0;
+
+                            let light_phase_shift = (2.0 * PI / (POINT_LIGHTS_COUNT as f32))
+                                * point_lights_visited as f32;
+
+                            light.intensities = Vec3 {
+                                x: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 0.0 + light_phase_shift)
+                                    .sin()
+                                    / 2.0
+                                    + 0.5,
+                                y: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 1.0 + light_phase_shift)
+                                    .sin()
+                                    / 2.0
+                                    + 0.5,
+                                z: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 2.0 + light_phase_shift)
+                                    .sin()
+                                    / 2.0
+                                    + 0.5,
+                            } * MAX_POINT_LIGHT_INTENSITY;
+
+                            let offset = point_lights_visited % 2 == 0;
+
+                            light.position = Vec3 {
+                                x: ORBIT_RADIUS
+                                    * ((uptime * LIGHT_SPEED_FACTOR) + light_phase_shift).sin()
+                                    * if offset { 1.5 } else { 1.0 },
+                                y: 1.0,
+                                z: ORBIT_RADIUS
+                                    * ((uptime * LIGHT_SPEED_FACTOR) + light_phase_shift).cos()
+                                    * if offset { 1.5 } else { 1.0 },
+                            };
+
+                            // *point_lights_visited += 1;
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get PointLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `PointLight` node with no resource handle!")
+                }
+            },
+            SceneNodeType::SpotLight => match handle {
+                Some(handle) => {
+                    let mut arena = resources.spot_light.borrow_mut();
+
+                    match arena.get_mut(handle) {
+                        Ok(entry) => {
+                            let light = &mut entry.item;
+
+                            static MAX_SPOT_LIGHT_INTENSITY: f32 = 25.0;
+
+                            // let mut spot_lights_visited = spot_lights_visited_rc.borrow_mut();
+
+                            light.intensities = Vec3 {
+                                x: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 0.0).cos() / 2.0 + 0.5,
+                                y: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 1.0).cos() / 2.0 + 0.5,
+                                z: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 2.0).cos() / 2.0 + 0.5,
+                            } * MAX_SPOT_LIGHT_INTENSITY;
+
+                            // *spot_lights_visited += 1;
+
+                            Ok(false)
+                        }
+                        Err(err) => panic!(
+                            "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                            handle, err
+                        ),
+                    }
+                }
+                None => {
+                    panic!("Encountered a `SpotLight` node with no resource handle!")
+                }
+            },
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -192,7 +368,9 @@ fn main() -> Result<(), String> {
         let resources = scene_context.resources.borrow();
 
         let mut scenes = scene_context.scenes.borrow_mut();
-        let mut shader_context = (*shader_context_rc).borrow_mut();
+        let scene = &mut scenes[0];
+
+        let mut shader_context = shader_context_rc.borrow_mut();
 
         shader_context.clear_lights();
 
@@ -265,201 +443,16 @@ fn main() -> Result<(), String> {
 
         // Traverse the scene graph and update its nodes.
 
-        static COLOR_CHANNEL_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+        let update_node_rc = Rc::new(update_node);
 
-        let mut point_lights_visited: usize = 0;
-        let mut spot_lights_visited: usize = 0;
-
-        let mut update_scene_graph_node = |_current_depth: usize,
-                                           current_world_transform: Mat4,
-                                           node: &mut SceneNode|
-         -> Result<(), String> {
-            let (node_type, handle) = (node.get_type(), node.get_handle());
-
-            match node_type {
-                SceneNodeType::Entity => match handle {
-                    Some(handle) => {
-                        let mut entity_arena = resources.entity.borrow_mut();
-
-                        match entity_arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let entity = &mut entry.item;
-
-                                if let Ok(entry) = resources.mesh.borrow_mut().get(&entity.mesh) {
-                                    let mesh = &entry.item;
-
-                                    if let Some(object_name) = &mesh.object_name {
-                                        if object_name == "plane" {
-                                            return Ok(());
-                                        }
-                                    }
-                                }
-
-                                let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
-
-                                let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
-
-                                node.get_transform_mut().set_rotation(q);
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get Entity from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::Camera => {
-                    match handle {
-                        Some(handle) => {
-                            let mut camera_arena = resources.camera.borrow_mut();
-
-                            match camera_arena.get_mut(handle) {
-                                Ok(entry) => {
-                                    let camera = &mut entry.item;
-
-                                    debug_message_buffer.write(format!(
-                                        "Camera position: {}",
-                                        camera.look_vector.get_position()
-                                    ));
-                                }
-                                Err(err) => panic!(
-                                    "Failed to get Camera from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
-                            }
-                        }
-                        None => {
-                            panic!("Encountered a `Camera` node with no resource handle!")
-                        }
-                    }
-
-                    node.update(
-                        &current_world_transform,
-                        &resources,
-                        app,
-                        mouse_state,
-                        keyboard_state,
-                        game_controller_state,
-                        &mut shader_context,
-                    )
-                }
-                SceneNodeType::PointLight => match handle {
-                    Some(handle) => {
-                        let mut arena = resources.point_light.borrow_mut();
-
-                        match arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                static LIGHT_SPEED_FACTOR: f32 = 0.66;
-                                static ORBIT_RADIUS: f32 = 12.0;
-                                static MAX_POINT_LIGHT_INTENSITY: f32 = 25.0;
-
-                                let light_phase_shift = (2.0 * PI / (POINT_LIGHTS_COUNT as f32))
-                                    * point_lights_visited as f32;
-
-                                light.intensities = Vec3 {
-                                    x: (uptime
-                                        + COLOR_CHANNEL_PHASE_SHIFT * 0.0
-                                        + light_phase_shift)
-                                        .sin()
-                                        / 2.0
-                                        + 0.5,
-                                    y: (uptime
-                                        + COLOR_CHANNEL_PHASE_SHIFT * 1.0
-                                        + light_phase_shift)
-                                        .sin()
-                                        / 2.0
-                                        + 0.5,
-                                    z: (uptime
-                                        + COLOR_CHANNEL_PHASE_SHIFT * 2.0
-                                        + light_phase_shift)
-                                        .sin()
-                                        / 2.0
-                                        + 0.5,
-                                } * MAX_POINT_LIGHT_INTENSITY;
-
-                                let offset = point_lights_visited % 2 == 0;
-
-                                light.position = Vec3 {
-                                    x: ORBIT_RADIUS
-                                        * ((uptime * LIGHT_SPEED_FACTOR) + light_phase_shift).sin()
-                                        * if offset { 1.5 } else { 1.0 },
-                                    y: 1.0,
-                                    z: ORBIT_RADIUS
-                                        * ((uptime * LIGHT_SPEED_FACTOR) + light_phase_shift).cos()
-                                        * if offset { 1.5 } else { 1.0 },
-                                };
-
-                                shader_context.get_point_lights_mut().push(*handle);
-
-                                point_lights_visited += 1;
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
-                    }
-                },
-                SceneNodeType::SpotLight => match handle {
-                    Some(handle) => {
-                        let mut arena = resources.spot_light.borrow_mut();
-
-                        match arena.get_mut(handle) {
-                            Ok(entry) => {
-                                let light = &mut entry.item;
-
-                                static MAX_SPOT_LIGHT_INTENSITY: f32 = 25.0;
-
-                                light.intensities = Vec3 {
-                                    x: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 0.0).cos() / 2.0 + 0.5,
-                                    y: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 1.0).cos() / 2.0 + 0.5,
-                                    z: (uptime + COLOR_CHANNEL_PHASE_SHIFT * 2.0).cos() / 2.0 + 0.5,
-                                } * MAX_SPOT_LIGHT_INTENSITY;
-
-                                shader_context.get_spot_lights_mut().push(*handle);
-
-                                spot_lights_visited += 1;
-
-                                Ok(())
-                            }
-                            Err(err) => panic!(
-                                "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
-                        }
-                    }
-                    None => {
-                        panic!("Encountered a `SpotLight` node with no resource handle!")
-                    }
-                },
-                _ => node.update(
-                    &current_world_transform,
-                    &resources,
-                    app,
-                    mouse_state,
-                    keyboard_state,
-                    game_controller_state,
-                    &mut shader_context,
-                ),
-            }
-        };
-
-        scenes[0].root.visit_mut(
-            SceneNodeGlobalTraversalMethod::DepthFirst,
-            Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut update_scene_graph_node,
+        scene.update(
+            &resources,
+            &mut shader_context,
+            app,
+            mouse_state,
+            keyboard_state,
+            game_controller_state,
+            Some(update_node_rc),
         )?;
 
         renderer.options.update(keyboard_state);
