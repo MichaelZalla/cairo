@@ -381,6 +381,12 @@ fn main() -> Result<(), String> {
             .unwrap()
         };
 
+        {
+            let mut shader_context = shader_context_rc.borrow_mut();
+
+            shader_context.set_directional_light_shadow_maps(Some(directional_light_shadow_maps));
+        }
+
         // Render scene.
 
         let resources = &scene_context.resources;
@@ -405,33 +411,40 @@ fn main() -> Result<(), String> {
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
+                        let shader_context = shader_context_rc.borrow();
+
                         let mut color_buffer = color_buffer_lock.borrow_mut();
 
                         static SHADOW_MAP_THUMBNAIL_SIZE: u32 = 175;
 
-                        for (shadow_map_index, shadow_map) in
-                            directional_light_shadow_maps.iter().enumerate()
+                        if let Some(shadow_maps) =
+                            shader_context.directional_light_shadow_maps.as_ref()
                         {
-                            for y in 0..SHADOW_MAP_THUMBNAIL_SIZE {
-                                for x in 0..SHADOW_MAP_THUMBNAIL_SIZE {
-                                    static UV_STEP: f32 = 1.0 / SHADOW_MAP_THUMBNAIL_SIZE as f32;
+                            for (shadow_map_index, shadow_map) in shadow_maps.iter().enumerate() {
+                                for y in 0..SHADOW_MAP_THUMBNAIL_SIZE {
+                                    for x in 0..SHADOW_MAP_THUMBNAIL_SIZE {
+                                        static UV_STEP: f32 =
+                                            1.0 / SHADOW_MAP_THUMBNAIL_SIZE as f32;
 
-                                    let uv = Vec2 {
-                                        x: x as f32 * UV_STEP,
-                                        y: y as f32 * UV_STEP,
-                                        z: 0.0,
-                                    };
+                                        let uv = Vec2 {
+                                            x: x as f32 * UV_STEP,
+                                            y: y as f32 * UV_STEP,
+                                            z: 0.0,
+                                        };
 
-                                    let sampled_depth = sample_nearest_f32(uv, shadow_map) * 100.0;
+                                        let sampled_depth =
+                                            sample_nearest_f32(uv, shadow_map) * 100.0;
 
-                                    let sampled_depth_color =
-                                        Color::from_vec3(vec3::ONES * sampled_depth * 255.0);
+                                        let sampled_depth_color =
+                                            Color::from_vec3(vec3::ONES * sampled_depth * 255.0);
 
-                                    color_buffer.set(
-                                        x,
-                                        y + (shadow_map_index as u32 * SHADOW_MAP_THUMBNAIL_SIZE),
-                                        sampled_depth_color.to_u32(),
-                                    );
+                                        color_buffer.set(
+                                            x,
+                                            y + (shadow_map_index as u32
+                                                * SHADOW_MAP_THUMBNAIL_SIZE),
+                                            sampled_depth_color.to_u32(),
+                                        );
+                                    }
                                 }
                             }
                         }
