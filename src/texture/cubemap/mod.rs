@@ -206,6 +206,10 @@ impl<
         cubemap
     }
 
+    pub fn is_cross(&self) -> bool {
+        self.is_cross
+    }
+
     pub fn cross(texture_path: &str, storage_format: TextureMapStorageFormat) -> Self {
         Self {
             is_cross: true,
