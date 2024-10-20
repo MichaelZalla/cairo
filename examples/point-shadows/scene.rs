@@ -59,9 +59,9 @@ pub fn make_scene(
             let camera = &mut entry.item;
 
             camera.look_vector.set_position(Vec3 {
-                x: 8.0,
-                y: 12.0,
-                z: 8.0,
+                x: 25.0,
+                y: 25.0,
+                z: 25.0,
             });
 
             camera.look_vector.set_target_position(Default::default());
