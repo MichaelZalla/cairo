@@ -13,9 +13,9 @@ use crate::{
 
 use super::{attenuation::LightAttenuation, contribute_pbr};
 
-pub static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 512;
+pub static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 192;
 pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.3;
-pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 100.0;
+pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 50.0;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PointLight {

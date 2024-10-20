@@ -4,7 +4,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_640_BY_320},
+        resolution::{Resolution, RESOLUTION_960_BY_540},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -44,8 +44,8 @@ static DRAW_POINT_SHADOW_MAP_THUMBNAILS: bool = false;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/point-shadows".to_string(),
-        canvas_resolution: RESOLUTION_640_BY_320,
-        window_resolution: RESOLUTION_640_BY_320,
+        canvas_resolution: RESOLUTION_960_BY_540,
+        window_resolution: RESOLUTION_960_BY_540,
         ..Default::default()
     };
 
