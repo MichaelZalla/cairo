@@ -1,7 +1,6 @@
 use cairo::{
     buffer::Buffer2D,
     color::Color,
-    scene::light::point_light::POINT_LIGHT_SHADOW_MAP_SIZE,
     texture::{
         cubemap::{CubeMap, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
         map::TextureMap,
@@ -18,13 +17,13 @@ pub fn debug_blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target:
         y_offset: u32,
         target: &mut Buffer2D,
     ) {
-        static UV_STEP: f32 = 1.0 / POINT_LIGHT_SHADOW_MAP_SIZE as f32;
+        let uv_step = 1.0 / side.width as f32;
 
         for y in 0..side.height {
             for x in 0..side.width {
                 let uv = Vec2 {
-                    x: x as f32 * UV_STEP,
-                    y: y as f32 * UV_STEP,
+                    x: x as f32 * uv_step,
+                    y: y as f32 * uv_step,
                     z: 0.0,
                 };
 
