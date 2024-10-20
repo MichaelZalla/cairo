@@ -15,7 +15,7 @@ pub enum FramebufferAttachmentKind {
     ForwardOrDeferredHdr,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct FramebufferAttachments {
     pub stencil: Option<RefCell<Buffer2D<u8>>>,
     pub depth: Option<RefCell<ZBuffer>>,
@@ -24,7 +24,7 @@ pub struct FramebufferAttachments {
     pub forward_or_deferred_hdr: Option<RefCell<Buffer2D<Vec3>>>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Framebuffer {
     pub width: u32,
     pub height: u32,

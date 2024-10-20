@@ -4,6 +4,7 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
+#[derive(Debug, Clone)]
 pub struct ShaderContext {
     pub world_transform: Mat4,
     pub view_position: Vec4,

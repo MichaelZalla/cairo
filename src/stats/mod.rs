@@ -59,7 +59,7 @@ pub trait FromIndex {
     fn from_index(index: usize) -> Self;
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct CycleCounters([CycleCounter; 32]);
 
 impl CycleCounters {

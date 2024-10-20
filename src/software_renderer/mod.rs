@@ -48,6 +48,7 @@ mod profile;
 
 pub mod zbuffer;
 
+#[derive(Debug, Clone)]
 pub struct SoftwareRenderer {
     pub options: RenderOptions,
     pub cycle_counters: CycleCounters,

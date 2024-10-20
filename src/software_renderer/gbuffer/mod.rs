@@ -1,5 +1,6 @@
 use crate::{buffer::Buffer2D, shader::geometry::sample::GeometrySample};
 
+#[derive(Default, Debug, Clone)]
 pub struct GBuffer(pub Buffer2D<GeometrySample>);
 
 impl GBuffer {
