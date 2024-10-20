@@ -20,6 +20,7 @@ pub static DirectionalShadowMapGeometryShader: GeometryShaderFn =
             stencil: true,
             position_world_space: interpolant.position_world_space,
             depth: interpolant.depth,
+            alpha: 1.0,
             ..Default::default()
         })
     };

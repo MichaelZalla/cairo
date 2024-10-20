@@ -165,6 +165,10 @@ impl Vec4 {
         }
     }
 
+    pub fn max(&self) -> f32 {
+        self.x.max(self.y.max(self.z))
+    }
+
     pub fn abs(self) -> Self {
         Vec4 {
             x: self.x.abs(),

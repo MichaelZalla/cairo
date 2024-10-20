@@ -27,11 +27,7 @@ pub static PointShadowMapVertexShader: VertexShaderFn =
 
         let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
 
-        out.position_world_space = Vec3 {
-            x: world_pos.x,
-            y: world_pos.y,
-            z: world_pos.z,
-        };
+        out.position_world_space = world_pos.to_vec3();
 
         out
     };
@@ -45,6 +41,7 @@ pub static PointShadowMapGeometryShader: GeometryShaderFn = |_context: &ShaderCo
         stencil: true,
         position_world_space: interpolant.position_world_space,
         depth: interpolant.depth,
+        alpha: 1.0,
         ..Default::default()
     })
 };

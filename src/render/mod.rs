@@ -25,6 +25,8 @@ pub mod viewport;
 pub trait Renderer {
     fn get_options(&self) -> &RenderOptions;
 
+    fn get_options_mut(&mut self) -> &mut RenderOptions;
+
     fn begin_frame(&mut self);
 
     fn end_frame(&mut self);

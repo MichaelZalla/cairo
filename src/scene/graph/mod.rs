@@ -11,7 +11,7 @@ use crate::{
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::{options::RenderPassFlag, Renderer},
+    render::{culling::FaceCullingReject, options::RenderPassFlag, Renderer},
     resource::handle::Handle,
     serde::PostDeserialize,
     shader::context::ShaderContext,
@@ -130,7 +130,8 @@ impl SceneGraph {
 
         // 1. Collect handles to active camera, clipping camera, active skybox, etc.
         // 2. Render shadow maps for directional light and point lights.
-        // 3. Render entities into the depth and deferred HDR buffers.
+        // 3. Render opaque entities into the depth and deferred HDR buffers.
+        // 4. Render semi-transparent entities into the accumulation and revealage buffers.
 
         let active_camera_handle_rc = RefCell::new(options.camera);
         let clipping_camera_handle_rc = RefCell::new(options.camera);
@@ -464,9 +465,9 @@ impl SceneGraph {
             }
         };
 
-        let mut render_entities = |_current_depth: usize,
-                                   current_world_transform: Mat4,
-                                   node: &SceneNode|
+        let mut render_opaque_entities = |_current_depth: usize,
+                                          current_world_transform: Mat4,
+                                          node: &SceneNode|
          -> Result<(), String> {
             let mut renderer = renderer_rc.borrow_mut();
 
@@ -480,6 +481,111 @@ impl SceneGraph {
                         match entity_arena.get(handle) {
                             Ok(entry) => {
                                 let entity = &entry.item;
+
+                                if let Some(material_handle) = entity.material.as_ref() {
+                                    let material_arena = resources.material.borrow();
+
+                                    if let Ok(entry) = material_arena.get(material_handle) {
+                                        let material = &entry.item;
+
+                                        if material.transparency > 0.0 {
+                                            // Object is semi-transparent.
+
+                                            return Ok(());
+                                        }
+                                    }
+                                }
+
+                                let mesh_arena = resources.mesh.borrow();
+
+                                match mesh_arena.get(&entity.mesh) {
+                                    Ok(entry) => {
+                                        let entity_mesh = &entry.item;
+
+                                        let clipping_camera_handle =
+                                            clipping_camera_handle_rc.borrow();
+
+                                        let clipping_camera_frustum = match clipping_camera_handle
+                                            .as_ref()
+                                        {
+                                            Some(camera_handle) => {
+                                                let camera_arena = resources.camera.borrow();
+
+                                                match camera_arena.get(camera_handle) {
+                                                    Ok(entry) => Some(*entry.item.get_frustum()),
+                                                    Err(err) => panic!(
+                                                        "Failed to get Camera from Arena with Handle {:?}: {}",
+                                                        entity.mesh, err
+                                                    ),
+                                                }
+                                            }
+                                            None => None,
+                                        };
+
+                                        let _was_drawn = renderer.render_entity(
+                                            &current_world_transform,
+                                            &clipping_camera_frustum,
+                                            entity_mesh,
+                                            &entity.material,
+                                        );
+
+                                        Ok(())
+                                    }
+                                    Err(err) => panic!(
+                                        "Failed to get Mesh from Arena with Handle {:?}: {}",
+                                        entity.mesh, err
+                                    ),
+                                }
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Entity from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered a `Entity` node with no handle!")
+                    }
+                },
+                _ => Ok(()),
+            }
+        };
+
+        let mut render_semi_transparent_entities = |_current_depth: usize,
+                                                    current_world_transform: Mat4,
+                                                    node: &SceneNode|
+         -> Result<(), String> {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            let (node_type, handle) = (node.get_type(), node.get_handle());
+
+            match node_type {
+                SceneNodeType::Entity => match handle {
+                    Some(handle) => {
+                        let entity_arena = resources.entity.borrow();
+
+                        match entity_arena.get(handle) {
+                            Ok(entry) => {
+                                let entity = &entry.item;
+
+                                match entity.material.as_ref() {
+                                    Some(material_handle) => {
+                                        let material_arena = resources.material.borrow();
+
+                                        if let Ok(entry) = material_arena.get(material_handle) {
+                                            let material = &entry.item;
+
+                                            if material.transparency == 0.0 {
+                                                // Object is opaque.
+
+                                                return Ok(());
+                                            }
+                                        }
+                                    }
+                                    None => {
+                                        return Ok(());
+                                    }
+                                }
 
                                 let mesh_arena = resources.mesh.borrow();
 
@@ -554,13 +660,43 @@ impl SceneGraph {
             )?;
         }
 
-        // Render entities.
+        // Render opaque entities.
 
         self.root.visit(
             SceneNodeGlobalTraversalMethod::DepthFirst,
             Some(SceneNodeLocalTraversalMethod::PostOrder),
-            &mut render_entities,
+            &mut render_opaque_entities,
         )?;
+
+        // Render semi-transparent entities.
+
+        let original_face_culling_reject;
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            let options = renderer.get_options_mut();
+
+            original_face_culling_reject = options.rasterizer_options.face_culling_strategy.reject;
+
+            options.rasterizer_options.face_culling_strategy.reject = FaceCullingReject::None;
+        }
+
+        self.root.visit(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            Some(SceneNodeLocalTraversalMethod::PostOrder),
+            &mut render_semi_transparent_entities,
+        )?;
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer
+                .get_options_mut()
+                .rasterizer_options
+                .face_culling_strategy
+                .reject = original_face_culling_reject;
+        }
 
         if !options.is_shadow_map_render {
             // Draw lights.
