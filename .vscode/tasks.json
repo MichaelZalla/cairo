@@ -399,6 +399,22 @@
     },
     {
       "type": "shell",
+      "problemMatcher": ["$rustc"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo run --example directional-shadows",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "directional-shadows",
+      ]
+    },
+    {
+      "type": "shell",
       "problemMatcher": [
         "$rustc"
       ],

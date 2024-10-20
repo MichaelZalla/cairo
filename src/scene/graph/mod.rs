@@ -39,6 +39,7 @@ type UpdateSceneGraphNodeCallback = dyn Fn(
 pub struct SceneGraphRenderOptions {
     pub draw_lights: bool,
     pub draw_cameras: bool,
+    pub draw_shadow_map_cameras: bool,
     pub camera: Option<Handle>,
 }
 
@@ -249,6 +250,49 @@ impl SceneGraph {
                         panic!("Encountered a `Entity` node with no resource handle!")
                     }
                 },
+                SceneNodeType::DirectionalLight => {
+                    if let Some(options) = &options {
+                        if !options.draw_lights {
+                            return Ok(());
+                        }
+
+                        if options.draw_shadow_map_cameras {
+                            match handle {
+                                Some(directional_light_handle) => {
+                                    let directional_light_arena =
+                                        resources.directional_light.borrow();
+
+                                    match directional_light_arena.get(directional_light_handle) {
+                                        Ok(entry) => {
+                                            let directional_light = &entry.item;
+
+                                            if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
+                                                for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
+                                                    let frustum_color = [
+                                                        color::RED,
+                                                        color::GREEN,
+                                                        color::BLUE,
+                                                    ][index];
+        
+                                                    renderer.render_camera(camera, Some(&frustum_color));
+                                                }
+                                            }
+                                        }
+                                        Err(err) => panic!(
+                                            "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
+                                            handle, err
+                                        ),
+                                    }
+                                }
+                                None => {
+                                    panic!("Encountered a `DirectionalLight` node with no resource handle!")
+                                }
+                            }
+                        }
+                    }
+
+                    Ok(())
+                }
                 SceneNodeType::PointLight => match (&options, handle) {
                     (Some(options), Some(point_light_handle)) => {
                         if !options.draw_lights {

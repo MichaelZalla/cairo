@@ -227,6 +227,7 @@ fn main() -> Result<(), String> {
             Some(SceneGraphRenderOptions {
                 draw_lights: true,
                 draw_cameras: true,
+                draw_shadow_map_cameras: false,
                 camera: None,
             }),
         ) {
