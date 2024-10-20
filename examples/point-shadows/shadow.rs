@@ -10,14 +10,16 @@ use cairo::{
         context::SceneContext,
         light::point_light::{
             PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
+            POINT_LIGHT_SHADOW_MAP_SIZE,
         },
     },
     shader::context::ShaderContext,
     texture::{
         cubemap::{CubeMap, Side, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
         map::{TextureMap, TextureMapWrapping},
+        sample::sample_nearest_f32,
     },
-    vec::vec3::Vec3,
+    vec::{vec2::Vec2, vec3::Vec3},
 };
 
 pub fn blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target: &mut Buffer2D) {
@@ -43,12 +45,22 @@ fn blit_shadow_map_side(
     y_offset: u32,
     target: &mut Buffer2D,
 ) {
+    static UV_STEP: f32 = 1.0 / POINT_LIGHT_SHADOW_MAP_SIZE as f32;
+
     for y in 0..side.height {
         for x in 0..side.width {
-            let depth_sample = side.levels[0].0.get(x, y) * 255.0;
+            let uv = Vec2 {
+                x: x as f32 * UV_STEP,
+                y: y as f32 * UV_STEP,
+                z: 0.0,
+            };
+
+            let depth_sample = sample_nearest_f32(uv, side);
+
+            let depth_sample_u8 = depth_sample * 255.0;
 
             let color = if depth_sample > 0.0001 {
-                Color::from_vec3(Vec3::ones() * depth_sample)
+                Color::from_vec3(Vec3::ones() * depth_sample_u8)
             } else {
                 CUBEMAP_SIDE_COLORS[side_index]
             };
