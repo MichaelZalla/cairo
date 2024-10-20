@@ -39,6 +39,8 @@ use shadow::{blit_shadow_map_horizontal_cross, update_point_light_shadow_maps};
 pub mod scene;
 pub mod shadow;
 
+static DRAW_POINT_SHADOW_MAP_THUMBNAILS: bool = false;
+
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/point-shadows".to_string(),
@@ -272,30 +274,34 @@ fn main() -> Result<(), String> {
                     Some(color_buffer_lock) => {
                         let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                        let point_light_arena = resources.point_light.borrow();
+                        if DRAW_POINT_SHADOW_MAP_THUMBNAILS {
+                            let point_light_arena = resources.point_light.borrow();
 
-                        for (index, entry) in point_light_arena.entries.iter().flatten().enumerate()
-                        {
-                            if index != 0 {
-                                continue;
-                            }
-
-                            let light = &entry.item;
-
-                            match &light.shadow_map {
-                                Some(shadow_map_handle) => {
-                                    let cubemap_f32_arena = resources.cubemap_f32.borrow();
-
-                                    if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle) {
-                                        let shadow_map = &entry.item;
-
-                                        blit_shadow_map_horizontal_cross(
-                                            shadow_map,
-                                            &mut color_buffer,
-                                        )
-                                    }
+                            for (index, entry) in
+                                point_light_arena.entries.iter().flatten().enumerate()
+                            {
+                                if index != 0 {
+                                    continue;
                                 }
-                                None => (),
+
+                                let light = &entry.item;
+
+                                match &light.shadow_map {
+                                    Some(shadow_map_handle) => {
+                                        let cubemap_f32_arena = resources.cubemap_f32.borrow();
+
+                                        if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle)
+                                        {
+                                            let shadow_map = &entry.item;
+
+                                            blit_shadow_map_horizontal_cross(
+                                                shadow_map,
+                                                &mut color_buffer,
+                                            )
+                                        }
+                                    }
+                                    None => (),
+                                }
                             }
                         }
 
