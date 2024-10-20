@@ -23,6 +23,7 @@ pub struct ShaderContext {
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
     pub point_lights: Vec<Handle>,
+    pub point_light_projection_z_far: Option<f32>,
     pub spot_lights: Vec<Handle>,
 }
 
@@ -46,6 +47,7 @@ impl Default for ShaderContext {
             ambient_light: None,
             directional_light: None,
             point_lights: vec![],
+            point_light_projection_z_far: None,
             spot_lights: vec![],
         }
     }
@@ -82,6 +84,7 @@ impl ShaderContext {
             ambient_light,
             directional_light,
             point_lights,
+            point_light_projection_z_far: None,
             spot_lights,
         }
     }

@@ -98,7 +98,7 @@ fn main() -> Result<(), String> {
         for entry in point_light_arena.entries.iter_mut().flatten() {
             let point_light = &mut entry.item;
 
-            point_light.enable_shadow_maps(256, scene_context.resources.clone());
+            point_light.enable_shadow_maps(256, 100.0, scene_context.resources.clone());
         }
     }
 
