@@ -34,7 +34,7 @@ use cairo::{
 };
 
 use scene::make_scene;
-use shadow::{blit_shadow_map_horizontal_cross, update_point_light_shadow_maps};
+use shadow::{debug_blit_shadow_map_horizontal_cross, update_point_light_shadow_maps};
 
 pub mod scene;
 pub mod shadow;
@@ -294,7 +294,7 @@ fn main() -> Result<(), String> {
                                         {
                                             let shadow_map = &entry.item;
 
-                                            blit_shadow_map_horizontal_cross(
+                                            debug_blit_shadow_map_horizontal_cross(
                                                 shadow_map,
                                                 &mut color_buffer,
                                             )
