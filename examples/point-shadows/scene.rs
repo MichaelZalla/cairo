@@ -66,6 +66,47 @@ pub fn make_scene(
         }
     }
 
+    // Add lights to our scene.
+
+    for (index, color) in [
+        color::WHITE, /*, color::RED, color::GREEN, color::BLUE*/
+    ]
+    .iter()
+    .enumerate()
+    {
+        let point_light = {
+            let mut light = PointLight::new();
+
+            light.position.y = 8.0 + index as f32 * 2.0;
+
+            light.intensities = (color.to_vec3() / 255.0) * 10.0;
+
+            let shadow_map_handle = cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(
+                &point_shadow_map_framebuffer_rc.borrow(),
+            ));
+
+            light.shadow_map = Some(shadow_map_handle);
+
+            light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
+
+            light
+        };
+
+        let point_light_node = {
+            let light = point_light.clone();
+
+            let point_light_handle = point_light_arena.insert(light);
+
+            SceneNode::new(
+                SceneNodeType::PointLight,
+                Default::default(),
+                Some(point_light_handle),
+            )
+        };
+
+        scene.root.add_child(point_light_node).unwrap();
+    }
+
     // Add a ground plane to our scene.
 
     let mut plane_entity_node = {
@@ -153,47 +194,6 @@ pub fn make_scene(
     // Add the ground plane to our scene.
 
     scene.root.add_child(plane_entity_node).unwrap();
-
-    // Add a point light to our scene.
-
-    for (index, color) in [
-        color::WHITE, /*, color::RED, color::GREEN, color::BLUE*/
-    ]
-    .iter()
-    .enumerate()
-    {
-        let point_light = {
-            let mut light = PointLight::new();
-
-            light.position.y = 8.0 + index as f32 * 2.0;
-
-            light.intensities = (color.to_vec3() / 255.0) * 10.0;
-
-            let shadow_map_handle = cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(
-                &point_shadow_map_framebuffer_rc.borrow(),
-            ));
-
-            light.shadow_map = Some(shadow_map_handle);
-
-            light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
-
-            light
-        };
-
-        let point_light_node = {
-            let light = point_light.clone();
-
-            let point_light_handle = point_light_arena.insert(light);
-
-            SceneNode::new(
-                SceneNodeType::PointLight,
-                Default::default(),
-                Some(point_light_handle),
-            )
-        };
-
-        scene.root.add_child(point_light_node).unwrap();
-    }
 
     Ok((scene, shader_context))
 }
