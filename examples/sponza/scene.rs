@@ -29,6 +29,7 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn make_sponza_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
@@ -110,14 +111,6 @@ pub fn make_sponza_scene(
     let point_light_node = {
         let mut light = PointLight::new();
 
-        let mut point_light_node_transform = Transform3D::default();
-
-        point_light_node_transform.set_translation(Vec3 {
-            x: 300.0,
-            y: 300.0,
-            z: 0.0,
-        });
-
         light.intensities = Color::rgb(255, 205, 185).to_vec3() / 255.0 * 25.0;
 
         light.attenuation = LightAttenuation::new(1.0, 0.007 / 2.0, 0.0002 / 2.0);
@@ -126,9 +119,17 @@ pub fn make_sponza_scene(
 
         let point_light_handle = point_light_arena.insert(light);
 
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 300.0,
+            y: 300.0,
+            z: 0.0,
+        });
+
         SceneNode::new(
             SceneNodeType::PointLight,
-            point_light_node_transform,
+            transform,
             Some(point_light_handle),
         )
     };
@@ -139,14 +140,6 @@ pub fn make_sponza_scene(
 
     let spot_light_node = {
         let mut light = SpotLight::new();
-
-        let mut point_light_node_transform = Transform3D::default();
-
-        point_light_node_transform.set_translation(Vec3 {
-            x: 300.0,
-            y: 900.0,
-            z: 0.0,
-        });
 
         light.look_vector.set_target_position(
             light.look_vector.get_position()
@@ -165,11 +158,15 @@ pub fn make_sponza_scene(
 
         let light_handle = spot_light_arena.insert(light);
 
-        SceneNode::new(
-            SceneNodeType::SpotLight,
-            point_light_node_transform,
-            Some(light_handle),
-        )
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 300.0,
+            y: 900.0,
+            z: 0.0,
+        });
+
+        SceneNode::new(SceneNodeType::SpotLight, transform, Some(light_handle))
     };
 
     scene.root.add_child(spot_light_node)?;

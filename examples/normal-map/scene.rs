@@ -17,10 +17,12 @@ use cairo::{
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat},
+    transform::Transform3D,
     vec::vec3::Vec3,
 };
 
-pub(crate) fn make_scene(
+#[allow(clippy::too_many_arguments)]
+pub fn make_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -86,18 +88,23 @@ pub(crate) fn make_scene(
     let point_light_node = {
         let mut light = PointLight::new();
 
-        light.position.y = 0.0;
-        light.position.z = -4.0;
-
         light.intensities = Vec3::ones() * 10.0;
 
         light.attenuation = LightAttenuation::new(1.0, 0.35, 0.44);
 
         let point_light_handle = point_light_arena.insert(light);
 
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -4.0,
+        });
+
         SceneNode::new(
             SceneNodeType::PointLight,
-            Default::default(),
+            transform,
             Some(point_light_handle),
         )
     };

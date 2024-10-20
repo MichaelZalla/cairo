@@ -21,6 +21,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn make_sphere_grid_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
@@ -59,21 +60,23 @@ pub fn make_sphere_grid_scene(
     for grid_index_x in 0..4 {
         let mut light = PointLight::new();
 
-        light.position = Vec3 {
-            x: -8.0 + 4.0 * grid_index_x as f32,
-            y: 4.0,
-            z: -3.0,
-        };
-
         light.intensities = Vec3::ones() * 1.0;
 
         light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
 
         let point_light_handle = point_light_arena.insert(light);
 
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: -8.0 + 4.0 * grid_index_x as f32,
+            y: 4.0,
+            z: -3.0,
+        });
+
         let point_light_node = SceneNode::new(
             SceneNodeType::PointLight,
-            Default::default(),
+            transform,
             Some(point_light_handle),
         );
 

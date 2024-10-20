@@ -15,9 +15,11 @@ use cairo::{
         node::{SceneNode, SceneNodeType},
     },
     shader::context::ShaderContext,
+    transform::Transform3D,
     vec::vec3::Vec3,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn make_spinning_cube_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
@@ -43,43 +45,47 @@ pub fn make_spinning_cube_scene(
 
     // Add a point light to the scene.
 
-    let mut point_light = PointLight::new();
+    let point_light_node = {
+        let mut point_light = PointLight::new();
 
-    point_light.intensities = Vec3::ones() * 0.4;
+        point_light.intensities = Vec3::ones() * 0.4;
 
-    let point_light_handle = point_light_arena.insert(point_light);
+        let point_light_handle = point_light_arena.insert(point_light);
 
-    let mut point_light_node = SceneNode::new(
-        SceneNodeType::PointLight,
-        Default::default(),
-        Some(point_light_handle),
-    );
+        let mut transform = Transform3D::default();
 
-    point_light_node.get_transform_mut().set_translation(Vec3 {
-        x: 0.0,
-        y: 5.0,
-        z: 0.0,
-    });
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 5.0,
+            z: 0.0,
+        });
+
+        SceneNode::new(
+            SceneNodeType::PointLight,
+            transform,
+            Some(point_light_handle),
+        )
+    };
 
     scene.root.add_child(point_light_node)?;
 
     // Add a spot light to the scene.
 
-    let spot_light = SpotLight::new();
+    let spot_light_node = {
+        let spot_light = SpotLight::new();
 
-    let spot_light_handle = spot_light_arena.insert(spot_light);
+        let spot_light_handle = spot_light_arena.insert(spot_light);
 
-    let mut spot_light_node = SceneNode::new(
-        SceneNodeType::SpotLight,
-        Default::default(),
-        Some(spot_light_handle),
-    );
+        let mut transform = Transform3D::default();
 
-    spot_light_node.get_transform_mut().set_translation(Vec3 {
-        x: 0.0,
-        y: 5.0,
-        z: 0.0,
-    });
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 5.0,
+            z: 0.0,
+        });
+
+        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
+    };
 
     scene.root.add_child(spot_light_node)?;
 

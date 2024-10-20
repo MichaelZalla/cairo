@@ -1,6 +1,6 @@
 #![allow(clippy::result_unit_err)]
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     buffer::framebuffer::Framebuffer,
@@ -22,9 +22,11 @@ use cairo::{
     },
     shader::context::ShaderContext,
     texture::cubemap::CubeMap,
+    transform::Transform3D,
     vec::vec3::{self, Vec3},
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn make_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
@@ -66,19 +68,12 @@ pub fn make_scene(
         }
     }
 
-    // Add lights to our scene.
+    // Add point lights to our scene.
 
-    for (index, color) in [
-        color::WHITE, /*, color::RED, color::GREEN, color::BLUE*/
-    ]
-    .iter()
-    .enumerate()
-    {
+    for (index, color) in [color::RED, color::GREEN].iter().enumerate() {
         let point_light_node = {
             let point_light = {
                 let mut light = PointLight::new();
-
-                light.position.y = 8.0 + index as f32 * 2.0;
 
                 light.intensities = (color.to_vec3() / 255.0) * 10.0;
 
@@ -95,9 +90,21 @@ pub fn make_scene(
 
             let point_light_handle = point_light_arena.insert(point_light);
 
+            let mut transform = Transform3D::default();
+
+            let y = 12.0 + index as f32 * 2.0;
+
+            let factor = (y - 5.0) / 2.0;
+
+            transform.set_translation(Vec3 {
+                x: 10.0 * (PI / 2.0 * factor).sin(),
+                y,
+                z: 10.0 * (PI / 2.0 * factor).cos(),
+            });
+
             SceneNode::new(
                 SceneNodeType::PointLight,
-                Default::default(),
+                transform,
                 Some(point_light_handle),
             )
         };

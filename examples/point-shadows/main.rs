@@ -29,6 +29,7 @@ use cairo::{
         },
     },
     software_renderer::SoftwareRenderer,
+    vec::vec3::Vec3,
 };
 
 use crate::{scene::make_scene, shadow::update_point_light_shadow_maps};
@@ -162,7 +163,7 @@ fn main() -> Result<(), String> {
 
     let update_node = |_current_world_transform: &Mat4,
                        node: &mut SceneNode,
-                       resources: &SceneResources,
+                       _resources: &SceneResources,
                        app: &App,
                        _mouse_state: &MouseState,
                        _keyboard_state: &KeyboardState,
@@ -173,16 +174,19 @@ fn main() -> Result<(), String> {
 
         match node.get_type() {
             SceneNodeType::PointLight => {
-                let mut point_light_arena = resources.point_light.borrow_mut();
+                let transform = node.get_transform_mut();
 
-                if let Ok(entry) = point_light_arena.get_mut(&node.get_handle().unwrap()) {
-                    let point_light = &mut entry.item;
+                let position = transform.translation();
 
-                    let index = (point_light.position.y - 5.0) / 2.0;
+                let y = position.y;
 
-                    point_light.position.x = 10.0 * (uptime + PI / 2.0 * index).sin();
-                    point_light.position.z = 10.0 * (uptime + PI / 2.0 * index).cos();
-                }
+                let factor = (y - 5.0) / 2.0;
+
+                transform.set_translation(Vec3 {
+                    x: 10.0 * (uptime + PI / 2.0 * factor).sin(),
+                    y,
+                    z: 10.0 * (uptime + PI / 2.0 * factor).cos(),
+                });
 
                 Ok(false)
             }

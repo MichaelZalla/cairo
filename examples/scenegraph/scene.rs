@@ -28,7 +28,8 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-pub(crate) fn make_scene(
+#[allow(clippy::too_many_arguments)]
+pub fn make_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -257,33 +258,37 @@ pub(crate) fn make_scene(
 
     // Add a point light to our scene.
 
-    let point_light = PointLight::new();
+    let point_light_node = {
+        let point_light = PointLight::new();
 
-    let point_light_handle = point_light_arena.insert(point_light);
+        let point_light_handle = point_light_arena.insert(point_light);
 
-    let point_light_node = SceneNode::new(
-        SceneNodeType::PointLight,
-        Default::default(),
-        Some(point_light_handle),
-    );
+        SceneNode::new(
+            SceneNodeType::PointLight,
+            Default::default(),
+            Some(point_light_handle),
+        )
+    };
 
     plane_entity_node.add_child(point_light_node)?;
 
     // Add a spot light to our scene.
 
-    let mut spot_light = SpotLight::new();
+    let mut spot_light_node = {
+        let mut spot_light = SpotLight::new();
 
-    spot_light
-        .look_vector
-        .set_target_position(Default::default());
+        spot_light
+            .look_vector
+            .set_target_position(Default::default());
 
-    let spot_light_handle = spot_light_arena.insert(spot_light);
+        let spot_light_handle = spot_light_arena.insert(spot_light);
 
-    let mut spot_light_node = SceneNode::new(
-        SceneNodeType::SpotLight,
-        Default::default(),
-        Some(spot_light_handle),
-    );
+        SceneNode::new(
+            SceneNodeType::SpotLight,
+            Default::default(),
+            Some(spot_light_handle),
+        )
+    };
 
     // Add a spot light as a child of the green cube.
 

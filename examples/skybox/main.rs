@@ -19,14 +19,12 @@ use cairo::{
     },
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::vec3::{self, Vec3},
+    vec::vec3,
 };
 
 use scene::make_scene;
 
 mod scene;
-
-static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -162,34 +160,6 @@ fn main() -> Result<(), String> {
                 }
                 None => {
                     panic!("Encountered a `Entity` node with no resource handle!")
-                }
-            },
-            SceneNodeType::PointLight => match handle {
-                Some(handle) => {
-                    let mut point_light_arena = resources.point_light.borrow_mut();
-
-                    match point_light_arena.get_mut(handle) {
-                        Ok(entry) => {
-                            let point_light = &mut entry.item;
-
-                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
-
-                            point_light.intensities = Vec3 {
-                                x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
-                                y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
-                                z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
-                            } * MAX_POINT_LIGHT_INTENSITY;
-
-                            Ok(false)
-                        }
-                        Err(err) => panic!(
-                            "Failed to get PointLight from Arena with Handle {:?}: {}",
-                            handle, err
-                        ),
-                    }
-                }
-                None => {
-                    panic!("Encountered a `PointLight` node with no resource handle!")
                 }
             },
             _ => Ok(false),

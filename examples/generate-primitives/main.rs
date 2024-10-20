@@ -298,7 +298,9 @@ fn main() -> Result<(), String> {
 
                             let offset = point_lights_visited % 2 == 0;
 
-                            light.position = Vec3 {
+                            let transform = node.get_transform_mut();
+
+                            transform.set_translation(Vec3 {
                                 x: ORBIT_RADIUS
                                     * ((uptime * LIGHT_SPEED_FACTOR) + light_phase_shift).sin()
                                     * if offset { 1.5 } else { 1.0 },
@@ -306,7 +308,7 @@ fn main() -> Result<(), String> {
                                 z: ORBIT_RADIUS
                                     * ((uptime * LIGHT_SPEED_FACTOR) + light_phase_shift).cos()
                                     * if offset { 1.5 } else { 1.0 },
-                            };
+                            });
 
                             // *point_lights_visited += 1;
 

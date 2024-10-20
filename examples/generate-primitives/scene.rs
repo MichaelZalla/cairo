@@ -17,6 +17,7 @@ use cairo::{
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
+    transform::Transform3D,
     vec::vec3::Vec3,
 };
 
@@ -217,21 +218,23 @@ pub fn make_primitives_scene(
 
     for x in 0..(LIGHT_GRID_SUBDIVISIONS + 1) {
         for z in 0..(LIGHT_GRID_SUBDIVISIONS + 1) {
-            let mut light = PointLight::new();
+            let light = PointLight::new();
 
-            light.position = Vec3 {
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(Vec3 {
                 x: -(LIGHT_GRID_SIZE / 2.0)
                     + (x as f32 / LIGHT_GRID_SUBDIVISIONS as f32) * LIGHT_GRID_SIZE,
                 y: 1.0,
                 z: -(LIGHT_GRID_SIZE / 2.0)
                     + (z as f32 / LIGHT_GRID_SUBDIVISIONS as f32) * LIGHT_GRID_SIZE,
-            };
+            });
 
             let point_light_handle = point_light_arena.insert(light);
 
             let point_light_node = SceneNode::new(
                 SceneNodeType::PointLight,
-                Default::default(),
+                transform,
                 Some(point_light_handle),
             );
 

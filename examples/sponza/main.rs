@@ -223,62 +223,34 @@ fn main() -> Result<(), String> {
                     panic!("Encountered a `DirectionalLight` node with no resource handle!")
                 }
             },
-            SceneNodeType::PointLight => match handle {
-                Some(handle) => {
-                    let mut arena = resources.point_light.borrow_mut();
+            SceneNodeType::PointLight => {
+                let transform = node.get_transform_mut();
 
-                    match arena.get_mut(handle) {
-                        Ok(entry) => {
-                            let light = &mut entry.item;
+                let position = SPONZA_CENTER
+                    + Vec3 {
+                        x: 1000.0 * uptime.sin(),
+                        y: 300.0,
+                        z: 0.0,
+                    };
 
-                            light.position = SPONZA_CENTER
-                                + Vec3 {
-                                    x: 1000.0 * uptime.sin(),
-                                    y: 300.0,
-                                    z: 0.0,
-                                };
+                transform.set_translation(position);
 
-                            Ok(false)
-                        }
-                        Err(err) => panic!(
-                            "Failed to get PointLight from Arena with Handle {:?}: {}",
-                            handle, err
-                        ),
-                    }
-                }
-                None => {
-                    panic!("Encountered a `PointLight` node with no resource handle!")
-                }
-            },
-            SceneNodeType::SpotLight => match handle {
-                Some(handle) => {
-                    let mut arena = resources.spot_light.borrow_mut();
+                Ok(false)
+            }
+            SceneNodeType::SpotLight => {
+                let transform = node.get_transform_mut();
 
-                    match arena.get_mut(handle) {
-                        Ok(entry) => {
-                            let light = &mut entry.item;
+                let position = SPONZA_CENTER
+                    + Vec3 {
+                        x: -1000.0 * uptime.sin(),
+                        y: 500.0,
+                        z: 0.0,
+                    };
 
-                            light.look_vector.set_position(
-                                SPONZA_CENTER
-                                    + Vec3 {
-                                        x: -1000.0 * uptime.sin(),
-                                        y: 500.0,
-                                        z: 0.0,
-                                    },
-                            );
+                transform.set_translation(position);
 
-                            Ok(false)
-                        }
-                        Err(err) => panic!(
-                            "Failed to get SpotLight from Arena with Handle {:?}: {}",
-                            handle, err
-                        ),
-                    }
-                }
-                None => {
-                    panic!("Encountered a `SpotLight` node with no resource handle!")
-                }
-            },
+                Ok(false)
+            }
             _ => Ok(false),
         }
     };

@@ -20,6 +20,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn make_scene(
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
