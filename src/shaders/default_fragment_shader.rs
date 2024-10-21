@@ -98,17 +98,28 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
         // Calculate directional light contribution
 
         let directional_light_contribution = match &context.directional_light {
-            Some(handle) => match resources.directional_light.borrow().get(handle) {
-                Ok(entry) => {
-                    let light = &entry.item;
+            Some(handle) => {
+                let texture_f32_arena = resources.texture_f32.borrow();
+                let directional_light_arena = resources.directional_light.borrow();
 
-                    light.contribute_pbr(sample, &f0, context)
+                match directional_light_arena.get(handle) {
+                    Ok(entry) => {
+                        let light = &entry.item;
+
+                        light.contribute_pbr(
+                            sample,
+                            &f0,
+                            &texture_f32_arena,
+                            context,
+                            light.shadow_maps.as_ref(),
+                        )
+                    }
+                    Err(err) => panic!(
+                        "Failed to get DirectionalLight from Arena: {:?}: {}",
+                        handle, err
+                    ),
                 }
-                Err(err) => panic!(
-                    "Failed to get DirectionalLight from Arena: {:?}: {}",
-                    handle, err
-                ),
-            },
+            }
             None => Default::default(),
         };
 

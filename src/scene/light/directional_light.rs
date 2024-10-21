@@ -1,17 +1,32 @@
 use std::{
     f32::consts::PI,
     fmt::{self, Display},
+    rc::Rc,
 };
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    color,
+    buffer::Buffer2D,
     matrix::Mat4,
-    scene::camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
+    render::culling::FaceCullingReject,
+    resource::{arena::Arena, handle::Handle},
+    scene::{
+        camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
+        context::SceneContext,
+        resources::SceneResources,
+    },
     serde::PostDeserialize,
     shader::{context::ShaderContext, geometry::sample::GeometrySample},
-    texture::{map::TextureMap, sample::sample_nearest_f32},
+    shaders::{
+        directional_shadow_map_fragment_shader::DirectionalShadowMapFragmentShader,
+        directional_shadow_map_geometry_shader::DirectionalShadowMapGeometryShader,
+        directional_shadow_map_vertex_shader::DirectionalShadowMapVertexShader,
+    },
+    texture::{
+        map::{TextureMap, TextureMapWrapping},
+        sample::sample_nearest_f32,
+    },
     transform::quaternion::Quaternion,
     vec::{
         vec2::Vec2,
@@ -20,9 +35,10 @@ use crate::{
     },
 };
 
-use super::contribute_pbr;
-
-pub const SHADOW_MAP_CAMERA_NEAR: f32 = 0.05;
+use super::{
+    contribute_pbr,
+    shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
+};
 
 pub const SHADOW_MAP_CAMERA_COUNT: usize = 3;
 
@@ -31,7 +47,12 @@ pub struct DirectionalLight {
     pub intensities: Vec3,
     rotation: Quaternion,
     direction: Vec4,
+    #[serde(skip)]
+    pub shadow_maps: Option<Vec<Handle>>,
+    #[serde(skip)]
     pub shadow_map_cameras: Option<Vec<(f32, Camera)>>,
+    #[serde(skip)]
+    pub shadow_map_rendering_context: Option<ShadowMapRenderingContext>,
 }
 
 impl Default for DirectionalLight {
@@ -40,7 +61,9 @@ impl Default for DirectionalLight {
             intensities: Vec3::ones() * 0.15,
             rotation: Default::default(),
             direction: vec4::FORWARD,
+            shadow_maps: None,
             shadow_map_cameras: None,
+            shadow_map_rendering_context: None,
         };
 
         result.set_direction(Quaternion::new(
@@ -77,6 +100,140 @@ impl DirectionalLight {
         let rotation_mat = *rotation.mat();
 
         self.direction = vec4::FORWARD * rotation_mat;
+    }
+
+    pub fn enable_shadow_maps(
+        &mut self,
+        shadow_map_size: u32,
+        projection_z_far: f32,
+        scene_resources: Rc<SceneResources>,
+    ) {
+        let shadow_map_rendering_context = ShadowMapRenderingContext::new(
+            shadow_map_size,
+            projection_z_far,
+            FaceCullingReject::None,
+            DirectionalShadowMapVertexShader,
+            DirectionalShadowMapGeometryShader,
+            DirectionalShadowMapFragmentShader,
+            scene_resources.clone(),
+        );
+
+        let (width, height) = (shadow_map_size, shadow_map_size);
+
+        let mut blank_texture = TextureMap::<f32>::from_buffer(
+            width,
+            height,
+            Buffer2D::<f32>::new(width, height, None),
+        );
+
+        blank_texture.sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
+
+        let mut handles: Vec<Handle> = vec![];
+
+        {
+            let mut texture_f32_arena = scene_resources.texture_f32.borrow_mut();
+
+            for _ in 0..SHADOW_MAP_CAMERA_COUNT {
+                handles.push(texture_f32_arena.insert(blank_texture.clone()))
+            }
+        }
+
+        self.shadow_maps.replace(handles);
+
+        self.shadow_map_rendering_context
+            .replace(shadow_map_rendering_context);
+    }
+
+    pub fn update_shadow_maps(&mut self, scene_context: &SceneContext) -> Result<(), String> {
+        match (
+            self.shadow_maps.as_ref(),
+            self.shadow_map_cameras.as_ref(),
+            self.shadow_map_rendering_context.as_ref(),
+        ) {
+            (Some(handles), Some(cameras), Some(rendering_context)) => {
+                let mut texture_f32_arena = scene_context.resources.texture_f32.borrow_mut();
+
+                for (depth_index, (_far_z, camera)) in cameras.iter().enumerate() {
+                    let (near, far) = (
+                        camera.get_projection_z_near(),
+                        camera.get_projection_z_far(),
+                    );
+
+                    let shadow_map_handle = &handles[depth_index];
+
+                    if let Ok(entry) = texture_f32_arena.get_mut(shadow_map_handle) {
+                        let map = &mut entry.item;
+
+                        // Do something here.
+                        {
+                            let framebuffer = rendering_context.framebuffer.borrow_mut();
+
+                            match framebuffer.attachments.depth.as_ref() {
+                                Some(attachment) => {
+                                    let mut zbuffer = attachment.borrow_mut();
+
+                                    zbuffer.set_projection_z_near(camera.get_projection_z_near());
+                                    zbuffer.set_projection_z_far(camera.get_projection_z_far());
+                                }
+                                None => panic!(),
+                            }
+                        }
+
+                        // Do something here.
+                        {
+                            let mut shader_context = rendering_context.shader_context.borrow_mut();
+
+                            shader_context.projection_z_near.replace(near);
+                            shader_context.projection_z_far.replace(far);
+
+                            shader_context
+                                .directional_light_view_projection_index
+                                .replace(depth_index);
+
+                            camera.update_shader_context(&mut shader_context);
+                        }
+
+                        //
+                        {
+                            let resources = &scene_context.resources;
+                            let scenes = scene_context.scenes.borrow();
+
+                            let scene = &scenes[0];
+
+                            match scene.render(resources, &rendering_context.renderer, None) {
+                                Ok(()) => {
+                                    // Blit our framebuffer's color attachment
+                                    // buffer to our cubemap face texture.
+
+                                    let framebuffer = rendering_context.framebuffer.borrow();
+
+                                    match &framebuffer.attachments.forward_or_deferred_hdr {
+                                    Some(hdr_attachment_rc) => {
+                                        let hdr_attachment = hdr_attachment_rc.borrow();
+
+                                        let buffer = &mut map.levels[0].0;
+
+                                        for y in 0..buffer.height {
+                                            for x in 0..buffer.width {
+                                                buffer.set(x, y, hdr_attachment.get(x, y).x);
+                                            }
+                                        }
+                                    }
+                                    None => return Err(
+                                        "Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()
+                                    ),
+                                }
+                                }
+                                Err(e) => panic!("{}", e),
+                            }
+                        }
+                    }
+                }
+            }
+            _ => panic!(),
+        }
+
+        Ok(())
     }
 
     pub fn update_shadow_map_cameras(&mut self, view_camera: &Camera) {
@@ -188,7 +345,9 @@ impl DirectionalLight {
         &self,
         sample: &GeometrySample,
         f0: &Vec3,
+        texture_f32_arena: &Arena<TextureMap<f32>>,
         context: &ShaderContext,
+        shadow_map_handles: Option<&Vec<Handle>>,
     ) -> Vec3 {
         let tangent_space_info = sample.tangent_space_info;
 
@@ -198,13 +357,10 @@ impl DirectionalLight {
 
         // Compute an enshadowing term for this fragment/sample.
 
-        let (shadow_map_index, in_shadow) = self.get_shadowing(sample, context);
-
-        let _shadow_map_index_color = match shadow_map_index {
-            0 => color::RED.to_vec3() / 255.0,
-            1 => color::GREEN.to_vec3() / 255.0,
-            2 => color::BLUE.to_vec3() / 255.0,
-            _ => panic!(),
+        let in_shadow = if let Some(maps) = shadow_map_handles {
+            self.get_shadowing(sample, texture_f32_arena, context, maps)
+        } else {
+            0.0
         };
 
         let intensity = self.intensities;
@@ -218,7 +374,6 @@ impl DirectionalLight {
         &self,
         sample: &GeometrySample,
         map: &TextureMap<f32>,
-        _far_z: f32,
         transform: &Mat4,
     ) -> f32 {
         let sample_position_light_view_projection_space =
@@ -273,12 +428,15 @@ impl DirectionalLight {
         shadow / 9.0
     }
 
-    fn get_shadowing(&self, sample: &GeometrySample, context: &ShaderContext) -> (usize, f32) {
-        match (
-            &context.directional_light_shadow_maps,
-            &context.directional_light_view_projections,
-        ) {
-            (Some(maps), Some(transforms)) => {
+    fn get_shadowing(
+        &self,
+        sample: &GeometrySample,
+        texture_f32_arena: &Arena<TextureMap<f32>>,
+        context: &ShaderContext,
+        shadow_map_handles: &[Handle],
+    ) -> f32 {
+        match &context.directional_light_view_projections {
+            Some(transforms) => {
                 let fragment_position_view_space =
                     Vec4::new(sample.world_pos, 1.0) * context.view_inverse_transform;
 
@@ -298,16 +456,19 @@ impl DirectionalLight {
                     index
                 };
 
-                let shadowing = self.get_shadowing_for_map(
-                    sample,
-                    &maps[index],
-                    transforms[index].0,
-                    &transforms[index].1,
-                );
+                let shadow_map_handle = &shadow_map_handles[index];
 
-                (index, shadowing)
+                if let Ok(entry) = texture_f32_arena.get(shadow_map_handle) {
+                    let map = &entry.item;
+
+                    let transform = &transforms[index].1;
+
+                    self.get_shadowing_for_map(sample, map, transform)
+                } else {
+                    0.0
+                }
             }
-            _ => (0, 0.0),
+            _ => 0.0,
         }
     }
 }
