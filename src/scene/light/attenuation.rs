@@ -1,10 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct LightAttenuation {
     constant: f32,
     linear: f32,
     quadratic: f32,
+}
+
+impl Default for LightAttenuation {
+    fn default() -> Self {
+        Self::new(1.0, 0.09, 0.032)
+    }
 }
 
 impl LightAttenuation {

@@ -53,9 +53,13 @@ impl Display for SpotLight {
 impl SpotLight {
     pub fn new() -> Self {
         let mut light = SpotLight {
-            intensities: vec3::ONES * 0.5,
+            intensities: vec3::ONES,
             look_vector: LookVector::new(
-                Default::default(),
+                Vec3 {
+                    x: 0.0,
+                    y: 10.0,
+                    z: 0.0,
+                },
                 Vec3 {
                     x: 0.001,
                     y: -1.0,

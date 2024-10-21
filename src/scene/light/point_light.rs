@@ -6,12 +6,12 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    buffer::Buffer2D, color, render::culling::FaceCullingReject, resource::handle::Handle, scene::{camera::Camera, context::SceneContext, resources::SceneResources}, serde::PostDeserialize, shader::geometry::sample::GeometrySample, shaders::shadow_shaders::point_shadows::{
+    buffer::Buffer2D, render::culling::FaceCullingReject, resource::handle::Handle, scene::{camera::Camera, context::SceneContext, resources::SceneResources}, serde::PostDeserialize, shader::geometry::sample::GeometrySample, shaders::shadow_shaders::point_shadows::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
     }, texture::{
         cubemap::{CubeMap, CUBE_MAP_SIDES},
         map::TextureMap,
-    }, vec::{vec3::Vec3, vec4::Vec4}
+    }, vec::{vec3::{self, Vec3}, vec4::Vec4}
 };
 
 use super::{
@@ -52,7 +52,7 @@ impl Display for PointLight {
 impl PointLight {
     pub fn new() -> Self {
         let mut light = PointLight {
-            intensities: color::WHITE.to_vec3() / 255.0,
+            intensities: vec3::ONES,
             position: Vec3 {
                 x: 0.0,
                 y: 10.0,
