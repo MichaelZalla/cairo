@@ -18,7 +18,10 @@ use crate::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera},
-        light::{point_light::PointLight, spot_light::SpotLight},
+        light::{
+            ambient_light::AmbientLight, directional_light::DirectionalLight,
+            point_light::PointLight, spot_light::SpotLight,
+        },
         resources::SceneResources,
     },
     shader::{
@@ -194,12 +197,20 @@ impl Renderer for SoftwareRenderer {
         self._render_camera(camera, color)
     }
 
-    fn render_point_light(&mut self, light: &PointLight) {
-        self._render_point_light(light)
+    fn render_ambient_light(&mut self, transform: &Mat4, light: &AmbientLight) {
+        self._render_ambient_light(transform, light)
     }
 
-    fn render_spot_light(&mut self, light: &SpotLight) {
-        self._render_spot_light(light)
+    fn render_directional_light(&mut self, transform: &Mat4, light: &DirectionalLight) {
+        self._render_directional_light(transform, light)
+    }
+
+    fn render_point_light(&mut self, transform: &Mat4, light: &PointLight) {
+        self._render_point_light(transform, light)
+    }
+
+    fn render_spot_light(&mut self, transform: &Mat4, light: &SpotLight) {
+        self._render_spot_light(transform, light)
     }
 
     fn render_entity_aabb(

@@ -16,6 +16,7 @@ use crate::{
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat},
+    transform::Transform3D,
     vec::vec3::{self, Vec3},
 };
 
@@ -53,16 +54,6 @@ pub fn make_empty_scene(
 
     let environment_handle = environment_arena.insert(Default::default());
 
-    let ambient_light_handle = {
-        let ambient_light = AmbientLight {
-            intensities: Vec3::ones() * 0.15,
-        };
-
-        ambient_light_arena.insert(ambient_light)
-    };
-
-    let directional_light_handle = directional_light_arena.insert(Default::default());
-
     let environment_node = {
         let mut environment_node = SceneNode::new(
             SceneNodeType::Environment,
@@ -70,17 +61,51 @@ pub fn make_empty_scene(
             Some(environment_handle),
         );
 
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::AmbientLight,
-            Default::default(),
-            Some(ambient_light_handle),
-        ))?;
+        let ambient_light_node = {
+            let ambient_light_handle = {
+                let ambient_light = AmbientLight {
+                    intensities: Vec3::ones() * 0.15,
+                };
 
-        environment_node.add_child(SceneNode::new(
-            SceneNodeType::DirectionalLight,
-            Default::default(),
-            Some(directional_light_handle),
-        ))?;
+                ambient_light_arena.insert(ambient_light)
+            };
+
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(Vec3 {
+                x: 10.0,
+                y: 25.0,
+                z: 10.0,
+            });
+
+            SceneNode::new(
+                SceneNodeType::AmbientLight,
+                transform,
+                Some(ambient_light_handle),
+            )
+        };
+
+        environment_node.add_child(ambient_light_node)?;
+
+        let directional_light_node = {
+            let directional_light_handle = directional_light_arena.insert(Default::default());
+
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(Vec3 {
+                x: 0.0,
+                y: 15.0,
+                z: 0.0,
+            });
+
+            SceneNode::new(
+                SceneNodeType::DirectionalLight,
+                transform,
+                Some(directional_light_handle),
+            )
+        };
+
+        environment_node.add_child(directional_light_node)?;
 
         environment_node
     };

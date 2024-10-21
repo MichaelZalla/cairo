@@ -7,7 +7,10 @@ use crate::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera},
-        light::{point_light::PointLight, spot_light::SpotLight},
+        light::{
+            ambient_light::AmbientLight, directional_light::DirectionalLight,
+            point_light::PointLight, spot_light::SpotLight,
+        },
     },
     texture::cubemap::CubeMap,
     vec::vec3::Vec3,
@@ -44,9 +47,13 @@ pub trait Renderer {
 
     fn render_camera(&mut self, camera: &Camera, color: Option<&Color>);
 
-    fn render_point_light(&mut self, light: &PointLight);
+    fn render_ambient_light(&mut self, transform: &Mat4, light: &AmbientLight);
 
-    fn render_spot_light(&mut self, light: &SpotLight);
+    fn render_directional_light(&mut self, transform: &Mat4, light: &DirectionalLight);
+
+    fn render_point_light(&mut self, transform: &Mat4, light: &PointLight);
+
+    fn render_spot_light(&mut self, transform: &Mat4, light: &SpotLight);
 
     fn render_entity_aabb(
         &mut self,

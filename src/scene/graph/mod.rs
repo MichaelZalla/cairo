@@ -117,7 +117,7 @@ impl SceneGraph {
         render_options: Option<SceneGraphRenderOptions>,
     ) -> Result<(), String> {
         let options = render_options.unwrap_or_default();
-        
+
         let mut renderer = renderer_rc.borrow_mut();
 
         // Begin frame
@@ -168,7 +168,7 @@ impl SceneGraph {
                         Ok(())
                     }
                     None => {
-                        panic!("Encountered a `Camera` node with no resource handle!")
+                        panic!("Encountered a `Camera` node with no handle!")
                     }
                 },
                 SceneNodeType::Skybox => {
@@ -178,7 +178,7 @@ impl SceneGraph {
                             active_skybox_transform.replace(current_world_transform);
                         }
                         None => {
-                            panic!("Encountered a `Skybox` node with no resource handle!")
+                            panic!("Encountered a `Skybox` node with no handle!")
                         }
                     }
 
@@ -241,33 +241,60 @@ impl SceneGraph {
                         }
                     }
                     None => {
-                        panic!("Encountered a `Entity` node with no resource handle!")
+                        panic!("Encountered a `Entity` node with no handle!")
                     }
                 },
-                SceneNodeType::DirectionalLight => {
-                    if !options.draw_lights {
-                        return Ok(());
+                SceneNodeType::AmbientLight => {
+                    if options.draw_lights {
+                        match handle {
+                            Some(ambient_light_handle) => {
+                                let ambient_light_arena = resources.ambient_light.borrow();
+
+                                match ambient_light_arena.get(ambient_light_handle) {
+                                    Ok(entry) => {
+                                        let ambient_light = &entry.item;
+
+                                        renderer.render_ambient_light(&current_world_transform, ambient_light);
+                                    }
+                                    Err(err) => panic!(
+                                        "Failed to get AmbientLight from Arena with Handle {:?}: {}",
+                                        handle, err
+                                    )
+                                }
+                            }
+                            None => {
+                                panic!("Encountered an `AmbientLight` node with no handle!")
+                            }
+                        }
                     }
 
-                    if options.draw_shadow_map_cameras {
+                    Ok(())
+                }
+                SceneNodeType::DirectionalLight => {
+                    if options.draw_lights || options.draw_shadow_map_cameras {
                         match handle {
                             Some(directional_light_handle) => {
-                                let directional_light_arena =
-                                    resources.directional_light.borrow();
+                                let directional_light_arena = resources.directional_light.borrow();
 
                                 match directional_light_arena.get(directional_light_handle) {
                                     Ok(entry) => {
                                         let directional_light = &entry.item;
 
-                                        if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
-                                            for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
-                                                let frustum_color = [
-                                                    color::RED,
-                                                    color::GREEN,
-                                                    color::BLUE,
-                                                ][index];
-    
-                                                renderer.render_camera(camera, Some(&frustum_color));
+                                        if options.draw_lights {
+                                            renderer.render_directional_light(&current_world_transform, directional_light);
+                                        }
+
+                                        if options.draw_shadow_map_cameras {
+                                            if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
+                                                for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
+                                                    let frustum_color = [
+                                                        color::RED,
+                                                        color::GREEN,
+                                                        color::BLUE,
+                                                    ][index];
+        
+                                                    renderer.render_camera(camera, Some(&frustum_color));
+                                                }
                                             }
                                         }
                                     }
@@ -278,7 +305,7 @@ impl SceneGraph {
                                 }
                             }
                             None => {
-                                panic!("Encountered a `DirectionalLight` node with no resource handle!")
+                                panic!("Encountered a `DirectionalLight` node with no handle!")
                             }
                         }
                     }
@@ -297,7 +324,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let point_light = &entry.item;
 
-                                renderer.render_point_light(point_light);
+                                renderer.render_point_light(&current_world_transform, point_light);
 
                                 Ok(())
                             }
@@ -308,7 +335,7 @@ impl SceneGraph {
                         }
                     }
                     None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
+                        panic!("Encountered a `PointLight` node with no handle!")
                     }
                 },
                 SceneNodeType::SpotLight => match handle {
@@ -323,7 +350,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let spot_light = &entry.item;
 
-                                renderer.render_spot_light(spot_light);
+                                renderer.render_spot_light(&current_world_transform, spot_light);
 
                                 Ok(())
                             }
@@ -334,7 +361,7 @@ impl SceneGraph {
                         }
                     }
                     None => {
-                        panic!("Encountered a `PointLight` node with no resource handle!")
+                        panic!("Encountered a `PointLight` node with no handle!")
                     }
                 },
                 _ => Ok(()),
