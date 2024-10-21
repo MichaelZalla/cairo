@@ -12,7 +12,7 @@ use cairo::{
     matrix::Mat4,
     scene::{
         context::SceneContext,
-        graph::SceneGraphRenderOptions,
+        graph::options::SceneGraphRenderOptions,
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },

@@ -24,6 +24,10 @@ use super::{
     resources::SceneResources,
 };
 
+use options::SceneGraphRenderOptions;
+
+pub mod options;
+
 type UpdateSceneGraphNodeCallback = dyn Fn(
     &Mat4,
     &mut SceneNode,
@@ -34,14 +38,6 @@ type UpdateSceneGraphNodeCallback = dyn Fn(
     &GameControllerState,
     &mut ShaderContext,
 ) -> Result<bool, String>;
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct SceneGraphRenderOptions {
-    pub draw_lights: bool,
-    pub draw_cameras: bool,
-    pub draw_shadow_map_cameras: bool,
-    pub camera: Option<Handle>,
-}
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SceneGraph {

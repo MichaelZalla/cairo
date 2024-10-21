@@ -11,7 +11,7 @@ use cairo::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         context::SceneContext,
-        graph::SceneGraphRenderOptions,
+        graph::options::SceneGraphRenderOptions,
         light::directional_light::DirectionalLight,
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
