@@ -3,7 +3,7 @@
 use crate::{
     color::Color,
     render::options::shader::RenderShaderOptions,
-    scene::resources::SceneResources,
+    scene::{light::shadow::DEFAULT_SHADOW_MAP_CAMERA_FAR, resources::SceneResources},
     shader::{
         context::ShaderContext,
         fragment::FragmentShaderFn,
@@ -46,8 +46,6 @@ pub static PointShadowMapGeometryShader: GeometryShaderFn = |_context: &ShaderCo
     })
 };
 
-static DEFAULT_POINT_LIGHT_PROJECTION_Z_FAR: f32 = 1000.0;
-
 pub static PointShadowMapFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
@@ -55,8 +53,8 @@ pub static PointShadowMapFragmentShader: FragmentShaderFn =
         let distance_to_point_light = (sample.world_pos - context.view_position.to_vec3()).mag();
 
         let projection_z_far = context
-            .point_light_projection_z_far
-            .unwrap_or(DEFAULT_POINT_LIGHT_PROJECTION_Z_FAR);
+            .projection_z_far
+            .unwrap_or(DEFAULT_SHADOW_MAP_CAMERA_FAR);
 
         let distance_alpha = distance_to_point_light / projection_z_far;
 

@@ -10,6 +10,8 @@ pub struct ShaderContext {
     pub view_position: Vec4,
     pub view_inverse_transform: Mat4,
     pub world_view_transform: Mat4,
+    pub projection_z_near: Option<f32>,
+    pub projection_z_far: Option<f32>,
     pub projection_transform: Mat4,
     pub world_view_projection_transform: Mat4,
     pub active_material: Option<Handle>,
@@ -23,7 +25,6 @@ pub struct ShaderContext {
     pub ambient_light: Option<Handle>,
     pub directional_light: Option<Handle>,
     pub point_lights: Vec<Handle>,
-    pub point_light_projection_z_far: Option<f32>,
     pub spot_lights: Vec<Handle>,
 }
 
@@ -34,6 +35,8 @@ impl Default for ShaderContext {
             view_position: Default::default(),
             view_inverse_transform: Mat4::identity(),
             world_view_transform: Mat4::identity(),
+            projection_z_near: None,
+            projection_z_far: None,
             projection_transform: Mat4::identity(),
             world_view_projection_transform: Default::default(),
             active_material: None,
@@ -47,7 +50,6 @@ impl Default for ShaderContext {
             ambient_light: None,
             directional_light: None,
             point_lights: vec![],
-            point_light_projection_z_far: None,
             spot_lights: vec![],
         }
     }
