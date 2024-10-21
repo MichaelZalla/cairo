@@ -13,7 +13,7 @@ use cairo::{
     render::culling::FaceCullingReject,
     scene::{
         context::SceneContext,
-        light::{
+        light::point_light::{
             POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
             POINT_LIGHT_SHADOW_MAP_SIZE,
         },

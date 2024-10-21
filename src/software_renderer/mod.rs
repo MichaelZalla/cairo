@@ -18,7 +18,7 @@ use crate::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera},
-        light::{PointLight, SpotLight},
+        light::{point_light::PointLight, spot_light::SpotLight},
         resources::SceneResources,
     },
     shader::{

@@ -8,7 +8,9 @@ use cairo::{
     scene::{
         camera::Camera,
         context::SceneContext,
-        light::{PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR},
+        light::point_light::{
+            PointLight, POINT_LIGHT_SHADOW_CAMERA_FAR, POINT_LIGHT_SHADOW_CAMERA_NEAR,
+        },
     },
     shader::context::ShaderContext,
     texture::{

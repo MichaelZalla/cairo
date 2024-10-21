@@ -465,11 +465,11 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
                             let resources = ctx.resources.borrow();
 
-                            let mut camera_arena = resources.camera.borrow_mut();
+                            let mut arena = resources.camera.borrow_mut();
 
                             let camera_handle = Handle { index, uuid };
 
-                            match camera_arena.get_mut(&camera_handle) {
+                            match arena.get_mut(&camera_handle) {
                                 Ok(entry) => {
                                     let camera = &mut entry.item;
 

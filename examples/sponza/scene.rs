@@ -13,7 +13,10 @@ use cairo::{
         context::utils::make_empty_scene,
         environment::Environment,
         graph::SceneGraph,
-        light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+        light::{
+            ambient_light::AmbientLight, directional_light::DirectionalLight,
+            point_light::PointLight, spot_light::SpotLight,
+        },
         node::{SceneNode, SceneNodeType},
         skybox::Skybox,
     },

@@ -9,7 +9,10 @@ use cairo::{
         context::utils::make_empty_scene,
         environment::Environment,
         graph::SceneGraph,
-        light::{AmbientLight, DirectionalLight, PointLight},
+        light::{
+            ambient_light::AmbientLight, directional_light::DirectionalLight,
+            point_light::PointLight,
+        },
         node::{SceneNode, SceneNodeType},
     },
     shader::context::ShaderContext,

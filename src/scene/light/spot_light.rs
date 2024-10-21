@@ -1,0 +1,140 @@
+use std::{
+    f32::consts::PI,
+    fmt::{self, Display},
+};
+
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    serde::PostDeserialize,
+    shader::geometry::sample::GeometrySample,
+    transform::look_vector::LookVector,
+    vec::{vec3::Vec3, vec4::Vec4},
+};
+
+use super::{contribute_pbr, get_approximate_influence_distance};
+
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct SpotLight {
+    pub intensities: Vec3,
+    pub look_vector: LookVector,
+    pub inner_cutoff_angle: f32,
+    #[serde(skip)]
+    pub inner_cutoff_angle_cos: f32,
+    pub outer_cutoff_angle: f32,
+    #[serde(skip)]
+    pub outer_cutoff_angle_cos: f32,
+    pub constant_attenuation: f32,
+    pub linear_attenuation: f32,
+    pub quadratic_attenuation: f32,
+    #[serde(skip)]
+    pub influence_distance: f32,
+}
+
+impl PostDeserialize for SpotLight {
+    fn post_deserialize(&mut self) {
+        self.influence_distance = get_approximate_influence_distance(
+            self.quadratic_attenuation,
+            self.linear_attenuation,
+            self.constant_attenuation,
+        );
+    }
+}
+
+impl Display for SpotLight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SpotLight (intensities={}, look_vector={})",
+            self.intensities, self.look_vector
+        )
+    }
+}
+
+impl SpotLight {
+    pub fn new() -> Self {
+        let default_light_position = Vec3 {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        };
+
+        let mut light = SpotLight {
+            intensities: Vec3 {
+                x: 0.5,
+                y: 0.5,
+                z: 0.5,
+            },
+            look_vector: LookVector::new(
+                default_light_position,
+                default_light_position
+                    + Vec3 {
+                        x: 0.001,
+                        y: -1.0,
+                        z: 0.001,
+                    },
+            ),
+            inner_cutoff_angle: (PI / 12.0),
+            outer_cutoff_angle: (PI / 8.0),
+            inner_cutoff_angle_cos: (PI / 12.0).cos(),
+            outer_cutoff_angle_cos: (PI / 8.0).cos(),
+            constant_attenuation: 1.0,
+            linear_attenuation: 0.09,
+            quadratic_attenuation: 0.032,
+            influence_distance: 0.0,
+        };
+
+        light.post_deserialize();
+
+        light
+    }
+
+    pub fn contribute(self, world_pos: Vec3) -> Vec3 {
+        let mut spot_light_contribution: Vec3 = Vec3::new();
+
+        let vertex_to_spot_light = self.look_vector.get_position() - world_pos;
+
+        let distance_to_spot_light = vertex_to_spot_light.mag();
+
+        let direction_to_spot_light = vertex_to_spot_light / distance_to_spot_light;
+
+        let theta_angle =
+            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_spot_light * -1.0));
+
+        let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
+
+        let spot_attenuation =
+            ((theta_angle - self.outer_cutoff_angle_cos) / epsilon).clamp(0.0, 1.0);
+
+        if theta_angle > self.outer_cutoff_angle_cos {
+            spot_light_contribution = self.intensities * spot_attenuation;
+        }
+
+        spot_light_contribution
+    }
+
+    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+        let tangent_space_info = sample.tangent_space_info;
+
+        let spot_light_position_tangent_space = (Vec4::new(self.look_vector.get_position(), 1.0)
+            * tangent_space_info.tbn_inverse)
+            .to_vec3();
+
+        let direction_to_light =
+            (spot_light_position_tangent_space - tangent_space_info.fragment_position).as_normal();
+
+        let theta_angle =
+            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_light * -1.0));
+
+        let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
+
+        let spot_attenuation =
+            ((theta_angle - self.outer_cutoff_angle_cos) / epsilon).clamp(0.0, 1.0);
+
+        if theta_angle > self.outer_cutoff_angle_cos {
+            contribute_pbr(sample, &self.intensities, &direction_to_light, f0) * spot_attenuation
+        } else {
+            Default::default()
+        }
+    }
+}

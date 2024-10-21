@@ -15,7 +15,10 @@ use crate::{
 use super::{
     camera::Camera,
     environment::Environment,
-    light::{AmbientLight, DirectionalLight, PointLight, SpotLight},
+    light::{
+        ambient_light::AmbientLight, directional_light::DirectionalLight, point_light::PointLight,
+        spot_light::SpotLight,
+    },
     skybox::Skybox,
 };
 

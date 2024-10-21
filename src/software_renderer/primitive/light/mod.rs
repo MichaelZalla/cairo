@@ -3,7 +3,7 @@ use crate::{
     render::Renderer,
     scene::{
         camera::frustum::Frustum,
-        light::{PointLight, SpotLight},
+        light::{point_light::PointLight, spot_light::SpotLight},
     },
     software_renderer::SoftwareRenderer,
 };

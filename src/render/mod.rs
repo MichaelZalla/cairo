@@ -7,7 +7,7 @@ use crate::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera},
-        light::{PointLight, SpotLight},
+        light::{point_light::PointLight, spot_light::SpotLight},
     },
     texture::cubemap::CubeMap,
     vec::vec3::Vec3,

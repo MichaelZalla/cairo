@@ -3,7 +3,7 @@
 use crate::{
     color::Color,
     render::options::shader::RenderShaderOptions,
-    scene::{light::POINT_LIGHT_SHADOW_CAMERA_FAR, resources::SceneResources},
+    scene::{light::point_light::POINT_LIGHT_SHADOW_CAMERA_FAR, resources::SceneResources},
     shader::{
         context::ShaderContext,
         fragment::FragmentShaderFn,
