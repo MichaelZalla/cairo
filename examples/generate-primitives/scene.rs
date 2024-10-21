@@ -245,35 +245,5 @@ pub fn make_primitives_scene(
 
     scene.root.add_child(spot_light_node)?;
 
-    // Add a second camera to our scene.
-
-    let camera_node = {
-        let camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 12.0,
-                z: -16.0,
-            },
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.5,
-            }
-            .as_normal(),
-            75.0,
-            camera_aspect_ratio,
-        );
-
-        let camera_handle = camera_arena.insert(camera);
-
-        SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        )
-    };
-
-    scene.root.add_child(camera_node)?;
-
     Ok((scene, shader_context))
 }
