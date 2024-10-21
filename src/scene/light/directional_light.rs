@@ -92,7 +92,7 @@ impl Display for DirectionalLight {
 }
 
 impl DirectionalLight {
-    pub fn get_direction(&mut self) -> &Vec4 {
+    pub fn get_direction(&self) -> &Vec4 {
         &self.direction
     }
 
