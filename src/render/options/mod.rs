@@ -1,9 +1,9 @@
 use sdl2::keyboard::Keycode;
 
 use crate::{
-    color::{self, Color},
     device::keyboard::KeyboardState,
     render::culling::{FaceCullingReject, FaceCullingWindingOrder},
+    vec::vec3::{self, Vec3},
 };
 
 use rasterizer::RasterizerOptions;
@@ -21,7 +21,7 @@ pub struct RenderOptions {
     // User debug
     pub draw_wireframe: bool,
     // User debug
-    pub wireframe_color: Color,
+    pub wireframe_color: Vec3,
     pub draw_normals: bool,
     pub draw_normals_scale: f32,
 }
@@ -37,7 +37,7 @@ impl Default for RenderOptions {
             // User debug
             draw_wireframe: false,
             // User debug
-            wireframe_color: color::WHITE,
+            wireframe_color: vec3::ONES,
             draw_normals: false,
             draw_normals_scale: 0.05,
         }

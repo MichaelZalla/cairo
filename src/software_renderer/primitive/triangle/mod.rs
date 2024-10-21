@@ -1,5 +1,5 @@
 use crate::{
-    color,
+    color::{self, Color},
     mesh::Face,
     render::{
         culling::{FaceCullingReject, FaceCullingWindingOrder},
@@ -134,13 +134,13 @@ impl SoftwareRenderer {
         }
 
         if self.options.draw_wireframe {
-            let color = self.options.wireframe_color;
+            let wireframe_color = Color::from_vec3(self.options.wireframe_color * 255.0);
 
             for i in 0..3 {
                 self.render_line(
                     projection_space_vertices[i].world_pos,
                     projection_space_vertices[if i == 2 { 0 } else { i + 1 }].world_pos,
-                    &color,
+                    &wireframe_color,
                 );
             }
         }

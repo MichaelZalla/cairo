@@ -7,12 +7,12 @@ use cairo::{
         resolution::{Resolution, RESOLUTIONS_16X9},
         window::{AppWindowingMode, APP_WINDOWING_MODES},
     },
-    color::Color,
     mem::linked_list::LinkedList,
     render::culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
     resource::handle::Handle,
     scene::camera::{CameraProjectionKind, CAMERA_PROJECTION_KINDS},
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
+    vec::vec3::Vec3,
 };
 
 use crate::{SCENE_CONTEXT, SETTINGS};
@@ -236,8 +236,9 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         prev_value_str
                             .replace(current_settings.render_options.wireframe_color.to_string());
 
-                        current_settings.render_options.wireframe_color =
-                            parse_or_map_err::<Color>(value_str)?;
+                        let wireframe_color = parse_or_map_err::<Vec3>(value_str)?;
+
+                        current_settings.render_options.wireframe_color = wireframe_color;
 
                         Ok(())
                     }

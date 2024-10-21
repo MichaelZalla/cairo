@@ -1,6 +1,6 @@
 use crate::{
-    color::Color,
     ui::ui_box::{tree::UIBoxTree, UILayoutDirection},
+    vec::vec3::Vec3,
 };
 
 use super::{
@@ -10,10 +10,10 @@ use super::{
 
 pub fn color_picker(
     id: String,
-    color: Color,
+    color: Vec3,
     options: SliderOptions,
     tree: &mut UIBoxTree,
-) -> Result<Option<Color>, String> {
+) -> Result<Option<Vec3>, String> {
     let mut result = None;
 
     tree.with_parent(
@@ -23,29 +23,29 @@ pub fn color_picker(
             None,
         ),
         |tree| {
-            if let Some(new_red) = slider(format!("{}.red_slider", id), color.r, options, tree)? {
+            if let Some(new_red) = slider(format!("{}.red_slider", id), color.x, options, tree)? {
                 if result.is_none() {
                     result = Some(color);
                 }
 
-                result.as_mut().unwrap().r = new_red;
+                result.as_mut().unwrap().x = new_red;
             }
 
-            if let Some(new_green) = slider(format!("{}.green_slider", id), color.g, options, tree)?
+            if let Some(new_green) = slider(format!("{}.green_slider", id), color.y, options, tree)?
             {
                 if result.is_none() {
                     result = Some(color);
                 }
 
-                result.as_mut().unwrap().g = new_green;
+                result.as_mut().unwrap().y = new_green;
             }
 
-            if let Some(new_blue) = slider(format!("{}.blue_slider", id), color.b, options, tree)? {
+            if let Some(new_blue) = slider(format!("{}.blue_slider", id), color.z, options, tree)? {
                 if result.is_none() {
                     result = Some(color);
                 }
 
-                result.as_mut().unwrap().b = new_blue;
+                result.as_mut().unwrap().z = new_blue;
             }
 
             Ok(())

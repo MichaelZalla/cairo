@@ -206,9 +206,9 @@ impl Renderer for SoftwareRenderer {
         entity: &Entity,
         world_transform: &Mat4,
         mesh_arena: &Arena<Mesh>,
-        color: &Color,
+        wireframe_color: &Vec3,
     ) {
-        self._render_entity_aabb(entity, world_transform, mesh_arena, color)
+        self._render_entity_aabb(entity, world_transform, mesh_arena, wireframe_color)
     }
 
     fn render_entity(

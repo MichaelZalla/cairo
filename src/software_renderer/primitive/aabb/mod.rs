@@ -1,5 +1,4 @@
 use crate::{
-    color::Color,
     entity::Entity,
     matrix::Mat4,
     mesh::Mesh,
@@ -9,6 +8,7 @@ use crate::{
     },
     resource::arena::Arena,
     software_renderer::SoftwareRenderer,
+    vec::vec3::Vec3,
 };
 
 impl SoftwareRenderer {
@@ -17,7 +17,7 @@ impl SoftwareRenderer {
         entity: &Entity,
         world_transform: &Mat4,
         mesh_arena: &Arena<Mesh>,
-        color: &Color,
+        wireframe_color: &Vec3,
     ) {
         match mesh_arena.get(&entity.mesh) {
             Ok(entry) => {
@@ -26,7 +26,7 @@ impl SoftwareRenderer {
                 let original_options = self.options;
 
                 self.options = RenderOptions {
-                    wireframe_color: *color,
+                    wireframe_color: *wireframe_color,
                     draw_wireframe: true,
                     do_rasterization: false,
                     do_lighting: false,

@@ -337,7 +337,7 @@ impl PanelInstance for RenderOptionsPanel {
                         current_color,
                         SliderOptions {
                             min: 0.0,
-                            max: 255.0,
+                            max: 1.0,
                             ..Default::default()
                         },
                         tree,
@@ -346,7 +346,7 @@ impl PanelInstance for RenderOptionsPanel {
                     if let Some(new_color) = color_picker_result {
                         let cmd_str = format!(
                             "set render_options.wireframe_color ({:.2},{:.2},{:.2})",
-                            new_color.r, new_color.g, new_color.b
+                            new_color.x, new_color.y, new_color.z
                         )
                         .to_string();
 

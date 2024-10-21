@@ -53,7 +53,7 @@ pub trait Renderer {
         entity: &Entity,
         world_transform: &Mat4,
         meshes: &Arena<Mesh>,
-        color: &Color,
+        wireframe_color: &Vec3,
     );
 
     fn render_entity(

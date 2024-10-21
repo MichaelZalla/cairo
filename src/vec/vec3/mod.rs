@@ -1,9 +1,6 @@
-use std::cmp;
-use std::fmt;
-use std::ops;
+use std::{cmp, fmt, ops, str::FromStr};
 
-use serde_tuple::Deserialize_tuple;
-use serde_tuple::Serialize_tuple;
+use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 
 use crate::animation::lerp;
 
@@ -16,7 +13,32 @@ pub struct Vec3 {
 
 impl fmt::Display for Vec3 {
     fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(v, "({:.*}, {:.*}, {:.*})", 2, self.x, 2, self.y, 2, self.z)
+        write!(v, "({:.*},{:.*},{:.*})", 2, self.x, 2, self.y, 2, self.z)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseVec3Error;
+
+impl FromStr for Vec3 {
+    type Err = ParseVec3Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let channels: Vec<String> = s
+            .strip_prefix('(')
+            .and_then(|s| s.strip_suffix(')'))
+            .map(|s| s.splitn(4, ','))
+            .map(|s| s.map(|c| c.to_string()))
+            .map(|s| s.collect())
+            .ok_or(ParseVec3Error)?;
+
+        debug_assert!(channels.len() == 3);
+
+        let x = channels[0].parse::<f32>().map_err(|_| ParseVec3Error)?;
+        let y = channels[1].parse::<f32>().map_err(|_| ParseVec3Error)?;
+        let z = channels[2].parse::<f32>().map_err(|_| ParseVec3Error)?;
+
+        Ok(Vec3 { x, y, z })
     }
 }
 
