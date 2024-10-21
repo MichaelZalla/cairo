@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, rc::Rc};
+use std::{cell::RefCell, env, f32::consts::PI, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -32,7 +32,8 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::{zbuffer::DEPTH_TEST_METHODS, SoftwareRenderer},
-    vec::{vec3::Vec3, vec4::Vec4},
+    transform::quaternion::Quaternion,
+    vec::vec3::{self, Vec3},
 };
 
 pub mod scene;
@@ -272,15 +273,10 @@ fn main() -> Result<(), String> {
                             Ok(entry) => {
                                 let light = &mut entry.item;
 
-                                light.direction = Vec4::new(
-                                    Vec3 {
-                                        x: uptime.sin(),
-                                        y: -1.0,
-                                        z: uptime.cos(),
-                                    },
-                                    1.0,
-                                )
-                                .as_normal();
+                                light.set_direction(Quaternion::new(
+                                    vec3::UP,
+                                    uptime.rem_euclid(PI * 2.0),
+                                ));
 
                                 shader_context.set_directional_light(Some(*handle));
 

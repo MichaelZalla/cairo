@@ -1,4 +1,7 @@
-use std::fmt::{self, Display};
+use std::{
+    f32::consts::PI,
+    fmt::{self, Display},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -7,9 +10,10 @@ use crate::{
     scene::camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
+    transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
-        vec4::Vec4,
+        vec4::{self, Vec4},
     },
 };
 
@@ -17,11 +21,30 @@ use super::contribute_pbr;
 
 pub const DIRECTIONAL_LIGHT_SHADOW_MAP_CAMERAS: usize = 3;
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectionalLight {
     pub intensities: Vec3,
-    pub direction: Vec4,
+    rotation: Quaternion,
+    direction: Vec4,
     pub shadow_map_cameras: Option<Vec<(f32, Camera)>>,
+}
+
+impl Default for DirectionalLight {
+    fn default() -> Self {
+        let mut result = Self {
+            intensities: Vec3::ones() * 0.15,
+            rotation: Default::default(),
+            direction: vec4::FORWARD,
+            shadow_map_cameras: Default::default(),
+        };
+
+        result.set_direction(Quaternion::new(
+            (vec3::RIGHT + vec3::FORWARD).as_normal(),
+            PI / 8.0,
+        ));
+
+        result
+    }
 }
 
 impl PostDeserialize for DirectionalLight {
@@ -34,13 +57,19 @@ impl Display for DirectionalLight {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "DirectionalLight (intensities={}, direction={})",
-            self.intensities, self.direction
+            "DirectionalLight(intensities={}, rotation={}, direction={})",
+            self.intensities, self.rotation, self.direction
         )
     }
 }
 
 impl DirectionalLight {
+    pub fn set_direction(&mut self, rotation: Quaternion) {
+        let rotation_mat = *rotation.mat();
+
+        self.direction = vec4::FORWARD * rotation_mat;
+    }
+
     pub fn update_shadow_map_cameras(&mut self, view_camera: &Camera) {
         let forward = self.direction.as_normal().to_vec3();
         let right = vec3::UP.cross(forward).as_normal();

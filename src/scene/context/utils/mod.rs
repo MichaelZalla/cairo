@@ -16,10 +16,7 @@ use crate::{
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat},
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::{self, Vec3},
 };
 
 pub fn make_empty_scene(
@@ -64,21 +61,7 @@ pub fn make_empty_scene(
         ambient_light_arena.insert(ambient_light)
     };
 
-    let directional_light_handle = {
-        let directional_light = DirectionalLight {
-            intensities: Vec3::ones() * 0.15,
-            direction: Vec4 {
-                x: 0.25,
-                y: -1.0,
-                z: -0.25,
-                w: 1.0,
-            }
-            .as_normal(),
-            shadow_map_cameras: None,
-        };
-
-        directional_light_arena.insert(directional_light)
-    };
+    let directional_light_handle = directional_light_arena.insert(Default::default());
 
     let environment_node = {
         let mut environment_node = SceneNode::new(
