@@ -27,6 +27,8 @@ pub struct SpotLight {
     pub outer_cutoff_angle: f32,
     #[serde(skip)]
     pub outer_cutoff_angle_cos: f32,
+    #[serde(skip)]
+    epsilon: f32,
     pub attenuation: LightAttenuation,
     #[serde(skip)]
     pub influence_distance: f32,
@@ -65,8 +67,10 @@ impl SpotLight {
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
             outer_cutoff_angle_cos: (PI / 8.0).cos(),
             attenuation: LightAttenuation::new(1.0, 0.09, 0.032),
-            influence_distance: 0.0,
+            ..Default::default()
         };
+
+        light.epsilon = light.inner_cutoff_angle_cos - light.outer_cutoff_angle_cos;
 
         light.post_deserialize();
 
@@ -85,10 +89,8 @@ impl SpotLight {
         let theta_angle =
             0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_spot_light * -1.0));
 
-        let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
-
         let spot_attenuation =
-            ((theta_angle - self.outer_cutoff_angle_cos) / epsilon).clamp(0.0, 1.0);
+            ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);
 
         if theta_angle > self.outer_cutoff_angle_cos {
             spot_light_contribution = self.intensities * spot_attenuation;
@@ -110,10 +112,8 @@ impl SpotLight {
         let theta_angle =
             0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_light * -1.0));
 
-        let epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
-
         let spot_attenuation =
-            ((theta_angle - self.outer_cutoff_angle_cos) / epsilon).clamp(0.0, 1.0);
+            ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);
 
         if theta_angle > self.outer_cutoff_angle_cos {
             contribute_pbr(sample, &self.intensities, &direction_to_light, f0) * spot_attenuation

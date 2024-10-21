@@ -13,15 +13,14 @@ impl SoftwareRenderer {
         end_world_space: Vec3,
         color: &Color,
     ) {
-        let start_ndc_space: Vec3;
-        let end_ndc_space: Vec3;
-
-        {
+        let (start_ndc_space, end_ndc_space) = {
             let shader_context = self.shader_context.borrow();
 
-            start_ndc_space = shader_context.to_ndc_space(start_world_space);
-            end_ndc_space = shader_context.to_ndc_space(end_world_space);
-        }
+            (
+                shader_context.to_ndc_space(start_world_space),
+                shader_context.to_ndc_space(end_world_space),
+            )
+        };
 
         self.render_line_from_ndc_space_vecs(&start_ndc_space, &end_ndc_space, color);
     }
