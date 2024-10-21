@@ -23,7 +23,7 @@ impl SoftwareRenderer {
             end_ndc_space = shader_context.to_ndc_space(end_world_space);
         }
 
-        self.render_line_from_ndc_space_vertices(&start_ndc_space, &end_ndc_space, color);
+        self.render_line_from_ndc_space_vecs(&start_ndc_space, &end_ndc_space, color);
     }
 
     pub(in crate::software_renderer) fn _render_point_indicator(
@@ -84,7 +84,7 @@ impl SoftwareRenderer {
         }
     }
 
-    fn render_line_from_ndc_space_vertices(&mut self, start: &Vec3, end: &Vec3, color: &Color) {
+    fn render_line_from_ndc_space_vecs(&mut self, start: &Vec3, end: &Vec3, color: &Color) {
         // Cull lines that are completely in front of our near plane
         // (z1 <= 0 and z2 <= 0).
 
@@ -109,11 +109,11 @@ impl SoftwareRenderer {
                             color,
                         );
                     },
-                    None => panic!("Called Graphics::render_line_from_ndc_space_vertices() with no forward (LDR) framebuffer attachment!"),
+                    None => panic!("Called SoftwareRenderer::render_line_from_ndc_space_vecs() with no forward (LDR) framebuffer attachment!"),
                 }
             }
             None => panic!(
-                "Called Graphics::render_line_from_ndc_space_vertices() with no bound framebuffer!"
+                "Called SoftwareRenderer::render_line_from_ndc_space_vecs() with no bound framebuffer!"
             ),
         }
     }
