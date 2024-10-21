@@ -35,9 +35,9 @@ pub fn make_empty_scene(
     let camera_handle = {
         let mut camera: Camera = Camera::from_perspective(
             Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -5.0,
+                x: 15.0,
+                y: 15.0,
+                z: -15.0,
             },
             vec3::FORWARD,
             75.0,
