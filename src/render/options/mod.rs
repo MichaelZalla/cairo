@@ -24,6 +24,8 @@ bitmask! {
         Lighting = (1 << 1),
         DeferredLighting = (1 << 2),
         Bloom = (1 << 3),
+        Ssao = (1 << 4),
+        SsaoBlur = (1 << 5),
     }
 }
 
