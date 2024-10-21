@@ -374,8 +374,6 @@ fn main() -> Result<(), String> {
 
         let mut shader_context = shader_context_rc.borrow_mut();
 
-        shader_context.clear_lights();
-
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 (Keycode::R, _) => {
@@ -448,7 +446,7 @@ fn main() -> Result<(), String> {
         let update_node_rc = Rc::new(update_node);
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,

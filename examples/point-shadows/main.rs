@@ -168,17 +168,16 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let mut scenes = scene_context.scenes.borrow_mut();
-        let mut shader_context = shader_context_rc.borrow_mut();
         let mut renderer = renderer_rc.borrow_mut();
 
-        shader_context.clear_lights();
+        let mut shader_context = shader_context_rc.borrow_mut();
+
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
         // Traverse the scene graph and update its nodes.
 
         let update_node_rc = Rc::new(update_node);
-
-        let scene = &mut scenes[0];
 
         scene.update(
             &scene_context.resources,

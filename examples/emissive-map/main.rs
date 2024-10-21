@@ -218,14 +218,12 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        shader_context.clear_lights();
-
         // Traverse the scene graph and update its nodes.
 
         let update_node_rc = Rc::new(update_node);
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,
