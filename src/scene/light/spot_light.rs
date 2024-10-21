@@ -12,7 +12,7 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-use super::{contribute_pbr, get_approximate_influence_distance};
+use super::{attenuation::LightAttenuation, contribute_pbr};
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SpotLight {
@@ -24,20 +24,14 @@ pub struct SpotLight {
     pub outer_cutoff_angle: f32,
     #[serde(skip)]
     pub outer_cutoff_angle_cos: f32,
-    pub constant_attenuation: f32,
-    pub linear_attenuation: f32,
-    pub quadratic_attenuation: f32,
+    pub attenuation: LightAttenuation,
     #[serde(skip)]
     pub influence_distance: f32,
 }
 
 impl PostDeserialize for SpotLight {
     fn post_deserialize(&mut self) {
-        self.influence_distance = get_approximate_influence_distance(
-            self.quadratic_attenuation,
-            self.linear_attenuation,
-            self.constant_attenuation,
-        );
+        self.influence_distance = self.attenuation.get_approximate_influence_distance();
     }
 }
 
@@ -78,9 +72,11 @@ impl SpotLight {
             outer_cutoff_angle: (PI / 8.0),
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
             outer_cutoff_angle_cos: (PI / 8.0).cos(),
-            constant_attenuation: 1.0,
-            linear_attenuation: 0.09,
-            quadratic_attenuation: 0.032,
+            attenuation: LightAttenuation {
+                constant: 1.0,
+                linear: 0.09,
+                quadratic: 0.032,
+            },
             influence_distance: 0.0,
         };
 

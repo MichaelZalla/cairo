@@ -156,9 +156,9 @@ pub(crate) fn make_scene(
 
     point_light.intensities = Vec3::ones() * 10.0;
 
-    point_light.constant_attenuation = 1.0;
-    point_light.linear_attenuation = 0.35;
-    point_light.quadratic_attenuation = 0.44;
+    point_light.attenuation.constant = 1.0;
+    point_light.attenuation.linear = 0.35;
+    point_light.attenuation.quadratic = 0.44;
 
     let point_light_handle = point_light_arena.insert(point_light);
 

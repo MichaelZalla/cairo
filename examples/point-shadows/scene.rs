@@ -175,9 +175,9 @@ pub fn make_scene(
 
             light.shadow_map = Some(shadow_map_handle);
 
-            light.constant_attenuation = 1.0;
-            light.linear_attenuation = 0.09;
-            light.quadratic_attenuation = 0.032;
+            light.attenuation.constant = 1.0;
+            light.attenuation.linear = 0.09;
+            light.attenuation.quadratic = 0.032;
 
             light
         };

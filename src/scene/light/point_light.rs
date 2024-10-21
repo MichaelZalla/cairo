@@ -11,7 +11,7 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-use super::{contribute_pbr, get_approximate_influence_distance};
+use super::{attenuation::LightAttenuation, contribute_pbr};
 
 pub static POINT_LIGHT_SHADOW_MAP_SIZE: u32 = 512;
 pub static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.3;
@@ -21,9 +21,7 @@ pub static POINT_LIGHT_SHADOW_CAMERA_FAR: f32 = 100.0;
 pub struct PointLight {
     pub intensities: Vec3,
     pub position: Vec3,
-    pub constant_attenuation: f32,
-    pub linear_attenuation: f32,
-    pub quadratic_attenuation: f32,
+    pub attenuation: LightAttenuation,
     #[serde(skip)]
     pub shadow_map: Option<Handle>,
     #[serde(skip)]
@@ -32,11 +30,7 @@ pub struct PointLight {
 
 impl PostDeserialize for PointLight {
     fn post_deserialize(&mut self) {
-        self.influence_distance = get_approximate_influence_distance(
-            self.quadratic_attenuation,
-            self.linear_attenuation,
-            self.constant_attenuation,
-        );
+        self.influence_distance = self.attenuation.get_approximate_influence_distance();
     }
 }
 
@@ -59,9 +53,11 @@ impl PointLight {
                 y: 10.0,
                 z: 0.0,
             },
-            constant_attenuation: 1.0,
-            linear_attenuation: 0.35,
-            quadratic_attenuation: 0.44,
+            attenuation: LightAttenuation {
+                constant: 1.0,
+                linear: 0.35,
+                quadratic: 0.44,
+            },
             shadow_map: None,
             influence_distance: 0.0,
         };
@@ -93,7 +89,9 @@ impl PointLight {
         let likeness = 0.0_f32.max(normal.dot(direction_to_point_light_tangent_space));
 
         if likeness > 0.0 {
-            let attenuation = self.get_attentuation(distance_to_point_light_tangent_space);
+            let attenuation = self
+                .attenuation
+                .attenuate_for_distance(distance_to_point_light_tangent_space);
 
             point_contribution = self.intensities * attenuation * 0.0_f32.max(likeness);
 
@@ -161,7 +159,9 @@ impl PointLight {
         };
 
         let contribution = contribute_pbr(sample, &self.intensities, &direction_to_point_light, f0)
-            * self.get_attentuation(distance_to_point_light);
+            * self
+                .attenuation
+                .attenuate_for_distance(distance_to_point_light);
 
         contribution * (1.0 - in_shadow)
     }
@@ -192,12 +192,5 @@ impl PointLight {
         } else {
             0.0
         }
-    }
-
-    #[inline]
-    fn get_attentuation(&self, distance: f32) -> f32 {
-        1.0 / (self.quadratic_attenuation * distance.powi(2)
-            + self.linear_attenuation * distance
-            + self.constant_attenuation)
     }
 }

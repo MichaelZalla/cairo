@@ -14,8 +14,8 @@ use cairo::{
         environment::Environment,
         graph::SceneGraph,
         light::{
-            ambient_light::AmbientLight, directional_light::DirectionalLight,
-            point_light::PointLight, spot_light::SpotLight,
+            ambient_light::AmbientLight, attenuation::LightAttenuation,
+            directional_light::DirectionalLight, point_light::PointLight, spot_light::SpotLight,
         },
         node::{SceneNode, SceneNodeType},
         skybox::Skybox,
@@ -120,9 +120,13 @@ pub fn make_sponza_scene(
 
         light.intensities = Color::rgb(255, 205, 185).to_vec3() / 255.0 * 25.0;
 
-        light.constant_attenuation = 1.0;
-        light.linear_attenuation = 0.0014;
-        light.quadratic_attenuation = 0.000007;
+        light.attenuation = LightAttenuation {
+            constant: 1.0,
+            linear: 0.007 / 2.0,
+            quadratic: 0.0002 / 2.0,
+        };
+
+        light.influence_distance = light.attenuation.get_approximate_influence_distance();
 
         let point_light_handle = point_light_arena.insert(light);
 
@@ -159,9 +163,13 @@ pub fn make_sponza_scene(
 
         light.intensities = vec3::ONES * 22.0;
 
-        light.constant_attenuation = 1.0;
-        light.linear_attenuation = 0.007;
-        light.quadratic_attenuation = 0.0002;
+        light.attenuation = LightAttenuation {
+            constant: 1.0,
+            linear: 0.007 / 10.0,
+            quadratic: 0.0002 / 10.0,
+        };
+
+        light.influence_distance = light.attenuation.get_approximate_influence_distance();
 
         let light_handle = spot_light_arena.insert(light);
 

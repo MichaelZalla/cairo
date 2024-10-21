@@ -67,9 +67,9 @@ pub fn make_sphere_grid_scene(
 
         light.intensities = Vec3::ones() * 1.0;
 
-        light.constant_attenuation = 1.0;
-        light.linear_attenuation = 0.09;
-        light.quadratic_attenuation = 0.032;
+        light.attenuation.constant = 1.0;
+        light.attenuation.linear = 0.09;
+        light.attenuation.quadratic = 0.032;
 
         let point_light_handle = point_light_arena.insert(light);
 

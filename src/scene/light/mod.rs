@@ -7,11 +7,12 @@ use crate::{
 };
 
 pub mod ambient_light;
+pub mod attenuation;
 pub mod directional_light;
 pub mod point_light;
 pub mod spot_light;
 
-fn contribute_pbr(
+pub(in crate::scene::light) fn contribute_pbr(
     sample: &GeometrySample,
     light_intensities: &Vec3,
     direction_to_light: &Vec3,
@@ -63,32 +64,4 @@ fn contribute_pbr(
     } else {
         Default::default()
     }
-}
-
-fn get_approximate_influence_distance(
-    quadratic_attenuation: f32,
-    linear_attenuation: f32,
-    constant_attenuation: f32,
-) -> f32 {
-    // y = 1.0 / (0.35x + 0.44x^2 + 1), from -20.0 to 20.0
-
-    let mut distance: f32 = 0.01;
-
-    let mut attenuation = 1.0
-        / (quadratic_attenuation * distance * distance
-            + linear_attenuation * distance
-            + constant_attenuation);
-
-    while attenuation > 0.1 {
-        // while attenuation > 0.0001 {
-        distance += 0.01;
-        attenuation = 1.0
-            / (quadratic_attenuation * distance * distance
-                + linear_attenuation * distance
-                + constant_attenuation);
-    }
-
-    distance -= 0.01;
-
-    distance
 }
