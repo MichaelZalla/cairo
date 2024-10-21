@@ -12,6 +12,8 @@ pub mod directional_light;
 pub mod point_light;
 pub mod spot_light;
 
+pub mod shadow;
+
 pub(in crate::scene::light) fn contribute_pbr(
     sample: &GeometrySample,
     light_intensities: &Vec3,

@@ -1,5 +1,4 @@
 use std::{
-    cell::RefCell,
     fmt::{self, Display},
     rc::Rc,
 };
@@ -7,17 +6,15 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::Buffer2D,
     color,
-    render::culling::FaceCullingReject,
     resource::handle::Handle,
     scene::{camera::Camera, context::SceneContext, resources::SceneResources},
     serde::PostDeserialize,
-    shader::{context::ShaderContext, geometry::sample::GeometrySample},
+    shader::geometry::sample::GeometrySample,
     shaders::shadow_shaders::point_shadows::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
     },
-    software_renderer::SoftwareRenderer,
     texture::{
         cubemap::{CubeMap, CUBE_MAP_SIDES},
         map::TextureMap,
@@ -25,74 +22,11 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-use super::{attenuation::LightAttenuation, contribute_pbr};
-
-static POINT_LIGHT_SHADOW_CAMERA_NEAR: f32 = 0.05;
-
-#[derive(Debug, Clone)]
-pub struct ShadowMapRenderingContext {
-    pub projection_z_far: f32,
-    pub framebuffer: Rc<RefCell<Framebuffer>>,
-    pub shader_context: Rc<RefCell<ShaderContext>>,
-    pub renderer: RefCell<SoftwareRenderer>,
-}
-
-impl ShadowMapRenderingContext {
-    pub fn new(
-        shadow_map_size: u32,
-        projection_z_far: f32,
-        scene_resources: Rc<SceneResources>,
-    ) -> Self {
-        // Shadow map framebuffer.
-
-        let projection_z_near = POINT_LIGHT_SHADOW_CAMERA_NEAR;
-
-        let framebuffer = {
-            let mut framebuffer = Framebuffer::new(shadow_map_size, shadow_map_size);
-
-            framebuffer.complete(projection_z_near, projection_z_far);
-
-            Rc::new(RefCell::new(framebuffer))
-        };
-
-        // Shadow map shader context.
-
-        let shader_context = Rc::new(RefCell::new(ShaderContext::default()));
-
-        // Shadow map renderer.
-
-        let renderer = {
-            let mut renderer = SoftwareRenderer::new(
-                shader_context.clone(),
-                scene_resources,
-                PointShadowMapVertexShader,
-                PointShadowMapFragmentShader,
-                Default::default(),
-            );
-
-            renderer.set_geometry_shader(PointShadowMapGeometryShader);
-
-            renderer
-                .options
-                .rasterizer_options
-                .face_culling_strategy
-                .reject = FaceCullingReject::Frontfaces;
-
-            renderer.bind_framebuffer(Some(framebuffer.clone()));
-
-            RefCell::new(renderer)
-        };
-
-        // Shadow map rendering context.
-
-        Self {
-            projection_z_far,
-            renderer,
-            shader_context,
-            framebuffer,
-        }
-    }
-}
+use super::{
+    attenuation::LightAttenuation,
+    contribute_pbr,
+    shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
+};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PointLight {
@@ -152,6 +86,9 @@ impl PointLight {
         let shadow_map_rendering_context = ShadowMapRenderingContext::new(
             shadow_map_size,
             projection_z_far,
+            PointShadowMapVertexShader,
+            PointShadowMapGeometryShader,
+            PointShadowMapFragmentShader,
             scene_resources.clone(),
         );
 
@@ -188,7 +125,7 @@ impl PointLight {
             let mut shader_context = rendering_context.shader_context.borrow_mut();
 
             shader_context
-                .point_light_projection_z_far
+                .projection_z_far
                 .replace(rendering_context.projection_z_far);
         }
 
@@ -312,7 +249,7 @@ impl PointLight {
 
         let current_depth = light_to_fragment.mag();
 
-        let (near, far) = (POINT_LIGHT_SHADOW_CAMERA_NEAR, context.projection_z_far);
+        let (near, far) = (SHADOW_MAP_CAMERA_NEAR, context.projection_z_far);
 
         let closest_depth = near
             + shadow_map.sample_nearest(&Vec4::new(light_to_fragment_direction, 1.0))
@@ -354,7 +291,7 @@ impl PointLight {
             // @NOTE(mzalla) Assumes the same near and far is set for the
             // framebuffer's depth attachment.
 
-            camera.set_projection_z_near(POINT_LIGHT_SHADOW_CAMERA_NEAR);
+            camera.set_projection_z_near(SHADOW_MAP_CAMERA_NEAR);
             camera.set_projection_z_far(context.projection_z_far);
 
             camera
