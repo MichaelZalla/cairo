@@ -315,8 +315,6 @@ fn main() -> Result<(), String> {
             for entry in directional_light_arena.entries.iter_mut().flatten() {
                 let directional_light = &mut entry.item;
 
-                println!("Updating shadow maps!");
-
                 directional_light.update_shadow_maps(&scene_context)?;
             }
         }
