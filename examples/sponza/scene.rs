@@ -118,7 +118,7 @@ pub fn make_sponza_scene(
         let mut transform = Transform3D::default();
 
         transform.set_translation(Vec3 {
-            x: 800.0 * (0.0_f32).sin(),
+            x: 0.0,
             y: 200.00,
             z: -75.0,
         });

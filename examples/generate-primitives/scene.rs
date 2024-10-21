@@ -199,38 +199,21 @@ pub fn make_primitives_scene(
 
     // Add point lights to our scene.
 
-    let point_light_decal_material = {
-        let mut material = Material::new("point_light_decal".to_string());
-
-        material.alpha_map = Some(texture_u8_arena.insert(TextureMap::new(
-            "./assets/decals/point_light_small.png",
-            TextureMapStorageFormat::Index8(0),
-        )));
-
-        material.emissive_color_map = material.alpha_map;
-
-        material.load_all_maps(texture_u8_arena, rendering_context)?;
-
-        material
-    };
-
-    let _point_light_decal_material_handle = material_arena.insert(point_light_decal_material);
-
     for x in 0..(LIGHT_GRID_SUBDIVISIONS + 1) {
         for z in 0..(LIGHT_GRID_SUBDIVISIONS + 1) {
-            let light = PointLight::new();
+            let point_light = PointLight::new();
+
+            let point_light_handle = point_light_arena.insert(point_light);
 
             let mut transform = Transform3D::default();
 
             transform.set_translation(Vec3 {
                 x: -(LIGHT_GRID_SIZE / 2.0)
                     + (x as f32 / LIGHT_GRID_SUBDIVISIONS as f32) * LIGHT_GRID_SIZE,
-                y: 1.0,
+                y: 10.0,
                 z: -(LIGHT_GRID_SIZE / 2.0)
                     + (z as f32 / LIGHT_GRID_SUBDIVISIONS as f32) * LIGHT_GRID_SIZE,
             });
-
-            let point_light_handle = point_light_arena.insert(light);
 
             let point_light_node = SceneNode::new(
                 SceneNodeType::PointLight,
@@ -244,39 +227,20 @@ pub fn make_primitives_scene(
 
     // Add a spot light to our scene.
 
-    let spot_light_decal_material = {
-        let mut material = Material::new("spot_light_decal".to_string());
-
-        material.alpha_map = Some(texture_u8_arena.insert(TextureMap::new(
-            "./assets/decals/spot_light_small.png",
-            TextureMapStorageFormat::Index8(0),
-        )));
-
-        material.emissive_color_map = material.alpha_map;
-
-        material.load_all_maps(texture_u8_arena, rendering_context)?;
-
-        material
-    };
-
-    let _spot_light_decal_material_handle = material_arena.insert(spot_light_decal_material);
-
     let spot_light_node = {
-        let mut spot_light = SpotLight::new();
+        let spot_light = SpotLight::new();
 
-        spot_light.look_vector.set_position(Vec3 {
+        let spot_light_handle = spot_light_arena.insert(spot_light);
+
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
             x: -6.0,
             y: 15.0,
             z: -6.0,
         });
 
-        let spot_light_handle = spot_light_arena.insert(spot_light);
-
-        SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        )
+        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
     };
 
     scene.root.add_child(spot_light_node)?;

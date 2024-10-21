@@ -86,19 +86,19 @@ pub fn make_scene(
     // Add a point light to our scene.
 
     let point_light_node = {
-        let mut light = PointLight::new();
+        let mut point_light = PointLight::new();
 
-        light.intensities = Vec3::ones() * 10.0;
+        point_light.intensities = Vec3::ones() * 10.0;
 
-        light.attenuation = LightAttenuation::new(1.0, 0.35, 0.44);
+        point_light.attenuation = LightAttenuation::new(1.0, 0.35, 0.44);
 
-        let point_light_handle = point_light_arena.insert(light);
+        let point_light_handle = point_light_arena.insert(point_light);
 
         let mut transform = Transform3D::default();
 
         transform.set_translation(Vec3 {
             x: 0.0,
-            y: 0.0,
+            y: 10.0,
             z: -4.0,
         });
 
@@ -114,15 +114,19 @@ pub fn make_scene(
     // Add a spot light to our scene.
 
     let spot_light_node = {
-        let light = SpotLight::new();
+        let spot_light = SpotLight::new();
 
-        let light_handle = spot_light_arena.insert(light);
+        let spot_light_handle = spot_light_arena.insert(spot_light);
 
-        SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(light_handle),
-        )
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 30.0,
+            z: 0.0,
+        });
+
+        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
     };
 
     scene.root.add_child(spot_light_node)?;

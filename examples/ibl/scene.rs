@@ -65,6 +65,12 @@ pub fn make_sphere_grid_scene(
     for grid_index_x in 0..4 {
         let mut light = PointLight::new();
 
+        light.intensities = Vec3::ones() * 15.0;
+
+        light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
+
+        let point_light_handle = point_light_arena.insert(light);
+
         let mut transform = Transform3D::default();
 
         transform.set_translation(Vec3 {
@@ -72,12 +78,6 @@ pub fn make_sphere_grid_scene(
             y: 4.0,
             z: -3.0,
         });
-
-        light.intensities = Vec3::ones() * 15.0;
-
-        light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
-
-        let point_light_handle = point_light_arena.insert(light);
 
         let point_light_node = SceneNode::new(
             SceneNodeType::PointLight,

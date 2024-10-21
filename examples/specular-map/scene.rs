@@ -20,6 +20,7 @@ use cairo::{
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
+    transform::Transform3D,
     vec::vec3::Vec3,
 };
 
@@ -169,9 +170,17 @@ pub fn make_scene(
 
         let point_light_handle = point_light_arena.insert(light);
 
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 6.0,
+            z: 0.0,
+        });
+
         SceneNode::new(
             SceneNodeType::PointLight,
-            Default::default(),
+            transform,
             Some(point_light_handle),
         )
     };
@@ -183,20 +192,19 @@ pub fn make_scene(
     let spot_light_node = {
         let mut spot_light = SpotLight::new();
 
-        spot_light.intensities = Vec3::ones() * 0.0;
-
-        spot_light.look_vector.set_position(Vec3 {
-            y: 10.0,
-            ..spot_light.look_vector.get_position()
-        });
+        spot_light.intensities = Vec3::ones() * 0.15;
 
         let spot_light_handle = spot_light_arena.insert(spot_light);
 
-        SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        )
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        });
+
+        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
     };
 
     scene.root.add_child(spot_light_node)?;

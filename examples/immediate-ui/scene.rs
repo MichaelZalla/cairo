@@ -72,9 +72,7 @@ pub fn make_scene(
     // Add a spot light to our scene.
 
     let spot_light_node = {
-        let mut spot_light = SpotLight::new();
-
-        spot_light.look_vector.set_target_position(Vec3::default());
+        let spot_light = SpotLight::new();
 
         let spot_light_handle = spot_light_arena.insert(spot_light);
 

@@ -184,11 +184,15 @@ pub fn make_scene(
 
         let spot_light_handle = spot_light_arena.insert(spot_light);
 
-        SceneNode::new(
-            SceneNodeType::SpotLight,
-            Default::default(),
-            Some(spot_light_handle),
-        )
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(Vec3 {
+            x: 0.0,
+            y: 30.0,
+            z: 0.0,
+        });
+
+        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
     };
 
     scene.root.add_child(spot_light_node)?;
