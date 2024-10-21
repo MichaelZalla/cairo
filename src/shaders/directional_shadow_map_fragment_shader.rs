@@ -2,7 +2,10 @@
 
 use crate::{
     color::Color,
-    scene::resources::SceneResources,
+    scene::{
+        light::shadow::{DEFAULT_SHADOW_MAP_CAMERA_FAR, SHADOW_MAP_CAMERA_NEAR},
+        resources::SceneResources,
+    },
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
@@ -10,36 +13,21 @@ use crate::{
 };
 
 pub static DirectionalShadowMapFragmentShader: FragmentShaderFn =
-    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
+    |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         let p = Vec4::new(sample.world_pos, 1.0)
             * context.view_inverse_transform
             * context.projection_transform;
 
-        let directional_light_arena = resources.directional_light.borrow();
+        let (near, far) = (
+            context.projection_z_near.unwrap_or(SHADOW_MAP_CAMERA_NEAR),
+            context
+                .projection_z_far
+                .unwrap_or(DEFAULT_SHADOW_MAP_CAMERA_FAR),
+        );
 
-        let (depth, _max_depth) =
-            match directional_light_arena.get(&context.directional_light.unwrap()) {
-                Ok(entry) => {
-                    let directional_light = &entry.item;
+        let _max_depth = far - near;
 
-                    let cameras = directional_light.shadow_map_cameras.as_ref().unwrap();
-                    let camera_index = context.directional_light_view_projection_index.unwrap();
-
-                    let (_far_z, camera) = cameras[camera_index];
-
-                    let (near, far) = (
-                        camera.get_projection_z_near(),
-                        camera.get_projection_z_far(),
-                    );
-
-                    let max_depth = far - near;
-
-                    let depth = p.z.max(near).min(far);
-
-                    (depth, max_depth)
-                }
-                Err(_) => panic!(),
-            };
+        let depth = p.z.max(near).min(far);
 
         if depth > 1.0 {
             Default::default()

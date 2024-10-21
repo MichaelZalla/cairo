@@ -35,6 +35,7 @@ pub struct SceneResources {
     pub entity: Rc<RefCell<Arena<Entity>>>,
     pub material: Rc<RefCell<Arena<Material>>>,
     pub texture_u8: Rc<RefCell<Arena<TextureMap>>>,
+    pub texture_f32: Rc<RefCell<Arena<TextureMap<f32>>>>,
     pub texture_vec2: Rc<RefCell<Arena<TextureMap<Vec2>>>>,
     pub texture_vec3: Rc<RefCell<Arena<TextureMap<Vec3>>>>,
     pub cubemap_u8: Rc<RefCell<Arena<CubeMap>>>,
@@ -63,6 +64,7 @@ impl SceneResources {
         self.entity.borrow_mut().post_deserialize();
         self.material.borrow_mut().post_deserialize();
         self.texture_u8.borrow_mut().post_deserialize();
+        self.texture_f32.borrow_mut().post_deserialize();
         self.texture_vec2.borrow_mut().post_deserialize();
         self.texture_vec3.borrow_mut().post_deserialize();
         self.cubemap_u8.borrow_mut().post_deserialize();
