@@ -9,10 +9,7 @@ use crate::{
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
     transform::look_vector::LookVector,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::{self, Vec3},
 };
 
 use super::{attenuation::LightAttenuation, contribute_pbr};
@@ -82,36 +79,27 @@ impl SpotLight {
     }
 
     pub fn contribute(self, world_pos: Vec3) -> Vec3 {
-        let mut spot_light_contribution: Vec3 = Vec3::new();
+        let fragment_to_light = self.look_vector.get_position() - world_pos;
 
-        let vertex_to_spot_light = self.look_vector.get_position() - world_pos;
-
-        let distance_to_spot_light = vertex_to_spot_light.mag();
-
-        let direction_to_spot_light = vertex_to_spot_light / distance_to_spot_light;
+        let direction_to_light = fragment_to_light.as_normal();
 
         let theta_angle =
-            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_spot_light * -1.0));
+            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_light * -1.0));
 
         let spot_attenuation =
             ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);
 
         if theta_angle > self.outer_cutoff_angle_cos {
-            spot_light_contribution = self.intensities * spot_attenuation;
+            self.intensities * spot_attenuation
+        } else {
+            Default::default()
         }
-
-        spot_light_contribution
     }
 
     pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
-        let tangent_space_info = sample.tangent_space_info;
+        let fragment_to_light = self.look_vector.get_position() - sample.world_pos;
 
-        let spot_light_position_tangent_space = (Vec4::new(self.look_vector.get_position(), 1.0)
-            * tangent_space_info.tbn_inverse)
-            .to_vec3();
-
-        let direction_to_light =
-            (spot_light_position_tangent_space - tangent_space_info.fragment_position).as_normal();
+        let direction_to_light = fragment_to_light.as_normal();
 
         let theta_angle =
             0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_light * -1.0));
