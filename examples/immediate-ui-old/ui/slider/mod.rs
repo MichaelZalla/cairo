@@ -221,6 +221,7 @@ pub fn do_slider(
     result
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_slider(
     ctx: &mut RefMut<'_, UIContext>,
     id: &UIID,

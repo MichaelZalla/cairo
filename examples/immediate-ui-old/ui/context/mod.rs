@@ -10,6 +10,7 @@ use cairo::{
 
 use super::theme::{UITheme, DEFAULT_UI_THEME};
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UIID {
     pub item: u32,

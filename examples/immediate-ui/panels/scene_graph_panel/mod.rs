@@ -169,7 +169,7 @@ impl PanelInstance for SceneGraphPanel {
                 COMMAND_BUFFER.with(|buffer| -> Result<(), String> {
                     let mut pending_queue = buffer.pending_commands.borrow_mut();
 
-                    self.render_for_scene(scene, &resources, tree, &mut pending_queue)
+                    self.render_for_scene(scene, resources, tree, &mut pending_queue)
                 })?;
             } else {
                 panic!(

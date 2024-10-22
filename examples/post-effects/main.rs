@@ -238,7 +238,7 @@ fn main() -> Result<(), String> {
         let update_node_rc = Rc::new(update_node);
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,

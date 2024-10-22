@@ -120,7 +120,7 @@ fn main() -> Result<(), String> {
         // Traverse the scene graph and update its nodes.
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,

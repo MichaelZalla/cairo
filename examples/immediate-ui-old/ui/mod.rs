@@ -22,6 +22,7 @@ pub mod text;
 pub mod textbox;
 pub mod theme;
 
+#[allow(clippy::too_many_arguments)]
 pub fn get_mouse_result(
     ctx: &mut RefMut<'_, UIContext>,
     id: &UIID,

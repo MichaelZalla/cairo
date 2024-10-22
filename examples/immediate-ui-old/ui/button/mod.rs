@@ -133,6 +133,7 @@ pub fn do_button(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_button(
     ctx: &mut RefMut<'_, UIContext>,
     id: &UIID,

@@ -142,6 +142,7 @@ pub fn do_checkbox(
     result
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_checkbox(
     ctx: &mut RefMut<'_, UIContext>,
     id: &UIID,

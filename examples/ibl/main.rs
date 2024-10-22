@@ -164,7 +164,7 @@ fn main() -> Result<(), String> {
         shader_context
             .set_ambient_specular_brdf_integration_map(Some(specular_brdf_integration_map_handle));
 
-        set_ibl_map_handles(&resources, scene, &radiance_irradiance_handles[0]);
+        set_ibl_map_handles(resources, scene, &radiance_irradiance_handles[0]);
     }
 
     let mut renderer = SoftwareRenderer::new(
@@ -225,7 +225,7 @@ fn main() -> Result<(), String> {
         let update_node_rc = Rc::new(update_node);
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,
@@ -249,7 +249,7 @@ fn main() -> Result<(), String> {
                 println!("{}", current_index);
 
                 set_ibl_map_handles(
-                    &resources,
+                    resources,
                     scene,
                     &radiance_irradiance_handles[*current_index],
                 );

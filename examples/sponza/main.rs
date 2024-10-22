@@ -280,7 +280,7 @@ fn main() -> Result<(), String> {
         let update_scene_graph_node_rc = Rc::new(update_scene_graph_node);
 
         scene.update(
-            &resources,
+            resources,
             &mut shader_context,
             app,
             mouse_state,

@@ -97,9 +97,7 @@ impl Strut {
 
         let damper_force_i_j = i_j_direction * self.damper * difference_in_velocities_along_strut;
 
-        let net_force_i_j = spring_force_i_j + damper_force_i_j;
-
-        net_force_i_j
+        spring_force_i_j + damper_force_i_j
     }
 
     fn compute_drag_and_lift_forces(

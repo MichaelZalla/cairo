@@ -131,7 +131,7 @@ pub fn do_dropdown(
     match &mut model_entry {
         Entry::Occupied(o) => {
             {
-                current_item = o.get().clone();
+                current_item.clone_from(o.get());
             }
 
             // Check if we've selected an option from the open menu.
@@ -170,7 +170,7 @@ pub fn do_dropdown(
                                 if *target_item != current_item {
                                     did_edit = true;
 
-                                    *o.get_mut() = (*target_item).clone();
+                                    o.get_mut().clone_from(target_item);
                                 }
                             }
                         }
@@ -211,6 +211,7 @@ pub fn do_dropdown(
     result
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_dropdown(
     ctx: &mut RefMut<'_, UIContext>,
     id: &UIID,

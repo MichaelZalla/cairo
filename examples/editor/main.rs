@@ -266,7 +266,7 @@ fn main() -> Result<(), String> {
             EDITOR_PANEL_ARENAS.with(|panel_arenas| {
                 let main_window_panel_tree = editor::panel::build_main_window_panel_tree(
                     &main_window_id,
-                    &resources,
+                    resources,
                     panel_arenas,
                     &editor_panel_render_callbacks,
                     &renderer_rc,
