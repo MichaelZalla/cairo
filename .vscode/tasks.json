@@ -268,14 +268,16 @@
         "$rustc"
       ],
       "group": {
-        "kind": "build"
+        "kind": "build",
+        "isDefault": true
       },
-      "label": "Rust: cargo run --example generate-primitives",
+      "label": "Rust: cargo run --example primitives",
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
-        "generate-primitives",
+        "primitives",
       ]
     },
     {

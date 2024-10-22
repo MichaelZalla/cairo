@@ -201,7 +201,7 @@ pub(crate) fn make_scene(
                     z: -(CUBE_ROWS as f32 * CUBE_WIDTH + (CUBE_ROWS - 1) as f32 * CUBE_SPACING)
                         / 2.0
                         + z as f32 * (CUBE_WIDTH + CUBE_SPACING),
-                    y: 1.5 + 0.0 * (x * z) as f32,
+                    y: 1.5,
                 });
 
                 node

@@ -3,7 +3,10 @@ extern crate sdl2;
 use std::{cell::RefCell, f32, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_320_BY_180},
+        App, AppWindowInfo,
+    },
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -24,7 +27,10 @@ use cairo::{
     software_renderer::SoftwareRenderer,
     texture::{map::TextureMap, sample::sample_nearest_f32},
     transform::quaternion::Quaternion,
-    vec::{vec2::Vec2, vec3},
+    vec::{
+        vec2::Vec2,
+        vec3::{self, Vec3},
+    },
 };
 
 use scene::make_scene;
@@ -32,13 +38,27 @@ use scene::make_scene;
 mod scene;
 
 static USE_DEMO_CAMERA: bool = false;
+static DRAW_DIRECTIONAL_SHADOW_MAP_THUMBNAILS: bool = false;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/directional-shadows".to_string(),
+        title: "examples/primitives".to_string(),
         relative_mouse_mode: true,
+        window_resolution: RESOLUTION_320_BY_180 * 4.0,
+        canvas_resolution: RESOLUTION_320_BY_180,
         ..Default::default()
     };
+
+    // Render callback
+
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   _canvas: &mut [u8]|
+     -> Result<(), String> { Ok(()) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
+
+    // let rendering_context = &app.context.rendering_context;
 
     // Pipeline framebuffer
 
@@ -62,8 +82,17 @@ fn main() -> Result<(), String> {
 
         let mut camera_arena = resources.camera.borrow_mut();
         let mut environment_arena = resources.environment.borrow_mut();
+
+        let mut skybox_arena = resources.skybox.borrow_mut();
+        let mut texture_vec2_arena = resources.texture_vec2.borrow_mut();
+        let mut cubemap_vec3_arena = resources.cubemap_vec3.borrow_mut();
+
         let mut ambient_light_arena = resources.ambient_light.borrow_mut();
         let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+        // let mut texture_u8_arena = resources.texture_u8.borrow_mut();
         let mut mesh_arena = resources.mesh.borrow_mut();
         let mut material_arena = resources.material.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
@@ -72,8 +101,13 @@ fn main() -> Result<(), String> {
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
+            &mut skybox_arena,
+            &mut texture_vec2_arena,
+            &mut cubemap_vec3_arena,
             &mut ambient_light_arena,
             &mut directional_light_arena,
+            &mut point_light_arena,
+            &mut spot_light_arena,
             &mut mesh_arena,
             &mut material_arena,
             &mut entity_arena,
@@ -88,7 +122,19 @@ fn main() -> Result<(), String> {
         for entry in directional_light_arena.entries.iter_mut().flatten() {
             let directional_light = &mut entry.item;
 
-            directional_light.enable_shadow_maps(768, 100.0, scene_context.resources.clone());
+            directional_light.enable_shadow_maps(384, 100.0, scene_context.resources.clone());
+        }
+    }
+
+    // Enable shadow maps for point lights.
+
+    {
+        let mut point_light_arena = scene_context.resources.point_light.borrow_mut();
+
+        for entry in point_light_arena.entries.iter_mut().flatten() {
+            let point_light = &mut entry.item;
+
+            point_light.enable_shadow_maps(192, 250.0, scene_context.resources.clone());
         }
     }
 
@@ -115,15 +161,6 @@ fn main() -> Result<(), String> {
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let renderer_rc = RefCell::new(renderer);
-
-    // Render callback
-
-    let render_to_window_canvas = |_frame_index: Option<u32>,
-                                   _new_resolution: Option<Resolution>,
-                                   _canvas: &mut [u8]|
-     -> Result<(), String> { Ok(()) };
-
-    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     // App update and render callbacks
 
@@ -158,7 +195,7 @@ fn main() -> Result<(), String> {
 
                 let seconds_since_last_update = app.timing_info.seconds_since_last_update;
 
-                let (node_type, _handle) = (node.get_type(), node.get_handle());
+                let (node_type, handle) = (node.get_type(), node.get_handle());
 
                 match node_type {
                     SceneNodeType::Camera => {
@@ -211,6 +248,85 @@ fn main() -> Result<(), String> {
 
                         Ok(false)
                     }
+                    SceneNodeType::PointLight => {
+                        let transform = node.get_transform_mut();
+
+                        let position = transform.translation();
+
+                        let y = position.y;
+
+                        static POINT_LIGHT_ORBIT_RADIUS: f32 = 16.0;
+
+                        transform.set_translation(Vec3 {
+                            x: uptime.sin() * POINT_LIGHT_ORBIT_RADIUS,
+                            y,
+                            z: uptime.cos() * POINT_LIGHT_ORBIT_RADIUS,
+                        });
+
+                        Ok(false)
+                    }
+                    SceneNodeType::SpotLight => {
+                        let transform = node.get_transform_mut();
+
+                        transform.set_translation(Vec3 {
+                            x: 25.0,
+                            y: 15.0,
+                            z: 0.0,
+                        });
+
+                        if let Some(handle) = node.get_handle() {
+                            let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+                            if let Ok(entry) = spot_light_arena.get_mut(handle) {
+                                let spot_light = &mut entry.item;
+
+                                spot_light.look_vector.set_target_position(Vec3 {
+                                    x: 25.0 + 10.0 * uptime.sin(),
+                                    y: 0.0,
+                                    z: 0.0 + 10.0 * uptime.cos(),
+                                });
+                            }
+                        }
+
+                        Ok(false)
+                    }
+                    SceneNodeType::Entity => match handle {
+                        Some(handle) => {
+                            let mut entity_arena = resources.entity.borrow_mut();
+
+                            match entity_arena.get_mut(handle) {
+                                Ok(entry) => {
+                                    let entity = &mut entry.item;
+
+                                    if let Ok(entry) = resources.mesh.borrow_mut().get(&entity.mesh)
+                                    {
+                                        let mesh = &entry.item;
+
+                                        if let Some(object_name) = &mesh.object_name {
+                                            if object_name == "plane" {
+                                                return Ok(false);
+                                            }
+                                        }
+                                    }
+
+                                    let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
+
+                                    let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+
+                                    node.get_transform_mut().set_rotation(q);
+
+                                    Ok(false)
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get Entity from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
+                        }
+                        None => {
+                            panic!("Encountered a `Entity` node with no resource handle!")
+                        }
+                    },
                     _ => Ok(false),
                 }
             },
@@ -305,13 +421,12 @@ fn main() -> Result<(), String> {
                   _new_resolution: Option<Resolution>,
                   canvas: &mut [u8]|
      -> Result<(), String> {
+        // Render scene.
+
         let resources = &scene_context.resources;
 
-        let scenes = scene_context.scenes.borrow();
-
-        let scene = &scenes[0];
-
-        // Render scene.
+        let mut scenes = scene_context.scenes.borrow_mut();
+        let scene = &mut scenes[0];
 
         match scene.render(
             resources,
@@ -332,22 +447,24 @@ fn main() -> Result<(), String> {
                     Some(color_buffer_lock) => {
                         let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                        let directional_light_arena = resources.directional_light.borrow();
+                        if DRAW_DIRECTIONAL_SHADOW_MAP_THUMBNAILS {
+                            let directional_light_arena = resources.directional_light.borrow();
 
-                        let texture_f32_arena = resources.texture_f32.borrow();
+                            let texture_f32_arena = resources.texture_f32.borrow();
 
-                        if let Some(handle) = scene
-                            .root
-                            .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
-                        {
-                            if let Ok(entry) = directional_light_arena.get(&handle) {
-                                let directional_light = &entry.item;
+                            if let Some(handle) = scene
+                                .root
+                                .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
+                            {
+                                if let Ok(entry) = directional_light_arena.get(&handle) {
+                                    let directional_light = &entry.item;
 
-                                blit_directional_shadow_maps(
-                                    directional_light,
-                                    &texture_f32_arena,
-                                    &mut color_buffer,
-                                );
+                                    blit_directional_shadow_maps(
+                                        directional_light,
+                                        &texture_f32_arena,
+                                        &mut color_buffer,
+                                    );
+                                }
                             }
                         }
 

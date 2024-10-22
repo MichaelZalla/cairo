@@ -421,7 +421,7 @@ impl DirectionalLight {
             }
         }
 
-        shadow / 9.0
+        shadow
     }
 
     fn get_shadowing(

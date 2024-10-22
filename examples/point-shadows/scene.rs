@@ -75,6 +75,8 @@ pub fn make_scene(
 
                 light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
 
+                light.influence_distance = light.attenuation.get_approximate_influence_distance();
+
                 light
             };
 
