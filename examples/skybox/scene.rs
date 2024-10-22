@@ -80,6 +80,7 @@ pub fn make_scene(
             radiance: Some(skybox_cubemap_handle),
             irradiance: None,
             specular_prefiltered_environment: None,
+            ambient_specular_brdf_integration: None,
         };
 
         let skybox_handle = skybox_arena.insert(skybox);

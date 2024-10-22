@@ -47,16 +47,23 @@ pub fn make_sphere_grid_scene(
         directional_light_arena,
     )?;
 
-    // Move the camera backwards.
+    // Move out default camera.
 
+    if let Some(handle) = scene
+        .root
+        .find(|node| *node.get_type() == SceneNodeType::Camera)
+        .unwrap()
     {
-        for entry in camera_arena.entries.as_mut_slice().iter_mut().flatten() {
+        if let Ok(entry) = camera_arena.get_mut(&handle) {
             let camera = &mut entry.item;
 
             camera.look_vector.set_position(Vec3 {
-                z: -16.0,
-                ..Default::default()
+                x: 0.0,
+                y: 0.0,
+                z: -20.0,
             });
+
+            camera.look_vector.set_target_position(Default::default());
         }
     }
 
@@ -155,12 +162,9 @@ pub fn make_sphere_grid_scene(
     for node in scene.root.children_mut().as_mut().unwrap() {
         if node.is_type(SceneNodeType::Environment) {
             let skybox_node = {
-                // No handles for now.
                 let skybox = Skybox {
                     is_hdr: true,
-                    radiance: None,
-                    irradiance: None,
-                    specular_prefiltered_environment: None,
+                    ..Default::default()
                 };
 
                 let skybox_handle = skybox_arena.insert(skybox);

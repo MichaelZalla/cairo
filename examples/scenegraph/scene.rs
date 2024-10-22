@@ -234,10 +234,8 @@ pub fn make_scene(
         let skybox_cubemap_handle = cubemap_u8_arena.insert(skybox_cubemap);
 
         let skybox = Skybox {
-            is_hdr: false,
             radiance: Some(skybox_cubemap_handle),
-            irradiance: None,
-            specular_prefiltered_environment: None,
+            ..Default::default()
         };
 
         let skybox_handle = skybox_arena.insert(skybox);

@@ -498,6 +498,10 @@ impl SceneNode {
                                 skybox.specular_prefiltered_environment,
                             );
 
+                            shader_context.set_ambient_specular_brdf_integration_map(
+                                skybox.ambient_specular_brdf_integration,
+                            );
+
                             shader_context.set_skybox_transform(Some(*current_world_transform));
 
                             Ok(())
