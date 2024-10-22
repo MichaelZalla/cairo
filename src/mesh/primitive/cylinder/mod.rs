@@ -33,9 +33,9 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         let radians = 2.0 * PI * alpha;
 
         top_ring_vertices.push(Vec3 {
-            x: (radius / 2.0) * radians.cos(),
+            x: radius * radians.cos(),
             y: top_center_vertex.y,
-            z: (radius / 2.0) * radians.sin(),
+            z: radius * radians.sin(),
         });
 
         top_ring_uvs.push(Vec2 {
@@ -45,9 +45,9 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         });
 
         bottom_ring_vertices.push(Vec3 {
-            x: (radius / 2.0) * radians.cos(),
+            x: radius * radians.cos(),
             y: bottom_center_vertex.y,
-            z: (radius / 2.0) * radians.sin(),
+            z: radius * radians.sin(),
         });
 
         bottom_ring_uvs.push(Vec2 {
