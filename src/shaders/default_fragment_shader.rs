@@ -158,7 +158,8 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    spot_light_contribution += light.contribute_pbr(sample, &f0);
+                    spot_light_contribution +=
+                        light.contribute_pbr(sample, &f0, &context.view_position);
                 }
                 Err(err) => panic!("Failed to get SpotLight from Arena: {:?}: {}", handle, err),
             }

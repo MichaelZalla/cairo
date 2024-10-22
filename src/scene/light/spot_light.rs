@@ -9,10 +9,13 @@ use crate::{
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
     transform::look_vector::LookVector,
-    vec::vec3::{self, Vec3},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
-use super::{attenuation::LightAttenuation, contribute_pbr};
+use super::{attenuation::LightAttenuation, contribute_pbr_world_space};
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SpotLight {
@@ -96,19 +99,27 @@ impl SpotLight {
         }
     }
 
-    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3) -> Vec3 {
+    pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3, view_position: &Vec4) -> Vec3 {
         let fragment_to_light = self.look_vector.get_position() - sample.world_pos;
 
-        let direction_to_light = fragment_to_light.as_normal();
+        let direction_to_light_world_space = fragment_to_light.as_normal();
 
-        let theta_angle =
-            0.0_f32.max((self.look_vector.get_forward()).dot(direction_to_light * -1.0));
+        let theta_angle = 0.0_f32
+            .max((self.look_vector.get_forward()).dot(direction_to_light_world_space * -1.0));
 
         let spot_attenuation =
             ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);
 
+        let light_intensities = &self.intensities;
+
         if theta_angle > self.outer_cutoff_angle_cos {
-            contribute_pbr(sample, &self.intensities, &direction_to_light, f0) * spot_attenuation
+            contribute_pbr_world_space(
+                sample,
+                light_intensities,
+                &direction_to_light_world_space,
+                f0,
+                view_position,
+            ) * spot_attenuation
         } else {
             Default::default()
         }

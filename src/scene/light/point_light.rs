@@ -6,17 +6,28 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    buffer::Buffer2D, render::culling::FaceCullingReject, resource::handle::Handle, scene::{camera::Camera, context::SceneContext, resources::SceneResources}, serde::PostDeserialize, shader::geometry::sample::GeometrySample, shaders::shadow_shaders::point_shadows::{
+    buffer::Buffer2D,
+    render::culling::FaceCullingReject,
+    resource::handle::Handle,
+    scene::{camera::Camera, context::SceneContext, resources::SceneResources},
+    serde::PostDeserialize,
+    shader::geometry::sample::GeometrySample,
+    shaders::shadow_shaders::point_shadows::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
-    }, texture::{
+    },
+    texture::{
         cubemap::{CubeMap, CUBE_MAP_SIDES},
         map::TextureMap,
-    }, vec::{vec3::{self, Vec3}, vec4::Vec4}
+    },
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 use super::{
     attenuation::LightAttenuation,
-    contribute_pbr,
+    contribute_pbr_tangent_space,
     shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
 };
 
@@ -215,8 +226,10 @@ impl PointLight {
             (Vec4::new(self.position, 1.0) * tangent_space_info.tbn_inverse).to_vec3();
 
         let fragment_to_point_light = point_light_position - tangent_space_info.fragment_position;
+
         let distance_to_point_light = fragment_to_point_light.mag();
-        let direction_to_point_light = fragment_to_point_light / distance_to_point_light;
+
+        let direction_to_light_tangent_space = fragment_to_point_light / distance_to_point_light;
 
         // Compute an enshadowing term for this fragment/sample.
 
@@ -226,12 +239,20 @@ impl PointLight {
             0.0
         };
 
-        let contribution = contribute_pbr(sample, &self.intensities, &direction_to_point_light, f0)
-            * self
-                .attenuation
-                .attenuate_for_distance(distance_to_point_light);
+        let light_intensities = &self.intensities;
 
-        contribution * (1.0 - in_shadow)
+        let contribution = contribute_pbr_tangent_space(
+            sample,
+            light_intensities,
+            &direction_to_light_tangent_space,
+            f0,
+        );
+
+        let attenuation = self
+            .attenuation
+            .attenuate_for_distance(distance_to_point_light);
+
+        contribution * attenuation * (1.0 - in_shadow)
     }
 
     fn get_shadowing(&self, sample: &GeometrySample, shadow_map: &CubeMap<f32>) -> f32 {

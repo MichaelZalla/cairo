@@ -36,7 +36,7 @@ use crate::{
 };
 
 use super::{
-    contribute_pbr,
+    contribute_pbr_world_space,
     shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
 };
 
@@ -349,11 +349,7 @@ impl DirectionalLight {
         context: &ShaderContext,
         shadow_map_handles: Option<&Vec<Handle>>,
     ) -> Vec3 {
-        let tangent_space_info = sample.tangent_space_info;
-
-        let direction_to_light = (self.direction * -1.0 * tangent_space_info.tbn_inverse)
-            .to_vec3()
-            .as_normal();
+        let direction_to_light_world_space = (self.direction * -1.0).as_normal().to_vec3();
 
         // Compute an enshadowing term for this fragment/sample.
 
@@ -365,7 +361,13 @@ impl DirectionalLight {
 
         let intensity = self.intensities;
 
-        let contribution = contribute_pbr(sample, &intensity, &direction_to_light, f0);
+        let contribution = contribute_pbr_world_space(
+            sample,
+            &intensity,
+            &direction_to_light_world_space,
+            f0,
+            &context.view_position,
+        );
 
         contribution * (1.0 - in_shadow)
     }
