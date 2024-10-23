@@ -3,7 +3,10 @@ extern crate sdl2;
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_640_BY_320},
+        App, AppWindowInfo,
+    },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
@@ -30,6 +33,8 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/emissive-map".to_string(),
+        window_resolution: RESOLUTION_640_BY_320 * 2.0,
+        canvas_resolution: RESOLUTION_640_BY_320,
         ..Default::default()
     };
 

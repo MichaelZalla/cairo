@@ -14,7 +14,7 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
-    color::{self, Color},
+    color,
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
@@ -285,12 +285,29 @@ fn main() -> Result<(), String> {
 
     // Create several screen-space post-processing effects.
 
-    let outline_effect = DilationEffect::new(Color::rgb(234, 182, 118), color::BLACK, Some(3));
-    let invert_effect = InvertEffect {};
+    #[allow(unused)]
+    let outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
+    let outline_effect_rc = RefCell::new(outline_effect);
+
+    #[allow(unused)]
     let grayscale_effect = GrayscaleEffect {};
+    let grayscale_effect_rc = RefCell::new(grayscale_effect);
+
+    #[allow(unused)]
+    let invert_effect = InvertEffect {};
+    let invert_effect_rc = RefCell::new(invert_effect);
+
+    #[allow(unused)]
     let sharpen_kernel_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
+    let sharpen_kernel_effect_rc = RefCell::new(sharpen_kernel_effect);
+
+    #[allow(unused)]
     let blur_kernel_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(5));
+    let blur_kernel_effect_rc = RefCell::new(blur_kernel_effect);
+
+    #[allow(unused)]
     let edge_detection_kernel_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);
+    let edge_detection_kernel_effect_rc = RefCell::new(edge_detection_kernel_effect);
 
     // Primary function for rendering the UI tree to `framebuffer`; this
     // function is called when either (1) the main loop executes, or (2) the
@@ -355,27 +372,39 @@ fn main() -> Result<(), String> {
                     let current_settings = settings_rc.borrow();
 
                     if current_settings.effects.outline {
-                        outline_effect.apply(&mut color_buffer);
+                        let mut effect = outline_effect_rc.borrow_mut();
+
+                        effect.apply(&mut color_buffer);
                     }
 
                     if current_settings.effects.invert {
-                        invert_effect.apply(&mut color_buffer);
+                        let mut effect = invert_effect_rc.borrow_mut();
+
+                        effect.apply(&mut color_buffer);
                     }
 
                     if current_settings.effects.grayscale {
-                        grayscale_effect.apply(&mut color_buffer);
+                        let mut effect = grayscale_effect_rc.borrow_mut();
+
+                        effect.apply(&mut color_buffer);
                     }
 
                     if current_settings.effects.sharpen_kernel {
-                        sharpen_kernel_effect.apply(&mut color_buffer);
+                        let mut effect = sharpen_kernel_effect_rc.borrow_mut();
+
+                        effect.apply(&mut color_buffer);
                     }
 
                     if current_settings.effects.blur_kernel {
-                        blur_kernel_effect.apply(&mut color_buffer);
+                        let mut effect = blur_kernel_effect_rc.borrow_mut();
+
+                        effect.apply(&mut color_buffer);
                     }
 
                     if current_settings.effects.edge_detection_kernel {
-                        edge_detection_kernel_effect.apply(&mut color_buffer);
+                        let mut effect = edge_detection_kernel_effect_rc.borrow_mut();
+
+                        effect.apply(&mut color_buffer);
                     }
                 });
             }

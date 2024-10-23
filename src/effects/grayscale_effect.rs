@@ -4,7 +4,7 @@ use crate::{buffer::Buffer2D, color::Color, effect::Effect, vec::vec3::Vec3};
 pub struct GrayscaleEffect {}
 
 impl Effect for GrayscaleEffect {
-    fn apply(&self, buffer: &mut Buffer2D) {
+    fn apply(&mut self, buffer: &mut Buffer2D) {
         for y in 0..buffer.height {
             for x in 0..buffer.width {
                 let color = Color::from_u32(*buffer.get(x, y));

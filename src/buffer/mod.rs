@@ -1,7 +1,7 @@
 use std::{
     fmt::Debug,
     mem::size_of,
-    ops::{Add, Div, Mul, Sub},
+    ops::{Add, AddAssign, Div, Mul, Sub},
     ptr,
 };
 
@@ -120,23 +120,6 @@ where
         self.set_at_unsafe(index, value);
     }
 
-    pub fn clear(&mut self, value: Option<T>) {
-        let fill_value: T = value.unwrap_or_default();
-
-        self.data.fill(fill_value);
-    }
-
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.width = width;
-
-        self.height = height;
-
-        self.width_over_height = width as f32 / height as f32;
-
-        self.data
-            .resize((width * height) as usize, Default::default());
-    }
-
     pub fn as_cast_slice<B, C>(&self, mut callback: C)
     where
         C: FnMut(&[B]),
@@ -155,10 +138,33 @@ where
         }
     }
 
+    pub fn copy(&mut self, source: &[T]) {
+        for index in 0..self.data.len() {
+            self.data[index] = source[index];
+        }
+    }
+
     pub fn copy_to<B: Copy>(&self, target: &mut [B]) {
         self.as_cast_slice(|data| {
             target.copy_from_slice(data);
         });
+    }
+
+    pub fn clear(&mut self, value: Option<T>) {
+        let fill_value: T = value.unwrap_or_default();
+
+        self.data.fill(fill_value);
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width;
+
+        self.height = height;
+
+        self.width_over_height = width as f32 / height as f32;
+
+        self.data
+            .resize((width * height) as usize, Default::default());
     }
 
     pub fn blit(&mut self, left: u32, top: u32, width: u32, height: u32, source: &[T]) {
@@ -243,6 +249,22 @@ where
         self.data[index] = blend(&blend_mode, blend_mode_max_value, &lhs, &rhs);
     }
 
+    pub fn copy_blended(
+        &mut self,
+        source: &[T],
+        blend_mode: Option<BlendMode>,
+        blend_mode_max_value: Option<T>,
+    ) {
+        for (lhs, rhs) in std::iter::zip(&mut self.data, source) {
+            let result = match &blend_mode {
+                Some(mode) => blend::<T>(mode, blend_mode_max_value, lhs, rhs),
+                None => blend::<T>(&BlendMode::Normal, None, lhs, rhs),
+            };
+
+            *lhs = result;
+        }
+    }
+
     pub fn blit_blended(
         &mut self,
         left: u32,
@@ -263,12 +285,12 @@ where
                 let dest_pixel_index = (y * self.width + x) as usize;
                 let src_pixel_index = ((y - top) * width + (x - left)) as usize;
 
-                let lhs = self.data[dest_pixel_index];
-                let rhs = source[src_pixel_index];
+                let lhs = &self.data[dest_pixel_index];
+                let rhs = &source[src_pixel_index];
 
                 let result = match &blend_mode {
-                    Some(mode) => blend::blend::<T>(mode, blend_mode_max_value, &lhs, &rhs),
-                    None => blend::blend::<T>(&BlendMode::Normal, None, &lhs, &rhs),
+                    Some(mode) => blend::blend::<T>(mode, blend_mode_max_value, lhs, rhs),
+                    None => blend::blend::<T>(&BlendMode::Normal, None, lhs, rhs),
                 };
 
                 self.data[dest_pixel_index] = result;
@@ -293,6 +315,86 @@ where
             blend_mode,
             blend_mode_max_value,
         )
+    }
+
+    pub fn dilate(&self, dest: &mut Buffer2D<T>, key_color: T, outline_color: T) {
+        for y in 0..self.height as i32 {
+            for x in 0..self.width as i32 {
+                let color = self.get(x as u32, y as u32);
+
+                if *color != key_color {
+                    dest.set(x as u32, y as u32, *color);
+
+                    for (index, (n_x, n_y)) in get_3x3_coordinates(x, y).iter().enumerate() {
+                        if index == 4 {
+                            // Skips center coordinate (4).
+                            continue;
+                        }
+
+                        // Perform bounds-checking.
+                        if *n_x < 0
+                            || *n_x > (self.width - 1) as i32
+                            || *n_y < 0
+                            || *n_y > (self.height - 1) as i32
+                        {
+                            continue;
+                        }
+
+                        // Perform dilation (but only outside of the drawn objects).
+                        if *self.get(*n_x as u32, *n_y as u32) == key_color {
+                            dest.set(*n_x as u32, *n_y as u32, outline_color)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl<T> Buffer2D<T>
+where
+    T: Default
+        + PartialEq
+        + Copy
+        + Clone
+        + Debug
+        + Add<Output = T>
+        + AddAssign
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>
+        + Mul<f32, Output = T>,
+{
+    pub fn blur(&self, dest: &mut Buffer2D<T>, weights: &[f32; 5], strength: u8, horizontal: bool) {
+        let weights_0 = weights[0];
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let mut result = *self.get(x, y) * weights_0;
+
+                for i in 1..strength {
+                    let i_u32 = i as u32;
+
+                    if horizontal {
+                        if x >= i_u32 {
+                            result += *self.get(x - i_u32, y) * weights[i as usize];
+                        }
+                        if x + i_u32 < self.width {
+                            result += *self.get(x + i_u32, y) * weights[i as usize];
+                        }
+                    } else {
+                        if y >= i_u32 {
+                            result += *self.get(x, y - i_u32) * weights[i as usize];
+                        }
+                        if y + i_u32 < self.height {
+                            result += *self.get(x, y + i_u32) * weights[i as usize];
+                        }
+                    }
+                }
+
+                dest.set(x, y, result);
+            }
+        }
     }
 }
 
@@ -330,4 +432,27 @@ impl Buffer2D<u32> {
             self.set(x, y, Color::from_vec3(blended * 255.0).to_u32());
         }
     }
+}
+
+pub fn get_3x3_coordinates(x: i32, y: i32) -> [(i32, i32); 9] {
+    [
+        // 0. Top-left
+        (x - 1, y - 1),
+        // 1. Above
+        (x, y - 1),
+        // 2. Top-right
+        (x + 1, y - 1),
+        // 3. Left
+        (x - 1, y),
+        // 4. Center
+        (x, y),
+        // 5. Right
+        (x + 1, y),
+        // 6. Bottom-left
+        (x - 1, y + 1),
+        // 7. Below
+        (x, y + 1),
+        // 8. Bottom-right
+        (x + 1, y + 1),
+    ]
 }

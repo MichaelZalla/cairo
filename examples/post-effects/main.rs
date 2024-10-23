@@ -124,16 +124,30 @@ fn main() -> Result<(), String> {
 
     #[allow(unused)]
     let outline_effect = DilationEffect::new(color::BLUE, color::BLACK, Some(2));
+
     #[allow(unused)]
     let grayscale_effect = GrayscaleEffect {};
+
     #[allow(unused)]
     let invert_effect = InvertEffect {};
+
     #[allow(unused)]
     let sharpen_kernel_effect = KernelEffect::new([2, 2, 2, 2, -15, 2, 2, 2, 2], None);
+
     #[allow(unused)]
     let blur_kernel_effect = KernelEffect::new([1, 2, 1, 2, 4, 2, 1, 2, 1], Some(5));
+
     #[allow(unused)]
     let edge_detection_kernel_effect = KernelEffect::new([1, 1, 1, 1, -8, 1, 1, 1, 1], None);
+
+    let effect_rcs: Vec<Box<RefCell<dyn Effect>>> = vec![
+        // Box::new(RefCell::new(outline_effect)),
+        // Box::new(RefCell::new(grayscale_effect)),
+        // Box::new(RefCell::new(invert_effect)),
+        // Box::new(RefCell::new(sharpen_kernel_effect)),
+        // Box::new(RefCell::new(blur_kernel_effect)),
+        Box::new(RefCell::new(edge_detection_kernel_effect)),
+    ];
 
     // App update and render callbacks
 
@@ -280,16 +294,9 @@ fn main() -> Result<(), String> {
 
                         // Perform a post-processing pass.
 
-                        let effects: Vec<&dyn Effect> = vec![
-                            // &outline_effect,
-                            // &invert_effect,
-                            // &grayscale_effect,
-                            // &sharpen_kernel_effect,
-                            // &blur_kernel_effect,
-                            &edge_detection_kernel_effect,
-                        ];
+                        for effect_rc in &effect_rcs {
+                            let mut effect = effect_rc.borrow_mut();
 
-                        for effect in effects {
                             effect.apply(&mut color_buffer);
                         }
 

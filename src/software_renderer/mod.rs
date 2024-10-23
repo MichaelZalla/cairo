@@ -6,6 +6,7 @@ use profile::SoftwareRendererCycleCounter;
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
+    effects::gaussian_blur::GaussianBlurEffect,
     entity::Entity,
     material::Material,
     matrix::Mat4,
@@ -60,6 +61,7 @@ pub struct SoftwareRenderer {
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
     bloom_buffer: Option<Buffer2D<Vec3>>,
+    bloom_effect: Option<GaussianBlurEffect>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
     scene_resources: Rc<SceneResources>,
     vertex_shader: VertexShaderFn,
@@ -295,6 +297,7 @@ impl SoftwareRenderer {
             viewport,
             g_buffer: None,
             bloom_buffer: None,
+            bloom_effect: None,
             shader_context,
             scene_resources,
             vertex_shader,
