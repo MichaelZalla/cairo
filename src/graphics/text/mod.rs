@@ -25,7 +25,7 @@ pub struct TextOperation<'a> {
 
 impl Graphics {
     pub fn text(
-        dest_buffer: &mut Buffer2D,
+        target: &mut Buffer2D,
         font_cache: &mut FontCache,
         text_cache: Option<&mut TextCache>,
         font_info: &FontInfo,
@@ -44,7 +44,7 @@ impl Graphics {
 
                 let cached_text_mask = text_cache.get(&text_cache_key).unwrap();
 
-                Graphics::blit_text_from_mask(cached_text_mask, op, dest_buffer, None);
+                Graphics::blit_text_from_mask(cached_text_mask, op, target, None);
             }
             None => {
                 let font = font_cache.load(font_info).unwrap();
@@ -54,7 +54,7 @@ impl Graphics {
 
                 println!("Generated text mask for text '{}' (uncached).", op.text);
 
-                Graphics::blit_text_from_mask(&text_mask, op, dest_buffer, None);
+                Graphics::blit_text_from_mask(&text_mask, op, target, None);
             }
         }
 
@@ -64,23 +64,23 @@ impl Graphics {
     pub fn blit_text_from_mask(
         mask: &TextMask,
         op: &TextOperation,
-        dest_buffer: &mut Buffer2D<u32>,
+        target: &mut Buffer2D<u32>,
         max_width: Option<u32>,
     ) {
-        if op.x >= dest_buffer.width {
+        if op.x >= target.width {
             return;
         }
 
-        if op.y >= dest_buffer.height {
+        if op.y >= target.height {
             return;
         }
 
-        let available_height = mask.0.height.min(dest_buffer.height - op.y);
+        let available_height = mask.0.height.min(target.height - op.y);
 
         let available_width =
             mask.0
                 .width
-                .min(dest_buffer.width - op.x)
+                .min(target.width - op.x)
                 .min(if let Some(width) = max_width {
                     width
                 } else {
@@ -101,19 +101,19 @@ impl Graphics {
 
                 let (x, y) = (op.x + x_rel, op.y + y_rel);
 
-                let start = Color::from_u32(*dest_buffer.get(x, y)).to_vec3();
+                let start = Color::from_u32(*target.get(x, y)).to_vec3();
                 let end = op.color.to_vec3();
 
                 let blended = lerp(start, end, alpha);
                 let blended_u32 = Color::from_vec3(blended).to_u32();
 
-                dest_buffer.set(x, y, blended_u32)
+                target.set(x, y, blended_u32)
             }
         }
     }
 
     pub fn render_debug_messages(
-        dest_buffer: &mut Buffer2D,
+        target: &mut Buffer2D,
         font_cache: &mut FontCache,
         font_info: &FontInfo,
         position: (u32, u32),
@@ -130,7 +130,7 @@ impl Graphics {
                 color: color::WHITE,
             };
 
-            Graphics::text(dest_buffer, font_cache, None, font_info, &op).unwrap();
+            Graphics::text(target, font_cache, None, font_info, &op).unwrap();
 
             y_offset += (font_info.point_size as f32 * padding_ems) as u32;
         }
