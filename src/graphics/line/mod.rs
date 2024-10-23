@@ -11,7 +11,7 @@ use super::Graphics;
 
 impl Graphics {
     pub fn line<T>(
-        buffer: &mut Buffer2D<T>,
+        target: &mut Buffer2D<T>,
         mut x1: i32,
         mut y1: i32,
         mut x2: i32,
@@ -28,12 +28,12 @@ impl Graphics {
             + Mul<Output = T>
             + Div<Output = T>,
     {
-        if x1 as u32 >= buffer.width
-            || x2 as u32 >= buffer.width
-            || y1 as u32 >= buffer.height
-            || y2 as u32 >= buffer.height
+        if x1 as u32 >= target.width
+            || x2 as u32 >= target.width
+            || y1 as u32 >= target.height
+            || y2 as u32 >= target.height
         {
-            match clip_line(buffer.width, buffer.height, x1, y1, x2, y2) {
+            match clip_line(target.width, target.height, x1, y1, x2, y2) {
                 Some(result) => {
                     x1 = result.left.0;
                     y1 = result.left.1;
@@ -67,7 +67,7 @@ impl Graphics {
             let min_y = min(y1, y2);
             let max_y = max(y1, y2);
 
-            buffer.vertical_line_unsafe(x1 as u32, min_y as u32, max_y as u32, color);
+            target.vertical_line_unsafe(x1 as u32, min_y as u32, max_y as u32, color);
         } else if y2 == y1 {
             // Horizontal line
 
@@ -76,7 +76,7 @@ impl Graphics {
             let min_x = min(x1, x2);
             let max_x = max(x1, x2);
 
-            buffer.horizontal_line_unsafe(min_x as u32, max_x as u32, y1 as u32, color);
+            target.horizontal_line_unsafe(min_x as u32, max_x as u32, y1 as u32, color);
         } else {
             // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
 
@@ -95,7 +95,7 @@ impl Graphics {
 
                 // Vertical-ish line
                 for y in y1..y2 + 1 {
-                    buffer.set(((y as f32 - b) / m) as u32, y as u32, color);
+                    target.set(((y as f32 - b) / m) as u32, y as u32, color);
                 }
             } else {
                 if x2 < x1 {
@@ -104,13 +104,13 @@ impl Graphics {
 
                 // Horizontal-ish line
                 for x in x1..x2 + 1 {
-                    buffer.set(x as u32, (m * x as f32 + b) as u32, color);
+                    target.set(x as u32, (m * x as f32 + b) as u32, color);
                 }
             }
         }
     }
 
-    pub fn poly_line<T>(buffer: &mut Buffer2D<T>, p: &[vec2::Vec2], closed: bool, color: T)
+    pub fn poly_line<T>(target: &mut Buffer2D<T>, p: &[vec2::Vec2], closed: bool, color: T)
     where
         T: Default
             + PartialEq
@@ -130,7 +130,7 @@ impl Graphics {
 
         for i in 0..last_index {
             Graphics::line(
-                buffer,
+                target,
                 p[i].x as i32,
                 p[i].y as i32,
                 p[i + 1].x as i32,
@@ -141,7 +141,7 @@ impl Graphics {
 
         if closed {
             Graphics::line(
-                buffer,
+                target,
                 p[last_index].x as i32,
                 p[last_index].y as i32,
                 p[0].x as i32,

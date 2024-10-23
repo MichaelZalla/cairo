@@ -55,11 +55,11 @@ pub(crate) fn draw_particle(
     let size_over_2 = size / 2.0;
 
     if let Some((x, y, width, height)) = Graphics::clip_rectangle(
+        framebuffer,
         x - size_over_2 as i32,
         y - size_over_2 as i32,
         size as u32,
         size as u32,
-        framebuffer,
     ) {
         Graphics::rectangle(framebuffer, x, y, width, height, Some(color.to_u32()), None)
     }

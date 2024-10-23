@@ -10,7 +10,7 @@ use super::Graphics;
 
 impl Graphics {
     pub fn circle<T>(
-        buffer: &mut Buffer2D<T>,
+        target: &mut Buffer2D<T>,
         center_x: u32,
         center_y: u32,
         radius: u32,
@@ -32,8 +32,8 @@ impl Graphics {
             "Called `Graphics::circle()` with no fill or border provided!"
         );
 
-        let buffer_width_minus_one = buffer.width - 1;
-        let buffer_height_minus_one = buffer.height - 1;
+        let buffer_width_minus_one = target.width - 1;
+        let buffer_height_minus_one = target.height - 1;
 
         // If no border was specified, use the fill color for perimeter.
 
@@ -97,11 +97,11 @@ impl Graphics {
                 let global_x = (center_x as i32) + local_x;
                 let global_y = (center_y as i32) + local_y;
 
-                if global_y >= 0 && global_y < buffer.height as i32 {
+                if global_y >= 0 && global_y < target.height as i32 {
                     // Border.
 
-                    if global_x >= 0 && global_x < buffer.width as i32 && border.is_some() {
-                        buffer.set(global_x as u32, global_y as u32, border_value);
+                    if global_x >= 0 && global_x < target.width as i32 && border.is_some() {
+                        target.set(global_x as u32, global_y as u32, border_value);
                     }
 
                     // Fill.
@@ -121,7 +121,7 @@ impl Graphics {
                         x2 = x2.clamp(0, buffer_width_minus_one as i32);
 
                         if local_x == x && (local_y == y || local_y == -y) {
-                            buffer.horizontal_line_unsafe(
+                            target.horizontal_line_unsafe(
                                 x1 as u32,
                                 x2 as u32 - 1,
                                 global_y as u32,
@@ -130,7 +130,7 @@ impl Graphics {
                         } else if local_x == y && (local_y == x || local_y == -x) {
                             if local_y == x {
                                 if global_y > 0 {
-                                    buffer.horizontal_line_unsafe(
+                                    target.horizontal_line_unsafe(
                                         x1 as u32,
                                         x2 as u32,
                                         (global_y - 1) as u32,
@@ -138,7 +138,7 @@ impl Graphics {
                                     );
                                 }
                             } else if global_y < buffer_height_minus_one as i32 {
-                                buffer.horizontal_line_unsafe(
+                                target.horizontal_line_unsafe(
                                     x1 as u32,
                                     x2 as u32,
                                     (global_y + 1) as u32,

@@ -6,7 +6,7 @@ use super::Graphics;
 
 impl Graphics {
     pub fn rectangle<T: Default + PartialEq + Copy + Clone + Debug>(
-        buffer: &mut Buffer2D<T>,
+        target: &mut Buffer2D<T>,
         x: u32,
         y: u32,
         width: u32,
@@ -18,11 +18,11 @@ impl Graphics {
             return;
         }
 
-        let y_start = y.min(buffer.height - 1);
-        let y_end_inclusive = (y + height - 1).min(buffer.height - 1);
+        let y_start = y.min(target.height - 1);
+        let y_end_inclusive = (y + height - 1).min(target.height - 1);
 
-        let x_start = x.min(buffer.width - 1);
-        let x_end_inclusive = (x + width - 1).min(buffer.width - 1);
+        let x_start = x.min(target.width - 1);
+        let x_end_inclusive = (x + width - 1).min(target.width - 1);
 
         if y_start == y_end_inclusive || x_start == x_end_inclusive {
             return;
@@ -32,7 +32,7 @@ impl Graphics {
 
         if let Some(fill_color) = fill {
             for current_y in y_start..y_end_inclusive + 1 {
-                buffer.horizontal_line_unsafe(x_start, x_end_inclusive, current_y, fill_color)
+                target.horizontal_line_unsafe(x_start, x_end_inclusive, current_y, fill_color)
             }
         }
 
@@ -41,12 +41,12 @@ impl Graphics {
         if let Some(border_color) = border {
             if y_start == y {
                 // Top edge was not clipped.
-                buffer.horizontal_line_unsafe(x_start, x_end_inclusive, y_start, border_color);
+                target.horizontal_line_unsafe(x_start, x_end_inclusive, y_start, border_color);
             }
 
             if y_end_inclusive == y + height - 1 {
                 // Bottom edge was not clipped.
-                buffer.horizontal_line_unsafe(
+                target.horizontal_line_unsafe(
                     x_start,
                     x_end_inclusive,
                     y_end_inclusive,
@@ -56,12 +56,12 @@ impl Graphics {
 
             if x_start == x {
                 // Left edge was not clipped.
-                buffer.vertical_line_unsafe(x_start, y_start, y_end_inclusive, border_color);
+                target.vertical_line_unsafe(x_start, y_start, y_end_inclusive, border_color);
             }
 
             if x_end_inclusive == x + width - 1 {
                 // Right edge was not clipped.
-                buffer.vertical_line_unsafe(
+                target.vertical_line_unsafe(
                     x_end_inclusive,
                     y_start,
                     y_end_inclusive,
@@ -72,27 +72,27 @@ impl Graphics {
     }
 
     pub fn clip_rectangle<T: Default + PartialEq + Copy + Clone + Debug>(
+        target: &Buffer2D<T>,
         x: i32,
         y: i32,
         width: u32,
         height: u32,
-        buffer: &Buffer2D<T>,
     ) -> Option<(u32, u32, u32, u32)> {
         // Overlapping tests.
 
-        if x >= buffer.width as i32 || (x + width as i32) < 0 {
+        if x >= target.width as i32 || (x + width as i32) < 0 {
             return None;
         }
 
-        if y >= buffer.height as i32 || (y + height as i32) < 0 {
+        if y >= target.height as i32 || (y + height as i32) < 0 {
             return None;
         }
 
         let (left, top, right, bottom) = (
-            x.max(0).min(buffer.width as i32 - 1),
-            y.max(0).min(buffer.height as i32 - 1),
-            (x + width as i32).max(0).min(buffer.width as i32 - 1),
-            (y + height as i32).max(0).min(buffer.height as i32 - 1),
+            x.max(0).min(target.width as i32 - 1),
+            y.max(0).min(target.height as i32 - 1),
+            (x + width as i32).max(0).min(target.width as i32 - 1),
+            (y + height as i32).max(0).min(target.height as i32 - 1),
         );
 
         Some((
@@ -104,7 +104,7 @@ impl Graphics {
     }
 
     pub fn rectangle_blended(
-        buffer: &mut Buffer2D,
+        target: &mut Buffer2D,
         x: u32,
         y: u32,
         width: u32,
@@ -116,11 +116,11 @@ impl Graphics {
             return;
         }
 
-        let y_start = y.min(buffer.height - 1);
-        let y_end_inclusive = (y + height - 1).min(buffer.height - 1);
+        let y_start = y.min(target.height - 1);
+        let y_end_inclusive = (y + height - 1).min(target.height - 1);
 
-        let x_start = x.min(buffer.width - 1);
-        let x_end_inclusive = (x + width - 1).min(buffer.width - 1);
+        let x_start = x.min(target.width - 1);
+        let x_end_inclusive = (x + width - 1).min(target.width - 1);
 
         if y_start == y_end_inclusive || x_start == x_end_inclusive {
             return;
@@ -130,7 +130,7 @@ impl Graphics {
 
         if let Some(fill_color) = fill {
             for current_y in y_start..y_end_inclusive + 1 {
-                buffer.horizontal_line_blended_unsafe(
+                target.horizontal_line_blended_unsafe(
                     x_start,
                     x_end_inclusive,
                     current_y,
@@ -144,7 +144,7 @@ impl Graphics {
         if let Some(border_color) = border {
             if y_start == y {
                 // Top edge was not clipped.
-                buffer.horizontal_line_blended_unsafe(
+                target.horizontal_line_blended_unsafe(
                     x_start,
                     x_end_inclusive,
                     y_start,
@@ -154,7 +154,7 @@ impl Graphics {
 
             if y_end_inclusive == y + height - 1 {
                 // Bottom edge was not clipped.
-                buffer.horizontal_line_blended_unsafe(
+                target.horizontal_line_blended_unsafe(
                     x_start,
                     x_end_inclusive,
                     y_end_inclusive,
@@ -164,7 +164,7 @@ impl Graphics {
 
             if x_start == x {
                 // Left edge was not clipped.
-                buffer.vertical_line_blended_unsafe(
+                target.vertical_line_blended_unsafe(
                     x_start,
                     y_start,
                     y_end_inclusive,
@@ -174,7 +174,7 @@ impl Graphics {
 
             if x_end_inclusive == x + width - 1 {
                 // Right edge was not clipped.
-                buffer.vertical_line_blended_unsafe(
+                target.vertical_line_blended_unsafe(
                     x_end_inclusive,
                     y_start,
                     y_end_inclusive,

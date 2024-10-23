@@ -42,11 +42,11 @@ impl Renderable for Point {
         let center_y = screen_space_position.y as i32;
 
         if let Some((x, y, width, height)) = Graphics::clip_rectangle(
+            buffer,
             center_x - POINT_SIZE_OVER_2 as i32,
             center_y - POINT_SIZE_OVER_2 as i32,
             POINT_SIZE,
             POINT_SIZE,
-            buffer,
         ) {
             Graphics::rectangle(
                 buffer,

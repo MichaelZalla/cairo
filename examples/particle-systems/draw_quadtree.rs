@@ -117,7 +117,7 @@ fn draw_quadtree_node(
     // Check whether this node overlaps the buffer's bounds.
 
     if let Some((safe_x, safe_y, safe_width, safe_height)) =
-        Graphics::clip_rectangle(x as i32, y as i32, width as u32, height as u32, buffer)
+        Graphics::clip_rectangle(buffer, x as i32, y as i32, width as u32, height as u32)
     {
         let color_for_depth = COLORS[depth % 4] * 0.33;
         let color_for_depth_u32 = color_for_depth.to_u32();
@@ -158,11 +158,11 @@ fn draw_quadtree_node(
         static CENTER_OF_MASS_INDICATOR_SIZE_OVER_2: u32 = CENTER_OF_MASS_INDICATOR_SIZE - 2;
 
         if let Some((x, y, width, height)) = Graphics::clip_rectangle(
+            buffer,
             center_of_mass_x - CENTER_OF_MASS_INDICATOR_SIZE_OVER_2 as i32,
             center_of_mass_y - CENTER_OF_MASS_INDICATOR_SIZE_OVER_2 as i32,
             CENTER_OF_MASS_INDICATOR_SIZE,
             CENTER_OF_MASS_INDICATOR_SIZE,
-            buffer,
         ) {
             // Draw quadrant's center of mass.
 
