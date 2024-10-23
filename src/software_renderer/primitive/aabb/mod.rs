@@ -4,7 +4,7 @@ use crate::{
     mesh::Mesh,
     render::{
         culling::{FaceCullingReject, FaceCullingStrategy},
-        options::{rasterizer::RasterizerOptions, RenderOptions},
+        options::{rasterizer::RasterizerOptions, RenderOptions, RenderPassMask},
     },
     resource::arena::Arena,
     software_renderer::SoftwareRenderer,
@@ -28,9 +28,7 @@ impl SoftwareRenderer {
                 self.options = RenderOptions {
                     wireframe_color: *wireframe_color,
                     draw_wireframe: true,
-                    do_rasterization: false,
-                    do_lighting: false,
-                    do_deferred_lighting: false,
+                    render_pass_flags: RenderPassMask::none(),
                     rasterizer_options: RasterizerOptions {
                         face_culling_strategy: FaceCullingStrategy {
                             reject: FaceCullingReject::None,

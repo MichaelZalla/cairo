@@ -3,6 +3,7 @@ use crate::{
     mesh::Face,
     render::{
         culling::{FaceCullingReject, FaceCullingWindingOrder},
+        options::RenderPassFlag,
         Renderer,
     },
     software_renderer::SoftwareRenderer,
@@ -125,7 +126,11 @@ impl SoftwareRenderer {
         // Interpolate entire vertex (all attributes) when drawing (scanline
         // interpolant)
 
-        if self.options.do_rasterization {
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::Rasterization)
+        {
             self.triangle_fill(
                 ndc_space_vertices[0],
                 ndc_space_vertices[1],

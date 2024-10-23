@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use cairo::{
     mem::linked_list::LinkedList,
+    render::options::RenderPassFlag,
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
@@ -69,22 +70,34 @@ impl PanelInstance for RenderOptionsPanel {
                     Checkbox::new(
                         "render_options.do_rasterization",
                         "Rasterization",
-                        current_settings.render_options.do_rasterization,
+                        current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Rasterization),
                     ),
                     Checkbox::new(
                         "render_options.do_lighting",
                         "Lighting",
-                        current_settings.render_options.do_lighting,
+                        current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Lighting),
                     ),
                     Checkbox::new(
                         "render_options.do_deferred_lighting",
                         "Deferred lighting",
-                        current_settings.render_options.do_deferred_lighting,
+                        current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::DeferredLighting),
                     ),
                     Checkbox::new(
                         "render_options.do_bloom",
                         "Bloom",
-                        current_settings.render_options.do_bloom,
+                        current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Bloom),
                     ),
                 ];
 

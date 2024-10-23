@@ -11,7 +11,7 @@ use crate::{
     matrix::Mat4,
     mesh::{geometry::Geometry, Face},
     render::{
-        options::{shader::RenderShaderOptions, RenderOptions},
+        options::{shader::RenderShaderOptions, RenderOptions, RenderPassFlag},
         viewport::RenderViewport,
         Renderer,
     },
@@ -85,7 +85,11 @@ impl Renderer for SoftwareRenderer {
             framebuffer.clear();
         }
 
-        if self.options.do_rasterization {
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::Rasterization)
+        {
             if let Some(g_buffer) = self.g_buffer.as_mut() {
                 g_buffer.clear();
             }
@@ -97,12 +101,22 @@ impl Renderer for SoftwareRenderer {
     }
 
     fn end_frame(&mut self) {
-        if self.options.do_rasterization && self.options.do_deferred_lighting {
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
+        {
+            // Deferred lighting.
+
             self.do_deferred_lighting_pass();
 
             // Bloom pass over the deferred (HDR) buffer.
 
-            if self.options.do_bloom {
+            if self
+                .options
+                .render_pass_flags
+                .contains(RenderPassFlag::Bloom)
+            {
                 self.do_bloom_pass();
             }
         }
@@ -112,7 +126,11 @@ impl Renderer for SoftwareRenderer {
         if let Some(rc) = &self.framebuffer {
             let framebuffer = rc.borrow_mut();
 
-            if self.options.do_rasterization {
+            if self
+                .options
+                .render_pass_flags
+                .contains(RenderPassFlag::Rasterization)
+            {
                 if let (Some(color_buffer_lock), Some(deferred_buffer_lock)) = (
                     framebuffer.attachments.color.as_ref(),
                     framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
@@ -491,7 +509,11 @@ impl SoftwareRenderer {
                                         stencil_buffer.set(x, y, 1);
                                     }
 
-                                    if !self.options.do_deferred_lighting {
+                                    if !self
+                                        .options
+                                        .render_pass_flags
+                                        .contains(RenderPassFlag::DeferredLighting)
+                                    {
                                         if let Some(forward_buffer_lock) =
                                             framebuffer.attachments.forward_ldr.as_ref()
                                         {
@@ -535,7 +557,11 @@ impl SoftwareRenderer {
         scene_resources: &SceneResources,
         sample: &GeometrySample,
     ) -> Vec3 {
-        if self.options.do_lighting {
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::Lighting)
+        {
             (self.fragment_shader)(shader_context, scene_resources, sample).to_vec3()
         } else {
             sample.albedo
@@ -545,7 +571,11 @@ impl SoftwareRenderer {
     fn get_tone_mapped_color_from_hdr(&self, hdr_color: Vec3) -> Color {
         let mut color_tone_mapped_vec3 = hdr_color;
 
-        if self.options.do_lighting {
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::Lighting)
+        {
             // Exposure tone mapping
 
             color_tone_mapped_vec3 = hdr_color.tone_map_exposure(1.0);

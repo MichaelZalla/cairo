@@ -1,3 +1,7 @@
+use bitmask::bitmask;
+
+use serde::{Deserialize, Serialize};
+
 use sdl2::keyboard::Keycode;
 
 use crate::{
@@ -11,16 +15,29 @@ use rasterizer::RasterizerOptions;
 pub mod rasterizer;
 pub mod shader;
 
+bitmask! {
+    #[derive(Debug, Serialize, Deserialize)]
+    pub mask RenderPassMask: u32 where flags RenderPassFlag {
+        Null = 0,
+        Rasterization = (1 << 0),
+        Lighting = (1 << 1),
+        DeferredLighting = (1 << 2),
+        Bloom = (1 << 3),
+    }
+}
+
+impl Default for RenderPassMask {
+    fn default() -> Self {
+        RenderPassFlag::Rasterization | RenderPassFlag::Lighting | RenderPassFlag::DeferredLighting
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct RenderOptions {
-    pub do_rasterization: bool,
+    pub render_pass_flags: RenderPassMask,
     pub rasterizer_options: RasterizerOptions,
-    pub do_lighting: bool,
-    pub do_deferred_lighting: bool,
-    pub do_bloom: bool,
     // User debug
     pub draw_wireframe: bool,
-    // User debug
     pub wireframe_color: Vec3,
     pub draw_normals: bool,
     pub draw_normals_scale: f32,
@@ -29,11 +46,8 @@ pub struct RenderOptions {
 impl Default for RenderOptions {
     fn default() -> Self {
         Self {
-            do_rasterization: true,
+            render_pass_flags: Default::default(),
             rasterizer_options: Default::default(),
-            do_lighting: true,
-            do_deferred_lighting: true,
-            do_bloom: false,
             // User debug
             draw_wireframe: false,
             // User debug
@@ -49,24 +63,41 @@ impl RenderOptions {
         for keycode in &keyboard_state.keys_pressed {
             match keycode {
                 (Keycode::Num1, _) => {
-                    self.do_rasterization = !self.do_rasterization;
+                    self.render_pass_flags ^= RenderPassFlag::Rasterization;
 
                     println!(
-                        "Rasterization: {}",
-                        if self.do_rasterization { "On" } else { "Off" }
+                        "Rasterization pass: {}",
+                        if self
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Rasterization)
+                        {
+                            "On"
+                        } else {
+                            "Off"
+                        }
                     );
                 }
                 (Keycode::Num2, _) => {
-                    self.do_lighting = !self.do_lighting;
-
-                    println!("Lighting: {}", if self.do_lighting { "On" } else { "Off" });
-                }
-                (Keycode::Num3, _) => {
-                    self.do_deferred_lighting = !self.do_deferred_lighting;
+                    self.render_pass_flags ^= RenderPassFlag::Lighting;
 
                     println!(
-                        "Deferred lighting: {}",
-                        if self.do_deferred_lighting {
+                        "Lighting pass: {}",
+                        if self.render_pass_flags.contains(RenderPassFlag::Lighting) {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    );
+                }
+                (Keycode::Num3, _) => {
+                    self.render_pass_flags ^= RenderPassFlag::DeferredLighting;
+
+                    println!(
+                        "Deferred lighting pass: {}",
+                        if self
+                            .render_pass_flags
+                            .contains(RenderPassFlag::DeferredLighting)
+                        {
                             "On"
                         } else {
                             "Off"
@@ -74,9 +105,16 @@ impl RenderOptions {
                     );
                 }
                 (Keycode::Num4, _) => {
-                    self.do_bloom = !self.do_bloom;
+                    self.render_pass_flags ^= RenderPassFlag::Bloom;
 
-                    println!("Bloom pass: {}", if self.do_bloom { "On" } else { "Off" });
+                    println!(
+                        "Bloom pass: {}",
+                        if self.render_pass_flags.contains(RenderPassFlag::Bloom) {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    );
                 }
                 (Keycode::Num5, _) => {
                     // Cycle culling reject settings.

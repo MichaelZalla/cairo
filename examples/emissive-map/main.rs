@@ -7,7 +7,7 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::options::RenderOptions,
+    render::options::{RenderOptions, RenderPassFlag, RenderPassMask},
     scene::{
         context::SceneContext,
         node::{SceneNode, SceneNodeType},
@@ -101,8 +101,10 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
+    let flags: RenderPassMask = Default::default();
+
     let render_options = RenderOptions {
-        do_bloom: true,
+        render_pass_flags: flags | RenderPassFlag::Bloom,
         ..Default::default()
     };
 

@@ -26,6 +26,7 @@ use cairo::{
         invert_effect::InvertEffect, kernel_effect::KernelEffect,
     },
     matrix::Mat4,
+    render::options::RenderPassFlag,
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -625,7 +626,10 @@ fn main() -> Result<(), String> {
                                 SETTINGS.with(|settings_rc| {
                                     let current_settings = settings_rc.borrow();
 
-                                    let bloom = current_settings.render_options.do_bloom;
+                                    let bloom = current_settings
+                                        .render_options
+                                        .render_pass_flags
+                                        .contains(RenderPassFlag::Bloom);
 
                                     let cmd_str = format!(
                                         "set render_options.do_bloom {}",

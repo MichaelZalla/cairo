@@ -8,7 +8,10 @@ use cairo::{
         window::{AppWindowingMode, APP_WINDOWING_MODES},
     },
     mem::linked_list::LinkedList,
-    render::culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
+    render::{
+        culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
+        options::RenderPassFlag,
+    },
     resource::handle::Handle,
     scene::camera::{CameraProjectionKind, CAMERA_PROJECTION_KINDS},
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
@@ -144,11 +147,22 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         Ok(())
                     }
                     "render_options.do_rasterization" => {
-                        prev_value_str
-                            .replace(current_settings.render_options.do_rasterization.to_string());
+                        let was_enabled = current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Rasterization);
 
-                        current_settings.render_options.do_rasterization =
-                            parse_or_map_err::<bool>(value_str)?;
+                        prev_value_str.replace(was_enabled.to_string());
+
+                        let is_enabled = parse_or_map_err::<bool>(value_str)?;
+
+                        if is_enabled {
+                            current_settings.render_options.render_pass_flags ^=
+                                RenderPassFlag::Rasterization;
+                        } else {
+                            current_settings.render_options.render_pass_flags |=
+                                RenderPassFlag::Rasterization;
+                        }
 
                         Ok(())
                     }
@@ -193,33 +207,62 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         Ok(())
                     }
                     "render_options.do_lighting" => {
-                        prev_value_str
-                            .replace(current_settings.render_options.do_lighting.to_string());
+                        let was_enabled = current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Lighting);
 
-                        current_settings.render_options.do_lighting =
-                            parse_or_map_err::<bool>(value_str)?;
+                        prev_value_str.replace(was_enabled.to_string());
+
+                        let is_enabled = parse_or_map_err::<bool>(value_str)?;
+
+                        if is_enabled {
+                            current_settings.render_options.render_pass_flags ^=
+                                RenderPassFlag::Lighting;
+                        } else {
+                            current_settings.render_options.render_pass_flags |=
+                                RenderPassFlag::Lighting;
+                        }
 
                         Ok(())
                     }
                     "render_options.do_deferred_lighting" => {
-                        prev_value_str.replace(
-                            current_settings
-                                .render_options
-                                .do_deferred_lighting
-                                .to_string(),
-                        );
+                        let was_enabled = current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::DeferredLighting);
 
-                        current_settings.render_options.do_deferred_lighting =
-                            parse_or_map_err::<bool>(value_str)?;
+                        prev_value_str.replace(was_enabled.to_string());
+
+                        let is_enabled = parse_or_map_err::<bool>(value_str)?;
+
+                        if is_enabled {
+                            current_settings.render_options.render_pass_flags ^=
+                                RenderPassFlag::DeferredLighting;
+                        } else {
+                            current_settings.render_options.render_pass_flags |=
+                                RenderPassFlag::DeferredLighting;
+                        }
 
                         Ok(())
                     }
                     "render_options.do_bloom" => {
-                        prev_value_str
-                            .replace(current_settings.render_options.do_bloom.to_string());
+                        let was_enabled = current_settings
+                            .render_options
+                            .render_pass_flags
+                            .contains(RenderPassFlag::Bloom);
 
-                        current_settings.render_options.do_bloom =
-                            parse_or_map_err::<bool>(value_str)?;
+                        prev_value_str.replace(was_enabled.to_string());
+
+                        let is_enabled = parse_or_map_err::<bool>(value_str)?;
+
+                        if is_enabled {
+                            current_settings.render_options.render_pass_flags ^=
+                                RenderPassFlag::Bloom;
+                        } else {
+                            current_settings.render_options.render_pass_flags |=
+                                RenderPassFlag::Bloom;
+                        }
 
                         Ok(())
                     }

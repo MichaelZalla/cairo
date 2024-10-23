@@ -15,6 +15,7 @@ use cairo::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
     matrix::Mat4,
+    render::options::RenderPassFlag,
     scene::{
         context::SceneContext,
         node::{SceneNode, SceneNodeType},
@@ -468,14 +469,22 @@ fn main() -> Result<(), String> {
 
         debug_message_buffer.write(format!(
             "Rasterized geometry: {}",
-            if renderer.options.do_rasterization {
+            if renderer
+                .options
+                .render_pass_flags
+                .contains(RenderPassFlag::Rasterization)
+            {
                 "On"
             } else {
                 "Off"
             }
         ));
 
-        if renderer.options.do_rasterization {
+        if renderer
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::Rasterization)
+        {
             debug_message_buffer.write(format!(
                 "Culling reject mask: {:?}",
                 renderer
@@ -507,7 +516,11 @@ fn main() -> Result<(), String> {
 
             debug_message_buffer.write(format!(
                 "Lighting: {}",
-                if renderer.options.do_lighting {
+                if renderer
+                    .options
+                    .render_pass_flags
+                    .contains(RenderPassFlag::Lighting)
+                {
                     "On"
                 } else {
                     "Off"
