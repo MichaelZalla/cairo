@@ -192,7 +192,7 @@ impl Graphics {
                 }
             }
 
-            if y >= x {
+            if y > x {
                 break;
             }
         }
