@@ -36,13 +36,23 @@ impl UIBox {
 
         let (width, height) = self.get_computed_pixel_size();
 
+        let fill_color_u32 = fill_color.map(|c| c.to_u32());
+
         if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
             let radius = (width.min(height) as f32 / 2.0).floor();
+
             let center = (x + width / 2, y + height / 2);
 
-            Graphics::circle(target, center.0, center.1, radius as u32, fill_color, None);
+            Graphics::circle(
+                target,
+                center.0,
+                center.1,
+                radius as u32,
+                fill_color_u32,
+                None,
+            );
         } else {
-            Graphics::rectangle(target, x, y, width, height, fill_color, None);
+            Graphics::rectangle(target, x, y, width, height, fill_color_u32, None);
         }
     }
 }

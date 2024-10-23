@@ -96,17 +96,21 @@ fn draw_quadtree_node(
         // Draw a (clipped) line from this node's center-of-mass to the parent's
         // center-of-mass.
 
+        let color = if node.contains_particles() {
+            color::YELLOW
+        } else {
+            color::DARK_GRAY
+        };
+
+        let color_u32 = color.to_u32();
+
         Graphics::line(
             buffer,
             center_of_mass_x,
             center_of_mass_y,
             parent_center_of_mass_x as i32,
             parent_center_of_mass_y as i32,
-            if node.contains_particles() {
-                color::YELLOW
-            } else {
-                color::DARK_GRAY
-            },
+            color_u32,
         );
     }
 
@@ -170,9 +174,9 @@ fn draw_quadtree_node(
                 height,
                 None,
                 Some(if node.contains_particles() {
-                    color::YELLOW
+                    color::YELLOW.to_u32()
                 } else {
-                    color::DARK_GRAY
+                    color::DARK_GRAY.to_u32()
                 }),
             )
         }

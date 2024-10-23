@@ -95,13 +95,15 @@ fn main() -> Result<(), String> {
                 world_to_screen_space(&to, &framebuffer),
             );
 
+            let color_u32 = color::WHITE.to_u32();
+
             Graphics::line(
                 &mut framebuffer,
                 from_screen_space.x as i32,
                 from_screen_space.y as i32,
                 to_screen_space.x as i32,
                 to_screen_space.y as i32,
-                color::WHITE,
+                color_u32,
             );
         }
 

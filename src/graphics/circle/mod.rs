@@ -1,35 +1,43 @@
-use std::mem;
+use std::{
+    fmt::Debug,
+    mem,
+    ops::{Add, Div, Mul, Sub},
+};
 
-use crate::{buffer::Buffer2D, color::Color};
+use crate::buffer::Buffer2D;
 
 use super::Graphics;
 
 impl Graphics {
-    pub fn circle(
-        buffer: &mut Buffer2D,
+    pub fn circle<T>(
+        buffer: &mut Buffer2D<T>,
         center_x: u32,
         center_y: u32,
         radius: u32,
-        fill: Option<Color>,
-        border: Option<Color>,
-    ) {
+        fill: Option<T>,
+        border: Option<T>,
+    ) where
+        T: Default
+            + PartialEq
+            + Copy
+            + Clone
+            + Debug
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    {
         assert!(
             fill.is_some() || border.is_some(),
             "Called `Graphics::circle()` with no fill or border provided!"
         );
-
-        let fill_u32 = if let Some(fill) = fill {
-            fill.to_u32()
-        } else {
-            0
-        };
 
         let buffer_width_minus_one = buffer.width - 1;
         let buffer_height_minus_one = buffer.height - 1;
 
         // If no border was specified, use the fill color for perimeter.
 
-        let border_u32 = border.unwrap_or_else(|| fill.unwrap()).to_u32();
+        let border_value = border.unwrap_or_else(|| fill.unwrap());
 
         // Begin at (+radius, 0), relative to the circle's center.
 
@@ -93,12 +101,12 @@ impl Graphics {
                     // Border.
 
                     if global_x >= 0 && global_x < buffer.width as i32 && border.is_some() {
-                        buffer.set(global_x as u32, global_y as u32, border_u32);
+                        buffer.set(global_x as u32, global_y as u32, border_value);
                     }
 
                     // Fill.
 
-                    if fill.is_some() {
+                    if let Some(fill_color) = fill {
                         let (mut x1, mut x2) = (center_x as i32 - local_x, global_x);
 
                         if x1 == x2 {
@@ -117,7 +125,7 @@ impl Graphics {
                                 x1 as u32,
                                 x2 as u32 - 1,
                                 global_y as u32,
-                                fill_u32,
+                                fill_color,
                             );
                         } else if local_x == y && (local_y == x || local_y == -x) {
                             if local_y == x {
@@ -126,7 +134,7 @@ impl Graphics {
                                         x1 as u32,
                                         x2 as u32,
                                         (global_y - 1) as u32,
-                                        fill_u32,
+                                        fill_color,
                                     );
                                 }
                             } else if global_y < buffer_height_minus_one as i32 {
@@ -134,7 +142,7 @@ impl Graphics {
                                     x1 as u32,
                                     x2 as u32,
                                     (global_y + 1) as u32,
-                                    fill_u32,
+                                    fill_color,
                                 );
                             }
                         }

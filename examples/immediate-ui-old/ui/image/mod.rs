@@ -80,6 +80,8 @@ fn draw_image(
     // Draw the optional inner border.
 
     if let Some(color) = options.border {
+        let color_u32 = color.to_u32();
+
         Graphics::poly_line(
             parent_buffer,
             &[
@@ -105,7 +107,7 @@ fn draw_image(
                 },
             ],
             true,
-            color,
+            color_u32,
         )
     }
 }

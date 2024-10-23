@@ -14,6 +14,7 @@ impl UIBox {
         target: &mut Buffer2D,
     ) {
         let divider_color = self.styles.border_color.unwrap_or_default();
+        let divider_color_u32 = divider_color.to_u32();
 
         for i in 0..(children.len() - 1) {
             let (child_a_rc, child_b_rc) = (&children[i], &children[i + 1]);
@@ -70,7 +71,7 @@ impl UIBox {
                 }
             };
 
-            Graphics::line(target, x1, y1, x2, y2, divider_color);
+            Graphics::line(target, x1, y1, x2, y2, divider_color_u32);
         }
     }
 }

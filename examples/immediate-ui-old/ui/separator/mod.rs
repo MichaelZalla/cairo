@@ -65,6 +65,8 @@ fn draw_separator(
 
     // Draw the separator (with margins).
 
+    let color_u32 = color.to_u32();
+
     match layout.direction {
         UILayoutDirection::LeftToRight => {
             // Draw a vertical separator.
@@ -75,7 +77,7 @@ fn draw_separator(
                 cursor.y as i32,
                 (cursor.x + SEPARATOR_MARGIN) as i32,
                 (cursor.y + layout.get_current_row_height()) as i32,
-                color,
+                color_u32,
             );
         }
         UILayoutDirection::TopToBottom => {
@@ -87,7 +89,7 @@ fn draw_separator(
                 (cursor.y + SEPARATOR_MARGIN) as i32,
                 layout.extent.right as i32,
                 (cursor.y + SEPARATOR_MARGIN) as i32,
-                color,
+                color_u32,
             );
         }
     }

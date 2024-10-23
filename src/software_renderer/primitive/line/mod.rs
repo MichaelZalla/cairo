@@ -95,6 +95,8 @@ impl SoftwareRenderer {
             Some(rc) => {
                 let framebuffer = rc.borrow_mut();
 
+                let color_u32 = color.to_u32();
+
                 match &framebuffer.attachments.forward_ldr {
                     Some(forward_buffer_lock) => {
                         let mut forward_buffer = forward_buffer_lock.borrow_mut();
@@ -105,7 +107,7 @@ impl SoftwareRenderer {
                             (start.y * self.viewport.height as f32) as i32,
                             (end.x * self.viewport.width as f32) as i32,
                             (end.y * self.viewport.height as f32) as i32,
-                            color,
+                            color_u32,
                         );
                     },
                     None => panic!("Called SoftwareRenderer::render_line_from_ndc_space_vecs() with no forward (LDR) framebuffer attachment!"),

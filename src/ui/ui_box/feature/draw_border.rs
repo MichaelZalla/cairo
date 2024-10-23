@@ -15,6 +15,14 @@ impl UIBox {
 
         let (width, height) = self.get_computed_pixel_size();
 
+        let fill_color = if draw_box_boundaries && self.is_spacer() {
+            Some(color::RED)
+        } else {
+            None
+        };
+
+        let fill_color_u32 = fill_color.map(|c| c.to_u32());
+
         let border_color = if draw_box_boundaries {
             Some(color::BLUE)
         } else if self.features.contains(UIBoxFeatureFlag::DrawBorder)
@@ -25,11 +33,7 @@ impl UIBox {
             None
         };
 
-        let fill_color = if draw_box_boundaries && self.is_spacer() {
-            Some(color::RED)
-        } else {
-            None
-        };
+        let border_color_u32 = border_color.map(|c| c.to_u32());
 
         if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
             let center = (x + width / 2, y + height / 2);
@@ -41,11 +45,19 @@ impl UIBox {
                 center.0,
                 center.1,
                 radius as u32,
-                fill_color,
-                border_color,
+                fill_color_u32,
+                border_color_u32,
             );
         } else {
-            Graphics::rectangle(target, x, y, width, height, fill_color, border_color);
+            Graphics::rectangle(
+                target,
+                x,
+                y,
+                width,
+                height,
+                fill_color_u32,
+                border_color_u32,
+            );
         }
     }
 }

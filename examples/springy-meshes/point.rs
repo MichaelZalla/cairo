@@ -48,7 +48,15 @@ impl Renderable for Point {
             POINT_SIZE,
             buffer,
         ) {
-            Graphics::rectangle(buffer, x, y, width, height, Some(color::YELLOW), None)
+            Graphics::rectangle(
+                buffer,
+                x,
+                y,
+                width,
+                height,
+                Some(color::YELLOW.to_u32()),
+                None,
+            )
         }
     }
 }

@@ -213,7 +213,9 @@ fn draw_line(
     let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
     let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
 
-    Graphics::line(buffer, x1, y1, x2, y2, color);
+    let color_u32 = color.to_u32();
+
+    Graphics::line(buffer, x1, y1, x2, y2, color_u32);
 }
 
 impl Renderable for SpringyMesh {

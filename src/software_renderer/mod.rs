@@ -145,7 +145,7 @@ impl Renderer for SoftwareRenderer {
                 // Skips pixels in our forward buffer if they weren't written to.
                 for (index, value) in forward_fragments.iter().enumerate() {
                     if Color::from_u32(*value).a > 0.0 {
-                        color_buffer.set_raw(index, *value);
+                        color_buffer.set_at(index, *value);
                     }
                 }
             }

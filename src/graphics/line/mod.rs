@@ -1,21 +1,33 @@
 use std::{
     cmp::{max, min},
+    fmt::Debug,
     mem,
+    ops::{Add, Div, Mul, Sub},
 };
 
-use crate::{buffer::Buffer2D, color::Color, vec::vec2};
+use crate::{buffer::Buffer2D, vec::vec2};
 
 use super::Graphics;
 
 impl Graphics {
-    pub fn line(
-        buffer: &mut Buffer2D,
+    pub fn line<T>(
+        buffer: &mut Buffer2D<T>,
         mut x1: i32,
         mut y1: i32,
         mut x2: i32,
         mut y2: i32,
-        color: Color,
-    ) {
+        color: T,
+    ) where
+        T: Default
+            + PartialEq
+            + Copy
+            + Clone
+            + Debug
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    {
         if x1 as u32 >= buffer.width
             || x2 as u32 >= buffer.width
             || y1 as u32 >= buffer.height
@@ -31,8 +43,6 @@ impl Graphics {
                 None => return,
             }
         }
-
-        let color_u32 = color.to_u32();
 
         // y = m*x + b
         // x = (y - b) / m
@@ -57,7 +67,7 @@ impl Graphics {
             let min_y = min(y1, y2);
             let max_y = max(y1, y2);
 
-            buffer.vertical_line_unsafe(x1 as u32, min_y as u32, max_y as u32, color_u32);
+            buffer.vertical_line_unsafe(x1 as u32, min_y as u32, max_y as u32, color);
         } else if y2 == y1 {
             // Horizontal line
 
@@ -66,7 +76,7 @@ impl Graphics {
             let min_x = min(x1, x2);
             let max_x = max(x1, x2);
 
-            buffer.horizontal_line_unsafe(min_x as u32, max_x as u32, y1 as u32, color_u32);
+            buffer.horizontal_line_unsafe(min_x as u32, max_x as u32, y1 as u32, color);
         } else {
             // println!("({}, {}), ({}, {})", x1, y1, x2, y2);
 
@@ -85,7 +95,7 @@ impl Graphics {
 
                 // Vertical-ish line
                 for y in y1..y2 + 1 {
-                    buffer.set(((y as f32 - b) / m) as u32, y as u32, color_u32);
+                    buffer.set(((y as f32 - b) / m) as u32, y as u32, color);
                 }
             } else {
                 if x2 < x1 {
@@ -94,13 +104,24 @@ impl Graphics {
 
                 // Horizontal-ish line
                 for x in x1..x2 + 1 {
-                    buffer.set(x as u32, (m * x as f32 + b) as u32, color_u32);
+                    buffer.set(x as u32, (m * x as f32 + b) as u32, color);
                 }
             }
         }
     }
 
-    pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], closed: bool, color: Color) {
+    pub fn poly_line<T>(buffer: &mut Buffer2D<T>, p: &[vec2::Vec2], closed: bool, color: T)
+    where
+        T: Default
+            + PartialEq
+            + Copy
+            + Clone
+            + Debug
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    {
         if p.is_empty() {
             return;
         }

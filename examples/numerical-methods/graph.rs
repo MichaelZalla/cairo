@@ -75,11 +75,13 @@ impl Graph {
     fn render_axes(&self, buffer: &mut Buffer2D) {
         let screen_origin = self.screen_origin;
 
+        let color_u32 = color::DARK_GRAY.to_u32();
+
         // Draw the X axis.
 
         let (x1, y1, x2, y2) = (0, screen_origin.1, buffer.width as i32, screen_origin.1);
 
-        Graphics::line(buffer, x1, y1, x2, y2, color::DARK_GRAY);
+        Graphics::line(buffer, x1, y1, x2, y2, color_u32);
 
         // Draw the Y axis.
 
@@ -90,7 +92,7 @@ impl Graph {
             (buffer.height - 1) as i32,
         );
 
-        Graphics::line(buffer, x1, y1, x2, y2, color::DARK_GRAY);
+        Graphics::line(buffer, x1, y1, x2, y2, color_u32);
     }
 
     fn render_ticks(&self, buffer: &mut Buffer2D) {
@@ -139,7 +141,7 @@ impl Graph {
                 tick_start.1,
                 tick_end.0,
                 tick_end.1,
-                color::DARK_GRAY,
+                color::DARK_GRAY.to_u32(),
             )
         }
 
@@ -163,7 +165,7 @@ impl Graph {
                 tick_start.1,
                 tick_end.0,
                 tick_end.1,
-                color::DARK_GRAY,
+                color::DARK_GRAY.to_u32(),
             )
         }
     }
@@ -215,6 +217,6 @@ impl Graph {
         let start = self.cartesian_to_screen(x1, y1);
         let end = self.cartesian_to_screen(x2, y2);
 
-        Graphics::line(buffer, start.0, start.1, end.0, end.1, color);
+        Graphics::line(buffer, start.0, start.1, end.0, end.1, color.to_u32());
     }
 }

@@ -18,7 +18,7 @@ pub(crate) fn draw_collider(
     let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
     let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
 
-    Graphics::line(framebuffer, x1, y1, x2, y2, color::GREEN);
+    Graphics::line(framebuffer, x1, y1, x2, y2, color::GREEN.to_u32());
 
     let (x1, y1) = (
         midpoint_screen_space.x as i32,
@@ -30,5 +30,5 @@ pub(crate) fn draw_collider(
         y1 + (normal_screen_space.y * PIXELS_PER_METER) as i32,
     );
 
-    Graphics::line(framebuffer, x1, y1, x2, y2, color::ORANGE);
+    Graphics::line(framebuffer, x1, y1, x2, y2, color::ORANGE.to_u32());
 }

@@ -972,7 +972,9 @@ impl<'a> UIBoxTree<'a> {
                     focused_rect.bottom - focused_rect.top,
                 );
 
-                Graphics::rectangle(target, x, y, width, height, None, Some(color::RED));
+                let color_u32 = color::RED.to_u32();
+
+                Graphics::rectangle(target, x, y, width, height, None, Some(color_u32));
 
                 Graphics::rectangle(
                     target,
@@ -981,7 +983,7 @@ impl<'a> UIBoxTree<'a> {
                     width - 2,
                     height - 2,
                     None,
-                    Some(color::RED),
+                    Some(color_u32),
                 );
             }
         }

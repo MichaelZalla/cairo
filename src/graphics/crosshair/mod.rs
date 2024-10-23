@@ -15,6 +15,8 @@ impl Graphics {
     ) {
         gap = gap.min((length as f32 / 2.0).ceil() as u16);
 
+        let color_u32 = color.to_u32();
+
         for i in 0..thickness {
             let offset_x = x - (thickness as f32 / 2.0).ceil() as i32 + i as i32;
             let offset_y = y - (thickness as f32 / 2.0).ceil() as i32 + i as i32;
@@ -26,7 +28,7 @@ impl Graphics {
                 offset_y,
                 x - gap as i32,
                 offset_y,
-                color,
+                color_u32,
             );
 
             Graphics::line(
@@ -35,7 +37,7 @@ impl Graphics {
                 offset_y,
                 x + (length as f32 / 2.0).ceil() as i32,
                 offset_y,
-                color,
+                color_u32,
             );
 
             // Vertical segments
@@ -46,7 +48,7 @@ impl Graphics {
                 y - (length as f32 / 2.0).ceil() as i32,
                 offset_x,
                 y - gap as i32,
-                color,
+                color_u32,
             );
 
             Graphics::line(
@@ -55,7 +57,7 @@ impl Graphics {
                 y + gap as i32,
                 offset_x,
                 y + (length as f32 / 2.0).ceil() as i32,
-                color,
+                color_u32,
             );
 
             // Center dot
@@ -67,7 +69,7 @@ impl Graphics {
                     offset_y,
                     x + (thickness as f32 / 2.0).ceil() as i32,
                     offset_y,
-                    color,
+                    color_u32,
                 );
             }
         }

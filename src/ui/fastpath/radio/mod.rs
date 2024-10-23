@@ -70,13 +70,15 @@ fn render_selected_indicator(
     GLOBAL_UI_CONTEXT.with(|ctx| {
         let theme = ctx.theme.borrow();
 
+        let background_selected_u32 = theme.background_selected.to_u32();
+
         Graphics::circle(
             target,
             extent.left + 8,
             extent.top + 8,
             5,
-            Some(theme.background_selected),
-            Some(theme.background_selected),
+            Some(background_selected_u32),
+            Some(background_selected_u32),
         );
     });
 
