@@ -78,7 +78,7 @@ impl SoftwareRenderer {
 
                 let mut forward_buffer = forward_buffer_lock.borrow_mut();
 
-                for (index, written) in stencil_buffer.iter().enumerate() {
+                for (index, written) in stencil_buffer.0.iter().enumerate() {
                     // If this pixel was not shaded by our fragment shader
 
                     if *written == 0 {

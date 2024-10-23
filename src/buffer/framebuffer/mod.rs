@@ -16,8 +16,17 @@ pub enum FramebufferAttachmentKind {
 }
 
 #[derive(Default, Debug, Clone)]
+pub struct StencilBuffer(pub Buffer2D<u8>);
+
+impl StencilBuffer {
+    pub fn set(&mut self, x: u32, y: u32) {
+        self.0.set(x, y, 1);
+    }
+}
+
+#[derive(Default, Debug, Clone)]
 pub struct FramebufferAttachments {
-    pub stencil: Option<Rc<RefCell<Buffer2D<u8>>>>,
+    pub stencil: Option<Rc<RefCell<StencilBuffer>>>,
     pub depth: Option<Rc<RefCell<ZBuffer>>>,
     pub color: Option<Rc<RefCell<Buffer2D>>>,
     pub forward_ldr: Option<Rc<RefCell<Buffer2D>>>,
@@ -50,7 +59,7 @@ impl Framebuffer {
     ) {
         match kind {
             FramebufferAttachmentKind::Stencil => {
-                let stencil_buffer = Buffer2D::new(self.width, self.height, None);
+                let stencil_buffer = StencilBuffer(Buffer2D::new(self.width, self.height, None));
 
                 self.attachments.stencil = Some(Rc::new(RefCell::new(stencil_buffer)));
             }
@@ -99,7 +108,7 @@ impl Framebuffer {
         if let Some(lock) = self.attachments.stencil.as_ref() {
             let buffer = lock.borrow();
 
-            assert!(buffer.width == self.width && buffer.height == self.height);
+            assert!(buffer.0.width == self.width && buffer.0.height == self.height);
         }
 
         if let Some(lock) = self.attachments.depth.as_ref() {
@@ -133,7 +142,7 @@ impl Framebuffer {
         if let Some(lock) = self.attachments.stencil.as_mut() {
             let mut buffer = lock.borrow_mut();
 
-            buffer.clear(None);
+            buffer.0.clear(None);
         }
 
         if let Some(lock) = self.attachments.depth.as_mut() {
@@ -170,9 +179,9 @@ impl Framebuffer {
         if let Some(lock) = self.attachments.stencil.as_mut() {
             let mut buffer = lock.borrow_mut();
 
-            buffer.resize(width, height);
+            buffer.0.resize(width, height);
             if should_clear {
-                buffer.clear(None);
+                buffer.0.clear(None);
             }
         }
 

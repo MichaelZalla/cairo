@@ -506,7 +506,7 @@ impl SoftwareRenderer {
 
                                         let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
 
-                                        stencil_buffer.set(x, y, 1);
+                                        stencil_buffer.set(x, y);
                                     }
 
                                     if !self
