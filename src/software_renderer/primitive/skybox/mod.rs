@@ -70,19 +70,18 @@ impl SoftwareRenderer {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
-            if let (Some(depth_buffer_rc), Some(forward_buffer_rc)) = (
-                framebuffer.attachments.depth.as_ref(),
+            if let (Some(stencil_buffer_lock), Some(forward_buffer_lock)) = (
+                framebuffer.attachments.stencil.as_ref(),
                 framebuffer.attachments.forward_ldr.as_ref(),
             ) {
-                let mut depth_buffer = depth_buffer_rc.borrow_mut();
-                let mut forward_buffer = forward_buffer_rc.borrow_mut();
+                let stencil_buffer = stencil_buffer_lock.borrow();
 
-                for (index, z_non_linear) in depth_buffer.iter().enumerate() {
+                let mut forward_buffer = forward_buffer_lock.borrow_mut();
+
+                for (index, written) in stencil_buffer.iter().enumerate() {
                     // If this pixel was not shaded by our fragment shader
 
-                    if *z_non_linear == zbuffer::MAX_DEPTH {
-                        // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
-
+                    if *written == 0 {
                         let x: u32 = (index as f32 % self.viewport.width as f32) as u32;
                         let y: u32 = (index as f32 / self.viewport.width as f32) as u32;
 
