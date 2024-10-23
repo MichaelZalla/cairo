@@ -307,24 +307,11 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let resources = &scene_context.resources;
 
-        // Re-render directional light shadow maps.
+        let scenes = scene_context.scenes.borrow();
 
-        {
-            let mut directional_light_arena = resources.directional_light.borrow_mut();
-
-            for entry in directional_light_arena.entries.iter_mut().flatten() {
-                let directional_light = &mut entry.item;
-
-                directional_light.update_shadow_maps(&scene_context)?;
-            }
-        }
+        let scene = &scenes[0];
 
         // Render scene.
-
-        let resources = &scene_context.resources;
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-        let scene = &mut scenes[0];
 
         match scene.render(
             resources,

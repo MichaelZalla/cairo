@@ -190,12 +190,13 @@ fn main() -> Result<(), String> {
                   _new_resolution: Option<Resolution>,
                   canvas: &mut [u8]|
      -> Result<(), String> {
-        // Render scene.
-
         let resources = &scene_context.resources;
 
-        let mut scenes = scene_context.scenes.borrow_mut();
-        let scene = &mut scenes[0];
+        let scenes = scene_context.scenes.borrow();
+
+        let scene = &scenes[0];
+
+        // Render scene.
 
         match scene.render(resources, &renderer_rc, None) {
             Ok(()) => {

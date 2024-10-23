@@ -333,11 +333,12 @@ fn main() -> Result<(), String> {
         {
             // Render scene.
 
-            SCENE_CONTEXT.with(|ctx| -> Result<(), String> {
-                let resources = &ctx.resources;
+            SCENE_CONTEXT.with(|scene_context| -> Result<(), String> {
+                let resources = &scene_context.resources;
 
-                let mut scenes = ctx.scenes.borrow_mut();
-                let scene = &mut scenes[0];
+                let scenes = scene_context.scenes.borrow();
+
+                let scene = &scenes[0];
 
                 scene.render(resources, &renderer_rc, None)
             })?;

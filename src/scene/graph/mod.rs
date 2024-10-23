@@ -274,11 +274,14 @@ impl SceneGraph {
                     if options.draw_lights || options.draw_shadow_map_cameras {
                         match handle {
                             Some(directional_light_handle) => {
-                                let directional_light_arena = resources.directional_light.borrow();
+                                let mut directional_light_arena =
+                                    resources.directional_light.borrow_mut();
 
-                                match directional_light_arena.get(directional_light_handle) {
+                                match directional_light_arena.get_mut(directional_light_handle) {
                                     Ok(entry) => {
-                                        let directional_light = &entry.item;
+                                        let directional_light = &mut entry.item;
+
+                                        directional_light.update_shadow_maps(resources, self)?;
 
                                         if options.draw_lights {
                                             renderer.render_directional_light(&current_world_transform, directional_light);
@@ -318,11 +321,13 @@ impl SceneGraph {
                             return Ok(());
                         }
 
-                        let point_light_arena = resources.point_light.borrow();
+                        let mut point_light_arena = resources.point_light.borrow_mut();
 
-                        match point_light_arena.get(point_light_handle) {
+                        match point_light_arena.get_mut(point_light_handle) {
                             Ok(entry) => {
-                                let point_light = &entry.item;
+                                let point_light = &mut entry.item;
+
+                                point_light.update_shadow_map(resources, self)?;
 
                                 renderer.render_point_light(&current_world_transform, point_light);
 

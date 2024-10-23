@@ -13,7 +13,7 @@ use crate::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
-        context::SceneContext,
+        graph::SceneGraph,
         resources::SceneResources,
     },
     serde::PostDeserialize,
@@ -144,93 +144,87 @@ impl DirectionalLight {
             .replace(shadow_map_rendering_context);
     }
 
-    pub fn update_shadow_maps(&mut self, scene_context: &SceneContext) -> Result<(), String> {
-        match (
+    pub fn update_shadow_maps(
+        &mut self,
+        resources: &SceneResources,
+        scene: &SceneGraph,
+    ) -> Result<(), String> {
+        if let (Some(handles), Some(cameras), Some(rendering_context)) = (
             self.shadow_maps.as_ref(),
             self.shadow_map_cameras.as_ref(),
             self.shadow_map_rendering_context.as_ref(),
         ) {
-            (Some(handles), Some(cameras), Some(rendering_context)) => {
-                let mut texture_f32_arena = scene_context.resources.texture_f32.borrow_mut();
+            let mut texture_f32_arena = resources.texture_f32.borrow_mut();
 
-                for (depth_index, (_far_z, camera)) in cameras.iter().enumerate() {
-                    let (near, far) = (
-                        camera.get_projection_z_near(),
-                        camera.get_projection_z_far(),
-                    );
+            for (depth_index, (_far_z, camera)) in cameras.iter().enumerate() {
+                let (near, far) = (
+                    camera.get_projection_z_near(),
+                    camera.get_projection_z_far(),
+                );
 
-                    let shadow_map_handle = &handles[depth_index];
+                let shadow_map_handle = &handles[depth_index];
 
-                    if let Ok(entry) = texture_f32_arena.get_mut(shadow_map_handle) {
-                        let map = &mut entry.item;
+                if let Ok(entry) = texture_f32_arena.get_mut(shadow_map_handle) {
+                    let map = &mut entry.item;
 
-                        // Do something here.
-                        {
-                            let framebuffer = rendering_context.framebuffer.borrow_mut();
+                    // Do something here.
+                    {
+                        let framebuffer = rendering_context.framebuffer.borrow_mut();
 
-                            match framebuffer.attachments.depth.as_ref() {
-                                Some(attachment) => {
-                                    let mut zbuffer = attachment.borrow_mut();
+                        match framebuffer.attachments.depth.as_ref() {
+                            Some(attachment) => {
+                                let mut zbuffer = attachment.borrow_mut();
 
-                                    zbuffer.set_projection_z_near(camera.get_projection_z_near());
-                                    zbuffer.set_projection_z_far(camera.get_projection_z_far());
-                                }
-                                None => panic!(),
+                                zbuffer.set_projection_z_near(camera.get_projection_z_near());
+                                zbuffer.set_projection_z_far(camera.get_projection_z_far());
                             }
+                            None => panic!(),
                         }
+                    }
 
-                        // Do something here.
-                        {
-                            let mut shader_context = rendering_context.shader_context.borrow_mut();
+                    // Do something here.
+                    {
+                        let mut shader_context = rendering_context.shader_context.borrow_mut();
 
-                            shader_context.projection_z_near.replace(near);
-                            shader_context.projection_z_far.replace(far);
+                        shader_context.projection_z_near.replace(near);
+                        shader_context.projection_z_far.replace(far);
 
-                            shader_context
-                                .directional_light_view_projection_index
-                                .replace(depth_index);
+                        shader_context
+                            .directional_light_view_projection_index
+                            .replace(depth_index);
 
-                            camera.update_shader_context(&mut shader_context);
-                        }
+                        camera.update_shader_context(&mut shader_context);
+                    }
 
-                        //
-                        {
-                            let resources = &scene_context.resources;
-                            let scenes = scene_context.scenes.borrow();
+                    //
+                    match scene.render(resources, &rendering_context.renderer, None) {
+                        Ok(()) => {
+                            // Blit our framebuffer's color attachment
+                            // buffer to our cubemap face texture.
 
-                            let scene = &scenes[0];
+                            let framebuffer = rendering_context.framebuffer.borrow();
 
-                            match scene.render(resources, &rendering_context.renderer, None) {
-                                Ok(()) => {
-                                    // Blit our framebuffer's color attachment
-                                    // buffer to our cubemap face texture.
+                            match &framebuffer.attachments.forward_or_deferred_hdr {
+                            Some(hdr_attachment_rc) => {
+                                let hdr_attachment = hdr_attachment_rc.borrow();
 
-                                    let framebuffer = rendering_context.framebuffer.borrow();
+                                let buffer = &mut map.levels[0].0;
 
-                                    match &framebuffer.attachments.forward_or_deferred_hdr {
-                                    Some(hdr_attachment_rc) => {
-                                        let hdr_attachment = hdr_attachment_rc.borrow();
-
-                                        let buffer = &mut map.levels[0].0;
-
-                                        for y in 0..buffer.height {
-                                            for x in 0..buffer.width {
-                                                buffer.set(x, y, hdr_attachment.get(x, y).x);
-                                            }
-                                        }
+                                for y in 0..buffer.height {
+                                    for x in 0..buffer.width {
+                                        buffer.set(x, y, hdr_attachment.get(x, y).x);
                                     }
-                                    None => return Err(
-                                        "Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()
-                                    ),
                                 }
-                                }
-                                Err(e) => panic!("{}", e),
                             }
+                            None => return Err(
+                                "Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()
+                            ),
                         }
+                        }
+                        Err(e) => panic!("{}", e),
                     }
                 }
             }
-            _ => panic!(),
         }
 
         Ok(())

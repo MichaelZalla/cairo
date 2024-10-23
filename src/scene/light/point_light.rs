@@ -9,7 +9,7 @@ use crate::{
     buffer::Buffer2D,
     render::culling::FaceCullingReject,
     resource::handle::Handle,
-    scene::{camera::Camera, context::SceneContext, resources::SceneResources},
+    scene::{camera::Camera, graph::SceneGraph, resources::SceneResources},
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
     shaders::shadow_shaders::point_shadows::{
@@ -110,7 +110,11 @@ impl PointLight {
             .replace(shadow_map_rendering_context);
     }
 
-    pub fn update_shadow_map(&mut self, scene_context: &SceneContext) -> Result<(), String> {
+    pub fn update_shadow_map(
+        &mut self,
+        resources: &SceneResources,
+        scene: &SceneGraph,
+    ) -> Result<(), String> {
         // Re-render shadow map for the latest scene.
 
         let shadow_map_handle = if self.shadow_map.is_none() {
@@ -134,12 +138,12 @@ impl PointLight {
         }
 
         {
-            let mut cubemap_f32_arena = scene_context.resources.cubemap_f32.borrow_mut();
+            let mut cubemap_f32_arena = resources.cubemap_f32.borrow_mut();
 
             if let Ok(entry) = cubemap_f32_arena.get_mut(shadow_map_handle) {
                 let map = &mut entry.item;
 
-                self.render_shadow_map_into(map, scene_context)?;
+                self.render_shadow_map_into(map, resources, scene)?;
             }
         }
 
@@ -291,7 +295,8 @@ impl PointLight {
     fn render_shadow_map_into(
         &self,
         shadow_map: &mut CubeMap<f32>,
-        scene_context: &SceneContext,
+        resources: &SceneResources,
+        scene: &SceneGraph,
     ) -> Result<(), String> {
         let context = if self.shadow_map_rendering_context.is_none() {
             return Err("Called PointLight::render_shadow_map() on a light with no shadow map rendering context created!".to_string());
@@ -328,11 +333,6 @@ impl PointLight {
                 shader_context
                     .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
             }
-
-            let resources = &scene_context.resources;
-            let scenes = scene_context.scenes.borrow();
-
-            let scene = &scenes[0];
 
             match scene.render(resources, &context.renderer, None) {
                 Ok(()) => {

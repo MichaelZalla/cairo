@@ -202,23 +202,11 @@ fn main() -> Result<(), String> {
      -> Result<(), String> {
         let resources = &scene_context.resources;
 
-        // Re-render point light shadow maps.
+        let scenes = scene_context.scenes.borrow();
 
-        {
-            let mut point_light_arena = resources.point_light.borrow_mut();
-
-            for entry in point_light_arena.entries.iter_mut().flatten() {
-                let point_light = &mut entry.item;
-
-                point_light.update_shadow_map(&scene_context)?;
-            }
-        }
+        let scene = &scenes[0];
 
         // Render scene.
-
-        let mut scenes = scene_context.scenes.borrow_mut();
-
-        let scene = &mut scenes[0];
 
         match scene.render(
             resources,
