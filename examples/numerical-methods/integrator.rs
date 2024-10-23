@@ -45,7 +45,7 @@ fn integrate_with_method(
     step_size: f32,
     steps: usize,
     graph: &Graph,
-    color: &Color,
+    color: Color,
     buffer: &mut Buffer2D,
 ) {
     let h = step_size;
@@ -69,7 +69,7 @@ pub(crate) fn integrate_forward_euler(
     step_size: f32,
     steps: usize,
     graph: &Graph,
-    color: &Color,
+    color: Color,
     buffer: &mut Buffer2D,
 ) {
     integrate_with_method(
@@ -90,7 +90,7 @@ pub(crate) fn integrate_rk2(
     step_size: f32,
     steps: usize,
     graph: &Graph,
-    color: &Color,
+    color: Color,
     buffer: &mut Buffer2D,
 ) {
     integrate_with_method(
@@ -111,7 +111,7 @@ pub(crate) fn integrate_rk4(
     step_size: f32,
     steps: usize,
     graph: &Graph,
-    color: &Color,
+    color: Color,
     buffer: &mut Buffer2D,
 ) {
     integrate_with_method(

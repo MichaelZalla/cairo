@@ -75,8 +75,8 @@ fn render_selected_indicator(
             extent.left + 8,
             extent.top + 8,
             5,
-            Some(&theme.background_selected),
-            Some(&theme.background_selected),
+            Some(theme.background_selected),
+            Some(theme.background_selected),
         );
     });
 

@@ -9,8 +9,8 @@ impl Graphics {
         y: u32,
         width: u32,
         height: u32,
-        fill: Option<&Color>,
-        border: Option<&Color>,
+        fill: Option<Color>,
+        border: Option<Color>,
     ) {
         if width == 0 || height == 0 {
             return;

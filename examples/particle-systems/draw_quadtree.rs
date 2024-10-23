@@ -103,9 +103,9 @@ fn draw_quadtree_node(
             parent_center_of_mass_x as i32,
             parent_center_of_mass_y as i32,
             if node.contains_particles() {
-                &color::YELLOW
+                color::YELLOW
             } else {
-                &color::DARK_GRAY
+                color::DARK_GRAY
             },
         );
     }
@@ -170,9 +170,9 @@ fn draw_quadtree_node(
                 height,
                 None,
                 Some(if node.contains_particles() {
-                    &color::YELLOW
+                    color::YELLOW
                 } else {
-                    &color::DARK_GRAY
+                    color::DARK_GRAY
                 }),
             )
         }

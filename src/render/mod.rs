@@ -28,14 +28,14 @@ pub trait Renderer {
     fn render_point(
         &mut self,
         point_world_space: Vec3,
-        color: &Color,
+        color: Color,
         camera: Option<&Camera>,
         materials: Option<&mut Arena<Material>>,
         material: Option<Handle>,
         scale: Option<f32>,
     );
 
-    fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: &Color);
+    fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color);
 
     fn render_point_indicator(&mut self, position: Vec3, scale: f32);
 
@@ -43,9 +43,9 @@ pub trait Renderer {
 
     fn render_ground_plane(&mut self, scale: f32);
 
-    fn render_frustum(&mut self, frustum: &Frustum, color: Option<&Color>);
+    fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>);
 
-    fn render_camera(&mut self, camera: &Camera, color: Option<&Color>);
+    fn render_camera(&mut self, camera: &Camera, color: Option<Color>);
 
     fn render_ambient_light(&mut self, transform: &Mat4, light: &AmbientLight);
 

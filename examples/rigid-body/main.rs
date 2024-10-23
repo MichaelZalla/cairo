@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
                 from_screen_space.y as i32,
                 to_screen_space.x as i32,
                 to_screen_space.y as i32,
-                &color::WHITE,
+                color::WHITE,
             );
         }
 

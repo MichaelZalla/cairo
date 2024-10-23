@@ -164,7 +164,7 @@ impl Renderer for SoftwareRenderer {
     fn render_point(
         &mut self,
         point_world_space: Vec3,
-        color: &Color,
+        color: Color,
         camera: Option<&Camera>,
         materials: Option<&mut Arena<Material>>,
         material: Option<Handle>,
@@ -173,7 +173,7 @@ impl Renderer for SoftwareRenderer {
         self._render_point(point_world_space, color, camera, materials, material, scale)
     }
 
-    fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: &Color) {
+    fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
         self._render_line(start_world_space, end_world_space, color)
     }
 
@@ -189,11 +189,11 @@ impl Renderer for SoftwareRenderer {
         self._render_ground_plane(scale)
     }
 
-    fn render_frustum(&mut self, frustum: &Frustum, color: Option<&Color>) {
+    fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
         self._render_frustum(frustum, color)
     }
 
-    fn render_camera(&mut self, camera: &Camera, color: Option<&Color>) {
+    fn render_camera(&mut self, camera: &Camera, color: Option<Color>) {
         self._render_camera(camera, color)
     }
 

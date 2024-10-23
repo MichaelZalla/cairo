@@ -13,7 +13,7 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_point(
         &mut self,
         point_world_space: Vec3,
-        color: &Color,
+        color: Color,
         camera: Option<&Camera>,
         materials: Option<&mut Arena<Material>>,
         material: Option<Handle>,

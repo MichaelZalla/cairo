@@ -12,27 +12,29 @@ impl UIBox {
         target: &mut Buffer2D,
     ) {
         let (x, y) = self.get_pixel_coordinates();
+
         let (width, height) = self.get_computed_pixel_size();
 
         let border_color = if draw_box_boundaries {
-            Some(&color::BLUE)
+            Some(color::BLUE)
         } else if self.features.contains(UIBoxFeatureFlag::DrawBorder)
             && self.styles.border_color.is_some()
         {
-            self.styles.border_color.as_ref()
+            self.styles.border_color
         } else {
             None
         };
 
         let fill_color = if draw_box_boundaries && self.is_spacer() {
-            Some(&color::RED)
+            Some(color::RED)
         } else {
             None
         };
 
         if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
-            let radius = width.min(height) as f32 / 2.0;
             let center = (x + width / 2, y + height / 2);
+
+            let radius = width.min(height) as f32 / 2.0;
 
             Graphics::circle(
                 target,

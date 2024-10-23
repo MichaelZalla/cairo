@@ -156,7 +156,7 @@ impl SceneGraph {
 
                                     clipping_camera_handle.replace(*handle);
                                 } else if options.draw_cameras {
-                                    renderer.render_camera(camera, Some(&color::ORANGE));
+                                    renderer.render_camera(camera, Some(color::ORANGE));
                                 }
                             }
                             Err(err) => panic!(
@@ -293,7 +293,7 @@ impl SceneGraph {
                                                         color::BLUE,
                                                     ][index];
         
-                                                    renderer.render_camera(camera, Some(&frustum_color));
+                                                    renderer.render_camera(camera, Some(frustum_color));
                                                 }
                                             }
                                         }

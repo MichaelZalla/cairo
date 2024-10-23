@@ -203,7 +203,7 @@ impl SpringyMesh {
 fn draw_line(
     start_world_space: &Vec3,
     end_world_space: &Vec3,
-    color: &Color,
+    color: Color,
     buffer: &mut Buffer2D,
     buffer_center: &Vec3,
 ) {
@@ -248,7 +248,7 @@ impl Renderable for SpringyMesh {
             draw_line(
                 start_world_space,
                 end_world_space,
-                &color,
+                color,
                 buffer,
                 buffer_center,
             );
@@ -265,11 +265,13 @@ impl Renderable for SpringyMesh {
         for face in &self.faces {
             static ANGLES: [(usize, usize, usize); 3] = [(0, 1, 2), (1, 2, 0), (2, 0, 1)];
 
-            static ANGLE_COLORS: [&Color; 3] = [&color::SKY_BOX, &color::ORANGE, &color::BLUE];
+            static ANGLE_COLORS: [Color; 3] = [color::SKY_BOX, color::ORANGE, color::BLUE];
 
             for (angle_index, (p1_index_index, p0_index_index, p2_index_index)) in
                 ANGLES.iter().enumerate()
             {
+                let color = ANGLE_COLORS[angle_index].clone();
+
                 let p0_index = face.points[*p0_index_index];
                 let p1_index = face.points[*p1_index_index];
                 let p2_index = face.points[*p2_index_index];
@@ -284,7 +286,7 @@ impl Renderable for SpringyMesh {
                 draw_line(
                     &(p0.position + p0_p1.as_normal() * 2.0),
                     &(p0.position + p0_p2.as_normal() * 2.0),
-                    ANGLE_COLORS[angle_index],
+                    color,
                     buffer,
                     buffer_center,
                 );
@@ -316,7 +318,7 @@ impl Renderable for SpringyMesh {
                 draw_line(
                     &p1.position,
                     &(p1.position + p0_p1_normal * 2.0),
-                    ANGLE_COLORS[angle_index],
+                    color,
                     buffer,
                     buffer_center,
                 );
@@ -324,7 +326,7 @@ impl Renderable for SpringyMesh {
                 draw_line(
                     &p2.position,
                     &(p2.position + p0_p2_normal * 2.0),
-                    ANGLE_COLORS[angle_index],
+                    color,
                     buffer,
                     buffer_center,
                 );

@@ -227,15 +227,11 @@ fn draw_panel_frame(
         width,
         height,
         if fill {
-            Some(&theme.panel_background)
+            Some(theme.panel_background)
         } else {
             None
         },
-        if fill {
-            None
-        } else {
-            Some(&theme.panel_border)
-        },
+        if fill { None } else { Some(theme.panel_border) },
     )
 }
 
@@ -265,7 +261,7 @@ fn draw_panel_title_bar(
         layout.extent.top + 1,
         layout.width() - 2,
         PANEL_TITLE_BAR_HEIGHT - 2,
-        Some(&theme.panel_titlebar_background),
+        Some(theme.panel_titlebar_background),
         None,
     );
 

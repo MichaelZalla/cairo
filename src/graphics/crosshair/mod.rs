@@ -11,7 +11,7 @@ impl Graphics {
         thickness: u16,
         mut gap: u16,
         center_dot: bool,
-        color: &Color,
+        color: Color,
     ) {
         gap = gap.min((length as f32 / 2.0).ceil() as u16);
 

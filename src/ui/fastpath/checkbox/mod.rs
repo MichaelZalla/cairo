@@ -102,13 +102,13 @@ fn render_checkmark(
     .map(|p| *p + OFFSET)
     .collect();
 
-    Graphics::poly_line(target, &points, false, &color::WHITE);
+    Graphics::poly_line(target, &points, false, color::WHITE);
 
     for point in points.iter_mut() {
         point.x += 1.0;
     }
 
-    Graphics::poly_line(target, &points, false, &color::WHITE);
+    Graphics::poly_line(target, &points, false, color::WHITE);
 
     Ok(())
 }

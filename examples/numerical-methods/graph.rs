@@ -79,7 +79,7 @@ impl Graph {
 
         let (x1, y1, x2, y2) = (0, screen_origin.1, buffer.width as i32, screen_origin.1);
 
-        Graphics::line(buffer, x1, y1, x2, y2, &color::DARK_GRAY);
+        Graphics::line(buffer, x1, y1, x2, y2, color::DARK_GRAY);
 
         // Draw the Y axis.
 
@@ -90,7 +90,7 @@ impl Graph {
             (buffer.height - 1) as i32,
         );
 
-        Graphics::line(buffer, x1, y1, x2, y2, &color::DARK_GRAY);
+        Graphics::line(buffer, x1, y1, x2, y2, color::DARK_GRAY);
     }
 
     fn render_ticks(&self, buffer: &mut Buffer2D) {
@@ -139,7 +139,7 @@ impl Graph {
                 tick_start.1,
                 tick_end.0,
                 tick_end.1,
-                &color::DARK_GRAY,
+                color::DARK_GRAY,
             )
         }
 
@@ -163,7 +163,7 @@ impl Graph {
                 tick_start.1,
                 tick_end.0,
                 tick_end.1,
-                &color::DARK_GRAY,
+                color::DARK_GRAY,
             )
         }
     }
@@ -175,11 +175,11 @@ impl Graph {
         buffer: &mut Buffer2D,
     ) {
         for (function, color) in functions {
-            self.function(function, color, buffer);
+            self.function(function, *color, buffer);
         }
     }
 
-    pub fn function(&self, function: &GraphingFunction, color: &Color, buffer: &mut Buffer2D) {
+    pub fn function(&self, function: &GraphingFunction, color: Color, buffer: &mut Buffer2D) {
         for i in 0..buffer.width - 2 {
             let (x1_cartesian, _) = self.screen_to_cartesian(i as i32, 0);
             let y1_cartesian = function(x1_cartesian);
@@ -199,7 +199,7 @@ impl Graph {
     }
 
     #[allow(unused)]
-    pub fn point(&self, x: f32, y: f32, color: &Color, buffer: &mut Buffer2D) {
+    pub fn point(&self, x: f32, y: f32, color: Color, buffer: &mut Buffer2D) {
         let (screen_x, screen_y) = self.cartesian_to_screen(x, y);
 
         if screen_x >= 0
@@ -211,7 +211,7 @@ impl Graph {
         }
     }
 
-    pub fn line(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: &Color, buffer: &mut Buffer2D) {
+    pub fn line(&self, x1: f32, y1: f32, x2: f32, y2: f32, color: Color, buffer: &mut Buffer2D) {
         let start = self.cartesian_to_screen(x1, y1);
         let end = self.cartesian_to_screen(x2, y2);
 

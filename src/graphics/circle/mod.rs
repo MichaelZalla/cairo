@@ -10,8 +10,8 @@ impl Graphics {
         center_x: u32,
         center_y: u32,
         radius: u32,
-        fill: Option<&Color>,
-        border: Option<&Color>,
+        fill: Option<Color>,
+        border: Option<Color>,
     ) {
         assert!(
             fill.is_some() || border.is_some(),
@@ -29,7 +29,7 @@ impl Graphics {
 
         // If no border was specified, use the fill color for perimeter.
 
-        let border_u32 = border.unwrap_or_else(|| fill.as_ref().unwrap()).to_u32();
+        let border_u32 = border.unwrap_or_else(|| fill.unwrap()).to_u32();
 
         // Begin at (+radius, 0), relative to the circle's center.
 

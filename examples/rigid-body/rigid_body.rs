@@ -132,7 +132,7 @@ impl Renderable for RigidBody {
                     position_screen_space.y as u32,
                     (radius * PIXELS_PER_METER) as u32,
                     None,
-                    Some(&color::YELLOW),
+                    Some(color::YELLOW),
                 );
 
                 // Draw a line to indicate the body's orientation.
@@ -149,7 +149,7 @@ impl Renderable for RigidBody {
                     position_screen_space.y as i32,
                     end_screen_space.x as i32,
                     end_screen_space.y as i32,
-                    &color::ORANGE,
+                    color::ORANGE,
                 );
             }
         }

@@ -14,7 +14,7 @@ impl Graphics {
         mut y1: i32,
         mut x2: i32,
         mut y2: i32,
-        color: &Color,
+        color: Color,
     ) {
         if x1 as u32 >= buffer.width
             || x2 as u32 >= buffer.width
@@ -100,7 +100,7 @@ impl Graphics {
         }
     }
 
-    pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], closed: bool, color: &Color) {
+    pub fn poly_line(buffer: &mut Buffer2D, p: &[vec2::Vec2], closed: bool, color: Color) {
         if p.is_empty() {
             return;
         }

@@ -261,7 +261,7 @@ impl Buffer2D<u32> {
         }
     }
 
-    pub fn horizontal_line_blended_unsafe(&mut self, x1: u32, x2: u32, y: u32, color: &Color) {
+    pub fn horizontal_line_blended_unsafe(&mut self, x1: u32, x2: u32, y: u32, color: Color) {
         // Assumes all coordinate arguments lie inside the buffer boundary.
 
         static ONE_OVER_255: f32 = 1.0 / 255.0;
@@ -287,7 +287,7 @@ impl Buffer2D<u32> {
         }
     }
 
-    pub fn vertical_line_blended_unsafe(&mut self, x: u32, y1: u32, y2: u32, color: &Color) {
+    pub fn vertical_line_blended_unsafe(&mut self, x: u32, y1: u32, y2: u32, color: Color) {
         // Assumes all coordinate arguments lie inside the buffer boundary.
 
         static ONE_OVER_255: f32 = 1.0 / 255.0;

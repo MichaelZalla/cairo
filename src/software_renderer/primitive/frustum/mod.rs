@@ -9,7 +9,7 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_frustum(
         &mut self,
         frustum: &Frustum,
-        color: Option<&Color>,
+        color: Option<Color>,
     ) {
         // Draw near plane (red).
 
@@ -19,7 +19,7 @@ impl SoftwareRenderer {
                 frustum.near[if index == 3 { 0 } else { index + 1 }],
                 match color {
                     Some(color) => color,
-                    None => &color::RED,
+                    None => color::RED,
                 },
             );
         }
@@ -32,7 +32,7 @@ impl SoftwareRenderer {
                 frustum.far[if index == 3 { 0 } else { index + 1 }],
                 match color {
                     Some(color) => color,
-                    None => &color::BLUE,
+                    None => color::BLUE,
                 },
             );
         }
@@ -45,7 +45,7 @@ impl SoftwareRenderer {
                 frustum.far[i],
                 match color {
                     Some(color) => color,
-                    None => &color::YELLOW,
+                    None => color::YELLOW,
                 },
             );
         }

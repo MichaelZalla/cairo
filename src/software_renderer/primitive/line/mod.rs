@@ -11,7 +11,7 @@ impl SoftwareRenderer {
         &mut self,
         start_world_space: Vec3,
         end_world_space: Vec3,
-        color: &Color,
+        color: Color,
     ) {
         let (start_ndc_space, end_ndc_space) = {
             let shader_context = self.shader_context.borrow();
@@ -32,15 +32,15 @@ impl SoftwareRenderer {
     ) {
         // X-axis (red)
 
-        self.render_line(position, position + vec3::RIGHT * scale, &color::RED);
+        self.render_line(position, position + vec3::RIGHT * scale, color::RED);
 
         // Y-axis (blue)
 
-        self.render_line(position, position + vec3::UP * scale, &color::BLUE);
+        self.render_line(position, position + vec3::UP * scale, color::BLUE);
 
         // Z-axis (green)
 
-        self.render_line(position, position + vec3::FORWARD * scale, &color::GREEN);
+        self.render_line(position, position + vec3::FORWARD * scale, color::GREEN);
     }
 
     pub(in crate::software_renderer) fn _render_world_axes(&mut self, scale: f32) {
@@ -62,7 +62,7 @@ impl SoftwareRenderer {
                     z: (i as f32 * scale),
                     ..Default::default()
                 },
-                if i == 0 { &color::RED } else { &color::WHITE },
+                if i == 0 { color::RED } else { color::WHITE },
             );
 
             // Z-axis parallels
@@ -78,12 +78,12 @@ impl SoftwareRenderer {
                     z: 10.0 * scale,
                     ..Default::default()
                 },
-                if i == 0 { &color::GREEN } else { &color::WHITE },
+                if i == 0 { color::GREEN } else { color::WHITE },
             );
         }
     }
 
-    fn render_line_from_ndc_space_vecs(&mut self, start: &Vec3, end: &Vec3, color: &Color) {
+    fn render_line_from_ndc_space_vecs(&mut self, start: &Vec3, end: &Vec3, color: Color) {
         // Cull lines that are completely in front of our near plane
         // (z1 <= 0 and z2 <= 0).
 

@@ -42,8 +42,8 @@ impl SoftwareRenderer {
         &self,
         position_ndc_space: &Vec3,
         radius_ndc_space: f32,
-        fill: Option<&Color>,
-        border: Option<&Color>,
+        fill: Option<Color>,
+        border: Option<Color>,
     ) {
         // Cull lines that are completely in front of our near plane (z1 <= 0
         // and z2 <= 0).
@@ -90,7 +90,7 @@ impl SoftwareRenderer {
         self.render_line(
             y_indicator_line_start,
             y_indicator_line_end,
-            &color::DARK_GRAY,
+            color::DARK_GRAY,
         );
     }
 
@@ -131,7 +131,7 @@ impl SoftwareRenderer {
             &start_ndc_space,
             horizontal_radius_ndc,
             None,
-            Some(&border_color),
+            Some(border_color),
         );
     }
 
@@ -160,7 +160,7 @@ impl SoftwareRenderer {
 
         let (start, end) = (position, position + light.get_direction().to_vec3() * 10.0);
 
-        self.render_line(start, end, &color);
+        self.render_line(start, end, color);
 
         self.render_light_ground_contact(&position);
     }
@@ -195,7 +195,7 @@ impl SoftwareRenderer {
 
         let target_position = position + forward * light.influence_distance;
 
-        self.render_line(position, target_position, &color::WHITE);
+        self.render_line(position, target_position, color::WHITE);
 
         // Draw sides for cutoff angles.
 
@@ -232,6 +232,6 @@ impl SoftwareRenderer {
             far: far_plane_points_world_space,
         };
 
-        self._render_frustum(&frustum, Some(&Color::from_vec3(color * 255.0)));
+        self._render_frustum(&frustum, Some(Color::from_vec3(color * 255.0)));
     }
 }

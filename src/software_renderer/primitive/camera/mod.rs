@@ -9,7 +9,7 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_camera(
         &mut self,
         camera: &Camera,
-        color: Option<&Color>,
+        color: Option<Color>,
     ) {
         // World space view volume.
 
@@ -24,7 +24,7 @@ impl SoftwareRenderer {
         self.render_line(
             (frustum.near[0] + frustum.near[2]) / 2.0,
             (frustum.far[0] + frustum.far[2]) / 2.0,
-            &color::WHITE,
+            color::WHITE,
         );
 
         self.render_point_indicator(Default::default(), 5.0);

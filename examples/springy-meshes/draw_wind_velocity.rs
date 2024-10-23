@@ -13,5 +13,5 @@ pub(crate) fn draw_wind_velocity(
     let (x1, y1) = (start_screen_space.x as i32, start_screen_space.y as i32);
     let (x2, y2) = (end_screen_space.x as i32, end_screen_space.y as i32);
 
-    Graphics::line(framebuffer, x1, y1, x2, y2, &color::SKY_BOX);
+    Graphics::line(framebuffer, x1, y1, x2, y2, color::SKY_BOX);
 }

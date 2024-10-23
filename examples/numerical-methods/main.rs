@@ -107,20 +107,20 @@ fn main() -> Result<(), String> {
         // ];
 
         // graph.functions(&functions, &mut framebuffer);
-        // graph.point(1.0, 1.0, &color::ORANGE, &mut framebuffer);
-        // graph.line(0.0, 0.0, 5.0, 3.0, &color::ORANGE, &mut framebuffer);
+        // graph.point(1.0, 1.0, color::ORANGE, &mut framebuffer);
+        // graph.line(0.0, 0.0, 5.0, 3.0, color::ORANGE, &mut framebuffer);
 
         if false {
             // Graph the exact solution for exponential decay.
 
-            graph.function(&exp_decay, &color::WHITE, &mut framebuffer);
+            graph.function(&exp_decay, color::WHITE, &mut framebuffer);
 
             graph.line(
                 0.0,
                 X_0,
                 TIME_CONSTANT_OF_DECAY,
                 0.0,
-                &color::DARK_GRAY,
+                color::DARK_GRAY,
                 &mut framebuffer,
             );
 
@@ -144,7 +144,7 @@ fn main() -> Result<(), String> {
                 step_size,
                 (10.0 / step_size) as usize,
                 &graph,
-                &color::YELLOW,
+                color::YELLOW,
                 &mut framebuffer,
             );
 
@@ -159,7 +159,7 @@ fn main() -> Result<(), String> {
                 step_size,
                 (10.0 / step_size) as usize,
                 &graph,
-                &color::GREEN,
+                color::GREEN,
                 &mut framebuffer,
             );
 
@@ -174,7 +174,7 @@ fn main() -> Result<(), String> {
                 step_size,
                 (10.0 / step_size) as usize,
                 &graph,
-                &color::BLUE,
+                color::BLUE,
                 &mut framebuffer,
             );
         }
@@ -182,7 +182,7 @@ fn main() -> Result<(), String> {
         if true {
             // Graph the exact solution for sinusoidal oscillation.
 
-            graph.function(&oscillation, &color::WHITE, &mut framebuffer);
+            graph.function(&oscillation, color::WHITE, &mut framebuffer);
 
             // Graph approximate solutions using our different integrators.
 
@@ -207,7 +207,7 @@ fn main() -> Result<(), String> {
                 step_size,
                 (20.0 / step_size) as usize,
                 &graph,
-                &color::YELLOW,
+                color::YELLOW,
                 &mut framebuffer,
             );
 
@@ -217,7 +217,7 @@ fn main() -> Result<(), String> {
                 step_size,
                 (20.0 / step_size) as usize,
                 &graph,
-                &color::GREEN,
+                color::GREEN,
                 &mut framebuffer,
             );
 
@@ -227,7 +227,7 @@ fn main() -> Result<(), String> {
                 step_size,
                 (20.0 / step_size) as usize,
                 &graph,
-                &color::BLUE,
+                color::BLUE,
                 &mut framebuffer,
             );
         }

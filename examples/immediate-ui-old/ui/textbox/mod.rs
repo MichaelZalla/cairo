@@ -224,7 +224,7 @@ fn draw_textbox(
         textbox_y,
         TEXTBOX_WIDTH,
         textbox_height,
-        Some(&theme.input_background),
+        Some(theme.input_background),
         None,
     );
 
@@ -297,7 +297,7 @@ fn draw_textbox(
                         2,
                         textbox_height - 2 - 2,
                         None,
-                        Some(&theme.input_cursor),
+                        Some(theme.input_cursor),
                     );
                 }
             }

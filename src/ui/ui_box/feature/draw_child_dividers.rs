@@ -70,7 +70,7 @@ impl UIBox {
                 }
             };
 
-            Graphics::line(target, x1, y1, x2, y2, &divider_color);
+            Graphics::line(target, x1, y1, x2, y2, divider_color);
         }
     }
 }

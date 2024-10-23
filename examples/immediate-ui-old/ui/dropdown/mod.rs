@@ -251,7 +251,7 @@ fn draw_dropdown(
         dropdown_y,
         DROPDOWN_WIDTH,
         item_height,
-        Some(&theme.dropdown_background),
+        Some(theme.dropdown_background),
         None,
     );
 
@@ -279,7 +279,7 @@ fn draw_dropdown(
     let carat_points = [carat_top_left, carat_bottom_mid, carat_top_right];
 
     if !is_open {
-        Graphics::poly_line(parent_buffer, &carat_points, true, &theme.text);
+        Graphics::poly_line(parent_buffer, &carat_points, true, theme.text);
     }
 
     let dropdown_top_left = (dropdown_x, dropdown_y);
@@ -317,7 +317,7 @@ fn draw_dropdown(
                 y + 1,
                 max_width + DROPDOWN_ITEM_HORIZONTAL_PADDING / 2 * 2 - 2,
                 model_value_texture.0.height,
-                Some(&color::BLUE),
+                Some(color::BLUE),
                 None,
             );
         }

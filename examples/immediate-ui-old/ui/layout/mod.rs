@@ -129,7 +129,7 @@ impl UILayoutContext {
             self.width() + self.options.padding * 2,
             self.height() + self.options.padding * 2,
             None,
-            Some(&color::GREEN),
+            Some(color::GREEN),
         );
 
         // Inner bounds (inside padding)
@@ -141,7 +141,7 @@ impl UILayoutContext {
             self.width(),
             self.height(),
             None,
-            Some(&color::YELLOW),
+            Some(color::YELLOW),
         );
     }
 }
