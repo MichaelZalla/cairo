@@ -17,11 +17,11 @@ pub enum FramebufferAttachmentKind {
 
 #[derive(Default, Debug, Clone)]
 pub struct FramebufferAttachments {
-    pub stencil: Option<RefCell<Buffer2D<u8>>>,
-    pub depth: Option<RefCell<ZBuffer>>,
+    pub stencil: Option<Rc<RefCell<Buffer2D<u8>>>>,
+    pub depth: Option<Rc<RefCell<ZBuffer>>>,
     pub color: Option<Rc<RefCell<Buffer2D>>>,
-    pub forward_ldr: Option<RefCell<Buffer2D>>,
-    pub forward_or_deferred_hdr: Option<RefCell<Buffer2D<Vec3>>>,
+    pub forward_ldr: Option<Rc<RefCell<Buffer2D>>>,
+    pub forward_or_deferred_hdr: Option<Rc<RefCell<Buffer2D<Vec3>>>>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -50,31 +50,35 @@ impl Framebuffer {
     ) {
         match kind {
             FramebufferAttachmentKind::Stencil => {
-                self.attachments.stencil =
-                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+                let stencil_buffer = Buffer2D::new(self.width, self.height, None);
+
+                self.attachments.stencil = Some(Rc::new(RefCell::new(stencil_buffer)));
             }
             FramebufferAttachmentKind::Depth => {
-                self.attachments.depth = Some(RefCell::new(ZBuffer::new(
+                let z_buffer = ZBuffer::new(
                     self.width,
                     self.height,
                     projection_z_near.unwrap(),
                     projection_z_far.unwrap(),
-                )));
+                );
+
+                self.attachments.depth = Some(Rc::new(RefCell::new(z_buffer)));
             }
             FramebufferAttachmentKind::Color => {
-                self.attachments.color = Some(Rc::new(RefCell::new(Buffer2D::new(
-                    self.width,
-                    self.height,
-                    None,
-                ))));
+                let color_buffer = Buffer2D::new(self.width, self.height, None);
+
+                self.attachments.color = Some(Rc::new(RefCell::new(color_buffer)));
             }
             FramebufferAttachmentKind::ForwardLdr => {
-                self.attachments.forward_ldr =
-                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+                let forward_ldr_buffer = Buffer2D::new(self.width, self.height, None);
+
+                self.attachments.forward_ldr = Some(Rc::new(RefCell::new(forward_ldr_buffer)));
             }
             FramebufferAttachmentKind::ForwardOrDeferredHdr => {
+                let forward_or_deferred_hdr_buffer = Buffer2D::new(self.width, self.height, None);
+
                 self.attachments.forward_or_deferred_hdr =
-                    Some(RefCell::new(Buffer2D::new(self.width, self.height, None)));
+                    Some(Rc::new(RefCell::new(forward_or_deferred_hdr_buffer)));
             }
         }
     }
