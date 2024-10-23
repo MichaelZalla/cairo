@@ -98,8 +98,8 @@ impl SoftwareRenderer {
                 let color_u32 = color.to_u32();
 
                 match &framebuffer.attachments.forward_ldr {
-                    Some(forward_buffer_lock) => {
-                        let mut forward_buffer = forward_buffer_lock.borrow_mut();
+                    Some(forward_ldr_rc) => {
+                        let mut forward_buffer = forward_ldr_rc.borrow_mut();
 
                         Graphics::line(
                             &mut forward_buffer,
