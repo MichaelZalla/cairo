@@ -18,6 +18,15 @@
       "problemMatcher": []
     },
     {
+      "label": "git rebase --continue",
+      "command": "git",
+      "args": [
+        "rebase",
+        "--continue",
+      ],
+      "problemMatcher": []
+    },
+    {
       "type": "shell",
       "problemMatcher": [
         "$rustc"
