@@ -314,6 +314,69 @@ impl PointLight {
         accumulated_shadow / (STEPS as f32 * 3.0)
     }
 
+    fn pcf_disk(
+        &self,
+        near: f32,
+        far: f32,
+        current_depth: f32,
+        sample: &GeometrySample,
+        map: &CubeMap<f32>,
+        light_to_fragment_direction: Vec3,
+    ) -> f32 {
+        static SAMPLE_OFFSET_DIRECTIONS: [Vec3; 20] = [
+            Vec3 { x:  1.0, y:  1.0, z:  1.0 },
+            Vec3 { x:  1.0, y: -1.0, z:  1.0 },
+            Vec3 { x: -1.0, y: -1.0, z:  1.0 },
+            Vec3 { x: -1.0, y:  1.0, z:  1.0 }, 
+            Vec3 { x:  1.0, y:  1.0, z: -1.0 },
+            Vec3 { x:  1.0, y: -1.0, z: -1.0 },
+            Vec3 { x: -1.0, y: -1.0, z: -1.0 },
+            Vec3 { x: -1.0, y:  1.0, z: -1.0 },
+            Vec3 { x:  1.0, y:  1.0, z:  0.0 },
+            Vec3 { x:  1.0, y: -1.0, z:  0.0 },
+            Vec3 { x: -1.0, y: -1.0, z:  0.0 },
+            Vec3 { x: -1.0, y:  1.0, z:  0.0 },
+            Vec3 { x:  1.0, y:  0.0, z:  1.0 },
+            Vec3 { x: -1.0, y:  0.0, z:  1.0 },
+            Vec3 { x:  1.0, y:  0.0, z: -1.0 },
+            Vec3 { x: -1.0, y:  0.0, z: -1.0 },
+            Vec3 { x:  0.0, y:  1.0, z:  1.0 },
+            Vec3 { x:  0.0, y: -1.0, z:  1.0 },
+            Vec3 { x:  0.0, y: -1.0, z: -1.0 },
+            Vec3 { x:  0.0, y:  1.0, z: -1.0 }            
+        ];
+
+        static DISK_RADIUS: f32 = 0.01;
+
+        let mut accumulated_shadow = 0.0;
+
+        for sample_offset in SAMPLE_OFFSET_DIRECTIONS {
+            let offset = sample_offset * DISK_RADIUS;
+
+            let perturbed_light_to_fragment_direction = light_to_fragment_direction + offset;
+
+            let closest_depth_sample = map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
+    
+            let closest_depth = near + closest_depth_sample * (far - near);
+    
+            if closest_depth == 0.0 {
+                continue;
+            }
+    
+            let likeness = sample
+                .world_normal
+                .dot((self.position - sample.world_pos).as_normal());
+    
+            let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
+
+            if current_depth + bias > closest_depth {
+                accumulated_shadow += 1.0;
+            }
+        }
+        
+        accumulated_shadow / SAMPLE_OFFSET_DIRECTIONS.len() as f32
+    }
+
     fn get_shadowing(&self, sample: &GeometrySample, map: &CubeMap<f32>) -> f32 {
         let context = self.shadow_map_rendering_context.as_ref().unwrap();
 
@@ -324,7 +387,7 @@ impl PointLight {
 
         let current_depth = light_to_fragment.mag();
 
-        self.pcf_3x3(near, far, current_depth, sample, map, light_to_fragment_direction)
+        self.pcf_disk(near, far, current_depth, sample, map, light_to_fragment_direction)
     }
 
     fn render_shadow_map_into(
