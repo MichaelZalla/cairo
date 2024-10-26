@@ -283,7 +283,7 @@ impl PointLight {
 
         let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
 
-        let is_in_shadow = (current_depth + bias) > closest_depth;
+        let is_in_shadow = current_depth + bias > closest_depth;
 
         if is_in_shadow {
             1.0

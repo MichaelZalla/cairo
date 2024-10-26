@@ -4,6 +4,7 @@ use std::ops;
 
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 
+use super::vec2::Vec2;
 use super::vec3;
 use super::vec3::Vec3;
 
@@ -197,6 +198,14 @@ impl Vec4 {
             y: self.y / mag,
             z: self.z / mag,
             w: self.w,
+        }
+    }
+
+    pub fn ndc_to_uv(&self) -> Vec2 {
+        Vec2 {
+            x: 0.5 + self.x / 2.0,
+            y: 0.5 + self.y / 2.0,
+            z: 0.0,
         }
     }
 }

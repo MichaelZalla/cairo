@@ -5,7 +5,6 @@ use crate::{
     texture::uv,
     transform::quaternion::Quaternion,
     vec::{
-        vec2::Vec2,
         vec3::{self, Vec3},
         vec4,
     },
@@ -95,11 +94,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
         let uv_normal = vec4::RIGHT * (*rotation.mat());
 
-        let uv = Vec2 {
-            x: 0.5 + uv_normal.x,
-            y: 0.5 + uv_normal.y,
-            z: 0.0,
-        };
+        let uv = uv_normal.ndc_to_uv();
 
         uvs.push(uv);
     }

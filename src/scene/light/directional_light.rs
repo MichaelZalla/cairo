@@ -369,6 +369,94 @@ impl DirectionalLight {
         contribution * (1.0 - in_shadow)
     }
 
+    fn pcf_3x3(
+        _near: f32,
+        far: f32,
+        current_depth: f32,
+        map: &TextureMap<f32>,
+        texel_size: f32,
+        uv: &Vec2,
+    ) -> f32 {
+        let mut shadow = 0.0;
+
+        for y in -1..1 {
+            for x in -1..1 {
+                let perturbed_uv = *uv
+                    + Vec2 {
+                        x: x as f32,
+                        y: y as f32,
+                        z: 0.0,
+                    } * texel_size;
+
+                if perturbed_uv.x < 0.0
+                    || perturbed_uv.x > 1.0
+                    || perturbed_uv.y < 0.0
+                    || perturbed_uv.y > 1.0
+                {
+                    continue;
+                }
+
+                let closest_depth = sample_nearest_f32(perturbed_uv, map) * far;
+
+                if closest_depth == 0.0 {
+                    continue;
+                }
+
+                let bias = 0.0025;
+
+                let is_in_shadow = current_depth - bias > closest_depth;
+
+                if is_in_shadow {
+                    shadow += 1.0;
+                }
+            }
+        }
+
+        shadow / 9.0
+    }
+
+    fn poisson_3x3(
+        near: f32,
+        far: f32,
+        current_depth: f32,
+        map: &TextureMap<f32>,
+        texel_size: f32,
+        uv: Vec2,
+    ) -> f32 {
+        static POISSON_DISK_SAMPLES: [Vec2; 4] = [
+            Vec2 {
+                x: -0.942_016_24,
+                y: -0.399_062_16,
+                z: 0.0,
+            },
+            Vec2 {
+                x: 0.945_586_1,
+                y: -0.768_907_25,
+                z: 0.0,
+            },
+            Vec2 {
+                x: -0.094_184_1,
+                y: -0.929_388_7,
+                z: 0.0,
+            },
+            Vec2 {
+                x: 0.344_959_38,
+                y: 0.293_877_6,
+                z: 0.0,
+            },
+        ];
+
+        let mut shadow = 0.0;
+
+        for sample in &POISSON_DISK_SAMPLES {
+            let poisson_uv = uv + (*sample / 700.0);
+
+            shadow += Self::pcf_3x3(near, far, current_depth, map, texel_size, &poisson_uv);
+        }
+
+        shadow / POISSON_DISK_SAMPLES.len() as f32
+    }
+
     fn get_shadowing_for_map(
         &self,
         sample: &GeometrySample,
@@ -384,48 +472,13 @@ impl DirectionalLight {
 
         let current_depth = sample_position_light_ndc_space.z;
 
-        let uv = Vec2 {
-            x: 0.5 + sample_position_light_ndc_space.x / 2.0,
-            y: 0.5 + sample_position_light_ndc_space.y / 2.0,
-            z: 0.0,
-        };
+        let (near, far) = (SHADOW_MAP_CAMERA_NEAR, rendering_context.projection_z_far);
 
         let texel_size = 1.0 / map.width as f32;
 
-        let mut shadow = 0.0;
+        let uv = sample_position_light_ndc_space.ndc_to_uv();
 
-        for y in -1..1 {
-            for x in -1..1 {
-                if uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 {
-                    continue;
-                }
-
-                let depth_sample = sample_nearest_f32(
-                    uv + Vec2 {
-                        x: x as f32,
-                        y: y as f32,
-                        z: 0.0,
-                    } * texel_size,
-                    map,
-                );
-
-                let closest_depth = depth_sample * rendering_context.projection_z_far;
-
-                if closest_depth == 0.0 {
-                    continue;
-                }
-
-                let bias = -0.01;
-
-                let is_in_shadow = current_depth + bias > closest_depth;
-
-                if is_in_shadow {
-                    shadow += 1.0;
-                }
-            }
-        }
-
-        shadow
+        Self::poisson_3x3(near, far, current_depth, map, texel_size, uv)
     }
 
     fn get_shadowing(
