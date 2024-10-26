@@ -1,8 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, f32::consts::PI, rc::Rc};
-
-use sdl2::keyboard::Keycode;
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{
@@ -10,12 +8,8 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
-    debug::message::DebugMessageBuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    font::{cache::FontCache, FontInfo},
-    graphics::Graphics,
     matrix::Mat4,
-    render::options::RenderPassFlag,
     scene::{
         context::SceneContext,
         node::{SceneNode, SceneNodeType},
@@ -23,16 +17,10 @@ use cairo::{
     },
     shader::context::ShaderContext,
     shaders::{
-        debug_shaders::{
-            albedo_fragment_shader::AlbedoFragmentShader,
-            depth_fragment_shader::DepthFragmentShader,
-            normal_fragment_shader::NormalFragmentShader,
-            uv_test_fragment_shader::UvTestFragmentShader,
-        },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
-    software_renderer::{zbuffer::DEPTH_TEST_METHODS, SoftwareRenderer},
+    software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };
@@ -42,15 +30,6 @@ pub mod scene;
 use scene::make_sponza_scene;
 
 fn main() -> Result<(), String> {
-    // Validates command line arguments.
-
-    let args: Vec<String> = env::args().collect();
-
-    if args.len() < 2 {
-        println!("Usage: cargo run --example sponza /path/to/your-font.fon");
-        return Ok(());
-    }
-
     let mut window_info = AppWindowInfo {
         title: "examples/sponza".to_string(),
         window_resolution: RESOLUTION_640_BY_480 * 2.0,
@@ -67,23 +46,6 @@ fn main() -> Result<(), String> {
     let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     let rendering_context = &app.context.rendering_context;
-
-    // Fonts
-
-    let font_info = Box::leak(Box::new(FontInfo {
-        filepath: args[1].to_string(),
-        point_size: 14,
-    }));
-
-    let font_cache_rc = Box::leak(Box::new(RefCell::new(FontCache::new(
-        app.context.ttf_context,
-    ))));
-
-    font_cache_rc.borrow_mut().load(font_info)?;
-
-    // Debug messages
-
-    let debug_message_buffer_rc: RefCell<DebugMessageBuffer> = Default::default();
 
     // Default framebuffer
 
@@ -148,18 +110,6 @@ fn main() -> Result<(), String> {
     // Shader context
 
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
-
-    // Fragment shaders
-
-    let fragment_shaders = [
-        DEFAULT_FRAGMENT_SHADER,
-        AlbedoFragmentShader,
-        DepthFragmentShader,
-        NormalFragmentShader,
-        UvTestFragmentShader,
-    ];
-
-    let active_fragment_shader_index_rc: RefCell<usize> = Default::default();
 
     // Renderer
 
@@ -256,21 +206,6 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
-        let window_info = (*app.window_info).borrow();
-
-        let mut debug_message_buffer = debug_message_buffer_rc.borrow_mut();
-
-        debug_message_buffer.write(format!(
-            "Resolution: {}x{}",
-            window_info.canvas_resolution.width, window_info.canvas_resolution.height
-        ));
-
-        let uptime = app.timing_info.uptime_seconds;
-
-        debug_message_buffer.write(format!("FPS: {:.*}", 0, app.timing_info.frames_per_second));
-
-        debug_message_buffer.write(format!("Seconds ellapsed: {:.*}", 2, uptime));
-
         let resources = &scene_context.resources;
 
         let mut shader_context = shader_context_rc.borrow_mut();
@@ -297,127 +232,7 @@ fn main() -> Result<(), String> {
 
         renderer.options.update(keyboard_state);
 
-        debug_message_buffer.write(format!(
-            "Wireframe: {}",
-            if renderer.options.draw_wireframe {
-                "On"
-            } else {
-                "Off"
-            }
-        ));
-
-        debug_message_buffer.write(format!(
-            "Rasterized geometry: {}",
-            if renderer
-                .options
-                .render_pass_flags
-                .contains(RenderPassFlag::Rasterization)
-            {
-                "On"
-            } else {
-                "Off"
-            }
-        ));
-
-        if renderer
-            .options
-            .render_pass_flags
-            .contains(RenderPassFlag::Rasterization)
-        {
-            debug_message_buffer.write(format!(
-                "Culling reject mask: {:?}",
-                renderer
-                    .options
-                    .rasterizer_options
-                    .face_culling_strategy
-                    .reject
-            ));
-
-            debug_message_buffer.write(format!(
-                "Culling winding order: {:?}",
-                renderer
-                    .options
-                    .rasterizer_options
-                    .face_culling_strategy
-                    .winding_order
-            ));
-
-            {
-                let framebuffer = framebuffer_rc.borrow();
-
-                let depth_buffer = framebuffer.attachments.depth.as_ref().unwrap().borrow();
-
-                debug_message_buffer.write(format!(
-                    "Depth test method: {:?}",
-                    depth_buffer.get_depth_test_method()
-                ));
-            }
-
-            debug_message_buffer.write(format!(
-                "Lighting: {}",
-                if renderer
-                    .options
-                    .render_pass_flags
-                    .contains(RenderPassFlag::Lighting)
-                {
-                    "On"
-                } else {
-                    "Off"
-                }
-            ));
-
-            renderer.shader_options.update(keyboard_state);
-
-            //
-
-            let mut active_fragment_shader_index = active_fragment_shader_index_rc.borrow_mut();
-
-            for keycode in &keyboard_state.keys_pressed {
-                match keycode {
-                    (Keycode::I, _) => {
-                        let framebuffer = framebuffer_rc.borrow_mut();
-
-                        let mut depth_buffer =
-                            framebuffer.attachments.depth.as_ref().unwrap().borrow_mut();
-
-                        let mut index = DEPTH_TEST_METHODS
-                            .iter()
-                            .position(|&method| method == *(depth_buffer.get_depth_test_method()))
-                            .unwrap();
-
-                        index = if index == (DEPTH_TEST_METHODS.len() - 1) {
-                            0
-                        } else {
-                            index + 1
-                        };
-
-                        depth_buffer.set_depth_test_method(DEPTH_TEST_METHODS[index])
-                    }
-                    (Keycode::H, _) => {
-                        *active_fragment_shader_index += 1;
-
-                        if *active_fragment_shader_index == fragment_shaders.len() {
-                            *active_fragment_shader_index = 0;
-                        }
-
-                        renderer
-                            .set_fragment_shader(fragment_shaders[*active_fragment_shader_index]);
-                    }
-                    _ => {}
-                }
-            }
-
-            debug_message_buffer.write(format!(
-                "Fragment shader: {}",
-                [
-                    "DEFAULT_FRAGMENT_SHADER",
-                    "AlbedoFragmentShader",
-                    "DepthFragmentShader",
-                    "NormalFragmentShader",
-                    "UvTestFragmentShader",
-                ][*active_fragment_shader_index]
-            ));
-        }
+        renderer.shader_options.update(keyboard_state);
 
         Ok(())
     };
@@ -436,28 +251,11 @@ fn main() -> Result<(), String> {
 
         match scene.render(resources, &renderer_rc, None) {
             Ok(()) => {
-                // Write out.
-
                 let framebuffer = framebuffer_rc.borrow();
-
-                let mut font_cache = font_cache_rc.borrow_mut();
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
-                        let mut color_buffer = color_buffer_lock.borrow_mut();
-
-                        let debug_messages = &mut *debug_message_buffer_rc.borrow_mut();
-
-                        {
-                            Graphics::render_debug_messages(
-                                &mut color_buffer,
-                                &mut font_cache,
-                                font_info,
-                                (12, 12),
-                                1.0,
-                                debug_messages,
-                            );
-                        }
+                        let color_buffer = color_buffer_lock.borrow_mut();
 
                         color_buffer.copy_to(canvas);
 
