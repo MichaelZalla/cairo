@@ -281,7 +281,7 @@ pub(crate) fn make_scene(
         );
 
         node.get_transform_mut().set_translation(Vec3 {
-            x: -20.0,
+            x: -16.0,
             y: 5.0,
             ..Default::default()
         });
@@ -294,7 +294,7 @@ pub(crate) fn make_scene(
     // Add a cone entity.
 
     let cone_entity_node = {
-        let mesh = cone::generate(2.5, 5.0, 36);
+        let mesh = cone::generate(2.5, 5.0, 16);
 
         let mesh_handle = mesh_arena.insert(mesh);
 
@@ -322,7 +322,7 @@ pub(crate) fn make_scene(
     // Add a cylinder entity.
 
     let cylinder_entity_node = {
-        let mesh = cylinder::generate(2.5, 5.0, 36);
+        let mesh = cylinder::generate(2.5, 5.0, 16);
 
         let mesh_handle = mesh_arena.insert(mesh);
 
@@ -337,7 +337,7 @@ pub(crate) fn make_scene(
         );
 
         node.get_transform_mut().set_translation(Vec3 {
-            x: 20.0,
+            x: 16.0,
             y: 5.0,
             ..Default::default()
         });

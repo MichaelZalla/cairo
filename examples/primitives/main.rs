@@ -309,11 +309,11 @@ fn main() -> Result<(), String> {
                                         }
                                     }
 
-                                    let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
-
-                                    let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
-
-                                    node.get_transform_mut().set_rotation(q);
+                                    node.get_transform_mut().set_rotation(
+                                        Quaternion::new(vec3::UP, uptime % (2.0 * PI))
+                                            * Quaternion::new(vec3::RIGHT, uptime % (2.0 * PI))
+                                            * Quaternion::new(vec3::FORWARD, uptime % (2.0 * PI)),
+                                    );
 
                                     Ok(false)
                                 }

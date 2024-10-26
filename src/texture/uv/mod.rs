@@ -25,3 +25,9 @@ pub const BOTTOM_RIGHT: Vec2 = Vec2 {
     y: 0.0,
     z: 0.0,
 };
+
+pub const CENTER: Vec2 = Vec2 {
+    x: 0.5,
+    y: 0.5,
+    z: 0.0,
+};
