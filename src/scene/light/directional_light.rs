@@ -347,8 +347,11 @@ impl DirectionalLight {
 
         // Compute an enshadowing term for this fragment/sample.
 
-        let in_shadow = if let Some(maps) = shadow_map_handles {
-            self.get_shadowing(sample, texture_f32_arena, context, maps)
+        let in_shadow = if let (Some(rendering_context), Some(maps)) = (
+            self.shadow_map_rendering_context.as_ref(),
+            shadow_map_handles,
+        ) {
+            self.get_shadowing(sample, texture_f32_arena, context, rendering_context, maps)
         } else {
             0.0
         };
@@ -369,6 +372,7 @@ impl DirectionalLight {
     fn get_shadowing_for_map(
         &self,
         sample: &GeometrySample,
+        rendering_context: &ShadowMapRenderingContext,
         map: &TextureMap<f32>,
         transform: &Mat4,
     ) -> f32 {
@@ -405,7 +409,7 @@ impl DirectionalLight {
                     map,
                 );
 
-                let closest_depth = depth_sample * 100.0;
+                let closest_depth = depth_sample * rendering_context.projection_z_far;
 
                 if closest_depth == 0.0 {
                     continue;
@@ -429,6 +433,7 @@ impl DirectionalLight {
         sample: &GeometrySample,
         texture_f32_arena: &Arena<TextureMap<f32>>,
         context: &ShaderContext,
+        rendering_context: &ShadowMapRenderingContext,
         shadow_map_handles: &[Handle],
     ) -> f32 {
         match &context.directional_light_view_projections {
@@ -459,7 +464,7 @@ impl DirectionalLight {
 
                     let transform = &transforms[index].1;
 
-                    self.get_shadowing_for_map(sample, map, transform)
+                    self.get_shadowing_for_map(sample, rendering_context, map, transform)
                 } else {
                     0.0
                 }
