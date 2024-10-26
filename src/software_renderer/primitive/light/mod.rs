@@ -93,7 +93,7 @@ impl SoftwareRenderer {
         self.render_line(
             y_indicator_line_start,
             y_indicator_line_end,
-            color::DARK_GRAY,
+            color::LIGHT_GRAY,
         );
     }
 

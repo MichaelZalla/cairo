@@ -21,6 +21,7 @@ pub static TRANSPARENT: Color = Color::rgba(0, 0, 0, 0);
 
 pub static BLACK: Color = Color::rgb(0, 0, 0);
 pub static DARK_GRAY: Color = Color::rgb(64, 64, 64);
+pub static LIGHT_GRAY: Color = Color::rgb(124, 124, 124);
 pub static WHITE: Color = Color::rgb(255, 255, 255);
 pub static RED: Color = Color::rgb(255, 0, 0);
 pub static YELLOW: Color = Color::rgb(255, 255, 0);
