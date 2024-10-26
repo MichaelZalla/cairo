@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use cairo::{
     color,
     entity::Entity,
@@ -11,6 +13,7 @@ use cairo::{
         graph::SceneGraph,
         light::{ambient_light::AmbientLight, directional_light::DirectionalLight},
         node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
     shader::context::ShaderContext,
     vec::vec3::{self, Vec3},
@@ -18,6 +21,7 @@ use cairo::{
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn make_scene(
+    resources: &Rc<SceneResources>,
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -65,6 +69,8 @@ pub(crate) fn make_scene(
             let directional_light = &mut entry.item;
 
             directional_light.intensities = vec3::ONES * 0.6;
+
+            directional_light.enable_shadow_maps(1024, 100.0, resources.clone());
         }
     }
 

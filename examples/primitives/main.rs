@@ -98,6 +98,7 @@ fn main() -> Result<(), String> {
         let mut entity_arena = resources.entity.borrow_mut();
 
         make_scene(
+            resources,
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
@@ -113,30 +114,6 @@ fn main() -> Result<(), String> {
             &mut entity_arena,
         )
     }?;
-
-    // Enable shadow maps for the directional light(s).
-
-    {
-        let mut directional_light_arena = scene_context.resources.directional_light.borrow_mut();
-
-        for entry in directional_light_arena.entries.iter_mut().flatten() {
-            let directional_light = &mut entry.item;
-
-            directional_light.enable_shadow_maps(384, 100.0, scene_context.resources.clone());
-        }
-    }
-
-    // Enable shadow maps for point lights.
-
-    {
-        let mut point_light_arena = scene_context.resources.point_light.borrow_mut();
-
-        for entry in point_light_arena.entries.iter_mut().flatten() {
-            let point_light = &mut entry.item;
-
-            point_light.enable_shadow_maps(192, 250.0, scene_context.resources.clone());
-        }
-    }
 
     {
         let mut scenes = scene_context.scenes.borrow_mut();
@@ -270,7 +247,7 @@ fn main() -> Result<(), String> {
 
                         transform.set_translation(Vec3 {
                             x: 25.0,
-                            y: 15.0,
+                            y: 25.0,
                             z: 0.0,
                         });
 
@@ -281,9 +258,9 @@ fn main() -> Result<(), String> {
                                 let spot_light = &mut entry.item;
 
                                 spot_light.look_vector.set_target_position(Vec3 {
-                                    x: 25.0 + 10.0 * uptime.sin(),
+                                    x: 25.0 + 15.0 * uptime.sin(),
                                     y: 0.0,
-                                    z: 0.0 + 10.0 * uptime.cos(),
+                                    z: 0.0 + 15.0 * uptime.cos(),
                                 });
                             }
                         }

@@ -78,6 +78,7 @@ fn main() -> Result<(), String> {
         let mut point_light_arena = resources.point_light.borrow_mut();
 
         make_scene(
+            resources,
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
@@ -89,18 +90,6 @@ fn main() -> Result<(), String> {
             &mut point_light_arena,
         )
     }?;
-
-    // Enable shadow maps for all existing point lights.
-
-    {
-        let mut point_light_arena = scene_context.resources.point_light.borrow_mut();
-
-        for entry in point_light_arena.entries.iter_mut().flatten() {
-            let point_light = &mut entry.item;
-
-            point_light.enable_shadow_maps(256, 100.0, scene_context.resources.clone());
-        }
-    }
 
     {
         let mut scenes = scene_context.scenes.borrow_mut();

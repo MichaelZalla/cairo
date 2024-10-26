@@ -1,6 +1,6 @@
 #![allow(clippy::result_unit_err)]
 
-use std::f32::consts::PI;
+use std::{f32::consts::PI, rc::Rc};
 
 use cairo::{
     color,
@@ -18,6 +18,7 @@ use cairo::{
             directional_light::DirectionalLight, point_light::PointLight,
         },
         node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
     shader::context::ShaderContext,
     transform::Transform3D,
@@ -26,6 +27,7 @@ use cairo::{
 
 #[allow(clippy::too_many_arguments)]
 pub fn make_scene(
+    resources: &Rc<SceneResources>,
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -76,6 +78,8 @@ pub fn make_scene(
                 light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
 
                 light.influence_distance = light.attenuation.get_approximate_influence_distance();
+
+                light.enable_shadow_maps(512, 100.0, resources.clone());
 
                 light
             };

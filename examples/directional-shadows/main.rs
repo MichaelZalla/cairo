@@ -69,6 +69,7 @@ fn main() -> Result<(), String> {
         let mut entity_arena = resources.entity.borrow_mut();
 
         make_scene(
+            resources,
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
@@ -79,18 +80,6 @@ fn main() -> Result<(), String> {
             &mut entity_arena,
         )
     }?;
-
-    // Enable shadow maps for the directional light(s).
-
-    {
-        let mut directional_light_arena = scene_context.resources.directional_light.borrow_mut();
-
-        for entry in directional_light_arena.entries.iter_mut().flatten() {
-            let directional_light = &mut entry.item;
-
-            directional_light.enable_shadow_maps(768, 100.0, scene_context.resources.clone());
-        }
-    }
 
     {
         let mut scenes = scene_context.scenes.borrow_mut();

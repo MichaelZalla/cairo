@@ -1,10 +1,11 @@
-use std::path::Path;
+use std::{path::Path, rc::Rc};
 
 use cairo::{
     app::context::ApplicationRenderingContext,
     color::Color,
     entity::Entity,
     material::Material,
+    matrix::Mat4,
     mesh::{
         obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
         Mesh,
@@ -19,7 +20,8 @@ use cairo::{
             ambient_light::AmbientLight, attenuation::LightAttenuation,
             directional_light::DirectionalLight, point_light::PointLight, spot_light::SpotLight,
         },
-        node::{SceneNode, SceneNodeType},
+        node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
+        resources::SceneResources,
         skybox::Skybox,
     },
     shader::context::ShaderContext,
@@ -36,6 +38,7 @@ use cairo::{
 
 #[allow(clippy::too_many_arguments)]
 pub fn make_sponza_scene(
+    resources: &Rc<SceneResources>,
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -60,64 +63,83 @@ pub fn make_sponza_scene(
         directional_light_arena,
     )?;
 
-    // Adjust our scene's default camera.
+    scene.root.visit_mut(
+        SceneNodeGlobalTraversalMethod::DepthFirst,
+        None,
+        &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
+            match node.get_type() {
+                SceneNodeType::AmbientLight => {
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = ambient_light_arena.get_mut(handle) {
+                            let ambient_light = &mut entry.item;
 
-    if let Some(camera_handle) = scene
-        .root
-        .find(|node| *node.get_type() == SceneNodeType::Camera)
-        .unwrap()
-    {
-        if let Ok(entry) = camera_arena.get_mut(&camera_handle) {
-            let camera = &mut entry.item;
+                            ambient_light.intensities = vec3::ONES * 0.005;
+                        }
+                    }
 
-            camera.look_vector.set_position(Vec3::default());
+                    Ok(())
+                }
+                SceneNodeType::DirectionalLight => {
+                    let transform = node.get_transform_mut();
 
-            camera
-                .look_vector
-                .set_target_position(camera.look_vector.get_position() + vec3::RIGHT * -1.0);
+                    transform.set_translation(Vec3 {
+                        x: 0.0,
+                        y: 15.0,
+                        z: 0.0,
+                    });
 
-            camera.movement_speed = 300.0;
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = directional_light_arena.get_mut(handle) {
+                            let directional_light = &mut entry.item;
 
-            camera.set_projection_z_far(10_000.0);
-        }
-    }
+                            directional_light.intensities = vec3::ONES * 0.005;
 
-    if let Some(ambient_light_handle) = scene
-        .root
-        .find(|node| *node.get_type() == SceneNodeType::AmbientLight)
-        .as_ref()
-        .unwrap()
-    {
-        if let Ok(entry) = ambient_light_arena.get_mut(ambient_light_handle) {
-            let ambient_light = &mut entry.item;
+                            directional_light.enable_shadow_maps(384, 5_000.0, resources.clone());
+                        }
+                    }
 
-            ambient_light.intensities = vec3::ONES * 0.005;
-        }
-    }
+                    Ok(())
+                }
+                SceneNodeType::Camera => {
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = camera_arena.get_mut(handle) {
+                            let camera = &mut entry.item;
 
-    if let Some(directional_light_handle) = scene
-        .root
-        .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)
-        .as_ref()
-        .unwrap()
-    {
-        if let Ok(entry) = directional_light_arena.get_mut(directional_light_handle) {
-            let directional_light = &mut entry.item;
+                            camera.look_vector.set_position(Vec3 {
+                                x: 1204.75,
+                                y: (-59.02 + 87.70) / 2.0,
+                                z: 85.99,
+                            });
 
-            directional_light.intensities = vec3::ONES * 0.005;
-        }
-    }
+                            camera.look_vector.set_target_position(
+                                camera.look_vector.get_position() + vec3::RIGHT * -1.0,
+                            );
+
+                            camera.movement_speed = 300.0;
+
+                            camera.set_projection_z_far(10_000.0);
+                        }
+                    }
+
+                    Ok(())
+                }
+                _ => Ok(()),
+            }
+        },
+    )?;
 
     // Add a point light to our scene.
 
     let point_light_node = {
         let mut light = PointLight::new();
 
-        light.intensities = Color::rgb(255, 205, 185).to_vec3() / 255.0 * 25.0;
+        light.intensities = Color::rgb(255, 85, 0).to_vec3() / 255.0 * 5.0;
 
         light.attenuation = LightAttenuation::new(1.0, 0.007 / 2.0, 0.0002 / 2.0);
 
         light.influence_distance = light.attenuation.get_approximate_influence_distance();
+
+        light.enable_shadow_maps(192, 5_000.0, resources.clone());
 
         let point_light_handle = point_light_arena.insert(light);
 

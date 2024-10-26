@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, path::Path};
+use std::{f32::consts::PI, path::Path, rc::Rc};
 
 use cairo::{
     color,
@@ -20,6 +20,7 @@ use cairo::{
             directional_light::DirectionalLight, point_light::PointLight, spot_light::SpotLight,
         },
         node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
+        resources::SceneResources,
         skybox::Skybox,
     },
     shader::context::ShaderContext,
@@ -33,6 +34,7 @@ use cairo::{
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn make_scene(
+    resources: &Rc<SceneResources>,
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -94,6 +96,8 @@ pub(crate) fn make_scene(
                             let rotate_y = Quaternion::new(vec3::UP, PI);
 
                             directional_light.set_direction(rotate_x * rotate_y);
+
+                            directional_light.enable_shadow_maps(384, 100.0, resources.clone());
                         }
                     }
 
@@ -140,6 +144,8 @@ pub(crate) fn make_scene(
 
                 light.influence_distance = light.attenuation.get_approximate_influence_distance();
 
+                light.enable_shadow_maps(192, 250.0, resources.clone());
+
                 light
             };
 
@@ -176,7 +182,7 @@ pub(crate) fn make_scene(
             x: 1.0,
             y: 1.0,
             z: 0.0,
-        } * 1.0;
+        } * 2.0;
 
         let spot_light_handle = spot_light_arena.insert(spot_light);
 
@@ -184,7 +190,7 @@ pub(crate) fn make_scene(
 
         transform.set_translation(Vec3 {
             x: 25.0,
-            y: 15.0,
+            y: 25.0,
             z: 0.0,
         });
 

@@ -83,6 +83,7 @@ fn main() -> Result<(), String> {
         let mut cubemap_vec3_arena = resources.cubemap_vec3.borrow_mut();
 
         make_sponza_scene(
+            resources,
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
