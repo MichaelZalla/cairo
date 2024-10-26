@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use cairo::{
     app::context::ApplicationRenderingContext,
     color::Color,
@@ -26,7 +28,10 @@ use cairo::{
         map::{TextureMap, TextureMapStorageFormat},
     },
     transform::Transform3D,
-    vec::vec3::{self, Vec3},
+    vec::{
+        vec2::Vec2,
+        vec3::{self, Vec3},
+    },
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -43,8 +48,9 @@ pub fn make_sponza_scene(
     rendering_context: &ApplicationRenderingContext,
     point_light_arena: &mut Arena<PointLight>,
     spot_light_arena: &mut Arena<SpotLight>,
-    cubemap_u8_arena: &mut Arena<CubeMap>,
     skybox_arena: &mut Arena<Skybox>,
+    texture_vec2_arena: &mut Arena<TextureMap<Vec2>>,
+    cubemap_vec3_arena: &mut Arena<CubeMap<Vec3>>,
 ) -> Result<(SceneGraph, ShaderContext), String> {
     let (mut scene, shader_context) = make_empty_scene(
         camera_arena,
@@ -146,7 +152,7 @@ pub fn make_sponza_scene(
                 },
         );
 
-        light.intensities = vec3::ONES * 22.0;
+        light.intensities = vec3::ONES * 5.0;
 
         light.attenuation = LightAttenuation::new(1.0, 0.007 / 10.0, 0.0002 / 10.0);
 
@@ -175,14 +181,16 @@ pub fn make_sponza_scene(
             TextureMapStorageFormat::RGB24,
         );
 
-        skybox_cubemap.load(rendering_context).unwrap();
+        skybox_cubemap.load(rendering_context)?;
 
-        let skybox_cubemap_handle = cubemap_u8_arena.insert(skybox_cubemap);
-
-        let skybox = Skybox {
-            radiance: Some(skybox_cubemap_handle),
+        let mut skybox = Skybox {
+            is_hdr: true,
             ..Default::default()
         };
+
+        let hdr_path = Path::new("./examples/sponza/assets/fireplace_1k.hdr");
+
+        skybox.load_hdr(texture_vec2_arena, cubemap_vec3_arena, hdr_path);
 
         let skybox_handle = skybox_arena.insert(skybox);
 

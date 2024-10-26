@@ -115,8 +115,10 @@ fn main() -> Result<(), String> {
         let mut texture_u8_arena = resources.texture_u8.borrow_mut();
         let mut point_light_arena = resources.point_light.borrow_mut();
         let mut spot_light_arena = resources.spot_light.borrow_mut();
-        let mut cubemap_u8_arena = resources.cubemap_u8.borrow_mut();
+
         let mut skybox_arena = resources.skybox.borrow_mut();
+        let mut texture_vec2_arena = resources.texture_vec2.borrow_mut();
+        let mut cubemap_vec3_arena = resources.cubemap_vec3.borrow_mut();
 
         make_sponza_scene(
             &mut camera_arena,
@@ -131,8 +133,9 @@ fn main() -> Result<(), String> {
             rendering_context,
             &mut point_light_arena,
             &mut spot_light_arena,
-            &mut cubemap_u8_arena,
             &mut skybox_arena,
+            &mut texture_vec2_arena,
+            &mut cubemap_vec3_arena,
         )
     }?;
 
