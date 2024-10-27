@@ -100,7 +100,7 @@ impl SpotLight {
     }
 
     pub fn contribute_pbr(&self, sample: &GeometrySample, f0: &Vec3, view_position: &Vec4) -> Vec3 {
-        let fragment_to_light = self.look_vector.get_position() - sample.world_pos;
+        let fragment_to_light = self.look_vector.get_position() - sample.position_world_space;
 
         let direction_to_light_world_space = fragment_to_light.as_normal();
 

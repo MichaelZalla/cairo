@@ -1,7 +1,4 @@
-use std::{
-    fmt::{Display, Formatter, Result},
-    ops::{Add, AddAssign, Div, Mul, MulAssign, Sub},
-};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 
 use crate::{
     animation::lerp,
@@ -92,14 +89,14 @@ impl Div<f32> for TangentSpaceInfo {
 
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct DefaultVertexOut {
-    pub position: Vec4,
-    pub normal: Vec4,
-    pub tangent: Vec4,
-    pub bitangent: Vec4,
+    pub position_world_space: Vec3,
+    pub position_projection_space: Vec4,
+    pub normal_world_space: Vec4,
+    pub tangent_world_space: Vec4,
+    pub bitangent_world_space: Vec4,
     pub tangent_space_info: TangentSpaceInfo,
     pub color: Vec3,
     pub uv: Vec2,
-    pub world_pos: Vec3,
     pub depth: f32,
 }
 
@@ -117,14 +114,15 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn add(self, rhs: Self) -> DefaultVertexOut {
         DefaultVertexOut {
-            position: self.position + rhs.position,
-            normal: self.normal + rhs.normal,
-            tangent: self.tangent + rhs.tangent,
-            bitangent: self.bitangent + rhs.bitangent,
+            position_world_space: self.position_world_space + rhs.position_world_space,
+            position_projection_space: self.position_projection_space
+                + rhs.position_projection_space,
+            normal_world_space: self.normal_world_space + rhs.normal_world_space,
+            tangent_world_space: self.tangent_world_space + rhs.tangent_world_space,
+            bitangent_world_space: self.bitangent_world_space + rhs.bitangent_world_space,
             tangent_space_info: self.tangent_space_info + rhs.tangent_space_info,
             color: self.color + rhs.color,
             uv: self.uv + rhs.uv,
-            world_pos: self.world_pos + rhs.world_pos,
             depth: self.depth + rhs.depth,
         }
     }
@@ -132,14 +130,14 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
 
 impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
     fn add_assign(&mut self, rhs: DefaultVertexOut) {
-        self.position += rhs.position;
-        self.normal += rhs.normal;
-        self.tangent += rhs.tangent;
-        self.bitangent += rhs.bitangent;
+        self.position_world_space += rhs.position_world_space;
+        self.position_projection_space += rhs.position_projection_space;
+        self.normal_world_space += rhs.normal_world_space;
+        self.tangent_world_space += rhs.tangent_world_space;
+        self.bitangent_world_space += rhs.bitangent_world_space;
         self.tangent_space_info += rhs.tangent_space_info;
         self.color += rhs.color;
         self.uv += rhs.uv;
-        self.world_pos += rhs.world_pos;
         self.depth += rhs.depth;
     }
 }
@@ -148,14 +146,15 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn sub(self, rhs: Self) -> DefaultVertexOut {
         DefaultVertexOut {
-            position: self.position - rhs.position,
-            normal: self.normal - rhs.normal,
-            tangent: self.tangent - rhs.tangent,
-            bitangent: self.bitangent - rhs.bitangent,
+            position_world_space: self.position_world_space - rhs.position_world_space,
+            position_projection_space: self.position_projection_space
+                - rhs.position_projection_space,
+            normal_world_space: self.normal_world_space - rhs.normal_world_space,
+            tangent_world_space: self.tangent_world_space - rhs.tangent_world_space,
+            bitangent_world_space: self.bitangent_world_space - rhs.bitangent_world_space,
             tangent_space_info: self.tangent_space_info - rhs.tangent_space_info,
             color: self.color - rhs.color,
             uv: self.uv - rhs.uv,
-            world_pos: self.world_pos - rhs.world_pos,
             depth: self.depth - rhs.depth,
         }
     }
@@ -165,14 +164,14 @@ impl Mul<f32> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn mul(self, scalar: f32) -> DefaultVertexOut {
         DefaultVertexOut {
-            position: self.position * scalar,
-            normal: self.normal * scalar,
-            tangent: self.tangent * scalar,
-            bitangent: self.bitangent * scalar,
+            position_world_space: self.position_world_space * scalar,
+            position_projection_space: self.position_projection_space * scalar,
+            normal_world_space: self.normal_world_space * scalar,
+            tangent_world_space: self.tangent_world_space * scalar,
+            bitangent_world_space: self.bitangent_world_space * scalar,
             tangent_space_info: self.tangent_space_info * scalar,
             color: self.color * scalar,
             uv: self.uv * scalar,
-            world_pos: self.world_pos * scalar,
             depth: self.depth * scalar,
         }
     }
@@ -180,14 +179,14 @@ impl Mul<f32> for DefaultVertexOut {
 
 impl MulAssign<f32> for DefaultVertexOut {
     fn mul_assign(&mut self, scalar: f32) {
-        self.position *= scalar;
-        self.normal *= scalar;
-        self.tangent *= scalar;
-        self.bitangent *= scalar;
+        self.position_world_space *= scalar;
+        self.position_projection_space *= scalar;
+        self.normal_world_space *= scalar;
+        self.tangent_world_space *= scalar;
+        self.bitangent_world_space *= scalar;
         self.tangent_space_info *= scalar;
         self.color *= scalar;
         self.uv *= scalar;
-        self.world_pos *= scalar;
         self.depth *= scalar;
     }
 }
@@ -196,21 +195,15 @@ impl Div<f32> for DefaultVertexOut {
     type Output = DefaultVertexOut;
     fn div(self, scalar: f32) -> DefaultVertexOut {
         DefaultVertexOut {
-            position: self.position / scalar,
-            normal: self.normal / scalar,
-            tangent: self.tangent / scalar,
-            bitangent: self.bitangent / scalar,
+            position_world_space: self.position_world_space / scalar,
+            position_projection_space: self.position_projection_space / scalar,
+            normal_world_space: self.normal_world_space / scalar,
+            tangent_world_space: self.tangent_world_space / scalar,
+            bitangent_world_space: self.bitangent_world_space / scalar,
             tangent_space_info: self.tangent_space_info / scalar,
             color: self.color / scalar,
             uv: self.uv / scalar,
-            world_pos: self.world_pos / scalar,
             depth: self.depth / scalar,
         }
-    }
-}
-
-impl Display for DefaultVertexOut {
-    fn fmt(&self, v: &mut Formatter<'_>) -> Result {
-        write!(v, "{}", self.position)
     }
 }

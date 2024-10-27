@@ -1,7 +1,4 @@
-use std::{
-    fmt::{Display, Formatter, Result},
-    ops::{Add, Div, Mul, Sub},
-};
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
     animation::lerp,
@@ -81,11 +78,5 @@ impl Div<f32> for DefaultVertexIn {
             uv: self.uv / scalar,
             color: self.color / scalar,
         }
-    }
-}
-
-impl Display for DefaultVertexIn {
-    fn fmt(&self, v: &mut Formatter<'_>) -> Result {
-        write!(v, "{}", self.position)
     }
 }

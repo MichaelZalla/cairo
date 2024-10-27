@@ -96,9 +96,9 @@ pub(in crate::scene::light) fn contribute_pbr_world_space(
     f0: &Vec3,
     view_position: &Vec4,
 ) -> Vec3 {
-    let normal = &sample.world_normal;
+    let normal = &sample.normal_world_space;
 
-    let direction_to_view = (view_position.to_vec3() - sample.world_pos).as_normal();
+    let direction_to_view = (view_position.to_vec3() - sample.position_world_space).as_normal();
 
     contribute_pbr(
         sample,

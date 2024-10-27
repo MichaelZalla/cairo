@@ -20,11 +20,12 @@ pub static PointShadowMapVertexShader: VertexShaderFn =
 
         let mut out = DefaultVertexOut::new();
 
-        out.position = Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
+        out.position_projection_space =
+            Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
 
         let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
 
-        out.world_pos = Vec3 {
+        out.position_world_space = Vec3 {
             x: world_pos.x,
             y: world_pos.y,
             z: world_pos.z,
@@ -40,7 +41,7 @@ pub static PointShadowMapGeometryShader: GeometryShaderFn = |_context: &ShaderCo
  -> Option<GeometrySample> {
     Some(GeometrySample {
         stencil: true,
-        world_pos: interpolant.world_pos,
+        position_world_space: interpolant.position_world_space,
         depth: interpolant.depth,
         ..Default::default()
     })
@@ -50,7 +51,8 @@ pub static PointShadowMapFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the linear depth value (in RGB space) for this fragment.
 
-        let distance_to_point_light = (sample.world_pos - context.view_position.to_vec3()).mag();
+        let distance_to_point_light =
+            (sample.position_world_space - context.view_position.to_vec3()).mag();
 
         let projection_z_far = context
             .projection_z_far

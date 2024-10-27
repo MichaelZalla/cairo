@@ -436,14 +436,14 @@ impl SoftwareRenderer {
     }
 
     fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {
-        let w_inverse = 1.0 / v.position.w;
+        let w_inverse = 1.0 / v.position_projection_space.w;
 
         *v *= w_inverse;
 
-        v.position.x = (v.position.x + 1.0) * self.viewport.width_over_2;
-        v.position.y = (-v.position.y + 1.0) * self.viewport.height_over_2;
+        v.position_projection_space.x = (v.position_projection_space.x + 1.0) * self.viewport.width_over_2;
+        v.position_projection_space.y = (-v.position_projection_space.y + 1.0) * self.viewport.height_over_2;
 
-        v.position.w = w_inverse;
+        v.position_projection_space.w = w_inverse;
     }
 
     fn test_and_set_z_buffer(
@@ -465,10 +465,10 @@ impl SoftwareRenderer {
                         // Restore linear space interpolant.
 
                         let mut linear_space_interpolant =
-                            *interpolant * (1.0 / interpolant.position.w);
+                            *interpolant * (1.0 / interpolant.position_projection_space.w);
 
                         if let Some(((x, y), non_linear_z)) =
-                            depth_buffer.test(x, y, linear_space_interpolant.position.z)
+                            depth_buffer.test(x, y, linear_space_interpolant.position_projection_space.z)
                         {
                             // Alpha shader test.
 
@@ -485,7 +485,7 @@ impl SoftwareRenderer {
                             // Geometry shader.
 
                             if let Some(g_buffer) = self.g_buffer.as_mut() {
-                                let z = linear_space_interpolant.position.z;
+                                let z = linear_space_interpolant.position_projection_space.z;
                                 let near = depth_buffer.get_projection_z_near();
                                 let far = depth_buffer.get_projection_z_far();
 

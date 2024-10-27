@@ -23,7 +23,7 @@ pub static HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
                 // Assumes the fragment-to-view direction (and thus the direction of the
                 // specular reflection) to be identical to surface normal direction.
 
-                let normal = sample.world_pos.as_normal();
+                let normal = sample.position_world_space.as_normal();
 
                 let direction_to_view_position = normal;
 

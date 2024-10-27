@@ -23,9 +23,9 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
     let mut out = GeometrySample {
         stencil: true,
         uv: interpolant.uv,
-        world_normal: interpolant.normal.to_vec3(),
+        position_world_space: interpolant.position_world_space,
+        normal_world_space: interpolant.normal_world_space.to_vec3(),
         tangent_space_info: interpolant.tangent_space_info,
-        world_pos: interpolant.world_pos,
         depth: interpolant.depth,
         roughness: 1.0,
         metallic: 0.0,
@@ -178,7 +178,7 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                         // Perturb the surface normal using the local
                         // tangent-space information read from `map`.
 
-                        out.world_normal = (tangent_space_normal
+                        out.normal_world_space = (tangent_space_normal
                             * interpolant.tangent_space_info.tbn)
                             .to_vec3()
                             .as_normal();

@@ -58,14 +58,22 @@ impl SoftwareRenderer {
                 FaceCullingReject::Backfaces => {
                     // Reject backfaces.
 
-                    if self.is_backface(v0.position, v1.position, v2.position) {
+                    if self.is_backface(
+                        v0.position_projection_space,
+                        v1.position_projection_space,
+                        v2.position_projection_space,
+                    ) {
                         continue;
                     }
                 }
                 FaceCullingReject::Frontfaces => {
                     // Reject frontfaces.
 
-                    if !self.is_backface(v0.position, v1.position, v2.position) {
+                    if !self.is_backface(
+                        v0.position_projection_space,
+                        v1.position_projection_space,
+                        v2.position_projection_space,
+                    ) {
                         continue;
                     }
                 }
@@ -80,9 +88,9 @@ impl SoftwareRenderer {
         triangle: &Triangle<DefaultVertexOut>,
     ) -> bool {
         let (v0, v1, v2) = (
-            &triangle.v0.position,
-            &triangle.v1.position,
-            &triangle.v2.position,
+            &triangle.v0.position_projection_space,
+            &triangle.v1.position_projection_space,
+            &triangle.v2.position_projection_space,
         );
 
         if v0.x > v0.w && v1.x > v1.w && v2.x > v2.w {
@@ -143,8 +151,8 @@ impl SoftwareRenderer {
 
             for i in 0..3 {
                 self.render_line(
-                    projection_space_vertices[i].world_pos,
-                    projection_space_vertices[if i == 2 { 0 } else { i + 1 }].world_pos,
+                    projection_space_vertices[i].position_world_space,
+                    projection_space_vertices[if i == 2 { 0 } else { i + 1 }].position_world_space,
                     wireframe_color,
                 );
             }
@@ -153,20 +161,23 @@ impl SoftwareRenderer {
         if self.options.draw_normals {
             for vertex in &projection_space_vertices {
                 self.render_line(
-                    vertex.world_pos,
-                    vertex.world_pos + vertex.normal.to_vec3() * self.options.draw_normals_scale,
+                    vertex.position_world_space,
+                    vertex.position_world_space
+                        + vertex.normal_world_space.to_vec3() * self.options.draw_normals_scale,
                     color::BLUE,
                 );
 
                 self.render_line(
-                    vertex.world_pos,
-                    vertex.world_pos + vertex.tangent.to_vec3() * self.options.draw_normals_scale,
+                    vertex.position_world_space,
+                    vertex.position_world_space
+                        + vertex.tangent_world_space.to_vec3() * self.options.draw_normals_scale,
                     color::RED,
                 );
 
                 self.render_line(
-                    vertex.world_pos,
-                    vertex.world_pos + vertex.bitangent.to_vec3() * self.options.draw_normals_scale,
+                    vertex.position_world_space,
+                    vertex.position_world_space
+                        + vertex.bitangent_world_space.to_vec3() * self.options.draw_normals_scale,
                     color::GREEN,
                 );
             }
@@ -236,34 +247,34 @@ impl SoftwareRenderer {
 
         // Sorts points by y-value (highest-to-lowest)
 
-        if tri[1].position.y < tri[0].position.y {
+        if tri[1].position_projection_space.y < tri[0].position_projection_space.y {
             tri.swap(0, 1);
         }
-        if tri[2].position.y < tri[1].position.y {
+        if tri[2].position_projection_space.y < tri[1].position_projection_space.y {
             tri.swap(1, 2);
         }
-        if tri[1].position.y < tri[0].position.y {
+        if tri[1].position_projection_space.y < tri[0].position_projection_space.y {
             tri.swap(0, 1);
         }
 
-        if tri[0].position.y == tri[1].position.y {
+        if tri[0].position_projection_space.y == tri[1].position_projection_space.y {
             // Flat-top (horizontal line is tri[0]-to-tri[1]);
 
             // tri[2] must sit below tri[0] and tri[1]; tri[0] and tri[1] cannot
             // have the same x-value; therefore, sort tri[0] and tri[1] by x-value;
 
-            if tri[1].position.x < tri[0].position.x {
+            if tri[1].position_projection_space.x < tri[0].position_projection_space.x {
                 tri.swap(0, 1);
             }
 
             self.flat_top_triangle_fill(tri[0], tri[1], tri[2]);
-        } else if tri[1].position.y == tri[2].position.y {
+        } else if tri[1].position_projection_space.y == tri[2].position_projection_space.y {
             // Flat-bottom (horizontal line is tri[1]-to-tri[2]);
 
             // tri[0] must sit above tri[1] and tri[2]; tri[1] and tri[2] cannot
             // have the same x-value; therefore, sort tri[1] and tri[2] by x-value;
 
-            if tri[2].position.x < tri[1].position.x {
+            if tri[2].position_projection_space.x < tri[1].position_projection_space.x {
                 tri.swap(1, 2);
             }
 
@@ -271,12 +282,13 @@ impl SoftwareRenderer {
         } else {
             // Find splitting vertex
 
-            let alpha_split =
-                (tri[1].position.y - tri[0].position.y) / (tri[2].position.y - tri[0].position.y);
+            let alpha_split = (tri[1].position_projection_space.y
+                - tri[0].position_projection_space.y)
+                / (tri[2].position_projection_space.y - tri[0].position_projection_space.y);
 
             let split_vertex = DefaultVertexOut::interpolate(tri[0], tri[2], alpha_split);
 
-            if tri[1].position.x < split_vertex.position.x {
+            if tri[1].position_projection_space.x < split_vertex.position_projection_space.x {
                 // Major right
 
                 // tri[0] must sit above tri[1] and split_point; tri[1] and
@@ -302,7 +314,7 @@ impl SoftwareRenderer {
         top_right: DefaultVertexOut,
         bottom: DefaultVertexOut,
     ) {
-        let delta_y = bottom.position.y - top_left.position.y;
+        let delta_y = bottom.position_projection_space.y - top_left.position_projection_space.y;
 
         // Calculate the change (step) for left and right sides, as we
         // rasterize downwards with each scanline.
@@ -327,7 +339,7 @@ impl SoftwareRenderer {
         bottom_left: DefaultVertexOut,
         bottom_right: DefaultVertexOut,
     ) {
-        let delta_y = bottom_right.position.y - top.position.y;
+        let delta_y = bottom_right.position_projection_space.y - top.position_projection_space.y;
 
         // Calculate the change (step) for both left and right sides, as we
         // rasterize downwards with each scanline.
@@ -370,24 +382,29 @@ impl SoftwareRenderer {
 
         // Calculate our start and end Y (end here is non-inclusive), such that
         // they are non-fractional screen coordinates.
-        let y_start: u32 = u32::max((it0.position.y - 0.5).ceil() as u32, 0);
+        let y_start: u32 = u32::max((it0.position_projection_space.y - 0.5).ceil() as u32, 0);
         let y_end: u32 = u32::min(
-            (it2.position.y - 0.5).ceil() as u32,
+            (it2.position_projection_space.y - 0.5).ceil() as u32,
             self.viewport.height - 1,
         );
 
         // Adjust both interpolants to account for us snapping y-start and y-end
         // to their nearest whole pixel coordinates.
-        left_edge_interpolant += *left_step * (y_start as f32 + 0.5 - it0.position.y);
-        *right_edge_interpolant += *right_step * (y_start as f32 + 0.5 - it0.position.y);
+        left_edge_interpolant +=
+            *left_step * (y_start as f32 + 0.5 - it0.position_projection_space.y);
+        *right_edge_interpolant +=
+            *right_step * (y_start as f32 + 0.5 - it0.position_projection_space.y);
 
         // Rasterization loop
         for y in y_start..y_end {
             // Calculate our start and end X (end here is non-inclusive), such
             // that they are non-fractional screen coordinates.
-            let x_start = u32::max((left_edge_interpolant.position.x - 0.5).ceil() as u32, 0);
+            let x_start = u32::max(
+                (left_edge_interpolant.position_projection_space.x - 0.5).ceil() as u32,
+                0,
+            );
             let x_end = u32::min(
-                (right_edge_interpolant.position.x - 0.5).ceil() as u32,
+                (right_edge_interpolant.position_projection_space.x - 0.5).ceil() as u32,
                 self.viewport.width - 1,
             );
 
@@ -396,7 +413,8 @@ impl SoftwareRenderer {
             let mut line_interpolant = left_edge_interpolant;
 
             // Calculate the width of our scanline, for this Y position.
-            let dx = right_edge_interpolant.position.x - left_edge_interpolant.position.x;
+            let dx = right_edge_interpolant.position_projection_space.x
+                - left_edge_interpolant.position_projection_space.x;
 
             // Calculate the change (step) for our horizontal interpolant, based
             // on the width of our scanline.
@@ -404,8 +422,8 @@ impl SoftwareRenderer {
 
             // Prestep our scanline interpolant to account for us snapping
             // x-start and x-end to their nearest whole pixel coordinates.
-            line_interpolant +=
-                line_interpolant_step * ((x_start as f32) + 0.5 - left_edge_interpolant.position.x);
+            line_interpolant += line_interpolant_step
+                * ((x_start as f32) + 0.5 - left_edge_interpolant.position_projection_space.x);
 
             for x in x_start..x_end {
                 self.test_and_set_z_buffer(x, y, &mut line_interpolant);

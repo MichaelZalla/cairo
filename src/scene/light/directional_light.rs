@@ -457,7 +457,7 @@ impl DirectionalLight {
         transform: &Mat4,
     ) -> f32 {
         let sample_position_light_view_projection_space =
-            Vec4::new(sample.world_pos, 1.0) * *transform;
+            Vec4::new(sample.position_world_space, 1.0) * *transform;
 
         let sample_position_light_ndc_space = sample_position_light_view_projection_space
             / sample_position_light_view_projection_space.w;
@@ -481,7 +481,7 @@ impl DirectionalLight {
         match &context.directional_light_view_projections {
             Some(transforms) => {
                 let fragment_position_view_space =
-                    Vec4::new(sample.world_pos, 1.0) * context.view_inverse_transform;
+                    Vec4::new(sample.position_world_space, 1.0) * context.view_inverse_transform;
 
                 let index = {
                     let mut index = SHADOW_MAP_CAMERA_COUNT - 1;

@@ -8,52 +8,58 @@ use crate::{
     },
 };
 
-pub static DEFAULT_VERTEX_SHADER: VertexShaderFn =
-    |context: &ShaderContext, v: &DefaultVertexIn| -> DefaultVertexOut {
-        // Object-to-world-space vertex transform
+pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
+                                                    v: &DefaultVertexIn|
+ -> DefaultVertexOut {
+    let mut out = DefaultVertexOut::new();
 
-        let mut out = DefaultVertexOut::new();
+    // World-space position.
 
-        out.position = Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
+    let position_world_space = Vec4::new(v.position, 1.0) * context.world_transform;
 
-        // debug_assert!(out.position.w != 0.0);
-
-        let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
-
-        out.world_pos = Vec3 {
-            x: world_pos.x,
-            y: world_pos.y,
-            z: world_pos.z,
-        };
-
-        // Compute a tangent-space to world-space transform.
-
-        let normal = (Vec4::new(v.normal, 0.0) * context.world_transform).as_normal();
-        let tangent = (Vec4::new(v.tangent, 0.0) * context.world_transform).as_normal();
-        let bitangent = (Vec4::new(v.bitangent, 0.0) * context.world_transform).as_normal();
-
-        out.normal = normal;
-        out.tangent = tangent;
-        out.bitangent = bitangent;
-
-        let (t, b, n) = (tangent, bitangent, normal);
-
-        // @NOTE(mzalla) Reversed Z-axis for our renderer's coordinate system.
-
-        let tbn = Mat4::tbn(t.to_vec3(), b.to_vec3(), n.to_vec3());
-
-        let tbn_inverse = tbn.transposed();
-
-        out.tangent_space_info = TangentSpaceInfo {
-            tbn,
-            tbn_inverse,
-            normal: (normal * tbn_inverse).to_vec3(),
-            view_position: (context.view_position * tbn_inverse).to_vec3(),
-            fragment_position: (world_pos * tbn_inverse).to_vec3(),
-        };
-
-        out.color = v.color;
-        out.uv = v.uv;
-
-        out
+    out.position_world_space = Vec3 {
+        x: position_world_space.x,
+        y: position_world_space.y,
+        z: position_world_space.z,
     };
+
+    // Projection-space position.
+
+    out.position_projection_space =
+        Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
+
+    // debug_assert!(out.position_projection_space.w != 0.0);
+
+    // Compute a tangent-space to world-space transform.
+
+    let normal_world_space = (Vec4::new(v.normal, 0.0) * context.world_transform).as_normal();
+    let tangent_world_space = (Vec4::new(v.tangent, 0.0) * context.world_transform).as_normal();
+    let bitangent_world_space = (Vec4::new(v.bitangent, 0.0) * context.world_transform).as_normal();
+
+    out.normal_world_space = normal_world_space;
+    out.tangent_world_space = tangent_world_space;
+    out.bitangent_world_space = bitangent_world_space;
+
+    let (t, b, n) = (
+        tangent_world_space,
+        bitangent_world_space,
+        normal_world_space,
+    );
+
+    let tbn = Mat4::tbn(t.to_vec3(), b.to_vec3(), n.to_vec3());
+
+    let tbn_inverse = tbn.transposed();
+
+    out.tangent_space_info = TangentSpaceInfo {
+        tbn,
+        tbn_inverse,
+        normal: (normal_world_space * tbn_inverse).to_vec3(),
+        view_position: (context.view_position * tbn_inverse).to_vec3(),
+        fragment_position: (position_world_space * tbn_inverse).to_vec3(),
+    };
+
+    out.color = v.color;
+    out.uv = v.uv;
+
+    out
+};

@@ -20,7 +20,7 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
             if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
-                let normal = sample.world_pos.as_normal();
+                let normal = sample.position_world_space.as_normal();
 
                 let mut irradiance = Vec3::new();
 
@@ -94,7 +94,7 @@ pub static HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
             if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
-                let normal = sample.world_pos.as_normal();
+                let normal = sample.position_world_space.as_normal();
 
                 let irradiance = map.sample_nearest(&Vec4::new(normal, 1.0), None);
 

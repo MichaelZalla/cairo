@@ -11,7 +11,7 @@ use crate::{
 
 pub static DirectionalShadowMapFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
-        let fragment_position_projection_space = Vec4::new(sample.world_pos, 1.0)
+        let fragment_position_projection_space = Vec4::new(sample.position_world_space, 1.0)
             * context.view_inverse_transform
             * context.projection_transform;
 

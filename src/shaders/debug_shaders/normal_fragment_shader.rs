@@ -6,19 +6,16 @@ use crate::{
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
-    vec::vec4::Vec4,
 };
 
 pub static NormalFragmentShader: FragmentShaderFn =
     |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
         // Emit only the world-space normal (RBG space) for this fragment.
 
-        let world_normal_vec4 = Vec4::new(sample.world_normal, 1.0);
-
         Color {
-            r: world_normal_vec4.x,
-            g: world_normal_vec4.y,
-            b: (1.0 - world_normal_vec4.z),
+            r: sample.normal_world_space.x,
+            g: sample.normal_world_space.y,
+            b: (1.0 - sample.normal_world_space.z),
             a: 1.0,
         }
     };

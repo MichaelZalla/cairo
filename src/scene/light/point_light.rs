@@ -299,8 +299,8 @@ impl PointLight {
                     }
             
                     let likeness = sample
-                        .world_normal
-                        .dot((self.position - sample.world_pos).as_normal());
+                        .normal_world_space
+                        .dot((self.position - sample.position_world_space).as_normal());
             
                     let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
             
@@ -364,8 +364,8 @@ impl PointLight {
             }
     
             let likeness = sample
-                .world_normal
-                .dot((self.position - sample.world_pos).as_normal());
+                .normal_world_space
+                .dot((self.position - sample.position_world_space).as_normal());
     
             let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
 
@@ -382,7 +382,7 @@ impl PointLight {
 
         let (near, far) = (SHADOW_MAP_CAMERA_NEAR, context.projection_z_far);
 
-        let light_to_fragment = sample.world_pos - self.position;
+        let light_to_fragment = sample.position_world_space - self.position;
         let light_to_fragment_direction = light_to_fragment.as_normal();
 
         let current_depth = light_to_fragment.mag();

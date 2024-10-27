@@ -15,10 +15,10 @@ impl SoftwareRenderer {
             Some(rc) => {
                 let mut framebuffer = rc.borrow_mut();
 
-                if let Some(deferred_buffer_lock) =
+                if let Some(deferred_buffer_rc) =
                     framebuffer.attachments.forward_or_deferred_hdr.as_mut()
                 {
-                    let mut deferred_buffer = deferred_buffer_lock.borrow_mut();
+                    let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
 
                     if let Some(bloom_buffer) = self.bloom_buffer.as_mut() {
                         for y in 0..deferred_buffer.height {

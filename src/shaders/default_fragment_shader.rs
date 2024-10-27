@@ -193,7 +193,7 @@ fn contribute_ambient_ibl(
     let cubemap_rotation_transform = context.skybox_transform.unwrap_or_default();
 
     let irradiance = diffuse_irradiance_map.sample_nearest(
-        &(Vec4::new(sample.world_normal, 1.0) * cubemap_rotation_transform),
+        &(Vec4::new(sample.normal_world_space, 1.0) * cubemap_rotation_transform),
         None,
     );
 
@@ -216,11 +216,11 @@ fn contribute_ambient_ibl(
         let specular_prefiltered_environment_lod: f32 =
             sample.roughness * MAX_LOD_FOR_PREFILTERED_ENVIRONMENT_MAP;
 
-        let normal_world_space = sample.world_normal;
+        let normal_world_space = sample.normal_world_space;
 
         let view_position_world_space = context.view_position;
 
-        let fragment_to_view = view_position_world_space.to_vec3() - sample.world_pos;
+        let fragment_to_view = view_position_world_space.to_vec3() - sample.position_world_space;
 
         let reflected_ray_direction = (fragment_to_view.as_normal()).reflect(normal_world_space);
 

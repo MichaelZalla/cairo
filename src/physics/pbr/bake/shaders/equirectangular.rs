@@ -24,13 +24,14 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
 
         let mut out = DefaultVertexOut::new();
 
-        out.position = Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
+        out.position_projection_space =
+            Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
 
         // debug_assert!(out.position.w != 0.0);
 
         let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
 
-        out.world_pos = Vec3 {
+        out.position_world_space = Vec3 {
             x: world_pos.x,
             y: world_pos.y,
             z: world_pos.z,
@@ -42,9 +43,9 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
         let tangent = (Vec4::new(v.tangent, 0.0) * context.world_transform).as_normal();
         let bitangent = (Vec4::new(v.bitangent, 0.0) * context.world_transform).as_normal();
 
-        out.normal = normal;
-        out.tangent = tangent;
-        out.bitangent = bitangent;
+        out.normal_world_space = normal;
+        out.tangent_world_space = tangent;
+        out.bitangent_world_space = bitangent;
 
         let (t, b, n) = (tangent, bitangent, normal);
 
@@ -87,7 +88,8 @@ pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
             if let Ok(entry) = resources.texture_vec3.borrow().get(&handle) {
                 let map = &entry.item;
 
-                let uv: Vec2 = sample_spherical_to_cartesian(sample.world_pos.as_normal());
+                let uv: Vec2 =
+                    sample_spherical_to_cartesian(sample.position_world_space.as_normal());
 
                 let sample = sample_nearest_vec3(uv, map, None) / 255.0;
 

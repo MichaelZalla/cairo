@@ -18,7 +18,7 @@ pub static DirectionalShadowMapGeometryShader: GeometryShaderFn =
      -> Option<GeometrySample> {
         Some(GeometrySample {
             stencil: true,
-            world_pos: interpolant.world_pos,
+            position_world_space: interpolant.position_world_space,
             depth: interpolant.depth,
             ..Default::default()
         })
