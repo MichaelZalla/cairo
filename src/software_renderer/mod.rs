@@ -44,7 +44,7 @@ use self::gbuffer::GBuffer;
 
 use super::{mesh::Mesh, vec::vec3::Vec3};
 
-use pass::ssao_pass::make_4x4_tangent_space_rotations;
+use pass::ssao_pass::{make_4x4_tangent_space_rotations, make_hemisphere_kernel, KERNEL_SIZE};
 
 mod gbuffer;
 mod pass;
@@ -62,6 +62,7 @@ pub struct SoftwareRenderer {
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
     pub ssao_buffer: Option<TextureMap<f32>>,
+    ssao_hemisphere_kernel: Option<[Vec3; KERNEL_SIZE]>,
     ssao_4x4_tangent_space_rotations: Option<[Vec3; 16]>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
     scene_resources: Rc<SceneResources>,
@@ -304,6 +305,7 @@ impl SoftwareRenderer {
             viewport,
             g_buffer: None,
             ssao_buffer: None,
+            ssao_hemisphere_kernel: None,
             ssao_4x4_tangent_space_rotations: None,
             shader_context,
             scene_resources,
@@ -367,6 +369,9 @@ impl SoftwareRenderer {
 
                             self.ssao_buffer
                                 .replace(TextureMap::from_buffer(width, height, buffer));
+
+                            self.ssao_hemisphere_kernel
+                                .replace(make_hemisphere_kernel());
 
                             self.ssao_4x4_tangent_space_rotations
                                 .replace(make_4x4_tangent_space_rotations());
