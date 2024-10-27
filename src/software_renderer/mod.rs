@@ -37,6 +37,7 @@ use crate::{
     },
     stats::CycleCounters,
     texture::{cubemap::CubeMap, map::TextureMap},
+    transform::quaternion::Quaternion,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -63,7 +64,7 @@ pub struct SoftwareRenderer {
     g_buffer: Option<GBuffer>,
     pub ssao_buffer: Option<TextureMap<f32>>,
     ssao_hemisphere_kernel: Option<[Vec3; KERNEL_SIZE]>,
-    ssao_4x4_tangent_space_rotations: Option<[Vec3; 16]>,
+    ssao_4x4_tangent_space_rotations: Option<[Quaternion; 16]>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
     scene_resources: Rc<SceneResources>,
     vertex_shader: VertexShaderFn,
@@ -96,8 +97,14 @@ impl Renderer for SoftwareRenderer {
         if self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::Rasterization)
+            .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
         {
+            if let Some(ssao_buffer) = self.ssao_buffer.as_mut() {
+                let map = &mut ssao_buffer.levels[0];
+
+                map.0.clear(None);
+            }
+
             if let Some(g_buffer) = self.g_buffer.as_mut() {
                 g_buffer.clear();
             }
@@ -110,6 +117,16 @@ impl Renderer for SoftwareRenderer {
             .render_pass_flags
             .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
         {
+            // Approximate screen-space ambient occlusion pass.
+
+            if self
+                .options
+                .render_pass_flags
+                .contains(RenderPassFlag::Ssao)
+            {
+                self.do_ssao_pass();
+            }
+
             // Deferred lighting.
 
             self.do_deferred_lighting_pass();

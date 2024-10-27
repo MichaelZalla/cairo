@@ -2,6 +2,8 @@ use std::{cmp, fmt, ops, str::FromStr};
 
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 
+use super::vec2::Vec2;
+
 #[derive(Debug, Copy, Clone, Default, Serialize_tuple, Deserialize_tuple)]
 pub struct Vec3 {
     pub x: f32,
@@ -268,6 +270,14 @@ impl Vec3 {
         let u = w * 2.0;
 
         u - absorbed_ray
+    }
+
+    pub fn ndc_to_uv(&self) -> Vec2 {
+        Vec2 {
+            x: self.x * 0.5 + 0.5,
+            y: self.y * 0.5 + 0.5,
+            z: 0.0,
+        }
     }
 
     pub fn srgb_to_linear(&mut self) {

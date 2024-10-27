@@ -384,6 +384,16 @@ impl Default for Mat4 {
     }
 }
 
+impl MulAssign<Mat4> for Vec3 {
+    fn mul_assign(&mut self, rhs: Mat4) {
+        let result = Vec4::new(*self, 0.0) * rhs;
+
+        self.x = result.x;
+        self.y = result.y;
+        self.z = result.z;
+    }
+}
+
 impl MulAssign<Mat4> for Vec4 {
     fn mul_assign(&mut self, rhs: Mat4) {
         let result = *self * rhs;
@@ -395,6 +405,16 @@ impl MulAssign<Mat4> for Vec4 {
     }
 }
 
+impl MulAssign<&Mat4> for Vec3 {
+    fn mul_assign(&mut self, rhs: &Mat4) {
+        let result = Vec4::new(*self, 0.0) * *rhs;
+
+        self.x = result.x;
+        self.y = result.y;
+        self.z = result.z;
+    }
+}
+
 impl MulAssign<&Mat4> for Vec4 {
     fn mul_assign(&mut self, rhs: &Mat4) {
         let result = *self * *rhs;
@@ -403,6 +423,32 @@ impl MulAssign<&Mat4> for Vec4 {
         self.y = result.y;
         self.z = result.z;
         self.w = result.w;
+    }
+}
+
+impl Mul<Mat4> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, rhs: Mat4) -> Self {
+        let product = Vec4 {
+            x: (self.x * rhs.elements[0][0]
+                + self.y * rhs.elements[1][0]
+                + self.z * rhs.elements[2][0]),
+            y: (self.x * rhs.elements[0][1]
+                + self.y * rhs.elements[1][1]
+                + self.z * rhs.elements[2][1]),
+            z: (self.x * rhs.elements[0][2]
+                + self.y * rhs.elements[1][2]
+                + self.z * rhs.elements[2][2]),
+            w: (self.x * rhs.elements[0][3]
+                + self.y * rhs.elements[1][3]
+                + self.z * rhs.elements[2][3]),
+        };
+
+        Self {
+            x: product.x,
+            y: product.y,
+            z: product.z,
+        }
     }
 }
 
