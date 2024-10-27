@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use profile::SoftwareRendererCycleCounter;
 
 use crate::{
-    buffer::framebuffer::Framebuffer,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     entity::Entity,
     material::Material,
@@ -36,7 +36,7 @@ use crate::{
         default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
     },
     stats::CycleCounters,
-    texture::cubemap::CubeMap,
+    texture::{cubemap::CubeMap, map::TextureMap},
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -59,6 +59,7 @@ pub struct SoftwareRenderer {
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
+    pub ssao_buffer: Option<TextureMap<f32>>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
     scene_resources: Rc<SceneResources>,
     vertex_shader: VertexShaderFn,
@@ -299,6 +300,7 @@ impl SoftwareRenderer {
             framebuffer,
             viewport,
             g_buffer: None,
+            ssao_buffer: None,
             shader_context,
             scene_resources,
             vertex_shader,
@@ -341,10 +343,26 @@ impl SoftwareRenderer {
                             None => true,
                         };
 
+                        let should_reallocate_ssao_buffers = match &self.ssao_buffer {
+                            Some(ssao_buffer) => {
+                                ssao_buffer.width != width || ssao_buffer.height != height
+                            }
+                            None => true,
+                        };
+
                         if should_reallocate_g_buffer {
                             // Re-allocate a G-buffer.
 
                             self.g_buffer = Some(GBuffer::new(width, height));
+                        }
+
+                        if should_reallocate_ssao_buffers {
+                            // Re-allocate an SSAO buffer.
+
+                            let buffer = Buffer2D::<f32>::new(width, height, None);
+
+                            self.ssao_buffer
+                                .replace(TextureMap::from_buffer(width, height, buffer));
                         }
                     }
                     Err(err) => {
@@ -355,6 +373,7 @@ impl SoftwareRenderer {
             None => {
                 self.framebuffer = None;
                 self.g_buffer = None;
+                self.ssao_buffer = None;
             }
         }
     }

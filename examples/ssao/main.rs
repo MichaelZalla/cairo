@@ -11,9 +11,11 @@ use cairo::{
         resolution::{Resolution, RESOLUTION_960_BY_540},
         App, AppWindowInfo,
     },
-    buffer::framebuffer::Framebuffer,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
+    color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
+    render::options::RenderPassFlag,
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -26,8 +28,9 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
+    texture::sample::sample_nearest_f32,
     transform::quaternion::Quaternion,
-    vec::vec3,
+    vec::{vec2::Vec2, vec3},
 };
 
 use scene::make_ssao_scene;
@@ -59,7 +62,7 @@ fn main() -> Result<(), String> {
         window_info.canvas_resolution.height,
     );
 
-    framebuffer.complete(0.3, 20.0);
+    framebuffer.complete(0.3, 100.0);
 
     let camera_aspect_ratio = framebuffer.width_over_height;
 
@@ -113,6 +116,8 @@ fn main() -> Result<(), String> {
         DEFAULT_FRAGMENT_SHADER,
         Default::default(),
     );
+
+    renderer.options.render_pass_flags |= RenderPassFlag::DeferredLighting | RenderPassFlag::Ssao;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
@@ -303,7 +308,9 @@ fn main() -> Result<(), String> {
 
                 match framebuffer.attachments.color.as_ref() {
                     Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+                        let mut color_buffer = color_buffer_lock.borrow_mut();
+
+                        draw_ambient_occlusion_buffer(&renderer_rc, &mut color_buffer);
 
                         color_buffer.copy_to(canvas);
 
@@ -319,4 +326,39 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &render)?;
 
     Ok(())
+}
+
+fn draw_ambient_occlusion_buffer(
+    renderer_rc: &RefCell<SoftwareRenderer>,
+    color_buffer: &mut Buffer2D,
+) {
+    static SSAO_BUFFER_THUMBNAIL_WIDTH: u32 = 360;
+
+    let renderer = renderer_rc.borrow();
+
+    let thumbnail_height =
+        (SSAO_BUFFER_THUMBNAIL_WIDTH as f32 / color_buffer.width_over_height) as u32;
+
+    let (offset_x, offset_y) = (0, color_buffer.height - 1 - thumbnail_height);
+
+    let uv_step_x = 1.0 / SSAO_BUFFER_THUMBNAIL_WIDTH as f32;
+    let uv_step_y = 1.0 / thumbnail_height as f32;
+
+    if let Some(occlusion_map) = renderer.ssao_buffer.as_ref() {
+        for y in 0..thumbnail_height {
+            for x in 0..SSAO_BUFFER_THUMBNAIL_WIDTH {
+                let uv = Vec2 {
+                    x: x as f32 * uv_step_x,
+                    y: 1.0 - y as f32 * uv_step_y,
+                    z: 0.0,
+                };
+
+                let occlusion = sample_nearest_f32(uv, occlusion_map);
+
+                let occlusion_color = Color::from_vec3(vec3::ONES * (1.0 - occlusion) * 255.0);
+
+                color_buffer.set(x + offset_x, y + offset_y, occlusion_color.to_u32());
+            }
+        }
+    }
 }
