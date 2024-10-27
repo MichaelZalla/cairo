@@ -10,6 +10,7 @@ pub struct GeometrySample {
     pub stencil: bool,
     // @TODO reconstruct from depth sample + pixel coordinate (index)
     pub position_world_space: Vec3,
+    pub position_view_space: Vec3,
     // Non-linear Z in world-view-projection space
     // @TODO reconstruct z component:
     //   normal.z = (1.0 - normal.x^2 - normal.y^2).sqrt()
@@ -49,6 +50,7 @@ impl Add<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor + rhs.ambient_factor,
             diffuse_color: self.diffuse_color + rhs.diffuse_color,
             position_world_space: self.position_world_space + rhs.position_world_space,
+            position_view_space: self.position_view_space + rhs.position_view_space,
             normal_world_space: self.normal_world_space + rhs.normal_world_space,
             tangent_space_info: self.tangent_space_info, // + rhs.tangent_space_info,
             depth: self.depth + rhs.depth,
@@ -78,6 +80,7 @@ impl Sub<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor - rhs.ambient_factor,
             diffuse_color: self.diffuse_color - rhs.diffuse_color,
             position_world_space: self.position_world_space - rhs.position_world_space,
+            position_view_space: self.position_view_space - rhs.position_view_space,
             normal_world_space: self.normal_world_space - rhs.normal_world_space,
             tangent_space_info: self.tangent_space_info, // - rhs.tangent_space_info,
             depth: self.depth - rhs.depth,
@@ -107,6 +110,7 @@ impl Mul<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor * rhs.ambient_factor,
             diffuse_color: self.diffuse_color * rhs.diffuse_color,
             position_world_space: self.position_world_space * rhs.position_world_space,
+            position_view_space: self.position_view_space * rhs.position_view_space,
             normal_world_space: self.normal_world_space * rhs.normal_world_space,
             tangent_space_info: self.tangent_space_info, // * rhs.tangent_space_info,
             depth: self.depth * rhs.depth,
@@ -136,6 +140,7 @@ impl Div<GeometrySample> for GeometrySample {
             ambient_factor: self.ambient_factor / rhs.ambient_factor,
             diffuse_color: self.diffuse_color / rhs.diffuse_color,
             position_world_space: self.position_world_space / rhs.position_world_space,
+            position_view_space: self.position_view_space / rhs.position_view_space,
             normal_world_space: self.normal_world_space / rhs.normal_world_space,
             tangent_space_info: self.tangent_space_info, // / rhs.tangent_space_info,
             depth: self.depth / rhs.depth,

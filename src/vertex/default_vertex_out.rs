@@ -90,6 +90,7 @@ impl Div<f32> for TangentSpaceInfo {
 #[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct DefaultVertexOut {
     pub position_world_space: Vec3,
+    pub position_view_space: Vec3,
     pub position_projection_space: Vec4,
     pub normal_world_space: Vec4,
     pub tangent_world_space: Vec4,
@@ -115,6 +116,7 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
     fn add(self, rhs: Self) -> DefaultVertexOut {
         DefaultVertexOut {
             position_world_space: self.position_world_space + rhs.position_world_space,
+            position_view_space: self.position_view_space + rhs.position_view_space,
             position_projection_space: self.position_projection_space
                 + rhs.position_projection_space,
             normal_world_space: self.normal_world_space + rhs.normal_world_space,
@@ -131,6 +133,7 @@ impl Add<DefaultVertexOut> for DefaultVertexOut {
 impl AddAssign<DefaultVertexOut> for DefaultVertexOut {
     fn add_assign(&mut self, rhs: DefaultVertexOut) {
         self.position_world_space += rhs.position_world_space;
+        self.position_view_space += rhs.position_view_space;
         self.position_projection_space += rhs.position_projection_space;
         self.normal_world_space += rhs.normal_world_space;
         self.tangent_world_space += rhs.tangent_world_space;
@@ -147,6 +150,7 @@ impl Sub<DefaultVertexOut> for DefaultVertexOut {
     fn sub(self, rhs: Self) -> DefaultVertexOut {
         DefaultVertexOut {
             position_world_space: self.position_world_space - rhs.position_world_space,
+            position_view_space: self.position_view_space - rhs.position_view_space,
             position_projection_space: self.position_projection_space
                 - rhs.position_projection_space,
             normal_world_space: self.normal_world_space - rhs.normal_world_space,
@@ -165,6 +169,7 @@ impl Mul<f32> for DefaultVertexOut {
     fn mul(self, scalar: f32) -> DefaultVertexOut {
         DefaultVertexOut {
             position_world_space: self.position_world_space * scalar,
+            position_view_space: self.position_view_space * scalar,
             position_projection_space: self.position_projection_space * scalar,
             normal_world_space: self.normal_world_space * scalar,
             tangent_world_space: self.tangent_world_space * scalar,
@@ -180,6 +185,7 @@ impl Mul<f32> for DefaultVertexOut {
 impl MulAssign<f32> for DefaultVertexOut {
     fn mul_assign(&mut self, scalar: f32) {
         self.position_world_space *= scalar;
+        self.position_view_space *= scalar;
         self.position_projection_space *= scalar;
         self.normal_world_space *= scalar;
         self.tangent_world_space *= scalar;
@@ -196,6 +202,7 @@ impl Div<f32> for DefaultVertexOut {
     fn div(self, scalar: f32) -> DefaultVertexOut {
         DefaultVertexOut {
             position_world_space: self.position_world_space / scalar,
+            position_view_space: self.position_view_space / scalar,
             position_projection_space: self.position_projection_space / scalar,
             normal_world_space: self.normal_world_space / scalar,
             tangent_world_space: self.tangent_world_space / scalar,

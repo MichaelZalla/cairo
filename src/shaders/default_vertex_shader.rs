@@ -23,6 +23,10 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
         z: position_world_space.z,
     };
 
+    // View-space position.
+
+    out.position_view_space = (Vec4::new(v.position, 1.0) * context.world_view_transform).to_vec3();
+
     // Projection-space position.
 
     out.position_projection_space =
