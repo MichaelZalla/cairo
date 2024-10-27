@@ -378,10 +378,12 @@ fn blit_directional_shadow_maps(
                             z: 0.0,
                         };
 
-                        let sampled_depth = sample_nearest_f32(uv, map) * 100.0;
+                        let closest_depth_ndc_space = sample_nearest_f32(uv, map);
+
+                        let closest_depth_alpha = closest_depth_ndc_space;
 
                         let sampled_depth_color =
-                            Color::from_vec3(vec3::ONES * sampled_depth * 255.0);
+                            Color::from_vec3(vec3::ONES * closest_depth_alpha * 255.0);
 
                         target.set(
                             x,

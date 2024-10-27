@@ -347,11 +347,8 @@ impl DirectionalLight {
 
         // Compute an enshadowing term for this fragment/sample.
 
-        let in_shadow = if let (Some(rendering_context), Some(maps)) = (
-            self.shadow_map_rendering_context.as_ref(),
-            shadow_map_handles,
-        ) {
-            self.get_shadowing(sample, texture_f32_arena, context, rendering_context, maps)
+        let in_shadow = if let Some(maps) = shadow_map_handles {
+            self.get_shadowing(sample, texture_f32_arena, context, maps)
         } else {
             0.0
         };
@@ -370,18 +367,16 @@ impl DirectionalLight {
     }
 
     fn pcf_3x3(
-        _near: f32,
-        far: f32,
-        current_depth: f32,
+        current_depth_ndc_space: f32,
         map: &TextureMap<f32>,
         texel_size: f32,
-        uv: &Vec2,
+        uv: Vec2,
     ) -> f32 {
         let mut shadow = 0.0;
 
         for y in -1..1 {
             for x in -1..1 {
-                let perturbed_uv = *uv
+                let perturbed_uv = uv
                     + Vec2 {
                         x: x as f32,
                         y: y as f32,
@@ -396,15 +391,15 @@ impl DirectionalLight {
                     continue;
                 }
 
-                let closest_depth = sample_nearest_f32(perturbed_uv, map) * far;
+                let closest_depth_ndc_space = sample_nearest_f32(perturbed_uv, map);
 
-                if closest_depth == 0.0 {
+                if closest_depth_ndc_space == 0.0 {
                     continue;
                 }
 
                 let bias = 0.0025;
 
-                let is_in_shadow = current_depth - bias > closest_depth;
+                let is_in_shadow = current_depth_ndc_space - bias > closest_depth_ndc_space;
 
                 if is_in_shadow {
                     shadow += 1.0;
@@ -416,9 +411,7 @@ impl DirectionalLight {
     }
 
     fn poisson_3x3(
-        near: f32,
-        far: f32,
-        current_depth: f32,
+        current_depth_ndc_space: f32,
         map: &TextureMap<f32>,
         texel_size: f32,
         uv: Vec2,
@@ -451,7 +444,7 @@ impl DirectionalLight {
         for sample in &POISSON_DISK_SAMPLES {
             let poisson_uv = uv + (*sample / 700.0);
 
-            shadow += Self::pcf_3x3(near, far, current_depth, map, texel_size, &poisson_uv);
+            shadow += Self::pcf_3x3(current_depth_ndc_space, map, texel_size, poisson_uv);
         }
 
         shadow / POISSON_DISK_SAMPLES.len() as f32
@@ -460,7 +453,6 @@ impl DirectionalLight {
     fn get_shadowing_for_map(
         &self,
         sample: &GeometrySample,
-        rendering_context: &ShadowMapRenderingContext,
         map: &TextureMap<f32>,
         transform: &Mat4,
     ) -> f32 {
@@ -470,15 +462,13 @@ impl DirectionalLight {
         let sample_position_light_ndc_space = sample_position_light_view_projection_space
             / sample_position_light_view_projection_space.w;
 
-        let current_depth = sample_position_light_ndc_space.z;
-
-        let (near, far) = (SHADOW_MAP_CAMERA_NEAR, rendering_context.projection_z_far);
+        let current_depth_ndc_space = sample_position_light_ndc_space.z;
 
         let texel_size = 1.0 / map.width as f32;
 
         let uv = sample_position_light_ndc_space.ndc_to_uv();
 
-        Self::poisson_3x3(near, far, current_depth, map, texel_size, uv)
+        Self::poisson_3x3(current_depth_ndc_space, map, texel_size, uv)
     }
 
     fn get_shadowing(
@@ -486,7 +476,6 @@ impl DirectionalLight {
         sample: &GeometrySample,
         texture_f32_arena: &Arena<TextureMap<f32>>,
         context: &ShaderContext,
-        rendering_context: &ShadowMapRenderingContext,
         shadow_map_handles: &[Handle],
     ) -> f32 {
         match &context.directional_light_view_projections {
@@ -517,7 +506,7 @@ impl DirectionalLight {
 
                     let transform = &transforms[index].1;
 
-                    self.get_shadowing_for_map(sample, rendering_context, map, transform)
+                    self.get_shadowing_for_map(sample, map, transform)
                 } else {
                     0.0
                 }
