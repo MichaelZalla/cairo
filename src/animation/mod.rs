@@ -16,3 +16,11 @@ pub fn exponential<T: Copy + Add<Output = T> + Sub<Output = T> + Mul<f32, Output
 ) -> T {
     current + (limit - current) * rate
 }
+
+pub fn smooth_step(start: f32, end: f32, value: f32) -> f32 {
+    let alpha = (value - start) / (end - start);
+
+    let clamped_alpha = alpha.max(0.0).min(1.0);
+
+    clamped_alpha * clamped_alpha * (3.0 - 2.0 * clamped_alpha)
+}

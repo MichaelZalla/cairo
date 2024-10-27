@@ -3,7 +3,7 @@ use std::f32::consts::TAU;
 use rand_distr::{Distribution, Uniform};
 
 use crate::{
-    animation::lerp,
+    animation::{lerp, smooth_step},
     buffer::Buffer2D,
     matrix::Mat4,
     software_renderer::{gbuffer::GBuffer, SoftwareRenderer},
@@ -234,7 +234,13 @@ fn get_occlusion(
         static BIAS: f32 = 0.025;
 
         occlusion += if closest_depth_projection_space <= sample_depth_projection_space + BIAS {
-            1.0
+            let range_check = {
+                let depth_delta = closest_depth_projection_space - sample_depth_projection_space;
+
+                smooth_step(0.0, 1.0, KERNEL_RADIUS / depth_delta.abs())
+            };
+
+            1.0 * range_check
         } else {
             0.0
         };
