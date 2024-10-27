@@ -63,6 +63,7 @@ pub struct SoftwareRenderer {
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
     pub ssao_buffer: Option<TextureMap<f32>>,
+    ssao_blur_buffer: Option<TextureMap<f32>>,
     ssao_hemisphere_kernel: Option<[Vec3; KERNEL_SIZE]>,
     ssao_4x4_tangent_space_rotations: Option<[Quaternion; 16]>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
@@ -101,6 +102,12 @@ impl Renderer for SoftwareRenderer {
         {
             if let Some(ssao_buffer) = self.ssao_buffer.as_mut() {
                 let map = &mut ssao_buffer.levels[0];
+
+                map.0.clear(None);
+            }
+
+            if let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut() {
+                let map = &mut ssao_blur_buffer.levels[0];
 
                 map.0.clear(None);
             }
@@ -322,6 +329,7 @@ impl SoftwareRenderer {
             viewport,
             g_buffer: None,
             ssao_buffer: None,
+            ssao_blur_buffer: None,
             ssao_hemisphere_kernel: None,
             ssao_4x4_tangent_space_rotations: None,
             shader_context,
@@ -387,6 +395,8 @@ impl SoftwareRenderer {
                             self.ssao_buffer
                                 .replace(TextureMap::from_buffer(width, height, buffer));
 
+                            self.ssao_blur_buffer.clone_from(&self.ssao_buffer);
+
                             self.ssao_hemisphere_kernel
                                 .replace(make_hemisphere_kernel());
 
@@ -403,6 +413,7 @@ impl SoftwareRenderer {
                 self.framebuffer = None;
                 self.g_buffer = None;
                 self.ssao_buffer = None;
+                self.ssao_blur_buffer = None;
             }
         }
     }

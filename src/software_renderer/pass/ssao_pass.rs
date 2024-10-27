@@ -6,6 +6,7 @@ use crate::{
     animation::{lerp, smooth_step},
     buffer::Buffer2D,
     matrix::Mat4,
+    render::options::RenderPassFlag,
     software_renderer::{gbuffer::GBuffer, SoftwareRenderer},
     transform::quaternion::Quaternion,
     vec::{
@@ -130,6 +131,25 @@ impl SoftwareRenderer {
                 _ => panic!(),
             }
 
+            // 2. (Optional) Blur the occlusion buffer to reduce noise
+            //    artifacts.
+
+            if self
+                .options
+                .render_pass_flags
+                .contains(RenderPassFlag::SsaoBlur)
+            {
+                if let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut() {
+                    ssao_blur(
+                        g_buffer,
+                        occlusion_buffer,
+                        &mut ssao_blur_buffer.levels[0].0,
+                    );
+                }
+            }
+
+            // 3. Write the final occlusion factors back to the geometry buffer.
+
             write_ambient_occlusion_factors(occlusion_buffer, g_buffer);
         }
     }
@@ -249,4 +269,65 @@ fn get_occlusion(
     occlusion /= KERNEL_SIZE as f32;
 
     occlusion
+}
+
+fn ssao_blur(
+    g_buffer: &GBuffer,
+    ssao_buffer: &mut Buffer2D<f32>,
+    ssao_blur_buffer: &mut Buffer2D<f32>,
+) {
+    static BLUR_STRENGTH: f32 = 4.0;
+
+    let max_offset = BLUR_STRENGTH as i32;
+
+    for y in 0..ssao_buffer.height {
+        for x in 0..ssao_buffer.width {
+            if !g_buffer.get(x, y).stencil {
+                continue;
+            }
+
+            let mut accum = 0.0;
+            let mut num_contributions = 0;
+
+            for y_offset in -max_offset..max_offset {
+                for x_offset in -max_offset..max_offset {
+                    let neighbor_x = x as i32 + x_offset;
+                    let neighbor_y = y as i32 + y_offset;
+
+                    // Ignores any out-of-bounds neighbors.
+
+                    if neighbor_x < 0
+                        || neighbor_x >= ssao_buffer.width as i32
+                        || neighbor_y < 0
+                        || neighbor_y >= ssao_buffer.height as i32
+                    {
+                        continue;
+                    }
+
+                    // Don't contribute occlusion for pixels that weren't
+                    // rasterized this frame.
+
+                    if !g_buffer.get(neighbor_x as u32, neighbor_y as u32).stencil {
+                        continue;
+                    }
+
+                    let neighbor_occlusion = *ssao_buffer.get(neighbor_x as u32, neighbor_y as u32);
+
+                    accum += neighbor_occlusion;
+
+                    num_contributions += 1;
+                }
+            }
+
+            ssao_blur_buffer.set(x, y, accum / num_contributions as f32);
+        }
+    }
+
+    for y in 0..ssao_buffer.height {
+        for x in 0..ssao_buffer.width {
+            if g_buffer.get(x, y).stencil {
+                ssao_buffer.set(x, y, *ssao_blur_buffer.get(x, y));
+            }
+        }
+    }
 }
