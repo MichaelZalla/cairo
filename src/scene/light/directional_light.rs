@@ -13,7 +13,7 @@ use crate::{
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
-        graph::SceneGraph,
+        graph::{options::SceneGraphRenderOptions, SceneGraph},
         resources::SceneResources,
     },
     serde::PostDeserialize,
@@ -167,7 +167,6 @@ impl DirectionalLight {
                 if let Ok(entry) = texture_f32_arena.get_mut(shadow_map_handle) {
                     let map = &mut entry.item;
 
-                    // Do something here.
                     {
                         let framebuffer = rendering_context.framebuffer.borrow_mut();
 
@@ -182,7 +181,6 @@ impl DirectionalLight {
                         }
                     }
 
-                    // Do something here.
                     {
                         let mut shader_context = rendering_context.shader_context.borrow_mut();
 
@@ -196,11 +194,17 @@ impl DirectionalLight {
                         camera.update_shader_context(&mut shader_context);
                     }
 
-                    //
-                    match scene.render(resources, &rendering_context.renderer, None) {
+                    match scene.render(
+                        resources,
+                        &rendering_context.renderer,
+                        Some(SceneGraphRenderOptions {
+                            is_shadow_map_render: true,
+                            ..Default::default()
+                        }),
+                    ) {
                         Ok(()) => {
-                            // Blit our framebuffer's color attachment
-                            // buffer to our cubemap face texture.
+                            // Blit our framebuffer's color attachment buffer to
+                            // our cubemap face texture.
 
                             let framebuffer = rendering_context.framebuffer.borrow();
 

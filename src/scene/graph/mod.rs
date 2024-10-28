@@ -271,78 +271,83 @@ impl SceneGraph {
                     Ok(())
                 }
                 SceneNodeType::DirectionalLight => {
-                    if options.draw_lights || options.draw_shadow_map_cameras {
-                        match handle {
-                            Some(directional_light_handle) => {
-                                let mut directional_light_arena =
-                                    resources.directional_light.borrow_mut();
+                    if options.is_shadow_map_render {
+                        return Ok(());
+                    }
 
-                                match directional_light_arena.get_mut(directional_light_handle) {
-                                    Ok(entry) => {
-                                        let directional_light = &mut entry.item;
+                    match handle {
+                        Some(directional_light_handle) => {
+                            let mut directional_light_arena =
+                                resources.directional_light.borrow_mut();
 
-                                        directional_light.update_shadow_maps(resources, self)?;
+                            match directional_light_arena.get_mut(directional_light_handle) {
+                                Ok(entry) => {
+                                    let directional_light = &mut entry.item;
 
-                                        if options.draw_lights {
-                                            renderer.render_directional_light(&current_world_transform, directional_light);
-                                        }
+                                    directional_light.update_shadow_maps(resources, self)?;
 
-                                        if options.draw_shadow_map_cameras {
-                                            if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
-                                                for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
-                                                    let frustum_color = [
-                                                        color::RED,
-                                                        color::GREEN,
-                                                        color::BLUE,
-                                                    ][index];
-        
-                                                    renderer.render_camera(camera, Some(frustum_color));
-                                                }
+                                    if options.draw_lights {
+                                        renderer.render_directional_light(&current_world_transform, directional_light);
+                                    }
+
+                                    if options.draw_shadow_map_cameras {
+                                        if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
+                                            for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
+                                                let frustum_color = [
+                                                    color::RED,
+                                                    color::GREEN,
+                                                    color::BLUE,
+                                                ][index];
+    
+                                                renderer.render_camera(camera, Some(frustum_color));
                                             }
                                         }
                                     }
-                                    Err(err) => panic!(
-                                        "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
-                                        handle, err
-                                    ),
                                 }
+                                Err(err) => panic!(
+                                    "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
                             }
-                            None => {
-                                panic!("Encountered a `DirectionalLight` node with no handle!")
-                            }
+                        }
+                        None => {
+                            panic!("Encountered a `DirectionalLight` node with no handle!")
                         }
                     }
 
                     Ok(())
                 }
-                SceneNodeType::PointLight => match handle {
-                    Some(point_light_handle) => {
-                        if !options.draw_lights {
-                            return Ok(());
-                        }
+                SceneNodeType::PointLight => {
+                    if options.is_shadow_map_render {
+                        return Ok(());
+                    }
 
-                        let mut point_light_arena = resources.point_light.borrow_mut();
+                    match handle {
+                        Some(point_light_handle) => {
+                            let mut point_light_arena = resources.point_light.borrow_mut();
 
-                        match point_light_arena.get_mut(point_light_handle) {
-                            Ok(entry) => {
-                                let point_light = &mut entry.item;
+                            match point_light_arena.get_mut(point_light_handle) {
+                                Ok(entry) => {
+                                    let point_light = &mut entry.item;
 
-                                point_light.update_shadow_map(resources, self)?;
+                                    point_light.update_shadow_map(resources, self)?;
 
-                                renderer.render_point_light(&current_world_transform, point_light);
+                                    renderer
+                                        .render_point_light(&current_world_transform, point_light);
 
-                                Ok(())
+                                    Ok(())
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get PointLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
                             }
-                            Err(err) => panic!(
-                                "Failed to get PointLight from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
+                        }
+                        None => {
+                            panic!("Encountered a `PointLight` node with no handle!")
                         }
                     }
-                    None => {
-                        panic!("Encountered a `PointLight` node with no handle!")
-                    }
-                },
+                }
                 SceneNodeType::SpotLight => match handle {
                     Some(spot_light_handle) => {
                         if !options.draw_lights {

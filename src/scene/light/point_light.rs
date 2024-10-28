@@ -9,7 +9,11 @@ use crate::{
     buffer::Buffer2D,
     render::culling::FaceCullingReject,
     resource::handle::Handle,
-    scene::{camera::Camera, graph::SceneGraph, resources::SceneResources},
+    scene::{
+        camera::Camera,
+        graph::{options::SceneGraphRenderOptions, SceneGraph},
+        resources::SceneResources,
+    },
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
     shaders::shadow_shaders::point_shadows::{
@@ -522,7 +526,14 @@ impl PointLight {
                     .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
             }
 
-            match scene.render(resources, &context.renderer, None) {
+            match scene.render(
+                resources,
+                &context.renderer,
+                Some(SceneGraphRenderOptions {
+                    is_shadow_map_render: true,
+                    ..Default::default()
+                }),
+            ) {
                 Ok(()) => {
                     // Blit our framebuffer's HDR attachment buffer to our
                     // cubemap's corresponding side (texture map).

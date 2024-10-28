@@ -412,7 +412,7 @@ fn main() -> Result<(), String> {
                 draw_lights: true,
                 draw_cameras: USE_DEMO_CAMERA,
                 draw_shadow_map_cameras: USE_DEMO_CAMERA,
-                camera: None,
+                ..Default::default()
             }),
         ) {
             Ok(()) => {
