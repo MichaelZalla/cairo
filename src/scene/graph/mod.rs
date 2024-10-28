@@ -284,7 +284,9 @@ impl SceneGraph {
                                 Ok(entry) => {
                                     let directional_light = &mut entry.item;
 
-                                    directional_light.update_shadow_maps(resources, self)?;
+                                    if let (Some(_), Some(_)) = (directional_light.shadow_maps.as_ref(), directional_light.shadow_map_rendering_context.as_ref()) {
+                                        directional_light.update_shadow_maps(resources, self)?;
+                                    }
 
                                     if options.draw_lights {
                                         renderer.render_directional_light(&current_world_transform, directional_light);
@@ -330,7 +332,9 @@ impl SceneGraph {
                                 Ok(entry) => {
                                     let point_light = &mut entry.item;
 
-                                    point_light.update_shadow_map(resources, self)?;
+                                    if let (Some(_), Some(_)) = (point_light.shadow_map.as_ref(), point_light.shadow_map_rendering_context.as_ref()) {
+                                        point_light.update_shadow_map(resources, self)?;
+                                    }
 
                                     renderer
                                         .render_point_light(&current_world_transform, point_light);
