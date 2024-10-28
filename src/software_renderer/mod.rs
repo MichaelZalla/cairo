@@ -133,14 +133,12 @@ impl Renderer for SoftwareRenderer {
                 .render_pass_flags
                 .contains(RenderPassFlag::Rasterization)
             {
-                if let (Some(color_buffer_lock), Some(deferred_buffer_lock)) = (
+                if let (Some(color_buffer_rc), Some(deferred_buffer_rc)) = (
                     framebuffer.attachments.color.as_ref(),
                     framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
                 ) {
-                    let (mut color_buffer, deferred_buffer) = (
-                        color_buffer_lock.borrow_mut(),
-                        deferred_buffer_lock.borrow(),
-                    );
+                    let (mut color_buffer, deferred_buffer) =
+                        (color_buffer_rc.borrow_mut(), deferred_buffer_rc.borrow());
 
                     for y in 0..framebuffer.height {
                         for x in 0..framebuffer.width {
@@ -153,12 +151,12 @@ impl Renderer for SoftwareRenderer {
                 }
             }
 
-            if let (Some(color_buffer_lock), Some(forward_buffer_lock)) = (
+            if let (Some(color_buffer_rc), Some(forward_buffer_rc)) = (
                 framebuffer.attachments.color.as_ref(),
                 framebuffer.attachments.forward_ldr.as_ref(),
             ) {
                 let (mut color_buffer, forward_buffer) =
-                    (color_buffer_lock.borrow_mut(), forward_buffer_lock.borrow());
+                    (color_buffer_rc.borrow_mut(), forward_buffer_rc.borrow());
 
                 let forward_fragments = forward_buffer.get_all();
 
@@ -459,8 +457,8 @@ impl SoftwareRenderer {
                 let framebuffer = rc.borrow_mut();
 
                 match framebuffer.attachments.depth.as_ref() {
-                    Some(depth_buffer_lock) => {
-                        let mut depth_buffer = depth_buffer_lock.borrow_mut();
+                    Some(depth_buffer_rc) => {
+                        let mut depth_buffer = depth_buffer_rc.borrow_mut();
 
                         // Restore linear space interpolant.
 
@@ -502,12 +500,12 @@ impl SoftwareRenderer {
 
                                     depth_buffer.set(x, y, non_linear_z);
 
-                                    if let Some(stencil_buffer_lock) =
+                                    if let Some(stencil_buffer_rc) =
                                         framebuffer.attachments.stencil.as_ref()
                                     {
                                         // Write to the stencil attachment.
 
-                                        let mut stencil_buffer = stencil_buffer_lock.borrow_mut();
+                                        let mut stencil_buffer = stencil_buffer_rc.borrow_mut();
 
                                         stencil_buffer.set(x, y);
                                     }
@@ -517,11 +515,10 @@ impl SoftwareRenderer {
                                         .render_pass_flags
                                         .contains(RenderPassFlag::DeferredLighting)
                                     {
-                                        if let Some(forward_buffer_lock) =
+                                        if let Some(forward_buffer_rc) =
                                             framebuffer.attachments.forward_ldr.as_ref()
                                         {
-                                            let mut forward_buffer =
-                                                forward_buffer_lock.borrow_mut();
+                                            let mut forward_buffer = forward_buffer_rc.borrow_mut();
 
                                             let forward_fragment_color = self
                                                 .get_tone_mapped_color_from_hdr(

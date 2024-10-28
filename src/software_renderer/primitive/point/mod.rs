@@ -68,8 +68,8 @@ impl SoftwareRenderer {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
-            if let Some(forward_buffer_lock) = &framebuffer.attachments.forward_ldr {
-                let mut forward_buffer = forward_buffer_lock.borrow_mut();
+            if let Some(forward_buffer_rc) = &framebuffer.attachments.forward_ldr {
+                let mut forward_buffer = forward_buffer_rc.borrow_mut();
 
                 forward_buffer.set(x, y, color_u32);
             }

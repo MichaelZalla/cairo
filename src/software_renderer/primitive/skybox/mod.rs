@@ -16,12 +16,12 @@ impl SoftwareRenderer {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
-            if let (Some(depth_buffer_lock), Some(forward_buffer_lock)) = (
+            if let (Some(depth_buffer_rc), Some(forward_buffer_rc)) = (
                 framebuffer.attachments.depth.as_ref(),
                 framebuffer.attachments.forward_ldr.as_ref(),
             ) {
-                let mut depth_buffer = depth_buffer_lock.borrow_mut();
-                let mut forward_buffer = forward_buffer_lock.borrow_mut();
+                let mut depth_buffer = depth_buffer_rc.borrow_mut();
+                let mut forward_buffer = forward_buffer_rc.borrow_mut();
 
                 for (index, z_non_linear) in depth_buffer.iter().enumerate() {
                     // If this pixel was not shaded by our fragment shader
@@ -70,13 +70,13 @@ impl SoftwareRenderer {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
-            if let (Some(stencil_buffer_lock), Some(forward_buffer_lock)) = (
+            if let (Some(stencil_buffer_rc), Some(forward_buffer_rc)) = (
                 framebuffer.attachments.stencil.as_ref(),
                 framebuffer.attachments.forward_ldr.as_ref(),
             ) {
-                let stencil_buffer = stencil_buffer_lock.borrow();
+                let stencil_buffer = stencil_buffer_rc.borrow();
 
-                let mut forward_buffer = forward_buffer_lock.borrow_mut();
+                let mut forward_buffer = forward_buffer_rc.borrow_mut();
 
                 for (index, written) in stencil_buffer.0.iter().enumerate() {
                     // If this pixel was not shaded by our fragment shader
