@@ -145,9 +145,9 @@ impl SoftwareRenderer {
     ) {
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
-        self.render_light_circle(&position, 1.0, &light.intensities);
-
         self.render_light_ground_contact(&position);
+
+        self.render_light_circle(&position, 1.0, &light.intensities);
     }
 
     pub(in crate::software_renderer) fn _render_directional_light(
@@ -157,6 +157,8 @@ impl SoftwareRenderer {
     ) {
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
+        self.render_light_ground_contact(&position);
+
         self.render_light_circle(&position, 1.0, &light.intensities);
 
         let color = get_color_for_intensities(&light.intensities);
@@ -164,8 +166,6 @@ impl SoftwareRenderer {
         let (start, end) = (position, position + light.get_direction().to_vec3() * 10.0);
 
         self.render_line(start, end, color);
-
-        self.render_light_ground_contact(&position);
     }
 
     pub(in crate::software_renderer) fn _render_point_light(
@@ -175,12 +175,12 @@ impl SoftwareRenderer {
     ) {
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
+        self.render_light_ground_contact(&position);
+
         let radius = light.influence_distance;
 
         self.render_light_circle(&position, 1.0, &light.intensities);
         self.render_light_circle(&position, radius, &light.intensities);
-
-        self.render_light_ground_contact(&position);
     }
 
     pub(in crate::software_renderer) fn _render_spot_light(
@@ -190,9 +190,9 @@ impl SoftwareRenderer {
     ) {
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
-        self.render_light_circle(&position, 1.0, &light.intensities);
-
         self.render_light_ground_contact(&position);
+
+        self.render_light_circle(&position, 1.0, &light.intensities);
 
         let forward = light.look_vector.get_forward().as_normal();
 
