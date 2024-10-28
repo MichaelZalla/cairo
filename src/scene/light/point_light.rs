@@ -273,7 +273,7 @@ impl PointLight {
         static SAMPLES: f32 = 3.0;
         static SAMPLES_OVER_2: f32 = SAMPLES / 2.0;
 
-        static OFFSET: f32  = 0.01;
+        static OFFSET: f32 = 0.01;
 
         static STEP_SIZE: f32 = OFFSET / SAMPLES_OVER_2;
 
@@ -281,29 +281,31 @@ impl PointLight {
 
         for i_x in 0..(STEPS + 1_usize) {
             let x = -OFFSET + STEP_SIZE * i_x as f32;
-            
+
             for i_y in 0..(STEPS + 1_usize) {
                 let y = -OFFSET + STEP_SIZE * i_y as f32;
-                
+
                 for i_z in 0..(STEPS + 1_usize) {
                     let z = -OFFSET + STEP_SIZE * i_z as f32;
 
-                    let perturbed_light_to_fragment_direction = light_to_fragment_direction + Vec3 { x, y, z};
+                    let perturbed_light_to_fragment_direction =
+                        light_to_fragment_direction + Vec3 { x, y, z };
 
-                    let closest_depth_sample = map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
-            
+                    let closest_depth_sample =
+                        map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
+
                     let closest_depth = near + closest_depth_sample * (far - near);
-            
+
                     if closest_depth == 0.0 {
                         continue;
                     }
-            
+
                     let likeness = sample
                         .normal_world_space
                         .dot((self.position - sample.position_world_space).as_normal());
-            
+
                     let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
-            
+
                     if current_depth + bias > closest_depth {
                         accumulated_shadow += 1.0;
                     }
@@ -324,26 +326,106 @@ impl PointLight {
         light_to_fragment_direction: Vec3,
     ) -> f32 {
         static SAMPLE_OFFSET_DIRECTIONS: [Vec3; 20] = [
-            Vec3 { x:  1.0, y:  1.0, z:  1.0 },
-            Vec3 { x:  1.0, y: -1.0, z:  1.0 },
-            Vec3 { x: -1.0, y: -1.0, z:  1.0 },
-            Vec3 { x: -1.0, y:  1.0, z:  1.0 }, 
-            Vec3 { x:  1.0, y:  1.0, z: -1.0 },
-            Vec3 { x:  1.0, y: -1.0, z: -1.0 },
-            Vec3 { x: -1.0, y: -1.0, z: -1.0 },
-            Vec3 { x: -1.0, y:  1.0, z: -1.0 },
-            Vec3 { x:  1.0, y:  1.0, z:  0.0 },
-            Vec3 { x:  1.0, y: -1.0, z:  0.0 },
-            Vec3 { x: -1.0, y: -1.0, z:  0.0 },
-            Vec3 { x: -1.0, y:  1.0, z:  0.0 },
-            Vec3 { x:  1.0, y:  0.0, z:  1.0 },
-            Vec3 { x: -1.0, y:  0.0, z:  1.0 },
-            Vec3 { x:  1.0, y:  0.0, z: -1.0 },
-            Vec3 { x: -1.0, y:  0.0, z: -1.0 },
-            Vec3 { x:  0.0, y:  1.0, z:  1.0 },
-            Vec3 { x:  0.0, y: -1.0, z:  1.0 },
-            Vec3 { x:  0.0, y: -1.0, z: -1.0 },
-            Vec3 { x:  0.0, y:  1.0, z: -1.0 }            
+            Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: -1.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: -1.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: 1.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: -1.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: -1.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: 1.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: -1.0,
+                z: 0.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: -1.0,
+                z: 0.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: 0.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: -1.0,
+                y: 0.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: 0.0,
+                y: -1.0,
+                z: 1.0,
+            },
+            Vec3 {
+                x: 0.0,
+                y: -1.0,
+                z: -1.0,
+            },
+            Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: -1.0,
+            },
         ];
 
         static DISK_RADIUS: f32 = 0.01;
@@ -355,25 +437,26 @@ impl PointLight {
 
             let perturbed_light_to_fragment_direction = light_to_fragment_direction + offset;
 
-            let closest_depth_sample = map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
-    
+            let closest_depth_sample =
+                map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
+
             let closest_depth = near + closest_depth_sample * (far - near);
-    
+
             if closest_depth == 0.0 {
                 continue;
             }
-    
+
             let likeness = sample
                 .normal_world_space
                 .dot((self.position - sample.position_world_space).as_normal());
-    
+
             let bias = 0.005_f32.max(0.05 * (1.0 - likeness));
 
             if current_depth + bias > closest_depth {
                 accumulated_shadow += 1.0;
             }
         }
-        
+
         accumulated_shadow / SAMPLE_OFFSET_DIRECTIONS.len() as f32
     }
 
@@ -387,7 +470,14 @@ impl PointLight {
 
         let current_depth = light_to_fragment.mag();
 
-        self.pcf_disk(near, far, current_depth, sample, map, light_to_fragment_direction)
+        self.pcf_disk(
+            near,
+            far,
+            current_depth,
+            sample,
+            map,
+            light_to_fragment_direction,
+        )
     }
 
     fn render_shadow_map_into(
