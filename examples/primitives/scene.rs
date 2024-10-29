@@ -267,18 +267,9 @@ pub(crate) fn make_scene(
 
         let entity_handle = entity_arena.insert(entity);
 
-        let mut node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(entity_handle),
-        );
+        let transform = Transform3D::default();
 
-        node.get_transform_mut().set_translation(Vec3 {
-            z: 3.0,
-            ..Default::default()
-        });
-
-        node
+        SceneNode::new(SceneNodeType::Entity, transform, Some(entity_handle))
     };
 
     scene.root.add_child(plane_entity_node)?;
