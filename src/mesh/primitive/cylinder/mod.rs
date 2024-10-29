@@ -11,7 +11,10 @@ use crate::{
 };
 
 pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
-    assert!(divisions >= 3);
+    assert!(
+        divisions >= 3,
+        "Called cylinder::generate() with fewer than 3 divisions!"
+    );
 
     let mut normals = vec![vec3::UP, -vec3::UP];
 

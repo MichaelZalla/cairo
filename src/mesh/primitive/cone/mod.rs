@@ -1,111 +1,128 @@
-use std::{f32::consts::PI, rc::Rc};
+use std::{f32::consts::TAU, mem, rc::Rc};
 
 use crate::{
     mesh::{geometry::Geometry, Mesh, PartialFace},
+    texture::uv,
+    transform::quaternion::Quaternion,
     vec::{
-        vec2::{self, Vec2},
         vec3::{self, Vec3},
+        vec4,
     },
 };
 
-use crate::texture;
-
 pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
-    assert!(divisions >= 3);
+    assert!(
+        divisions >= 3,
+        "Called cone::generate() with fewer than 3 divisions!"
+    );
 
-    // Generate vertices and UVs
+    let mut normals = vec![vec3::UP, -vec3::UP];
 
-    let top_center_vertex = vec3::UP * height / 2.0;
+    let mut vertices = vec![];
 
-    let bottom_center_vertex = vec3::UP * -height / 2.0;
+    let mut uvs = vec![];
 
-    let center_uv = vec2::Vec2::interpolate(texture::uv::TOP_LEFT, texture::uv::BOTTOM_RIGHT, 0.5);
+    let mut partial_faces = vec![];
 
-    let mut ring_vertices: Vec<Vec3> = vec![];
-    let mut ring_uvs: Vec<Vec2> = vec![];
+    let alpha_step = 1.0 / divisions as f32;
 
-    for i in 0..divisions + 1 {
-        // Generate vertices and UVs around the base
-        let alpha: f32 = i as f32 * (1.0 / divisions as f32);
-        let radians = 2.0 * PI * alpha;
+    let height_over_2 = height / 2.0;
 
-        ring_vertices.push(Vec3 {
-            x: radius * radians.cos(),
-            y: bottom_center_vertex.y,
-            z: radius * radians.sin(),
-        });
+    let center_top = Vec3 {
+        x: 0.0,
+        y: height_over_2,
+        z: 0.0,
+    };
 
-        ring_uvs.push(Vec2 {
-            x: radians.cos() / 2.0 + 0.5,
-            y: radians.sin() / 2.0 + 0.5,
-            z: 0.0,
-        });
+    let center_bottom = Vec3 {
+        x: 0.0,
+        y: -height_over_2,
+        z: 0.0,
+    };
+
+    let uvs_center_index = uvs.len();
+
+    uvs.push(uv::CENTER);
+
+    let uvs_ring_start_index = uvs.len();
+
+    for i in 0..divisions as usize {
+        let alpha = alpha_step * i as f32;
+
+        let rotation_y = Quaternion::new(vec3::UP, TAU * -alpha);
+
+        // Vertex
+
+        let ring_vertex = (vec4::RIGHT * (*rotation_y.mat())).to_vec3() * radius + center_bottom;
+
+        // Normal
+
+        let normal = {
+            let mut normal = (center_top - ring_vertex).as_normal();
+
+            let tangent = {
+                let mut tangent = vec3::UP.cross(normal).as_normal();
+
+                if tangent.x.is_nan() {
+                    tangent = vec3::RIGHT.cross(normal).as_normal();
+                }
+
+                tangent
+            };
+
+            let mut bitangent = normal.cross(tangent);
+
+            mem::swap(&mut normal, &mut bitangent);
+
+            normal
+        };
+
+        normals.push(normal);
+
+        vertices.push(ring_vertex);
+
+        // UV
+
+        let uv_normal_rotation = Quaternion::new(vec3::FORWARD, TAU * alpha);
+
+        let uv_normal = vec4::RIGHT * (*uv_normal_rotation.mat());
+
+        let uv = uv_normal.ndc_to_uv();
+
+        uvs.push(uv);
     }
 
-    assert!(ring_vertices.len() as u32 == divisions + 1);
-    assert!(ring_uvs.len() == ring_vertices.len());
+    // Cone top.
 
-    let mut vertices: Vec<Vec3> = vec![];
+    let center_vertex_index = vertices.len();
 
-    vertices.append(&mut ring_vertices);
-    vertices.append(&mut vec![bottom_center_vertex, top_center_vertex]);
+    vertices.push(center_top);
 
-    let bottom_center_index = (divisions + 1) as usize;
-    let top_center_index = (divisions + 2) as usize;
+    do_triangle_fan(
+        divisions as usize,
+        center_vertex_index,
+        uvs_center_index,
+        uvs_ring_start_index,
+        true,
+        &mut partial_faces,
+    );
 
-    assert!(top_center_index == vertices.len() - 1);
+    // Bottom cap.
 
-    let mut uvs: Vec<Vec2> = vec![];
+    let center_vertex_index = vertices.len();
 
-    uvs.append(&mut ring_uvs);
-    uvs.append(&mut vec![center_uv]);
+    vertices.push(center_bottom);
 
-    let center_uv_index = uvs.len() - 1_usize;
+    do_triangle_fan(
+        divisions as usize,
+        center_vertex_index,
+        uvs_center_index,
+        uvs_ring_start_index,
+        false,
+        &mut partial_faces,
+    );
 
-    // Generate normals
-
-    let up = vec3::UP;
-
-    let down = up * -1.0;
-
-    let mut normals = vec![down];
-
-    // Generate faces
-
-    let mut partial_faces: Vec<PartialFace> = vec![];
-
-    for i in 0..divisions {
-        // Generate a ring of faces around the base
-
-        partial_faces.push(PartialFace {
-            // (ring_i, ring_i + 1, bottom_center) (clockwise)
-            vertices: [i as usize, i as usize + 1, bottom_center_index],
-            // (down, down, down)
-            normals: Some([0, 0, 0]),
-            // (ring_i, ring_i + 1, center) (clockwise)
-            uvs: Some([i as usize, i as usize + 1, center_uv_index]),
-        });
-
-        // (ring_i + 1, ring_i, top_center) (counter-clockwise)
-        let vertex_indices = [i as usize + 1, i as usize, top_center_index];
-
-        // @TODO Smooth normals for cone sides
-        normals.push(
-            (vertices[vertex_indices[1]] - vertices[vertex_indices[0]])
-                .cross(vertices[vertex_indices[2]] - vertices[vertex_indices[0]])
-                .as_normal(),
-        );
-
-        let normal_index = normals.len() - 1;
-
-        partial_faces.push(PartialFace {
-            vertices: vertex_indices,
-            // (normal to the face)
-            normals: Some([normal_index, normal_index, normal_index]),
-            // (ring_i + 1, ring_i, center) (counter-clockwise)
-            uvs: Some([i as usize + 1, i as usize, center_uv_index]),
-        });
-    }
+    // Packaging.
 
     let geometry = Geometry {
         vertices: vertices.into_boxed_slice(),
@@ -118,4 +135,41 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     mesh.object_name = Some("cone".to_string());
 
     mesh
+}
+
+fn do_triangle_fan(
+    divisions: usize,
+    center_vertex_index: usize,
+    uvs_center_index: usize,
+    uvs_ring_start_index: usize,
+    is_top: bool,
+    partial_faces: &mut Vec<PartialFace>,
+) {
+    for i in 0..divisions {
+        let n_i = 2 + i;
+        let mut n_j = n_i + 1;
+
+        // Index of the top or bottom vertex associated with each side (edge).
+
+        let (mut v_i, mut v_j) = (i, i + 1);
+
+        let (mut uv_i, mut uv_j) = (uvs_ring_start_index + i, uvs_ring_start_index + i + 1);
+
+        if i == divisions - 1 {
+            n_j = 2;
+            v_j = 0;
+            uv_j = uvs_ring_start_index;
+        }
+
+        if !is_top {
+            mem::swap(&mut v_i, &mut v_j);
+            mem::swap(&mut uv_i, &mut uv_j);
+        }
+
+        partial_faces.push(PartialFace {
+            normals: Some(if !is_top { [1, 1, 1] } else { [n_i, n_j, 0] }),
+            vertices: [v_i, v_j, center_vertex_index],
+            uvs: Some([uv_i, uv_j, uvs_center_index]),
+        });
+    }
 }
