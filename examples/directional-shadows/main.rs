@@ -374,7 +374,7 @@ fn blit_directional_shadow_maps(
 
                         let uv = Vec2 {
                             x: x as f32 * UV_STEP,
-                            y: y as f32 * UV_STEP,
+                            y: 1.0 - y as f32 * UV_STEP,
                             z: 0.0,
                         };
 

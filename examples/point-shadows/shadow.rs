@@ -23,7 +23,7 @@ pub fn debug_blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target:
             for x in 0..side.width {
                 let uv = Vec2 {
                     x: x as f32 * uv_step,
-                    y: y as f32 * uv_step,
+                    y: 1.0 - y as f32 * uv_step,
                     z: 0.0,
                 };
 
