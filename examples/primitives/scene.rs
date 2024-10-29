@@ -1,6 +1,7 @@
 use std::{f32::consts::PI, path::Path, rc::Rc};
 
 use cairo::{
+    app::context::ApplicationRenderingContext,
     color,
     entity::Entity,
     material::Material,
@@ -24,7 +25,10 @@ use cairo::{
         skybox::Skybox,
     },
     shader::context::ShaderContext,
-    texture::{cubemap::CubeMap, map::TextureMap},
+    texture::{
+        cubemap::CubeMap,
+        map::{TextureMap, TextureMapStorageFormat},
+    },
     transform::{quaternion::Quaternion, Transform3D},
     vec::{
         vec2::Vec2,
@@ -45,9 +49,11 @@ pub(crate) fn make_scene(
     directional_light_arena: &mut Arena<DirectionalLight>,
     point_light_arena: &mut Arena<PointLight>,
     spot_light_arena: &mut Arena<SpotLight>,
+    texture_u8_arena: &mut Arena<TextureMap>,
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
+    rendering_context: &ApplicationRenderingContext,
 ) -> Result<(SceneGraph, ShaderContext), String> {
     let (mut scene, shader_context) = make_empty_scene(
         camera_arena,
@@ -229,11 +235,19 @@ pub(crate) fn make_scene(
     // Create a rough material.
 
     let material_handle = {
+        let albedo_map_handle = texture_u8_arena.insert(TextureMap::new(
+            "./assets/textures/checkerboard.jpg",
+            TextureMapStorageFormat::RGB24,
+        ));
+
         let mut material = Material::new("mat".to_string());
 
         material.albedo = vec3::ONES;
+        material.albedo_map = Some(albedo_map_handle);
         material.roughness = 0.7;
         material.metallic = 0.2;
+
+        material.load_all_maps(texture_u8_arena, rendering_context)?;
 
         material_arena.insert(material)
     };
@@ -328,7 +342,7 @@ pub(crate) fn make_scene(
     // Add a cylinder entity.
 
     let cylinder_entity_node = {
-        let mesh = cylinder::generate(2.5, 5.0, 16);
+        let mesh = cylinder::generate(2.387, 5.0, 16);
 
         let mesh_handle = mesh_arena.insert(mesh);
 

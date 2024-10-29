@@ -58,7 +58,7 @@ fn main() -> Result<(), String> {
 
     let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
-    // let rendering_context = &app.context.rendering_context;
+    let rendering_context = &app.context.rendering_context;
 
     // Pipeline framebuffer
 
@@ -92,7 +92,7 @@ fn main() -> Result<(), String> {
         let mut point_light_arena = resources.point_light.borrow_mut();
         let mut spot_light_arena = resources.spot_light.borrow_mut();
 
-        // let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
         let mut mesh_arena = resources.mesh.borrow_mut();
         let mut material_arena = resources.material.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
@@ -109,9 +109,11 @@ fn main() -> Result<(), String> {
             &mut directional_light_arena,
             &mut point_light_arena,
             &mut spot_light_arena,
+            &mut texture_u8_arena,
             &mut mesh_arena,
             &mut material_arena,
             &mut entity_arena,
+            rendering_context,
         )
     }?;
 

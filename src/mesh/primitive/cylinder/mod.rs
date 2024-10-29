@@ -5,6 +5,7 @@ use crate::{
     texture::uv,
     transform::quaternion::Quaternion,
     vec::{
+        vec2::Vec2,
         vec3::{self, Vec3},
         vec4,
     },
@@ -40,6 +41,9 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         z: 0.0,
     };
 
+    let horizontal_uv_span = TAU * radius / height;
+    let horizontal_uv_span_step = horizontal_uv_span / divisions as f32;
+
     for i in 0..divisions as usize {
         let alpha = alpha_step * i as f32;
 
@@ -63,7 +67,11 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
         // UVs
 
-        let side_edge_uv_top = uv::TOP_LEFT + (uv::TOP_RIGHT - uv::TOP_LEFT) * alpha;
+        let side_edge_uv_top = uv::TOP_LEFT
+            + Vec2 {
+                x: horizontal_uv_span_step * i as f32,
+                ..Default::default()
+            };
 
         let mut side_edge_uv_bottom = side_edge_uv_top;
         side_edge_uv_bottom.y = uv::BOTTOM_LEFT.y;
@@ -71,13 +79,27 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         uvs.push(side_edge_uv_top);
         uvs.push(side_edge_uv_bottom);
 
+        if i == divisions as usize - 1 {
+            let side_edge_uv_top = uv::TOP_LEFT
+                + Vec2 {
+                    x: horizontal_uv_span_step * (i + 1) as f32,
+                    ..Default::default()
+                };
+
+            let mut side_edge_uv_bottom = side_edge_uv_top;
+            side_edge_uv_bottom.y = uv::BOTTOM_LEFT.y;
+
+            uvs.push(side_edge_uv_top);
+            uvs.push(side_edge_uv_bottom);
+        }
+
         // Partial faces
 
         if i > 0 {
-            side_triangle_strip_between_i_j(i - 1, i, &mut partial_faces);
+            side_triangle_strip_between_i_j(i - 1, i, &uvs, &mut partial_faces);
 
             if i == divisions as usize - 1 {
-                side_triangle_strip_between_i_j(i, 0, &mut partial_faces);
+                side_triangle_strip_between_i_j(i, 0, &uvs, &mut partial_faces);
             }
         }
     }
@@ -147,25 +169,36 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
     mesh
 }
 
-fn side_triangle_strip_between_i_j(i: usize, j: usize, partial_faces: &mut Vec<PartialFace>) {
+fn side_triangle_strip_between_i_j(
+    i: usize,
+    j: usize,
+    uvs: &[Vec2],
+    partial_faces: &mut Vec<PartialFace>,
+) {
     // Offset to account for "up" and "down" normals that begin our normals.
-    let (n_i, n_j) = (i + 2, j + 2);
+    let (n_i, n_j) = (2 + i, 2 + j);
 
     // Index of the first vertex associated with each side (edge).
     let (v_i, v_j) = (i * 2, j * 2);
 
     let (v_1, v_2, v_3, v_4) = (v_i, v_i + 1, v_j, v_j + 1);
 
+    let (uv_1, uv_2, mut uv_3, mut uv_4) = (v_1, v_2, v_3, v_4);
+
+    if j < i {
+        (uv_3, uv_4) = (uvs.len() - 2, uvs.len() - 1);
+    }
+
     let side_strip_face_1 = PartialFace {
         normals: Some([n_i, n_i, n_j]),
         vertices: [v_1, v_2, v_3],
-        uvs: Some([v_1, v_2, v_3]),
+        uvs: Some([uv_1, uv_2, uv_3]),
     };
 
     let side_strip_face_2 = PartialFace {
         normals: Some([n_j, n_j, n_i]),
         vertices: [v_4, v_3, v_2],
-        uvs: Some([v_4, v_3, v_2]),
+        uvs: Some([uv_4, uv_3, uv_2]),
     };
 
     partial_faces.push(side_strip_face_1);
