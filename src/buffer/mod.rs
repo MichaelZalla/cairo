@@ -377,16 +377,20 @@ where
 
                     if horizontal {
                         if x >= i_u32 {
+                            // Accumulate left.
                             result += *self.get(x - i_u32, y) * *weight;
                         }
                         if x + i_u32 < self.width {
+                            // Accumulate right.
                             result += *self.get(x + i_u32, y) * *weight;
                         }
                     } else {
                         if y >= i_u32 {
+                            // Accumulate above.
                             result += *self.get(x, y - i_u32) * *weight;
                         }
                         if y + i_u32 < self.height {
+                            // Accumulate below.
                             result += *self.get(x, y + i_u32) * *weight;
                         }
                     }
