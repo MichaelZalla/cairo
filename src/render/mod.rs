@@ -1,3 +1,5 @@
+use options::RenderOptions;
+
 use crate::{
     color::Color,
     entity::Entity,
@@ -21,6 +23,8 @@ pub mod options;
 pub mod viewport;
 
 pub trait Renderer {
+    fn get_options(&self) -> &RenderOptions;
+
     fn begin_frame(&mut self);
 
     fn end_frame(&mut self);

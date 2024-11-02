@@ -11,7 +11,7 @@ use crate::{
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::Renderer,
+    render::{options::RenderPassFlag, Renderer},
     resource::handle::Handle,
     serde::PostDeserialize,
     shader::context::ShaderContext,
@@ -141,6 +141,8 @@ impl SceneGraph {
                                            node: &SceneNode|
          -> Result<(), String> {
             let (node_type, handle) = (node.get_type(), node.get_handle());
+
+            let render_pass_flags = renderer.get_options().render_pass_flags;
 
             match node_type {
                 SceneNodeType::Camera => match handle {
@@ -284,7 +286,11 @@ impl SceneGraph {
                                 Ok(entry) => {
                                     let directional_light = &mut entry.item;
 
-                                    if let (Some(_), Some(_)) = (directional_light.shadow_maps.as_ref(), directional_light.shadow_map_rendering_context.as_ref()) {
+                                    if let (Some(_), Some(_), true) = (
+                                        directional_light.shadow_maps.as_ref(),
+                                        directional_light.shadow_map_rendering_context.as_ref(),
+                                        render_pass_flags.contains(RenderPassFlag::Lighting))
+                                    {
                                         directional_light.update_shadow_maps(resources, self)?;
                                     }
 
@@ -332,7 +338,11 @@ impl SceneGraph {
                                 Ok(entry) => {
                                     let point_light = &mut entry.item;
 
-                                    if let (Some(_), Some(_)) = (point_light.shadow_map.as_ref(), point_light.shadow_map_rendering_context.as_ref()) {
+                                    if let (Some(_), Some(_), true) = (
+                                        point_light.shadow_map.as_ref(),
+                                        point_light.shadow_map_rendering_context.as_ref(),
+                                        render_pass_flags.contains(RenderPassFlag::Lighting),
+                                    ) {
                                         point_light.update_shadow_map(resources, self)?;
                                     }
 

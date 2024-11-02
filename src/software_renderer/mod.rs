@@ -71,6 +71,10 @@ pub struct SoftwareRenderer {
 }
 
 impl Renderer for SoftwareRenderer {
+    fn get_options(&self) -> &RenderOptions {
+        &self.options
+    }
+
     fn begin_frame(&mut self) {
         #[cfg(feature = "debug_cycle_counts")]
         {
