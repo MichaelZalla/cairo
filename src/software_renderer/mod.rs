@@ -593,12 +593,12 @@ impl SoftwareRenderer {
         scene_resources: &SceneResources,
         sample: &GeometrySample,
     ) -> Vec3 {
-        if self
-            .options
-            .render_pass_flags
-            .contains(RenderPassFlag::Lighting)
-        {
+        let render_pass_flags = self.get_options().render_pass_flags;
+
+        if render_pass_flags.contains(RenderPassFlag::Lighting) {
             (self.fragment_shader)(shader_context, scene_resources, sample).to_vec3()
+        } else if render_pass_flags.contains(RenderPassFlag::Ssao) {
+            sample.albedo * sample.ambient_factor
         } else {
             sample.albedo
         }
