@@ -64,7 +64,7 @@
       "group": {
         "kind": "test"
       },
-      "label": "Rust: cargo +nightly-x86_64-pc-windows-msvc miri test",
+      "label": "Rust: cargo miri test",
       "command": "cargo",
       "args": [
         "+nightly-x86_64-pc-windows-msvc",
