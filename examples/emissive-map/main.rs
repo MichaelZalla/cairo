@@ -4,7 +4,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_640_BY_320},
+        resolution::{Resolution, RESOLUTION_960_BY_540},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -23,7 +23,7 @@ use cairo::{
     },
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::vec3::{self, Vec3},
+    vec::vec3,
 };
 
 use scene::make_scene;
@@ -33,8 +33,8 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/emissive-map".to_string(),
-        window_resolution: RESOLUTION_640_BY_320 * 2.0,
-        canvas_resolution: RESOLUTION_640_BY_320,
+        window_resolution: RESOLUTION_960_BY_540,
+        canvas_resolution: RESOLUTION_960_BY_540,
         ..Default::default()
     };
 
@@ -74,11 +74,10 @@ fn main() -> Result<(), String> {
         let mut mesh_arena = resources.mesh.borrow_mut();
         let mut material_arena = resources.material.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
-        let mut point_light_arena = resources.point_light.borrow_mut();
-        let mut spot_light_arena = resources.spot_light.borrow_mut();
         let mut texture_u8_arena = resources.texture_u8.borrow_mut();
 
         make_scene(
+            resources,
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
@@ -87,8 +86,6 @@ fn main() -> Result<(), String> {
             &mut mesh_arena,
             &mut material_arena,
             &mut entity_arena,
-            &mut point_light_arena,
-            &mut spot_light_arena,
             &mut texture_u8_arena,
             rendering_context,
         )
@@ -178,35 +175,6 @@ fn main() -> Result<(), String> {
                 }
                 None => {
                     panic!("Encountered a `Entity` node with no resource handle!")
-                }
-            },
-            SceneNodeType::PointLight => match handle {
-                Some(handle) => {
-                    let mut point_light_arena = resources.point_light.borrow_mut();
-
-                    match point_light_arena.get_mut(handle) {
-                        Ok(entry) => {
-                            let point_light = &mut entry.item;
-
-                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
-                            static MAX_POINT_LIGHT_INTENSITY: f32 = 0.5;
-
-                            point_light.intensities = Vec3 {
-                                x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
-                                y: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
-                                z: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,
-                            } * MAX_POINT_LIGHT_INTENSITY;
-
-                            Ok(false)
-                        }
-                        Err(err) => panic!(
-                            "Failed to get PointLight from Arena with Handle {:?}: {}",
-                            handle, err
-                        ),
-                    }
-                }
-                None => {
-                    panic!("Encountered a `PointLight` node with no resource handle!")
                 }
             },
             _ => Ok(false),

@@ -1,7 +1,10 @@
+use std::{f32::consts::PI, rc::Rc};
+
 use cairo::{
     app::context::ApplicationRenderingContext,
     entity::Entity,
     material::Material,
+    matrix::Mat4,
     mesh::{
         primitive::{cube, plane},
         Mesh,
@@ -12,20 +15,19 @@ use cairo::{
         context::utils::make_empty_scene,
         environment::Environment,
         graph::SceneGraph,
-        light::{
-            ambient_light::AmbientLight, directional_light::DirectionalLight,
-            point_light::PointLight, spot_light::SpotLight,
-        },
-        node::{SceneNode, SceneNodeType},
+        light::{ambient_light::AmbientLight, directional_light::DirectionalLight},
+        node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
+        resources::SceneResources,
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
-    transform::Transform3D,
-    vec::vec3::Vec3,
+    transform::quaternion::Quaternion,
+    vec::vec3::{self, Vec3},
 };
 
 #[allow(clippy::too_many_arguments)]
 pub fn make_scene(
+    _resources: &Rc<SceneResources>,
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,
     environment_arena: &mut Arena<Environment>,
@@ -34,8 +36,6 @@ pub fn make_scene(
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
-    point_light_arena: &mut Arena<PointLight>,
-    spot_light_arena: &mut Arena<SpotLight>,
     texture_u8_arena: &mut Arena<TextureMap>,
     rendering_context: &ApplicationRenderingContext,
 ) -> Result<(SceneGraph, ShaderContext), String> {
@@ -45,6 +45,51 @@ pub fn make_scene(
         environment_arena,
         ambient_light_arena,
         directional_light_arena,
+    )?;
+
+    scene.root.visit_mut(
+        SceneNodeGlobalTraversalMethod::DepthFirst,
+        None,
+        &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
+            match node.get_type() {
+                SceneNodeType::AmbientLight => {
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = ambient_light_arena.get_mut(handle) {
+                            let ambient_light = &mut entry.item;
+
+                            ambient_light.intensities = vec3::ONES * 0.1;
+                        }
+                    }
+
+                    Ok(())
+                }
+                SceneNodeType::DirectionalLight => {
+                    let transform = node.get_transform_mut();
+
+                    transform.set_translation(Vec3 {
+                        x: 0.0,
+                        y: 15.0,
+                        z: 0.0,
+                    });
+
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = directional_light_arena.get_mut(handle) {
+                            let directional_light = &mut entry.item;
+
+                            directional_light.intensities = vec3::ONES * 0.5;
+
+                            let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
+                            let rotate_y = Quaternion::new(vec3::UP, PI);
+
+                            directional_light.set_direction(rotate_x * rotate_y);
+                        }
+                    }
+
+                    Ok(())
+                }
+                _ => Ok(()),
+            }
+        },
     )?;
 
     // Add a textured ground plane to our scene.
@@ -152,54 +197,6 @@ pub fn make_scene(
     plane_entity_node.add_child(cube_entity_node)?;
 
     scene.root.add_child(plane_entity_node)?;
-
-    // Add a point light to our scene.
-
-    let point_light_node = {
-        let mut point_light = PointLight::new();
-
-        point_light.intensities = Vec3::ones() * 0.8;
-
-        let point_light_handle = point_light_arena.insert(point_light);
-
-        let mut transform = Transform3D::default();
-
-        transform.set_translation(Vec3 {
-            x: 0.0,
-            y: 6.0,
-            z: 0.0,
-        });
-
-        SceneNode::new(
-            SceneNodeType::PointLight,
-            transform,
-            Some(point_light_handle),
-        )
-    };
-
-    scene.root.add_child(point_light_node)?;
-
-    // Add a spot light to our scene.
-
-    let spot_light_node = {
-        let mut spot_light = SpotLight::new();
-
-        spot_light.intensities = Vec3::ones() * 0.1;
-
-        let spot_light_handle = spot_light_arena.insert(spot_light);
-
-        let mut transform = Transform3D::default();
-
-        transform.set_translation(Vec3 {
-            x: 0.0,
-            y: 30.0,
-            z: 0.0,
-        });
-
-        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
-    };
-
-    scene.root.add_child(spot_light_node)?;
 
     Ok((scene, shader_context))
 }
