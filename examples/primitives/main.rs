@@ -179,7 +179,8 @@ fn main() -> Result<(), String> {
                 match node_type {
                     SceneNodeType::Camera => {
                         let mut camera_arena = resources.camera.borrow_mut();
-                        let handle = node.get_handle().unwrap();
+
+                        let handle = handle.unwrap();
 
                         let mut was_handled = false;
 
@@ -189,9 +190,7 @@ fn main() -> Result<(), String> {
                             if (USE_DEMO_CAMERA && !camera.is_active)
                                 || (!USE_DEMO_CAMERA && camera.is_active)
                             {
-                                view_camera_handle
-                                    .borrow_mut()
-                                    .replace(node.get_handle().unwrap());
+                                view_camera_handle.borrow_mut().replace(handle);
                             }
 
                             if camera.is_active {
