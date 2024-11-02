@@ -4,7 +4,6 @@ use crate::{buffer::Buffer2D, effect::Effect, vec::vec3::Vec3};
 
 #[derive(Debug, Clone)]
 pub struct GaussianBlurEffect {
-    strength: u8,
     passes: u8,
     weights: [f32; 5],
     swap_a: Buffer2D<Vec3>,
@@ -14,7 +13,6 @@ pub struct GaussianBlurEffect {
 impl Default for GaussianBlurEffect {
     fn default() -> Self {
         Self {
-            strength: 5,
             passes: 6,
             weights: [0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216],
             swap_a: Default::default(),
@@ -53,11 +51,11 @@ impl Effect<Vec3> for GaussianBlurEffect {
 
             // 1. Blur horizontally into the destination buffer.
 
-            src.blur(dest_ref, &self.weights, self.strength, true);
+            src.blur(dest_ref, &self.weights, true);
 
             // 2. Blur vertically back into the source buffer.
 
-            src.blur(dest_ref, &self.weights, self.strength, false);
+            src.blur(dest_ref, &self.weights, false);
 
             // 3. Swap buffers.
 

@@ -365,29 +365,29 @@ where
         + Div<Output = T>
         + Mul<f32, Output = T>,
 {
-    pub fn blur(&self, dest: &mut Buffer2D<T>, weights: &[f32; 5], strength: u8, horizontal: bool) {
+    pub fn blur(&self, dest: &mut Buffer2D<T>, weights: &[f32; 5], horizontal: bool) {
         let weights_0 = weights[0];
 
         for y in 0..self.height {
             for x in 0..self.width {
                 let mut result = *self.get(x, y) * weights_0;
 
-                for i in 1..strength {
+                for (i, weight) in weights.iter().enumerate().skip(1) {
                     let i_u32 = i as u32;
 
                     if horizontal {
                         if x >= i_u32 {
-                            result += *self.get(x - i_u32, y) * weights[i as usize];
+                            result += *self.get(x - i_u32, y) * *weight;
                         }
                         if x + i_u32 < self.width {
-                            result += *self.get(x + i_u32, y) * weights[i as usize];
+                            result += *self.get(x + i_u32, y) * *weight;
                         }
                     } else {
                         if y >= i_u32 {
-                            result += *self.get(x, y - i_u32) * weights[i as usize];
+                            result += *self.get(x, y - i_u32) * *weight;
                         }
                         if y + i_u32 < self.height {
-                            result += *self.get(x, y + i_u32) * weights[i as usize];
+                            result += *self.get(x, y + i_u32) * *weight;
                         }
                     }
                 }
