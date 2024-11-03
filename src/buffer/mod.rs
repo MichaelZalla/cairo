@@ -56,6 +56,10 @@ where
         }
     }
 
+    pub fn assert_dimensions(&self, width: u32, height: u32) {
+        assert!(self.width == width && self.height == height);
+    }
+
     pub fn iter(&self) -> std::slice::Iter<'_, T> {
         self.data.iter()
     }

@@ -105,34 +105,38 @@ impl Framebuffer {
     }
 
     pub fn validate(&self) -> Result<(), String> {
-        if let Some(lock) = self.attachments.stencil.as_ref() {
-            let buffer = lock.borrow();
+        let (width, height) = (self.width, self.height);
 
-            assert!(buffer.0.width == self.width && buffer.0.height == self.height);
+        if let Some(stencil_buffer_rc) = self.attachments.stencil.as_ref() {
+            let stencil_buffer = stencil_buffer_rc.borrow();
+
+            stencil_buffer.0.assert_dimensions(width, height);
         }
 
-        if let Some(lock) = self.attachments.depth.as_ref() {
-            let zbuffer = lock.borrow();
+        if let Some(depth_buffer_rc) = self.attachments.depth.as_ref() {
+            let depth_buffer = depth_buffer_rc.borrow();
 
-            assert!(zbuffer.buffer.width == self.width && zbuffer.buffer.height == self.height);
+            depth_buffer.buffer.assert_dimensions(width, height);
         }
 
-        if let Some(lock) = self.attachments.color.as_ref() {
-            let buffer = lock.borrow();
+        if let Some(color_buffer_rc) = self.attachments.color.as_ref() {
+            let color_buffer = color_buffer_rc.borrow();
 
-            assert!(buffer.width == self.width && buffer.height == self.height);
+            color_buffer.assert_dimensions(width, height);
         }
 
-        if let Some(lock) = self.attachments.forward_ldr.as_ref() {
-            let buffer = lock.borrow();
+        if let Some(forward_ldr_buffer_rc) = self.attachments.forward_ldr.as_ref() {
+            let forward_ldr_buffer = forward_ldr_buffer_rc.borrow();
 
-            assert!(buffer.width == self.width && buffer.height == self.height);
+            forward_ldr_buffer.assert_dimensions(width, height);
         }
 
-        if let Some(lock) = self.attachments.forward_or_deferred_hdr.as_ref() {
-            let buffer = lock.borrow();
+        if let Some(forward_or_deferred_hdr_buffer_rc) =
+            self.attachments.forward_or_deferred_hdr.as_ref()
+        {
+            let forward_or_deferred_hdr_buffer = forward_or_deferred_hdr_buffer_rc.borrow();
 
-            assert!(buffer.width == self.width && buffer.height == self.height);
+            forward_or_deferred_hdr_buffer.assert_dimensions(width, height);
         }
 
         Ok(())
