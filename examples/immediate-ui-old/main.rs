@@ -16,10 +16,7 @@ use cairo::{
         resolution::{Resolution, RESOLUTIONS_16X9},
         App, AppWindowInfo,
     },
-    buffer::{
-        framebuffer::{Framebuffer, FramebufferAttachmentKind},
-        Buffer2D,
-    },
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     font::{cache::FontCache, FontInfo},
     texture::map::{TextureMap, TextureMapStorageFormat},
@@ -51,16 +48,21 @@ fn main() -> Result<(), String> {
 
     // Initialize framebuffer with attachments
 
-    let framebuffer = Framebuffer::new(
+    let (width, height) = (
         window_info.window_resolution.width,
         window_info.window_resolution.height,
     );
 
-    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+    let mut framebuffer = Framebuffer::new(width, height);
 
-    framebuffer_rc
-        .borrow_mut()
-        .create_attachment(FramebufferAttachmentKind::Color, None, None);
+    let color_buffer = Buffer2D::new(width, height, None);
+
+    framebuffer
+        .attachments
+        .color
+        .replace(Rc::new(RefCell::new(color_buffer)));
+
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     // Initialize an app.
 
