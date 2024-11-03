@@ -47,6 +47,30 @@ fn apply_wrapping_options<T: Default + Debug + Copy + PartialEq>(
     }
 }
 
+fn get_uv_as_fractional_texel<T: Default + Debug + Copy + PartialEq>(
+    map: &TextureMap<T>,
+    level_index: Option<usize>,
+    uv: Vec2,
+) -> Vec2 {
+    let (level_width, level_height) = if let Some(index) = level_index {
+        debug_assert!(index < map.levels.len(), "Invalid mipmap level index!");
+
+        (map.levels[index].0.width, map.levels[index].0.height)
+    } else {
+        (map.width, map.height)
+    };
+
+    let safe_uv = apply_wrapping_options(uv, map);
+
+    // Maps the wrapped UV coordinate to a fractional texel coordinate.
+
+    Vec2 {
+        x: (safe_uv.x * (level_width - 1) as f32),
+        y: ((1.0 - safe_uv.y) * (level_height - 1) as f32),
+        z: 1.0,
+    }
+}
+
 pub fn sample_nearest_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
@@ -187,41 +211,7 @@ pub fn sample_nearest_vec3(uv: Vec2, map: &TextureMap<Vec3>, level_index: Option
 pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>) -> (u8, u8, u8) {
     debug_assert!(map.is_loaded);
 
-    let safe_uv = apply_wrapping_options(uv, map);
-
-    // Determine our map dimensions, based on the level index.
-    let level_width = match level_index {
-        Some(index) => map.width / 2_u32.pow(index as u32),
-        None => map.width,
-    };
-
-    let level_height = match level_index {
-        Some(index) => map.height / 2_u32.pow(index as u32),
-        None => map.height,
-    };
-
-    debug_assert!(
-        level_index.is_none() || level_index.unwrap() < map.levels.len(),
-        "map={}, level_index={}, map.levels.len={}",
-        map.info.filepath,
-        level_index.unwrap(),
-        map.levels.len(),
-    );
-
-    debug_assert!(
-        level_width > 0 && level_height > 0,
-        "map={}, level_width={}, level_height={}",
-        map.info.filepath,
-        level_width,
-        level_height
-    );
-
-    // Maps the wrapped UV coordinate to a fractional texel coordinate.
-    let wrapped_uv_as_fractional_texel = Vec2 {
-        x: (safe_uv.x * (level_width - 1) as f32),
-        y: ((1.0 - safe_uv.y) * (level_height - 1) as f32),
-        z: 1.0,
-    };
+    let fractional_texel = get_uv_as_fractional_texel(map, level_index, uv);
 
     // Performs bilinear filtering (interpolation)
 
@@ -233,7 +223,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
     let b: f32;
 
     let nearest_neighbors = get_neighbors(
-        wrapped_uv_as_fractional_texel,
+        fractional_texel,
         map.width,
         map.height,
         level_index,
@@ -260,7 +250,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             let sample_a = sample_from_texel_u8(top_left, map, level_index);
             let sample_b = sample_from_texel_u8(bottom_left, map, level_index);
 
-            let alpha = wrapped_uv_as_fractional_texel.y - top_left.1;
+            let alpha = fractional_texel.y - top_left.1;
 
             r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
             g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
@@ -274,7 +264,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             let sample_a = sample_from_texel_u8(top_right, map, level_index);
             let sample_b = sample_from_texel_u8(bottom_right, map, level_index);
 
-            let alpha = wrapped_uv_as_fractional_texel.y - top_right.1;
+            let alpha = fractional_texel.y - top_right.1;
 
             r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
             g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
@@ -288,7 +278,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             let sample_a = sample_from_texel_u8(top_left, map, level_index);
             let sample_b = sample_from_texel_u8(top_right, map, level_index);
 
-            let alpha = wrapped_uv_as_fractional_texel.x - top_left.0;
+            let alpha = fractional_texel.x - top_left.0;
 
             r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
             g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
@@ -302,7 +292,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             let sample_a = sample_from_texel_u8(bottom_left, map, level_index);
             let sample_b = sample_from_texel_u8(bottom_right, map, level_index);
 
-            let alpha = wrapped_uv_as_fractional_texel.x - bottom_left.0;
+            let alpha = fractional_texel.x - bottom_left.0;
 
             r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
             g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
@@ -311,8 +301,8 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
 
         // Case: 4 neighbors
         (Some(top_left), Some(top_right), Some(bottom_left), Some(bottom_right)) => {
-            let alpha_x = wrapped_uv_as_fractional_texel.x - top_left.0;
-            let alpha_y = wrapped_uv_as_fractional_texel.y - top_left.1;
+            let alpha_x = fractional_texel.x - top_left.0;
+            let alpha_y = fractional_texel.y - top_left.1;
 
             // 1. Interpolate between top_left and top_right (based on uv.x).
             let sample_a_1 = sample_from_texel_u8(top_left, map, level_index);
