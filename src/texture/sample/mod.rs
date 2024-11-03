@@ -240,7 +240,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
         (None, None, Some(texel), None) |
 
         // Case: One neighbor (bottom-right)
-        (None, None, None, Some(texel)) => return sample_from_texel_u8(texel, map, level_index),
+        (None, None, None, Some(texel)) => sample_from_texel_u8(texel, map, level_index),
 
         // Case: Two neighbors (left column)
         (Some(top_left), None, Some(bottom_left), None) => {
@@ -254,6 +254,8 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
             g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
             b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
+
+            (r as u8, g as u8, b as u8)
         }
 
         // Case: Two neighbors (right column)
@@ -268,6 +270,8 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
             g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
             b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
+
+            (r as u8, g as u8, b as u8)
         }
 
         // Case: Two neighbors (top row)
@@ -282,6 +286,8 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
             g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
             b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
+
+            (r as u8, g as u8, b as u8)
         }
 
         // Case: Two neighbors (bottom row)
@@ -296,6 +302,8 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
             g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
             b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
+
+            (r as u8, g as u8, b as u8)
         }
 
         // Case: 4 neighbors
@@ -326,6 +334,8 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             r = r_1 + (r_2 - r_1) * alpha_y;
             g = g_1 + (g_2 - g_1) * alpha_y;
             b = b_1 + (b_2 - b_1) * alpha_y;
+
+            (r as u8, g as u8, b as u8)
         }
 
         // Invalid case: Zero neighbors
@@ -335,8 +345,113 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
             panic!()
         }
     }
+}
 
-    (r as u8, g as u8, b as u8)
+pub fn sample_bilinear_vec3(uv: Vec2, map: &TextureMap<Vec3>, level_index: Option<usize>) -> Vec3 {
+    debug_assert!(map.is_loaded);
+
+    let fractional_texel = get_uv_as_fractional_texel(map, level_index, uv);
+
+    let nearest_neighbors = get_neighbors(
+        fractional_texel,
+        map.width,
+        map.height,
+        level_index,
+        &map.sampling_options,
+    );
+
+    match nearest_neighbors {
+        // Case: One neighbor (top-left)
+        (Some(texel), None, None, None) |
+
+        // Case: One neighbor (top-right)
+        (None, Some(texel), None, None) |
+
+        // Case: One neighbor (bottom-left)
+        (None, None, Some(texel), None) |
+
+        // Case: One neighbor (bottom-right)
+        (None, None, None, Some(texel)) => sample_from_texel_vec3(texel, map, level_index),
+
+        // Case: Two neighbors (left column)
+        (Some(top_left), None, Some(bottom_left), None) => {
+            // Interpolate between top_left and bottom_left (based on uv.y).
+
+            let sample_a = sample_from_texel_vec3(top_left, map, level_index);
+            let sample_b = sample_from_texel_vec3(bottom_left, map, level_index);
+
+            let alpha = fractional_texel.y - top_left.1;
+
+            lerp(sample_a, sample_b, alpha)
+        }
+
+        // Case: Two neighbors (right column)
+        (None, Some(top_right), None, Some(bottom_right)) => {
+            // Interpolate between top_right and bottom_right (based on uv.y).
+
+            let sample_a = sample_from_texel_vec3(top_right, map, level_index);
+            let sample_b = sample_from_texel_vec3(bottom_right, map, level_index);
+
+            let alpha = fractional_texel.y - top_right.1;
+
+            lerp(sample_a, sample_b, alpha)
+        }
+
+        // Case: Two neighbors (top row)
+        (Some(top_left), Some(top_right), None, None) => {
+            // Interpolate between top_left and top_right (based on uv.x).
+
+            let sample_a = sample_from_texel_vec3(top_left, map, level_index);
+            let sample_b = sample_from_texel_vec3(top_right, map, level_index);
+
+            let alpha = fractional_texel.x - top_left.0;
+
+            lerp(sample_a, sample_b, alpha)
+        }
+
+        // Case: Two neighbors (bottom row)
+        (None, None, Some(bottom_left), Some(bottom_right)) => {
+            // Interpolate between bottom_left and bottom_right (based on uv.x).
+
+            let sample_a = sample_from_texel_vec3(bottom_left, map, level_index);
+            let sample_b = sample_from_texel_vec3(bottom_right, map, level_index);
+
+            let alpha = fractional_texel.x - bottom_left.0;
+
+            lerp(sample_a, sample_b, alpha)
+        }
+
+        // Case: 4 neighbors
+        (Some(top_left), Some(top_right), Some(bottom_left), Some(bottom_right)) => {
+            let alpha_x = fractional_texel.x - top_left.0;
+            
+            // 1. Interpolate between top_left and top_right (based on uv.x).
+            let sample_a_1 = sample_from_texel_vec3(top_left, map, level_index);
+            let sample_b_1 = sample_from_texel_vec3(top_right, map, level_index);
+
+            let blended_1 = lerp(sample_a_1, sample_b_1, alpha_x);
+
+            // 2. Interpolate between bottom_left and bottom_right (based on uv.x).
+
+            let sample_a_2 = sample_from_texel_vec3(bottom_left, map, level_index);
+            let sample_b_2 = sample_from_texel_vec3(bottom_right, map, level_index);
+
+            let blended_2 = lerp(sample_a_2, sample_b_2, alpha_x);
+
+            // 3. Interpolate between 2 interpolated samples (based on uv.y).
+
+            let alpha_y = fractional_texel.y - top_left.1;
+
+            lerp(blended_1, blended_2, alpha_y)
+        }
+
+        // Invalid case: Zero neighbors
+        // Invalid case: Two diagonal neighbors
+        // Invalid case: Three neighbors
+        (_top_left_option, _top_right_option, _bottom_left_option, _bottom_right_option) => {
+           panic!()
+        }
+    }
 }
 
 pub fn sample_trilinear_u8(
