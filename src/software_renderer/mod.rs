@@ -329,8 +329,9 @@ impl SoftwareRenderer {
     pub fn bind_framebuffer(&mut self, framebuffer_option: Option<Rc<RefCell<Framebuffer>>>) {
         match &framebuffer_option {
             Some(framebuffer_rc) => {
-                let refcell = &**framebuffer_rc;
-                let framebuffer = refcell.borrow();
+                let framebuffer = framebuffer_rc.borrow();
+
+                let (width, height) = (framebuffer.width, framebuffer.height);
 
                 match framebuffer.validate() {
                     Ok(()) => {
@@ -340,16 +341,14 @@ impl SoftwareRenderer {
 
                         let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {
-                                g_buffer.0.width != framebuffer.width
-                                    || g_buffer.0.height != framebuffer.height
+                                g_buffer.0.width != width || g_buffer.0.height != height
                             }
                             None => true,
                         };
 
                         let should_reallocate_bloom_buffer = match &self.bloom_buffer {
                             Some(bloom_buffer) => {
-                                bloom_buffer.width != framebuffer.width
-                                    || bloom_buffer.height != framebuffer.height
+                                bloom_buffer.width != width || bloom_buffer.height != height
                             }
                             None => true,
                         };
@@ -357,18 +356,13 @@ impl SoftwareRenderer {
                         if should_reallocate_g_buffer {
                             // Re-allocate a G-buffer.
 
-                            self.g_buffer =
-                                Some(GBuffer::new(framebuffer.width, framebuffer.height));
+                            self.g_buffer = Some(GBuffer::new(width, height));
                         }
 
                         if should_reallocate_bloom_buffer {
                             // Re-allocate a bloom buffer.
 
-                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(
-                                framebuffer.width,
-                                framebuffer.height,
-                                None,
-                            ));
+                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(width, height, None));
                         }
                     }
                     Err(err) => {
