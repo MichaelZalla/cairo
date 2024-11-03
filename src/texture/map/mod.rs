@@ -163,6 +163,17 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         Ok(())
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width;
+        self.height = height;
+
+        self.levels[0].0.resize(width, height);
+
+        self.levels = vec![self.levels[0].to_owned()];
+
+        self.has_mipmaps_generated = false;
+    }
+
     pub fn map<C>(&mut self, mut callback: C) -> Result<(), String>
     where
         C: FnMut(T, T, T) -> (T, T, T),
