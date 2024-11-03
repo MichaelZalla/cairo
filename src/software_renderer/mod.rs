@@ -446,8 +446,11 @@ impl SoftwareRenderer {
 
         *v *= w_inverse;
 
-        v.position_projection_space.x = (v.position_projection_space.x + 1.0) * self.viewport.width_over_2;
-        v.position_projection_space.y = (-v.position_projection_space.y + 1.0) * self.viewport.height_over_2;
+        v.position_projection_space.x =
+            (v.position_projection_space.x + 1.0) * self.viewport.width_over_2;
+
+        v.position_projection_space.y =
+            (-v.position_projection_space.y + 1.0) * self.viewport.height_over_2;
 
         v.position_projection_space.w = w_inverse;
     }
@@ -473,9 +476,11 @@ impl SoftwareRenderer {
                         let mut linear_space_interpolant =
                             *interpolant * (1.0 / interpolant.position_projection_space.w);
 
-                        if let Some(((x, y), non_linear_z)) =
-                            depth_buffer.test(x, y, linear_space_interpolant.position_projection_space.z)
-                        {
+                        if let Some(((x, y), non_linear_z)) = depth_buffer.test(
+                            x,
+                            y,
+                            linear_space_interpolant.position_projection_space.z,
+                        ) {
                             // Alpha shader test.
 
                             let shader_context = self.shader_context.borrow();
