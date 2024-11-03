@@ -332,9 +332,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
         // Invalid case: Two diagonal neighbors
         // Invalid case: Three neighbors
         (_top_left_option, _top_right_option, _bottom_left_option, _bottom_right_option) => {
-            r = 0.0;
-            g = 255.0;
-            b = 0.0;
+            panic!()
         }
     }
 
