@@ -352,13 +352,13 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example emissive-map",
+      "label": "Rust: cargo run --example bloom",
       "command": "cargo",
       "args": [
         "run",
         "--release",
         "--example",
-        "emissive-map"
+        "bloom"
       ]
     },
     {

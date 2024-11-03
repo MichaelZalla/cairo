@@ -33,7 +33,7 @@ mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/emissive-map".to_string(),
+        title: "examples/bloom".to_string(),
         window_resolution: RESOLUTION_960_BY_540,
         canvas_resolution: RESOLUTION_960_BY_540,
         ..Default::default()
