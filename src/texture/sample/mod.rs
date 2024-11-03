@@ -384,15 +384,15 @@ pub fn sample_trilinear_vec3(
     // Sample a color from both mipmaps, using bilinear sampling.
 
     if (near_level_index == far_level_index) || alpha == 0.0 {
-        return sample_nearest_vec3(uv, map, Some(near_level_index));
+        sample_nearest_vec3(uv, map, Some(near_level_index))
     } else if alpha >= 1.0 {
-        return sample_nearest_vec3(uv, map, Some(far_level_index));
+        sample_nearest_vec3(uv, map, Some(far_level_index))
+    } else {
+        let near = sample_nearest_vec3(uv, map, Some(near_level_index));
+        let far = sample_nearest_vec3(uv, map, Some(far_level_index));
+
+        Vec3::interpolate(near, far, alpha)
     }
-
-    let near = sample_nearest_vec3(uv, map, Some(near_level_index));
-    let far = sample_nearest_vec3(uv, map, Some(far_level_index));
-
-    Vec3::interpolate(near, far, alpha)
 }
 
 fn get_texel_color_index<T: Default + Debug + Copy + PartialEq>(
