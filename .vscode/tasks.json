@@ -76,8 +76,7 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example basic-window",
       "command": "cargo",
@@ -268,8 +267,7 @@
         "$rustc"
       ],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example primitives",
       "command": "cargo",
@@ -413,8 +411,7 @@
       "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example directional-shadows",
       "command": "cargo",
