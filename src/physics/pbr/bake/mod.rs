@@ -110,7 +110,7 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
     let renderer_rc = RefCell::new(renderer);
 
     let cubemap_face_framebuffer = {
-        let mut framebuffer = Framebuffer::new(0, 0);
+        let mut framebuffer = Framebuffer::new(8, 8);
 
         framebuffer.complete(0.3, 100.0);
 

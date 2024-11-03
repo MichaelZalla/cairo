@@ -290,6 +290,14 @@ impl Vec3 {
                 z: (-self.z * exposure).exp(),
             }
     }
+
+    pub fn max(&self, min: f32) -> Self {
+        Self {
+            x: self.x.max(min),
+            y: self.y.max(min),
+            z: self.z.max(min),
+        }
+    }
 }
 
 pub static MIN: Vec3 = Vec3 {

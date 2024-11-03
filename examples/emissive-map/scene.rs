@@ -1,7 +1,9 @@
+use core::f32;
 use std::{f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::context::ApplicationRenderingContext,
+    color::{self, Color},
     entity::Entity,
     material::Material,
     matrix::Mat4,
@@ -15,14 +17,20 @@ use cairo::{
         context::utils::make_empty_scene,
         environment::Environment,
         graph::SceneGraph,
-        light::{ambient_light::AmbientLight, directional_light::DirectionalLight},
+        light::{
+            ambient_light::AmbientLight, attenuation::LIGHT_ATTENUATION_RANGE_20_UNITS,
+            directional_light::DirectionalLight, point_light::PointLight,
+        },
         node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
         resources::SceneResources,
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat, TextureMapWrapping},
-    transform::quaternion::Quaternion,
-    vec::vec3::{self, Vec3},
+    transform::{quaternion::Quaternion, Transform3D},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -33,6 +41,7 @@ pub fn make_scene(
     environment_arena: &mut Arena<Environment>,
     ambient_light_arena: &mut Arena<AmbientLight>,
     directional_light_arena: &mut Arena<DirectionalLight>,
+    point_light_arena: &mut Arena<PointLight>,
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
@@ -87,6 +96,17 @@ pub fn make_scene(
 
                     Ok(())
                 }
+                SceneNodeType::Camera => {
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = camera_arena.get_mut(handle) {
+                            let camera = &mut entry.item;
+
+                            camera.movement_speed = 10.0;
+                        }
+                    }
+
+                    Ok(())
+                }
                 _ => Ok(()),
             }
         },
@@ -120,9 +140,7 @@ pub fn make_scene(
     };
 
     let mut plane_entity_node = {
-        let mut mesh = plane::generate(80.0, 80.0, 8, 8);
-
-        mesh.material = Some(checkerboard_material_handle);
+        let mesh = plane::generate(80.0, 80.0, 8, 8);
 
         let mesh_handle = mesh_arena.insert(mesh);
 
@@ -130,71 +148,89 @@ pub fn make_scene(
 
         let entity_handle = entity_arena.insert(entity);
 
-        let mut node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(entity_handle),
-        );
+        let transform = Transform3D::default();
 
-        node.get_transform_mut().set_translation(Vec3 {
-            z: 3.0,
-            y: -3.0,
-            ..Default::default()
-        });
-
-        node
+        SceneNode::new(SceneNodeType::Entity, transform, Some(entity_handle))
     };
 
-    // Add a container (cube) to our scene.
+    // Add some emissive cubes to our scene.
 
-    let emissive_material_handle = {
-        let emissive_material = {
-            let mut material = Material::new("emissive".to_string());
+    let cube_mesh = cube::generate(2.0, 2.0, 2.0);
 
-            material.albedo_map = Some(texture_u8_arena.insert(TextureMap::new(
-                "./examples/post-effects/assets/lava.png",
-                TextureMapStorageFormat::RGB24,
-            )));
+    let cube_mesh_handle = mesh_arena.insert(cube_mesh);
 
-            material.emissive_color_map = Some(texture_u8_arena.insert(TextureMap::new(
-                "./examples/post-effects/assets/lava_emissive.png",
-                TextureMapStorageFormat::Index8(0),
-            )));
+    static CUBE_COLORS: [&Color; 4] = [&color::RED, &color::GREEN, &color::BLUE, &color::WHITE];
 
-            material
-                .load_all_maps(texture_u8_arena, rendering_context)
-                .unwrap();
+    for (color_index, color) in CUBE_COLORS.iter().enumerate() {
+        let transform = {
+            static ROTATION_STEP: f32 = f32::consts::TAU / CUBE_COLORS.len() as f32;
 
-            material
+            let theta = color_index as f32 * ROTATION_STEP;
+
+            let rotate_y = Quaternion::new(vec3::UP, theta);
+
+            let mut position = Vec4::new(
+                Vec3 {
+                    x: 8.0,
+                    y: 4.0,
+                    z: 0.0,
+                },
+                1.0,
+            );
+
+            position *= *rotate_y.mat();
+
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(position.to_vec3());
+
+            transform
         };
 
-        material_arena.insert(emissive_material)
-    };
+        let albedo = color.to_vec3() / 255.0;
 
-    let cube_entity_node = {
-        let mesh = cube::generate(2.0, 2.0, 2.0);
+        let point_light_node = {
+            let mut point_light = PointLight::new();
 
-        let mesh_handle = mesh_arena.insert(mesh);
+            point_light.intensities = albedo * 4.0;
 
-        let entity = Entity::new(mesh_handle, Some(emissive_material_handle));
+            point_light.set_attenuation(LIGHT_ATTENUATION_RANGE_20_UNITS);
 
-        let entity_handle = entity_arena.insert(entity);
+            let point_light_handle = point_light_arena.insert(point_light);
 
-        let mut node = SceneNode::new(
-            SceneNodeType::Entity,
-            Default::default(),
-            Some(entity_handle),
-        );
+            SceneNode::new(
+                SceneNodeType::PointLight,
+                transform,
+                Some(point_light_handle),
+            )
+        };
 
-        node.get_transform_mut().set_translation(Vec3 {
-            y: 3.0,
-            ..Default::default()
-        });
+        plane_entity_node.add_child(point_light_node)?;
 
-        node
-    };
+        let emissive_material_handle = {
+            let emissive_material = {
+                let mut material = Material::new(format!("emissive_material_{}", color_index));
 
-    plane_entity_node.add_child(cube_entity_node)?;
+                material.albedo = albedo;
+
+                material.emissive_color = albedo * 4.0;
+
+                material
+            };
+
+            material_arena.insert(emissive_material)
+        };
+
+        let cube_entity_node = {
+            let entity = Entity::new(cube_mesh_handle, Some(emissive_material_handle));
+
+            let entity_handle = entity_arena.insert(entity);
+
+            SceneNode::new(SceneNodeType::Entity, transform, Some(entity_handle))
+        };
+
+        plane_entity_node.add_child(cube_entity_node)?;
+    }
 
     scene.root.add_child(plane_entity_node)?;
 

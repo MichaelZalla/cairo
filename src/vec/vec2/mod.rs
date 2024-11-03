@@ -114,3 +114,13 @@ impl ops::Div<f32> for Vec2 {
         }
     }
 }
+
+impl Vec2 {
+    pub fn offset(&self, x: f32, y: f32) -> Self {
+        Self {
+            x: self.x + x,
+            y: self.y + y,
+            z: self.z,
+        }
+    }
+}

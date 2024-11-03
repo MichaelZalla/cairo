@@ -395,6 +395,12 @@ where
         + Div<Output = T>
         + Mul<f32, Output = T>,
 {
+    pub fn copy_lerp(&mut self, rhs: &[T], alpha: f32) {
+        for (lhs, rhs) in std::iter::zip(&mut self.data, rhs) {
+            *lhs = lerp(*lhs, *rhs, alpha);
+        }
+    }
+
     pub fn blur(&self, dest: &mut Buffer2D<T>, weights: &[f32; 5], horizontal: bool) {
         let weights_0 = weights[0];
 

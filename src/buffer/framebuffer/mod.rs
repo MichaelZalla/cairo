@@ -2,6 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     software_renderer::zbuffer::{self, ZBuffer},
+    texture::map::{TextureMap, TextureMapWrapping},
     vec::vec3::Vec3,
 };
 
@@ -13,6 +14,7 @@ pub enum FramebufferAttachmentKind {
     Color,
     ForwardLdr,
     ForwardOrDeferredHdr,
+    Bloom,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -31,6 +33,7 @@ pub struct FramebufferAttachments {
     pub color: Option<Rc<RefCell<Buffer2D>>>,
     pub forward_ldr: Option<Rc<RefCell<Buffer2D>>>,
     pub forward_or_deferred_hdr: Option<Rc<RefCell<Buffer2D<Vec3>>>>,
+    pub bloom: Option<Rc<RefCell<TextureMap<Vec3>>>>,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -74,6 +77,14 @@ impl Framebuffer {
 
         self.attachments.forward_or_deferred_hdr =
             Some(Rc::new(RefCell::new(forward_or_deferred_hdr_buffer)));
+
+        let bloom_buffer = Buffer2D::<Vec3>::new(width, height, None);
+
+        let mut bloom_texture_map = TextureMap::from_buffer(width, height, bloom_buffer);
+
+        bloom_texture_map.sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
+
+        self.attachments.bloom = Some(Rc::new(RefCell::new(bloom_texture_map)));
     }
 
     pub fn validate(&self) -> Result<(), String> {
@@ -109,6 +120,14 @@ impl Framebuffer {
             let forward_or_deferred_hdr_buffer = forward_or_deferred_hdr_buffer_rc.borrow();
 
             forward_or_deferred_hdr_buffer.assert_dimensions(width, height);
+        }
+
+        if let Some(bloom_texture_map_rc) = self.attachments.bloom.as_ref() {
+            let bloom_texture_map = bloom_texture_map_rc.borrow();
+
+            bloom_texture_map.levels[0]
+                .0
+                .assert_dimensions(width, height);
         }
 
         Ok(())
@@ -199,6 +218,12 @@ impl Framebuffer {
             if should_clear {
                 buffer.clear(None);
             }
+        }
+
+        if let Some(lock) = self.attachments.bloom.as_mut() {
+            let mut map = lock.borrow_mut();
+
+            map.resize(width, height);
         }
     }
 }

@@ -4,9 +4,8 @@ use std::{cell::RefCell, rc::Rc};
 use profile::SoftwareRendererCycleCounter;
 
 use crate::{
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::framebuffer::Framebuffer,
     color::Color,
-    effects::gaussian_blur::GaussianBlurEffect,
     entity::Entity,
     material::Material,
     matrix::Mat4,
@@ -60,8 +59,6 @@ pub struct SoftwareRenderer {
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
     g_buffer: Option<GBuffer>,
-    bloom_buffer: Option<Buffer2D<Vec3>>,
-    bloom_effect: Option<GaussianBlurEffect>,
     pub shader_context: Rc<RefCell<ShaderContext>>,
     scene_resources: Rc<SceneResources>,
     vertex_shader: VertexShaderFn,
@@ -98,10 +95,6 @@ impl Renderer for SoftwareRenderer {
         {
             if let Some(g_buffer) = self.g_buffer.as_mut() {
                 g_buffer.clear();
-            }
-
-            if let Some(bloom_buffer) = self.bloom_buffer.as_mut() {
-                bloom_buffer.clear(None);
             }
         }
     }
@@ -302,8 +295,6 @@ impl SoftwareRenderer {
             framebuffer,
             viewport,
             g_buffer: None,
-            bloom_buffer: None,
-            bloom_effect: None,
             shader_context,
             scene_resources,
             vertex_shader,
@@ -346,23 +337,10 @@ impl SoftwareRenderer {
                             None => true,
                         };
 
-                        let should_reallocate_bloom_buffer = match &self.bloom_buffer {
-                            Some(bloom_buffer) => {
-                                bloom_buffer.width != width || bloom_buffer.height != height
-                            }
-                            None => true,
-                        };
-
                         if should_reallocate_g_buffer {
                             // Re-allocate a G-buffer.
 
                             self.g_buffer = Some(GBuffer::new(width, height));
-                        }
-
-                        if should_reallocate_bloom_buffer {
-                            // Re-allocate a bloom buffer.
-
-                            self.bloom_buffer = Some(Buffer2D::<Vec3>::new(width, height, None));
                         }
                     }
                     Err(err) => {
@@ -373,7 +351,6 @@ impl SoftwareRenderer {
             None => {
                 self.framebuffer = None;
                 self.g_buffer = None;
-                self.bloom_buffer = None;
             }
         }
     }

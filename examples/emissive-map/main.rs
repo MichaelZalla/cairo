@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
@@ -8,6 +8,7 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
+    color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     render::options::{RenderOptions, RenderPassFlag, RenderPassMask},
@@ -22,8 +23,8 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    transform::quaternion::Quaternion,
-    vec::vec3,
+    texture::map::TextureMap,
+    vec::vec3::Vec3,
 };
 
 use scene::make_scene;
@@ -71,6 +72,7 @@ fn main() -> Result<(), String> {
         let mut environment_arena = resources.environment.borrow_mut();
         let mut ambient_light_arena = resources.ambient_light.borrow_mut();
         let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
         let mut mesh_arena = resources.mesh.borrow_mut();
         let mut material_arena = resources.material.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
@@ -83,6 +85,7 @@ fn main() -> Result<(), String> {
             &mut environment_arena,
             &mut ambient_light_arena,
             &mut directional_light_arena,
+            &mut point_light_arena,
             &mut mesh_arena,
             &mut material_arena,
             &mut entity_arena,
@@ -129,14 +132,12 @@ fn main() -> Result<(), String> {
     let update_node = |_current_world_transform: &Mat4,
                        node: &mut SceneNode,
                        resources: &SceneResources,
-                       app: &App,
+                       _app: &App,
                        _mouse_state: &MouseState,
                        _keyboard_state: &KeyboardState,
                        _game_controller_state: &GameControllerState,
                        _shader_context: &mut ShaderContext|
      -> Result<bool, String> {
-        let uptime = app.timing_info.uptime_seconds;
-
         let (node_type, handle) = (node.get_type(), node.get_handle());
 
         match node_type {
@@ -158,12 +159,6 @@ fn main() -> Result<(), String> {
                                     }
                                 }
                             }
-
-                            let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
-
-                            let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
-
-                            node.get_transform_mut().set_rotation(q);
 
                             Ok(false)
                         }
@@ -234,15 +229,24 @@ fn main() -> Result<(), String> {
 
                 let framebuffer = framebuffer_rc.borrow();
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+                match (
+                    framebuffer.attachments.color.as_ref(),
+                    framebuffer.attachments.bloom.as_ref(),
+                ) {
+                    (Some(color_buffer_rc), Some(bloom_texture_map_rc)) => {
+                        let color_buffer = color_buffer_rc.borrow();
 
                         color_buffer.copy_to(canvas);
 
+                        if false {
+                            let bloom_texture_map = bloom_texture_map_rc.borrow();
+
+                            blit_bloom_mipmaps_to_canvas(&bloom_texture_map, canvas);
+                        }
+
                         Ok(())
                     }
-                    None => panic!(),
+                    _ => panic!(),
                 }
             }
             Err(e) => panic!("{}", e),
@@ -252,4 +256,35 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &render)?;
 
     Ok(())
+}
+
+fn blit_bloom_mipmaps_to_canvas(bloom_texture_map: &TextureMap<Vec3>, canvas: &mut [u8]) {
+    let width = bloom_texture_map.levels[0].0.width;
+
+    let (mut thumbnail_start_x, thumbnail_start_y) = (0, 0);
+
+    for level_index in 1..bloom_texture_map.levels.len() {
+        let mipmap = &bloom_texture_map.levels[level_index].0;
+
+        for x in 0..mipmap.width {
+            for y in 0..mipmap.height {
+                let canvas_index =
+                    (((thumbnail_start_y + y) * width + (thumbnail_start_x + x)) * 4) as usize;
+
+                let bloom_color_hdr = mipmap.get(x, y);
+
+                let mut bloom_color_tone_mapped_linear = bloom_color_hdr.tone_map_exposure(1.0);
+
+                bloom_color_tone_mapped_linear.linear_to_srgb();
+
+                let bloom_color_ldr = Color::from_vec3(bloom_color_tone_mapped_linear * 255.0);
+
+                canvas[canvas_index] = bloom_color_ldr.r as u8;
+                canvas[canvas_index + 1] = bloom_color_ldr.g as u8;
+                canvas[canvas_index + 2] = bloom_color_ldr.b as u8;
+            }
+        }
+
+        thumbnail_start_x += mipmap.width;
+    }
 }
