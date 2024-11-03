@@ -346,8 +346,10 @@ impl SceneGraph {
                                         point_light.update_shadow_map(resources, self)?;
                                     }
 
-                                    renderer
-                                        .render_point_light(&current_world_transform, point_light);
+                                    if options.draw_lights {
+                                        renderer
+                                            .render_point_light(&current_world_transform, point_light);
+                                    }
 
                                     Ok(())
                                 }
