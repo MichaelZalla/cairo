@@ -37,7 +37,7 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
             z: world_pos.z,
         };
 
-        // Compute a tangent-space to world-space transform.
+        // Computes a tangent-to-world-space transform.
 
         let normal = (Vec4::new(v.normal, 0.0) * context.world_transform).as_normal();
         let tangent = (Vec4::new(v.tangent, 0.0) * context.world_transform).as_normal();
@@ -49,7 +49,7 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
 
         let (t, b, n) = (tangent, bitangent, normal);
 
-        // @NOTE(mzalla) Reversed Z-axis for our renderer's coordinate system.
+        // Note: Reversed Z-axis for our renderer's coordinate system.
 
         let tbn = Mat4::tbn(t.to_vec3(), b.to_vec3(), n.to_vec3());
 
@@ -95,7 +95,7 @@ pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
                 // Exposure tone mapping
 
-                return Color::from_vec3(sample.tone_map_exposure(100.0));
+                return Color::from_vec3(sample.tone_map_exposure(HDR_EXPOSURE));
             }
         }
 
