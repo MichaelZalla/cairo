@@ -23,7 +23,7 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    texture::map::TextureMap,
+    texture::map::{TextureMap, TextureMapStorageFormat},
     vec::vec3::Vec3,
 };
 
@@ -106,11 +106,27 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let flags: RenderPassMask = Default::default();
+    let render_options = {
+        let flags: RenderPassMask = Default::default();
 
-    let render_options = RenderOptions {
-        render_pass_flags: flags | RenderPassFlag::Bloom,
-        ..Default::default()
+        let bloom_dirt_mask_handle = {
+            let mut texture_u8_arena = scene_context.resources.texture_u8.borrow_mut();
+
+            let mut map = TextureMap::new(
+                "./examples/bloom/assets/dirt_mask.png",
+                TextureMapStorageFormat::RGB24,
+            );
+
+            map.load(rendering_context)?;
+
+            texture_u8_arena.insert(map)
+        };
+
+        RenderOptions {
+            render_pass_flags: flags | RenderPassFlag::Bloom,
+            bloom_dirt_mask_handle: Some(bloom_dirt_mask_handle),
+            ..Default::default()
+        }
     };
 
     let mut renderer = SoftwareRenderer::new(

@@ -116,7 +116,11 @@ impl Renderer for SoftwareRenderer {
                 .render_pass_flags
                 .contains(RenderPassFlag::Bloom)
             {
-                self.do_bloom_pass();
+                if let Some(handle) = self.options.bloom_dirt_mask_handle {
+                    self.do_bloom_pass(Some(handle));
+                } else {
+                    self.do_bloom_pass(None);
+                }
             }
         }
 

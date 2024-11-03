@@ -7,6 +7,7 @@ use sdl2::keyboard::Keycode;
 use crate::{
     device::keyboard::KeyboardState,
     render::culling::{FaceCullingReject, FaceCullingWindingOrder},
+    resource::handle::Handle,
     vec::vec3::{self, Vec3},
 };
 
@@ -35,6 +36,7 @@ impl Default for RenderPassMask {
 #[derive(Debug, Copy, Clone)]
 pub struct RenderOptions {
     pub render_pass_flags: RenderPassMask,
+    pub bloom_dirt_mask_handle: Option<Handle>,
     pub rasterizer_options: RasterizerOptions,
     // User debug
     pub draw_wireframe: bool,
@@ -47,6 +49,7 @@ impl Default for RenderOptions {
     fn default() -> Self {
         Self {
             render_pass_flags: Default::default(),
+            bloom_dirt_mask_handle: None,
             rasterizer_options: Default::default(),
             // User debug
             draw_wireframe: false,

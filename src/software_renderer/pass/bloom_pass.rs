@@ -1,9 +1,11 @@
 use crate::{
+    animation::lerp,
     buffer::Buffer2D,
     color,
+    resource::handle::Handle,
     texture::{
         map::{TextureBuffer, TextureMap},
-        sample::sample_bilinear_vec3,
+        sample::{sample_bilinear_u8, sample_bilinear_vec3},
     },
     vec::{vec2::Vec2, vec3::Vec3},
 };
@@ -11,7 +13,7 @@ use crate::{
 use super::SoftwareRenderer;
 
 impl SoftwareRenderer {
-    pub(in crate::software_renderer) fn do_bloom_pass(&mut self) {
+    pub(in crate::software_renderer) fn do_bloom_pass(&mut self, dirt_mask_handle: Option<Handle>) {
         match &self.framebuffer {
             Some(framebuffer_rc) => {
                 let framebuffer = framebuffer_rc.borrow_mut();
@@ -40,7 +42,42 @@ impl SoftwareRenderer {
 
                     let bloom_buffer = &bloom_texture_map.levels[0].0;
 
-                    deferred_buffer.copy_lerp(bloom_buffer.data.as_slice(), BLOOM_STRENGTH);
+                    if let Some(handle) = dirt_mask_handle.as_ref() {
+                        let texture_u8_arena = self.scene_resources.texture_u8.borrow();
+
+                        if let Ok(entry) = texture_u8_arena.get(handle) {
+                            let dirt_mask = &entry.item;
+
+                            for x in 0..bloom_buffer.width {
+                                for y in 0..bloom_buffer.height {
+                                    let hdr = *deferred_buffer.get(x, y);
+
+                                    let bloom = *bloom_buffer.get(x, y);
+
+                                    let dirt = {
+                                        let uv = Vec2 {
+                                            x: bloom_buffer.texel_size_over_2.x
+                                                + x as f32 * bloom_buffer.texel_size.x,
+                                            y: 1.0
+                                                - (bloom_buffer.texel_size_over_2.y
+                                                    + y as f32 * bloom_buffer.texel_size.y),
+                                            z: 0.0,
+                                        };
+
+                                        let (r, _g, _b) = sample_bilinear_u8(uv, dirt_mask, None);
+
+                                        r as f32 / 255.0 * DIRT_MASK_INTENSITY
+                                    };
+
+                                    let blended = lerp(hdr, bloom + bloom * dirt, BLOOM_STRENGTH);
+
+                                    deferred_buffer.set(x, y, blended);
+                                }
+                            }
+                        }
+                    } else {
+                        deferred_buffer.copy_lerp(bloom_buffer.data.as_slice(), BLOOM_STRENGTH);
+                    }
                 }
             }
             None => panic!(),
