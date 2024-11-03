@@ -2,8 +2,7 @@ use std::fmt::Debug;
 use std::ops::Rem;
 
 use crate::{
-    texture::map::{TextureMapStorageFormat, TextureMapWrapping},
-    vec::{vec2::Vec2, vec3::Vec3},
+    animation::lerp, texture::map::{TextureMapStorageFormat, TextureMapWrapping}, vec::{vec2::Vec2, vec3::Vec3}
 };
 
 use super::map::{TextureMap, TextureMapSamplingOptions};
@@ -252,9 +251,9 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
 
             let alpha = fractional_texel.y - top_left.1;
 
-            r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
-            g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
-            b = sample_a.2 as f32 + (sample_b.2 as f32 - sample_a.2 as f32) * alpha;
+            r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
+            g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
+            b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
         }
 
         // Case: Two neighbors (right column)
@@ -266,9 +265,9 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
 
             let alpha = fractional_texel.y - top_right.1;
 
-            r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
-            g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
-            b = sample_a.2 as f32 + (sample_b.2 as f32 - sample_a.2 as f32) * alpha;
+            r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
+            g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
+            b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
         }
 
         // Case: Two neighbors (top row)
@@ -280,9 +279,9 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
 
             let alpha = fractional_texel.x - top_left.0;
 
-            r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
-            g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
-            b = sample_a.2 as f32 + (sample_b.2 as f32 - sample_a.2 as f32) * alpha;
+            r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
+            g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
+            b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
         }
 
         // Case: Two neighbors (bottom row)
@@ -294,34 +293,35 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
 
             let alpha = fractional_texel.x - bottom_left.0;
 
-            r = sample_a.0 as f32 + (sample_b.0 as f32 - sample_a.0 as f32) * alpha;
-            g = sample_a.1 as f32 + (sample_b.1 as f32 - sample_a.1 as f32) * alpha;
-            b = sample_a.2 as f32 + (sample_b.2 as f32 - sample_a.2 as f32) * alpha;
+            r = lerp(sample_a.0 as f32, sample_b.0 as f32, alpha);
+            g = lerp(sample_a.1 as f32, sample_b.1 as f32, alpha);
+            b = lerp(sample_a.2 as f32, sample_b.2 as f32, alpha);
         }
 
         // Case: 4 neighbors
         (Some(top_left), Some(top_right), Some(bottom_left), Some(bottom_right)) => {
             let alpha_x = fractional_texel.x - top_left.0;
-            let alpha_y = fractional_texel.y - top_left.1;
-
+            
             // 1. Interpolate between top_left and top_right (based on uv.x).
             let sample_a_1 = sample_from_texel_u8(top_left, map, level_index);
             let sample_b_1 = sample_from_texel_u8(top_right, map, level_index);
 
-            let r_1 = sample_a_1.0 as f32 + (sample_b_1.0 as f32 - sample_a_1.0 as f32) * alpha_x;
-            let g_1 = sample_a_1.1 as f32 + (sample_b_1.1 as f32 - sample_a_1.1 as f32) * alpha_x;
-            let b_1 = sample_a_1.2 as f32 + (sample_b_1.2 as f32 - sample_a_1.2 as f32) * alpha_x;
+            let r_1 = lerp(sample_a_1.0 as f32, sample_b_1.0 as f32, alpha_x);
+            let g_1 = lerp(sample_a_1.1 as f32, sample_b_1.1 as f32, alpha_x);
+            let b_1 = lerp(sample_a_1.2 as f32, sample_b_1.2 as f32, alpha_x);
 
             // 2. Interpolate between bottom_left and bottom_right (based on uv.x).
 
             let sample_a_2 = sample_from_texel_u8(bottom_left, map, level_index);
             let sample_b_2 = sample_from_texel_u8(bottom_right, map, level_index);
 
-            let r_2 = sample_a_2.0 as f32 + (sample_b_2.0 as f32 - sample_a_2.0 as f32) * alpha_x;
-            let g_2 = sample_a_2.1 as f32 + (sample_b_2.1 as f32 - sample_a_2.1 as f32) * alpha_x;
-            let b_2 = sample_a_2.2 as f32 + (sample_b_2.2 as f32 - sample_a_2.2 as f32) * alpha_x;
+            let r_2 = lerp(sample_a_2.0 as f32, sample_b_2.0 as f32, alpha_x);
+            let g_2 = lerp(sample_a_2.1 as f32, sample_b_2.1 as f32, alpha_x);
+            let b_2 = lerp(sample_a_2.2 as f32, sample_b_2.2 as f32, alpha_x);
 
             // 3. Interpolate between 2 interpolated samples (based on uv.y).
+
+            let alpha_y = fractional_texel.y - top_left.1;
 
             r = r_1 + (r_2 - r_1) * alpha_y;
             g = g_1 + (g_2 - g_1) * alpha_y;
@@ -369,7 +369,7 @@ pub fn sample_trilinear_u8(
         z: far_color.2 as f32,
     };
 
-    let color = Vec3::interpolate(near_color_vec3, far_color_vec3, alpha);
+    let color = lerp(near_color_vec3, far_color_vec3, alpha);
 
     (color.x as u8, color.y as u8, color.z as u8)
 }
@@ -391,7 +391,7 @@ pub fn sample_trilinear_vec3(
         let near = sample_nearest_vec3(uv, map, Some(near_level_index));
         let far = sample_nearest_vec3(uv, map, Some(far_level_index));
 
-        Vec3::interpolate(near, far, alpha)
+        lerp(near, far, alpha)
     }
 }
 

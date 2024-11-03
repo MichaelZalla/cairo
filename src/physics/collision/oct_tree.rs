@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::vec::vec3::Vec3;
+use crate::{animation::lerp, vec::vec3::Vec3};
 
 use super::aabb::AABB;
 
@@ -50,7 +50,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
     fn subdivide(&mut self) {
         let child_half_extent = (self.bounds.right - self.bounds.left) / 2.0;
 
-        let left_top_near_center = Vec3::interpolate(
+        let left_top_near_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.left,
@@ -60,7 +60,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let right_top_near_center = Vec3::interpolate(
+        let right_top_near_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.right,
@@ -70,7 +70,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let left_bottom_near_center = Vec3::interpolate(
+        let left_bottom_near_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.left,
@@ -80,7 +80,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let right_bottom_near_center = Vec3::interpolate(
+        let right_bottom_near_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.right,
@@ -90,7 +90,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let left_top_far_center = Vec3::interpolate(
+        let left_top_far_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.left,
@@ -100,7 +100,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let right_top_far_center = Vec3::interpolate(
+        let right_top_far_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.right,
@@ -110,7 +110,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let left_bottom_far_center = Vec3::interpolate(
+        let left_bottom_far_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.left,
@@ -120,7 +120,7 @@ impl<T: Copy + Display> OctTreeNode<T> {
             0.5,
         );
 
-        let right_bottom_far_center = Vec3::interpolate(
+        let right_bottom_far_center = lerp(
             self.bounds.center,
             Vec3 {
                 x: self.bounds.right,

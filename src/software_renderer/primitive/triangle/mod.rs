@@ -1,4 +1,5 @@
 use crate::{
+    animation::lerp,
     color::{self, Color},
     mesh::Face,
     render::{
@@ -286,7 +287,7 @@ impl SoftwareRenderer {
                 - tri[0].position_projection_space.y)
                 / (tri[2].position_projection_space.y - tri[0].position_projection_space.y);
 
-            let split_vertex = DefaultVertexOut::interpolate(tri[0], tri[2], alpha_split);
+            let split_vertex = lerp(tri[0], tri[2], alpha_split);
 
             if tri[1].position_projection_space.x < split_vertex.position_projection_space.x {
                 // Major right

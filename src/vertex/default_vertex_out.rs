@@ -1,7 +1,6 @@
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 
 use crate::{
-    animation::lerp,
     matrix::Mat4,
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
@@ -104,10 +103,6 @@ pub struct DefaultVertexOut {
 impl DefaultVertexOut {
     pub fn new() -> Self {
         Default::default()
-    }
-
-    pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        lerp(start, end, alpha)
     }
 }
 

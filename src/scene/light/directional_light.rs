@@ -7,6 +7,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    animation::lerp,
     buffer::Buffer2D,
     matrix::Mat4,
     render::culling::FaceCullingReject,
@@ -255,16 +256,16 @@ impl DirectionalLight {
 
                 let subfrustum = Frustum {
                     near: [
-                        Vec3::interpolate(frustum.near[0], frustum.far[0], near_alpha),
-                        Vec3::interpolate(frustum.near[1], frustum.far[1], near_alpha),
-                        Vec3::interpolate(frustum.near[2], frustum.far[2], near_alpha),
-                        Vec3::interpolate(frustum.near[3], frustum.far[3], near_alpha),
+                        lerp(frustum.near[0], frustum.far[0], near_alpha),
+                        lerp(frustum.near[1], frustum.far[1], near_alpha),
+                        lerp(frustum.near[2], frustum.far[2], near_alpha),
+                        lerp(frustum.near[3], frustum.far[3], near_alpha),
                     ],
                     far: [
-                        Vec3::interpolate(frustum.near[0], frustum.far[0], far_alpha),
-                        Vec3::interpolate(frustum.near[1], frustum.far[1], far_alpha),
-                        Vec3::interpolate(frustum.near[2], frustum.far[2], far_alpha),
-                        Vec3::interpolate(frustum.near[3], frustum.far[3], far_alpha),
+                        lerp(frustum.near[0], frustum.far[0], far_alpha),
+                        lerp(frustum.near[1], frustum.far[1], far_alpha),
+                        lerp(frustum.near[2], frustum.far[2], far_alpha),
+                        lerp(frustum.near[3], frustum.far[3], far_alpha),
                     ],
                     forward,
                 };

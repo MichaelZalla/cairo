@@ -2,8 +2,6 @@ use std::{cmp, fmt, ops, str::FromStr};
 
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 
-use crate::animation::lerp;
-
 #[derive(Debug, Copy, Clone, Default, Serialize_tuple, Deserialize_tuple)]
 pub struct Vec3 {
     pub x: f32,
@@ -270,10 +268,6 @@ impl Vec3 {
         let u = w * 2.0;
 
         u - absorbed_ray
-    }
-
-    pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        lerp(start, end, alpha)
     }
 
     pub fn srgb_to_linear(&mut self) {

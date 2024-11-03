@@ -1,9 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::{
-    animation::lerp,
-    vec::{vec2::Vec2, vec3::Vec3},
-};
+use crate::vec::{vec2::Vec2, vec3::Vec3};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct DefaultVertexIn {
@@ -13,16 +10,6 @@ pub struct DefaultVertexIn {
     pub bitangent: Vec3,
     pub uv: Vec2,
     pub color: Vec3,
-}
-
-impl DefaultVertexIn {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        lerp(start, end, alpha)
-    }
 }
 
 impl Add<DefaultVertexIn> for DefaultVertexIn {

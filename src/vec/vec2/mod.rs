@@ -4,8 +4,6 @@ use std::ops;
 use serde_tuple::Deserialize_tuple;
 use serde_tuple::Serialize_tuple;
 
-use crate::animation::lerp;
-
 #[derive(Debug, Copy, Clone, Default, PartialEq, Serialize_tuple, Deserialize_tuple)]
 pub struct Vec2 {
     pub x: f32,
@@ -114,11 +112,5 @@ impl ops::Div<f32> for Vec2 {
             y: self.y / rhs,
             z: self.z / rhs,
         }
-    }
-}
-
-impl Vec2 {
-    pub fn interpolate(start: Self, end: Self, alpha: f32) -> Self {
-        lerp(start, end, alpha)
     }
 }
