@@ -26,7 +26,6 @@ pub(crate) struct Settings {
     pub shader_options: RenderShaderOptions,
     pub depth_test_method: DepthTestMethod,
     pub fragment_shader: usize,
-    pub tone_mapping: usize,
     pub effects: ActiveEffects,
 }
 
@@ -43,7 +42,6 @@ impl Default for Settings {
             shader_options: Default::default(),
             depth_test_method: Default::default(),
             fragment_shader: Default::default(),
-            tone_mapping: 1,
             effects: Default::default(),
         }
     }

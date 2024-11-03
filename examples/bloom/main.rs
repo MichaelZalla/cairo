@@ -11,7 +11,9 @@ use cairo::{
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::options::{RenderOptions, RenderPassFlag, RenderPassMask},
+    render::options::{
+        tone_mapping::ToneMappingOperator, RenderOptions, RenderPassFlag, RenderPassMask,
+    },
     scene::{
         context::SceneContext,
         node::{SceneNode, SceneNodeType},
@@ -289,7 +291,11 @@ fn blit_bloom_mipmaps_to_canvas(bloom_texture_map: &TextureMap<Vec3>, canvas: &m
 
                 let bloom_color_hdr = mipmap.get(x, y);
 
-                let mut bloom_color_tone_mapped_linear = bloom_color_hdr.tone_map_exposure(1.0);
+                static TONE_MAPPING_OPERATOR: ToneMappingOperator =
+                    ToneMappingOperator::Exposure(1.0);
+
+                let mut bloom_color_tone_mapped_linear =
+                    TONE_MAPPING_OPERATOR.map(*bloom_color_hdr);
 
                 bloom_color_tone_mapped_linear.linear_to_srgb();
 

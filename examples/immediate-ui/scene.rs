@@ -13,10 +13,9 @@ use cairo::{
             point_light::PointLight, spot_light::SpotLight,
         },
         node::{SceneNode, SceneNodeType},
+        skybox::Skybox,
     },
     shader::context::ShaderContext,
-    transform::Transform3D,
-    vec::vec3::Vec3,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -29,8 +28,9 @@ pub fn make_scene(
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
-    point_light_arena: &mut Arena<PointLight>,
-    spot_light_arena: &mut Arena<SpotLight>,
+    _point_light_arena: &mut Arena<PointLight>,
+    _spot_light_arena: &mut Arena<SpotLight>,
+    skybox_arena: &mut Arena<Skybox>,
 ) -> Result<(SceneGraph, ShaderContext), String> {
     let (mut scene, shader_context) = make_cube_scene(
         camera_arena,
@@ -43,51 +43,28 @@ pub fn make_scene(
         entity_arena,
     )?;
 
-    // Add a point light to our scene.
+    // Add a skybox to our scene.
 
-    let point_light_node = {
-        let mut point_light = PointLight::new();
+    for node in scene.root.children_mut().as_mut().unwrap() {
+        if node.is_type(SceneNodeType::Environment) {
+            let skybox_node = {
+                let skybox = Skybox {
+                    is_hdr: true,
+                    ..Default::default()
+                };
 
-        point_light.intensities = Vec3::ones() * 0.7;
+                let skybox_handle = skybox_arena.insert(skybox);
 
-        let point_light_handle = point_light_arena.insert(point_light);
+                SceneNode::new(
+                    SceneNodeType::Skybox,
+                    Default::default(),
+                    Some(skybox_handle),
+                )
+            };
 
-        let mut transform = Transform3D::default();
-
-        transform.set_translation(Vec3 {
-            x: 0.0,
-            y: 6.0,
-            z: 0.0,
-        });
-
-        SceneNode::new(
-            SceneNodeType::PointLight,
-            transform,
-            Some(point_light_handle),
-        )
-    };
-
-    scene.root.add_child(point_light_node)?;
-
-    // Add a spot light to our scene.
-
-    let spot_light_node = {
-        let spot_light = SpotLight::new();
-
-        let spot_light_handle = spot_light_arena.insert(spot_light);
-
-        let mut transform = Transform3D::default();
-
-        transform.set_translation(Vec3 {
-            x: 0.0,
-            y: 3.0,
-            z: -3.0,
-        });
-
-        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
-    };
-
-    scene.root.add_child(spot_light_node)?;
+            node.add_child(skybox_node)?;
+        }
+    }
 
     Ok((scene, shader_context))
 }

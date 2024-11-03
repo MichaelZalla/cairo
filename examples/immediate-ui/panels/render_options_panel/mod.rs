@@ -163,18 +163,32 @@ impl PanelInstance for RenderOptionsPanel {
                     "Tone mapping".to_string(),
                 ))?;
 
-                let tone_mapping_options: Vec<RadioOption> =
-                    ["Reinhard", "Exposure", "ACES Filmic", "AGX"]
-                        .iter()
-                        .map(|label| RadioOption {
-                            label: label.to_string(),
-                        })
-                        .collect();
+                let tone_mapping_options: Vec<RadioOption> = [
+                    "Reinhard",
+                    "Extended Reinhard",
+                    "Extended Reinhard (Lum)",
+                    "Reinhard-Jodie",
+                    "Hable Filmic",
+                    "ACES",
+                    "ACES (Approximate)",
+                    "Exposure",
+                ]
+                .iter()
+                .map(|label| RadioOption {
+                    label: label.to_string(),
+                })
+                .collect();
+
+                let selected_tone_mapping_index: usize = current_settings
+                    .render_options
+                    .tone_mapping
+                    .try_into()
+                    .unwrap();
 
                 if let Some(new_selected_tone_mapping_index) = radio_group(
                     format!("{}.render.tone_mapping.radio_group", self.id).to_string(),
                     &tone_mapping_options,
-                    current_settings.tone_mapping,
+                    selected_tone_mapping_index,
                     tree,
                 )? {
                     let cmd_str = format!(

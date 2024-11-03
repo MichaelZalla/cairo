@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, env, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, env, f32::consts::PI, path::Path, rc::Rc};
 
 use sdl2::{
     keyboard::{Keycode, Mod},
@@ -188,6 +188,7 @@ fn main() -> Result<(), String> {
             let mut entity_arena = resources.entity.borrow_mut();
             let mut point_light_arena = resources.point_light.borrow_mut();
             let mut spot_light_arena = resources.spot_light.borrow_mut();
+            let mut skybox_arena = resources.skybox.borrow_mut();
 
             make_scene(
                 &mut camera_arena,
@@ -200,15 +201,38 @@ fn main() -> Result<(), String> {
                 &mut entity_arena,
                 &mut point_light_arena,
                 &mut spot_light_arena,
+                &mut skybox_arena,
             )
         },
     )?;
 
-    SCENE_CONTEXT.with(|scene_context| {
+    SCENE_CONTEXT.with(|scene_context| -> Result<(), String> {
+        if let Some(skybox_handle) = scene
+            .root
+            .find(|node| *node.get_type() == SceneNodeType::Skybox)?
+        {
+            let resources = &scene_context.resources;
+
+            let mut skybox_arena = resources.skybox.borrow_mut();
+
+            if let Ok(entry) = skybox_arena.get_mut(&skybox_handle) {
+                let skybox = &mut entry.item;
+
+                let mut texture_vec2_arena = resources.texture_vec2.borrow_mut();
+                let mut cubemap_vec3_arena = resources.cubemap_vec3.borrow_mut();
+
+                let hdr_path = Path::new("./examples/ibl/assets/thatch_chapel_4k.hdr");
+
+                skybox.load_hdr(&mut texture_vec2_arena, &mut cubemap_vec3_arena, hdr_path);
+            }
+        }
+
         let mut scenes = scene_context.scenes.borrow_mut();
 
         scenes.push(scene);
-    });
+
+        Ok(())
+    })?;
 
     // Initializes a shader context.
 

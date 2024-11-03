@@ -615,24 +615,14 @@ impl SoftwareRenderer {
         }
     }
 
-    fn get_tone_mapped_color_from_hdr(&self, hdr_color: Vec3) -> Color {
-        let mut color_tone_mapped_vec3 = hdr_color;
+    fn get_tone_mapped_color_from_hdr(&self, color_hdr: Vec3) -> Color {
+        let mut tone_mapped = self.options.tone_mapping.map(color_hdr);
 
-        if self
-            .options
-            .render_pass_flags
-            .contains(RenderPassFlag::Lighting)
-        {
-            // Exposure tone mapping
+        // Gamma correct: Transforms linear space to sRGB space.
 
-            color_tone_mapped_vec3 = hdr_color.tone_map_exposure(1.0);
-        }
+        tone_mapped.linear_to_srgb();
 
-        // (Gamma) Transform linear space to sRGB space.
-
-        color_tone_mapped_vec3.linear_to_srgb();
-
-        Color::from_vec3(color_tone_mapped_vec3 * 255.0)
+        Color::from_vec3(tone_mapped * 255.0)
     }
 }
 

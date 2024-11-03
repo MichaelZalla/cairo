@@ -3,8 +3,9 @@
 use std::f32::consts::PI;
 
 use crate::{
-    color::{self, Color},
+    color::Color,
     matrix::Mat4,
+    render::options::tone_mapping::ToneMappingOperator,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
@@ -82,22 +83,22 @@ pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
             Vec2 { x: u, y: v, z: 0.0 }
         }
 
-        static HDR_EXPOSURE: f32 = 100.0;
+        static TONE_MAPPING_OPERATOR: ToneMappingOperator = ToneMappingOperator::Exposure(100.0);
 
-        if let Some(handle) = shader_context.active_hdr_map {
-            if let Ok(entry) = resources.texture_vec3.borrow().get(&handle) {
+        let handle = shader_context.active_hdr_map.unwrap();
+
+        match resources.texture_vec3.borrow().get(&handle) {
+            Ok(entry) => {
                 let map = &entry.item;
 
-                let uv: Vec2 =
-                    sample_spherical_to_cartesian(sample.position_world_space.as_normal());
+                let uv = sample_spherical_to_cartesian(sample.position_world_space.as_normal());
 
                 let sample = sample_nearest_vec3(uv, map, None) / 255.0;
 
                 // Exposure tone mapping
 
-                return Color::from_vec3(sample.tone_map_exposure(HDR_EXPOSURE));
+                Color::from_vec3(TONE_MAPPING_OPERATOR.map(sample))
             }
+            Err(_) => panic!(),
         }
-
-        color::GREEN
     };

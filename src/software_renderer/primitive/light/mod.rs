@@ -14,16 +14,6 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-fn get_color_for_intensities(intensities: &Vec3) -> Color {
-    let mut c = *intensities;
-
-    c = c.tone_map_exposure(1.0);
-
-    c.linear_to_srgb();
-
-    Color::from_vec3(c * 255.0)
-}
-
 fn projection_to_ndc(position_projection_space: Vec4) -> Vec3 {
     let w_inverse = 1.0 / position_projection_space.w;
 
@@ -126,7 +116,7 @@ impl SoftwareRenderer {
             projection_to_ndc(view_projection_space)
         };
 
-        let border_color = get_color_for_intensities(intensities);
+        let border_color = self.get_tone_mapped_color_from_hdr(*intensities);
 
         let horizontal_radius_ndc = end_ndc_space.x - start_ndc_space.x;
 
@@ -161,7 +151,7 @@ impl SoftwareRenderer {
 
         self.render_light_circle(&position, 1.0, &light.intensities);
 
-        let color = get_color_for_intensities(&light.intensities);
+        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
         let (start, end) = (position, position + light.get_direction().to_vec3() * 10.0);
 
@@ -225,9 +215,7 @@ impl SoftwareRenderer {
 
         // Exposure tone mapping
 
-        let mut color = light.intensities.tone_map_exposure(1.0);
-
-        color.linear_to_srgb();
+        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
         let frustum = Frustum {
             forward,
@@ -235,6 +223,6 @@ impl SoftwareRenderer {
             far: far_plane_points_world_space,
         };
 
-        self._render_frustum(&frustum, Some(Color::from_vec3(color * 255.0)));
+        self._render_frustum(&frustum, Some(color));
     }
 }

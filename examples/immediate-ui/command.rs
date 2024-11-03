@@ -10,7 +10,7 @@ use cairo::{
     mem::linked_list::LinkedList,
     render::{
         culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
-        options::RenderPassFlag,
+        options::{tone_mapping::TONE_MAPPING_OPERATORS, RenderPassFlag},
     },
     resource::handle::Handle,
     scene::camera::{CameraProjectionKind, CAMERA_PROJECTION_KINDS},
@@ -308,9 +308,13 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         Ok(())
                     }
                     "render.tone_mapping" => {
-                        prev_value_str.replace(current_settings.tone_mapping.to_string());
+                        prev_value_str
+                            .replace(current_settings.render_options.tone_mapping.to_string());
 
-                        current_settings.tone_mapping = parse_or_map_err::<usize>(value_str)?;
+                        let new_index = parse_or_map_err::<usize>(value_str)?;
+
+                        current_settings.render_options.tone_mapping =
+                            TONE_MAPPING_OPERATORS[new_index];
 
                         Ok(())
                     }

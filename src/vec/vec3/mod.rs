@@ -292,21 +292,42 @@ impl Vec3 {
         self.z = self.z.sqrt();
     }
 
-    pub fn tone_map_exposure(&self, exposure: f32) -> Self {
-        Self::ones()
-            - Self {
-                x: (-self.x * exposure).exp(),
-                y: (-self.y * exposure).exp(),
-                z: (-self.z * exposure).exp(),
-            }
+    pub fn luminance(&self) -> f32 {
+        // See: https://en.wikipedia.org/wiki/Rec._709
+
+        static LUMA_COEFFICIENTS: Vec3 = Vec3 {
+            x: 0.2126,
+            y: 0.7152,
+            z: 0.0722,
+        };
+
+        self.dot(LUMA_COEFFICIENTS)
     }
 
-    pub fn max(&self, min: f32) -> Self {
+    pub fn with_luminance(&self, luminance: f32) -> Self {
+        let (from, to) = (self.luminance(), luminance);
+
+        *self * to / from
+    }
+
+    pub fn min(&self, upper_limit: f32) -> Self {
         Self {
-            x: self.x.max(min),
-            y: self.y.max(min),
-            z: self.z.max(min),
+            x: self.x.min(upper_limit),
+            y: self.y.min(upper_limit),
+            z: self.z.min(upper_limit),
         }
+    }
+
+    pub fn max(&self, lower_limit: f32) -> Self {
+        Self {
+            x: self.x.max(lower_limit),
+            y: self.y.max(lower_limit),
+            z: self.z.max(lower_limit),
+        }
+    }
+
+    pub fn clamp(&self, min: f32, max: f32) -> Self {
+        self.max(min).min(max)
     }
 }
 

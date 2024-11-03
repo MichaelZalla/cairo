@@ -161,7 +161,7 @@ impl Mat4 {
         }
     }
 
-    pub fn new_from_elements(elements: [[f32; 4]; 4]) -> Self {
+    pub const fn new_from_elements(elements: [[f32; 4]; 4]) -> Self {
         Self { elements }
     }
 

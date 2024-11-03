@@ -6,15 +6,17 @@ use sdl2::keyboard::Keycode;
 
 use crate::{
     device::keyboard::KeyboardState,
-    render::culling::{FaceCullingReject, FaceCullingWindingOrder},
+    render::culling::FaceCullingReject,
     resource::handle::Handle,
     vec::vec3::{self, Vec3},
 };
 
 use rasterizer::RasterizerOptions;
+use tone_mapping::{ToneMappingOperator, TONE_MAPPING_OPERATORS};
 
 pub mod rasterizer;
 pub mod shader;
+pub mod tone_mapping;
 
 bitmask! {
     #[derive(Debug, Serialize, Deserialize)]
@@ -40,6 +42,7 @@ pub struct RenderOptions {
     pub render_pass_flags: RenderPassMask,
     pub bloom_dirt_mask_handle: Option<Handle>,
     pub rasterizer_options: RasterizerOptions,
+    pub tone_mapping: ToneMappingOperator,
     // User debug
     pub draw_wireframe: bool,
     pub wireframe_color: Vec3,
@@ -53,6 +56,7 @@ impl Default for RenderOptions {
             render_pass_flags: Default::default(),
             bloom_dirt_mask_handle: None,
             rasterizer_options: Default::default(),
+            tone_mapping: Default::default(),
             // User debug
             draw_wireframe: false,
             // User debug
@@ -122,6 +126,17 @@ impl RenderOptions {
                     );
                 }
                 (Keycode::Num5, _) => {
+                    // Cycle tone-mapping operators.
+
+                    let current_index: usize = self.tone_mapping.try_into().unwrap();
+
+                    let new_index = (current_index + 1).rem_euclid(TONE_MAPPING_OPERATORS.len());
+
+                    self.tone_mapping = TONE_MAPPING_OPERATORS[new_index];
+
+                    println!("Tone mapping: {}", self.tone_mapping);
+                }
+                (Keycode::Num6, _) => {
                     // Cycle culling reject settings.
 
                     self.rasterizer_options.face_culling_strategy.reject =
@@ -134,24 +149,6 @@ impl RenderOptions {
                     println!(
                         "Face culling - Reject: {:?}",
                         self.rasterizer_options.face_culling_strategy.reject
-                    );
-                }
-                (Keycode::Num6, _) => {
-                    // Cycle winding order.
-
-                    self.rasterizer_options.face_culling_strategy.winding_order =
-                        match self.rasterizer_options.face_culling_strategy.winding_order {
-                            FaceCullingWindingOrder::Clockwise => {
-                                FaceCullingWindingOrder::CounterClockwise
-                            }
-                            FaceCullingWindingOrder::CounterClockwise => {
-                                FaceCullingWindingOrder::Clockwise
-                            }
-                        };
-
-                    println!(
-                        "Face culling - Winding order: {:?}",
-                        self.rasterizer_options.face_culling_strategy.winding_order
                     );
                 }
                 (Keycode::Num7, _) => {
