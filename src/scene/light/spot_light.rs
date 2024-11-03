@@ -29,14 +29,14 @@ pub struct SpotLight {
     pub outer_cutoff_angle_cos: f32,
     #[serde(skip)]
     epsilon: f32,
-    pub attenuation: LightAttenuation,
+    attenuation: LightAttenuation,
     #[serde(skip)]
     pub influence_distance: f32,
 }
 
 impl PostDeserialize for SpotLight {
     fn post_deserialize(&mut self) {
-        self.influence_distance = self.attenuation.get_approximate_influence_distance();
+        self.recompute_influence_distance();
     }
 }
 
@@ -79,6 +79,20 @@ impl SpotLight {
         light.post_deserialize();
 
         light
+    }
+
+    pub fn get_attenuation(&self) -> &LightAttenuation {
+        &self.attenuation
+    }
+
+    pub fn set_attenuation(&mut self, attenuation: LightAttenuation) {
+        self.attenuation = attenuation;
+
+        self.recompute_influence_distance();
+    }
+
+    fn recompute_influence_distance(&mut self) {
+        self.influence_distance = self.attenuation.get_approximate_influence_distance();
     }
 
     pub fn contribute(self, world_pos: Vec3) -> Vec3 {

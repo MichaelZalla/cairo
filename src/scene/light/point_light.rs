@@ -39,7 +39,7 @@ use super::{
 pub struct PointLight {
     pub intensities: Vec3,
     pub position: Vec3,
-    pub attenuation: LightAttenuation,
+    attenuation: LightAttenuation,
     #[serde(skip)]
     pub shadow_map: Option<Handle>,
     #[serde(skip)]
@@ -50,7 +50,7 @@ pub struct PointLight {
 
 impl PostDeserialize for PointLight {
     fn post_deserialize(&mut self) {
-        self.influence_distance = self.attenuation.get_approximate_influence_distance();
+        self.recompute_influence_distance();
     }
 }
 
@@ -82,6 +82,20 @@ impl PointLight {
         light.post_deserialize();
 
         light
+    }
+
+    pub fn get_attenuation(&self) -> &LightAttenuation {
+        &self.attenuation
+    }
+
+    pub fn set_attenuation(&mut self, attenuation: LightAttenuation) {
+        self.attenuation = attenuation;
+
+        self.recompute_influence_distance();
+    }
+
+    fn recompute_influence_distance(&mut self) {
+        self.influence_distance = self.attenuation.get_approximate_influence_distance();
     }
 
     pub fn enable_shadow_maps(

@@ -17,7 +17,7 @@ use cairo::{
         environment::Environment,
         graph::SceneGraph,
         light::{
-            ambient_light::AmbientLight, attenuation::LightAttenuation,
+            ambient_light::AmbientLight, attenuation::LIGHT_ATTENUATION_RANGE_600_UNITS,
             directional_light::DirectionalLight, point_light::PointLight, spot_light::SpotLight,
         },
         node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
@@ -135,9 +135,7 @@ pub fn make_sponza_scene(
 
         light.intensities = Color::rgb(255, 85, 0).to_vec3() / 255.0 * 5.0;
 
-        light.attenuation = LightAttenuation::new(1.0, 0.007 / 2.0, 0.0002 / 2.0);
-
-        light.influence_distance = light.attenuation.get_approximate_influence_distance();
+        light.set_attenuation(LIGHT_ATTENUATION_RANGE_600_UNITS);
 
         light.enable_shadow_maps(192, 5_000.0, resources.clone());
 
@@ -176,9 +174,7 @@ pub fn make_sponza_scene(
 
         light.intensities = vec3::ONES * 5.0;
 
-        light.attenuation = LightAttenuation::new(1.0, 0.007 / 10.0, 0.0002 / 10.0);
-
-        light.influence_distance = light.attenuation.get_approximate_influence_distance();
+        light.set_attenuation(LIGHT_ATTENUATION_RANGE_600_UNITS);
 
         let light_handle = spot_light_arena.insert(light);
 

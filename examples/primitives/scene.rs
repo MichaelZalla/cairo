@@ -17,7 +17,7 @@ use cairo::{
         environment::Environment,
         graph::SceneGraph,
         light::{
-            ambient_light::AmbientLight, attenuation::LightAttenuation,
+            ambient_light::AmbientLight, attenuation::LIGHT_ATTENUATION_RANGE_50_UNITS,
             directional_light::DirectionalLight, point_light::PointLight, spot_light::SpotLight,
         },
         node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
@@ -146,9 +146,7 @@ pub(crate) fn make_scene(
 
                 light.intensities = color.to_vec3() / 255.0 * 5.0;
 
-                light.attenuation = LightAttenuation::new(1.0, 0.09, 0.032);
-
-                light.influence_distance = light.attenuation.get_approximate_influence_distance();
+                light.set_attenuation(LIGHT_ATTENUATION_RANGE_50_UNITS);
 
                 light.enable_shadow_maps(192, 250.0, resources.clone());
 
