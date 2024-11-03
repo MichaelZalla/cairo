@@ -110,9 +110,8 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                     current_layer_depth += layer_depth;
                                 }
 
-                                // Interpolate between the sampled
-                                // displacements at the previous layer and
-                                // the current layer.
+                                // Interpolate between the sampled displacements
+                                // at the previous layer and the current layer.
 
                                 let previous_uv = current_uv + uv_step;
 
