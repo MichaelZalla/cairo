@@ -11,7 +11,7 @@ use crate::{
         blend::{self, blend, BlendMode},
         Color,
     },
-    vec::vec3::Vec3,
+    vec::{vec2::Vec2, vec3::Vec3},
 };
 
 pub mod framebuffer;
@@ -23,6 +23,8 @@ where
 {
     pub width: u32,
     pub height: u32,
+    pub texel_size: Vec2,
+    pub texel_size_over_2: Vec2,
     pub width_over_height: f32,
     pub center: Vec3,
     pub data: Vec<T>,
@@ -37,9 +39,17 @@ where
 
         let data: Vec<T> = vec![value; (width * height) as usize];
 
+        let texel_size = Vec2 {
+            x: 1.0 / width as f32,
+            y: 1.0 / height as f32,
+            z: 0.0,
+        };
+
         Self {
             width,
             height,
+            texel_size,
+            texel_size_over_2: texel_size / 2.0,
             width_over_height: width as f32 / height as f32,
             center: Vec3::from_x_y(width as f32 / 2.0, height as f32 / 2.0),
             data,
@@ -47,9 +57,17 @@ where
     }
 
     pub fn from_data(width: u32, height: u32, data: Vec<T>) -> Self {
+        let texel_size = Vec2 {
+            x: 1.0 / width as f32,
+            y: 1.0 / height as f32,
+            z: 0.0,
+        };
+
         Buffer2D {
             width,
             height,
+            texel_size,
+            texel_size_over_2: texel_size / 2.0,
             width_over_height: width as f32 / height as f32,
             center: Vec3::from_x_y(width as f32 / 2.0, height as f32 / 2.0),
             data,
@@ -164,6 +182,14 @@ where
         self.width = width;
 
         self.height = height;
+
+        self.texel_size = Vec2 {
+            x: 1.0 / width as f32,
+            y: 1.0 / height as f32,
+            z: 0.0,
+        };
+
+        self.texel_size_over_2 = self.texel_size / 2.0;
 
         self.width_over_height = width as f32 / height as f32;
 
