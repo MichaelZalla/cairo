@@ -116,7 +116,7 @@ impl Renderer for SoftwareRenderer {
 
             self.do_deferred_lighting_pass();
 
-            // Bloom pass over the deferred (HDR) buffer.
+            // Bloom pass over the (deferred) HDR color buffer.
 
             if self
                 .options
@@ -127,47 +127,51 @@ impl Renderer for SoftwareRenderer {
             }
         }
 
-        // Blit deferred (HDR) framebuffer to the (final) color framebuffer.
+        // Combine the forward and deferred (HDR) color buffers into the default
+        // color buffer.
 
-        if let Some(rc) = &self.framebuffer {
-            let framebuffer = rc.borrow_mut();
+        if let Some(framebuffer_rc) = &self.framebuffer {
+            let framebuffer = framebuffer_rc.borrow();
 
-            if self
-                .options
-                .render_pass_flags
-                .contains(RenderPassFlag::Rasterization)
-            {
-                if let (Some(color_buffer_rc), Some(deferred_buffer_rc)) = (
-                    framebuffer.attachments.color.as_ref(),
-                    framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
-                ) {
-                    let (mut color_buffer, deferred_buffer) =
-                        (color_buffer_rc.borrow_mut(), deferred_buffer_rc.borrow());
+            if let Some(color_buffer_rc) = framebuffer.attachments.color.as_ref() {
+                let mut color_buffer = color_buffer_rc.borrow_mut();
 
-                    for y in 0..framebuffer.height {
-                        for x in 0..framebuffer.width {
-                            let lit_geometry_fragment_color_tone =
-                                self.get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
+                // Perform tone-mapping pass over the deferred HDR color buffer,
+                // and blit.
 
-                            color_buffer.set(x, y, lit_geometry_fragment_color_tone.to_u32());
+                if self
+                    .options
+                    .render_pass_flags
+                    .contains(RenderPassFlag::Rasterization)
+                {
+                    if let Some(deferred_buffer_rc) =
+                        framebuffer.attachments.forward_or_deferred_hdr.as_ref()
+                    {
+                        let deferred_buffer = deferred_buffer_rc.borrow();
+
+                        for y in 0..framebuffer.height {
+                            for x in 0..framebuffer.width {
+                                let lit_geometry_fragment_color_tone =
+                                    self.get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
+
+                                color_buffer.set(x, y, lit_geometry_fragment_color_tone.to_u32());
+                            }
                         }
                     }
                 }
-            }
 
-            if let (Some(color_buffer_rc), Some(forward_buffer_rc)) = (
-                framebuffer.attachments.color.as_ref(),
-                framebuffer.attachments.forward_ldr.as_ref(),
-            ) {
-                let (mut color_buffer, forward_buffer) =
-                    (color_buffer_rc.borrow_mut(), forward_buffer_rc.borrow());
+                // Blit the forward color buffer.
 
-                let forward_fragments = forward_buffer.get_all();
+                if let Some(forward_buffer_rc) = framebuffer.attachments.forward_ldr.as_ref() {
+                    let forward_buffer = forward_buffer_rc.borrow();
 
-                // Skips pixels in our forward buffer if they weren't written to.
-                for (index, value) in forward_fragments.iter().enumerate() {
-                    if Color::from_u32(*value).a > 0.0 {
-                        color_buffer.set_at(index, *value);
+                    let forward_fragments = forward_buffer.get_all();
+
+                    // Skips pixels in our forward buffer if they weren't written to.
+                    for (index, value) in forward_fragments.iter().enumerate() {
+                        if Color::from_u32(*value).a > 0.0 {
+                            color_buffer.set_at(index, *value);
+                        }
                     }
                 }
             }
