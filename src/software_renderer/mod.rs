@@ -153,51 +153,53 @@ impl Renderer for SoftwareRenderer {
             }
         }
 
+        // Perform tone-mapping pass over the deferred HDR color buffer,
+        // and blit.
+
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::ToneMapping)
+        {
+            self.do_tone_mapping_pass();
+        } else if let Some(framebuffer_rc) = &self.framebuffer {
+            let framebuffer = framebuffer_rc.borrow();
+
+            // Blit the forward color buffer.
+
+            if let Some(deferred_buffer_rc) =
+                framebuffer.attachments.forward_or_deferred_hdr.as_ref()
+            {
+                let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
+
+                for color_hdr in deferred_buffer.iter_mut() {
+                    *color_hdr = color_hdr.clamp(0.0, 1.0);
+                }
+            }
+        }
+
         // Combine the forward and deferred (HDR) color buffers into the default
         // color buffer.
 
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow();
 
-            if let Some(color_buffer_rc) = framebuffer.attachments.color.as_ref() {
+            // Blit the forward color buffer.
+
+            if let (Some(forward_buffer_rc), Some(color_buffer_rc)) = (
+                framebuffer.attachments.forward_ldr.as_ref(),
+                framebuffer.attachments.color.as_ref(),
+            ) {
+                let forward_buffer = forward_buffer_rc.borrow();
+
                 let mut color_buffer = color_buffer_rc.borrow_mut();
 
-                // Perform tone-mapping pass over the deferred HDR color buffer,
-                // and blit.
+                let forward_fragments = forward_buffer.get_all();
 
-                if self
-                    .options
-                    .render_pass_flags
-                    .contains(RenderPassFlag::Rasterization)
-                {
-                    if let Some(deferred_buffer_rc) =
-                        framebuffer.attachments.forward_or_deferred_hdr.as_ref()
-                    {
-                        let deferred_buffer = deferred_buffer_rc.borrow();
-
-                        for y in 0..framebuffer.height {
-                            for x in 0..framebuffer.width {
-                                let lit_geometry_fragment_color_tone =
-                                    self.get_tone_mapped_color_from_hdr(*deferred_buffer.get(x, y));
-
-                                color_buffer.set(x, y, lit_geometry_fragment_color_tone.to_u32());
-                            }
-                        }
-                    }
-                }
-
-                // Blit the forward color buffer.
-
-                if let Some(forward_buffer_rc) = framebuffer.attachments.forward_ldr.as_ref() {
-                    let forward_buffer = forward_buffer_rc.borrow();
-
-                    let forward_fragments = forward_buffer.get_all();
-
-                    // Skips pixels in our forward buffer if they weren't written to.
-                    for (index, value) in forward_fragments.iter().enumerate() {
-                        if Color::from_u32(*value).a > 0.0 {
-                            color_buffer.set_at(index, *value);
-                        }
+                // Skips pixels in our forward buffer if they weren't written to.
+                for (index, value) in forward_fragments.iter().enumerate() {
+                    if Color::from_u32(*value).a > 0.0 {
+                        color_buffer.set_at(index, *value);
                     }
                 }
             }
@@ -567,20 +569,25 @@ impl SoftwareRenderer {
                                         {
                                             let mut forward_buffer = forward_buffer_rc.borrow_mut();
 
-                                            let forward_fragment_color = self
-                                                .get_tone_mapped_color_from_hdr(
-                                                    self.get_hdr_color_for_sample(
-                                                        &shader_context,
-                                                        &self.scene_resources,
-                                                        &sample,
-                                                    ),
-                                                );
-
-                                            forward_buffer.set(
-                                                x,
-                                                y,
-                                                forward_fragment_color.to_u32(),
+                                            let hdr_color = self.get_hdr_color_for_sample(
+                                                &shader_context,
+                                                &self.scene_resources,
+                                                &sample,
                                             );
+
+                                            let color = if self
+                                                .options
+                                                .render_pass_flags
+                                                .contains(RenderPassFlag::ToneMapping)
+                                            {
+                                                self.get_tone_mapped_color_from_hdr(hdr_color)
+                                            } else {
+                                                Color::from_vec3(hdr_color.clamp(0.0, 1.0))
+                                            };
+
+                                            let color_u32 = color.to_u32();
+
+                                            forward_buffer.set(x, y, color_u32);
                                         }
                                     } else {
                                         g_buffer.set(x, y, sample);

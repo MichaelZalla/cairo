@@ -28,12 +28,16 @@ bitmask! {
         Bloom = (1 << 3),
         Ssao = (1 << 4),
         SsaoBlur = (1 << 5),
+        ToneMapping = (1 << 6),
     }
 }
 
 impl Default for RenderPassMask {
     fn default() -> Self {
-        RenderPassFlag::Rasterization | RenderPassFlag::Lighting | RenderPassFlag::DeferredLighting
+        RenderPassFlag::Rasterization
+            | RenderPassFlag::Lighting
+            | RenderPassFlag::DeferredLighting
+            | RenderPassFlag::ToneMapping
     }
 }
 
