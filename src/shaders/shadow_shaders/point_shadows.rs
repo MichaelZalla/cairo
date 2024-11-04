@@ -1,7 +1,6 @@
 #![allow(non_upper_case_globals)]
 
 use crate::{
-    color::Color,
     render::options::shader::RenderShaderOptions,
     scene::{light::shadow::DEFAULT_SHADOW_MAP_CAMERA_FAR, resources::SceneResources},
     shader::{
@@ -10,7 +9,10 @@ use crate::{
         geometry::{sample::GeometrySample, GeometryShaderFn},
         vertex::VertexShaderFn,
     },
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
 };
 
@@ -48,7 +50,7 @@ pub static PointShadowMapGeometryShader: GeometryShaderFn = |_context: &ShaderCo
 };
 
 pub static PointShadowMapFragmentShader: FragmentShaderFn =
-    |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
+    |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
         // Emit only the linear depth value (in RGB space) for this fragment.
 
         let distance_to_point_light =
@@ -60,9 +62,5 @@ pub static PointShadowMapFragmentShader: FragmentShaderFn =
 
         let distance_alpha = distance_to_point_light / projection_z_far;
 
-        Color::from_vec3(Vec3 {
-            x: distance_alpha,
-            y: distance_alpha,
-            z: distance_alpha,
-        })
+        vec3::ONES * distance_alpha
     };

@@ -3,7 +3,6 @@
 use std::f32::consts::PI;
 
 use crate::{
-    color::Color,
     matrix::Mat4,
     render::options::tone_mapping::ToneMappingOperator,
     scene::resources::SceneResources,
@@ -68,10 +67,7 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
     };
 
 pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
-    |shader_context: &ShaderContext,
-     resources: &SceneResources,
-     sample: &GeometrySample|
-     -> Color {
+    |shader_context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
         fn sample_spherical_to_cartesian(pos: Vec3) -> Vec2 {
             // See: http://disq.us/p/2nvby4v
 
@@ -97,7 +93,7 @@ pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
                 // Exposure tone mapping
 
-                Color::from_vec3(TONE_MAPPING_OPERATOR.map(sample))
+                TONE_MAPPING_OPERATOR.map(sample)
             }
             Err(_) => panic!(),
         }

@@ -1,7 +1,6 @@
 #![allow(non_upper_case_globals)]
 
 use crate::{
-    color::{self, Color},
     physics::pbr::sampling::importance_sample_ggx,
     random::sequence::hammersley_2d_sequence,
     scene::resources::SceneResources,
@@ -12,12 +11,11 @@ use crate::{
 };
 
 pub static HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
-    |shader_context: &ShaderContext,
-     resources: &SceneResources,
-     sample: &GeometrySample|
-     -> Color {
-        if let Some(handle) = shader_context.ambient_radiance_map {
-            if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
+    |shader_context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
+        let handle = shader_context.ambient_radiance_map.unwrap();
+
+        match resources.cubemap_vec3.borrow().get(&handle) {
+            Ok(entry) => {
                 let map = &entry.item;
 
                 // Assumes the fragment-to-view direction (and thus the direction of the
@@ -30,6 +28,7 @@ pub static HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
                 static SAMPLE_COUNT: usize = 1024;
 
                 let mut prefiltered_irradiance: Vec3 = Default::default();
+
                 let mut total_weight = 0.0;
 
                 let one_over_n = 1.0 / SAMPLE_COUNT as f32;
@@ -62,9 +61,8 @@ pub static HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
 
                 prefiltered_irradiance /= total_weight;
 
-                return Color::from_vec3(prefiltered_irradiance);
+                prefiltered_irradiance
             }
+            Err(_) => panic!(),
         }
-
-        color::GREEN
     };

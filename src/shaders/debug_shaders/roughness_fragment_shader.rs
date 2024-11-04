@@ -1,17 +1,16 @@
 #![allow(non_upper_case_globals)]
 
 use crate::{
-    color::Color,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
 pub static RoughnessFragmentShader: FragmentShaderFn =
-    |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
+    |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
         // Emit only the roughness for this fragment.
 
-        Color::from_vec3(Vec3::ones() * sample.roughness)
+        vec3::ONES * sample.roughness
     };

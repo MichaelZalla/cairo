@@ -1,6 +1,5 @@
 use crate::{
     animation::lerp,
-    color::Color,
     physics::pbr::brdf::fresnel_schlick_indirect,
     scene::resources::SceneResources,
     shader::{
@@ -15,7 +14,7 @@ use crate::{
 };
 
 pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
-    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Color {
+    |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
         // Surface reflection at zero incidence.
         #[allow(non_upper_case_globals)]
         static f0_dielectic: Vec3 = Vec3 {
@@ -171,13 +170,11 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         // Combine light intensities
 
-        let total_contribution = ambient_light_contribution
+        ambient_light_contribution
             + directional_light_contribution
             + point_light_contribution
             + spot_light_contribution
-            + emissive_light_contribution;
-
-        Color::from_vec3(total_contribution)
+            + emissive_light_contribution
     };
 
 fn contribute_ambient_ibl(

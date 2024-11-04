@@ -6,7 +6,7 @@ use cairo::{
         map::TextureMap,
         sample::sample_nearest_f32,
     },
-    vec::{vec2::Vec2, vec3::Vec3},
+    vec::{vec2::Vec2, vec3},
 };
 
 pub fn debug_blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target: &mut Buffer2D) {
@@ -32,7 +32,7 @@ pub fn debug_blit_shadow_map_horizontal_cross(shadow_map: &CubeMap<f32>, target:
                 let depth_sample_u8 = depth_sample * 255.0;
 
                 let color = if depth_sample > 0.0001 {
-                    Color::from_vec3(Vec3::ones() * depth_sample_u8)
+                    Color::from_vec3(vec3::ONES * depth_sample_u8)
                 } else {
                     CUBEMAP_SIDE_COLORS[side_index]
                 };

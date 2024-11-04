@@ -3,7 +3,6 @@
 use std::f32::consts::PI;
 
 use crate::{
-    color::{self, Color},
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
@@ -12,12 +11,11 @@ use crate::{
 };
 
 pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
-    |shader_context: &ShaderContext,
-     resources: &SceneResources,
-     sample: &GeometrySample|
-     -> Color {
-        if let Some(handle) = shader_context.ambient_radiance_map {
-            if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
+    |shader_context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
+        let handle = shader_context.ambient_radiance_map.unwrap();
+
+        match resources.cubemap_vec3.borrow().get(&handle) {
+            Ok(entry) => {
                 let map = &entry.item;
 
                 let normal = sample.position_world_space.as_normal();
@@ -78,28 +76,26 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
 
                 irradiance = irradiance * PI * (1.0 / sample_count as f32);
 
-                return Color::from_vec3(irradiance);
+                irradiance
             }
+            Err(_) => panic!(),
         }
-
-        color::GREEN
     };
 
 pub static HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
-    |shader_context: &ShaderContext,
-     resources: &SceneResources,
-     sample: &GeometrySample|
-     -> Color {
-        if let Some(handle) = shader_context.ambient_diffuse_irradiance_map {
-            if let Ok(entry) = resources.cubemap_vec3.borrow().get(&handle) {
+    |shader_context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
+        let handle = shader_context.ambient_diffuse_irradiance_map.unwrap();
+
+        match resources.cubemap_vec3.borrow().get(&handle) {
+            Ok(entry) => {
                 let map = &entry.item;
 
                 let normal = sample.position_world_space.as_normal();
 
-                let irradiance = map.sample_nearest(&Vec4::new(normal, 1.0), None);
+                let irradiance = map.sample_nearest(&Vec4::new(normal, 0.0), None);
 
-                return Color::from_vec3(irradiance);
+                irradiance
             }
+            Err(_) => panic!(),
         }
-        color::GREEN
     };

@@ -1,16 +1,16 @@
 #![allow(non_upper_case_globals)]
 
 use crate::{
-    color::Color,
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext, fragment::FragmentShaderFn, geometry::sample::GeometrySample,
     },
+    vec::vec3::Vec3,
 };
 
 pub static AlbedoFragmentShader: FragmentShaderFn =
-    |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Color {
-        // Emit only the diffuse color for this fragment.
+    |_context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
+        // Emit only the albedo color for this fragment.
 
-        Color::from_vec3(sample.albedo)
+        sample.albedo
     };
