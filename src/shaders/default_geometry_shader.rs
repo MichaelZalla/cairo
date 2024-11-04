@@ -32,7 +32,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
         metallic: 0.0,
         albedo: vec3::ONES,
         ambient_factor: 1.0,
-        diffuse_color: vec3::ONES,
         specular_color: vec3::ONES,
         specular_exponent: 8,
         emissive_color: Default::default(),
@@ -217,41 +216,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                             ambient_occlusion_map_handle, err
                         )
                     }
-                }
-            }
-
-            // Diffuse color
-            match (&material.diffuse_color_map, options.albedo_mapping_active) {
-                (Some(diffuse_color_map_handle), true) => {
-                    match resources.texture_u8.borrow().get(diffuse_color_map_handle) {
-                        Ok(entry) => {
-                            let map = &entry.item;
-
-                            let (r, g, b) = if options.bilinear_active {
-                                sample_bilinear_u8(out.uv, map, None)
-                            } else {
-                                sample_nearest_u8(out.uv, map, None)
-                            };
-
-                            let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
-
-                            color.srgb_to_linear();
-
-                            out.diffuse_color = color;
-                        }
-                        Err(err) => {
-                            panic!(
-                                "Failed to get TextureMap from Arena: {:?}: {}",
-                                diffuse_color_map_handle, err
-                            )
-                        }
-                    }
-                }
-                _ => {
-                    // No diffuse map defined for this material, or
-                    // diffuse mapping is disabled.
-
-                    out.diffuse_color = material.diffuse_color;
                 }
             }
 

@@ -2,11 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::context::ApplicationRenderingContext,
-    color,
     resource::{arena::Arena, handle::Handle},
     serde::PostDeserialize,
     texture::map::TextureMap,
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
 pub mod mtl;
@@ -33,8 +32,6 @@ pub struct Material {
     // Blinn-Phong attributes
     pub ambient_color: Vec3,
     pub ambient_color_map: Option<Handle>,
-    pub diffuse_color: Vec3,
-    pub diffuse_color_map: Option<Handle>,
     pub specular_color: Vec3,
     pub specular_color_map: Option<Handle>,
     pub specular_exponent: u8,
@@ -67,8 +64,7 @@ impl Material {
     pub fn new(name: String) -> Self {
         Material {
             name,
-            albedo: color::WHITE.to_vec3() / 255.0,
-            diffuse_color: color::WHITE.to_vec3() / 255.0,
+            albedo: vec3::ONES,
             specular_exponent: 8,
             ..Default::default()
         }
@@ -85,7 +81,6 @@ impl Material {
             &mut self.ambient_occlusion_map,
             &mut self.albedo_map,
             &mut self.decal_map,
-            &mut self.diffuse_color_map,
             &mut self.displacement_map,
             &mut self.emissive_color_map,
             &mut self.metallic_map,

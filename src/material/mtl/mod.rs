@@ -78,7 +78,7 @@ pub fn load_mtl(
                             // See: https://benhouston3d.com/blog/extended-wavefront-obj-mtl-for-pbr/
                             //
 
-                            // Diffuse / albedo
+                            // Albedo
                             "kd" => {
                                 // (r,g,b)
                                 // Example:
@@ -92,11 +92,10 @@ pub fn load_mtl(
                                     let color = next_rgb(&mut line_tokens);
 
                                     material.albedo = color;
-                                    material.diffuse_color = color;
                                 }
                             }
 
-                            // Diffuse / albedo map
+                            // Albedo map
                             "map_kd" => {
                                 // [filepath]
                                 // Example:
@@ -116,7 +115,6 @@ pub fn load_mtl(
                                     let material = &mut entry.item;
 
                                     material.albedo_map = Some(texture_map_handle);
-                                    material.diffuse_color_map = Some(texture_map_handle);
                                 }
                             }
 

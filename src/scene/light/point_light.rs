@@ -169,8 +169,8 @@ impl PointLight {
     }
 
     pub fn contribute(self, sample: &GeometrySample) -> Vec3 {
-        let mut point_contribution: Vec3 = Vec3::new();
-        let mut specular_contribution: Vec3 = Vec3::new();
+        let mut point_contribution = Vec3::default();
+        let mut specular_contribution = Vec3::default();
 
         let tangent_space_info = sample.tangent_space_info;
 

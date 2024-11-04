@@ -53,7 +53,7 @@ impl SoftwareRenderer {
             if let Ok(billboard_material_entry) = materials.get_mut(&material_handle) {
                 let material = &mut billboard_material_entry.item;
 
-                material.diffuse_color = color.to_vec3() / 255.0;
+                material.albedo = color.to_vec3() / 255.0;
 
                 billboard_mesh.material = Some(material_handle);
 
