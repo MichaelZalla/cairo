@@ -8,7 +8,7 @@ use crate::{
         Renderer,
     },
     software_renderer::SoftwareRenderer,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::vec4::Vec4,
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
@@ -186,47 +186,17 @@ impl SoftwareRenderer {
     }
 
     fn is_backface(&mut self, v0: Vec4, v1: Vec4, v2: Vec4) -> bool {
-        let vertices = [
-            Vec3 {
-                x: v0.x,
-                y: v0.y,
-                z: v0.z,
-            },
-            Vec3 {
-                x: v1.x,
-                y: v1.y,
-                z: v1.z,
-            },
-            Vec3 {
-                x: v2.x,
-                y: v2.y,
-                z: v2.z,
-            },
-        ];
-
         // Computes a hard surface normal for the face (ignores smooth normals);
 
-        let vertex_normal = (vertices[1] - vertices[0])
-            .cross(vertices[2] - vertices[0])
-            .as_normal();
+        let face_normal_unnormalized = (v1 - v0).cross(v2 - v0);
 
-        let projected_origin =
+        let camera_position_projection_space =
             Vec4::new(Default::default(), 1.0) * self.shader_context.borrow().get_projection();
 
-        let dot_product = vertex_normal.dot(
-            vertices[0].as_normal()
-                - Vec3 {
-                    x: projected_origin.x,
-                    y: projected_origin.y,
-                    z: projected_origin.z,
-                },
-        );
+        let similarity_to_view_direction =
+            face_normal_unnormalized.dot(v0 - camera_position_projection_space);
 
-        if dot_product > 0.0 {
-            return true;
-        }
-
-        false
+        similarity_to_view_direction > 0.0
     }
 
     fn process_triangle(&mut self, triangle: &Triangle<DefaultVertexOut>) {
