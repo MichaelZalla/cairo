@@ -190,11 +190,7 @@ impl SoftwareRenderer {
 
         let face_normal_unnormalized = (v1 - v0).cross(v2 - v0);
 
-        let camera_position_projection_space =
-            Vec4::new(Default::default(), 1.0) * self.shader_context.borrow().get_projection();
-
-        let similarity_to_view_direction =
-            face_normal_unnormalized.dot(v0 - camera_position_projection_space);
+        let similarity_to_view_direction = face_normal_unnormalized.dot(v0);
 
         similarity_to_view_direction > 0.0
     }
