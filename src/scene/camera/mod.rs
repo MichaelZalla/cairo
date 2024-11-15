@@ -427,7 +427,12 @@ impl Camera {
             }
         }
 
-        self.recompute_world_space_frustum();
+        if let (Some(_), Some(_)) = (
+            self.look_vector_controller.as_ref(),
+            mouse_state.wheel_event.as_ref(),
+        ) {
+            self.recompute_world_space_frustum();
+        }
     }
 
     pub fn update_shader_context(&self, ctx: &mut ShaderContext) {
