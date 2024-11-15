@@ -531,7 +531,7 @@ impl PointLight {
         for side in CUBE_MAP_SIDES {
             cubemap_face_camera
                 .look_vector
-                .set_target_position(self.position + side.get_direction());
+                .set_target(self.position + side.get_direction());
 
             {
                 let mut shader_context = context.shader_context.borrow_mut();

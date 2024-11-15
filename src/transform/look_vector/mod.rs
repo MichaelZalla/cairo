@@ -30,7 +30,7 @@ pub struct LookVector {
 
 impl PostDeserialize for LookVector {
     fn post_deserialize(&mut self) {
-        self.set_target_position(self.target);
+        self.set_target(self.target);
     }
 }
 
@@ -71,7 +71,7 @@ impl LookVector {
         self.target
     }
 
-    pub fn set_target_position(&mut self, target: Vec3) {
+    pub fn set_target(&mut self, target: Vec3) {
         let world_up = vec3::UP;
 
         self.forward = (target - self.position).as_normal();

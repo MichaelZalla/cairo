@@ -63,7 +63,7 @@ pub fn make_sphere_grid_scene(
                 z: -20.0,
             });
 
-            camera.look_vector.set_target_position(Default::default());
+            camera.look_vector.set_target(Default::default());
         }
     }
 

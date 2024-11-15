@@ -111,9 +111,9 @@ pub fn make_sponza_scene(
                                 z: 85.99,
                             });
 
-                            camera.look_vector.set_target_position(
-                                camera.look_vector.get_position() + vec3::RIGHT * -1.0,
-                            );
+                            camera
+                                .look_vector
+                                .set_target(camera.look_vector.get_position() + vec3::RIGHT * -1.0);
 
                             camera.movement_speed = 300.0;
 
@@ -163,7 +163,7 @@ pub fn make_sponza_scene(
     let spot_light_node = {
         let mut light = SpotLight::new();
 
-        light.look_vector.set_target_position(
+        light.look_vector.set_target(
             light.look_vector.get_position()
                 + Vec3 {
                     x: 0.001,

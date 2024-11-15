@@ -361,7 +361,7 @@ impl CubeMap<Vec3> {
         for side in CUBE_MAP_SIDES {
             cubemap_face_camera
                 .look_vector
-                .set_target_position(side.get_direction());
+                .set_target(side.get_direction());
 
             {
                 let mut shader_context = (*shader_context_rc).borrow_mut();

@@ -258,7 +258,7 @@ fn main() -> Result<(), String> {
                             if let Ok(entry) = spot_light_arena.get_mut(handle) {
                                 let spot_light = &mut entry.item;
 
-                                spot_light.look_vector.set_target_position(Vec3 {
+                                spot_light.look_vector.set_target(Vec3 {
                                     x: 25.0 + 15.0 * uptime.sin(),
                                     y: 0.0,
                                     z: 0.0 + 15.0 * uptime.cos(),

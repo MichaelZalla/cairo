@@ -337,7 +337,7 @@ pub fn make_scene(
                 z: -32.0,
             });
 
-            camera.look_vector.set_target_position(Default::default());
+            camera.look_vector.set_target(Default::default());
         }
     }
 

@@ -91,7 +91,7 @@ pub(crate) fn make_scene(
                 z: -50.0,
             });
 
-            camera.look_vector.set_target_position(Vec3 {
+            camera.look_vector.set_target(Vec3 {
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
