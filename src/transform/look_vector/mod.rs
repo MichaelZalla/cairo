@@ -29,9 +29,7 @@ pub struct LookVector {
 }
 
 impl PostDeserialize for LookVector {
-    fn post_deserialize(&mut self) {
-        self.set_target(self.target);
-    }
+    fn post_deserialize(&mut self) {}
 }
 
 impl fmt::Display for LookVector {
@@ -45,18 +43,18 @@ impl fmt::Display for LookVector {
 }
 
 impl LookVector {
-    pub fn new(position: Vec3, target: Vec3) -> Self {
-        let mut vector = Self {
+    pub fn new(position: Vec3) -> Self {
+        let mut result = Self {
             position,
-            target,
+            target: Default::default(),
             forward: vec3::FORWARD,
             up: vec3::UP,
             right: vec3::RIGHT,
         };
 
-        vector.post_deserialize();
+        result.recompute_basis();
 
-        vector
+        result
     }
 
     pub fn get_position(&self) -> Vec3 {
@@ -72,15 +70,9 @@ impl LookVector {
     }
 
     pub fn set_target(&mut self, target: Vec3) {
-        let world_up = vec3::UP;
-
-        self.forward = (target - self.position).as_normal();
-
-        self.right = world_up.cross(self.forward).as_normal();
-
-        self.up = self.forward.cross(self.right).as_normal();
-
         self.target = target;
+
+        self.recompute_basis();
     }
 
     pub fn get_forward(&self) -> Vec3 {
@@ -217,5 +209,17 @@ impl LookVector {
         if yaw_delta != 0.0 {
             self.apply_rotation(Quaternion::new(self.right, yaw_delta));
         }
+    }
+
+    fn recompute_basis(&mut self) {
+        self.forward = (self.target - self.position).as_normal();
+
+        self.right = vec3::UP.cross(self.forward).as_normal();
+
+        if self.right.x.is_nan() {
+            self.right = vec3::RIGHT.cross(self.forward).as_normal();
+        }
+
+        self.up = self.forward.cross(self.right).as_normal();
     }
 }

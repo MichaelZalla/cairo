@@ -137,9 +137,11 @@ impl Camera {
             movement_speed: 50.0,
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
-            look_vector: LookVector::new(position, target),
+            look_vector: LookVector::new(position),
             frustum: Default::default(),
         };
+
+        camera.look_vector.set_target(target);
 
         camera.post_deserialize();
 

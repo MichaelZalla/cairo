@@ -54,18 +54,11 @@ impl SpotLight {
     pub fn new() -> Self {
         let mut light = SpotLight {
             intensities: vec3::ONES,
-            look_vector: LookVector::new(
-                Vec3 {
-                    x: 0.0,
-                    y: 10.0,
-                    z: 0.0,
-                },
-                Vec3 {
-                    x: 0.001,
-                    y: -1.0,
-                    z: 0.001,
-                },
-            ),
+            look_vector: LookVector::new(Vec3 {
+                x: 0.0,
+                y: 10.0,
+                z: 0.0,
+            }),
             inner_cutoff_angle: (PI / 12.0),
             outer_cutoff_angle: (PI / 8.0),
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
@@ -73,6 +66,8 @@ impl SpotLight {
             attenuation: LightAttenuation::new(1.0, 0.09, 0.032),
             ..Default::default()
         };
+
+        light.look_vector.set_target(-vec3::UP);
 
         light.epsilon = light.inner_cutoff_angle_cos - light.outer_cutoff_angle_cos;
 
