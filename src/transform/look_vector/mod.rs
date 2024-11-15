@@ -1,22 +1,15 @@
-use std::{f32::consts::PI, fmt};
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use sdl2::keyboard::Keycode;
-
 use crate::{
-    device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     serde::PostDeserialize,
-    time::TimingInfo,
-    vec::{
-        vec2::Vec2,
-        vec3::{self, Vec3},
-    },
+    vec::vec3::{self, Vec3},
 };
 
 use super::quaternion::Quaternion;
 
-static LOOK_SENSITIVITY: f32 = 1.0 / 100.0;
+pub mod controller;
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct LookVector {
@@ -97,111 +90,6 @@ impl LookVector {
         let position_to_target_rotated = position_to_target * rotation;
 
         self.target = self.position + position_to_target_rotated;
-    }
-
-    pub fn update(
-        &mut self,
-        timing_info: &TimingInfo,
-        keyboard_state: &KeyboardState,
-        mouse_state: Option<&MouseState>,
-        game_controller_state: &GameControllerState,
-        movement_speed: f32,
-    ) {
-        // Apply camera movement based on mouse input.
-
-        if let Some(mouse_state) = mouse_state {
-            // Translate relative mouse movements to NDC values (in the
-            // range [0, 1]).
-
-            let pitch_delta = mouse_state.relative_motion.0 as f32 * LOOK_SENSITIVITY;
-            let yaw_delta = mouse_state.relative_motion.1 as f32 * LOOK_SENSITIVITY;
-
-            // Update camera pitch and yaw, based on mouse position deltas.
-
-            if pitch_delta != 0.0 {
-                self.apply_rotation(Quaternion::new(self.up, -pitch_delta));
-            }
-
-            if yaw_delta != 0.0 {
-                self.apply_rotation(Quaternion::new(self.right, -yaw_delta));
-            }
-        }
-
-        // Apply camera movement based on keyboard input.
-
-        let camera_movement_step = movement_speed * timing_info.seconds_since_last_update;
-
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                (Keycode::Up | Keycode::W, _) => {
-                    self.set_position(self.position + self.get_forward() * camera_movement_step);
-                }
-                (Keycode::Down | Keycode::S, _) => {
-                    self.set_position(self.position - self.get_forward() * camera_movement_step);
-                }
-                (Keycode::Left | Keycode::A, _) => {
-                    self.set_position(self.position - self.get_right() * camera_movement_step);
-                }
-                (Keycode::Right | Keycode::D, _) => {
-                    self.set_position(self.position + self.get_right() * camera_movement_step);
-                }
-                (Keycode::Q, _) => {
-                    self.set_position(self.position - self.get_up() * camera_movement_step);
-                }
-                (Keycode::E, _) => {
-                    self.set_position(self.position + self.get_up() * camera_movement_step);
-                }
-                _ => {}
-            }
-        }
-
-        // Apply camera movement based on gamepad input.
-
-        if game_controller_state.buttons.dpad_up {
-            self.set_position(self.position + self.get_forward() * camera_movement_step);
-        } else if game_controller_state.buttons.dpad_down {
-            self.set_position(self.position - self.get_forward() * camera_movement_step);
-        } else if game_controller_state.buttons.dpad_left {
-            self.set_position(self.position - self.get_right() * camera_movement_step);
-        } else if game_controller_state.buttons.dpad_right {
-            self.set_position(self.position + self.get_right() * camera_movement_step);
-        }
-
-        let left_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.left.position.x as f32 / i16::MAX as f32,
-            y: game_controller_state.joysticks.left.position.y as f32 / i16::MAX as f32,
-            z: 1.0,
-        };
-
-        if left_joystick_position_normalized.x > 0.5 {
-            self.set_position(self.position + self.get_right() * camera_movement_step);
-        } else if left_joystick_position_normalized.x < -0.5 {
-            self.set_position(self.position - self.get_right() * camera_movement_step);
-        }
-
-        if left_joystick_position_normalized.y > 0.5 {
-            self.set_position(self.position - self.get_forward() * camera_movement_step);
-        } else if left_joystick_position_normalized.y < -0.5 {
-            self.set_position(self.position + self.get_forward() * camera_movement_step);
-        }
-
-        let right_joystick_position_normalized = Vec2 {
-            x: game_controller_state.joysticks.right.position.x as f32 / i16::MAX as f32,
-            y: game_controller_state.joysticks.right.position.y as f32 / i16::MAX as f32,
-            z: 1.0,
-        };
-
-        let yaw_delta = right_joystick_position_normalized.x * (PI / 64.0);
-        let pitch_delta = right_joystick_position_normalized.y * (PI / 64.0);
-        let _roll_delta = -yaw_delta * 0.5;
-
-        if pitch_delta != 0.0 {
-            self.apply_rotation(Quaternion::new(self.up, -pitch_delta));
-        }
-
-        if yaw_delta != 0.0 {
-            self.apply_rotation(Quaternion::new(self.right, yaw_delta));
-        }
     }
 
     fn recompute_basis(&mut self) {

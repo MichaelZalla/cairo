@@ -8,7 +8,10 @@ use crate::{
     serde::PostDeserialize,
     shader::context::ShaderContext,
     time::TimingInfo,
-    transform::look_vector::LookVector,
+    transform::look_vector::{
+        controller::{FirstPersonLookVectorController, LookVectorController},
+        LookVector,
+    },
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -70,6 +73,8 @@ pub struct Camera {
     #[serde(skip)]
     projection_inverse_transform: Mat4,
     pub look_vector: LookVector,
+    #[serde(skip)]
+    pub look_vector_controller: Option<FirstPersonLookVectorController>,
     #[serde(skip)]
     frustum: Frustum,
 }
@@ -138,6 +143,7 @@ impl Camera {
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position),
+            look_vector_controller: Default::default(),
             frustum: Default::default(),
         };
 
@@ -395,16 +401,19 @@ impl Camera {
         mouse_state: &MouseState,
         game_controller_state: &GameControllerState,
     ) {
-        self.look_vector.update(
-            timing_info,
-            keyboard_state,
-            match self.kind {
-                CameraProjectionKind::Perspective => Some(mouse_state),
-                CameraProjectionKind::Orthographic => None,
-            },
-            game_controller_state,
-            self.movement_speed,
-        );
+        if let Some(controller) = self.look_vector_controller.as_mut() {
+            controller.update(
+                &mut self.look_vector,
+                timing_info,
+                keyboard_state,
+                match self.kind {
+                    CameraProjectionKind::Perspective => Some(mouse_state),
+                    CameraProjectionKind::Orthographic => None,
+                },
+                game_controller_state,
+                self.movement_speed,
+            );
+        }
 
         // Apply field-of-view zoom based on mousewheel input.
 
