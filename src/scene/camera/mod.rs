@@ -412,8 +412,6 @@ impl Camera {
                     self.set_projection_z_far(self.get_projection_z_far() + event.delta as f32);
 
                     self.recompute_projections();
-
-                    self.recompute_world_space_frustum();
                 }
                 CameraProjectionKind::Orthographic => {
                     let current_z_far = self.get_projection_z_far();
