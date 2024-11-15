@@ -370,7 +370,7 @@ impl Camera {
         //  y: -1 to 1 (y is up)
         //  z: -1 (near) to 1 (far)
 
-        let pixel_coordinate_camera_view_space: Vec4 = Vec4 {
+        let pixel_coordinate_camera_view_space = Vec4 {
             x: -1.0 + pixel_coordinate_projection_space.x * 2.0,
             y: -1.0 + (1.0 - pixel_coordinate_projection_space.y) * 2.0,
             z: 1.0,

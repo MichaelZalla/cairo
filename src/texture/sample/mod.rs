@@ -2,7 +2,9 @@ use std::fmt::Debug;
 use std::ops::Rem;
 
 use crate::{
-    animation::lerp, texture::map::{TextureMapStorageFormat, TextureMapWrapping}, vec::{vec2::Vec2, vec3::Vec3}
+    animation::lerp,
+    texture::map::{TextureMapStorageFormat, TextureMapWrapping},
+    vec::{vec2::Vec2, vec3::Vec3},
 };
 
 use super::map::{TextureMap, TextureMapSamplingOptions};

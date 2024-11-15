@@ -370,6 +370,7 @@ impl SoftwareRenderer {
                 (left_edge_interpolant.position_projection_space.x - 0.5).ceil() as u32,
                 0,
             );
+
             let x_end = u32::min(
                 (right_edge_interpolant.position_projection_space.x - 0.5).ceil() as u32,
                 self.viewport.width - 1,

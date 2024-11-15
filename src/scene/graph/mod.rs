@@ -347,8 +347,10 @@ impl SceneGraph {
                                     }
 
                                     if options.draw_lights {
-                                        renderer
-                                            .render_point_light(&current_world_transform, point_light);
+                                        renderer.render_point_light(
+                                            &current_world_transform,
+                                            point_light,
+                                        );
                                     }
 
                                     Ok(())
