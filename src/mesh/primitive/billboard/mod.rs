@@ -65,6 +65,8 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
         },
     ];
 
+    // Package the geometry.
+
     let geometry = Geometry {
         vertices: vertices.into_boxed_slice(),
         uvs: uvs.into_boxed_slice(),

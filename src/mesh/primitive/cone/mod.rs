@@ -122,7 +122,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
         &mut partial_faces,
     );
 
-    // Packaging.
+    // Package the geometry.
 
     let geometry = Geometry {
         vertices: vertices.into_boxed_slice(),

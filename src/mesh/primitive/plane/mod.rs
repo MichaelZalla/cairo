@@ -11,7 +11,7 @@ use crate::{
 pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u32) -> Mesh {
     assert!(width_divisions >= 1 && depth_divisions >= 1);
 
-    // Generate vertices and UVs
+    // Generate vertices and UVs.
 
     let mut vertices: Vec<Vec3> = vec![];
 
@@ -39,13 +39,13 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
     assert!(vertices.len() as u32 == (width_divisions + 1) * (depth_divisions + 1));
     assert!(uvs.len() == vertices.len());
 
-    // Generate normals
+    // Generate normals.
 
     let up = vec3::UP;
 
     let normals = vec![up];
 
-    // Generate faces
+    // Generate faces.
 
     let mut partial_faces: Vec<PartialFace> = vec![];
 
@@ -91,6 +91,8 @@ pub fn generate(width: f32, depth: f32, width_divisions: u32, depth_divisions: u
             partial_faces.push(face_2);
         }
     }
+
+    // Package the geometry.
 
     let geometry = Geometry {
         vertices: vertices.into_boxed_slice(),

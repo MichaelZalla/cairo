@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
-    // Generate vertices
+    // Generate vertices.
 
     let front_top_left = Vec3 {
         x: -width / 2.0,
@@ -52,7 +52,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     back_bottom_right.z += depth;
 
-    // Generate normals
+    // Generate normals.
 
     let forward = vec3::FORWARD;
     let backward = forward * -1.0;
@@ -88,11 +88,11 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
         right,    // 5
     ];
 
-    // Generate faces
+    // Generate faces.
 
     let mut partial_faces: Vec<PartialFace> = vec![];
 
-    // Front face
+    // Front face.
 
     let front_face_1 = PartialFace {
         // (front_top_right, front_bottom_left, front_top_left)
@@ -115,7 +115,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     partial_faces.push(front_face_1);
     partial_faces.push(front_face_2);
 
-    // Back face
+    // Back face.
 
     let back_face_1 = PartialFace {
         // (back_bottom_left, back_top_right, back_top_left)
@@ -138,7 +138,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     partial_faces.push(back_face_1);
     partial_faces.push(back_face_2);
 
-    // Top face
+    // Top face.
 
     let top_face_1 = PartialFace {
         // (back_top_right, front_top_left, back_top_left)
@@ -161,7 +161,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     partial_faces.push(top_face_1);
     partial_faces.push(top_face_2);
 
-    // Bottom face
+    // Bottom face.
 
     let bottom_face_1 = PartialFace {
         // (front_bottom_left, back_bottom_right, back_bottom_left)
@@ -184,7 +184,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     partial_faces.push(bottom_face_1);
     partial_faces.push(bottom_face_2);
 
-    // Left face
+    // Left face.
 
     let left_face_1 = PartialFace {
         // (front_top_left, back_bottom_left, back_top_left)
@@ -207,7 +207,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
     partial_faces.push(left_face_1);
     partial_faces.push(left_face_2);
 
-    // Right face
+    // Right face.
 
     let right_face_1 = PartialFace {
         // (back_bottom_right, front_bottom_right, front_top_right)
@@ -229,6 +229,8 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     partial_faces.push(right_face_1);
     partial_faces.push(right_face_2);
+
+    // Package the geometry.
 
     let geometry = Geometry {
         vertices: vertices.into_boxed_slice(),
