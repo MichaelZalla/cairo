@@ -2,6 +2,7 @@ use crate::{
     app::context::ApplicationRenderingContext,
     entity::Entity,
     material::Material,
+    matrix::Mat4,
     mesh::{self, Mesh},
     resource::arena::Arena,
     scene::{
@@ -12,12 +13,12 @@ use crate::{
             ambient_light::AmbientLight, directional_light::DirectionalLight,
             point_light::PointLight, spot_light::SpotLight,
         },
-        node::{SceneNode, SceneNodeType},
+        node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
     },
     shader::context::ShaderContext,
     texture::map::{TextureMap, TextureMapStorageFormat},
     transform::Transform3D,
-    vec::vec3::{self, Vec3},
+    vec::vec3::Vec3,
 };
 
 pub fn make_empty_scene(
@@ -40,7 +41,7 @@ pub fn make_empty_scene(
                 y: 15.0,
                 z: -15.0,
             },
-            vec3::FORWARD,
+            Default::default(),
             75.0,
             camera_aspect_ratio,
         );
@@ -139,6 +140,33 @@ pub fn make_cube_scene(
         environment_arena,
         ambient_light_arena,
         directional_light_arena,
+    )?;
+
+    // Move the default camera.
+
+    scene.root.visit_mut(
+        SceneNodeGlobalTraversalMethod::DepthFirst,
+        None,
+        &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
+            match node.get_type() {
+                SceneNodeType::Camera => {
+                    if let Some(handle) = node.get_handle() {
+                        if let Ok(entry) = camera_arena.get_mut(handle) {
+                            let camera = &mut entry.item;
+
+                            camera.look_vector.set_position(Vec3 {
+                                x: 3.0,
+                                y: 3.0,
+                                z: -3.0,
+                            });
+                        }
+                    }
+
+                    Ok(())
+                }
+                _ => Ok(()),
+            }
+        },
     )?;
 
     let cube_mesh = mesh::primitive::cube::generate(1.0, 1.0, 1.0);

@@ -5,6 +5,7 @@ use crate::{
 
 use super::LookVector;
 
+pub mod editor;
 pub mod first_person;
 
 pub trait LookVectorController {

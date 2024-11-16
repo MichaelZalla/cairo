@@ -9,7 +9,7 @@ use crate::{
     shader::context::ShaderContext,
     time::TimingInfo,
     transform::look_vector::{
-        controller::{first_person::FirstPersonLookVectorController, LookVectorController},
+        controller::{editor::EditorLookVectorController, LookVectorController},
         LookVector,
     },
     vec::{
@@ -74,7 +74,7 @@ pub struct Camera {
     projection_inverse_transform: Mat4,
     pub look_vector: LookVector,
     #[serde(skip)]
-    pub look_vector_controller: Option<FirstPersonLookVectorController>,
+    pub look_vector_controller: Option<EditorLookVectorController>,
     #[serde(skip)]
     frustum: Frustum,
 }
@@ -143,7 +143,7 @@ impl Camera {
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position),
-            look_vector_controller: None,
+            look_vector_controller: Some(EditorLookVectorController::default()),
             frustum: Default::default(),
         };
 
@@ -413,18 +413,6 @@ impl Camera {
                 game_controller_state,
                 self.movement_speed,
             );
-        }
-
-        // Apply field-of-view zoom based on mousewheel input.
-
-        if let Some(event) = &mouse_state.wheel_event {
-            let current_z_far = self.get_projection_z_far();
-
-            self.set_projection_z_far(current_z_far + event.delta as f32);
-
-            if let CameraProjectionKind::Perspective = self.kind {
-                self.recompute_projections();
-            }
         }
 
         if let (Some(_), Some(_)) = (
