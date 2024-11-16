@@ -128,12 +128,11 @@ impl SoftwareRenderer {
 
         let mut ndc_space_vertices = projection_space_vertices;
 
-        self.transform_to_ndc_space(&mut ndc_space_vertices[0]);
-        self.transform_to_ndc_space(&mut ndc_space_vertices[1]);
-        self.transform_to_ndc_space(&mut ndc_space_vertices[2]);
+        ndc_space_vertices[0].projection_space_to_viewport_space(&self.viewport);
+        ndc_space_vertices[1].projection_space_to_viewport_space(&self.viewport);
+        ndc_space_vertices[2].projection_space_to_viewport_space(&self.viewport);
 
-        // Interpolate entire vertex (all attributes) when drawing (scanline
-        // interpolant)
+        // Rasterize triangle in viewport space.
 
         if self
             .options

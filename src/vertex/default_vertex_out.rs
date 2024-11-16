@@ -2,6 +2,7 @@ use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 
 use crate::{
     matrix::Mat4,
+    render::viewport::RenderViewport,
     vec::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
 };
 
@@ -103,6 +104,20 @@ pub struct DefaultVertexOut {
 impl DefaultVertexOut {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn projection_space_to_viewport_space(&mut self, viewport: &RenderViewport) {
+        let w_inverse = 1.0 / self.position_projection_space.w;
+
+        *self *= w_inverse;
+
+        self.position_projection_space.x =
+            (self.position_projection_space.x + 1.0) * viewport.width_over_2;
+
+        self.position_projection_space.y =
+            (-self.position_projection_space.y + 1.0) * viewport.height_over_2;
+
+        self.position_projection_space.w = w_inverse;
     }
 }
 

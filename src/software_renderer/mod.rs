@@ -419,20 +419,6 @@ impl SoftwareRenderer {
         }
     }
 
-    fn transform_to_ndc_space(&mut self, v: &mut DefaultVertexOut) {
-        let w_inverse = 1.0 / v.position_projection_space.w;
-
-        *v *= w_inverse;
-
-        v.position_projection_space.x =
-            (v.position_projection_space.x + 1.0) * self.viewport.width_over_2;
-
-        v.position_projection_space.y =
-            (-v.position_projection_space.y + 1.0) * self.viewport.height_over_2;
-
-        v.position_projection_space.w = w_inverse;
-    }
-
     fn test_and_set_z_buffer(
         &mut self,
         x: u32,
