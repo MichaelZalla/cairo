@@ -9,7 +9,7 @@ use crate::{
     shader::context::ShaderContext,
     time::TimingInfo,
     transform::look_vector::{
-        controller::{FirstPersonLookVectorController, LookVectorController},
+        controller::{first_person::FirstPersonLookVectorController, LookVectorController},
         LookVector,
     },
     vec::{
@@ -143,7 +143,7 @@ impl Camera {
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position),
-            look_vector_controller: Default::default(),
+            look_vector_controller: None,
             frustum: Default::default(),
         };
 
