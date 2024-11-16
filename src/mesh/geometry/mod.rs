@@ -29,8 +29,6 @@ impl Geometry {
 
         let center = aabb.center;
 
-        println!("World center: {}", center);
-
         for vertex in self.vertices.iter_mut() {
             vertex.x -= center.x;
             vertex.y -= center.y;
