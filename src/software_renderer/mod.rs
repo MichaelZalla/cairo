@@ -88,6 +88,8 @@ impl Renderer for SoftwareRenderer {
                 .start();
         }
 
+        // Clear the bound framebuffer.
+
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
@@ -99,17 +101,23 @@ impl Renderer for SoftwareRenderer {
             .render_pass_flags
             .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
         {
+            // Clear the SSAO buffer.
+
             if let Some(ssao_buffer) = self.ssao_buffer.as_mut() {
                 let map = &mut ssao_buffer.levels[0];
 
                 map.0.clear(None);
             }
 
+            // Clear the SSAO blur buffer.
+
             if let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut() {
                 let map = &mut ssao_blur_buffer.levels[0];
 
                 map.0.clear(None);
             }
+
+            // Clear the geometry buffer (resets stencil bits).
 
             if let Some(g_buffer) = self.g_buffer.as_mut() {
                 g_buffer.clear();
@@ -133,11 +141,11 @@ impl Renderer for SoftwareRenderer {
                 self.do_ssao_pass();
             }
 
-            // Deferred lighting.
+            // Deferred lighting pass.
 
             self.do_deferred_lighting_pass();
 
-            // Bloom pass over the (deferred) HDR color buffer.
+            // Bloom pass (with or without dirt mask).
 
             if self
                 .options
@@ -152,8 +160,7 @@ impl Renderer for SoftwareRenderer {
             }
         }
 
-        // Perform tone-mapping pass over the deferred HDR color buffer,
-        // and blit.
+        // Tone-mapping pass (or basic blit).
 
         if self
             .options
