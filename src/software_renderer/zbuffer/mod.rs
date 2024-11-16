@@ -70,10 +70,6 @@ impl ZBuffer {
         }
     }
 
-    pub fn get_projection_depth(&self) -> f32 {
-        self.projection_depth
-    }
-
     pub fn get_projection_z_near(&self) -> f32 {
         self.projection_z_near
     }
@@ -108,6 +104,10 @@ impl ZBuffer {
 
     pub fn clear(&mut self) {
         self.buffer.clear(Some(MAX_DEPTH));
+    }
+
+    pub fn get_normalized(&self, linear_space_z: f32) -> f32 {
+        ((linear_space_z - self.projection_z_near) / self.projection_depth).clamp(0.0, 1.0)
     }
 
     pub fn test(&mut self, x: u32, y: u32, z: f32) -> Option<((u32, u32), f32)> {

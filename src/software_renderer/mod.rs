@@ -422,117 +422,97 @@ impl SoftwareRenderer {
         }
     }
 
-    fn test_and_set_z_buffer(
-        &mut self,
-        x: u32,
-        y: u32,
-        interpolant: &mut DefaultVertexOut,
-        // shader_context: &ShaderContext,
-        // scene_resources: &SceneResources,
-    ) {
-        match &self.framebuffer {
-            Some(rc) => {
-                let framebuffer = rc.borrow_mut();
+    fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
+        let shader_context = self.shader_context.borrow();
 
-                match framebuffer.attachments.depth.as_ref() {
-                    Some(depth_buffer_rc) => {
-                        let mut depth_buffer = depth_buffer_rc.borrow_mut();
+        let framebuffer = self.framebuffer.as_ref().unwrap().borrow();
 
-                        // Restore linear space interpolant.
+        let mut depth_buffer = framebuffer.attachments.depth.as_ref().unwrap().borrow_mut();
 
-                        let mut linear_space_interpolant =
-                            *interpolant * (1.0 / interpolant.position_projection_space.w);
+        // Restore linear space interpolant.
 
-                        if let Some(((x, y), non_linear_z)) = depth_buffer.test(
-                            x,
-                            y,
-                            linear_space_interpolant.position_projection_space.z,
-                        ) {
-                            // Alpha shader test.
+        let mut linear_space_interpolant =
+            *interpolant * (1.0 / interpolant.position_projection_space.w);
 
-                            let shader_context = self.shader_context.borrow();
+        let linear_space_z = linear_space_interpolant.position_projection_space.z;
 
-                            if !(self.alpha_shader)(
-                                &shader_context,
-                                &self.scene_resources,
-                                &linear_space_interpolant,
-                            ) {
-                                return;
-                            }
+        if let Some(((x, y), non_linear_z)) = depth_buffer.test(x, y, linear_space_z) {
+            // Alpha shader test.
 
-                            // Geometry shader.
+            if !(self.alpha_shader)(
+                &shader_context,
+                &self.scene_resources,
+                &linear_space_interpolant,
+            ) {
+                return;
+            }
 
-                            if let Some(g_buffer) = self.g_buffer.as_mut() {
-                                let z = linear_space_interpolant.position_projection_space.z;
-                                let near = depth_buffer.get_projection_z_near();
-                                let far = depth_buffer.get_projection_z_far();
+            // Geometry shader.
 
-                                linear_space_interpolant.depth =
-                                    ((z - near) / (far - near)).clamp(0.0, 1.0);
+            if let Some(g_buffer) = self.g_buffer.as_mut() {
+                linear_space_interpolant.depth = depth_buffer.get_normalized(linear_space_z);
 
-                                if let Some(sample) = (self.geometry_shader)(
-                                    &shader_context,
-                                    &self.scene_resources,
-                                    &self.shader_options,
-                                    &linear_space_interpolant,
-                                ) {
-                                    // Write to the depth attachment.
+                if let Some(sample) = (self.geometry_shader)(
+                    &shader_context,
+                    &self.scene_resources,
+                    &self.shader_options,
+                    &linear_space_interpolant,
+                ) {
+                    // Write to the depth attachment.
 
-                                    depth_buffer.set(x, y, non_linear_z);
+                    depth_buffer.set(x, y, non_linear_z);
 
-                                    if let Some(stencil_buffer_rc) =
-                                        framebuffer.attachments.stencil.as_ref()
-                                    {
-                                        // Write to the stencil attachment.
+                    if let Some(stencil_buffer_rc) = framebuffer.attachments.stencil.as_ref() {
+                        // Write to the stencil attachment.
 
-                                        let mut stencil_buffer = stencil_buffer_rc.borrow_mut();
+                        let mut stencil_buffer = stencil_buffer_rc.borrow_mut();
 
-                                        stencil_buffer.set(x, y);
-                                    }
-
-                                    if !self
-                                        .options
-                                        .render_pass_flags
-                                        .contains(RenderPassFlag::DeferredLighting)
-                                    {
-                                        if let Some(forward_buffer_rc) =
-                                            framebuffer.attachments.forward_ldr.as_ref()
-                                        {
-                                            let mut forward_buffer = forward_buffer_rc.borrow_mut();
-
-                                            let hdr_color = self.get_hdr_color_for_sample(
-                                                &shader_context,
-                                                &self.scene_resources,
-                                                &sample,
-                                            );
-
-                                            let color = if self
-                                                .options
-                                                .render_pass_flags
-                                                .contains(RenderPassFlag::ToneMapping)
-                                            {
-                                                self.get_tone_mapped_color_from_hdr(hdr_color)
-                                            } else {
-                                                Color::from_vec3(hdr_color.clamp(0.0, 1.0))
-                                            };
-
-                                            let color_u32 = color.to_u32();
-
-                                            forward_buffer.set(x, y, color_u32);
-                                        }
-                                    } else {
-                                        g_buffer.set(x, y, sample);
-                                    }
-                                }
-                            }
-                        }
+                        stencil_buffer.set(x, y);
                     }
-                    _ => {
-                        todo!("Support framebuffers with no bound depth attachment! (i.e., always passes depth test)");
+
+                    // Write this fragment.
+
+                    if self
+                        .options
+                        .render_pass_flags
+                        .contains(RenderPassFlag::DeferredLighting)
+                    {
+                        g_buffer.set(x, y, sample);
+                    } else {
+                        self.set_forward_fragment(&shader_context, &framebuffer, x, y, sample);
                     }
                 }
             }
-            None => panic!(),
+        }
+    }
+
+    fn set_forward_fragment(
+        &self,
+        shader_context: &ShaderContext,
+        framebuffer: &Framebuffer,
+        x: u32,
+        y: u32,
+        sample: GeometrySample,
+    ) {
+        if let Some(forward_buffer_rc) = framebuffer.attachments.forward_ldr.as_ref() {
+            let mut forward_buffer = forward_buffer_rc.borrow_mut();
+
+            let hdr_color =
+                self.get_hdr_color_for_sample(shader_context, &self.scene_resources, &sample);
+
+            let color = if self
+                .options
+                .render_pass_flags
+                .contains(RenderPassFlag::ToneMapping)
+            {
+                self.get_tone_mapped_color_from_hdr(hdr_color)
+            } else {
+                Color::from_vec3(hdr_color.clamp(0.0, 1.0))
+            };
+
+            let color_u32 = color.to_u32();
+
+            forward_buffer.set(x, y, color_u32);
         }
     }
 
