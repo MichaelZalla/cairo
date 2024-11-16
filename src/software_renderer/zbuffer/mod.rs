@@ -51,6 +51,7 @@ pub struct ZBuffer {
     projection_z_far: f32,
     projection_z_near_reciprocal: f32,
     projection_z_far_reciprocal: f32,
+    projection_depth: f32,
     depth_test_method: DepthTestMethod,
 }
 
@@ -64,8 +65,13 @@ impl ZBuffer {
             projection_z_near_reciprocal: 1.0 / projection_z_near,
             projection_z_far,
             projection_z_far_reciprocal: 1.0 / projection_z_far,
+            projection_depth: projection_z_far - projection_z_near,
             depth_test_method: Default::default(),
         }
+    }
+
+    pub fn get_projection_depth(&self) -> f32 {
+        self.projection_depth
     }
 
     pub fn get_projection_z_near(&self) -> f32 {
@@ -74,7 +80,10 @@ impl ZBuffer {
 
     pub fn set_projection_z_near(&mut self, depth: f32) {
         self.projection_z_near = depth;
+
         self.projection_z_near_reciprocal = 1.0 / depth;
+
+        self.projection_depth = self.projection_z_far - self.projection_z_near;
     }
 
     pub fn get_projection_z_far(&self) -> f32 {
@@ -83,7 +92,10 @@ impl ZBuffer {
 
     pub fn set_projection_z_far(&mut self, depth: f32) {
         self.projection_z_far = depth;
+
         self.projection_z_far_reciprocal = 1.0 / depth;
+
+        self.projection_depth = self.projection_z_far - self.projection_z_near;
     }
 
     pub fn get_depth_test_method(&self) -> &DepthTestMethod {
