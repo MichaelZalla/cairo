@@ -113,7 +113,7 @@ pub fn do_textbox(
 
     if let Some(target_id) = ctx.get_focus_target() {
         if target_id == id {
-            for (keycode, modifiers) in &keyboard_state.keys_pressed {
+            for keycode in &keyboard_state.newly_pressed_keycodes {
                 match *keycode {
                     Keycode::Backspace | Keycode::Delete => {
                         // Remove one character from the model value, if possible.
@@ -130,7 +130,7 @@ pub fn do_textbox(
                         }
                     }
                     _ => {
-                        match to_ascii_char(keycode, modifiers) {
+                        match to_ascii_char(keycode, &keyboard_state.newly_pressed_keycodes) {
                             Some(char) => {
                                 // Add this character to the model value (string).
 

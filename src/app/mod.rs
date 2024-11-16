@@ -2,12 +2,14 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use sdl2::event::{EventWatch, WindowEvent};
-use sdl2::keyboard::Keycode;
-use sdl2::mouse::MouseButton;
-use sdl2::render::Canvas;
-use sdl2::video::{FullscreenType, Window};
-use sdl2::{event::Event, render::Texture};
+use sdl2::{
+    event::{EventWatch, WindowEvent},
+    keyboard::Keycode,
+    mouse::MouseButton,
+    render::Canvas,
+    video::{FullscreenType, Window},
+    {event::Event, render::Texture},
+};
 
 use crate::{
     device::{
@@ -19,11 +21,10 @@ use crate::{
     time::TimingInfo,
 };
 
-use window::AppWindowingMode;
-
 use context::{make_application_context, make_canvas_texture, ApplicationContext};
 use profile::AppCycleCounter;
 use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
+use window::AppWindowingMode;
 
 mod profile;
 
@@ -256,6 +257,8 @@ impl App {
         let mut frame_start: u64 = timer_subsystem.performance_counter();
         let mut frame_end: u64;
 
+        let mut prev_keyboard_state: KeyboardState = Default::default();
+
         let mut prev_mouse_position = (0, 0);
         let mut prev_mouse_ndc_position = (0.0, 0.0);
         let mut prev_mouse_buttons_down = HashSet::new();
@@ -303,8 +306,6 @@ impl App {
             let events = event_pump.poll_iter();
 
             let mut mouse_state: MouseState = Default::default();
-
-            let mut keyboard_state: KeyboardState = Default::default();
 
             let mut game_controller = GameController::new();
 
@@ -431,7 +432,7 @@ impl App {
 
                     Event::KeyDown {
                         keycode: Some(keycode),
-                        keymod: modifiers,
+                        keymod: _modifiers,
                         ..
                     } => match keycode {
                         Keycode::Escape => break 'main,
@@ -450,13 +451,7 @@ impl App {
                                 }
                             }
                         }
-                        _ => {
-                            if keycode == Keycode::SPACE {
-                                self.toggle_updates();
-                            }
-
-                            keyboard_state.keys_pressed.push((keycode, modifiers));
-                        }
+                        _ => (),
                     },
 
                     Event::ControllerDeviceAdded { which, .. } => {
@@ -489,6 +484,40 @@ impl App {
 
                     _ => {}
                 }
+            }
+
+            // Read the current keyboard state
+
+            let sdl_context = &self.context.sdl_context;
+
+            let sdl_keyboard_util = sdl_context.keyboard();
+
+            let modifiers = sdl_keyboard_util.mod_state();
+
+            let sdl_keyboard_state = event_pump.keyboard_state();
+
+            let pressed_keycodes = sdl_keyboard_state
+                .pressed_scancodes()
+                .filter_map(Keycode::from_scancode)
+                .collect();
+
+            let prev_pressed_keycodes = prev_keyboard_state.pressed_keycodes;
+
+            let newly_pressed_keycodes = &pressed_keycodes - &prev_pressed_keycodes;
+
+            let mut keyboard_state = KeyboardState {
+                pressed_keycodes,
+                newly_pressed_keycodes,
+                modifiers,
+            };
+
+            // Global key bindings.
+
+            if keyboard_state
+                .newly_pressed_keycodes
+                .contains(&Keycode::SPACE)
+            {
+                self.toggle_updates();
             }
 
             // Read the current mouse state
@@ -644,6 +673,8 @@ impl App {
             self.cycle_counters
                 .get_mut(AppCycleCounter::UpdateCallback as usize)
                 .end();
+
+            prev_keyboard_state = keyboard_state;
 
             prev_mouse_position = mouse_state.position;
             prev_mouse_ndc_position = mouse_state.ndc_position;

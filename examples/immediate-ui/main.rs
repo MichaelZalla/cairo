@@ -2,10 +2,7 @@ extern crate sdl2;
 
 use std::{cell::RefCell, env, f32::consts::PI, path::Path, rc::Rc};
 
-use sdl2::{
-    keyboard::{Keycode, Mod},
-    mouse::Cursor,
-};
+use sdl2::{keyboard::Keycode, mouse::Cursor};
 
 use cairo::{
     app::{
@@ -572,10 +569,15 @@ fn main() -> Result<(), String> {
 
                 // Extract keyboard shortcut commands.
 
+                let is_ctrl_pressed = keyboard_state.pressed_keycodes.contains(&Keycode::LCtrl)
+                    || keyboard_state.pressed_keycodes.contains(&Keycode::RCtrl);
+
+                let is_shift_pressed = keyboard_state.pressed_keycodes.contains(&Keycode::LShift)
+                    || keyboard_state.pressed_keycodes.contains(&Keycode::RShift);
+
                 keyboard_state
-                    .keys_pressed
-                    .retain(|(keycode, modifiers)| match *keycode {
-                        #[cfg(debug_assertions)]
+                    .newly_pressed_keycodes
+                    .retain(|keycode| match *keycode {
                         Keycode::F7 => {
                             GLOBAL_UI_CONTEXT.with(|ctx| {
                                 let mut debug_options = ctx.debug.borrow_mut();
@@ -587,14 +589,10 @@ fn main() -> Result<(), String> {
                             false
                         }
                         Keycode::Z => {
-                            if modifiers.contains(Mod::LCTRLMOD)
-                                || modifiers.contains(Mod::RCTRLMOD)
-                            {
+                            if is_ctrl_pressed {
                                 if let Some(executed_command) = executed_commands.pop_back() {
                                     let (new_pending_command, is_undo) = {
-                                        if modifiers.contains(Mod::LSHIFTMOD)
-                                            | modifiers.contains(Mod::RSHIFTMOD)
-                                        {
+                                        if is_shift_pressed {
                                             (
                                                 format!(
                                                     "{} {}",
@@ -629,9 +627,7 @@ fn main() -> Result<(), String> {
                             }
                         }
                         Keycode::V => {
-                            if modifiers.contains(Mod::LCTRLMOD)
-                                || modifiers.contains(Mod::RCTRLMOD)
-                            {
+                            if is_ctrl_pressed {
                                 SETTINGS.with(|settings_rc| {
                                     let current_settings = settings_rc.borrow();
 
@@ -652,9 +648,7 @@ fn main() -> Result<(), String> {
                             }
                         }
                         Keycode::H => {
-                            if modifiers.contains(Mod::LCTRLMOD)
-                                || modifiers.contains(Mod::RCTRLMOD)
-                            {
+                            if is_ctrl_pressed {
                                 SETTINGS.with(|settings_rc| {
                                     let current_settings = settings_rc.borrow();
 
@@ -673,9 +667,7 @@ fn main() -> Result<(), String> {
                             }
                         }
                         Keycode::B => {
-                            if modifiers.contains(Mod::LCTRLMOD)
-                                || modifiers.contains(Mod::RCTRLMOD)
-                            {
+                            if is_ctrl_pressed {
                                 SETTINGS.with(|settings_rc| {
                                     let current_settings = settings_rc.borrow();
 

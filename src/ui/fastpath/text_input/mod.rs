@@ -53,9 +53,9 @@ pub fn text_input(
         GLOBAL_UI_CONTEXT.with(|ctx| {
             let input_events = ctx.input_events.borrow();
 
-            let keys_pressed = &input_events.keyboard.keys_pressed;
+            let pressed_keys = &input_events.keyboard.newly_pressed_keycodes;
 
-            for (keycode, modifiers) in keys_pressed {
+            for keycode in pressed_keys {
                 match *keycode {
                     Keycode::BACKSPACE | Keycode::Delete => {
                         // Remove one character from the model value, if possible.
@@ -66,7 +66,7 @@ pub fn text_input(
                         result.replace(new_value);
                     }
                     _ => {
-                        match keycode::to_ascii_char(keycode, modifiers) {
+                        match keycode::to_ascii_char(keycode, pressed_keys) {
                             Some(char) => {
                                 // Add this character to the model value (string).
 

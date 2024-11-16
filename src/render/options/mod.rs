@@ -73,9 +73,9 @@ impl Default for RenderOptions {
 
 impl RenderOptions {
     pub fn update(&mut self, keyboard_state: &KeyboardState) {
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                (Keycode::Num1, _) => {
+        for keycode in keyboard_state.newly_pressed_keycodes.iter() {
+            match *keycode {
+                Keycode::Num1 => {
                     self.render_pass_flags ^= RenderPassFlag::Rasterization;
 
                     println!(
@@ -90,7 +90,7 @@ impl RenderOptions {
                         }
                     );
                 }
-                (Keycode::Num2, _) => {
+                Keycode::Num2 => {
                     self.render_pass_flags ^= RenderPassFlag::Lighting;
 
                     println!(
@@ -102,7 +102,7 @@ impl RenderOptions {
                         }
                     );
                 }
-                (Keycode::Num3, _) => {
+                Keycode::Num3 => {
                     self.render_pass_flags ^= RenderPassFlag::DeferredLighting;
 
                     println!(
@@ -117,7 +117,7 @@ impl RenderOptions {
                         }
                     );
                 }
-                (Keycode::Num4, _) => {
+                Keycode::Num4 => {
                     self.render_pass_flags ^= RenderPassFlag::Bloom;
 
                     println!(
@@ -129,7 +129,7 @@ impl RenderOptions {
                         }
                     );
                 }
-                (Keycode::Num5, _) => {
+                Keycode::Num5 => {
                     // Cycle tone-mapping operators.
 
                     let current_index: usize = self.tone_mapping.try_into().unwrap();
@@ -140,7 +140,7 @@ impl RenderOptions {
 
                     println!("Tone mapping: {}", self.tone_mapping);
                 }
-                (Keycode::Num6, _) => {
+                Keycode::Num6 => {
                     // Cycle culling reject settings.
 
                     self.rasterizer_options.face_culling_strategy.reject =
@@ -155,7 +155,7 @@ impl RenderOptions {
                         self.rasterizer_options.face_culling_strategy.reject
                     );
                 }
-                (Keycode::Num7, _) => {
+                Keycode::Num7 => {
                     self.draw_wireframe = !self.draw_wireframe;
 
                     println!(
@@ -163,7 +163,7 @@ impl RenderOptions {
                         if self.draw_wireframe { "On" } else { "Off" }
                     );
                 }
-                (Keycode::Num8, _) => {
+                Keycode::Num8 => {
                     self.draw_normals = !self.draw_normals;
 
                     println!(

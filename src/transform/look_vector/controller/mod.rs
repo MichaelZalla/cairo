@@ -111,34 +111,34 @@ impl FirstPersonLookVectorController {
     ) {
         // Apply camera movement based on keyboard input.
 
-        for keycode in &keyboard_state.keys_pressed {
-            match keycode {
-                (Keycode::Up | Keycode::W, _) => {
+        for keycode in &keyboard_state.pressed_keycodes {
+            match *keycode {
+                Keycode::Up | Keycode::W => {
                     look_vector.set_position(
                         look_vector.position + look_vector.get_forward() * camera_movement_step,
                     );
                 }
-                (Keycode::Down | Keycode::S, _) => {
+                Keycode::Down | Keycode::S => {
                     look_vector.set_position(
                         look_vector.position - look_vector.get_forward() * camera_movement_step,
                     );
                 }
-                (Keycode::Left | Keycode::A, _) => {
+                Keycode::Left | Keycode::A => {
                     look_vector.set_position(
                         look_vector.position - look_vector.get_right() * camera_movement_step,
                     );
                 }
-                (Keycode::Right | Keycode::D, _) => {
+                Keycode::Right | Keycode::D => {
                     look_vector.set_position(
                         look_vector.position + look_vector.get_right() * camera_movement_step,
                     );
                 }
-                (Keycode::Q, _) => {
+                Keycode::Q => {
                     look_vector.set_position(
                         look_vector.position - look_vector.get_up() * camera_movement_step,
                     );
                 }
-                (Keycode::E, _) => {
+                Keycode::E => {
                     look_vector.set_position(
                         look_vector.position + look_vector.get_up() * camera_movement_step,
                     );

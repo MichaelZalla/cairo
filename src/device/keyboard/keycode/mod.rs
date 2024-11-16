@@ -1,6 +1,8 @@
-use sdl2::keyboard::{Keycode, Mod};
+use std::collections::HashSet;
 
-pub fn to_ascii_char(keycode: &Keycode, modifiers: &Mod) -> Option<char> {
+use sdl2::keyboard::Keycode;
+
+pub fn to_ascii_char(keycode: &Keycode, pressed_keys: &HashSet<Keycode>) -> Option<char> {
     match *keycode {
         Keycode::SPACE => Some(' '),
         Keycode::TAB => Some('\t'),
@@ -72,9 +74,9 @@ pub fn to_ascii_char(keycode: &Keycode, modifiers: &Mod) -> Option<char> {
             let char = keycode.name().chars().next().unwrap();
 
             let mut uppercase =
-                modifiers.contains(Mod::LSHIFTMOD) || modifiers.contains(Mod::RSHIFTMOD);
+                pressed_keys.contains(&Keycode::LShift) || pressed_keys.contains(&Keycode::RShift);
 
-            if modifiers.contains(Mod::CAPSMOD) {
+            if pressed_keys.contains(&Keycode::CapsLock) {
                 uppercase = !uppercase;
             }
 

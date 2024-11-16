@@ -194,22 +194,28 @@ fn main() -> Result<(), String> {
             Some(update_node_rc),
         )?;
 
-        for keycode in &keyboard_state.keys_pressed {
-            if let (Keycode::Num0 | Keycode::Num9, _) = keycode {
-                let mut current_index = hdr_path_index_rc.borrow_mut();
+        let was_num0_pressed = keyboard_state
+            .newly_pressed_keycodes
+            .contains(&Keycode::Num0);
 
-                *current_index = if keycode.0 == Keycode::Num0 {
-                    (*current_index + 1) % hdr_paths.len()
-                } else if *current_index == 0 {
-                    hdr_paths.len() - 1
-                } else {
-                    *current_index - 1
-                };
+        let was_num9_pressed = keyboard_state
+            .newly_pressed_keycodes
+            .contains(&Keycode::Num9);
 
-                let hdr_path = hdr_paths[*current_index];
+        if was_num0_pressed || was_num9_pressed {
+            let mut current_index = hdr_path_index_rc.borrow_mut();
 
-                update_skybox_handles(resources, scene, hdr_path);
-            }
+            *current_index = if was_num0_pressed {
+                (*current_index + 1) % hdr_paths.len()
+            } else if *current_index == 0 {
+                hdr_paths.len() - 1
+            } else {
+                *current_index - 1
+            };
+
+            let hdr_path = hdr_paths[*current_index];
+
+            update_skybox_handles(resources, scene, hdr_path);
         }
 
         let mut renderer = renderer_rc.borrow_mut();

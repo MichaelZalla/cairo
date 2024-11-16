@@ -204,7 +204,7 @@ fn main() -> Result<(), String> {
             // Process global inputs.
 
             {
-                for (keycode, _) in &keyboard_state.keys_pressed {
+                for keycode in &keyboard_state.newly_pressed_keycodes {
                     if let Keycode::L = *keycode {
                         let mut layout_direction = layout_direction_rc.borrow_mut();
 

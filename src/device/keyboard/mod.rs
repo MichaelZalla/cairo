@@ -1,8 +1,22 @@
+use std::collections::HashSet;
+
 use sdl2::keyboard::{Keycode, Mod};
 
 pub mod keycode;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct KeyboardState {
-    pub keys_pressed: Vec<(Keycode, Mod)>,
+    pub modifiers: Mod,
+    pub pressed_keycodes: HashSet<Keycode>,
+    pub newly_pressed_keycodes: HashSet<Keycode>,
+}
+
+impl Default for KeyboardState {
+    fn default() -> Self {
+        Self {
+            modifiers: Mod::NOMOD,
+            pressed_keycodes: Default::default(),
+            newly_pressed_keycodes: Default::default(),
+        }
+    }
 }

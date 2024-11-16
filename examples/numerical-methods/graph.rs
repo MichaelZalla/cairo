@@ -42,20 +42,22 @@ impl Graph {
 
         static TRANSLATION_SPEED: i32 = 8;
 
-        let keycodes_pressed = keyboard_state
-            .keys_pressed
-            .iter()
-            .map(|(code, _)| *code)
-            .collect::<Vec<Keycode>>();
-
-        if keycodes_pressed.contains(&Keycode::W) {
-            self.screen_origin.1 += TRANSLATION_SPEED;
-        } else if keycodes_pressed.contains(&Keycode::A) {
-            self.screen_origin.0 += TRANSLATION_SPEED;
-        } else if keycodes_pressed.contains(&Keycode::S) {
-            self.screen_origin.1 -= TRANSLATION_SPEED;
-        } else if keycodes_pressed.contains(&Keycode::D) {
-            self.screen_origin.0 -= TRANSLATION_SPEED;
+        for keycode in &keyboard_state.pressed_keycodes {
+            match keycode {
+                &Keycode::W => {
+                    self.screen_origin.1 += TRANSLATION_SPEED;
+                }
+                &Keycode::A => {
+                    self.screen_origin.0 += TRANSLATION_SPEED;
+                }
+                &Keycode::S => {
+                    self.screen_origin.1 -= TRANSLATION_SPEED;
+                }
+                &Keycode::D => {
+                    self.screen_origin.0 -= TRANSLATION_SPEED;
+                }
+                _ => (),
+            }
         }
 
         // Change zoom level with scroll wheel.
