@@ -267,7 +267,7 @@ impl<'a> Window<'a> {
             Some(handle) => {
                 let mouse = &ctx.input_events.borrow().mouse;
 
-                if mouse.drag_event.is_some() {
+                if mouse.drag_events.contains_key(&MouseButton::Left) {
                     self.apply_resize_event(mouse, handle, main_window_bounds);
                 }
             }
@@ -385,7 +385,9 @@ impl<'a> Window<'a> {
         handle: &UIBoxDragHandle,
         main_window_bounds: &Resolution,
     ) {
-        let mut delta = mouse_state.drag_event.as_ref().unwrap().delta;
+        let drag_event = mouse_state.drag_events.get(&MouseButton::Left);
+
+        let mut delta = drag_event.as_ref().unwrap().delta;
 
         // Restricts the resize deltas to protect the minimum size needed for
         // the window's inner content.

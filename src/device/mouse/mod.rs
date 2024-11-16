@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use sdl2::mouse::{MouseButton, MouseWheelDirection};
 
@@ -50,5 +50,5 @@ pub struct MouseState {
     pub prev_ndc_position: (f32, f32),
     pub wheel_event: Option<MouseWheelEvent>,
     pub relative_motion: MousePosition,
-    pub drag_event: Option<MouseDragEvent>,
+    pub drag_events: HashMap<MouseButton, MouseDragEvent>,
 }

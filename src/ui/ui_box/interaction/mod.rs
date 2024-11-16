@@ -116,7 +116,10 @@ impl UIBoxInteraction {
         {
             let mouse = &input_events.mouse;
 
-            if let (Some(_), Some(ui_box_prev)) = (&mouse.drag_event, ui_box_previous_frame) {
+            if let (Some(_), Some(ui_box_prev)) = (
+                &mouse.drag_events.get(&MouseButton::Left),
+                ui_box_previous_frame,
+            ) {
                 // Check that the drag event originated from inside the UIBox's extent.
 
                 if ui_box_prev.contains_screen_pixel(mouse.prev_position.0, mouse.prev_position.1) {

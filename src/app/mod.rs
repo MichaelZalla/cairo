@@ -573,13 +573,47 @@ impl App {
 
             // Drag events.
 
-            if mouse_state.buttons_down.contains(&MouseButton::Left)
-                && mouse_state.prev_buttons_down.contains(&MouseButton::Left)
-                && !(mouse_state.relative_motion.0 == 0 && mouse_state.relative_motion.1 == 0)
-            {
-                mouse_state.drag_event.replace(MouseDragEvent {
-                    delta: mouse_state.relative_motion,
-                });
+            mouse_state.drag_events.clear();
+
+            if !(mouse_state.relative_motion.0 == 0 && mouse_state.relative_motion.1 == 0) {
+                // Left button drag.
+
+                if mouse_state.buttons_down.contains(&MouseButton::Left)
+                    && mouse_state.prev_buttons_down.contains(&MouseButton::Left)
+                {
+                    mouse_state.drag_events.insert(
+                        MouseButton::Left,
+                        MouseDragEvent {
+                            delta: mouse_state.relative_motion,
+                        },
+                    );
+                }
+
+                // Middle button drag.
+
+                if mouse_state.buttons_down.contains(&MouseButton::Middle)
+                    && mouse_state.prev_buttons_down.contains(&MouseButton::Middle)
+                {
+                    mouse_state.drag_events.insert(
+                        MouseButton::Middle,
+                        MouseDragEvent {
+                            delta: mouse_state.relative_motion,
+                        },
+                    );
+                }
+
+                // Right button drag.
+
+                if mouse_state.buttons_down.contains(&MouseButton::Right)
+                    && mouse_state.prev_buttons_down.contains(&MouseButton::Right)
+                {
+                    mouse_state.drag_events.insert(
+                        MouseButton::Right,
+                        MouseDragEvent {
+                            delta: mouse_state.relative_motion,
+                        },
+                    );
+                }
             }
 
             // Update current scene

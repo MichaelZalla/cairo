@@ -2,6 +2,8 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use sdl2::mouse::MouseButton;
+
 use crate::{
     collections::tree::{node::NodeLocalTraversalMethod, Tree},
     ui::{
@@ -125,7 +127,8 @@ impl<'a> PanelTree<'a> {
                                 let mouse = &ctx.input_events.borrow().mouse;
                                 let cache = &ctx.cache.borrow();
 
-                                if let Some(drag_event) = &mouse.drag_event {
+                                if let Some(drag_event) = mouse.drag_events.get(&MouseButton::Left)
+                                {
                                     let pixel_delta = drag_event.delta;
 
                                     let prev_frame_parent =
