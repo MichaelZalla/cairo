@@ -4,6 +4,7 @@ pub mod entity;
 pub mod frustum;
 pub mod light;
 pub mod line;
+pub mod mesh;
 pub mod point;
 pub mod skybox;
 pub mod triangle;
