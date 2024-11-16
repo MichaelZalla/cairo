@@ -55,23 +55,16 @@ fn should_cull_aabb(world_transform: Mat4, clipping_camera_frustum: &Frustum, aa
 
     let bounding_sphere_position = (Vec4::new(aabb.center, 1.0) * world_transform).to_vec3();
 
-    let bounding_sphere_radius = aabb.max_half_extent;
-
     // @TODO Generate planes once per frame, not once per entity draw.
     let culling_planes = clipping_camera_frustum.get_planes();
 
-    // @TODO Need to verify sign of top plane normal and bottom plane normal.
+    let radius = aabb.bounding_sphere_radius;
 
-    !culling_planes[0]
-        .is_sphere_on_or_in_front_of(&bounding_sphere_position, bounding_sphere_radius)
-        || !culling_planes[1]
-            .is_sphere_on_or_in_front_of(&bounding_sphere_position, bounding_sphere_radius)
-        || !culling_planes[2]
-            .is_sphere_on_or_in_front_of(&bounding_sphere_position, bounding_sphere_radius)
-        || !culling_planes[3]
-            .is_sphere_on_or_in_front_of(&bounding_sphere_position, bounding_sphere_radius)
-        || !culling_planes[4]
-            .is_sphere_on_or_in_front_of(&bounding_sphere_position, bounding_sphere_radius)
-        || !culling_planes[5]
-            .is_sphere_on_or_in_front_of(&bounding_sphere_position, bounding_sphere_radius)
+    // @TODO Verify the sign of the top plane and bottom plane normals.
+    !culling_planes[0].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[1].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[2].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[3].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[4].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[5].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
 }

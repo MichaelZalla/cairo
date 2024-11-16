@@ -16,12 +16,12 @@ pub struct AABB {
     pub bottom: f32,
     pub near: f32,
     pub far: f32,
-    pub max_half_extent: f32,
+    pub bounding_sphere_radius: f32,
 }
 
 impl AABB {
     pub fn cube(center: Vec3, half_extent: f32) -> Self {
-        AABB {
+        let mut aabb = AABB {
             center,
             left: center.x - half_extent,
             right: center.x + half_extent,
@@ -29,8 +29,12 @@ impl AABB {
             bottom: center.y - half_extent,
             near: center.z + half_extent,
             far: center.z - half_extent,
-            max_half_extent: half_extent,
-        }
+            bounding_sphere_radius: 0.0,
+        };
+
+        aabb.bounding_sphere_radius = aabb.get_bounding_sphere_radius();
+
+        aabb
     }
 
     pub fn from_min_max(min: Vec3, max: Vec3) -> Self {
@@ -46,9 +50,7 @@ impl AABB {
             z: min.z,
         } + half_extents;
 
-        let max_half_extent = half_extents.x.max(half_extents.y).max(half_extents.z);
-
-        AABB {
+        let mut aabb = AABB {
             center,
             left: min.x,
             right: max.x,
@@ -56,8 +58,12 @@ impl AABB {
             bottom: min.y,
             near: max.z,
             far: min.z,
-            max_half_extent,
-        }
+            bounding_sphere_radius: 0.0,
+        };
+
+        aabb.bounding_sphere_radius = aabb.get_bounding_sphere_radius();
+
+        aabb
     }
 
     pub fn from_geometry(geometry: &Geometry) -> Self {
@@ -151,6 +157,18 @@ impl AABB {
             bottom_left_subdivision,
             bottom_right_subdivision,
         ]
+    }
+
+    fn get_bounding_sphere_radius(&self) -> f32 {
+        // Center-to-corner is equidistant for all corners on the AABB.
+
+        let top_left_near = Vec3 {
+            x: self.left,
+            y: self.top,
+            z: self.near,
+        };
+
+        (top_left_near - self.center).mag()
     }
 }
 
