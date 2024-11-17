@@ -80,6 +80,7 @@ impl PanelInstance for Viewport3DPanel {
             let resources = &scene_context.resources;
 
             let scenes = scene_context.scenes.borrow();
+
             let scene = &scenes[0];
 
             let renderer_rc = self.renderer.as_ref().unwrap();

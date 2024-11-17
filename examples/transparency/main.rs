@@ -156,24 +156,23 @@ fn main() -> Result<(), String> {
         let mut scenes = scene_context.scenes.borrow_mut();
         let scene = &mut scenes[0];
 
-        match scene.render(resources, &renderer_rc, None) {
-            Ok(()) => {
-                // Write out.
+        // Render scene.
 
-                let framebuffer = framebuffer_rc.borrow();
+        scene.render(resources, &renderer_rc, None)?;
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+        // Write out.
 
-                        color_buffer.copy_to(canvas);
+        let framebuffer = framebuffer_rc.borrow();
 
-                        Ok(())
-                    }
-                    None => panic!(),
-                }
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let color_buffer = color_buffer_lock.borrow();
+
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 

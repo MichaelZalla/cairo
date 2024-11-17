@@ -250,22 +250,21 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        match scene.render(resources, &renderer_rc, None) {
-            Ok(()) => {
-                let framebuffer = framebuffer_rc.borrow();
+        scene.render(resources, &renderer_rc, None)?;
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow_mut();
+        // Write out.
 
-                        color_buffer.copy_to(canvas);
+        let framebuffer = framebuffer_rc.borrow();
 
-                        Ok(())
-                    }
-                    None => panic!(),
-                }
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let color_buffer = color_buffer_lock.borrow();
+
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 

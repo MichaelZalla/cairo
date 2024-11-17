@@ -241,33 +241,30 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        match scene.render(resources, &renderer_rc, None) {
-            Ok(()) => {
-                // Write out.
+        scene.render(resources, &renderer_rc, None)?;
 
-                let framebuffer = framebuffer_rc.borrow();
+        // Write out.
 
-                match (
-                    framebuffer.attachments.color.as_ref(),
-                    framebuffer.attachments.bloom.as_ref(),
-                ) {
-                    (Some(color_buffer_rc), Some(bloom_texture_map_rc)) => {
-                        let color_buffer = color_buffer_rc.borrow();
+        let framebuffer = framebuffer_rc.borrow();
 
-                        color_buffer.copy_to(canvas);
+        match (
+            framebuffer.attachments.color.as_ref(),
+            framebuffer.attachments.bloom.as_ref(),
+        ) {
+            (Some(color_buffer_rc), Some(bloom_texture_map_rc)) => {
+                let color_buffer = color_buffer_rc.borrow();
 
-                        if false {
-                            let bloom_texture_map = bloom_texture_map_rc.borrow();
+                color_buffer.copy_to(canvas);
 
-                            blit_bloom_mipmaps_to_canvas(&bloom_texture_map, canvas);
-                        }
+                if false {
+                    let bloom_texture_map = bloom_texture_map_rc.borrow();
 
-                        Ok(())
-                    }
-                    _ => panic!(),
+                    blit_bloom_mipmaps_to_canvas(&bloom_texture_map, canvas);
                 }
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            _ => panic!(),
         }
     };
 
