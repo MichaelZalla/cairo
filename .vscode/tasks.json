@@ -565,5 +565,22 @@
         "rigid-body"
       ]
     },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example obj-viewer",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "obj-viewer"
+      ]
+    },
   ]
 }
