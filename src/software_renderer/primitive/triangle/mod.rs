@@ -1,7 +1,7 @@
 use crate::{
     animation::lerp,
     color::{self, Color},
-    mesh::Face,
+    mesh::face::Face,
     render::{
         culling::{FaceCullingReject, FaceCullingWindingOrder},
         options::RenderPassFlag,
