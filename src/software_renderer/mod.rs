@@ -101,6 +101,12 @@ impl Renderer for SoftwareRenderer {
             .render_pass_flags
             .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
         {
+            // Clear the geometry buffer (resets stencil bits).
+
+            if let Some(g_buffer) = self.g_buffer.as_mut() {
+                g_buffer.clear();
+            }
+
             // Clear the SSAO buffer.
 
             if let Some(ssao_buffer) = self.ssao_buffer.as_mut() {
@@ -115,12 +121,6 @@ impl Renderer for SoftwareRenderer {
                 let map = &mut ssao_blur_buffer.levels[0];
 
                 map.0.clear(None);
-            }
-
-            // Clear the geometry buffer (resets stencil bits).
-
-            if let Some(g_buffer) = self.g_buffer.as_mut() {
-                g_buffer.clear();
             }
         }
     }
