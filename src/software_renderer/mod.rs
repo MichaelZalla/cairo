@@ -420,7 +420,7 @@ impl SoftwareRenderer {
         }
     }
 
-    fn test_and_set_z_buffer(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
+    fn submit_fragment(&mut self, x: u32, y: u32, interpolant: &mut DefaultVertexOut) {
         let shader_context = self.shader_context.borrow();
 
         let framebuffer = self.framebuffer.as_ref().unwrap().borrow();

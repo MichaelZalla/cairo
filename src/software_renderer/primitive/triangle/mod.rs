@@ -393,7 +393,7 @@ impl SoftwareRenderer {
                 * ((x_start as f32) + 0.5 - left_edge_interpolant.position_projection_space.x);
 
             for x in x_start..x_end {
-                self.test_and_set_z_buffer(x, y, &mut line_interpolant);
+                self.submit_fragment(x, y, &mut line_interpolant);
 
                 line_interpolant += line_interpolant_step;
             }
