@@ -1,6 +1,6 @@
 use crate::{
     matrix::Mat4,
-    mesh::{mesh_geometry::MeshGeometry, Face, Mesh},
+    mesh::{face::Face, mesh_geometry::MeshGeometry, Mesh},
     software_renderer::SoftwareRenderer,
     vec::vec3::Vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
