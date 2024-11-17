@@ -16,6 +16,7 @@ pub mod effects;
 pub mod entity;
 pub mod font;
 pub mod fs;
+pub mod geometry;
 pub mod graphics;
 pub mod hdr;
 pub mod material;

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    physics::collider::plane::Plane,
+    geometry::primitives::plane::Plane,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 

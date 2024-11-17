@@ -1,7 +1,7 @@
 use std::fmt;
 
 use cairo::{
-    physics::collider::plane::Plane,
+    geometry::primitives::plane::Plane,
     vec::vec3::{self, Vec3},
 };
 

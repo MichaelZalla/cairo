@@ -1,11 +1,12 @@
 use std::rc::Rc;
 
 use crate::{
+    geometry::primitives::aabb::AABB,
     mesh::{mesh_geometry::MeshGeometry, Mesh},
     vec::vec3::Vec3,
 };
 
-use super::{aabb::AABB, oct_tree::OctTreeNode};
+use super::oct_tree::OctTreeNode;
 
 #[derive(Clone)]
 pub struct MeshOctTree<'a> {
