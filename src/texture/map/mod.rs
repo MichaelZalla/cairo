@@ -167,7 +167,12 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         self.width = width;
         self.height = height;
 
-        self.levels[0].0.resize(width, height);
+        if self.levels.is_empty() {
+            self.levels
+                .push(TextureBuffer(Buffer2D::new(width, height, None)))
+        } else {
+            self.levels[0].0.resize(width, height);
+        }
 
         self.levels = vec![self.levels[0].to_owned()];
 
