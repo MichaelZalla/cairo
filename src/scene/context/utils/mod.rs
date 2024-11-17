@@ -37,8 +37,8 @@ pub fn make_empty_scene(
     let camera_handle = {
         let mut camera: Camera = Camera::from_perspective(
             Vec3 {
-                x: 15.0,
-                y: 15.0,
+                x: 0.0,
+                y: 3.0,
                 z: -15.0,
             },
             Default::default(),
@@ -74,9 +74,9 @@ pub fn make_empty_scene(
             let mut transform = Transform3D::default();
 
             transform.set_translation(Vec3 {
-                x: 10.0,
-                y: 25.0,
-                z: 10.0,
+                x: 0.0,
+                y: 16.0,
+                z: 0.0,
             });
 
             SceneNode::new(
@@ -89,14 +89,16 @@ pub fn make_empty_scene(
         environment_node.add_child(ambient_light_node)?;
 
         let directional_light_node = {
-            let directional_light_handle = directional_light_arena.insert(Default::default());
+            let directional_light = DirectionalLight::default();
+
+            let directional_light_handle = directional_light_arena.insert(directional_light);
 
             let mut transform = Transform3D::default();
 
             transform.set_translation(Vec3 {
-                x: 0.0,
-                y: 15.0,
-                z: 0.0,
+                x: 8.0,
+                y: 16.0,
+                z: -8.0,
             });
 
             SceneNode::new(
@@ -155,7 +157,7 @@ pub fn make_cube_scene(
                             let camera = &mut entry.item;
 
                             camera.look_vector.set_position(Vec3 {
-                                x: 3.0,
+                                x: 0.0,
                                 y: 3.0,
                                 z: -3.0,
                             });
