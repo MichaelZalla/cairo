@@ -185,29 +185,25 @@ fn main() -> Result<(), String> {
         let resources = &scene_context.resources;
 
         let scenes = scene_context.scenes.borrow();
-
         let scene = &scenes[0];
 
         // Render scene.
 
-        match scene.render(resources, &renderer_rc, None) {
-            Ok(()) => {
-                // Write out.
+        scene.render(resources, &renderer_rc, None)?;
 
-                let framebuffer = framebuffer_rc.borrow();
+        // Write out.
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+        let framebuffer = framebuffer_rc.borrow();
 
-                        color_buffer.copy_to(canvas);
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let color_buffer = color_buffer_lock.borrow();
 
-                        Ok(())
-                    }
-                    None => panic!(),
-                }
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 

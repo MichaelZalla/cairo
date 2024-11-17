@@ -10,7 +10,7 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     render::options::RenderOptions,
-    scene::{context::SceneContext, graph::options::SceneGraphRenderOptions},
+    scene::context::SceneContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -167,24 +167,21 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        match scene.render(resources, &renderer_rc, None) {
-            Ok(()) => {
-                // Write out.
+        scene.render(resources, &renderer_rc, None)?;
 
-                let framebuffer = framebuffer_rc.borrow();
+        // Write out.
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let color_buffer = color_buffer_lock.borrow();
+        let framebuffer = framebuffer_rc.borrow();
 
-                        color_buffer.copy_to(canvas);
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let color_buffer = color_buffer_lock.borrow();
 
-                        Ok(())
-                    }
-                    None => panic!(),
-                }
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 

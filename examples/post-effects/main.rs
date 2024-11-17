@@ -282,34 +282,31 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        match scene.render(resources, &renderer_rc, None) {
-            Ok(()) => {
-                // Write out.
+        scene.render(resources, &renderer_rc, None)?;
 
-                let framebuffer = framebuffer_rc.borrow();
+        // Write out.
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let mut color_buffer = color_buffer_lock.borrow_mut();
+        let framebuffer = framebuffer_rc.borrow();
 
-                        // Perform a post-processing pass.
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                        for effect_rc in &effect_rcs {
-                            let mut effect = effect_rc.borrow_mut();
+                // Perform a post-processing pass.
 
-                            effect.apply(&mut color_buffer);
-                        }
+                for effect_rc in &effect_rcs {
+                    let mut effect = effect_rc.borrow_mut();
 
-                        // Return the post-processed pixels.
-
-                        color_buffer.copy_to(canvas);
-
-                        Ok(())
-                    }
-                    None => panic!(),
+                    effect.apply(&mut color_buffer);
                 }
+
+                // Return the post-processed pixels.
+
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 
