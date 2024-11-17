@@ -1,7 +1,7 @@
 use std::{f32::consts::TAU, mem, rc::Rc};
 
 use crate::{
-    mesh::{geometry::Geometry, Mesh, PartialFace},
+    mesh::{mesh_geometry::MeshGeometry, Mesh, PartialFace},
     texture::uv,
     transform::quaternion::Quaternion,
     vec::{
@@ -124,7 +124,7 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
     // Package the geometry.
 
-    let geometry = Geometry {
+    let geometry = MeshGeometry {
         vertices: vertices.into_boxed_slice(),
         uvs: uvs.into_boxed_slice(),
         normals: normals.into_boxed_slice(),

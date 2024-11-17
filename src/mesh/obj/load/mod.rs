@@ -8,7 +8,7 @@ use crate::{
     fs::read_lines,
     material::{mtl::load_mtl, Material},
     mesh::{
-        geometry::Geometry,
+        mesh_geometry::MeshGeometry,
         obj::parse::{
             parse_face, parse_mtllib, parse_vertex, parse_vertex_normal, parse_vertex_uv,
         },
@@ -19,7 +19,7 @@ use crate::{
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
-pub struct LoadObjResult(pub Rc<Geometry>, pub Vec<Mesh>);
+pub struct LoadObjResult(pub Rc<MeshGeometry>, pub Vec<Mesh>);
 
 #[derive(Default, Debug)]
 struct LoadObjStats {
@@ -224,7 +224,7 @@ pub fn load_obj(
         None => (),
     }
 
-    let mut geometry = Geometry {
+    let mut geometry = MeshGeometry {
         vertices: vertices.into_boxed_slice(),
         normals: normals.into_boxed_slice(),
         uvs: uvs.into_boxed_slice(),

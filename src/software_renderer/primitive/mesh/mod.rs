@@ -1,6 +1,6 @@
 use crate::{
     matrix::Mat4,
-    mesh::{geometry::Geometry, Face, Mesh},
+    mesh::{mesh_geometry::MeshGeometry, Face, Mesh},
     software_renderer::SoftwareRenderer,
     vec::vec3::Vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},
@@ -36,11 +36,11 @@ impl SoftwareRenderer {
         }
     }
 
-    fn render_mesh_geometry(&mut self, geometry: &Geometry, faces: &[Face]) {
+    fn render_mesh_geometry(&mut self, geometry: &MeshGeometry, faces: &[Face]) {
         self.process_object_space_vertices(geometry, faces);
     }
 
-    fn process_object_space_vertices(&mut self, geometry: &Geometry, faces: &[Face]) {
+    fn process_object_space_vertices(&mut self, geometry: &MeshGeometry, faces: &[Face]) {
         // Map each face to a set of 3 unique instances of DefaultVertexIn.
 
         let mut vertices_in: Vec<DefaultVertexIn> = Vec::with_capacity(faces.len() * 3);
@@ -69,7 +69,7 @@ impl SoftwareRenderer {
     }
 }
 
-fn get_vertices_in(geometry: &Geometry, face: &Face) -> [DefaultVertexIn; 3] {
+fn get_vertices_in(geometry: &MeshGeometry, face: &Face) -> [DefaultVertexIn; 3] {
     let (v0, v1, v2) = (
         geometry.vertices[face.vertices[0]],
         geometry.vertices[face.vertices[1]],

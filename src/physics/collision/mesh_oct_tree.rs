@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    mesh::{geometry::Geometry, Mesh},
+    mesh::{mesh_geometry::MeshGeometry, Mesh},
     vec::vec3::Vec3,
 };
 
@@ -9,14 +9,14 @@ use super::{aabb::AABB, oct_tree::OctTreeNode};
 
 #[derive(Clone)]
 pub struct MeshOctTree<'a> {
-    geometry: &'a Rc<Geometry>,
+    geometry: &'a Rc<MeshGeometry>,
     mesh: &'a Mesh,
     pub root: OctTreeNode<usize>,
 }
 
 impl<'a> MeshOctTree<'a> {
     pub fn new(
-        geometry: &'a Rc<Geometry>,
+        geometry: &'a Rc<MeshGeometry>,
         mesh: &'a Mesh,
         level_capacity: usize,
         bounds: AABB,

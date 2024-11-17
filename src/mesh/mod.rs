@@ -2,14 +2,14 @@ use std::{collections::HashMap, fmt, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use self::geometry::Geometry;
+use self::mesh_geometry::MeshGeometry;
 
 use crate::{
     physics::collision::aabb::AABB, resource::handle::Handle, serde::PostDeserialize,
     vec::vec3::Vec3,
 };
 
-pub mod geometry;
+pub mod mesh_geometry;
 pub mod obj;
 pub mod primitive;
 
@@ -84,7 +84,7 @@ pub struct Mesh {
     pub group_name: Option<String>,
     pub material_source: Option<String>,
     pub material: Option<Handle>,
-    pub geometry: Rc<Geometry>,
+    pub geometry: Rc<MeshGeometry>,
     pub faces: Vec<Face>,
     #[serde(skip)]
     pub aabb: AABB,
@@ -108,7 +108,7 @@ impl fmt::Display for Mesh {
     }
 }
 
-fn get_processed_faces(geometry: &Rc<Geometry>, partial_faces: &Vec<PartialFace>) -> Vec<Face> {
+fn get_processed_faces(geometry: &Rc<MeshGeometry>, partial_faces: &Vec<PartialFace>) -> Vec<Face> {
     let mut faces: Vec<Face> = Vec::<Face>::with_capacity(partial_faces.len());
 
     for partial_face in partial_faces {
@@ -183,7 +183,7 @@ fn get_processed_faces(geometry: &Rc<Geometry>, partial_faces: &Vec<PartialFace>
 
 impl Mesh {
     pub fn new(
-        geometry: Rc<Geometry>,
+        geometry: Rc<MeshGeometry>,
         partial_faces: Vec<PartialFace>,
         material: Option<Handle>,
     ) -> Self {
