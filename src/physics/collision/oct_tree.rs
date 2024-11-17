@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-use crate::{animation::lerp, vec::vec3::Vec3};
-
-use super::aabb::AABB;
+use crate::{animation::lerp, geometry::primitives::aabb::AABB, vec::vec3::Vec3};
 
 #[derive(Default, Clone)]
 pub struct OctTreeNode<T> {

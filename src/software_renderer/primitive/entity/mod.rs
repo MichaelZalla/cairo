@@ -1,5 +1,5 @@
 use crate::{
-    matrix::Mat4, mesh::Mesh, physics::collision::aabb::AABB, resource::handle::Handle,
+    geometry::primitives::aabb::AABB, matrix::Mat4, mesh::Mesh, resource::handle::Handle,
     scene::camera::frustum::Frustum, software_renderer::SoftwareRenderer, vec::vec4::Vec4,
 };
 

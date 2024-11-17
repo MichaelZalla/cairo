@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use self::mesh_geometry::MeshGeometry;
 
 use crate::{
-    physics::collision::aabb::AABB, resource::handle::Handle, serde::PostDeserialize,
+    geometry::primitives::aabb::AABB, resource::handle::Handle, serde::PostDeserialize,
     vec::vec3::Vec3,
 };
 

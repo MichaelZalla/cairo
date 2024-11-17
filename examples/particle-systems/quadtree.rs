@@ -2,7 +2,7 @@ use std::ptr::NonNull;
 
 use arrayvec::ArrayVec;
 
-use cairo::{physics::collision::aabb::AABB, vec::vec3::Vec3};
+use cairo::{geometry::primitives::aabb::AABB, vec::vec3::Vec3};
 
 use crate::{force::Acceleration, simulation::universal_gravity_acceleration};
 

@@ -3,7 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    physics::collision::aabb::AABB,
+    geometry::primitives::aabb::AABB,
     vec::{vec2::Vec2, vec3::Vec3},
 };
 
