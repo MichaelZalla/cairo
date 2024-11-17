@@ -3,7 +3,7 @@ use std::fmt::{self};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mesh::{geometry::Geometry, Mesh},
+    mesh::{mesh_geometry::MeshGeometry, Mesh},
     vec::vec3::{self, Vec3},
 };
 
@@ -66,7 +66,7 @@ impl AABB {
         aabb
     }
 
-    pub fn from_geometry(geometry: &Geometry) -> Self {
+    pub fn from_geometry(geometry: &MeshGeometry) -> Self {
         let (min, max) = get_min_max_for_geometry(geometry);
 
         AABB::from_min_max(min, max)
@@ -182,7 +182,7 @@ impl fmt::Display for AABB {
     }
 }
 
-fn get_min_max_for_geometry(geometry: &Geometry) -> (Vec3, Vec3) {
+fn get_min_max_for_geometry(geometry: &MeshGeometry) -> (Vec3, Vec3) {
     let mut min = vec3::MAX;
     let mut max = vec3::MIN;
 

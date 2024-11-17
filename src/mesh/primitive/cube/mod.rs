@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    mesh::{geometry::Geometry, Mesh, PartialFace},
+    mesh::{mesh_geometry::MeshGeometry, Mesh, PartialFace},
     texture,
     vec::{
         vec2::Vec2,
@@ -232,7 +232,7 @@ pub fn generate(width: f32, height: f32, depth: f32) -> Mesh {
 
     // Package the geometry.
 
-    let geometry = Geometry {
+    let geometry = MeshGeometry {
         vertices: vertices.into_boxed_slice(),
         uvs: uvs.into_boxed_slice(),
         normals: normals.into_boxed_slice(),
