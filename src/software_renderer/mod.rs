@@ -427,6 +427,13 @@ impl SoftwareRenderer {
 
         let mut depth_buffer = framebuffer.attachments.depth.as_ref().unwrap().borrow_mut();
 
+        let mut stencil_buffer = framebuffer
+            .attachments
+            .stencil
+            .as_ref()
+            .unwrap()
+            .borrow_mut();
+
         // Restore linear space interpolant.
 
         let mut linear_space_interpolant =
@@ -456,19 +463,15 @@ impl SoftwareRenderer {
                     &self.shader_options,
                     &linear_space_interpolant,
                 ) {
-                    // Write to the depth attachment.
+                    // Write non-linear depth to the depth buffer.
 
                     depth_buffer.set(x, y, non_linear_z);
 
-                    if let Some(stencil_buffer_rc) = framebuffer.attachments.stencil.as_ref() {
-                        // Write to the stencil attachment.
+                    // Write to the stencil buffer.
 
-                        let mut stencil_buffer = stencil_buffer_rc.borrow_mut();
+                    stencil_buffer.set(x, y);
 
-                        stencil_buffer.set(x, y);
-                    }
-
-                    // Write this fragment.
+                    // Write to either the geometry buffer or the forward color buffer.
 
                     if self
                         .options
@@ -476,41 +479,37 @@ impl SoftwareRenderer {
                         .contains(RenderPassFlag::DeferredLighting)
                     {
                         g_buffer.set(x, y, sample);
-                    } else {
-                        self.set_forward_fragment(&shader_context, &framebuffer, x, y, sample);
+                    } else if let Some(forward_buffer_rc) =
+                        framebuffer.attachments.forward_ldr.as_ref()
+                    {
+                        let mut forward_buffer = forward_buffer_rc.borrow_mut();
+
+                        let hdr_color = self.get_hdr_color_for_sample(
+                            &shader_context,
+                            &self.scene_resources,
+                            &sample,
+                        );
+
+                        let ldr_color = self.get_ldr_color(hdr_color);
+
+                        let ldr_color_u32 = ldr_color.to_u32();
+
+                        forward_buffer.set(x, y, ldr_color_u32);
                     }
                 }
             }
         }
     }
 
-    fn set_forward_fragment(
-        &self,
-        shader_context: &ShaderContext,
-        framebuffer: &Framebuffer,
-        x: u32,
-        y: u32,
-        sample: GeometrySample,
-    ) {
-        if let Some(forward_buffer_rc) = framebuffer.attachments.forward_ldr.as_ref() {
-            let mut forward_buffer = forward_buffer_rc.borrow_mut();
-
-            let hdr_color =
-                self.get_hdr_color_for_sample(shader_context, &self.scene_resources, &sample);
-
-            let color = if self
-                .options
-                .render_pass_flags
-                .contains(RenderPassFlag::ToneMapping)
-            {
-                self.get_tone_mapped_color_from_hdr(hdr_color)
-            } else {
-                Color::from_vec3(hdr_color.clamp(0.0, 1.0))
-            };
-
-            let color_u32 = color.to_u32();
-
-            forward_buffer.set(x, y, color_u32);
+    fn get_ldr_color(&self, hdr_color: Vec3) -> Color {
+        if self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::ToneMapping)
+        {
+            self.get_tone_mapped_color_from_hdr(hdr_color)
+        } else {
+            Color::from_vec3(hdr_color.clamp(0.0, 1.0))
         }
     }
 
