@@ -554,7 +554,7 @@ impl PointLight {
 
                     let framebuffer = context.framebuffer.borrow();
 
-                    match &framebuffer.attachments.forward_or_deferred_hdr {
+                    match &framebuffer.attachments.deferred_hdr {
                         Some(hdr_attachment_rc) => {
                             let hdr_attachment = hdr_attachment_rc.borrow();
     

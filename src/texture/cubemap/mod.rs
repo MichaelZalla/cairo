@@ -378,7 +378,7 @@ impl CubeMap<Vec3> {
 
                     let framebuffer = framebuffer_rc.borrow();
 
-                    match &framebuffer.attachments.forward_or_deferred_hdr {
+                    match &framebuffer.attachments.deferred_hdr {
                         Some(hdr_attachment_rc) => {
                             let hdr_buffer = hdr_attachment_rc.borrow();
 

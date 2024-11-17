@@ -7,7 +7,7 @@ impl SoftwareRenderer {
                 let framebuffer = framebuffer_rc.borrow_mut();
 
                 if let (Some(deferred_buffer_rc), Some(color_buffer_rc)) = (
-                    framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
+                    framebuffer.attachments.deferred_hdr.as_ref(),
                     framebuffer.attachments.color.as_ref(),
                 ) {
                     let deferred_buffer = deferred_buffer_rc.borrow();

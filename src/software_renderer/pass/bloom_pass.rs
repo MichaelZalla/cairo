@@ -18,7 +18,7 @@ impl SoftwareRenderer {
                 let framebuffer = framebuffer_rc.borrow_mut();
 
                 if let (Some(deferred_buffer_rc), Some(bloom_texture_map_rc)) = (
-                    framebuffer.attachments.forward_or_deferred_hdr.as_ref(),
+                    framebuffer.attachments.deferred_hdr.as_ref(),
                     framebuffer.attachments.bloom.as_ref(),
                 ) {
                     let mut deferred_buffer = deferred_buffer_rc.borrow_mut();

@@ -32,7 +32,7 @@ pub struct FramebufferAttachments {
     pub depth: Option<Rc<RefCell<ZBuffer>>>,
     pub color: Option<Rc<RefCell<Buffer2D>>>,
     pub forward_ldr: Option<Rc<RefCell<Buffer2D>>>,
-    pub forward_or_deferred_hdr: Option<Rc<RefCell<Buffer2D<Vec3>>>>,
+    pub deferred_hdr: Option<Rc<RefCell<Buffer2D<Vec3>>>>,
     pub bloom: Option<Rc<RefCell<TextureMap<Vec3>>>>,
 }
 
@@ -73,10 +73,9 @@ impl Framebuffer {
 
         self.attachments.forward_ldr = Some(Rc::new(RefCell::new(forward_ldr_buffer)));
 
-        let forward_or_deferred_hdr_buffer = Buffer2D::new(width, height, None);
+        let deferred_hdr_buffer = Buffer2D::new(width, height, None);
 
-        self.attachments.forward_or_deferred_hdr =
-            Some(Rc::new(RefCell::new(forward_or_deferred_hdr_buffer)));
+        self.attachments.deferred_hdr = Some(Rc::new(RefCell::new(deferred_hdr_buffer)));
 
         let bloom_buffer = Buffer2D::<Vec3>::new(width, height, None);
 
@@ -114,12 +113,10 @@ impl Framebuffer {
             forward_ldr_buffer.assert_dimensions(width, height);
         }
 
-        if let Some(forward_or_deferred_hdr_buffer_rc) =
-            self.attachments.forward_or_deferred_hdr.as_ref()
-        {
-            let forward_or_deferred_hdr_buffer = forward_or_deferred_hdr_buffer_rc.borrow();
+        if let Some(deferred_hdr_buffer_rc) = self.attachments.deferred_hdr.as_ref() {
+            let deferred_hdr_buffer = deferred_hdr_buffer_rc.borrow();
 
-            forward_or_deferred_hdr_buffer.assert_dimensions(width, height);
+            deferred_hdr_buffer.assert_dimensions(width, height);
         }
 
         if let Some(bloom_texture_map_rc) = self.attachments.bloom.as_ref() {
@@ -158,7 +155,7 @@ impl Framebuffer {
             buffer.clear(None);
         }
 
-        if let Some(lock) = self.attachments.forward_or_deferred_hdr.as_mut() {
+        if let Some(lock) = self.attachments.deferred_hdr.as_mut() {
             let mut buffer = lock.borrow_mut();
 
             buffer.clear(None);
@@ -210,7 +207,7 @@ impl Framebuffer {
             }
         }
 
-        if let Some(lock) = self.attachments.forward_or_deferred_hdr.as_mut() {
+        if let Some(lock) = self.attachments.deferred_hdr.as_mut() {
             let mut buffer = lock.borrow_mut();
 
             buffer.resize(width, height);

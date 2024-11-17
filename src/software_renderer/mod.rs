@@ -169,9 +169,7 @@ impl Renderer for SoftwareRenderer {
 
             // Blit the forward color buffer.
 
-            if let Some(deferred_buffer_rc) =
-                framebuffer.attachments.forward_or_deferred_hdr.as_ref()
-            {
+            if let Some(deferred_buffer_rc) = framebuffer.attachments.deferred_hdr.as_ref() {
                 let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
 
                 for color_hdr in deferred_buffer.iter_mut() {
