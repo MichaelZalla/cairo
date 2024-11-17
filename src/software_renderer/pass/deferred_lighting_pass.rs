@@ -17,16 +17,13 @@ impl SoftwareRenderer {
 
                 for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
                     if sample.stencil {
-                        let x = index as u32 % self.viewport.width;
-                        let y = index as u32 / self.viewport.width;
-
-                        let color = self.get_hdr_color_for_sample(
+                        let hdr_color = self.get_hdr_color_for_sample(
                             &shader_context,
                             &self.scene_resources,
                             sample,
                         );
 
-                        deferred_buffer.set(x, y, color);
+                        deferred_buffer.set_at(index, hdr_color);
                     }
                 }
             }
