@@ -5,7 +5,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1280_BY_720, RESOLUTION_960_BY_540},
+        resolution::{Resolution, RESOLUTION_1024_BY_576},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -38,8 +38,8 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/collision-physics".to_string(),
         relative_mouse_mode: true,
-        canvas_resolution: RESOLUTION_960_BY_540,
-        window_resolution: RESOLUTION_1280_BY_720,
+        canvas_resolution: RESOLUTION_1024_BY_576,
+        window_resolution: RESOLUTION_1024_BY_576,
         ..Default::default()
     };
 
