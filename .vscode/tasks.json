@@ -32,6 +32,21 @@
         "$rustc"
       ],
       "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo build --lib",
+      "command": "cargo",
+      "args": [
+        "build",
+        "--lib"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
         "kind": "build",
         "isDefault": true
       },
@@ -596,6 +611,24 @@
         "--release",
         "--example",
         "obj-viewer"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Rust: cargo run --example collision-physics",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "collision-physics"
       ]
     },
   ]
