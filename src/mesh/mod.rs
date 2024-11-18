@@ -3,7 +3,9 @@ use std::{collections::HashMap, fmt, rc::Rc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    geometry::primitives::aabb::AABB, resource::handle::Handle, serde::PostDeserialize,
+    geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, primitives::aabb::AABB},
+    resource::handle::Handle,
+    serde::PostDeserialize,
     vec::vec3::Vec3,
 };
 
@@ -74,11 +76,13 @@ pub struct Mesh {
     pub faces: Vec<Face>,
     #[serde(skip)]
     pub aabb: AABB,
+    #[serde(skip)]
+    pub static_triangle_bvh: Option<StaticTriangleBVH>,
 }
 
 impl PostDeserialize for Mesh {
     fn post_deserialize(&mut self) {
-        self.aabb = self.make_object_space_bounding_box();
+        self.aabb = AABB::from_mesh(self);
     }
 }
 
@@ -111,6 +115,7 @@ impl Mesh {
             geometry,
             faces,
             aabb: Default::default(),
+            static_triangle_bvh: None,
         };
 
         mesh.post_deserialize();
@@ -185,9 +190,5 @@ impl Mesh {
         }
 
         Ok(())
-    }
-
-    fn make_object_space_bounding_box(&self) -> AABB {
-        AABB::from_mesh(self)
     }
 }
