@@ -529,6 +529,19 @@ impl SceneGraph {
                                             &entity.material,
                                         );
 
+                                        if let Some(bvh) = entity_mesh.static_triangle_bvh.as_ref()
+                                        {
+                                            // Render the BVH root's AABB.
+
+                                            let root = &bvh.root;
+
+                                            renderer.render_aabb(
+                                                &root.aabb,
+                                                &current_world_transform,
+                                                color::GREEN,
+                                            );
+                                        }
+
                                         Ok(())
                                     }
                                     Err(err) => panic!(

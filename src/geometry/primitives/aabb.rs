@@ -84,6 +84,57 @@ impl AABB {
         AABB::from_min_max(min, max)
     }
 
+    pub fn get_vertices(&self) -> [Vec3; 8] {
+        let left = Vec3 {
+            x: self.left,
+            ..Default::default()
+        };
+
+        let right = Vec3 {
+            x: self.right,
+            ..Default::default()
+        };
+
+        let top = Vec3 {
+            y: self.top,
+            ..Default::default()
+        };
+
+        let bottom = Vec3 {
+            y: self.bottom,
+            ..Default::default()
+        };
+
+        let near = Vec3 {
+            z: self.near,
+            ..Default::default()
+        };
+
+        let far = Vec3 {
+            z: self.far,
+            ..Default::default()
+        };
+
+        [
+            // 0. Near top left
+            near + top + left,
+            // 1. Near top right
+            near + top + right,
+            // 2. Near bottom right
+            near + bottom + right,
+            // 3. Near bottom left
+            near + bottom + left,
+            // 4. Far top left
+            far + top + left,
+            // 5. Far top right
+            far + top + right,
+            // 6. Far bottom right
+            far + bottom + right,
+            // 7. Far bottom left
+            far + bottom + left,
+        ]
+    }
+
     pub fn intersects(&self, rhs: &Self) -> bool {
         if self.right < rhs.left
             || self.left > rhs.right
