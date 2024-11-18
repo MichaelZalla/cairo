@@ -6,7 +6,7 @@ use profile::SoftwareRendererCycleCounter;
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
-    entity::Entity,
+    geometry::primitives::aabb::AABB,
     material::Material,
     matrix::Mat4,
     render::{
@@ -286,14 +286,8 @@ impl Renderer for SoftwareRenderer {
         self._render_spot_light(transform, light)
     }
 
-    fn render_entity_aabb(
-        &mut self,
-        entity: &Entity,
-        world_transform: &Mat4,
-        mesh_arena: &Arena<Mesh>,
-        wireframe_color: &Vec3,
-    ) {
-        self._render_entity_aabb(entity, world_transform, mesh_arena, wireframe_color)
+    fn render_aabb(&mut self, aabb: &AABB, world_transform: &Mat4, color: Color) {
+        self._render_aabb(aabb, world_transform, color)
     }
 
     fn render_entity(

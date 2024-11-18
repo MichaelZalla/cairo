@@ -1,51 +1,41 @@
 use crate::{
-    entity::Entity,
-    matrix::Mat4,
-    mesh::Mesh,
-    render::{
-        culling::{FaceCullingReject, FaceCullingStrategy},
-        options::{rasterizer::RasterizerOptions, RenderOptions, RenderPassMask},
-    },
-    resource::arena::Arena,
-    software_renderer::SoftwareRenderer,
-    vec::vec3::Vec3,
+    color::Color, geometry::primitives::aabb::AABB, matrix::Mat4, render::Renderer,
+    software_renderer::SoftwareRenderer, vec::vec3::Vec3,
 };
 
 impl SoftwareRenderer {
-    pub(in crate::software_renderer) fn _render_entity_aabb(
+    pub(in crate::software_renderer) fn _render_aabb(
         &mut self,
-        entity: &Entity,
+        aabb: &AABB,
         world_transform: &Mat4,
-        mesh_arena: &Arena<Mesh>,
-        wireframe_color: &Vec3,
+        color: Color,
     ) {
-        match mesh_arena.get(&entity.mesh) {
-            Ok(entry) => {
-                let mesh = &entry.item;
+        let mut vertices = aabb.get_vertices();
 
-                let original_options = self.options;
+        for v in vertices.iter_mut() {
+            *v *= *world_transform;
+        }
 
-                self.options = RenderOptions {
-                    wireframe_color: *wireframe_color,
-                    draw_wireframe: true,
-                    render_pass_flags: RenderPassMask::none(),
-                    rasterizer_options: RasterizerOptions {
-                        face_culling_strategy: FaceCullingStrategy {
-                            reject: FaceCullingReject::None,
-                            ..Default::default()
-                        },
-                    },
-                    ..Default::default()
-                };
+        // Near plane.
 
-                self.render_entity_mesh(mesh, world_transform);
+        self.render_line_cycle(&vertices, 0, 3, color);
 
-                self.options = original_options;
-            }
-            Err(err) => panic!(
-                "Failed to get Mesh from Arena with Handle {:?}: {}",
-                entity.mesh, err
-            ),
+        // Far plane.
+
+        self.render_line_cycle(&vertices, 4, 7, color);
+
+        // Connect near and far planes.
+
+        for i in 0..4 {
+            self.render_line(vertices[i], vertices[i + 4], color);
+        }
+    }
+
+    fn render_line_cycle(&mut self, vertices: &[Vec3; 8], first: usize, last: usize, color: Color) {
+        for i in first..last + 1 {
+            let j = if i < last { i + 1 } else { first };
+
+            self.render_line(vertices[i], vertices[j], color);
         }
     }
 }

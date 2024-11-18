@@ -2,7 +2,7 @@ use options::RenderOptions;
 
 use crate::{
     color::Color,
-    entity::Entity,
+    geometry::primitives::aabb::AABB,
     material::Material,
     matrix::Mat4,
     mesh::Mesh,
@@ -61,13 +61,7 @@ pub trait Renderer {
 
     fn render_spot_light(&mut self, transform: &Mat4, light: &SpotLight);
 
-    fn render_entity_aabb(
-        &mut self,
-        entity: &Entity,
-        world_transform: &Mat4,
-        meshes: &Arena<Mesh>,
-        wireframe_color: &Vec3,
-    );
+    fn render_aabb(&mut self, aabb: &AABB, world_transform: &Mat4, color: Color);
 
     fn render_entity(
         &mut self,
