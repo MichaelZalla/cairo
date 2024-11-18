@@ -10,6 +10,7 @@ use crate::{
     app::App,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    geometry::primitives::ray::Ray,
     matrix::Mat4,
     render::{culling::FaceCullingReject, options::RenderPassFlag, Renderer},
     resource::handle::Handle,
@@ -540,6 +541,21 @@ impl SceneGraph {
                                                 &current_world_transform,
                                                 color::GREEN,
                                             );
+
+                                            // Build a grid of downward-facing rays that begins above the level geometry.
+
+                                            let mut rays = Ray::grid(8, 8, 40.0);
+
+                                            for ray in rays.iter_mut() {
+                                                ray.origin.y = 6.0;
+                                                ray.t = 12.0;
+
+                                                renderer.render_line(
+                                                    ray.origin,
+                                                    ray.origin + ray.direction * ray.t,
+                                                    color::ORANGE,
+                                                );
+                                            }
                                         }
 
                                         Ok(())
