@@ -187,23 +187,8 @@ fn get_min_max_for_geometry(geometry: &MeshGeometry) -> (Vec3, Vec3) {
     let mut max = vec3::MIN;
 
     for v in geometry.vertices.iter() {
-        if v.x < min.x {
-            min.x = v.x;
-        } else if v.x > max.x {
-            max.x = v.x;
-        }
-
-        if v.y < min.y {
-            min.y = v.y;
-        } else if v.y > max.y {
-            max.y = v.y;
-        }
-
-        if v.z < min.z {
-            min.z = v.z;
-        } else if v.z > max.z {
-            max.z = v.z;
-        }
+        min = min.min(v);
+        max = max.max(v);
     }
 
     (min, max)
@@ -217,23 +202,8 @@ fn get_min_max_for_mesh(mesh: &Mesh) -> (Vec3, Vec3) {
         for vertex_index in &face.vertices {
             let v = &mesh.geometry.vertices[*vertex_index];
 
-            if v.x < min.x {
-                min.x = v.x;
-            } else if v.x > max.x {
-                max.x = v.x;
-            }
-
-            if v.y < min.y {
-                min.y = v.y;
-            } else if v.y > max.y {
-                max.y = v.y;
-            }
-
-            if v.z < min.z {
-                min.z = v.z;
-            } else if v.z > max.z {
-                max.z = v.z;
-            }
+            min = min.min(v);
+            max = max.max(v);
         }
     }
 

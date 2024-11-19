@@ -212,28 +212,29 @@ impl ops::MulAssign<Vec3> for Vec3 {
 }
 
 impl Vec3 {
+    pub fn min(&self, rhs: &Vec3) -> Self {
+        Self {
+            x: self.x.min(rhs.x),
+            y: self.y.min(rhs.y),
+            z: self.z.min(rhs.z),
+        }
+    }
+
+    pub fn max(&self, rhs: &Vec3) -> Self {
+        Self {
+            x: self.x.max(rhs.x),
+            y: self.y.max(rhs.y),
+            z: self.z.max(rhs.z),
+        }
+    }
+
     pub fn extent(points: &[Vec3]) -> (Vec3, Vec3) {
         let mut min = MAX;
         let mut max = MIN;
 
         for v in points {
-            if v.x < min.x {
-                min.x = v.x;
-            } else if v.x > max.x {
-                max.x = v.x;
-            }
-
-            if v.y < min.y {
-                min.y = v.y;
-            } else if v.y > max.y {
-                max.y = v.y;
-            }
-
-            if v.z < min.z {
-                min.z = v.z;
-            } else if v.z > max.z {
-                max.z = v.z;
-            }
+            min = min.min(v);
+            max = max.max(v);
         }
 
         (min, max)
