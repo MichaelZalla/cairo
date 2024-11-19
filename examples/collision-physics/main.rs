@@ -2,6 +2,8 @@ extern crate sdl2;
 
 use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::{
         resolution::{Resolution, RESOLUTION_1280_BY_720},
@@ -160,12 +162,22 @@ fn main() -> Result<(), String> {
     let ray_grid_rotation = Quaternion::new(vec3::UP, 0.0);
     let ray_grid_rotation_rc = RefCell::new(ray_grid_rotation);
 
+    let draw_ray_grid_rc = RefCell::new(false);
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
+
+        // Use the 'G' key to toggle rendering of the ray (g)rid.
+
+        if keyboard_state.newly_pressed_keycodes.contains(&Keycode::G) {
+            let mut draw_ray_grid = draw_ray_grid_rc.borrow_mut();
+
+            *draw_ray_grid = !*draw_ray_grid;
+        }
 
         let resources = &scene_context.resources;
 
@@ -281,9 +293,11 @@ fn main() -> Result<(), String> {
 
                     renderer.render_bvh(bvh);
 
-                    let grid_rotation = ray_grid_rotation_rc.borrow();
+                    if *draw_ray_grid_rc.borrow() {
+                        let grid_rotation = ray_grid_rotation_rc.borrow();
 
-                    render_rotated_ray_grid(&mut renderer, &grid_rotation);
+                        render_rotated_ray_grid(&mut renderer, &grid_rotation);
+                    }
                 }
             }
 
