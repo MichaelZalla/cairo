@@ -1,5 +1,6 @@
 pub mod aabb;
 pub mod camera;
+pub mod circle;
 pub mod entity;
 pub mod frustum;
 pub mod light;

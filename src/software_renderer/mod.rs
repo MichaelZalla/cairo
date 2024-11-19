@@ -250,6 +250,10 @@ impl Renderer for SoftwareRenderer {
         self._render_line(start_world_space, end_world_space, color)
     }
 
+    fn render_circle(&mut self, position: &Vec3, radius_world_units: f32, color: Color) {
+        self._render_circle(position, radius_world_units, color)
+    }
+
     fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>) {
         self._render_axes(position, scale)
     }
