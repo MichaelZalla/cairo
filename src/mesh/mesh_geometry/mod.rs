@@ -27,7 +27,7 @@ impl MeshGeometry {
     pub fn center(&mut self) {
         let aabb = AABB::from_geometry(self);
 
-        let center = aabb.center;
+        let center = aabb.center();
 
         for vertex in self.vertices.iter_mut() {
             vertex.x -= center.x;
