@@ -39,9 +39,9 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
 
         // Computes a tangent-to-world-space transform.
 
-        let normal = (Vec4::new(v.normal, 0.0) * context.world_transform).as_normal();
-        let tangent = (Vec4::new(v.tangent, 0.0) * context.world_transform).as_normal();
-        let bitangent = (Vec4::new(v.bitangent, 0.0) * context.world_transform).as_normal();
+        let normal = (v.normal * context.world_transform).as_normal();
+        let tangent = (v.tangent * context.world_transform).as_normal();
+        let bitangent = (v.bitangent * context.world_transform).as_normal();
 
         out.normal_world_space = normal;
         out.tangent_world_space = tangent;
@@ -51,14 +51,14 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
 
         // Note: Reversed Z-axis for our renderer's coordinate system.
 
-        let tbn = Mat4::tbn(t.to_vec3(), b.to_vec3(), n.to_vec3());
+        let tbn = Mat4::tbn(t, b, n);
 
         let tbn_inverse = tbn.transposed();
 
         out.tangent_space_info = TangentSpaceInfo {
             tbn,
             tbn_inverse,
-            normal: (normal * tbn_inverse).to_vec3(),
+            normal: (normal * tbn_inverse),
             view_position: (context.view_position * tbn_inverse).to_vec3(),
             fragment_position: (world_pos * tbn_inverse).to_vec3(),
         };
