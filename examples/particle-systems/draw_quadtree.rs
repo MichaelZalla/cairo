@@ -57,14 +57,14 @@ fn draw_quadtree_node(
 
     let (x, y, width, height) = {
         let top_left_world_space = Vec3 {
-            x: node_bounds.left,
-            y: node_bounds.top,
+            x: node_bounds.min.x,
+            y: node_bounds.max.y,
             z: 0.0,
         };
 
         let bottom_right_world_space = Vec3 {
-            x: node_bounds.right,
-            y: node_bounds.bottom,
+            x: node_bounds.max.x,
+            y: node_bounds.min.y,
             z: 0.0,
         };
 

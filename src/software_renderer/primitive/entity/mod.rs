@@ -53,7 +53,7 @@ impl SoftwareRenderer {
 fn should_cull_aabb(world_transform: Mat4, clipping_camera_frustum: &Frustum, aabb: &AABB) -> bool {
     // Cull the entire entity, if possible, based on its bounds.
 
-    let bounding_sphere_position = (Vec4::new(aabb.center, 1.0) * world_transform).to_vec3();
+    let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * world_transform).to_vec3();
 
     // @TODO Generate planes once per frame, not once per entity draw.
     let culling_planes = clipping_camera_frustum.get_planes();

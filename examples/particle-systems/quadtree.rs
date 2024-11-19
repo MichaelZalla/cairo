@@ -182,19 +182,21 @@ impl QuadtreeNode {
     }
 
     fn contains(&self, point: &Vec3) -> bool {
-        point.x >= self.bounds.left
-            && point.x <= self.bounds.right
-            && point.y >= self.bounds.bottom
-            && point.y <= self.bounds.top
+        point.x >= self.bounds.min.x
+            && point.x <= self.bounds.max.x
+            && point.y >= self.bounds.min.y
+            && point.y <= self.bounds.max.y
     }
 
     fn subquadrant_for(&self, position: &Vec3) -> usize {
         // @NOTE: We won't update `self.bounds` until after this new particle
         // (position) is inserted into the appropriate (sub)quadrant.
 
-        if position.x < self.bounds.center.x {
+        let center = self.bounds.center();
+
+        if position.x < center.x {
             // Particle belongs on the left half.
-            if position.y < self.bounds.center.y {
+            if position.y < center.y {
                 // Particle belongs in the bottom-left quadrant.
                 BOTTOM_LEFT_QUADRANT
             } else {
@@ -203,7 +205,7 @@ impl QuadtreeNode {
             }
         } else {
             // Particle belongs on the right.
-            if position.y < self.bounds.center.y {
+            if position.y < center.y {
                 // Particle belongs in the bottom-right quadrant.
                 BOTTOM_RIGHT_QUADRANT
             } else {
@@ -215,29 +217,29 @@ impl QuadtreeNode {
 
     fn recompute_bounding_radius(&mut self) {
         let center_of_mass_to_top_left = (Vec3 {
-            x: self.bounds.left,
-            y: self.bounds.top,
+            x: self.bounds.min.x,
+            y: self.bounds.max.y,
             z: 0.0,
         } - self.center_of_mass)
             .mag();
 
         let center_of_mass_to_top_right = (Vec3 {
-            x: self.bounds.right,
-            y: self.bounds.top,
+            x: self.bounds.max.x,
+            y: self.bounds.max.y,
             z: 0.0,
         } - self.center_of_mass)
             .mag();
 
         let center_of_mass_to_bottom_left = (Vec3 {
-            x: self.bounds.left,
-            y: self.bounds.bottom,
+            x: self.bounds.min.x,
+            y: self.bounds.min.y,
             z: 0.0,
         } - self.center_of_mass)
             .mag();
 
         let center_of_mass_to_bottom_right = (Vec3 {
-            x: self.bounds.right,
-            y: self.bounds.bottom,
+            x: self.bounds.max.x,
+            y: self.bounds.min.y,
             z: 0.0,
         } - self.center_of_mass)
             .mag();
@@ -292,7 +294,7 @@ impl QuadtreeNode {
             .iter()
             .map(|sub| QuadtreeNode {
                 bounds: *sub,
-                center_of_mass: sub.center,
+                center_of_mass: sub.center(),
                 parent: Some(unsafe { NonNull::new_unchecked(self) }),
                 ..Default::default()
             })
