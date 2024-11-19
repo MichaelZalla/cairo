@@ -1,4 +1,4 @@
-use std::{cell::RefMut, collections::hash_map::Entry, f32::consts::PI};
+use std::{cell::RefMut, collections::hash_map::Entry, f32::consts::TAU};
 
 use sdl2::keyboard::Keycode;
 
@@ -277,7 +277,7 @@ fn draw_textbox(
 
                 // Draw the text cursor.
 
-                let with_cursor = (uptime_second * 2.0 * PI).sin() > 0.0;
+                let with_cursor = (uptime_second * TAU).sin() > 0.0;
 
                 if ctx.is_focused(id) && with_cursor {
                     let blinking_text_cursor_x = textbox_top_left.0

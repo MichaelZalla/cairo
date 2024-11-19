@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
@@ -146,7 +146,7 @@ fn main() -> Result<(), String> {
 
                             let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
 
-                            let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+                            let q = Quaternion::new(rotation_axis, uptime % TAU);
 
                             node.get_transform_mut().set_rotation(q);
 

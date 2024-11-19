@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use std::f32::consts::PI;
+use std::f32::consts::{PI, TAU};
 
 use crate::{
     scene::resources::SceneResources,
@@ -37,7 +37,7 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
 
                 let mut phi = 0.0;
 
-                while phi < 2.0 * PI {
+                while phi < TAU {
                     let mut theta = 0.0;
 
                     while theta < 0.5 * PI {

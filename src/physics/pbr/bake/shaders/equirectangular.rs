@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use std::f32::consts::PI;
+use std::f32::consts::TAU;
 
 use crate::{
     matrix::Mat4,
@@ -73,7 +73,7 @@ pub static HdrEquirectangularProjectionFragmentShader: FragmentShaderFn =
 
             let n = pos.as_normal();
 
-            let u = (pos.x).atan2(pos.z) / (2.0 * PI) + 0.5;
+            let u = (pos.x).atan2(pos.z) / TAU + 0.5;
             let v = n.y * 0.5 + 0.5;
 
             Vec2 { x: u, y: v, z: 0.0 }

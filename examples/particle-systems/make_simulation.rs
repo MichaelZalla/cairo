@@ -1,6 +1,4 @@
-use std::cell::RefCell;
-use std::f32::consts::PI;
-use std::rc::Rc;
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use sdl2::sys::SDL_STANDARD_GRAVITY;
 
@@ -271,7 +269,7 @@ pub(crate) fn make_simulation<'a>(
             //             * particle_rotational_frequency_scaling_factor)
             //             .max(VORTEX_ROTATIONAL_FREQUENCY_MAX);
 
-            //         let omega = 2.0 * PI * particle_rotational_frequency;
+            //         let omega = TAU * particle_rotational_frequency;
 
             //         let new_velocity_vec4 =
             //             Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(omega * h);

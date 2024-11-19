@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::f32::consts::TAU;
 
 use crate::vec::{
     vec2::Vec2,
@@ -8,7 +8,7 @@ use crate::vec::{
 pub fn importance_sample_ggx(x_i: Vec2, normal: &Vec3, roughness: f32) -> Vec3 {
     let alpha = roughness * roughness;
 
-    let phi = 2.0 * PI * x_i.x;
+    let phi = TAU * x_i.x;
 
     let cosine_theta = ((1.0 - x_i.y) / (1.0 + (alpha * alpha - 1.0) * x_i.y)).sqrt();
 

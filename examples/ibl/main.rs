@@ -1,4 +1,4 @@
-use std::{cell::RefCell, f32::consts::PI, path::Path, rc::Rc};
+use std::{cell::RefCell, f32::consts::TAU, path::Path, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -158,7 +158,7 @@ fn main() -> Result<(), String> {
             SceneNodeType::Entity => {
                 let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
 
-                let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+                let q = Quaternion::new(rotation_axis, uptime % TAU);
 
                 node.get_transform_mut().set_rotation(q);
 

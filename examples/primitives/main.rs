@@ -1,6 +1,10 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32, f32::consts::PI, rc::Rc};
+use std::{
+    cell::RefCell,
+    f32::consts::{PI, TAU},
+    rc::Rc,
+};
 
 use cairo::{
     app::{
@@ -218,8 +222,7 @@ fn main() -> Result<(), String> {
 
                             let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
 
-                            let rotate_y =
-                                Quaternion::new(vec3::UP, uptime / 2.0 % f32::consts::TAU);
+                            let rotate_y = Quaternion::new(vec3::UP, uptime / 2.0 % TAU);
 
                             light.set_direction(rotate_x * rotate_y);
                         }
@@ -288,9 +291,9 @@ fn main() -> Result<(), String> {
                                     }
 
                                     node.get_transform_mut().set_rotation(
-                                        Quaternion::new(vec3::UP, uptime % (2.0 * PI))
-                                            * Quaternion::new(vec3::RIGHT, uptime % (2.0 * PI))
-                                            * Quaternion::new(vec3::FORWARD, uptime % (2.0 * PI)),
+                                        Quaternion::new(vec3::UP, uptime % TAU)
+                                            * Quaternion::new(vec3::RIGHT, uptime % TAU)
+                                            * Quaternion::new(vec3::FORWARD, uptime % TAU),
                                     );
 
                                     Ok(false)
