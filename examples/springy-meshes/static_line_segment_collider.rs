@@ -61,8 +61,8 @@ impl Collider for StaticLineSegmentCollider {
             return None;
         }
 
-        let distance = self.plane.get_signed_distance_to_plane(position);
-        let new_distance = self.plane.get_signed_distance_to_plane(new_position);
+        let distance = self.plane.get_signed_distance(position);
+        let new_distance = self.plane.get_signed_distance(new_position);
 
         if (distance * new_distance) < 0.0 {
             // Calculates the fraction of the timestep at which the collision

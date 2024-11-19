@@ -61,10 +61,10 @@ fn should_cull_aabb(world_transform: Mat4, clipping_camera_frustum: &Frustum, aa
     let radius = aabb.bounding_sphere_radius;
 
     // @TODO Verify the sign of the top plane and bottom plane normals.
-    !culling_planes[0].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[1].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[2].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[3].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[4].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[5].is_sphere_on_or_in_front_of(&bounding_sphere_position, radius)
+    !culling_planes[0].is_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[1].is_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[2].is_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[3].is_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[4].is_on_or_in_front_of(&bounding_sphere_position, radius)
+        || !culling_planes[5].is_on_or_in_front_of(&bounding_sphere_position, radius)
 }
