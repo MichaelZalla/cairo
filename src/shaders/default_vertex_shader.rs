@@ -36,9 +36,9 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
 
     // Compute a tangent-space to world-space transform.
 
-    let normal_world_space = (Vec4::new(v.normal, 0.0) * context.world_transform).as_normal();
-    let tangent_world_space = (Vec4::new(v.tangent, 0.0) * context.world_transform).as_normal();
-    let bitangent_world_space = (Vec4::new(v.bitangent, 0.0) * context.world_transform).as_normal();
+    let normal_world_space = (v.normal * context.world_transform).as_normal();
+    let tangent_world_space = (v.tangent * context.world_transform).as_normal();
+    let bitangent_world_space = (v.bitangent * context.world_transform).as_normal();
 
     out.normal_world_space = normal_world_space;
     out.tangent_world_space = tangent_world_space;
@@ -50,14 +50,14 @@ pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
         normal_world_space,
     );
 
-    let tbn = Mat4::tbn(t.to_vec3(), b.to_vec3(), n.to_vec3());
+    let tbn = Mat4::tbn(t, b, n);
 
     let tbn_inverse = tbn.transposed();
 
     out.tangent_space_info = TangentSpaceInfo {
         tbn,
         tbn_inverse,
-        normal: (normal_world_space * tbn_inverse).to_vec3(),
+        normal: (normal_world_space * tbn_inverse),
         view_position: (context.view_position * tbn_inverse).to_vec3(),
         fragment_position: (position_world_space * tbn_inverse).to_vec3(),
     };

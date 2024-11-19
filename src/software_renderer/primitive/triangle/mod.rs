@@ -163,21 +163,21 @@ impl SoftwareRenderer {
                 self.render_line(
                     vertex.position_world_space,
                     vertex.position_world_space
-                        + vertex.normal_world_space.to_vec3() * self.options.draw_normals_scale,
+                        + vertex.normal_world_space * self.options.draw_normals_scale,
                     color::BLUE,
                 );
 
                 self.render_line(
                     vertex.position_world_space,
                     vertex.position_world_space
-                        + vertex.tangent_world_space.to_vec3() * self.options.draw_normals_scale,
+                        + vertex.tangent_world_space * self.options.draw_normals_scale,
                     color::RED,
                 );
 
                 self.render_line(
                     vertex.position_world_space,
                     vertex.position_world_space
-                        + vertex.bitangent_world_space.to_vec3() * self.options.draw_normals_scale,
+                        + vertex.bitangent_world_space * self.options.draw_normals_scale,
                     color::GREEN,
                 );
             }
