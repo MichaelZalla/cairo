@@ -259,7 +259,7 @@ fn downsample(map: &mut TextureMap<Vec3>, from_mipmap_index: usize) {
                 sample += (b + d + f + h) * 0.0625;
                 sample += (j + k + l + m) * 0.125;
 
-                sample.max(0.0001)
+                sample.clamp_min(0.0001)
             };
 
             map.levels[to_mipmap_index].0.set(x, y, downsampled);

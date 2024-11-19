@@ -322,7 +322,7 @@ impl Vec3 {
         *self * to / from
     }
 
-    pub fn min(&self, upper_limit: f32) -> Self {
+    pub fn clamp_max(&self, upper_limit: f32) -> Self {
         Self {
             x: self.x.min(upper_limit),
             y: self.y.min(upper_limit),
@@ -330,7 +330,7 @@ impl Vec3 {
         }
     }
 
-    pub fn max(&self, lower_limit: f32) -> Self {
+    pub fn clamp_min(&self, lower_limit: f32) -> Self {
         Self {
             x: self.x.max(lower_limit),
             y: self.y.max(lower_limit),
@@ -339,7 +339,7 @@ impl Vec3 {
     }
 
     pub fn clamp(&self, min: f32, max: f32) -> Self {
-        self.max(min).min(max)
+        self.clamp_min(min).clamp_max(max)
     }
 }
 
