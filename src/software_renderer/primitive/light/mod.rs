@@ -55,8 +55,8 @@ impl SoftwareRenderer {
 
                         Graphics::circle(
                             &mut forward_buffer,
-                            (position_ndc_space.x * self.viewport.width as f32) as u32,
-                            (position_ndc_space.y * self.viewport.height as f32) as u32,
+                            (position_ndc_space.x * self.viewport.width as f32) as i32,
+                            (position_ndc_space.y * self.viewport.height as f32) as i32,
                             (radius_ndc_space * self.viewport.width as f32) as u32, fill_u32, border_u32);
                     },
                     None => panic!("Called SoftwareRenderer::render_circle_at_ndc_space_position() with no forward (LDR) framebuffer attachment!"),

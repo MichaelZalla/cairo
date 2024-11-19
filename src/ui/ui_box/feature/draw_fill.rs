@@ -45,8 +45,8 @@ impl UIBox {
 
             Graphics::circle(
                 target,
-                center.0,
-                center.1,
+                center.0 as i32,
+                center.1 as i32,
                 radius as u32,
                 fill_color_u32,
                 None,

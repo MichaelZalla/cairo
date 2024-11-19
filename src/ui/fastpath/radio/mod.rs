@@ -74,8 +74,8 @@ fn render_selected_indicator(
 
         Graphics::circle(
             target,
-            extent.left + 8,
-            extent.top + 8,
+            (extent.left + 8) as i32,
+            (extent.top + 8) as i32,
             5,
             Some(background_selected_u32),
             Some(background_selected_u32),
