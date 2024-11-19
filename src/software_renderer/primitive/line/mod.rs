@@ -25,6 +25,20 @@ impl SoftwareRenderer {
         self.render_line_from_ndc_space_vecs(&start_ndc_space, &end_ndc_space, color);
     }
 
+    pub(in crate::software_renderer) fn render_line_loop(
+        &mut self,
+        positions_world_space: &[Vec3],
+        first: usize,
+        last: usize,
+        color: Color,
+    ) {
+        for i in first..last + 1 {
+            let j = if i < last { i + 1 } else { first };
+
+            self.render_line(positions_world_space[i], positions_world_space[j], color);
+        }
+    }
+
     pub(in crate::software_renderer) fn _render_axes(
         &mut self,
         position: Option<Vec3>,
