@@ -8,10 +8,7 @@ use distribution::GeneratedDistribution;
 
 use crate::{
     matrix::Mat4,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::{self, Vec3},
 };
 
 pub mod distribution;
@@ -105,9 +102,9 @@ impl<const N: usize> RandomSampler<N> {
         // @NOTE: Skipping rotation sample for now, as we don't need it for 2D.
         // let theta = self.sample_range_uniform(-PI, PI);
 
-        let right_rotated = Vec4::new(vec3::RIGHT, 1.0) * Mat4::rotation_z(phi);
+        let right_rotated = vec3::RIGHT * Mat4::rotation_z(phi);
 
-        ((right_rotated * basis) * v.mag()).to_vec3()
+        (right_rotated * basis) * v.mag()
     }
 }
 
