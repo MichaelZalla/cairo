@@ -19,24 +19,17 @@ pub struct AABB {
     pub bounding_sphere_radius: f32,
 }
 
-impl AABB {
-    pub fn cube(center: Vec3, half_extent: f32) -> Self {
-        let mut aabb = AABB {
-            center,
-            left: center.x - half_extent,
-            right: center.x + half_extent,
-            top: center.y + half_extent,
-            bottom: center.y - half_extent,
-            near: center.z + half_extent,
-            far: center.z - half_extent,
-            bounding_sphere_radius: 0.0,
-        };
-
-        aabb.bounding_sphere_radius = aabb.get_bounding_sphere_radius();
-
-        aabb
+impl fmt::Display for AABB {
+    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            v,
+            "AABB (center={}) (l={}, r={}, b={}, t={}, n={}, f={})",
+            self.center, self.left, self.right, self.bottom, self.top, self.near, self.far
+        )
     }
+}
 
+impl AABB {
     pub fn from_min_max(min: Vec3, max: Vec3) -> Self {
         let half_extents = Vec3 {
             x: (max.x - min.x),
@@ -74,12 +67,6 @@ impl AABB {
 
     pub fn from_mesh(mesh: &Mesh) -> Self {
         let (min, max) = get_min_max_for_mesh(mesh);
-
-        AABB::from_min_max(min, max)
-    }
-
-    pub fn new_from_triangle(v0: &Vec3, v1: &Vec3, v2: &Vec3) -> Self {
-        let (min, max) = Vec3::extent(&[*v0, *v1, *v2]);
 
         AABB::from_min_max(min, max)
     }
@@ -220,16 +207,6 @@ impl AABB {
         };
 
         (top_left_near - self.center).mag()
-    }
-}
-
-impl fmt::Display for AABB {
-    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            v,
-            "AABB (center={}) (l={}, r={}, b={}, t={}, n={}, f={})",
-            self.center, self.left, self.right, self.bottom, self.top, self.near, self.far
-        )
     }
 }
 
