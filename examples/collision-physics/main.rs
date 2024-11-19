@@ -1,7 +1,6 @@
 extern crate sdl2;
 
-use core::f32;
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
@@ -26,8 +25,6 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
-    transform::quaternion::Quaternion,
-    vec::vec3,
 };
 
 use scene::make_collision_physics_scene;
@@ -174,14 +171,14 @@ fn main() -> Result<(), String> {
         let update_node_rc = Rc::new(
             |_current_world_transform: &Mat4,
              node: &mut SceneNode,
-             resources: &SceneResources,
+             _resources: &SceneResources,
              app: &App,
              _mouse_state: &MouseState,
              _keyboard_state: &KeyboardState,
              _game_controller_state: &GameControllerState,
              _shader_context: &mut ShaderContext|
              -> Result<bool, String> {
-                let uptime = app.timing_info.uptime_seconds;
+                let _uptime = app.timing_info.uptime_seconds;
 
                 let (node_type, handle) = (node.get_type(), node.get_handle());
 
@@ -194,24 +191,6 @@ fn main() -> Result<(), String> {
                         }
                         None => panic!("Encountered a `Camera` node with no resource handle!"),
                     },
-                    SceneNodeType::DirectionalLight => {
-                        if let Ok(entry) = resources
-                            .directional_light
-                            .borrow_mut()
-                            .get_mut(&node.get_handle().unwrap())
-                        {
-                            let light = &mut entry.item;
-
-                            let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
-
-                            let rotate_y =
-                                Quaternion::new(vec3::UP, uptime / 2.0 % f32::consts::TAU);
-
-                            light.set_direction(rotate_x * rotate_y);
-                        }
-
-                        Ok(false)
-                    }
                     _ => Ok(false),
                 }
             },
