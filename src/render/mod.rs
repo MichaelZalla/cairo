@@ -43,9 +43,7 @@ pub trait Renderer {
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color);
 
-    fn render_point_indicator(&mut self, position: Vec3, scale: f32);
-
-    fn render_world_axes(&mut self, scale: f32);
+    fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>);
 
     fn render_ground_plane(&mut self, scale: f32);
 

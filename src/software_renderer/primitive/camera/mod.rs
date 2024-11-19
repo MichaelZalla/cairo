@@ -27,6 +27,6 @@ impl SoftwareRenderer {
             color::WHITE,
         );
 
-        self.render_point_indicator(Default::default(), 5.0);
+        self.render_axes(None, Some(5.0));
     }
 }

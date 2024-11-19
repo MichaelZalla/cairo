@@ -250,12 +250,8 @@ impl Renderer for SoftwareRenderer {
         self._render_line(start_world_space, end_world_space, color)
     }
 
-    fn render_point_indicator(&mut self, position: Vec3, scale: f32) {
-        self._render_point_indicator(position, scale)
-    }
-
-    fn render_world_axes(&mut self, scale: f32) {
-        self._render_world_axes(scale)
+    fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>) {
+        self._render_axes(position, scale)
     }
 
     fn render_ground_plane(&mut self, scale: f32) {

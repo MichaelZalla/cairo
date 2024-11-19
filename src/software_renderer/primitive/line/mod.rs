@@ -25,26 +25,26 @@ impl SoftwareRenderer {
         self.render_line_from_ndc_space_vecs(&start_ndc_space, &end_ndc_space, color);
     }
 
-    pub(in crate::software_renderer) fn _render_point_indicator(
+    pub(in crate::software_renderer) fn _render_axes(
         &mut self,
-        position: Vec3,
-        scale: f32,
+        position: Option<Vec3>,
+        scale: Option<f32>,
     ) {
+        let p = position.unwrap_or_default();
+
+        let s = scale.unwrap_or(1.0);
+
         // X-axis (red)
 
-        self.render_line(position, position + vec3::RIGHT * scale, color::RED);
+        self.render_line(p, p + vec3::RIGHT * s, color::RED);
 
         // Y-axis (blue)
 
-        self.render_line(position, position + vec3::UP * scale, color::BLUE);
+        self.render_line(p, p + vec3::UP * s, color::BLUE);
 
         // Z-axis (green)
 
-        self.render_line(position, position + vec3::FORWARD * scale, color::GREEN);
-    }
-
-    pub(in crate::software_renderer) fn _render_world_axes(&mut self, scale: f32) {
-        self.render_point_indicator(Default::default(), scale)
+        self.render_line(p, p + vec3::FORWARD * s, color::GREEN);
     }
 
     pub(in crate::software_renderer) fn _render_ground_plane(&mut self, scale: f32) {
