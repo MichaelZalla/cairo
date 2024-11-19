@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{
@@ -155,10 +155,7 @@ fn main() -> Result<(), String> {
                         Ok(entry) => {
                             let light = &mut entry.item;
 
-                            light.set_direction(Quaternion::new(
-                                vec3::UP,
-                                uptime.rem_euclid(PI * 2.0),
-                            ));
+                            light.set_direction(Quaternion::new(vec3::UP, uptime.rem_euclid(TAU)));
 
                             Ok(false)
                         }

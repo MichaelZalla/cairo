@@ -1,4 +1,4 @@
-use std::{cell::RefCell, f32::consts::PI};
+use std::{cell::RefCell, f32::consts::TAU};
 
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
@@ -57,14 +57,13 @@ fn main() -> Result<(), String> {
 
     // Sinusoidal oscillation.
 
-    static TWO_PI: f32 = 2.0 * PI;
     static MAGNITUDE: f32 = 2.0;
-    static PERIOD: f32 = 0.5 * TWO_PI;
+    static PERIOD: f32 = 0.5 * TAU;
     static PHASE_ANGLE: f32 = 0.0;
-    static FREQUENCY: f32 = TWO_PI / PERIOD;
+    static FREQUENCY: f32 = TAU / PERIOD;
 
     let oscillation: BoxedGraphingFunction =
-        Box::new(|t: f32| -> f32 { MAGNITUDE * (2.0 * PI * (t / PERIOD) - PHASE_ANGLE).cos() });
+        Box::new(|t: f32| -> f32 { MAGNITUDE * (TAU * (t / PERIOD) - PHASE_ANGLE).cos() });
 
     let oscillation_system_dynamics_function =
         Box::leak(Box::new(|state: State| -> StateDerivative {

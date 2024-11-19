@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
@@ -153,7 +153,7 @@ fn main() -> Result<(), String> {
 
                             let rotation_axis = (vec3::UP + vec3::RIGHT) / 2.0;
 
-                            let q = Quaternion::new(rotation_axis, uptime % (2.0 * PI));
+                            let q = Quaternion::new(rotation_axis, uptime % TAU);
 
                             node.get_transform_mut().set_rotation(q);
 
@@ -177,7 +177,7 @@ fn main() -> Result<(), String> {
                         Ok(entry) => {
                             let point_light = &mut entry.item;
 
-                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = TAU / 3.0;
 
                             point_light.intensities = Vec3 {
                                 x: (uptime + POINT_LIGHT_INTENSITY_PHASE_SHIFT).sin() / 2.0 + 0.5,

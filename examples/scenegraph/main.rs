@@ -1,6 +1,10 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{
+    cell::RefCell,
+    f32::consts::{PI, TAU},
+    rc::Rc,
+};
 
 use cairo::{
     app::{resolution::Resolution, App, AppWindowInfo},
@@ -169,10 +173,8 @@ fn main() -> Result<(), String> {
                                             transform.set_rotation(qx * qz);
                                         }
                                         "red_cube" => {
-                                            let qy = Quaternion::new(
-                                                vec3::UP,
-                                                (uptime / 2.0) % 2.0 * PI,
-                                            );
+                                            let qy =
+                                                Quaternion::new(vec3::UP, (uptime / 2.0) % TAU);
 
                                             transform.set_rotation(qy);
 
@@ -186,10 +188,8 @@ fn main() -> Result<(), String> {
                                             scale.z = uniform_scale;
                                         }
                                         "green_cube" => {
-                                            let qy = Quaternion::new(
-                                                vec3::UP,
-                                                (-uptime / 4.0) % 2.0 * PI,
-                                            );
+                                            let qy =
+                                                Quaternion::new(vec3::UP, (-uptime / 4.0) % TAU);
 
                                             transform.set_rotation(qy);
 
@@ -206,10 +206,8 @@ fn main() -> Result<(), String> {
                                             translation.z = (uptime).cos() * 1.0;
                                         }
                                         "blue_cube" => {
-                                            let qy = Quaternion::new(
-                                                vec3::UP,
-                                                (uptime / 8.0) % 2.0 * PI,
-                                            );
+                                            let qy =
+                                                Quaternion::new(vec3::UP, (uptime / 8.0) % TAU);
 
                                             transform.set_rotation(qy);
 
@@ -253,7 +251,7 @@ fn main() -> Result<(), String> {
                         Ok(entry) => {
                             let point_light = &mut entry.item;
 
-                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = 2.0 * PI / 3.0;
+                            static POINT_LIGHT_INTENSITY_PHASE_SHIFT: f32 = TAU / 3.0;
                             static MAX_POINT_LIGHT_INTENSITY: f32 = 1.0;
 
                             point_light.intensities = Vec3 {
