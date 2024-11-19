@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{
@@ -26,6 +26,8 @@ use cairo::{
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
+    transform::quaternion::Quaternion,
+    vec::vec3,
 };
 
 use scene::make_collision_physics_scene;
@@ -155,11 +157,16 @@ fn main() -> Result<(), String> {
     let view_camera_handle: &'static RefCell<Option<Handle>> =
         Box::leak(Box::new(RefCell::new(Default::default())));
 
+    let ray_grid_rotation = Quaternion::new(vec3::UP, 0.0);
+    let ray_grid_rotation_rc = RefCell::new(ray_grid_rotation);
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
+        let uptime = app.timing_info.uptime_seconds;
+
         let resources = &scene_context.resources;
 
         let mut shader_context = (*shader_context_rc).borrow_mut();
@@ -206,6 +213,10 @@ fn main() -> Result<(), String> {
             game_controller_state,
             Some(update_node_rc),
         )?;
+
+        let theta = (uptime / 10.0).rem_euclid(TAU);
+
+        *ray_grid_rotation_rc.borrow_mut() = Quaternion::new(vec3::UP, theta);
 
         {
             let mut camera_arena = resources.camera.borrow_mut();
@@ -270,7 +281,9 @@ fn main() -> Result<(), String> {
 
                     renderer.render_bvh(bvh);
 
-                    render_ray_grid(&mut renderer);
+                    let grid_rotation = ray_grid_rotation_rc.borrow();
+
+                    render_rotated_ray_grid(&mut renderer, &grid_rotation);
                 }
             }
 
@@ -298,13 +311,19 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn render_ray_grid(renderer: &mut SoftwareRenderer) {
+fn render_rotated_ray_grid(renderer: &mut SoftwareRenderer, grid_rotation: &Quaternion) {
     // Build a grid of downward-facing rays that begins above the level geometry.
 
-    let mut rays = ray::grid(8, 8, 40.0);
+    static ROWS: usize = 16;
+    static COLUMNS: usize = 16;
+
+    let mut rays = ray::grid(ROWS, COLUMNS, 40.0);
 
     for ray in rays.iter_mut() {
         ray.origin.y = 6.0;
+
+        ray.origin *= *grid_rotation.mat();
+
         ray.t = 12.0;
 
         renderer.render_ray(ray, color::ORANGE);
