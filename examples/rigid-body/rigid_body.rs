@@ -128,8 +128,8 @@ impl Renderable for RigidBody {
 
                 Graphics::circle(
                     buffer,
-                    position_screen_space.x as u32,
-                    position_screen_space.y as u32,
+                    position_screen_space.x as i32,
+                    position_screen_space.y as i32,
                     (radius * PIXELS_PER_METER) as u32,
                     None,
                     Some(color::YELLOW.to_u32()),

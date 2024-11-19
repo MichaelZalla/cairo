@@ -11,8 +11,8 @@ use super::Graphics;
 impl Graphics {
     pub fn circle<T>(
         target: &mut Buffer2D<T>,
-        center_x: u32,
-        center_y: u32,
+        center_x: i32,
+        center_y: i32,
         radius: u32,
         fill: Option<T>,
         border: Option<T>,
@@ -94,8 +94,8 @@ impl Graphics {
             ];
 
             for (local_x, local_y) in local_coordinates {
-                let global_x = (center_x as i32) + local_x;
-                let global_y = (center_y as i32) + local_y;
+                let global_x = center_x + local_x;
+                let global_y = center_y + local_y;
 
                 if global_y >= 0 && global_y < target.height as i32 {
                     // Border.
@@ -107,7 +107,7 @@ impl Graphics {
                     // Fill.
 
                     if let Some(fill_color) = fill {
-                        let (mut x1, mut x2) = (center_x as i32 - local_x, global_x);
+                        let (mut x1, mut x2) = (center_x - local_x, global_x);
 
                         if x1 == x2 {
                             continue;
