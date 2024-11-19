@@ -2,7 +2,7 @@ use options::RenderOptions;
 
 use crate::{
     color::Color,
-    geometry::primitives::aabb::AABB,
+    geometry::primitives::{aabb::AABB, ray::Ray},
     material::Material,
     matrix::Mat4,
     mesh::Mesh,
@@ -60,6 +60,8 @@ pub trait Renderer {
     fn render_point_light(&mut self, transform: &Mat4, light: &PointLight);
 
     fn render_spot_light(&mut self, transform: &Mat4, light: &SpotLight);
+
+    fn render_ray(&mut self, ray: &Ray, color: Color);
 
     fn render_aabb(&mut self, aabb: &AABB, world_transform: &Mat4, color: Color);
 

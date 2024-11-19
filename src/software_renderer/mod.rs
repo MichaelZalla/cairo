@@ -6,7 +6,7 @@ use profile::SoftwareRendererCycleCounter;
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
-    geometry::primitives::aabb::AABB,
+    geometry::primitives::{aabb::AABB, ray::Ray},
     material::Material,
     matrix::Mat4,
     render::{
@@ -284,6 +284,10 @@ impl Renderer for SoftwareRenderer {
 
     fn render_spot_light(&mut self, transform: &Mat4, light: &SpotLight) {
         self._render_spot_light(transform, light)
+    }
+
+    fn render_ray(&mut self, ray: &Ray, color: Color) {
+        self._render_ray(ray, color)
     }
 
     fn render_aabb(&mut self, aabb: &AABB, world_transform: &Mat4, color: Color) {

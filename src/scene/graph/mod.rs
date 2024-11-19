@@ -550,11 +550,7 @@ impl SceneGraph {
                                                 ray.origin.y = 6.0;
                                                 ray.t = 12.0;
 
-                                                renderer.render_line(
-                                                    ray.origin,
-                                                    ray.origin + ray.direction * ray.t,
-                                                    color::ORANGE,
-                                                );
+                                                renderer.render_ray(ray, color::ORANGE);
                                             }
                                         }
 
