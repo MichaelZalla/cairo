@@ -4,20 +4,83 @@ use rand::rngs::ThreadRng;
 
 use rand_distr::{Distribution, Uniform};
 
+use serde::{
+    ser::{Serialize, SerializeStruct, Serializer},
+    Deserialize, Deserializer,
+};
+
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 
 use super::vec2::Vec2;
 
-#[derive(Debug, Copy, Clone, Default, Serialize_tuple, Deserialize_tuple)]
+#[derive(Default, Debug, Copy, Clone, Serialize_tuple, Deserialize_tuple)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 
+#[derive(Copy, Clone)]
+pub union Vec3A {
+    pub v: Vec3,
+    pub a: [f32; 3],
+}
+
+impl Serialize for Vec3A {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Vec3A", 3)?;
+
+        unsafe {
+            state.serialize_field("x", &self.v.x)?;
+            state.serialize_field("y", &self.v.y)?;
+            state.serialize_field("z", &self.v.z)?;
+        }
+
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Vec3A {
+    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Default::default())
+    }
+}
+
+impl Default for Vec3A {
+    fn default() -> Self {
+        let v = Vec3::default();
+
+        Self { v }
+    }
+}
+
+impl fmt::Debug for Vec3A {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unsafe { write!(f, "{}", self.v) }
+    }
+}
+
+impl Vec3A {
+    pub fn from_vec3(v: Vec3) -> Self {
+        Self { v }
+    }
+}
+
 impl fmt::Display for Vec3 {
-    fn fmt(&self, v: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(v, "({:.*},{:.*},{:.*})", 2, self.x, 2, self.y, 2, self.z)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({:.*},{:.*},{:.*})", 2, self.x, 2, self.y, 2, self.z)
+    }
+}
+
+impl fmt::Display for Vec3A {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.v })
     }
 }
 
