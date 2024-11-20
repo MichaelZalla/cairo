@@ -157,6 +157,7 @@ fn main() -> Result<(), String> {
         let mut shader_context = (*shader_context_rc).borrow_mut();
 
         let mut scenes = scene_context.scenes.borrow_mut();
+
         let scene = &mut scenes[0];
 
         // Traverse the scene graph and update its nodes.

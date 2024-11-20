@@ -341,6 +341,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
         //
 
         let mut scenes = scene_context.scenes.borrow_mut();
+
         let scene = &mut scenes[0];
 
         let cube_entity_handle = scene
