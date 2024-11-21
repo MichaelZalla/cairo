@@ -203,3 +203,60 @@ impl Color {
         Self::from_vec3(mixed)
     }
 }
+
+pub fn hsv_to_rgb(hsv: Vec3) -> Vec3 {
+    // See: https://cs.stackexchange.com/a/127918
+
+    let h = hsv.x;
+    let s = hsv.y;
+    let v = hsv.z;
+
+    let max = v;
+    let c = s * v;
+    let min = max - c;
+
+    let h_prime = if h > 300.0 {
+        (h - 360.0) / 60.0
+    } else {
+        h / 60.0
+    };
+
+    let (r, g, b) = match h_prime {
+        -1.0..=1.0 => {
+            if h_prime < 0.0 {
+                let (r, g) = (max, min);
+                let b = g - h_prime * c;
+                (r, g, b)
+            } else {
+                let (r, b) = (max, min);
+                let g = b + h_prime * c;
+                (r, g, b)
+            }
+        }
+        1.0..=3.0 => {
+            if h_prime - 2.0 < 0.0 {
+                let (g, b) = (max, min);
+                let r = b - (h_prime - 2.0) * c;
+                (r, g, b)
+            } else {
+                let (r, g) = (min, max);
+                let b = r + (h_prime - 2.0) * c;
+                (r, g, b)
+            }
+        }
+        3.0..=5.0 => {
+            if h_prime - 4.0 < 0.0 {
+                let (r, b) = (min, max);
+                let g = r - (h_prime - 4.0) * c;
+                (r, g, b)
+            } else {
+                let (g, b) = (min, max);
+                let r = g + (h_prime - 4.0) * c;
+                (r, g, b)
+            }
+        }
+        _ => (0.0, 0.0, 0.0),
+    };
+
+    Vec3 { x: r, y: g, z: b }
+}
