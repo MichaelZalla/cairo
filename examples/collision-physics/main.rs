@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
+use std::{cell::RefCell, cmp::Ordering, f32::consts::TAU, rc::Rc};
 
 use sdl2::keyboard::Keycode;
 
@@ -162,6 +162,9 @@ fn main() -> Result<(), String> {
     let ray_grid_rotation = Quaternion::new(vec3::UP, 0.0);
     let ray_grid_rotation_rc = RefCell::new(ray_grid_rotation);
 
+    let bvh_maximum_visible_node_depth = 0_u8;
+    let bvh_maximum_visible_node_depth_rc = RefCell::new(bvh_maximum_visible_node_depth);
+
     let draw_ray_grid_rc = RefCell::new(false);
 
     let mut update = |app: &mut App,
@@ -170,6 +173,25 @@ fn main() -> Result<(), String> {
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
         let uptime = app.timing_info.uptime_seconds;
+
+        // Use Shift + Scroll wheel to increment or decrement minimum depth of visible BVH nodes.
+
+        let is_shift_pressed = keyboard_state.pressed_keycodes.contains(&Keycode::LShift)
+            || keyboard_state.pressed_keycodes.contains(&Keycode::RShift);
+
+        if let Some(event) = mouse_state.wheel_event.as_ref() {
+            let mut maximum_depth = bvh_maximum_visible_node_depth_rc.borrow_mut();
+
+            if is_shift_pressed {
+                match event.delta.cmp(&0) {
+                    Ordering::Greater => *maximum_depth += event.delta as u8,
+                    Ordering::Less => {
+                        *maximum_depth -= (event.delta.unsigned_abs() as u8).min(*maximum_depth)
+                    }
+                    Ordering::Equal => (),
+                }
+            }
+        }
 
         // Use the 'G' key to toggle rendering of the ray (g)rid.
 
@@ -292,7 +314,9 @@ fn main() -> Result<(), String> {
                 if let Some(bvh) = mesh.static_triangle_bvh.as_ref() {
                     // Render the BVH root's AABB.
 
-                    renderer.render_bvh(bvh);
+                    let maximum_depth = bvh_maximum_visible_node_depth_rc.borrow();
+
+                    renderer.render_bvh(bvh, *maximum_depth);
 
                     if *draw_ray_grid_rc.borrow() {
                         let grid_rotation = ray_grid_rotation_rc.borrow();

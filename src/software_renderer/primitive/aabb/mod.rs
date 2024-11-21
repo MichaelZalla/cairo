@@ -35,11 +35,15 @@ impl SoftwareRenderer {
         }
     }
 
-    pub fn render_bvh(&mut self, bvh: &StaticTriangleBVH) {
+    pub fn render_bvh(&mut self, bvh: &StaticTriangleBVH, maximum_depth: u8) {
         let current_world_transform = Mat4::identity();
 
         for node_index in 0..bvh.nodes_used {
             let node = &bvh.nodes[node_index];
+
+            if node.depth > maximum_depth {
+                continue;
+            }
 
             static BVH_MAX_DEPTH: f32 = 16.0;
             static BVH_DEPTH_ALPHA_STEP: f32 = 1.0 / BVH_MAX_DEPTH;
