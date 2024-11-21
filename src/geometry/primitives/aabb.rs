@@ -49,6 +49,10 @@ impl AABB {
         self.min + (self.max + self.min) / 2.0
     }
 
+    pub fn extent(&self) -> Vec3 {
+        self.max - self.min
+    }
+
     pub fn get_vertices(&self) -> [Vec3; 8] {
         let left = Vec3 {
             x: self.min.x,
