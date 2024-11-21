@@ -37,10 +37,10 @@ impl SoftwareRenderer {
     pub fn render_bvh(&mut self, bvh: &StaticTriangleBVH) {
         let current_world_transform = Mat4::identity();
 
-        // Render the BVH root's AABB.
+        for node_index in 0..bvh.nodes_used {
+            let node = &bvh.nodes[node_index];
 
-        let root = &bvh.root;
-
-        self.render_aabb(&root.aabb, &current_world_transform, color::GREEN);
+            self._render_aabb(&node.aabb, &current_world_transform, color::GREEN);
+        }
     }
 }
