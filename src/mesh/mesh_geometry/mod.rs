@@ -24,6 +24,10 @@ impl fmt::Display for MeshGeometry {
 }
 
 impl MeshGeometry {
+    pub fn get_vertices(&self, v0: usize, v1: usize, v2: usize) -> (&Vec3, &Vec3, &Vec3) {
+        (&self.vertices[v0], &self.vertices[v1], &self.vertices[v2])
+    }
+
     pub fn center(&mut self) {
         let aabb = AABB::from_geometry(self);
 

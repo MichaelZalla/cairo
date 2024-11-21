@@ -10,11 +10,18 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
-    color,
+    color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, primitives::ray},
+    geometry::{
+        accelerator::static_triangle_bvh::StaticTriangleBVH,
+        intersect::{intersect_ray_bvh, intersect_ray_triangle},
+        primitives::ray,
+    },
     matrix::Mat4,
-    mesh::obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
+    mesh::{
+        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
+        Mesh,
+    },
     render::{options::RenderOptions, Renderer},
     resource::handle::Handle,
     scene::{
@@ -321,7 +328,7 @@ fn main() -> Result<(), String> {
                     if *draw_ray_grid_rc.borrow() {
                         let grid_rotation = ray_grid_rotation_rc.borrow();
 
-                        render_rotated_ray_grid(&mut renderer, &grid_rotation);
+                        render_rotated_ray_grid(&mut renderer, &grid_rotation, mesh);
                     }
                 }
             }
@@ -350,21 +357,81 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn render_rotated_ray_grid(renderer: &mut SoftwareRenderer, grid_rotation: &Quaternion) {
+fn render_rotated_ray_grid(
+    renderer: &mut SoftwareRenderer,
+    grid_rotation: &Quaternion,
+    level_mesh: &Mesh,
+) {
     // Build a grid of downward-facing rays that begins above the level geometry.
 
-    static ROWS: usize = 16;
     static COLUMNS: usize = 16;
+    static COLUMN_ALPHA_STEP: f32 = 1.0 / COLUMNS as f32;
 
-    let mut rays = ray::grid(ROWS, COLUMNS, 40.0);
+    static ROWS: usize = 16;
+    static ROW_ALPHA_STEP: f32 = 1.0 / ROWS as f32;
 
-    for ray in rays.iter_mut() {
-        ray.origin.y = 6.0;
+    let level_mesh_extent = level_mesh.aabb.extent();
 
-        ray.origin *= *grid_rotation.mat();
+    let grid_size = level_mesh_extent
+        .x
+        .max(level_mesh_extent.y)
+        .max(level_mesh_extent.z);
 
-        ray.t = 12.0;
+    let mut rays = ray::grid(ROWS, COLUMNS, grid_size);
 
-        renderer.render_ray(ray, color::ORANGE);
+    for (ray_index, ray) in rays.iter_mut().enumerate() {
+        let z = ray_index / COLUMNS;
+        let x = ray_index % COLUMNS;
+
+        let z_alpha = COLUMN_ALPHA_STEP * z as f32;
+        let x_alpha = ROW_ALPHA_STEP * x as f32;
+
+        let ray_color = Color::rgb((255.0 * z_alpha) as u8, (255.0 * x_alpha) as u8, 0);
+
+        ray.origin.y = level_mesh.aabb.max.y + 1.0;
+
+        ray.origin *= grid_rotation.mat();
+
+        ray.direction = (-vec3::UP + vec3::FORWARD).as_normal();
+
+        ray.one_over_direction = vec3::ONES / ray.direction;
+
+        ray.t = f32::MAX;
+
+        let bvh = level_mesh.static_triangle_bvh.as_ref().unwrap();
+
+        if false {
+            // Brute-force intersections.
+
+            for (triangle_index, triangle) in bvh.tris.iter().enumerate() {
+                let (v0, v1, v2) = (
+                    &level_mesh.geometry.vertices[triangle.vertices[0]],
+                    &level_mesh.geometry.vertices[triangle.vertices[1]],
+                    &level_mesh.geometry.vertices[triangle.vertices[2]],
+                );
+
+                intersect_ray_triangle(ray, triangle_index, v0, v1, v2);
+            }
+        } else {
+            // Accelerated BVH intersections.
+
+            intersect_ray_bvh(ray, bvh);
+        }
+
+        renderer.render_ray(ray, ray_color);
+
+        if let Some(index) = &ray.triangle {
+            let triangle = &bvh.tris[*index];
+
+            let (v0, v1, v2) = (
+                &level_mesh.geometry.vertices[triangle.vertices[0]],
+                &level_mesh.geometry.vertices[triangle.vertices[1]],
+                &level_mesh.geometry.vertices[triangle.vertices[2]],
+            );
+
+            renderer.render_line(*v0, *v1, ray_color);
+            renderer.render_line(*v1, *v2, ray_color);
+            renderer.render_line(*v0, *v2, ray_color);
+        }
     }
 }

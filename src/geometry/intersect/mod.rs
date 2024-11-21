@@ -1,0 +1,174 @@
+use std::mem;
+
+use crate::vec::vec3::{Vec3, Vec3A};
+
+use super::{
+    accelerator::static_triangle_bvh::StaticTriangleBVH,
+    primitives::{aabb::AABB, ray::Ray},
+};
+
+pub fn intersect_ray_triangle(
+    ray: &mut Ray,
+    triangle_index: usize,
+    v0: &Vec3,
+    v1: &Vec3,
+    v2: &Vec3,
+) {
+    // See: https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+
+    let edge1 = *v1 - *v0;
+    let edge2 = *v2 - *v0;
+
+    let ray_cross_edge2 = ray.direction.cross(edge2);
+
+    let determinant = edge1.dot(ray_cross_edge2);
+
+    if determinant > -f32::EPSILON && determinant < f32::EPSILON {
+        // Ray is parallel to this triangle.
+
+        return;
+    }
+
+    let determinant_inverse = 1.0 / determinant;
+
+    let s = ray.origin - *v0;
+
+    let u = determinant_inverse * s.dot(ray_cross_edge2);
+
+    if !(0.0..=1.0).contains(&u) {
+        return;
+    }
+
+    let s_cross_edge1 = s.cross(edge1);
+
+    let v = determinant_inverse * ray.direction.dot(s_cross_edge1);
+
+    if v < 0.0 || (u + v) > 1.0 {
+        return;
+    }
+
+    // The line that the ray follows intersects this triangle.
+
+    let t = determinant_inverse * edge2.dot(s_cross_edge1);
+
+    if t > f32::EPSILON && t < ray.t {
+        // Closest intersection to this ray so far.
+
+        ray.t = t;
+
+        ray.triangle.replace(triangle_index);
+    }
+}
+
+pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> bool {
+    let min = &aabb.min;
+    let max = &aabb.max;
+
+    let t_x1 = (min.x - ray.origin.x) * ray.one_over_direction.x;
+    let t_x2 = (max.x - ray.origin.x) * ray.one_over_direction.x;
+
+    let mut t_min = t_x1.min(t_x2);
+    let mut t_max = t_x1.max(t_x2);
+
+    let t_y1 = (min.y - ray.origin.y) * ray.one_over_direction.y;
+    let t_y2 = (max.y - ray.origin.y) * ray.one_over_direction.y;
+
+    t_min = t_min.max(t_y1.min(t_y2));
+    t_max = t_max.min(t_y1.max(t_y2));
+
+    let t_z1 = (min.z - ray.origin.z) * ray.one_over_direction.z;
+    let t_z2 = (max.z - ray.origin.z) * ray.one_over_direction.z;
+
+    t_min = t_min.max(t_z1.min(t_z2));
+    t_max = t_max.min(t_z1.max(t_z2));
+
+    t_max >= t_min && t_min < ray.t && t_max > 0.0
+}
+
+pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
+    let mut t_min = 0.0_f32;
+    let mut t_max = f32::MAX;
+
+    let p = Vec3A::from_vec3(ray.origin);
+    let d = Vec3A::from_vec3(ray.direction);
+
+    let aabb_min = Vec3A::from_vec3(aabb.min);
+    let aabb_max = Vec3A::from_vec3(aabb.max);
+
+    let one_over_direction = Vec3A::from_vec3(ray.one_over_direction);
+
+    for i in 0..3 {
+        unsafe {
+            if d.a[i].abs() < f32::EPSILON {
+                // Ray is parallel to this slab.
+                // If the ray origin is not within the slab, then no hit.
+
+                if p.a[i] < aabb_min.a[i] || p.a[i] > aabb_max.a[i] {
+                    return;
+                }
+            } else {
+                // Compute the ray's intersection (t) value with near and far plane of this slab.
+
+                let mut t1 = (aabb_min.a[i] - p.a[i]) * one_over_direction.a[i];
+                let mut t2 = (aabb_max.a[i] - p.a[i]) * one_over_direction.a[i];
+
+                // t1 as intersection of near plane, t2 as intersection of far plane.
+
+                if t1 > t2 {
+                    mem::swap(&mut t1, &mut t2);
+                }
+
+                // Compute the intersection of slab-intersection intervals.
+
+                t_min = t_min.max(t1);
+                t_max = t_max.min(t2);
+
+                // Exit with no hit as soon as the slab intersection is empty.
+
+                if t_min > t_max {
+                    return;
+                }
+            }
+        }
+    }
+
+    ray.triangle.replace(node_index);
+
+    ray.t = ray.t.min(t_min);
+}
+
+pub fn intersect_ray_bvh(ray: &mut Ray, bvh: &StaticTriangleBVH) {
+    intersect_ray_bvh_node(ray, bvh, 0)
+}
+
+fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: usize) {
+    let node = &bvh.nodes[node_index];
+
+    if !test_ray_aabb(ray, &node.aabb) {
+        return;
+    };
+
+    if node.is_leaf() {
+        if true {
+            let start = node.primitives_start_index as usize;
+            let end = start + node.primitives_count as usize;
+
+            for tri_index_index in start..end {
+                let tri_index = bvh.tri_indices[tri_index_index];
+
+                let tri = &bvh.tris[tri_index];
+
+                let [v0, v1, v2] = tri.vertices;
+
+                let (v0, v1, v2) = bvh.geometry.get_vertices(v0, v1, v2);
+
+                intersect_ray_triangle(ray, tri_index, v0, v1, v2);
+            }
+        } else {
+            intersect_ray_aabb(ray, node_index, &node.aabb);
+        }
+    } else {
+        intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize);
+        intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize + 1);
+    }
+}
