@@ -41,18 +41,21 @@ impl LookVectorController for EditorLookVectorController {
         if let Some(mouse_state) = mouse_state {
             // Moves camera forward or backward using mouse wheel.
 
-            if let Some(wheel_event) = mouse_state.wheel_event.as_ref() {
-                let delta = wheel_event.delta as f32;
+            let is_shift_pressed = keyboard_state.pressed_keycodes.contains(&Keycode::LShift)
+                || keyboard_state.pressed_keycodes.contains(&Keycode::RShift);
 
-                look_vector.set_position(look_vector.position + look_vector.get_forward() * delta);
+            if !is_shift_pressed {
+                if let Some(wheel_event) = mouse_state.wheel_event.as_ref() {
+                    let delta = wheel_event.delta as f32;
+
+                    look_vector
+                        .set_position(look_vector.position + look_vector.get_forward() * delta);
+                }
             }
 
             if let Some(drag_event) = mouse_state.drag_events.get(&MouseButton::Middle) {
                 let delta_x = drag_event.delta.0 as f32;
                 let delta_y = drag_event.delta.1 as f32;
-
-                let is_shift_pressed = keyboard_state.pressed_keycodes.contains(&Keycode::LShift)
-                    || keyboard_state.pressed_keycodes.contains(&Keycode::RShift);
 
                 if is_shift_pressed {
                     // Pans camera left or right using Shift and middle mouse drag.
