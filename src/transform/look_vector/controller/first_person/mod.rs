@@ -99,7 +99,7 @@ impl FirstPersonLookVectorController {
     ) {
         // Apply camera movement based on keyboard input.
 
-        for keycode in keyboard_state.newly_pressed_keycodes.iter() {
+        for keycode in keyboard_state.pressed_keycodes.iter() {
             match *keycode {
                 Keycode::Up | Keycode::W => {
                     look_vector.set_position(
