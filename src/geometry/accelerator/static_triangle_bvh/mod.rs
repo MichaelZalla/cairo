@@ -27,6 +27,12 @@ impl StaticTriangleBVHNode {
     }
 }
 
+#[derive(Default, Debug, Copy, Clone)]
+struct BVHNodeSplit {
+    axis: usize,
+    position: f32,
+}
+
 #[derive(Debug, Clone)]
 pub struct StaticTriangleBVH {
     pub geometry: Rc<MeshGeometry>,
@@ -130,33 +136,9 @@ impl StaticTriangleBVH {
             return;
         }
 
-        let root_aabb = &self.nodes[split_node_index].aabb;
+        // Determine the split plane (axis) and position via some split strategy.
 
-        // Determine a split plane (axis, and position on that axis).
-
-        let extent = Vec3A {
-            v: root_aabb.extent(),
-        };
-
-        let split_axis = unsafe {
-            let mut split_axis = 0;
-
-            if extent.v.y > extent.v.x {
-                split_axis = 1;
-            }
-
-            if extent.v.z > extent.a[split_axis] {
-                split_axis = 2;
-            }
-
-            split_axis
-        };
-
-        let center = Vec3A {
-            v: root_aabb.center(),
-        };
-
-        let split_position = unsafe { center.a[split_axis] };
+        let split = self.split_strategy_midpoint(split_node_index);
 
         // Split the root's primitives into left and right bins.
 
@@ -174,7 +156,7 @@ impl StaticTriangleBVH {
 
                 let tri = &self.tris[tri_index];
 
-                if tri.centroid.a[split_axis] < split_position {
+                if tri.centroid.a[split.axis] < split.position {
                     i += 1;
                 } else {
                     self.tri_indices.swap(i as usize, j as usize);
@@ -225,5 +207,37 @@ impl StaticTriangleBVH {
 
         self.subdivide(left_child_index);
         self.subdivide(right_child_index);
+    }
+
+    fn split_strategy_midpoint(&self, split_node_index: usize) -> BVHNodeSplit {
+        let split_node_aabb = &self.nodes[split_node_index].aabb;
+
+        let extent = Vec3A {
+            v: split_node_aabb.extent(),
+        };
+
+        let axis = unsafe {
+            let mut split_axis = 0;
+
+            if extent.v.y > extent.v.x {
+                split_axis = 1;
+            }
+
+            if extent.v.z > extent.a[split_axis] {
+                split_axis = 2;
+            }
+
+            split_axis
+        };
+
+        let position = unsafe {
+            let center = Vec3A {
+                v: split_node_aabb.center(),
+            };
+
+            center.a[axis]
+        };
+
+        BVHNodeSplit { axis, position }
     }
 }
