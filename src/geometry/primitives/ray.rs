@@ -6,7 +6,17 @@ use crate::vec::vec3::{self, Vec3};
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
+    pub one_over_direction: Vec3,
     pub t: f32,
+    pub triangle: Option<usize>,
+}
+
+fn get_one_over_direction_safe(d: Vec3) -> Vec3 {
+    Vec3 {
+        x: 1.0 / if d.x == 0.0 { f32::EPSILON } else { d.x },
+        y: 1.0 / if d.y == 0.0 { f32::EPSILON } else { d.y },
+        z: 1.0 / if d.z == 0.0 { f32::EPSILON } else { d.z },
+    }
 }
 
 impl Default for Ray {
@@ -14,7 +24,9 @@ impl Default for Ray {
         Self {
             origin: Default::default(),
             direction: vec3::FORWARD,
+            one_over_direction: get_one_over_direction_safe(vec3::FORWARD),
             t: f32::MAX,
+            triangle: None,
         }
     }
 }
@@ -24,6 +36,7 @@ impl Ray {
         Self {
             origin,
             direction,
+            one_over_direction: get_one_over_direction_safe(direction),
             ..Default::default()
         }
     }
