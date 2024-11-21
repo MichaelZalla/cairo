@@ -7,11 +7,21 @@ use crate::{
     vec::vec3::{self, Vec3},
 };
 
-#[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct AABB {
     pub min: Vec3,
     pub max: Vec3,
     pub bounding_sphere_radius: f32,
+}
+
+impl Default for AABB {
+    fn default() -> Self {
+        Self {
+            min: vec3::MAX,
+            max: vec3::MIN,
+            bounding_sphere_radius: 0.0,
+        }
+    }
 }
 
 impl fmt::Display for AABB {
@@ -116,6 +126,11 @@ impl AABB {
         }
 
         true
+    }
+
+    pub fn grow(&mut self, point: &Vec3) {
+        self.min = self.min.min(point);
+        self.max = self.max.max(point);
     }
 
     pub fn subdivide_2d(&self) -> [Self; 4] {

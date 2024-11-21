@@ -138,7 +138,11 @@ impl StaticTriangleBVH {
 
         // Determine the split plane (axis) and position via some split strategy.
 
-        let split = self.split_strategy_midpoint(split_node_index);
+        let split = {
+            // self.split_strategy_midpoint(split_node_index)
+
+            self.split_strategy_surface_area(split_node_index)
+        };
 
         // Split the root's primitives into left and right bins.
 
@@ -239,5 +243,89 @@ impl StaticTriangleBVH {
         };
 
         BVHNodeSplit { axis, position }
+    }
+
+    fn split_strategy_surface_area(&self, split_node_index: usize) -> BVHNodeSplit {
+        let mut best_axis: isize = -1;
+        let mut best_position = 0_f32;
+
+        let mut minimum_cost = f32::MAX;
+
+        let split_node = &self.nodes[split_node_index];
+
+        for candidate_axis in 0..3 {
+            for tri_index in (split_node.primitives_start_index as usize)
+                ..(split_node.primitives_start_index + split_node.primitives_count) as usize
+            {
+                let tri = &self.tris[self.tri_indices[tri_index]];
+
+                let candidate_position = unsafe { tri.centroid.a[candidate_axis] };
+
+                let candidate_split = BVHNodeSplit {
+                    axis: candidate_axis,
+                    position: candidate_position,
+                };
+
+                let candidate_cost =
+                    self.get_split_cost_surface_area(split_node_index, candidate_split);
+
+                if candidate_cost < minimum_cost {
+                    minimum_cost = candidate_cost;
+
+                    best_axis = candidate_axis as isize;
+                    best_position = candidate_position;
+                }
+            }
+        }
+
+        if best_axis == -1 {
+            panic!();
+        }
+
+        BVHNodeSplit {
+            axis: best_axis as usize,
+            position: best_position,
+        }
+    }
+
+    fn get_split_cost_surface_area(&self, split_node_index: usize, split: BVHNodeSplit) -> f32 {
+        let (mut left_aabb, mut right_aabb) = (AABB::default(), AABB::default());
+
+        let (mut left_count, mut right_count) = (0_usize, 0_usize);
+
+        let split_node = &self.nodes[split_node_index];
+
+        // Compute the left and right AABBs that would result from this split.
+
+        for tri_index in (split_node.primitives_start_index as usize)
+            ..(split_node.primitives_start_index + split_node.primitives_count) as usize
+        {
+            let tri = &self.tris[self.tri_indices[tri_index]];
+
+            let (v0, v1, v2) =
+                self.geometry
+                    .get_vertices(tri.vertices[0], tri.vertices[1], tri.vertices[2]);
+
+            unsafe {
+                if tri.centroid.a[split.axis] < split.position {
+                    left_count += 1;
+
+                    left_aabb.grow(v0);
+                    left_aabb.grow(v1);
+                    left_aabb.grow(v2);
+                } else {
+                    right_count += 1;
+
+                    right_aabb.grow(v0);
+                    right_aabb.grow(v1);
+                    right_aabb.grow(v2);
+                }
+            }
+        }
+
+        // Compute split cost.
+
+        left_count as f32 * left_aabb.extent().half_area_of_extent()
+            + right_count as f32 * right_aabb.extent().half_area_of_extent()
     }
 }

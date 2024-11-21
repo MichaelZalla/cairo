@@ -333,6 +333,10 @@ impl Vec3 {
         }
     }
 
+    pub fn half_area_of_extent(&self) -> f32 {
+        self.x * self.y + self.y * self.z + self.x * self.z
+    }
+
     pub fn reflect(self, rhs: Self) -> Self {
         // Project the incoming ray forward through the fragment/surface
         let absorbed_ray = self;
