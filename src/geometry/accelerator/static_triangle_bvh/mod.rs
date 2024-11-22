@@ -130,18 +130,24 @@ impl StaticTriangleBVH {
     }
 
     fn subdivide(&mut self, split_node_index: usize) {
-        // Base case.
-
-        if self.nodes[split_node_index].primitives_count <= BVH_NODE_LOAD_FACTOR {
-            return;
-        }
-
-        // Determine the split plane (axis) and position via some split strategy.
-
         let split = {
-            // self.split_strategy_midpoint(split_node_index)
+            let split_node = &self.nodes[split_node_index];
 
-            self.split_strategy_surface_area(split_node_index)
+            // Base case.
+
+            if split_node.primitives_count <= BVH_NODE_LOAD_FACTOR {
+                return;
+            }
+
+            // Determine the split plane (axis) and position via some split strategy.
+
+            let split = {
+                // self.split_strategy_midpoint(split_node_index)
+
+                self.split_strategy_surface_area(split_node_index)
+            };
+
+            split
         };
 
         // Split the root's primitives into left and right bins.
