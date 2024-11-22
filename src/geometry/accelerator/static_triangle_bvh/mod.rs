@@ -141,11 +141,22 @@ impl StaticTriangleBVH {
 
             // Determine the split plane (axis) and position via some split strategy.
 
-            let split = {
+            let (split, cost) = {
                 // self.split_strategy_midpoint(split_node_index)
 
                 self.split_strategy_surface_area(split_node_index)
             };
+
+            // Skip the subdivide if dividing the parent actually yields worse net cost.
+
+            let parent_extent = split_node.aabb.extent();
+
+            let parent_cost =
+                split_node.primitives_count as f32 * parent_extent.half_area_of_extent();
+
+            if cost >= parent_cost {
+                return;
+            }
 
             split
         };
@@ -251,7 +262,7 @@ impl StaticTriangleBVH {
         BVHNodeSplit { axis, position }
     }
 
-    fn split_strategy_surface_area(&self, split_node_index: usize) -> BVHNodeSplit {
+    fn split_strategy_surface_area(&self, split_node_index: usize) -> (BVHNodeSplit, f32) {
         let mut best_axis: isize = -1;
         let mut best_position = 0_f32;
 
@@ -288,10 +299,12 @@ impl StaticTriangleBVH {
             panic!();
         }
 
-        BVHNodeSplit {
+        let split = BVHNodeSplit {
             axis: best_axis as usize,
             position: best_position,
-        }
+        };
+
+        (split, minimum_cost)
     }
 
     fn get_split_cost_surface_area(&self, split_node_index: usize, split: BVHNodeSplit) -> f32 {
