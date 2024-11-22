@@ -5,9 +5,10 @@ use cairo::{
     color,
     graphics::Graphics,
     matrix::Mat4,
+    transform::Transform3D,
     vec::{
-        vec3::Vec3,
-        vec4::{self, Vec4},
+        vec3::{self, Vec3},
+        vec4::Vec4,
     },
 };
 
@@ -15,7 +16,6 @@ use crate::{
     coordinates::{world_to_screen_space, PIXELS_PER_METER},
     renderable::Renderable,
     rigid_body_simulation_state::RigidBodySimulationState,
-    transform::Transform,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -35,7 +35,7 @@ pub struct RigidBody {
     pub mass: f32,
     #[allow(unused)]
     pub moment_of_inertia: Mat4,
-    pub transform: Transform,
+    pub transform: Transform3D,
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
     pub kind: RigidBodyKind,
@@ -71,11 +71,15 @@ impl RigidBody {
         let (moment_of_inertia, inverse_moment_of_inertia) =
             get_moment_of_intertia_for_circle(radius);
 
+        let mut transform = Transform3D::default();
+
+        transform.set_translation(center);
+
         let mut result = Self {
             kind: RigidBodyKind::Circle(radius),
             mass,
             inverse_mass: 1.0 / mass,
-            transform: Transform::new(center),
+            transform,
             linear_momentum: Default::default(),
             moment_of_inertia,
             inverse_moment_of_inertia,
@@ -94,19 +98,23 @@ impl RigidBody {
             inverse_mass: self.inverse_mass,
             inverse_moment_of_interia: self.inverse_moment_of_inertia,
             position: *self.transform.translation(),
-            orientation: *self.transform.orientation(),
+            orientation: *self.transform.rotation(),
             linear_momentum: self.linear_momentum,
             angular_momentum: self.angular_momentum,
         }
     }
 
     pub fn apply_simulation_state(&mut self, state: &RigidBodySimulationState) {
-        let (translation, orientation) = (state.position, state.orientation);
+        let (translation, mut orientation) = (state.position, state.orientation);
 
-        self.transform
-            .set_translation_and_orientation(translation, orientation);
+        self.transform.set_translation(translation);
+
+        orientation.renormalize();
+
+        self.transform.set_rotation(orientation);
 
         self.linear_momentum = state.linear_momentum;
+
         self.angular_momentum = state.angular_momentum;
     }
 
@@ -137,8 +145,8 @@ impl Renderable for RigidBody {
 
                 // Draw a line to indicate the body's orientation.
 
-                let local_right = vec4::RIGHT;
-                let global_right = (local_right * *self.transform.orientation().mat()).to_vec3();
+                let local_right = vec3::RIGHT;
+                let global_right = local_right * *self.transform.rotation().mat();
 
                 let end = *self.transform.translation() + (global_right * radius);
                 let end_screen_space = world_to_screen_space(&end, buffer);
