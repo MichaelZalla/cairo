@@ -60,7 +60,7 @@ pub fn intersect_ray_triangle(
     }
 }
 
-pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> bool {
+pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> f32 {
     let min = &aabb.min;
     let max = &aabb.max;
 
@@ -82,7 +82,11 @@ pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> bool {
     t_min = t_min.max(t_z1.min(t_z2));
     t_max = t_max.min(t_z1.max(t_z2));
 
-    t_max >= t_min && t_min < ray.t && t_max > 0.0
+    if t_max >= t_min && t_min < ray.t && t_max > 0.0 {
+        t_min
+    } else {
+        f32::MAX
+    }
 }
 
 pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
@@ -138,13 +142,14 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
 }
 
 pub fn intersect_ray_bvh(ray: &mut Ray, bvh: &StaticTriangleBVH) {
-    intersect_ray_bvh_node(ray, bvh, 0)
+    // intersect_ray_bvh_node(ray, bvh, 0)
+    intersect_ray_bvh_node_sorted(ray, bvh)
 }
 
 fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: usize) {
     let node = &bvh.nodes[node_index];
 
-    if !test_ray_aabb(ray, &node.aabb) {
+    if test_ray_aabb(ray, &node.aabb) == f32::MAX {
         return;
     };
 
@@ -170,5 +175,73 @@ fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: us
     } else {
         intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize);
         intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize + 1);
+    }
+}
+
+pub fn intersect_ray_bvh_node_sorted(ray: &mut Ray, bvh: &StaticTriangleBVH) {
+    let mut node: &super::accelerator::static_triangle_bvh::StaticTriangleBVHNode = &bvh.nodes[0];
+
+    let mut stack = vec![0_usize; 64];
+    let mut stack_ptr = 0_usize;
+
+    loop {
+        if node.is_leaf() {
+            let start = node.primitives_start_index as usize;
+            let end = start + node.primitives_count as usize;
+
+            for tri_index_index in start..end {
+                let tri_index = bvh.tri_indices[tri_index_index];
+
+                let tri = &bvh.tris[tri_index];
+
+                let [v0, v1, v2] = tri.vertices;
+
+                let (v0, v1, v2) = bvh.geometry.get_vertices(v0, v1, v2);
+
+                intersect_ray_triangle(ray, tri_index, v0, v1, v2);
+            }
+
+            if stack_ptr == 0 {
+                break;
+            } else {
+                stack_ptr -= 1;
+
+                let node_index = stack[stack_ptr];
+
+                node = &bvh.nodes[node_index];
+            }
+
+            continue;
+        }
+
+        let mut near_child_index = node.left_child_index as usize;
+        let mut far_child_index = near_child_index + 1;
+
+        let mut near_distance = test_ray_aabb(ray, &bvh.nodes[near_child_index].aabb);
+        let mut far_distance = test_ray_aabb(ray, &bvh.nodes[far_child_index].aabb);
+
+        if near_distance > far_distance {
+            mem::swap(&mut near_child_index, &mut far_child_index);
+            mem::swap(&mut near_distance, &mut far_distance);
+        }
+
+        if near_distance == f32::MAX {
+            if stack_ptr == 0 {
+                break;
+            } else {
+                stack_ptr -= 1;
+
+                let node_index = stack[stack_ptr];
+
+                node = &bvh.nodes[node_index];
+            }
+        } else {
+            node = &bvh.nodes[near_child_index];
+
+            if far_distance != f32::MAX {
+                stack[stack_ptr] = far_child_index;
+                stack_ptr += 1;
+            }
+        }
     }
 }
