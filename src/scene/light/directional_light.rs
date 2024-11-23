@@ -226,10 +226,8 @@ impl DirectionalLight {
 
                             let buffer = &mut map.levels[0].0;
 
-                            for y in 0..buffer.height {
-                                for x in 0..buffer.width {
-                                    buffer.set(x, y, hdr_attachment.get(x, y).x);
-                                }
+                            for (index, hdr_color) in hdr_attachment.data.iter().enumerate() {
+                                buffer.set_at(index, hdr_color.x);
                             }
                         }
                         None => return Err(

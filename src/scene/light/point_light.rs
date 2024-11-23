@@ -588,9 +588,7 @@ fn blit_hdr_attachment_to_cubemap_side(
 ) {
     let buffer = &mut cubemap_side.levels[0].0;
 
-    for y in 0..buffer.height {
-        for x in 0..buffer.width {
-            buffer.set(x, y, hdr_buffer.get(x, y).x);
-        }
+    for (index, hdr_color) in hdr_buffer.iter().enumerate() {
+        buffer.set_at(index, hdr_color.x);
     }
 }
