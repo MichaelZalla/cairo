@@ -18,7 +18,6 @@ use renderable::Renderable;
 mod coordinates;
 mod draw_collider;
 mod draw_wind_velocity;
-mod force;
 mod make_simulation;
 mod point;
 mod renderable;

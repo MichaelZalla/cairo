@@ -6,7 +6,7 @@ use cairo::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-use crate::force::Force;
+use crate::simulation::RigidBodyForce;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodySimulationState {
@@ -102,14 +102,14 @@ impl RigidBodySimulationState {
 
     pub fn accumulate_accelerations(
         &self,
-        forces: &[Force],
+        forces: &[RigidBodyForce],
         current_time: f32,
         derivative: &mut Self,
     ) {
         let position = self.position;
 
         for force in forces {
-            let (f, point) = force(self, current_time);
+            let (f, point) = force(self, 0, current_time);
 
             // Accumulate linear momentum.
 

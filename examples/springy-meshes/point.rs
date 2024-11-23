@@ -1,4 +1,7 @@
-use cairo::{buffer::Buffer2D, color, graphics::Graphics, vec::vec3::Vec3};
+use cairo::{
+    buffer::Buffer2D, color, graphics::Graphics, physics::simulation::units::Velocity,
+    vec::vec3::Vec3,
+};
 
 use crate::{
     coordinates::world_to_screen_space,
@@ -10,7 +13,7 @@ use crate::{
 pub struct Point {
     pub is_static: bool,
     pub position: Vec3,
-    pub velocity: Vec3,
+    pub velocity: Velocity,
 }
 
 pub static POINT_MASS: f32 = 2.5;
