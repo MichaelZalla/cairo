@@ -10,7 +10,7 @@ use crate::{
     animation::lerp,
     buffer::Buffer2D,
     matrix::Mat4,
-    render::culling::FaceCullingReject,
+    render::{culling::FaceCullingReject, Renderer},
     resource::{arena::Arena, handle::Handle},
     scene::{
         camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
@@ -192,38 +192,49 @@ impl DirectionalLight {
                         camera.update_shader_context(&mut shader_context);
                     }
 
-                    match scene.render(
+                    {
+                        let mut renderer = rendering_context.renderer.borrow_mut();
+
+                        renderer.begin_frame();
+                    }
+
+                    // Render scene.
+
+                    scene.render(
                         resources,
                         &rendering_context.renderer,
                         Some(SceneGraphRenderOptions {
                             is_shadow_map_render: true,
                             ..Default::default()
                         }),
-                    ) {
-                        Ok(()) => {
-                            // Blit our framebuffer's color attachment buffer to
-                            // our cubemap face texture.
+                    )?;
 
-                            let framebuffer = rendering_context.framebuffer.borrow();
+                    {
+                        let mut renderer = rendering_context.renderer.borrow_mut();
 
-                            match &framebuffer.attachments.deferred_hdr {
-                            Some(hdr_attachment_rc) => {
-                                let hdr_attachment = hdr_attachment_rc.borrow();
+                        renderer.end_frame();
+                    }
 
-                                let buffer = &mut map.levels[0].0;
+                    // Blit our framebuffer's color attachment buffer to our
+                    // cubemap face texture.
 
-                                for y in 0..buffer.height {
-                                    for x in 0..buffer.width {
-                                        buffer.set(x, y, hdr_attachment.get(x, y).x);
-                                    }
+                    let framebuffer = rendering_context.framebuffer.borrow();
+
+                    match &framebuffer.attachments.deferred_hdr {
+                        Some(hdr_attachment_rc) => {
+                            let hdr_attachment = hdr_attachment_rc.borrow();
+
+                            let buffer = &mut map.levels[0].0;
+
+                            for y in 0..buffer.height {
+                                for x in 0..buffer.width {
+                                    buffer.set(x, y, hdr_attachment.get(x, y).x);
                                 }
                             }
-                            None => return Err(
-                                "Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()
-                            ),
                         }
-                        }
-                        Err(e) => panic!("{}", e),
+                        None => return Err(
+                            "Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()
+                        ),
                     }
                 }
             }

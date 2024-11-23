@@ -23,7 +23,7 @@ use cairo::{
         invert_effect::InvertEffect, kernel_effect::KernelEffect,
     },
     matrix::Mat4,
-    render::options::RenderPassFlag,
+    render::{options::RenderPassFlag, Renderer},
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -379,7 +379,23 @@ fn main() -> Result<(), String> {
 
                 let scene = &scenes[0];
 
-                scene.render(resources, &renderer_rc, None)
+                {
+                    let mut renderer = renderer_rc.borrow_mut();
+
+                    renderer.begin_frame();
+                }
+
+                // Render scene.
+
+                scene.render(resources, &renderer_rc, None)?;
+
+                {
+                    let mut renderer = renderer_rc.borrow_mut();
+
+                    renderer.end_frame();
+                }
+
+                Ok(())
             })?;
         }
 

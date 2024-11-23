@@ -119,14 +119,6 @@ impl SceneGraph {
     ) -> Result<(), String> {
         let options = render_options.unwrap_or_default();
 
-        // Begin frame
-
-        {
-            let mut renderer = renderer_rc.borrow_mut();
-
-            renderer.begin_frame();
-        }
-
         // Render the scene.
 
         // 1. Collect handles to active camera, clipping camera, active skybox, etc.
@@ -797,14 +789,6 @@ impl SceneGraph {
                     }
                 }
             }
-        }
-
-        // End frame
-
-        {
-            let mut renderer = renderer_rc.borrow_mut();
-
-            renderer.end_frame();
         }
 
         Ok(())

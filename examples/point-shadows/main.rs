@@ -7,9 +7,10 @@ use cairo::{
         resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
     },
-    buffer::framebuffer::Framebuffer,
+    buffer::{framebuffer::Framebuffer, Buffer2D},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
+    render::Renderer,
     scene::{
         context::SceneContext,
         graph::options::SceneGraphRenderOptions,
@@ -195,9 +196,15 @@ fn main() -> Result<(), String> {
 
         let scene = &scenes[0];
 
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.begin_frame();
+        }
+
         // Render scene.
 
-        match scene.render(
+        scene.render(
             resources,
             &renderer_rc,
             Some(SceneGraphRenderOptions {
@@ -205,59 +212,60 @@ fn main() -> Result<(), String> {
                 draw_cameras: true,
                 ..Default::default()
             }),
-        ) {
-            Ok(()) => {
-                // Write out.
+        )?;
 
-                let framebuffer = framebuffer_rc.borrow();
+        {
+            let mut renderer = renderer_rc.borrow_mut();
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let mut color_buffer = color_buffer_lock.borrow_mut();
+            renderer.end_frame();
+        }
 
-                        if DRAW_POINT_SHADOW_MAP_THUMBNAILS {
-                            let point_light_arena = resources.point_light.borrow();
+        // Write out.
 
-                            for (index, entry) in
-                                point_light_arena.entries.iter().flatten().enumerate()
-                            {
-                                if index != 0 {
-                                    continue;
-                                }
+        let framebuffer = framebuffer_rc.borrow();
 
-                                let light = &entry.item;
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_rc) => {
+                let mut color_buffer = color_buffer_rc.borrow_mut();
 
-                                match &light.shadow_map {
-                                    Some(shadow_map_handle) => {
-                                        let cubemap_f32_arena = resources.cubemap_f32.borrow();
-
-                                        if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle)
-                                        {
-                                            let shadow_map = &entry.item;
-
-                                            debug_blit_shadow_map_horizontal_cross(
-                                                shadow_map,
-                                                &mut color_buffer,
-                                            )
-                                        }
-                                    }
-                                    None => (),
-                                }
-                            }
-                        }
-
-                        color_buffer.copy_to(canvas);
-
-                        Ok(())
-                    }
-                    None => panic!(),
+                if DRAW_POINT_SHADOW_MAP_THUMBNAILS {
+                    draw_point_shadow_map_thumbnails(resources, &mut color_buffer);
                 }
+
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 
     app.run(&mut update, &render)?;
 
     Ok(())
+}
+
+fn draw_point_shadow_map_thumbnails(resources: &SceneResources, color_buffer: &mut Buffer2D) {
+    let point_light_arena = resources.point_light.borrow();
+
+    for (index, entry) in point_light_arena.entries.iter().flatten().enumerate() {
+        if index != 0 {
+            continue;
+        }
+
+        let light = &entry.item;
+
+        match &light.shadow_map {
+            Some(shadow_map_handle) => {
+                let cubemap_f32_arena = resources.cubemap_f32.borrow();
+
+                if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle) {
+                    let shadow_map = &entry.item;
+
+                    debug_blit_shadow_map_horizontal_cross(shadow_map, color_buffer)
+                }
+            }
+            None => (),
+        }
+    }
 }
