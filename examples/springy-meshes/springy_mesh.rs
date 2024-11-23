@@ -5,6 +5,7 @@ use cairo::{
     buffer::Buffer2D,
     color::{self, Color},
     graphics::Graphics,
+    physics::simulation::state_vector::StateVector,
     vec::vec3::{self, Vec3},
 };
 
@@ -12,7 +13,6 @@ use crate::{
     coordinates::world_to_screen_space,
     point::{Point, POINT_MASS},
     renderable::Renderable,
-    state_vector::StateVector,
     strut::Strut,
 };
 

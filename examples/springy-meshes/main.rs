@@ -23,7 +23,6 @@ mod point;
 mod renderable;
 mod simulation;
 mod springy_mesh;
-mod state_vector;
 mod static_line_segment_collider;
 mod strut;
 

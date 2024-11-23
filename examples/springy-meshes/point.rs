@@ -1,13 +1,15 @@
 use cairo::{
-    buffer::Buffer2D, color, graphics::Graphics, physics::simulation::units::Velocity,
+    buffer::Buffer2D,
+    color,
+    graphics::Graphics,
+    physics::simulation::{
+        state_vector::{FromStateVector, StateVector, ToStateVector},
+        units::Velocity,
+    },
     vec::vec3::Vec3,
 };
 
-use crate::{
-    coordinates::world_to_screen_space,
-    renderable::Renderable,
-    state_vector::{FromStateVector, StateVector, ToStateVector},
-};
+use crate::{coordinates::world_to_screen_space, renderable::Renderable};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Point {
