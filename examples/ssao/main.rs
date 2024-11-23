@@ -15,7 +15,7 @@ use cairo::{
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::options::RenderPassFlag,
+    render::{options::RenderPassFlag, Renderer},
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -298,11 +298,24 @@ fn main() -> Result<(), String> {
         let resources = &scene_context.resources;
 
         let mut scenes = scene_context.scenes.borrow_mut();
+
         let scene = &mut scenes[0];
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.begin_frame();
+        }
 
         // Render scene.
 
         scene.render(resources, &renderer_rc, None)?;
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.end_frame();
+        }
 
         // Write out.
 

@@ -7,6 +7,7 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
+    render::Renderer,
     scene::{
         context::{utils::make_textured_cube_scene, SceneContext},
         node::{SceneNode, SceneNodeType},
@@ -185,11 +186,24 @@ fn main() -> Result<(), String> {
         let resources = &scene_context.resources;
 
         let scenes = scene_context.scenes.borrow();
+
         let scene = &scenes[0];
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.begin_frame();
+        }
 
         // Render scene.
 
         scene.render(resources, &renderer_rc, None)?;
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.end_frame();
+        }
 
         // Write out.
 

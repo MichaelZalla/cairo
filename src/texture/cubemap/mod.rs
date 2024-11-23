@@ -369,26 +369,39 @@ impl CubeMap<Vec3> {
                 cubemap_face_camera.update_shader_context(&mut shader_context);
             }
 
+            // Begin frame
+
+            {
+                let mut renderer = renderer_rc.borrow_mut();
+
+                renderer.begin_frame();
+            }
+
             let scene = &scene_context.scenes.borrow()[0];
 
-            match scene.render(&scene_context.resources, renderer_rc, None) {
-                Ok(()) => {
-                    // Blit our framebuffer's color attachment buffer to our
-                    // cubemap face texture.
+            scene.render(&scene_context.resources, renderer_rc, None)?;
 
-                    let framebuffer = framebuffer_rc.borrow();
+            // End frame
 
-                    match &framebuffer.attachments.deferred_hdr {
-                        Some(hdr_attachment_rc) => {
-                            let hdr_buffer = hdr_attachment_rc.borrow();
+            {
+                let mut renderer = renderer_rc.borrow_mut();
 
-                            self.sides[side as usize].levels[mipmap_level.unwrap_or(0)] =
-                                TextureBuffer::<Vec3>(hdr_buffer.clone());
-                        }
-                        None => return Err("Called CubeMap::<Vec3>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
-                    }
+                renderer.end_frame();
+            }
+
+            // Blit our framebuffer's color attachment buffer to our cubemap
+            // face texture.
+
+            let framebuffer = framebuffer_rc.borrow();
+
+            match &framebuffer.attachments.deferred_hdr {
+                Some(hdr_attachment_rc) => {
+                    let hdr_buffer = hdr_attachment_rc.borrow();
+
+                    self.sides[side as usize].levels[mipmap_level.unwrap_or(0)] =
+                        TextureBuffer::<Vec3>(hdr_buffer.clone());
                 }
-                Err(e) => return Err(e),
+                None => return Err("Called CubeMap::<Vec3>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
             }
         }
 

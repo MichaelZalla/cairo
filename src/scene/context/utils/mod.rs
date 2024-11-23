@@ -180,7 +180,9 @@ pub fn make_cube_scene(
 
         let cube_material_handle = material_arena.insert(cube_material);
 
-        entity_arena.insert(Entity::new(cube_mesh_handle, Some(cube_material_handle)))
+        let cube_entity = Entity::new(cube_mesh_handle, Some(cube_material_handle));
+
+        entity_arena.insert(cube_entity)
     };
 
     let cube_entity_node = SceneNode::new(

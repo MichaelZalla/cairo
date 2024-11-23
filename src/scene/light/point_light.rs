@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     buffer::Buffer2D,
-    render::culling::FaceCullingReject,
+    render::{culling::FaceCullingReject, Renderer},
     resource::handle::Handle,
     scene::{
         camera::Camera,
@@ -540,30 +540,41 @@ impl PointLight {
                     .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
             }
 
-            match scene.render(
+            {
+                let mut renderer = context.renderer.borrow_mut();
+
+                renderer.begin_frame();
+            }
+
+            // Render scene.
+
+            scene.render(
                 resources,
                 &context.renderer,
                 Some(SceneGraphRenderOptions {
                     is_shadow_map_render: true,
                     ..Default::default()
                 }),
-            ) {
-                Ok(()) => {
-                    // Blit our framebuffer's HDR attachment buffer to our
-                    // cubemap's corresponding side (texture map).
+            )?;
 
-                    let framebuffer = context.framebuffer.borrow();
+            {
+                let mut renderer = context.renderer.borrow_mut();
 
-                    match &framebuffer.attachments.deferred_hdr {
-                        Some(hdr_attachment_rc) => {
-                            let hdr_attachment = hdr_attachment_rc.borrow();
-    
-                            blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]);
-                        }
-                        None => return Err("Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
-                    }
+                renderer.end_frame();
+            }
+
+            // Blit our framebuffer's HDR attachment buffer to our cubemap's
+            // corresponding side (texture map).
+
+            let framebuffer = context.framebuffer.borrow();
+
+            match &framebuffer.attachments.deferred_hdr {
+                Some(hdr_attachment_rc) => {
+                    let hdr_attachment = hdr_attachment_rc.borrow();
+
+                    blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]);
                 }
-                Err(e) => panic!("{}", e),
+                None => return Err("Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
             }
         }
 

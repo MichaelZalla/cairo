@@ -12,7 +12,7 @@ use cairo::{
     geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     matrix::Mat4,
     mesh::obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
-    render::options::RenderOptions,
+    render::{options::RenderOptions, Renderer},
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -244,9 +244,21 @@ fn main() -> Result<(), String> {
 
         let scene = &scenes[0];
 
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.begin_frame();
+        }
+
         // Render scene.
 
         scene.render(resources, &renderer_rc, None)?;
+
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.end_frame();
+        }
 
         // Write out.
 
