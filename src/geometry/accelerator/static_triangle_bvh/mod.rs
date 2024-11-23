@@ -25,6 +25,12 @@ impl StaticTriangleBVHNode {
     pub fn is_leaf(&self) -> bool {
         self.primitives_count > 0
     }
+
+    pub fn get_cost(&self) -> f32 {
+        let extent = self.aabb.extent();
+
+        self.primitives_count as f32 * extent.half_area_of_extent()
+    }
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -131,17 +137,17 @@ impl StaticTriangleBVH {
 
     fn subdivide(&mut self, split_node_index: usize) {
         let split = {
-            let split_node = &self.nodes[split_node_index];
+            let node = &self.nodes[split_node_index];
 
             // Base case.
 
-            if split_node.primitives_count <= BVH_NODE_LOAD_FACTOR {
+            if node.primitives_count <= BVH_NODE_LOAD_FACTOR {
                 return;
             }
 
             // Determine the split plane (axis) and position via some split strategy.
 
-            let (split, cost) = {
+            let (split, split_cost) = {
                 // self.split_strategy_midpoint(split_node_index)
 
                 self.split_strategy_surface_area(split_node_index)
@@ -149,12 +155,7 @@ impl StaticTriangleBVH {
 
             // Skip the subdivide if dividing the parent actually yields worse net cost.
 
-            let parent_extent = split_node.aabb.extent();
-
-            let parent_cost =
-                split_node.primitives_count as f32 * parent_extent.half_area_of_extent();
-
-            if cost >= parent_cost {
+            if split_cost >= node.get_cost() {
                 return;
             }
 
