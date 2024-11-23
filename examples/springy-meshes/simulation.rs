@@ -1,14 +1,15 @@
-use cairo::vec::vec3::Vec3;
+use cairo::{physics::simulation::force::Force, vec::vec3::Vec3};
 
 use crate::{
-    force::Force,
     springy_mesh::SpringyMesh,
     state_vector::{FromStateVector, StateVector, ToStateVector},
     static_line_segment_collider::{Collider, StaticLineSegmentCollider},
 };
 
+pub type PointForce = Force<StateVector>;
+
 pub struct Simulation<'a> {
-    pub forces: Vec<&'a Force>,
+    pub forces: Vec<&'a PointForce>,
     pub wind: Vec3,
     pub static_colliders: Vec<StaticLineSegmentCollider>,
     pub meshes: Vec<SpringyMesh>,
@@ -113,7 +114,9 @@ impl<'a> Simulation<'a> {
             let mut net_force_acceleration: Vec3 = Default::default();
 
             for force in &self.forces {
-                net_force_acceleration += force(current_state, i, current_time);
+                let (newtons, _contact_point) = force(current_state, i, current_time);
+
+                net_force_acceleration += newtons;
             }
 
             // Write the final net environmental acceleration.

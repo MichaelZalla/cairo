@@ -3,12 +3,13 @@ use std::{cell::RefCell, rc::Rc};
 use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 
 use cairo::{
-    physics::simulation::units::Acceleration, random::sampler::RandomSampler, vec::vec3::Vec3,
+    physics::simulation::{force, units::Acceleration},
+    random::sampler::RandomSampler,
+    vec::vec3::Vec3,
 };
 
 use crate::{
     collider::{Collider, LineSegmentCollider},
-    force::Force,
     operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     particle::{
         generator::{ParticleGenerator, ParticleGeneratorKind},
@@ -18,12 +19,14 @@ use crate::{
     state_vector::{FromStateVector, StateVector, ToStateVector},
 };
 
+pub type ParticleForce = force::Force<StateVector>;
+
 static COMPONENTS_PER_PARTICLE: usize = 2;
 
 fn system_dynamics_function(
     current_state: &StateVector,
     quadtree: &Quadtree,
-    forces: &[&Force],
+    forces: &[&ParticleForce],
     operators: &mut Operators,
     current_time: f32,
     h: f32,
@@ -45,7 +48,7 @@ fn system_dynamics_function(
 fn compute_accelerations(
     current_state: &StateVector,
     quadtree: &Quadtree,
-    forces: &[&Force],
+    forces: &[&ParticleForce],
     operators: &mut Operators,
     current_time: f32,
     h: f32,
@@ -59,7 +62,9 @@ fn compute_accelerations(
         let mut net_force_acceleration: Vec3 = Default::default();
 
         for force in forces {
-            net_force_acceleration += force(current_state, i, current_time);
+            let (newtons, _contact_point) = force(current_state, i, current_time);
+
+            net_force_acceleration += newtons;
         }
 
         let mut net_force_acceleration_with_operators = net_force_acceleration;
@@ -148,7 +153,7 @@ pub(crate) struct Operators {
 pub(crate) struct Simulation<'a, const N: usize> {
     pub sampler: Rc<RefCell<RandomSampler<N>>>,
     pub pool: RefCell<ParticleList>,
-    pub forces: Vec<&'a Force>,
+    pub forces: Vec<&'a ParticleForce>,
     pub colliders: RefCell<Vec<LineSegmentCollider>>,
     pub operators: RefCell<Operators>,
     pub generators: RefCell<Vec<ParticleGenerator>>,

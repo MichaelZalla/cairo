@@ -1,12 +1,14 @@
-use cairo::vec::vec3::Vec3;
+use cairo::{physics::simulation::force::BoxedForce, vec::vec3::Vec3};
 
 use crate::{
-    force::Force, rigid_body::RigidBody, rigid_body_simulation_state::RigidBodySimulationState,
+    rigid_body::RigidBody, rigid_body_simulation_state::RigidBodySimulationState,
     state_vector::StateVector,
 };
 
+pub type RigidBodyForce = BoxedForce<RigidBodySimulationState>;
+
 pub struct Simulation {
-    pub forces: Vec<Force>,
+    pub forces: Vec<RigidBodyForce>,
     pub rigid_bodies: Vec<RigidBody>,
 }
 
@@ -39,7 +41,7 @@ impl Simulation {
 
 fn system_dynamics_function(
     state: &StateVector<RigidBodySimulationState>,
-    forces: &[Force],
+    forces: &[RigidBodyForce],
     current_time: f32,
 ) -> StateVector<RigidBodySimulationState> {
     let n = state.0.len();

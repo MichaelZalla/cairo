@@ -12,18 +12,16 @@ use cairo::{
         mouse::{MouseEventKind, MouseState},
     },
     graphics::Graphics,
-    physics::simulation::units::Newtons,
+    physics::simulation::{force::ContactPoint, units::Newtons},
     vec::vec3::Vec3,
 };
 
 use coordinates::{screen_to_world_space, world_to_screen_space};
-use force::Point;
 use make_simulation::make_simulation;
 use renderable::Renderable;
 use rigid_body_simulation_state::RigidBodySimulationState;
 
 mod coordinates;
-mod force;
 mod make_simulation;
 mod renderable;
 mod rigid_body;
@@ -166,8 +164,9 @@ fn main() -> Result<(), String> {
 
                         let force = Box::new(
                             move |_state: &RigidBodySimulationState,
+                                  _i: usize,
                                   _current_time: f32|
-                                  -> (Newtons, Option<Point>) {
+                                  -> (Newtons, Option<ContactPoint>) {
                                 (f, Some(from))
                             },
                         );

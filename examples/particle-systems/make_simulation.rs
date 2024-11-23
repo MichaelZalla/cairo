@@ -1,42 +1,47 @@
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    physics::simulation::{physical_constants::EARTH_GRAVITY, units::Newtons},
+    physics::simulation::{force::ContactPoint, physical_constants::EARTH_GRAVITY, units::Newtons},
     random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
 
 use crate::{
-    force::Force,
     particle::{
         generator::{ParticleGenerator, ParticleGeneratorKind},
         PARTICLE_MASS,
     },
-    simulation::{Operators, Simulation},
+    simulation::{Operators, ParticleForce, Simulation},
     state_vector::StateVector,
 };
 
 pub(crate) const SEED_SIZE: usize = 2048;
 
-static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| -> Newtons {
-    Vec3 {
-        x: 0.0,
-        y: -EARTH_GRAVITY,
-        z: 0.0,
-    }
-};
+static GRAVITY: ParticleForce =
+    |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
+        let newtons = Vec3 {
+            x: 0.0,
+            y: -EARTH_GRAVITY,
+            z: 0.0,
+        };
 
-static AIR_RESISTANCE: Force = |state: &StateVector, i: usize, _current_time: f32| -> Newtons {
-    static D: f32 = 0.0;
-
-    static WIND: Vec3 = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
+        (newtons, None)
     };
 
-    (WIND - state.data[i + state.len()]) * D
-};
+static AIR_RESISTANCE: ParticleForce =
+    |state: &StateVector, i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
+        static D: f32 = 0.0;
+
+        static WIND: Vec3 = Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+
+        let newtons = (WIND - state.data[i + state.len()]) * D;
+
+        (newtons, None)
+    };
 
 pub(crate) fn make_simulation<'a>(
     sampler: Rc<RefCell<RandomSampler<SEED_SIZE>>>,

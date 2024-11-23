@@ -4,17 +4,22 @@ use cairo::{
 };
 
 use crate::{
-    force::Force, simulation::Simulation, springy_mesh::SpringyMesh, state_vector::StateVector,
+    simulation::{PointForce, Simulation},
+    springy_mesh::SpringyMesh,
+    state_vector::StateVector,
     static_line_segment_collider::StaticLineSegmentCollider,
 };
 
-static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| -> Newtons {
-    Vec3 {
-        x: 0.0,
-        y: -EARTH_GRAVITY,
-        z: 0.0,
-    }
-};
+static GRAVITY: PointForce =
+    |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<Vec3>) {
+        let newtons = Vec3 {
+            x: 0.0,
+            y: -EARTH_GRAVITY,
+            z: 0.0,
+        };
+
+        (newtons, None)
+    };
 
 pub fn make_simulation<'a>() -> Simulation<'a> {
     let forces = vec![&GRAVITY];

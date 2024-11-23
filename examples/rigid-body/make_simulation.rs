@@ -1,19 +1,21 @@
 use cairo::{
-    physics::simulation::{physical_constants::EARTH_GRAVITY, units::Newtons},
+    physics::simulation::{force::ContactPoint, physical_constants::EARTH_GRAVITY, units::Newtons},
     vec::vec3::Vec3,
 };
 
 use crate::{
-    force::{Force, Point},
     rigid_body::RigidBody,
     rigid_body_simulation_state::RigidBodySimulationState,
-    simulation::Simulation,
+    simulation::{RigidBodyForce, Simulation},
 };
 
 pub fn make_simulation() -> Simulation {
     #[allow(unused)]
-    let gravity_body_force: Force = Box::new(
-        |state: &RigidBodySimulationState, _current_time: f32| -> (Newtons, Option<Point>) {
+    let gravity_body_force: RigidBodyForce = Box::new(
+        |state: &RigidBodySimulationState,
+         _i: usize,
+         _current_time: f32|
+         -> (Newtons, Option<ContactPoint>) {
             static BODY_FORCE: Vec3 = Vec3 {
                 x: 0.0,
                 y: -EARTH_GRAVITY,
