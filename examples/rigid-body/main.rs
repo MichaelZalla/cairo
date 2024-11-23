@@ -12,11 +12,12 @@ use cairo::{
         mouse::{MouseEventKind, MouseState},
     },
     graphics::Graphics,
+    physics::simulation::units::Newtons,
     vec::vec3::Vec3,
 };
 
 use coordinates::{screen_to_world_space, world_to_screen_space};
-use force::{Newtons, Point};
+use force::Point;
 use make_simulation::make_simulation;
 use renderable::Renderable;
 use rigid_body_simulation_state::RigidBodySimulationState;

@@ -2,11 +2,13 @@ use std::{cell::RefCell, rc::Rc};
 
 use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 
-use cairo::{random::sampler::RandomSampler, vec::vec3::Vec3};
+use cairo::{
+    physics::simulation::units::Acceleration, random::sampler::RandomSampler, vec::vec3::Vec3,
+};
 
 use crate::{
     collider::{Collider, LineSegmentCollider},
-    force::{Acceleration, Force},
+    force::Force,
     operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     particle::{
         generator::{ParticleGenerator, ParticleGeneratorKind},

@@ -1,10 +1,10 @@
-use cairo::{physics::simulation::physical_constants::EARTH_GRAVITY, vec::vec3::Vec3};
+use cairo::{
+    physics::simulation::{physical_constants::EARTH_GRAVITY, units::Newtons},
+    vec::vec3::Vec3,
+};
 
 use crate::{
-    force::{Force, Newtons},
-    simulation::Simulation,
-    springy_mesh::SpringyMesh,
-    state_vector::StateVector,
+    force::Force, simulation::Simulation, springy_mesh::SpringyMesh, state_vector::StateVector,
     static_line_segment_collider::StaticLineSegmentCollider,
 };
 

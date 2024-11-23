@@ -1,7 +1,10 @@
-use cairo::{physics::simulation::physical_constants::EARTH_GRAVITY, vec::vec3::Vec3};
+use cairo::{
+    physics::simulation::{physical_constants::EARTH_GRAVITY, units::Newtons},
+    vec::vec3::Vec3,
+};
 
 use crate::{
-    force::{Force, Newtons, Point},
+    force::{Force, Point},
     rigid_body::RigidBody,
     rigid_body_simulation_state::RigidBodySimulationState,
     simulation::Simulation,
