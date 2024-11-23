@@ -1,7 +1,6 @@
-use cairo::vec::vec3::Vec3;
-
-use cairo::random::sampler::{
-    DirectionSampler, RandomSampler, RangeSampler, VectorDisplaceSampler,
+use crate::{
+    random::sampler::{DirectionSampler, RandomSampler, RangeSampler, VectorDisplaceSampler},
+    vec::vec3::Vec3,
 };
 
 use super::{particlelist::ParticleList, Particle};
@@ -27,6 +26,7 @@ impl Default for ParticleGeneratorKind {
 #[derive(Default, Debug, Copy, Clone)]
 pub struct ParticleGenerator {
     pub kind: ParticleGeneratorKind,
+    prototype: Particle,
     particles_per_second: f32,
     fractional_particles_accumulator: f32,
     max_deflection_angle_radians: Option<f32>,
@@ -38,6 +38,7 @@ pub struct ParticleGenerator {
 impl ParticleGenerator {
     pub fn new(
         kind: ParticleGeneratorKind,
+        prototype: Particle,
         particles_per_second: f32,
         max_deflection_angle_radians: Option<f32>,
         mass: f32,
@@ -46,6 +47,7 @@ impl ParticleGenerator {
     ) -> Self {
         Self {
             kind,
+            prototype,
             particles_per_second,
             fractional_particles_accumulator: 0.0,
             max_deflection_angle_radians,
@@ -57,7 +59,7 @@ impl ParticleGenerator {
 
     pub fn generate<const N: usize>(
         &mut self,
-        list: &mut ParticleList,
+        list: &mut ParticleList<N>,
         sampler: &mut RandomSampler<N>,
         h: f32,
     ) -> Result<(), String> {
@@ -108,10 +110,9 @@ impl ParticleGenerator {
             position += velocity * h * sampler.sample_range_uniform(0.0, 1.0);
 
             list.activate(Particle {
-                mass: self.mass,
                 position,
                 velocity,
-                ..Default::default()
+                ..self.prototype
             })?;
         }
 

@@ -194,15 +194,7 @@ fn main() -> Result<(), String> {
                     && (screen_space_position.y as i32 - MAX_PARTICLE_SIZE_PIXELS as i32)
                         < framebuffer.height as i32
                 {
-                    let prev_screen_space_position =
-                        world_to_screen_space(&particle.prev_position, &framebuffer_center);
-
-                    draw_particle(
-                        particle,
-                        &screen_space_position,
-                        &prev_screen_space_position,
-                        &mut framebuffer,
-                    );
+                    draw_particle(particle, &screen_space_position, &mut framebuffer);
                 }
             }
         }
