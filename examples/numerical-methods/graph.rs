@@ -43,17 +43,17 @@ impl Graph {
         static TRANSLATION_SPEED: i32 = 8;
 
         for keycode in &keyboard_state.pressed_keycodes {
-            match keycode {
-                &Keycode::W => {
+            match *keycode {
+                Keycode::W => {
                     self.screen_origin.1 += TRANSLATION_SPEED;
                 }
-                &Keycode::A => {
+                Keycode::A => {
                     self.screen_origin.0 += TRANSLATION_SPEED;
                 }
-                &Keycode::S => {
+                Keycode::S => {
                     self.screen_origin.1 -= TRANSLATION_SPEED;
                 }
-                &Keycode::D => {
+                Keycode::D => {
                     self.screen_origin.0 -= TRANSLATION_SPEED;
                 }
                 _ => (),
