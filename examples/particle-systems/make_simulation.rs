@@ -1,8 +1,9 @@
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
-use sdl2::sys::SDL_STANDARD_GRAVITY;
-
-use cairo::{random::sampler::RandomSampler, vec::vec3::Vec3};
+use cairo::{
+    physics::simulation::physical_constants::EARTH_GRAVITY, random::sampler::RandomSampler,
+    vec::vec3::Vec3,
+};
 
 use crate::{
     force::{Force, Newtons},
@@ -19,7 +20,7 @@ pub(crate) const SEED_SIZE: usize = 2048;
 static GRAVITY: Force = |_state: &StateVector, _i: usize, _current_time: f32| -> Newtons {
     Vec3 {
         x: 0.0,
-        y: -(SDL_STANDARD_GRAVITY as f32),
+        y: -EARTH_GRAVITY,
         z: 0.0,
     }
 };

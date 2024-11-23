@@ -1,11 +1,11 @@
-use sdl2::sys::SDL_STANDARD_GRAVITY;
+use cairo::{physics::simulation::physical_constants::EARTH_GRAVITY, vec::vec3::Vec3};
 
-use cairo::vec::vec3::Vec3;
-
-use crate::force::{Force, Newtons, Point};
-use crate::rigid_body::RigidBody;
-use crate::rigid_body_simulation_state::RigidBodySimulationState;
-use crate::simulation::Simulation;
+use crate::{
+    force::{Force, Newtons, Point},
+    rigid_body::RigidBody,
+    rigid_body_simulation_state::RigidBodySimulationState,
+    simulation::Simulation,
+};
 
 pub fn make_simulation() -> Simulation {
     #[allow(unused)]
@@ -13,7 +13,7 @@ pub fn make_simulation() -> Simulation {
         |state: &RigidBodySimulationState, _current_time: f32| -> (Newtons, Option<Point>) {
             static BODY_FORCE: Vec3 = Vec3 {
                 x: 0.0,
-                y: -(SDL_STANDARD_GRAVITY as f32),
+                y: -EARTH_GRAVITY,
                 z: 0.0,
             };
 
