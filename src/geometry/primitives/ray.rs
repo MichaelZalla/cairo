@@ -27,34 +27,34 @@ impl Ray {
             ..Default::default()
         }
     }
+}
 
-    pub fn grid(rows: usize, columns: usize, size: f32) -> Vec<Ray> {
-        let mut rays = vec![Ray::new(Default::default(), -vec3::UP); rows * columns];
+pub fn grid(rows: usize, columns: usize, size: f32) -> Vec<Ray> {
+    let mut rays = vec![Ray::new(Default::default(), -vec3::UP); rows * columns];
 
-        let grid_left = -size / 2.0;
+    let grid_left = -size / 2.0;
 
-        let grid_near = grid_left;
+    let grid_near = grid_left;
 
-        let ray_grid_column_alpha_step = 1.0 / columns as f32;
+    let ray_grid_column_alpha_step = 1.0 / columns as f32;
 
-        let ray_grid_row_alpha_step = 1.0 / rows as f32;
+    let ray_grid_row_alpha_step = 1.0 / rows as f32;
 
-        for z_offset in 0..columns {
-            let z_alpha = z_offset as f32 * ray_grid_column_alpha_step;
+    for z_offset in 0..columns {
+        let z_alpha = z_offset as f32 * ray_grid_column_alpha_step;
 
-            for x_offset in 0..rows {
-                let x_alpha = x_offset as f32 * ray_grid_row_alpha_step;
+        for x_offset in 0..rows {
+            let x_alpha = x_offset as f32 * ray_grid_row_alpha_step;
 
-                let ray = &mut rays[z_offset * columns + x_offset];
+            let ray = &mut rays[z_offset * columns + x_offset];
 
-                ray.origin = Vec3 {
-                    x: grid_left + size * (0.5 * ray_grid_row_alpha_step + x_alpha),
-                    z: grid_near + size * (0.5 * ray_grid_column_alpha_step + z_alpha),
-                    ..Default::default()
-                };
-            }
+            ray.origin = Vec3 {
+                x: grid_left + size * (0.5 * ray_grid_row_alpha_step + x_alpha),
+                z: grid_near + size * (0.5 * ray_grid_column_alpha_step + z_alpha),
+                ..Default::default()
+            };
         }
-
-        rays
     }
+
+    rays
 }

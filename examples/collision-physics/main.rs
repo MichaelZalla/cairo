@@ -4,12 +4,13 @@ use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1024_BY_576},
+        resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
+    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
+    geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, primitives::ray},
     matrix::Mat4,
     mesh::obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
     render::{options::RenderOptions, Renderer},
@@ -35,8 +36,8 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/collision-physics".to_string(),
         relative_mouse_mode: true,
-        canvas_resolution: RESOLUTION_1024_BY_576,
-        window_resolution: RESOLUTION_1024_BY_576,
+        canvas_resolution: RESOLUTION_1280_BY_720,
+        window_resolution: RESOLUTION_1280_BY_720,
         ..Default::default()
     };
 
@@ -257,6 +258,22 @@ fn main() -> Result<(), String> {
         {
             let mut renderer = renderer_rc.borrow_mut();
 
+            // Render the nodes of our level mesh's BHV.
+
+            let mesh_arena = resources.mesh.borrow();
+
+            if let Ok(entry) = mesh_arena.get(&level_mesh_handle) {
+                let mesh = &entry.item;
+
+                if let Some(bvh) = mesh.static_triangle_bvh.as_ref() {
+                    // Render the BVH root's AABB.
+
+                    renderer.render_bvh(bvh);
+
+                    render_ray_grid(&mut renderer);
+                }
+            }
+
             renderer.end_frame();
         }
 
@@ -279,4 +296,17 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &render)?;
 
     Ok(())
+}
+
+fn render_ray_grid(renderer: &mut SoftwareRenderer) {
+    // Build a grid of downward-facing rays that begins above the level geometry.
+
+    let mut rays = ray::grid(8, 8, 40.0);
+
+    for ray in rays.iter_mut() {
+        ray.origin.y = 6.0;
+        ray.t = 12.0;
+
+        renderer.render_ray(ray, color::ORANGE);
+    }
 }
