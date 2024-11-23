@@ -3,7 +3,14 @@ use std::{cell::RefCell, rc::Rc};
 use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 
 use cairo::{
-    physics::simulation::{force, units::Acceleration},
+    physics::simulation::{
+        force,
+        particle::{
+            generator::{ParticleGenerator, ParticleGeneratorKind},
+            particlelist::ParticleList,
+        },
+        units::Acceleration,
+    },
     random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
@@ -11,10 +18,6 @@ use cairo::{
 use crate::{
     collider::{Collider, LineSegmentCollider},
     operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
-    particle::{
-        generator::{ParticleGenerator, ParticleGeneratorKind},
-        particlelist::ParticleList,
-    },
     quadtree::Quadtree,
     state_vector::{FromStateVector, StateVector, ToStateVector},
 };
@@ -144,7 +147,6 @@ fn integrate(
 
 #[derive(Default)]
 pub(crate) struct Operators {
-    // pub initialization: Vec<fn(&mut Particle)>,
     pub additive_acceleration: Vec<Box<dyn AdditiveAccelerationOperator>>,
     pub functional_acceleration: Vec<Box<dyn FunctionalAccelerationOperator>>,
     pub velocity: Vec<Box<dyn VelocityOperator>>,
@@ -152,7 +154,7 @@ pub(crate) struct Operators {
 
 pub(crate) struct Simulation<'a, const N: usize> {
     pub sampler: Rc<RefCell<RandomSampler<N>>>,
-    pub pool: RefCell<ParticleList>,
+    pub pool: RefCell<ParticleList<N>>,
     pub forces: Vec<&'a ParticleForce>,
     pub colliders: RefCell<Vec<LineSegmentCollider>>,
     pub operators: RefCell<Operators>,

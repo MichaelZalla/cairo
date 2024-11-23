@@ -1,16 +1,21 @@
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    physics::simulation::{force::ContactPoint, physical_constants::EARTH_GRAVITY, units::Newtons},
+    physics::simulation::{
+        force::ContactPoint,
+        particle::{
+            generator::{ParticleGenerator, ParticleGeneratorKind},
+            Particle,
+        },
+        physical_constants::EARTH_GRAVITY,
+        units::Newtons,
+    },
     random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
 
 use crate::{
-    particle::{
-        generator::{ParticleGenerator, ParticleGeneratorKind},
-        PARTICLE_MASS,
-    },
+    particle::{PARTICLE_MASS, PARTICLE_MAX_AGE_SECONDS},
     simulation::{Operators, ParticleForce, Simulation},
     state_vector::StateVector,
 };
@@ -51,12 +56,19 @@ pub(crate) fn make_simulation<'a>(
 
     // Define some particle generators.
 
+    let prototype = Particle {
+        mass: PARTICLE_MASS,
+        max_age: PARTICLE_MAX_AGE_SECONDS,
+        ..Default::default()
+    };
+
     let omnidirectional = ParticleGenerator::new(
         ParticleGeneratorKind::Omnidirectional(Vec3 {
             x: 0.0,
             y: 40.0,
             z: 0.0,
         }),
+        prototype,
         50.0,
         None,
         mass,
@@ -77,6 +89,7 @@ pub(crate) fn make_simulation<'a>(
                 z: 0.0,
             },
         ),
+        prototype,
         50.0,
         Some(PI / 4.0),
         mass,
@@ -97,6 +110,7 @@ pub(crate) fn make_simulation<'a>(
                 z: 0.0,
             },
         ),
+        prototype,
         50.0,
         Some(PI / 2.0),
         mass,

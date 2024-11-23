@@ -3,15 +3,15 @@ use cairo::{
     buffer::Buffer2D,
     color::{self, Color},
     graphics::Graphics,
+    physics::simulation::particle::Particle,
     vec::vec3::Vec3,
 };
 
-use crate::particle::{Particle, MAX_PARTICLE_SIZE_PIXELS, PARTICLE_MAX_AGE_SECONDS};
+use crate::particle::{MAX_PARTICLE_SIZE_PIXELS, PARTICLE_MAX_AGE_SECONDS};
 
 pub(crate) fn draw_particle(
     particle: &Particle,
     screen_space_position: &Vec3,
-    _prev_screen_space_position: &Vec3,
     framebuffer: &mut Buffer2D,
 ) {
     debug_assert!(particle.alive);
@@ -23,28 +23,6 @@ pub(crate) fn draw_particle(
         color::BLACK.to_vec3(),
         age_alpha,
     ));
-
-    // Color {
-    //     r: age_alpha_u8,
-    //     g: age_alpha_u8,
-    //     b: age_alpha_u8,
-    //     a: 1.0,
-    // };
-
-    // framebuffer.set(
-    //     screen_space_position.x as u32,
-    //     screen_space_position.y as u32,
-    //     color.to_u32(),
-    // );
-
-    // Graphics::line(
-    //     framebuffer,
-    //     screen_space_position.x as i32,
-    //     screen_space_position.y as i32,
-    //     prev_screen_space_position.x as i32,
-    //     prev_screen_space_position.y as i32,
-    //     &color,
-    // );
 
     // Assumes screen space position lies within our buffer.
 
