@@ -1,41 +1,13 @@
-use cairo::{buffer::Buffer2D, color::Color};
+use cairo::{
+    buffer::Buffer2D,
+    color::Color,
+    physics::simulation::integration::{forward_euler, rk2, rk4},
+};
 
 use crate::{
     graph::Graph,
     state::{State, StateDerivative},
 };
-
-fn forward_euler(
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
-    state: State,
-    h: f32,
-) -> StateDerivative {
-    state + system_dynamics_function(state) * h
-}
-
-fn rk2(
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
-    state: State,
-    h: f32,
-) -> StateDerivative {
-    let k1 = system_dynamics_function(state);
-    let k2 = system_dynamics_function(state + k1 * (h / 2.0));
-
-    state + k2 * h
-}
-
-fn rk4(
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
-    state: State,
-    h: f32,
-) -> StateDerivative {
-    let k1 = system_dynamics_function(state);
-    let k2 = system_dynamics_function(state + k1 * (h / 2.0));
-    let k3 = system_dynamics_function(state + k2 * (h / 2.0));
-    let k4 = system_dynamics_function(state + k3 * h);
-
-    state + (k1 + k2 * 2.0 + k3 * 2.0 + k4) * (h / 6.0)
-}
 
 #[allow(clippy::too_many_arguments)]
 fn integrate_with_method(
