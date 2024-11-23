@@ -272,7 +272,7 @@ impl Renderable for SpringyMesh {
             for (angle_index, (p1_index_index, p0_index_index, p2_index_index)) in
                 ANGLES.iter().enumerate()
             {
-                let color = ANGLE_COLORS[angle_index].clone();
+                let color = ANGLE_COLORS[angle_index];
 
                 let p0_index = face.points[*p0_index_index];
                 let p1_index = face.points[*p1_index_index];
