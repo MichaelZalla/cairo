@@ -74,11 +74,7 @@ impl ParticleList {
     }
 
     pub fn reset_inactive_stack(&mut self) {
-        self.inactive_stack.clear();
-
-        for i in 0..MAX_PARTICLES {
-            self.inactive_stack.push(i);
-        }
+        self.inactive_stack = (0..MAX_PARTICLES).collect();
 
         self.inactive_count = MAX_PARTICLES;
     }
