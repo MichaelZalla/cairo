@@ -1,12 +1,9 @@
 use cairo::{
-    physics::simulation::units::Newtons,
+    physics::simulation::{state_vector::StateVector, units::Newtons},
     vec::vec3::{self, Vec3},
 };
 
-use crate::{
-    point::{Point, POINT_MASS},
-    state_vector::StateVector,
-};
+use crate::point::{Point, POINT_MASS};
 
 pub static STRENGTH_PER_UNIT_LENGTH: f32 = 400.0;
 pub static DAMPER_PER_UNIT_LENGTH: f32 = 250.0;

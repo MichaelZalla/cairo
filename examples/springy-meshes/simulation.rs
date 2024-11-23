@@ -1,8 +1,13 @@
-use cairo::{physics::simulation::force::Force, vec::vec3::Vec3};
+use cairo::{
+    physics::simulation::{
+        force::Force,
+        state_vector::{FromStateVector, StateVector, ToStateVector},
+    },
+    vec::vec3::Vec3,
+};
 
 use crate::{
     springy_mesh::SpringyMesh,
-    state_vector::{FromStateVector, StateVector, ToStateVector},
     static_line_segment_collider::{Collider, StaticLineSegmentCollider},
 };
 

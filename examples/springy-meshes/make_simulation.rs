@@ -1,12 +1,13 @@
 use cairo::{
-    physics::simulation::{physical_constants::EARTH_GRAVITY, units::Newtons},
+    physics::simulation::{
+        physical_constants::EARTH_GRAVITY, state_vector::StateVector, units::Newtons,
+    },
     vec::vec3::Vec3,
 };
 
 use crate::{
     simulation::{PointForce, Simulation},
     springy_mesh::SpringyMesh,
-    state_vector::StateVector,
     static_line_segment_collider::StaticLineSegmentCollider,
 };
 

@@ -3,19 +3,19 @@ use std::{
     ops::{Add, AddAssign, Mul, MulAssign},
 };
 
-use cairo::vec::vec3::Vec3;
+use crate::vec::vec3::Vec3;
 
 #[derive(Default, Debug, Clone)]
-pub(crate) struct StateVector {
+pub struct StateVector {
     size: usize,
     pub data: Vec<Vec3>,
 }
 
-pub(crate) trait ToStateVector {
+pub trait ToStateVector {
     fn write_to(&self, state: &mut StateVector, n: usize, i: usize);
 }
 
-pub(crate) trait FromStateVector {
+pub trait FromStateVector {
     fn write_from(&mut self, state: &StateVector, n: usize, i: usize);
 }
 
