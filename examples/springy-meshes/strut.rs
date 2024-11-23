@@ -1,7 +1,9 @@
-use cairo::vec::vec3::{self, Vec3};
+use cairo::{
+    physics::simulation::units::Newtons,
+    vec::vec3::{self, Vec3},
+};
 
 use crate::{
-    force::Newtons,
     point::{Point, POINT_MASS},
     state_vector::StateVector,
 };

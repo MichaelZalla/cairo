@@ -1,9 +1,12 @@
-use cairo::{buffer::Buffer2D, color, graphics::Graphics, vec::vec3::Vec3};
+use cairo::{
+    buffer::Buffer2D, color, graphics::Graphics, physics::simulation::units::Velocity,
+    vec::vec3::Vec3,
+};
 
 use crate::coordinates::world_to_screen_space;
 
 pub(crate) fn draw_wind_velocity(
-    wind: &Vec3,
+    wind: &Velocity,
     framebuffer: &mut Buffer2D,
     framebuffer_center: &Vec3,
 ) {

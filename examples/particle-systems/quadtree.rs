@@ -2,9 +2,11 @@ use std::ptr::NonNull;
 
 use arrayvec::ArrayVec;
 
-use cairo::{geometry::primitives::aabb::AABB, vec::vec3::Vec3};
+use cairo::{
+    geometry::primitives::aabb::AABB, physics::simulation::units::Acceleration, vec::vec3::Vec3,
+};
 
-use crate::{force::Acceleration, simulation::universal_gravity_acceleration};
+use crate::simulation::universal_gravity_acceleration;
 
 #[derive(Default, Debug, Clone)]
 pub struct StaticParticle {

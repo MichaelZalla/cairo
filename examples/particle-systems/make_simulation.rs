@@ -1,12 +1,13 @@
 use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    physics::simulation::physical_constants::EARTH_GRAVITY, random::sampler::RandomSampler,
+    physics::simulation::{physical_constants::EARTH_GRAVITY, units::Newtons},
+    random::sampler::RandomSampler,
     vec::vec3::Vec3,
 };
 
 use crate::{
-    force::{Force, Newtons},
+    force::Force,
     particle::{
         generator::{ParticleGenerator, ParticleGeneratorKind},
         PARTICLE_MASS,
@@ -104,9 +105,9 @@ pub(crate) fn make_simulation<'a>(
             // Box::new(
             //     move |_current_state: &StateVector,
             //           _i: usize,
-            //           _total_acceleration: &Vec3,
+            //           _total_acceleration: &Acceleration,
             //           h: f32|
-            //           -> Vec3 {
+            //           -> Acceleration {
             //         static SCALING_FACTOR: f32 = 1.0;
 
             //         let mut sampler = sampler_for_random_acceleration_operator.borrow_mut();
@@ -118,9 +119,9 @@ pub(crate) fn make_simulation<'a>(
             // Box::new(
             //     |current_state: &StateVector,
             //      i: usize,
-            //      total_acceleration: &Vec3,
+            //      total_acceleration: &Acceleration,
             //      _h: f32|
-            //      -> Vec3 {
+            //      -> Acceleration {
             //         static COLLIDER_CENTER: Vec3 = Vec3 {
             //             x: -15.0,
             //             y: -15.0,
@@ -137,7 +138,7 @@ pub(crate) fn make_simulation<'a>(
             //         let current_velocity = current_state.data[i + n];
 
             //         if current_velocity.mag() == 0.0 {
-            //             return Default::default();
+            //             return Acceleration::default();
             //         }
 
             //         let particle_direction = current_velocity.as_normal();
@@ -148,7 +149,7 @@ pub(crate) fn make_simulation<'a>(
             //             particle_to_collider_center.dot(particle_direction);
 
             //         if distance_of_particle_closest_approach_to_collider_center < 0.0 {
-            //             return Default::default();
+            //             return Acceleration::default();
             //         }
 
             //         let distance_of_concern = current_velocity.mag() * THRESHOLD_TIME;
@@ -156,7 +157,7 @@ pub(crate) fn make_simulation<'a>(
             //         if distance_of_particle_closest_approach_to_collider_center
             //             > distance_of_concern
             //         {
-            //             return Default::default();
+            //             return Acceleration::default();
             //         }
 
             //         let closest_approach = current_position
@@ -172,7 +173,7 @@ pub(crate) fn make_simulation<'a>(
             //             collider_center_to_closest_approach.mag();
 
             //         if collider_center_to_closest_approach_distance > COLLIDER_SAFE_RADIUS {
-            //             return Default::default();
+            //             return Acceleration::default();
             //         }
 
             //         let turning_target = COLLIDER_CENTER
@@ -207,7 +208,11 @@ pub(crate) fn make_simulation<'a>(
         functional_acceleration: vec![
             // Functional acceleration operator: Enforces a minimum velocity;
             // Box::new(
-            //     |current_state: &StateVector, i: usize, new_velocity: &Vec3, _h: f32| -> Vec3 {
+            //     |current_state: &StateVector,
+            //      i: usize,
+            //      new_velocity: &Velocity,
+            //      _h: f32|
+            //      -> Velocity {
             //         static MINIMUM_SPEED: f32 = 20.0;
 
             //         let n = current_state.len();
@@ -230,20 +235,25 @@ pub(crate) fn make_simulation<'a>(
             // ),
             // Functional acceleration operator: Rotation around the Z-axis.
             // Box::new(
-            //     |_current_state: &StateVector, _i: usize, new_velocity: &Vec3, h: f32| -> Vec3 {
+            //     |_current_state: &StateVector,
+            //      _i: usize,
+            //      new_velocity: &Velocity,
+            //      h: f32|
+            //      -> Velocity {
             //         static ANGLE: f32 = PI / 2.0;
 
-            //         let new_velocity_vec4 =
-            //             Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(ANGLE * h);
-
-            //         new_velocity_vec4.to_vec3()
+            //         *new_velocity * Mat4::rotation_z(ANGLE * h)
             //     },
             // ),
         ],
         velocity: vec![
             // Velocity operator: Vortex.
             // Box::new(
-            //     |current_state: &StateVector, i: usize, new_velocity: &Vec3, h: f32| -> Vec3 {
+            //     |current_state: &StateVector,
+            //      i: usize,
+            //      new_velocity: &Velocity,
+            //      h: f32|
+            //      -> Velocity {
             //         static VORTEX_CENTER: Vec3 = Vec3 {
             //             x: 0.0,
             //             y: 0.0,
@@ -272,15 +282,16 @@ pub(crate) fn make_simulation<'a>(
 
             //         let omega = TAU * particle_rotational_frequency;
 
-            //         let new_velocity_vec4 =
-            //             Vec4::new(*new_velocity, 1.0) * Mat4::rotation_z(omega * h);
-
-            //         new_velocity_vec4.to_vec3()
+            //         *new_velocity * Mat4::rotation_z(omega * h)
             //     },
             // ),
             // Velocity operator: Translation by offset.
             // Box::new(
-            //     |_current_state: &StateVector, _i: usize, new_velocity: &Vec3, _h: f32| -> Vec3 {
+            //     |_current_state: &StateVector,
+            //      _i: usize,
+            //      new_velocity: &Velocity,
+            //      _h: f32|
+            //      -> Velocity {
             //         static OFFSET: Vec3 = Vec3 {
             //             x: 50.0,
             //             y: 0.0,
