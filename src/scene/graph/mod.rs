@@ -10,7 +10,6 @@ use crate::{
     app::App,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    geometry::primitives::ray::Ray,
     matrix::Mat4,
     render::{culling::FaceCullingReject, options::RenderPassFlag, Renderer},
     resource::handle::Handle,
@@ -521,30 +520,6 @@ impl SceneGraph {
                                             entity_mesh,
                                             &entity.material,
                                         );
-
-                                        if let Some(bvh) = entity_mesh.static_triangle_bvh.as_ref()
-                                        {
-                                            // Render the BVH root's AABB.
-
-                                            let root = &bvh.root;
-
-                                            renderer.render_aabb(
-                                                &root.aabb,
-                                                &current_world_transform,
-                                                color::GREEN,
-                                            );
-
-                                            // Build a grid of downward-facing rays that begins above the level geometry.
-
-                                            let mut rays = Ray::grid(8, 8, 40.0);
-
-                                            for ray in rays.iter_mut() {
-                                                ray.origin.y = 6.0;
-                                                ray.t = 12.0;
-
-                                                renderer.render_ray(ray, color::ORANGE);
-                                            }
-                                        }
 
                                         Ok(())
                                     }

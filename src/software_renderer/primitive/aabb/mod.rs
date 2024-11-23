@@ -1,5 +1,8 @@
 use crate::{
-    color::Color, geometry::primitives::aabb::AABB, matrix::Mat4, render::Renderer,
+    color::{self, Color},
+    geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, primitives::aabb::AABB},
+    matrix::Mat4,
+    render::Renderer,
     software_renderer::SoftwareRenderer,
 };
 
@@ -29,5 +32,15 @@ impl SoftwareRenderer {
         for i in 0..4 {
             self.render_line(vertices[i], vertices[i + 4], color);
         }
+    }
+
+    pub fn render_bvh(&mut self, bvh: &StaticTriangleBVH) {
+        let current_world_transform = Mat4::identity();
+
+        // Render the BVH root's AABB.
+
+        let root = &bvh.root;
+
+        self.render_aabb(&root.aabb, &current_world_transform, color::GREEN);
     }
 }
