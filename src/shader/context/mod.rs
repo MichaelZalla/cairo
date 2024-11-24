@@ -94,23 +94,23 @@ impl ShaderContext {
         self.recompute_world_view_projection_transform();
     }
 
-    pub fn to_ndc_space(&self, world_space_position: Vec3) -> Vec3 {
-        let ndc_space_position = {
-            let mut view_projection_space_position = Vec4::new(world_space_position, 1.0)
+    pub fn to_ndc_space(&self, position_world_space: Vec3) -> Vec3 {
+        let position_ndc_space = {
+            let mut position_projection_space = Vec4::new(position_world_space, 1.0)
                 * self.view_inverse_transform
                 * self.projection_transform;
 
-            let w_inverse = 1.0 / view_projection_space_position.w;
+            let w_inverse = 1.0 / position_projection_space.w;
 
-            view_projection_space_position *= w_inverse;
+            position_projection_space *= w_inverse;
 
-            view_projection_space_position.x = (view_projection_space_position.x + 1.0) / 2.0;
-            view_projection_space_position.y = (-view_projection_space_position.y + 1.0) / 2.0;
+            position_projection_space.x = (position_projection_space.x + 1.0) / 2.0;
+            position_projection_space.y = (-position_projection_space.y + 1.0) / 2.0;
 
-            view_projection_space_position
+            position_projection_space
         };
 
-        ndc_space_position.to_vec3()
+        position_ndc_space.to_vec3()
     }
 
     pub fn set_ambient_light(&mut self, light: Option<Handle>) {
