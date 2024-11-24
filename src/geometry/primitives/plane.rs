@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::vec::vec3::Vec3;
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Plane {
     pub point: Vec3,
     pub normal: Vec3,

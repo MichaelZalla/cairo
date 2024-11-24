@@ -130,11 +130,9 @@ impl SoftwareRenderer {
 
         let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
-        let frustum = Frustum {
-            forward,
-            near: near_plane_points_world_space,
-            far: far_plane_points_world_space,
-        };
+        let (near, far) = (near_plane_points_world_space, far_plane_points_world_space);
+
+        let frustum = Frustum::new(forward, near, far);
 
         self._render_frustum(&frustum, Some(color));
     }
