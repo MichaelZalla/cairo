@@ -540,12 +540,13 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example particle-systems",
+      "label": "Rust: cargo run --example particle-systems-2d",
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
-        "particle-systems"
+        "particle-systems-2d"
       ]
     },
     {
