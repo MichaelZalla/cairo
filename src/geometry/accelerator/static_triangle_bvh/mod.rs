@@ -6,6 +6,11 @@ use crate::{
     vec::vec3::{self, Vec3A},
 };
 
+static DO_PLANE_SPLITS: bool = true;
+static DO_BINNING: bool = true;
+
+const BIN_COUNT: usize = 8;
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct StaticTriangle {
     pub vertices: [usize; 3],
@@ -37,6 +42,12 @@ impl StaticTriangleBVHNode {
 struct Split {
     axis: usize,
     position: f32,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+struct Bin {
+    pub bounds: AABB,
+    pub primitives_count: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -306,6 +317,48 @@ impl StaticTriangleBVH {
         (extent_along_axis, min_position)
     }
 
+    fn make_bins(
+        &self,
+        split_node: &StaticTriangleBVHNode,
+        axis: usize,
+        min_position: f32,
+        extent_along_axis: f32,
+    ) -> [Bin; BIN_COUNT] {
+        let mut bins: [Bin; BIN_COUNT] = [Default::default(); BIN_COUNT];
+
+        let normalizing_factor = 1.0 / extent_along_axis;
+
+        for i in 0..split_node.primitives_count as usize {
+            let tri_index_index = split_node.primitives_start_index as usize + i;
+
+            let tri_index = self.tri_indices[tri_index_index];
+
+            let tri = &self.tris[tri_index];
+
+            let axial_extent = unsafe { tri.centroid.a[axis] };
+
+            let centroid_position_alpha = (axial_extent - min_position) * normalizing_factor;
+
+            let bin_index_unchecked = (centroid_position_alpha * BIN_COUNT as f32) as usize;
+
+            let bin_index = bin_index_unchecked.min(BIN_COUNT - 1);
+
+            let bin = &mut bins[bin_index];
+
+            bin.primitives_count += 1;
+
+            let (v0, v1, v2) =
+                self.geometry
+                    .get_vertices(tri.vertices[0], tri.vertices[1], tri.vertices[2]);
+
+            bin.bounds.grow(v0);
+            bin.bounds.grow(v1);
+            bin.bounds.grow(v2);
+        }
+
+        bins
+    }
+
     fn split_strategy_surface_area(&self, split_node_index: usize) -> (Split, f32) {
         let mut best_axis: isize = -1;
         let mut best_position = 0_f32;
@@ -315,9 +368,7 @@ impl StaticTriangleBVH {
         let split_node = &self.nodes[split_node_index];
 
         for axis in 0..3 {
-            static BINNED_SPLITS: bool = true;
-
-            if BINNED_SPLITS {
+            if DO_PLANE_SPLITS {
                 let (extent_along_axis, min_position) =
                     self.get_extent_along_axis(split_node_index, axis);
 
@@ -325,25 +376,85 @@ impl StaticTriangleBVH {
                     continue;
                 }
 
-                static NUM_INTERVALS: usize = 8;
+                let bin_extent = extent_along_axis / BIN_COUNT as f32;
 
-                let interval_size = extent_along_axis / NUM_INTERVALS as f32;
+                if DO_BINNING {
+                    let bins = self.make_bins(split_node, axis, min_position, extent_along_axis);
 
-                for i in 1..NUM_INTERVALS {
-                    let split_plane_position = min_position + interval_size * i as f32;
+                    const PLANE_COUNT: usize = BIN_COUNT - 1;
 
-                    let candidate_split = Split {
-                        axis,
-                        position: split_plane_position,
-                    };
+                    let mut areas_from_left: [f32; PLANE_COUNT] = [0.0; PLANE_COUNT];
+                    let mut primitives_count_from_left: [u32; PLANE_COUNT] = [0; PLANE_COUNT];
 
-                    self.keep_best_split(
-                        split_node_index,
-                        candidate_split,
-                        &mut minimum_cost,
-                        &mut best_axis,
-                        &mut best_position,
-                    )
+                    let mut areas_from_right: [f32; PLANE_COUNT] = [0.0; PLANE_COUNT];
+                    let mut primitives_count_from_right: [u32; PLANE_COUNT] = [0; PLANE_COUNT];
+
+                    let mut sweep_left_area = AABB::default();
+                    let mut sweep_left_primitives_count = 0;
+
+                    let mut sweep_right_area = AABB::default();
+                    let mut sweep_right_primitives_count = 0;
+
+                    for left_index in 0..PLANE_COUNT {
+                        // Sweep left.
+
+                        let left_bin = &bins[left_index];
+
+                        sweep_left_area.grow_aabb(&left_bin.bounds);
+
+                        sweep_left_primitives_count += left_bin.primitives_count;
+
+                        areas_from_left[left_index] =
+                            sweep_left_area.extent().half_area_of_extent();
+
+                        primitives_count_from_left[left_index] = sweep_left_primitives_count;
+
+                        // Sweep right.
+
+                        sweep_right_area.grow_aabb(&bins[PLANE_COUNT - left_index].bounds);
+
+                        sweep_right_primitives_count +=
+                            bins[PLANE_COUNT - left_index].primitives_count;
+
+                        areas_from_right[PLANE_COUNT - 1 - left_index] =
+                            sweep_right_area.extent().half_area_of_extent();
+
+                        primitives_count_from_right[PLANE_COUNT - 1 - left_index] =
+                            sweep_right_primitives_count;
+                    }
+
+                    for plane_index in 0..PLANE_COUNT {
+                        let split_plane_position =
+                            min_position + (plane_index + 1) as f32 * bin_extent;
+
+                        let split_cost = primitives_count_from_left[plane_index] as f32
+                            * areas_from_left[plane_index]
+                            + primitives_count_from_right[plane_index] as f32
+                                * areas_from_right[plane_index];
+
+                        if split_cost < minimum_cost {
+                            best_axis = axis as isize;
+                            best_position = split_plane_position;
+                            minimum_cost = split_cost;
+                        }
+                    }
+                } else {
+                    for i in 1..BIN_COUNT {
+                        let split_plane_position = min_position + bin_extent * i as f32;
+
+                        let candidate_split = Split {
+                            axis,
+                            position: split_plane_position,
+                        };
+
+                        self.keep_best_split(
+                            split_node_index,
+                            candidate_split,
+                            &mut minimum_cost,
+                            &mut best_axis,
+                            &mut best_position,
+                        )
+                    }
                 }
             } else {
                 for tri_index in (split_node.primitives_start_index as usize)
