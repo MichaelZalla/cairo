@@ -8,6 +8,7 @@ use cairo::{
             Particle,
         },
         physical_constants::EARTH_GRAVITY,
+        state_vector::StateVector,
         units::Newtons,
     },
     random::sampler::RandomSampler,
@@ -17,7 +18,6 @@ use cairo::{
 use crate::{
     particle::{PARTICLE_MASS, PARTICLE_MAX_AGE_SECONDS},
     simulation::{Operators, ParticleForce, Simulation},
-    state_vector::StateVector,
 };
 
 pub(crate) const SEED_SIZE: usize = 2048;
