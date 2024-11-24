@@ -34,7 +34,7 @@ impl StaticTriangleBVHNode {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
-struct BVHNodeSplit {
+struct Split {
     axis: usize,
     position: f32,
 }
@@ -231,7 +231,7 @@ impl StaticTriangleBVH {
         self.subdivide(right_child_index);
     }
 
-    fn split_strategy_midpoint(&self, split_node_index: usize) -> BVHNodeSplit {
+    fn split_strategy_midpoint(&self, split_node_index: usize) -> Split {
         let split_node_aabb = &self.nodes[split_node_index].aabb;
 
         let extent = Vec3A {
@@ -260,13 +260,13 @@ impl StaticTriangleBVH {
             center.a[axis]
         };
 
-        BVHNodeSplit { axis, position }
+        Split { axis, position }
     }
 
     fn keep_best_split(
         &self,
         split_node_index: usize,
-        split: BVHNodeSplit,
+        split: Split,
         minimum_cost: &mut f32,
         best_axis: &mut isize,
         best_position: &mut f32,
@@ -281,7 +281,7 @@ impl StaticTriangleBVH {
         }
     }
 
-    fn split_strategy_surface_area(&self, split_node_index: usize) -> (BVHNodeSplit, f32) {
+    fn split_strategy_surface_area(&self, split_node_index: usize) -> (Split, f32) {
         let mut best_axis: isize = -1;
         let mut best_position = 0_f32;
 
@@ -325,7 +325,7 @@ impl StaticTriangleBVH {
                 for i in 1..NUM_INTERVALS {
                     let position = min_position + interval_size * i as f32;
 
-                    let candidate_split = BVHNodeSplit { axis, position };
+                    let candidate_split = Split { axis, position };
 
                     self.keep_best_split(
                         split_node_index,
@@ -343,7 +343,7 @@ impl StaticTriangleBVH {
 
                     let position = unsafe { tri.centroid.a[axis] };
 
-                    let candidate_split = BVHNodeSplit { axis, position };
+                    let candidate_split = Split { axis, position };
 
                     self.keep_best_split(
                         split_node_index,
@@ -360,7 +360,7 @@ impl StaticTriangleBVH {
             panic!();
         }
 
-        let split = BVHNodeSplit {
+        let split = Split {
             axis: best_axis as usize,
             position: best_position,
         };
@@ -368,7 +368,7 @@ impl StaticTriangleBVH {
         (split, minimum_cost)
     }
 
-    fn get_split_cost_surface_area(&self, split_node_index: usize, split: BVHNodeSplit) -> f32 {
+    fn get_split_cost_surface_area(&self, split_node_index: usize, split: Split) -> f32 {
         let (mut left_aabb, mut right_aabb) = (AABB::default(), AABB::default());
 
         let (mut left_count, mut right_count) = (0_usize, 0_usize);
