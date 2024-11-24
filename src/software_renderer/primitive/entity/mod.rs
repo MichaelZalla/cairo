@@ -14,7 +14,7 @@ impl SoftwareRenderer {
         let mut should_cull = false;
 
         if let Some(frustum) = culling_frustum.as_ref() {
-            if should_cull_aabb(*world_transform, frustum, &entity_mesh.aabb) {
+            if should_cull_aabb_sphere(*world_transform, frustum, &entity_mesh.aabb) {
                 should_cull = true;
             }
         }
@@ -50,7 +50,7 @@ impl SoftwareRenderer {
     }
 }
 
-fn should_cull_aabb(world_transform: Mat4, culling_frustum: &Frustum, aabb: &AABB) -> bool {
+fn should_cull_aabb_sphere(world_transform: Mat4, culling_frustum: &Frustum, aabb: &AABB) -> bool {
     // Cull the entire entity, if possible, based on its bounds.
 
     let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * world_transform).to_vec3();
