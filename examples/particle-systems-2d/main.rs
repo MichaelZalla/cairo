@@ -46,7 +46,7 @@ struct LineSegmentColliderCreationState {
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/particle-systems".to_string(),
+        title: "examples/particle-systems-2d".to_string(),
         window_resolution: RESOLUTION_1280_BY_720,
         canvas_resolution: RESOLUTION_1280_BY_720,
         ..Default::default()
