@@ -2,7 +2,10 @@ use core::f32;
 
 use crate::vec::vec3::Vec3;
 
-use super::units::Velocity;
+use super::{
+    state_vector::{FromStateVector, StateVector, ToStateVector},
+    units::Velocity,
+};
 
 pub mod generator;
 pub mod particlelist;
@@ -27,6 +30,20 @@ impl Default for Particle {
             position: Vec3::default(),
             velocity: Velocity::default(),
         }
+    }
+}
+
+impl ToStateVector for Particle {
+    fn write_to(&self, state: &mut StateVector, n: usize, i: usize) {
+        state.data[i] = self.position;
+        state.data[i + n] = self.velocity;
+    }
+}
+
+impl FromStateVector for Particle {
+    fn write_from(&mut self, state: &StateVector, n: usize, i: usize) {
+        self.position = state.data[i];
+        self.velocity = state.data[i + n];
     }
 }
 

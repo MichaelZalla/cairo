@@ -37,7 +37,6 @@ mod operator;
 mod particle;
 mod quadtree;
 mod simulation;
-mod state_vector;
 
 struct LineSegmentColliderCreationState {
     start: Option<Vec3>,

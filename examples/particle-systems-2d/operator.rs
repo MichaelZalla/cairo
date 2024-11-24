@@ -1,9 +1,10 @@
 use cairo::{
-    physics::simulation::units::{Acceleration, Velocity},
+    physics::simulation::{
+        state_vector::StateVector,
+        units::{Acceleration, Velocity},
+    },
     vec::vec3::Vec3,
 };
-
-use crate::state_vector::StateVector;
 
 pub(crate) trait AdditiveAccelerationOperator:
     FnMut(&StateVector, usize, &Acceleration, f32) -> Acceleration

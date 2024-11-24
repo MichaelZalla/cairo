@@ -9,6 +9,7 @@ use cairo::{
             generator::{ParticleGenerator, ParticleGeneratorKind},
             particlelist::ParticleList,
         },
+        state_vector::{FromStateVector, StateVector, ToStateVector},
         units::Acceleration,
     },
     random::sampler::RandomSampler,
@@ -19,7 +20,6 @@ use crate::{
     collider::{Collider, LineSegmentCollider},
     operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     quadtree::Quadtree,
-    state_vector::{FromStateVector, StateVector, ToStateVector},
 };
 
 pub type ParticleForce = force::Force<StateVector>;
