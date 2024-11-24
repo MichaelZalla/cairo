@@ -15,12 +15,15 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{
-    particle::{PARTICLE_MASS, PARTICLE_MAX_AGE_SECONDS},
-    simulation::{Operators, ParticleForce, Simulation},
-};
+use crate::simulation::{Operators, ParticleForce, Simulation};
 
 pub(crate) const SEED_SIZE: usize = 2048;
+
+static PARTICLE_MASS: f32 = 5_000_000_000.0;
+
+pub static PARTICLE_MAX_AGE_SECONDS: f32 = 8.0;
+
+pub static MAX_PARTICLE_SIZE_PIXELS: u32 = 8;
 
 static GRAVITY: ParticleForce =
     |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {

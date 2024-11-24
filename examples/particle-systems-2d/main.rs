@@ -24,8 +24,7 @@ use coordinates::{screen_to_world_space, world_to_screen_space};
 use draw_collider::draw_collider;
 use draw_particle::draw_particle;
 use draw_quadtree::draw_quadtree;
-use make_simulation::{make_simulation, SEED_SIZE};
-use particle::MAX_PARTICLE_SIZE_PIXELS;
+use make_simulation::{make_simulation, MAX_PARTICLE_SIZE_PIXELS, SEED_SIZE};
 
 mod collider;
 mod coordinates;
@@ -34,7 +33,6 @@ mod draw_particle;
 mod draw_quadtree;
 mod make_simulation;
 mod operator;
-mod particle;
 mod quadtree;
 mod simulation;
 
