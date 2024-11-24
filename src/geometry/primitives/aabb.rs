@@ -133,6 +133,11 @@ impl AABB {
         self.max = self.max.max(point);
     }
 
+    pub fn grow_aabb(&mut self, aabb: &Self) {
+        self.min = self.min.min(&aabb.min);
+        self.max = self.max.max(&aabb.max);
+    }
+
     pub fn subdivide_2d(&self) -> [Self; 4] {
         let center = self.center();
 

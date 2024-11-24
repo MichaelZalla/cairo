@@ -179,7 +179,7 @@ fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: us
 }
 
 pub fn intersect_ray_bvh_node_sorted(ray: &mut Ray, bvh: &StaticTriangleBVH) {
-    let mut node: &super::accelerator::static_triangle_bvh::StaticTriangleBVHNode = &bvh.nodes[0];
+    let mut node = &bvh.nodes[0];
 
     let mut stack = vec![0_usize; 64];
     let mut stack_ptr = 0_usize;
