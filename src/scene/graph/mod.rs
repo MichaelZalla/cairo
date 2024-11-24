@@ -497,7 +497,7 @@ impl SceneGraph {
                                         let clipping_camera_handle =
                                             clipping_camera_handle_rc.borrow();
 
-                                        let clipping_camera_frustum = match clipping_camera_handle
+                                        let culling_frustum = match clipping_camera_handle
                                             .as_ref()
                                         {
                                             Some(camera_handle) => {
@@ -516,7 +516,7 @@ impl SceneGraph {
 
                                         let _was_drawn = renderer.render_entity(
                                             &current_world_transform,
-                                            &clipping_camera_frustum,
+                                            &culling_frustum,
                                             entity_mesh,
                                             &entity.material,
                                         );
@@ -588,7 +588,7 @@ impl SceneGraph {
                                         let clipping_camera_handle =
                                             clipping_camera_handle_rc.borrow();
 
-                                        let clipping_camera_frustum = match clipping_camera_handle
+                                        let culling_frustum = match clipping_camera_handle
                                             .as_ref()
                                         {
                                             Some(camera_handle) => {
@@ -607,7 +607,7 @@ impl SceneGraph {
 
                                         let _was_drawn = renderer.render_entity(
                                             &current_world_transform,
-                                            &clipping_camera_frustum,
+                                            &culling_frustum,
                                             entity_mesh,
                                             &entity.material,
                                         );
