@@ -32,7 +32,6 @@ mod draw_collider;
 mod draw_particle;
 mod draw_quadtree;
 mod make_simulation;
-mod operator;
 mod quadtree;
 mod simulation;
 

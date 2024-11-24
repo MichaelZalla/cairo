@@ -5,6 +5,7 @@ use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 use cairo::{
     physics::simulation::{
         force,
+        operator::Operators,
         particle::{
             generator::{ParticleGenerator, ParticleGeneratorKind},
             particlelist::ParticleList,
@@ -18,7 +19,6 @@ use cairo::{
 
 use crate::{
     collider::{Collider, LineSegmentCollider},
-    operator::{AdditiveAccelerationOperator, FunctionalAccelerationOperator, VelocityOperator},
     quadtree::Quadtree,
 };
 
@@ -143,13 +143,6 @@ fn integrate(
     }
 
     result
-}
-
-#[derive(Default)]
-pub(crate) struct Operators {
-    pub additive_acceleration: Vec<Box<dyn AdditiveAccelerationOperator>>,
-    pub functional_acceleration: Vec<Box<dyn FunctionalAccelerationOperator>>,
-    pub velocity: Vec<Box<dyn VelocityOperator>>,
 }
 
 pub(crate) struct Simulation<'a, const N: usize> {
