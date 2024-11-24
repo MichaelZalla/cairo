@@ -330,9 +330,12 @@ impl StaticTriangleBVH {
                 let interval_size = extent_along_axis / NUM_INTERVALS as f32;
 
                 for i in 1..NUM_INTERVALS {
-                    let position = min_position + interval_size * i as f32;
+                    let split_plane_position = min_position + interval_size * i as f32;
 
-                    let candidate_split = Split { axis, position };
+                    let candidate_split = Split {
+                        axis,
+                        position: split_plane_position,
+                    };
 
                     self.keep_best_split(
                         split_node_index,
