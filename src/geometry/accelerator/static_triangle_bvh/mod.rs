@@ -263,6 +263,24 @@ impl StaticTriangleBVH {
         BVHNodeSplit { axis, position }
     }
 
+    fn keep_best_split(
+        &self,
+        split_node_index: usize,
+        split: BVHNodeSplit,
+        minimum_cost: &mut f32,
+        best_axis: &mut isize,
+        best_position: &mut f32,
+    ) {
+        let candidate_cost = self.get_split_cost_surface_area(split_node_index, split);
+
+        if candidate_cost < *minimum_cost {
+            *minimum_cost = candidate_cost;
+
+            *best_axis = split.axis as isize;
+            *best_position = split.position;
+        }
+    }
+
     fn split_strategy_surface_area(&self, split_node_index: usize) -> (BVHNodeSplit, f32) {
         let mut best_axis: isize = -1;
         let mut best_position = 0_f32;
@@ -271,27 +289,59 @@ impl StaticTriangleBVH {
 
         let split_node = &self.nodes[split_node_index];
 
-        for candidate_axis in 0..3 {
-            for tri_index in (split_node.primitives_start_index as usize)
-                ..(split_node.primitives_start_index + split_node.primitives_count) as usize
-            {
-                let tri = &self.tris[self.tri_indices[tri_index]];
+        for axis in 0..3 {
+            static BINNED_SPLITS: bool = true;
 
-                let candidate_position = unsafe { tri.centroid.a[candidate_axis] };
+            if BINNED_SPLITS {
+                let (extent_along_axis, min_position) = unsafe {
+                    let aabb = &self.nodes[split_node_index].aabb;
 
-                let candidate_split = BVHNodeSplit {
-                    axis: candidate_axis,
-                    position: candidate_position,
+                    let extent_along_axis = Vec3A { v: aabb.extent() }.a[axis];
+
+                    let (min_position, max_position) =
+                        { (Vec3A { v: aabb.min }.a[axis], Vec3A { v: aabb.max }.a[axis]) };
+
+                    if min_position == max_position {
+                        continue;
+                    }
+
+                    (extent_along_axis, min_position)
                 };
 
-                let candidate_cost =
-                    self.get_split_cost_surface_area(split_node_index, candidate_split);
+                static NUM_INTERVALS: usize = 8;
 
-                if candidate_cost < minimum_cost {
-                    minimum_cost = candidate_cost;
+                let interval_size = extent_along_axis / NUM_INTERVALS as f32;
 
-                    best_axis = candidate_axis as isize;
-                    best_position = candidate_position;
+                for i in 1..NUM_INTERVALS {
+                    let position = min_position + interval_size * i as f32;
+
+                    let candidate_split = BVHNodeSplit { axis, position };
+
+                    self.keep_best_split(
+                        split_node_index,
+                        candidate_split,
+                        &mut minimum_cost,
+                        &mut best_axis,
+                        &mut best_position,
+                    )
+                }
+            } else {
+                for tri_index in (split_node.primitives_start_index as usize)
+                    ..(split_node.primitives_start_index + split_node.primitives_count) as usize
+                {
+                    let tri = &self.tris[self.tri_indices[tri_index]];
+
+                    let position = unsafe { tri.centroid.a[axis] };
+
+                    let candidate_split = BVHNodeSplit { axis, position };
+
+                    self.keep_best_split(
+                        split_node_index,
+                        candidate_split,
+                        &mut minimum_cost,
+                        &mut best_axis,
+                        &mut best_position,
+                    )
                 }
             }
         }
