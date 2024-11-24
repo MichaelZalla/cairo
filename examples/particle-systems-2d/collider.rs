@@ -39,7 +39,7 @@ impl LineSegmentCollider {
         let tangent = delta.as_normal();
         let normal = vec3::FORWARD.cross(tangent).as_normal();
 
-        let plane = Plane { point, normal };
+        let plane = Plane::new(point, normal);
 
         Self {
             start,

@@ -145,35 +145,12 @@ fn make_frustum_planes(forward: Vec3, near: &[Vec3; 4], far: &[Vec3; 4]) -> [Pla
         .cross(far_bottom_left - near_bottom_left))
     .as_normal();
 
-    let near_plane = Plane {
-        point: near[0],
-        normal: near_plane_normal,
-    };
-
-    let far_plane = Plane {
-        point: far[0],
-        normal: far_plane_normal,
-    };
-
-    let left_plane = Plane {
-        point: near[0],
-        normal: left_plane_normal,
-    };
-
-    let right_plane = Plane {
-        point: near[1],
-        normal: right_plane_normal,
-    };
-
-    let top_plane = Plane {
-        point: near[0],
-        normal: top_plane_normal,
-    };
-
-    let bottom_plane = Plane {
-        point: near[2],
-        normal: bottom_plane_normal,
-    };
+    let near_plane = Plane::new(near[0], near_plane_normal);
+    let far_plane = Plane::new(far[0], far_plane_normal);
+    let left_plane = Plane::new(near[0], left_plane_normal);
+    let right_plane = Plane::new(near[1], right_plane_normal);
+    let top_plane = Plane::new(near[0], top_plane_normal);
+    let bottom_plane = Plane::new(near[2], bottom_plane_normal);
 
     [
         near_plane,
