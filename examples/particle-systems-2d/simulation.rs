@@ -204,6 +204,7 @@ impl<'a, const N: usize> Simulation<'a, N> {
             .collect();
 
         // Copy current positions and velocities into the current state.
+
         for (i, index) in alive_indices.iter().enumerate() {
             match pool.at(*index) {
                 Some(particle) => {
@@ -286,6 +287,7 @@ impl<'a, const N: usize> Simulation<'a, N> {
         }
 
         // Copy new positions and velocities back into each particle.
+        
         for (i, index) in alive_indices.iter().enumerate() {
             match pool.at_mut(*index) {
                 Some(particle) => {
