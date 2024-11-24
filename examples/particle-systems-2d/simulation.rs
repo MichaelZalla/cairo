@@ -4,7 +4,7 @@ use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 
 use cairo::{
     physics::simulation::{
-        force,
+        force::PointForce,
         operator::Operators,
         particle::{
             generator::{ParticleGenerator, ParticleGeneratorKind},
@@ -22,14 +22,12 @@ use crate::{
     quadtree::Quadtree,
 };
 
-pub type ParticleForce = force::Force<StateVector>;
-
 static COMPONENTS_PER_PARTICLE: usize = 2;
 
 fn system_dynamics_function(
     current_state: &StateVector,
     quadtree: &Quadtree,
-    forces: &[&ParticleForce],
+    forces: &[&PointForce],
     operators: &mut Operators,
     current_time: f32,
     h: f32,
@@ -51,7 +49,7 @@ fn system_dynamics_function(
 fn compute_accelerations(
     current_state: &StateVector,
     quadtree: &Quadtree,
-    forces: &[&ParticleForce],
+    forces: &[&PointForce],
     operators: &mut Operators,
     current_time: f32,
     h: f32,
@@ -148,7 +146,7 @@ fn integrate(
 pub(crate) struct Simulation<'a, const N: usize> {
     pub sampler: RefCell<RandomSampler<N>>,
     pub pool: RefCell<ParticleList<N>>,
-    pub forces: Vec<&'a ParticleForce>,
+    pub forces: Vec<&'a PointForce>,
     pub colliders: RefCell<Vec<LineSegmentCollider>>,
     pub operators: RefCell<Operators>,
     pub generators: RefCell<Vec<ParticleGenerator>>,
@@ -287,7 +285,7 @@ impl<'a, const N: usize> Simulation<'a, N> {
         }
 
         // Copy new positions and velocities back into each particle.
-        
+
         for (i, index) in alive_indices.iter().enumerate() {
             match pool.at_mut(*index) {
                 Some(particle) => {
