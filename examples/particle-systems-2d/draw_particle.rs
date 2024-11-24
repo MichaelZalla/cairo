@@ -7,7 +7,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::particle::{MAX_PARTICLE_SIZE_PIXELS, PARTICLE_MAX_AGE_SECONDS};
+use crate::make_simulation::{MAX_PARTICLE_SIZE_PIXELS, PARTICLE_MAX_AGE_SECONDS};
 
 pub(crate) fn draw_particle(
     particle: &Particle,

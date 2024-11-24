@@ -1,5 +1,0 @@
-pub static PARTICLE_MASS: f32 = 10_000_000_000_000.0;
-
-pub static PARTICLE_MAX_AGE_SECONDS: f32 = 8.0;
-
-pub static MAX_PARTICLE_SIZE_PIXELS: u32 = 8;
