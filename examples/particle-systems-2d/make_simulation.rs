@@ -3,6 +3,7 @@ use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 use cairo::{
     physics::simulation::{
         force::ContactPoint,
+        operator::Operators,
         particle::{
             generator::{ParticleGenerator, ParticleGeneratorKind},
             Particle,
@@ -15,7 +16,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::simulation::{Operators, ParticleForce, Simulation};
+use crate::simulation::{ParticleForce, Simulation};
 
 pub(crate) const SEED_SIZE: usize = 2048;
 
