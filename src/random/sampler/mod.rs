@@ -91,20 +91,21 @@ impl<const N: usize> RandomSampler<N> {
 
         let bitangent = normal.cross(tangent);
 
-        // @NOTE: Using {normal, bitangent, tangent} order such that `normal`
-        // becomes the X-axis in our new frame of reference; for 3D, we will
-        // want `normal` to serve as the Z-axis instead.
-        let basis = Mat4::tbn(normal, bitangent, tangent);
+        let basis = Mat4::tbn(tangent, bitangent, normal);
 
-        // @NOTE: Rotation currently only happens in the positive direction.
+        // Rotation currently only happens in the positive direction.
+
         let phi = f.sqrt() * max_deflection_angle_radians;
 
-        // @NOTE: Skipping rotation sample for now, as we don't need it for 2D.
-        // let theta = self.sample_range_uniform(-PI, PI);
+        let theta = self.sample_range_uniform(-PI, PI);
 
-        let right_rotated = vec3::RIGHT * Mat4::rotation_z(phi);
+        let v_hat_prime = Vec3 {
+            x: theta.cos() * theta.sin(),
+            y: theta.sin() * phi.sin(),
+            z: phi.cos(),
+        };
 
-        (right_rotated * basis) * v.mag()
+        (v_hat_prime * basis) * v.mag()
     }
 }
 
@@ -136,7 +137,7 @@ impl<const N: usize> DirectionSampler for RandomSampler<N> {
         let sample = Vec3 {
             x: r * azimuth.cos(),
             y: height,
-            z: 0.0,
+            z: -r * azimuth.sin(),
         };
 
         sample.as_normal()

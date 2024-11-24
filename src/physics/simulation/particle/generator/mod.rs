@@ -107,6 +107,8 @@ impl ParticleGenerator {
 
             let velocity = direction * speed;
 
+            // Apply a random position offset (along direction).
+
             position += velocity * h * sampler.sample_range_uniform(0.0, 1.0);
 
             list.activate(Particle {
