@@ -1,4 +1,4 @@
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI};
 
 use cairo::{
     physics::simulation::{
@@ -53,15 +53,14 @@ static AIR_RESISTANCE: ParticleForce =
     };
 
 pub(crate) fn make_simulation<'a>(
-    sampler: Rc<RefCell<RandomSampler<SEED_SIZE>>>,
-    _sampler_for_random_acceleration_operator: Rc<RefCell<RandomSampler<SEED_SIZE>>>,
+    sampler: RefCell<RandomSampler<SEED_SIZE>>,
 ) -> Simulation<'a, SEED_SIZE> {
     let mass = PARTICLE_MASS;
 
     // Define some particle generators.
 
     let prototype = Particle {
-        mass: PARTICLE_MASS,
+        mass,
         max_age: PARTICLE_MAX_AGE_SECONDS,
         ..Default::default()
     };
@@ -124,20 +123,6 @@ pub(crate) fn make_simulation<'a>(
 
     let operators = Operators {
         additive_acceleration: vec![
-            // Additive acceleration operator: Contributes a random acceleration.
-            // Box::new(
-            //     move |_current_state: &StateVector,
-            //           _i: usize,
-            //           _total_acceleration: &Acceleration,
-            //           h: f32|
-            //           -> Acceleration {
-            //         static SCALING_FACTOR: f32 = 1.0;
-
-            //         let mut sampler = sampler_for_random_acceleration_operator.borrow_mut();
-
-            //         sampler.sample_direction_uniform() * SCALING_FACTOR / h
-            //     },
-            // ),
             // Additive acceleration operator: Avoids a static sphere collider.
             // Box::new(
             //     |current_state: &StateVector,

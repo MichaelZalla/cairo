@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
 
 use sdl2::{keyboard::Keycode, mouse::MouseButton};
 
@@ -73,19 +73,17 @@ fn main() -> Result<(), String> {
 
     // Set up our particle simulation.
 
-    let mut sampler: RandomSampler<SEED_SIZE> = Default::default();
+    let sampler_rc = {
+        let mut sampler: RandomSampler<SEED_SIZE> = Default::default();
 
-    // Seed the simulation's random number sampler.
+        // Seed the simulation's random number sampler.
 
-    match sampler.seed() {
-        Ok(_) => (),
-        Err(err) => return Err(format!("{}", err)),
-    }
+        sampler.seed().unwrap();
 
-    let sampler_rc = Rc::new(RefCell::new(sampler));
-    let sampler_rc_for_random_acceleration_operator = sampler_rc.clone();
+        RefCell::new(sampler)
+    };
 
-    let sim = make_simulation(sampler_rc, sampler_rc_for_random_acceleration_operator);
+    let sim = make_simulation(sampler_rc);
 
     let collider_creation_state_rc = RefCell::new(LineSegmentColliderCreationState {
         start: None,
