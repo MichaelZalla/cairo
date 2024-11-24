@@ -297,13 +297,13 @@ impl Renderer for SoftwareRenderer {
     fn render_entity(
         &mut self,
         world_transform: &Mat4,
-        clipping_camera_frustum: &Option<Frustum>,
+        culling_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
         entity_material: &Option<Handle>,
     ) -> bool {
         self._render_entity(
             world_transform,
-            clipping_camera_frustum,
+            culling_frustum,
             entity_mesh,
             entity_material,
         )
