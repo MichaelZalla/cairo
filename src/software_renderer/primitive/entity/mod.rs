@@ -7,13 +7,13 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_entity(
         &mut self,
         world_transform: &Mat4,
-        clipping_camera_frustum: &Option<Frustum>,
+        culling_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
         entity_material: &Option<Handle>,
     ) -> bool {
         let mut should_cull = false;
 
-        if let Some(frustum) = clipping_camera_frustum.as_ref() {
+        if let Some(frustum) = culling_frustum.as_ref() {
             if should_cull_aabb(*world_transform, frustum, &entity_mesh.aabb) {
                 should_cull = true;
             }
@@ -50,12 +50,12 @@ impl SoftwareRenderer {
     }
 }
 
-fn should_cull_aabb(world_transform: Mat4, clipping_camera_frustum: &Frustum, aabb: &AABB) -> bool {
+fn should_cull_aabb(world_transform: Mat4, culling_frustum: &Frustum, aabb: &AABB) -> bool {
     // Cull the entire entity, if possible, based on its bounds.
 
     let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * world_transform).to_vec3();
 
-    let culling_planes = clipping_camera_frustum.get_planes();
+    let culling_planes = culling_frustum.get_planes();
 
     let radius = aabb.bounding_sphere_radius;
 
