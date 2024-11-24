@@ -342,11 +342,13 @@ impl Camera {
             }
         };
 
-        self.frustum = Frustum {
-            forward: self.look_vector.get_forward(),
-            near: near_plane_points_world_space,
-            far: far_plane_points_world_space,
-        };
+        let (forward, near, far) = (
+            self.look_vector.get_forward(),
+            near_plane_points_world_space,
+            far_plane_points_world_space,
+        );
+
+        self.frustum = Frustum::new(forward, near, far);
     }
 
     pub fn get_near_plane_pixel_world_space_position(

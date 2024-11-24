@@ -55,7 +55,6 @@ fn should_cull_aabb(world_transform: Mat4, clipping_camera_frustum: &Frustum, aa
 
     let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * world_transform).to_vec3();
 
-    // @TODO Generate planes once per frame, not once per entity draw.
     let culling_planes = clipping_camera_frustum.get_planes();
 
     let radius = aabb.bounding_sphere_radius;

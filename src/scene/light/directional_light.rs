@@ -258,23 +258,24 @@ impl DirectionalLight {
         let subfrustum_cameras: Vec<(f32, Camera)> = (0..SHADOW_MAP_CAMERA_COUNT)
             .map(|subfrustum_index| {
                 let near_alpha = alpha_step * subfrustum_index as f32;
+
                 let far_alpha = alpha_step * (subfrustum_index + 1) as f32;
 
-                let subfrustum = Frustum {
-                    near: [
-                        lerp(frustum.near[0], frustum.far[0], near_alpha),
-                        lerp(frustum.near[1], frustum.far[1], near_alpha),
-                        lerp(frustum.near[2], frustum.far[2], near_alpha),
-                        lerp(frustum.near[3], frustum.far[3], near_alpha),
-                    ],
-                    far: [
-                        lerp(frustum.near[0], frustum.far[0], far_alpha),
-                        lerp(frustum.near[1], frustum.far[1], far_alpha),
-                        lerp(frustum.near[2], frustum.far[2], far_alpha),
-                        lerp(frustum.near[3], frustum.far[3], far_alpha),
-                    ],
-                    forward,
-                };
+                let near = [
+                    lerp(frustum.near[0], frustum.far[0], near_alpha),
+                    lerp(frustum.near[1], frustum.far[1], near_alpha),
+                    lerp(frustum.near[2], frustum.far[2], near_alpha),
+                    lerp(frustum.near[3], frustum.far[3], near_alpha),
+                ];
+
+                let far = [
+                    lerp(frustum.near[0], frustum.far[0], far_alpha),
+                    lerp(frustum.near[1], frustum.far[1], far_alpha),
+                    lerp(frustum.near[2], frustum.far[2], far_alpha),
+                    lerp(frustum.near[3], frustum.far[3], far_alpha),
+                ];
+
+                let subfrustum = Frustum::new(forward, near, far);
 
                 let subfrustum_far_z = projection_depth_step * (subfrustum_index + 1) as f32;
 
