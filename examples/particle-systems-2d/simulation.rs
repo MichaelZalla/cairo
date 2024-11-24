@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
 
 use physical_constants::NEWTONIAN_CONSTANT_OF_GRAVITATION;
 
@@ -146,7 +146,7 @@ fn integrate(
 }
 
 pub(crate) struct Simulation<'a, const N: usize> {
-    pub sampler: Rc<RefCell<RandomSampler<N>>>,
+    pub sampler: RefCell<RandomSampler<N>>,
     pub pool: RefCell<ParticleList<N>>,
     pub forces: Vec<&'a ParticleForce>,
     pub colliders: RefCell<Vec<LineSegmentCollider>>,
