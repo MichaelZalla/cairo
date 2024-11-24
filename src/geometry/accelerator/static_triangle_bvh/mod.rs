@@ -281,6 +281,31 @@ impl StaticTriangleBVH {
         }
     }
 
+    fn get_extent_along_axis(&self, node_index: usize, axis: usize) -> (f32, f32) {
+        let node = &self.nodes[node_index];
+
+        let (mut min_position, mut max_position) = (f32::MAX, f32::MIN);
+
+        for i in 0..node.primitives_count {
+            let tri_index_index = (node.primitives_start_index + i) as usize;
+
+            let tri_index = self.tri_indices[tri_index_index];
+
+            let tri = &self.tris[tri_index];
+
+            let centroid = &tri.centroid;
+
+            unsafe {
+                min_position = min_position.min(centroid.a[axis]);
+                max_position = max_position.max(centroid.a[axis]);
+            }
+        }
+
+        let extent_along_axis = max_position - min_position;
+
+        (extent_along_axis, min_position)
+    }
+
     fn split_strategy_surface_area(&self, split_node_index: usize) -> (Split, f32) {
         let mut best_axis: isize = -1;
         let mut best_position = 0_f32;
@@ -293,30 +318,12 @@ impl StaticTriangleBVH {
             static BINNED_SPLITS: bool = true;
 
             if BINNED_SPLITS {
-                let (extent_along_axis, min_position) = unsafe {
-                    let (mut min_position, mut max_position) = (f32::MAX, f32::MIN);
+                let (extent_along_axis, min_position) =
+                    self.get_extent_along_axis(split_node_index, axis);
 
-                    for i in 0..split_node.primitives_count {
-                        let tri_index_index = (split_node.primitives_start_index + i) as usize;
-
-                        let tri_index = self.tri_indices[tri_index_index];
-
-                        let tri = &self.tris[tri_index];
-
-                        let centroid = &tri.centroid;
-
-                        min_position = min_position.min(centroid.a[axis]);
-                        max_position = max_position.max(centroid.a[axis]);
-                    }
-
-                    if min_position == max_position {
-                        continue;
-                    }
-
-                    let extent_along_axis = max_position - min_position;
-
-                    (extent_along_axis, min_position)
-                };
+                if extent_along_axis == 0.0 {
+                    continue;
+                }
 
                 static NUM_INTERVALS: usize = 8;
 
