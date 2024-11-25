@@ -7,14 +7,13 @@ use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     geometry::primitives::{aabb::AABB, ray::Ray},
-    material::Material,
     matrix::Mat4,
     render::{
         options::{shader::RenderShaderOptions, RenderOptions, RenderPassFlag},
         viewport::RenderViewport,
         Renderer,
     },
-    resource::{arena::Arena, handle::Handle},
+    resource::handle::Handle,
     scene::{
         camera::{frustum::Frustum, Camera},
         light::{
@@ -235,16 +234,8 @@ impl Renderer for SoftwareRenderer {
         }
     }
 
-    fn render_point(
-        &mut self,
-        point_world_space: Vec3,
-        color: Color,
-        camera: Option<&Camera>,
-        materials: Option<&mut Arena<Material>>,
-        material: Option<Handle>,
-        scale: Option<f32>,
-    ) {
-        self._render_point(point_world_space, color, camera, materials, material, scale)
+    fn render_point(&mut self, transform: &Mat4, color: Option<Color>) {
+        self._render_point(transform, color)
     }
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
