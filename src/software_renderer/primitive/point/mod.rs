@@ -1,78 +1,84 @@
 use crate::{
-    color::Color,
-    material::Material,
-    mesh,
-    resource::{arena::Arena, handle::Handle},
-    scene::camera::Camera,
-    software_renderer::SoftwareRenderer,
-    transform::Transform3D,
-    vec::vec3::Vec3,
+    color::Color, matrix::Mat4, render::options::RenderPassFlag,
+    software_renderer::SoftwareRenderer, vec::vec4::Vec4,
+    vertex::default_vertex_in::DefaultVertexIn,
 };
 
 impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_point(
         &mut self,
-        point_world_space: Vec3,
-        color: Color,
-        camera: Option<&Camera>,
-        materials: Option<&mut Arena<Material>>,
-        material: Option<Handle>,
-        scale: Option<f32>,
+        transform: &Mat4,
+        color: Option<Color>,
     ) {
-        let point_ndc_space: Vec3;
+        // Cull point masses against the culling frustum.
 
-        {
-            let shader_context = (*self.shader_context).borrow();
+        let position_world_space = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
 
-            point_ndc_space = shader_context.to_ndc_space(point_world_space);
-        }
-
-        let x = (point_ndc_space.x * self.viewport.width as f32) as u32;
-        let y = (point_ndc_space.y * self.viewport.height as f32) as u32;
-        let z = point_ndc_space.z;
-
-        // Cull points that are in front of our near plane (z <= 0).
-        if z <= 0.0 {
-            return;
-        }
-
-        let color_u32 = color.to_u32();
-
-        if let Some(materials) = materials {
-            let material_handle = material.unwrap();
-
-            let billboard_scale = scale.unwrap();
-
-            let mut billboard_mesh = mesh::primitive::billboard::generate(
-                point_world_space,
-                &camera.unwrap().look_vector.get_position(),
-                billboard_scale,
-                billboard_scale,
-            );
-
-            if let Ok(billboard_material_entry) = materials.get_mut(&material_handle) {
-                let material = &mut billboard_material_entry.item;
-
-                material.albedo = color.to_vec3() / 255.0;
-
-                billboard_mesh.material = Some(material_handle);
-
-                let transform: Transform3D = Default::default();
-
-                self.render_entity_mesh(&billboard_mesh, transform.mat());
-
+        for plane in self.clipping_frustum.get_planes() {
+            if !plane.is_on_or_in_front_of(&position_world_space, 0.0) {
                 return;
             }
         }
 
-        if let Some(framebuffer_rc) = &self.framebuffer {
-            let framebuffer = framebuffer_rc.borrow_mut();
+        let original_flags = self.options.render_pass_flags;
 
-            if let Some(forward_buffer_rc) = &framebuffer.attachments.forward_ldr {
-                let mut forward_buffer = forward_buffer_rc.borrow_mut();
+        self.options.render_pass_flags ^= RenderPassFlag::Lighting;
+        self.options.render_pass_flags ^= RenderPassFlag::DeferredLighting;
 
-                forward_buffer.set(x, y, color_u32);
-            }
+        let color = color.unwrap();
+
+        let mut color_vec3 = color.to_vec3() / 255.0;
+
+        color_vec3.srgb_to_linear();
+
+        let vertex_out = {
+            let shader_context = self.shader_context.borrow();
+
+            let vertex_in = DefaultVertexIn {
+                position: position_world_space,
+                color: color_vec3,
+                ..Default::default()
+            };
+
+            (self.vertex_shader)(&shader_context, &vertex_in)
+        };
+
+        let projection_space_vertex = vertex_out;
+
+        let mut ndc_space_vertex = projection_space_vertex;
+
+        let v = &ndc_space_vertex.position_projection_space;
+
+        if v.x > v.w || v.x < -v.w {
+            return;
         }
+
+        if v.y > v.w || v.y < -v.w {
+            return;
+        }
+
+        if v.z > v.w || v.z < -v.w {
+            return;
+        }
+
+        ndc_space_vertex.projection_space_to_viewport_space(&self.viewport);
+
+        let x = u32::max(
+            (ndc_space_vertex.position_projection_space.x - 0.5).ceil() as u32,
+            0,
+        );
+
+        let y = u32::max(
+            (ndc_space_vertex.position_projection_space.y - 0.5).ceil() as u32,
+            0,
+        );
+
+        if x > self.viewport.width - 1 || y > self.viewport.height - 1 {
+            return;
+        }
+
+        self.submit_fragment(x, y, &mut ndc_space_vertex);
+
+        self.options.render_pass_flags = original_flags;
     }
 }

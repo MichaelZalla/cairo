@@ -3,10 +3,9 @@ use options::RenderOptions;
 use crate::{
     color::Color,
     geometry::primitives::{aabb::AABB, ray::Ray},
-    material::Material,
     matrix::Mat4,
     mesh::Mesh,
-    resource::{arena::Arena, handle::Handle},
+    resource::handle::Handle,
     scene::{
         camera::{frustum::Frustum, Camera},
         light::{
@@ -31,15 +30,7 @@ pub trait Renderer {
 
     fn end_frame(&mut self);
 
-    fn render_point(
-        &mut self,
-        point_world_space: Vec3,
-        color: Color,
-        camera: Option<&Camera>,
-        materials: Option<&mut Arena<Material>>,
-        material: Option<Handle>,
-        scale: Option<f32>,
-    );
+    fn render_point(&mut self, transform: &Mat4, color: Option<Color>);
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color);
 
