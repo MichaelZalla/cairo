@@ -494,29 +494,8 @@ impl SceneGraph {
                                     Ok(entry) => {
                                         let entity_mesh = &entry.item;
 
-                                        let clipping_camera_handle =
-                                            clipping_camera_handle_rc.borrow();
-
-                                        let culling_frustum = match clipping_camera_handle
-                                            .as_ref()
-                                        {
-                                            Some(camera_handle) => {
-                                                let camera_arena = resources.camera.borrow();
-
-                                                match camera_arena.get(camera_handle) {
-                                                    Ok(entry) => Some(*entry.item.get_frustum()),
-                                                    Err(err) => panic!(
-                                                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                                                        entity.mesh, err
-                                                    ),
-                                                }
-                                            }
-                                            None => None,
-                                        };
-
                                         let _was_drawn = renderer.render_entity(
                                             &current_world_transform,
-                                            &culling_frustum,
                                             entity_mesh,
                                             &entity.material,
                                         );
@@ -585,29 +564,8 @@ impl SceneGraph {
                                     Ok(entry) => {
                                         let entity_mesh = &entry.item;
 
-                                        let clipping_camera_handle =
-                                            clipping_camera_handle_rc.borrow();
-
-                                        let culling_frustum = match clipping_camera_handle
-                                            .as_ref()
-                                        {
-                                            Some(camera_handle) => {
-                                                let camera_arena = resources.camera.borrow();
-
-                                                match camera_arena.get(camera_handle) {
-                                                    Ok(entry) => Some(*entry.item.get_frustum()),
-                                                    Err(err) => panic!(
-                                                        "Failed to get Camera from Arena with Handle {:?}: {}",
-                                                        entity.mesh, err
-                                                    ),
-                                                }
-                                            }
-                                            None => None,
-                                        };
-
                                         let _was_drawn = renderer.render_entity(
                                             &current_world_transform,
-                                            &culling_frustum,
                                             entity_mesh,
                                             &entity.material,
                                         );
