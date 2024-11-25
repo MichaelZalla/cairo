@@ -349,6 +349,7 @@ impl SoftwareRenderer {
         // Calculate our start and end Y (end here is non-inclusive), such that
         // they are non-fractional screen coordinates.
         let y_start: u32 = u32::max((it0.position_projection_space.y - 0.5).ceil() as u32, 0);
+
         let y_end: u32 = u32::min(
             (it2.position_projection_space.y - 0.5).ceil() as u32,
             self.viewport.height - 1,
@@ -358,6 +359,7 @@ impl SoftwareRenderer {
         // to their nearest whole pixel coordinates.
         left_edge_interpolant +=
             *left_step * (y_start as f32 + 0.5 - it0.position_projection_space.y);
+
         *right_edge_interpolant +=
             *right_step * (y_start as f32 + 0.5 - it0.position_projection_space.y);
 
