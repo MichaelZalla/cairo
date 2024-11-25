@@ -655,6 +655,8 @@ impl App {
                     ticks_since_last_update as f32 / ticks_per_second as f32;
 
                 self.timing_info.uptime_seconds += self.timing_info.seconds_since_last_update;
+            } else {
+                self.timing_info.seconds_since_last_update = 0.0;
             }
 
             #[cfg(feature = "debug_cycle_counts")]
