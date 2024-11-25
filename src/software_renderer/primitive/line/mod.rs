@@ -17,6 +17,12 @@ impl SoftwareRenderer {
         // Clip the line segment against all 6 planes of the frustum.
 
         for plane in self.clipping_frustum.get_planes() {
+            if plane.get_signed_distance(&start_world_space) < 0.0
+                && plane.get_signed_distance(&end_world_space) < 0.0
+            {
+                return;
+            }
+
             if let Some((_alpha, intersection_point)) =
                 intersect_line_segment_plane(plane, start_world_space, end_world_space)
             {
