@@ -3,7 +3,10 @@ extern crate sdl2;
 use std::{cell::RefCell, f32, f32::consts::PI, rc::Rc};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_640_BY_480},
+        App, AppWindowInfo,
+    },
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -13,7 +16,7 @@ use cairo::{
     scene::{
         context::SceneContext,
         graph::options::SceneGraphRenderOptions,
-        light::directional_light::DirectionalLight,
+        light::directional_light::{DirectionalLight, SHADOW_MAP_CAMERA_COUNT},
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -38,6 +41,8 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/directional-shadows".to_string(),
         relative_mouse_mode: true,
+        canvas_resolution: RESOLUTION_640_BY_480,
+        window_resolution: RESOLUTION_640_BY_480,
         ..Default::default()
     };
 
@@ -194,8 +199,7 @@ fn main() -> Result<(), String> {
 
                             let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
 
-                            let rotate_y =
-                                Quaternion::new(vec3::UP, uptime / 2.0 % f32::consts::TAU);
+                            let rotate_y = Quaternion::new(vec3::UP, uptime % f32::consts::TAU);
 
                             light.set_direction(rotate_x * rotate_y);
                         }
@@ -289,6 +293,20 @@ fn main() -> Result<(), String> {
 
         renderer.shader_options.update(keyboard_state);
 
+        let camera_handle = scene
+            .root
+            .find(|node| *node.get_type() == SceneNodeType::Camera)
+            .unwrap()
+            .unwrap();
+
+        let camera_arena = resources.camera.borrow();
+
+        if let Ok(entry) = camera_arena.get(&camera_handle) {
+            let camera = &entry.item;
+
+            renderer.set_clipping_frustum(*camera.get_frustum());
+        }
+
         Ok(())
     };
 
@@ -372,7 +390,8 @@ fn blit_directional_shadow_maps(
     texture_f32_arena: &Arena<TextureMap<f32>>,
     target: &mut Buffer2D,
 ) {
-    static SHADOW_MAP_THUMBNAIL_SIZE: u32 = 175;
+    static SHADOW_MAP_THUMBNAIL_SIZE: u32 =
+        RESOLUTION_640_BY_480.height / SHADOW_MAP_CAMERA_COUNT as u32;
 
     if let Some(handles) = light.shadow_maps.as_ref() {
         for (index, handle) in handles.iter().enumerate() {

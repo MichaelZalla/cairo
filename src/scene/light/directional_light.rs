@@ -41,7 +41,7 @@ use super::{
     shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
 };
 
-pub const SHADOW_MAP_CAMERA_COUNT: usize = 3;
+pub const SHADOW_MAP_CAMERA_COUNT: usize = 2;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DirectionalLight {
@@ -194,6 +194,8 @@ impl DirectionalLight {
 
                     {
                         let mut renderer = rendering_context.renderer.borrow_mut();
+
+                        renderer.set_clipping_frustum(*camera.get_frustum());
 
                         renderer.begin_frame();
                     }

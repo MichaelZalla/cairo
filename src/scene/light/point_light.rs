@@ -543,6 +543,8 @@ impl PointLight {
             {
                 let mut renderer = context.renderer.borrow_mut();
 
+                renderer.set_clipping_frustum(*cubemap_face_camera.get_frustum());
+
                 renderer.begin_frame();
             }
 

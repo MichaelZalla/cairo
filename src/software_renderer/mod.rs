@@ -61,6 +61,7 @@ pub struct SoftwareRenderer {
     pub shader_options: RenderShaderOptions,
     framebuffer: Option<Rc<RefCell<Framebuffer>>>,
     viewport: RenderViewport,
+    clipping_frustum: Frustum,
     g_buffer: Option<GBuffer>,
     alpha_accumulation_buffer: Buffer2D<Vec4>,
     alpha_revealage_buffer: Buffer2D<f32>,
@@ -297,16 +298,10 @@ impl Renderer for SoftwareRenderer {
     fn render_entity(
         &mut self,
         world_transform: &Mat4,
-        culling_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
         entity_material: &Option<Handle>,
     ) -> bool {
-        self._render_entity(
-            world_transform,
-            culling_frustum,
-            entity_mesh,
-            entity_material,
-        )
+        self._render_entity(world_transform, entity_mesh, entity_material)
     }
 
     fn render_skybox(&mut self, skybox: &CubeMap, camera: &Camera, skybox_rotation: Option<Mat4>) {
@@ -341,11 +336,14 @@ impl SoftwareRenderer {
 
         let viewport: RenderViewport = Default::default();
 
+        let clipping_frustum = Frustum::default();
+
         SoftwareRenderer {
             options,
             cycle_counters: Default::default(),
             framebuffer,
             viewport,
+            clipping_frustum,
             g_buffer: None,
             ssao_buffer: None,
             ssao_blur_buffer: None,
@@ -361,6 +359,10 @@ impl SoftwareRenderer {
             shader_options,
             fragment_shader,
         }
+    }
+
+    pub fn set_clipping_frustum(&mut self, frustum: Frustum) {
+        self.clipping_frustum = frustum;
     }
 
     pub fn set_vertex_shader(&mut self, shader: VertexShaderFn) {

@@ -158,6 +158,8 @@ fn main() -> Result<(), String> {
                       mouse_state: &mut MouseState,
                       game_controller_state: &mut GameControllerState|
      -> Result<(), String> {
+        let resources = &scene_context.resources;
+
         let mut renderer = renderer_rc.borrow_mut();
 
         let mut shader_context = shader_context_rc.borrow_mut();
@@ -183,6 +185,20 @@ fn main() -> Result<(), String> {
         renderer.options.update(keyboard_state);
 
         renderer.shader_options.update(keyboard_state);
+
+        let camera_handle = scene
+            .root
+            .find(|node| *node.get_type() == SceneNodeType::Camera)
+            .unwrap()
+            .unwrap();
+
+        let camera_arena = resources.camera.borrow();
+
+        if let Ok(entry) = camera_arena.get(&camera_handle) {
+            let camera = &entry.item;
+
+            renderer.set_clipping_frustum(*camera.get_frustum());
+        }
 
         Ok(())
     };

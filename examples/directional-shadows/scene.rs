@@ -71,7 +71,7 @@ pub(crate) fn make_scene(
 
             directional_light.intensities = vec3::ONES * 0.6;
 
-            directional_light.enable_shadow_maps(1024, 100.0, resources.clone());
+            directional_light.enable_shadow_maps(1024, 48.0, resources.clone());
         }
     }
 
@@ -87,8 +87,8 @@ pub(crate) fn make_scene(
 
             camera.look_vector.set_position(Vec3 {
                 x: 0.0,
-                y: 16.0,
-                z: -50.0,
+                y: 12.0,
+                z: -36.0,
             });
 
             camera.look_vector.set_target(Vec3 {
@@ -101,42 +101,11 @@ pub(crate) fn make_scene(
         }
     }
 
-    // Add a second camera (to provide a visualized camera frustum).
-
-    let camera2 = {
-        let mut camera = Camera::from_perspective(
-            Vec3 {
-                x: 0.0,
-                y: 6.0,
-                z: -50.0,
-            },
-            Vec3 {
-                x: 0.0,
-                y: 6.0,
-                z: 0.0,
-            },
-            75.0,
-            camera_aspect_ratio,
-        );
-
-        camera.set_projection_z_far(50.0);
-
-        let camera_handle = camera_arena.insert(camera);
-
-        SceneNode::new(
-            SceneNodeType::Camera,
-            Default::default(),
-            Some(camera_handle),
-        )
-    };
-
-    scene.root.add_child(camera2).unwrap();
-
     // Add a ground plane to our scene.
 
     let mut plane_entity_node = {
         let entity = {
-            let mesh = cube::generate(200.0, 1.0, 200.0);
+            let mesh = cube::generate(100.0, 1.0, 100.0);
 
             let mesh_handle = mesh_arena.insert(mesh);
 
@@ -159,8 +128,8 @@ pub(crate) fn make_scene(
 
     // Add cubes to our scene.
 
-    static CUBE_ROWS: usize = 25;
-    static CUBE_COLUMNS: usize = 25;
+    static CUBE_ROWS: usize = 8;
+    static CUBE_COLUMNS: usize = 8;
 
     static CUBE_WIDTH: f32 = 2.0;
     static CUBE_SPACING: f32 = 4.0;
@@ -171,8 +140,8 @@ pub(crate) fn make_scene(
         let cube_mesh_handle = mesh_arena.insert(cube_mesh);
 
         let cube_material_handle = material_arena.insert(Material {
-            name: "green".to_string(),
-            albedo: color::GREEN.to_vec3() / 255.0,
+            name: "red".to_string(),
+            albedo: color::RED.to_vec3() / 255.0,
             roughness: 0.0,
             ..Default::default()
         });

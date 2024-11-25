@@ -86,15 +86,19 @@ impl PanelInstance for Viewport3DPanel {
             let renderer_rc = self.renderer.as_ref().unwrap();
 
             {
-                let renderer = (*renderer_rc).borrow_mut();
+                let mut renderer = (*renderer_rc).borrow_mut();
                 let camera_arena = resources.camera.borrow();
 
                 if let Ok(entry) = camera_arena.get(&self.active_camera) {
                     let camera = &entry.item;
 
-                    let mut shader_context = (*renderer.shader_context).borrow_mut();
+                    {
+                        let mut shader_context = (*renderer.shader_context).borrow_mut();
 
-                    camera.update_shader_context(&mut shader_context);
+                        camera.update_shader_context(&mut shader_context);
+                    }
+
+                    renderer.set_clipping_frustum(*camera.get_frustum());
                 }
             }
 

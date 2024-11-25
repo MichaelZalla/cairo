@@ -15,6 +15,7 @@ use cairo::{
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
+    render::Renderer,
     resource::{arena::Arena, handle::Handle},
     scene::{
         context::SceneContext,
@@ -396,6 +397,20 @@ fn main() -> Result<(), String> {
 
         renderer.shader_options.update(keyboard_state);
 
+        let camera_handle = scene
+            .root
+            .find(|node| *node.get_type() == SceneNodeType::Camera)
+            .unwrap()
+            .unwrap();
+
+        let camera_arena = resources.camera.borrow();
+
+        if let Ok(entry) = camera_arena.get(&camera_handle) {
+            let camera = &entry.item;
+
+            renderer.set_clipping_frustum(*camera.get_frustum());
+        }
+
         Ok(())
     };
 
@@ -411,7 +426,13 @@ fn main() -> Result<(), String> {
 
         let scene = &mut scenes[0];
 
-        match scene.render(
+        {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.begin_frame();
+        }
+
+        scene.render(
             resources,
             &renderer_rc,
             Some(SceneGraphRenderOptions {
@@ -420,45 +441,48 @@ fn main() -> Result<(), String> {
                 draw_shadow_map_cameras: USE_DEMO_CAMERA,
                 ..Default::default()
             }),
-        ) {
-            Ok(()) => {
-                // Write out.
+        )?;
 
-                let framebuffer = framebuffer_rc.borrow();
+        {
+            let mut renderer = renderer_rc.borrow_mut();
 
-                match framebuffer.attachments.color.as_ref() {
-                    Some(color_buffer_lock) => {
-                        let mut color_buffer = color_buffer_lock.borrow_mut();
+            renderer.end_frame();
+        }
 
-                        if DRAW_DIRECTIONAL_SHADOW_MAP_THUMBNAILS {
-                            let directional_light_arena = resources.directional_light.borrow();
+        // Write out.
 
-                            let texture_f32_arena = resources.texture_f32.borrow();
+        let framebuffer = framebuffer_rc.borrow();
 
-                            if let Some(handle) = scene
-                                .root
-                                .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
-                            {
-                                if let Ok(entry) = directional_light_arena.get(&handle) {
-                                    let directional_light = &entry.item;
+        match framebuffer.attachments.color.as_ref() {
+            Some(color_buffer_lock) => {
+                let mut color_buffer = color_buffer_lock.borrow_mut();
 
-                                    blit_directional_shadow_maps(
-                                        directional_light,
-                                        &texture_f32_arena,
-                                        &mut color_buffer,
-                                    );
-                                }
-                            }
+                if DRAW_DIRECTIONAL_SHADOW_MAP_THUMBNAILS {
+                    let directional_light_arena = resources.directional_light.borrow();
+
+                    let texture_f32_arena = resources.texture_f32.borrow();
+
+                    if let Some(handle) = scene
+                        .root
+                        .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
+                    {
+                        if let Ok(entry) = directional_light_arena.get(&handle) {
+                            let directional_light = &entry.item;
+
+                            blit_directional_shadow_maps(
+                                directional_light,
+                                &texture_f32_arena,
+                                &mut color_buffer,
+                            );
                         }
-
-                        color_buffer.copy_to(canvas);
-
-                        Ok(())
                     }
-                    None => panic!(),
                 }
+
+                color_buffer.copy_to(canvas);
+
+                Ok(())
             }
-            Err(e) => panic!("{}", e),
+            None => panic!(),
         }
     };
 

@@ -68,7 +68,6 @@ pub trait Renderer {
     fn render_entity(
         &mut self,
         world_transform: &Mat4,
-        culling_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
         entity_material: &Option<Handle>,
     ) -> bool;

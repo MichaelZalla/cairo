@@ -7,16 +7,13 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_entity(
         &mut self,
         world_transform: &Mat4,
-        culling_frustum: &Option<Frustum>,
         entity_mesh: &Mesh,
         entity_material: &Option<Handle>,
     ) -> bool {
         let mut should_cull = false;
 
-        if let Some(frustum) = culling_frustum.as_ref() {
-            if should_cull_aabb_sphere(*world_transform, frustum, &entity_mesh.aabb) {
-                should_cull = true;
-            }
+        if should_cull_aabb_sphere(*world_transform, &self.clipping_frustum, &entity_mesh.aabb) {
+            should_cull = true;
         }
 
         if !should_cull {
