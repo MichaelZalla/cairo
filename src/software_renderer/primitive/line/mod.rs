@@ -1,5 +1,6 @@
 use crate::{
     color::{self, Color},
+    geometry::intersect::intersect_line_segment_plane,
     graphics::Graphics,
     render::Renderer,
     software_renderer::SoftwareRenderer,
@@ -9,10 +10,30 @@ use crate::{
 impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_line(
         &mut self,
-        start_world_space: Vec3,
-        end_world_space: Vec3,
+        mut start_world_space: Vec3,
+        mut end_world_space: Vec3,
         color: Color,
     ) {
+        // Clip the line segment against all 6 planes of the frustum.
+
+        for plane in self.clipping_frustum.get_planes() {
+            if let Some((_alpha, intersection_point)) =
+                intersect_line_segment_plane(plane, start_world_space, end_world_space)
+            {
+                let start_world_space_clipped = intersection_point;
+
+                let end_world_space_clipped = if plane.get_signed_distance(&start_world_space) > 0.0
+                {
+                    start_world_space
+                } else {
+                    end_world_space
+                };
+
+                start_world_space = start_world_space_clipped;
+                end_world_space = end_world_space_clipped;
+            }
+        }
+
         let (start_ndc_space, end_ndc_space) = {
             let shader_context = self.shader_context.borrow();
 
