@@ -4,8 +4,32 @@ use crate::vec::vec3::{Vec3, Vec3A};
 
 use super::{
     accelerator::static_triangle_bvh::StaticTriangleBVH,
-    primitives::{aabb::AABB, ray::Ray},
+    primitives::{aabb::AABB, plane::Plane, ray::Ray},
 };
+
+pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(f32, Vec3)> {
+    // Compute a t-value for the directed line intersecting the plane.
+
+    let ab = b - a;
+
+    let nominator = plane.d - plane.normal.dot(a);
+
+    let denominator = plane.normal.dot(ab);
+
+    let t = nominator / denominator;
+
+    if (0.0..=1.0).contains(&t) {
+        // If t lies in the range [0..1], compute the segment's intersection point.
+
+        let q = a + ab * t;
+
+        Some((t, q))
+    } else {
+        // Else, no intersection has occurred.
+
+        None
+    }
+}
 
 pub fn intersect_ray_triangle(
     ray: &mut Ray,
