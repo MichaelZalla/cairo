@@ -1,9 +1,7 @@
 use std::rc::Rc;
 
 use cairo::{
-    app::context::ApplicationRenderingContext,
     entity::Entity,
-    material::Material,
     mesh::Mesh,
     resource::{arena::Arena, handle::Handle},
     scene::{
@@ -16,7 +14,6 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    texture::map::TextureMap,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -28,10 +25,7 @@ pub fn make_collision_physics_scene(
     ambient_light_arena: &mut Arena<AmbientLight>,
     directional_light_arena: &mut Arena<DirectionalLight>,
     mesh_arena: &mut Arena<Mesh>,
-    material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
-    texture_u8_arena: &mut Arena<TextureMap>,
-    rendering_context: &ApplicationRenderingContext,
     level_meshes: Vec<Mesh>,
     level_mesh_handle: &mut Handle,
 ) -> Result<(SceneGraph, ShaderContext), String> {
@@ -42,15 +36,6 @@ pub fn make_collision_physics_scene(
         ambient_light_arena,
         directional_light_arena,
     )?;
-
-    for entry in material_arena.entries.iter_mut().flatten() {
-        let material = &mut entry.item;
-
-        material.roughness = 1.0;
-        material.metallic = 0.0;
-
-        material.load_all_maps(texture_u8_arena, rendering_context)?;
-    }
 
     // Assign the level mesh to an entity.
 
