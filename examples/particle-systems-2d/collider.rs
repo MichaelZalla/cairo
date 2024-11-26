@@ -23,6 +23,7 @@ pub(crate) trait Collider {
 pub(crate) struct LineSegmentCollider {
     pub start: Vec3,
     pub end: Vec3,
+    pub midpoint: Vec3,
     pub plane: Plane,
     tangent: Vec3,
     length: f32,
@@ -32,18 +33,19 @@ pub(crate) struct LineSegmentCollider {
 
 impl LineSegmentCollider {
     pub fn new(start: Vec3, end: Vec3) -> Self {
-        let point = start + (end - start) / 2.0;
+        let midpoint = start + (end - start) / 2.0;
 
         let delta = end - start;
         let length = delta.mag();
         let tangent = delta.as_normal();
         let normal = vec3::FORWARD.cross(tangent).as_normal();
 
-        let plane = Plane::new(point, normal);
+        let plane = Plane::new(midpoint, normal);
 
         Self {
             start,
             end,
+            midpoint,
             plane,
             tangent,
             length,
