@@ -154,23 +154,19 @@ fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: us
     };
 
     if node.is_leaf() {
-        if true {
-            let start = node.primitives_start_index as usize;
-            let end = start + node.primitives_count as usize;
+        let start = node.primitives_start_index as usize;
+        let end = start + node.primitives_count as usize;
 
-            for tri_index_index in start..end {
-                let tri_index = bvh.tri_indices[tri_index_index];
+        for tri_index_index in start..end {
+            let tri_index = bvh.tri_indices[tri_index_index];
 
-                let tri = &bvh.tris[tri_index];
+            let tri = &bvh.tris[tri_index];
 
-                let [v0, v1, v2] = tri.vertices;
+            let [v0, v1, v2] = tri.vertices;
 
-                let (v0, v1, v2) = bvh.geometry.get_vertices(v0, v1, v2);
+            let (v0, v1, v2) = bvh.geometry.get_vertices(v0, v1, v2);
 
-                intersect_ray_triangle(ray, tri_index, v0, v1, v2);
-            }
-        } else {
-            intersect_ray_aabb(ray, node_index, &node.aabb);
+            intersect_ray_triangle(ray, tri_index, v0, v1, v2);
         }
     } else {
         intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize);
