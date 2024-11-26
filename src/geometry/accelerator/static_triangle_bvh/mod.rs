@@ -1,32 +1,15 @@
 use std::rc::Rc;
 
 use crate::{
-    geometry::primitives::aabb::AABB,
+    geometry::primitives::{aabb::AABB, triangle::Triangle},
     mesh::{mesh_geometry::MeshGeometry, Mesh},
-    vec::vec3::{self, Vec3, Vec3A},
+    vec::vec3::{self, Vec3A},
 };
 
 static DO_PLANE_SPLITS: bool = true;
 static DO_BINNING: bool = true;
 
 const BIN_COUNT: usize = 8;
-
-#[derive(Default, Debug, Copy, Clone)]
-pub struct StaticTriangle {
-    pub vertices: [usize; 3],
-    pub centroid: Vec3A,
-}
-
-impl StaticTriangle {
-    pub fn new(vertices: [usize; 3], a: Vec3, b: Vec3, c: Vec3) -> Self {
-        let centroid = (a + b + c) * 0.33333;
-
-        Self {
-            vertices,
-            centroid: Vec3A { v: centroid },
-        }
-    }
-}
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct StaticTriangleBVHNode {
@@ -64,7 +47,7 @@ struct Bin {
 #[derive(Debug, Clone)]
 pub struct StaticTriangleBVH {
     pub geometry: Rc<MeshGeometry>,
-    pub tris: Vec<StaticTriangle>,
+    pub tris: Vec<Triangle>,
     pub tri_indices: Vec<usize>,
     pub nodes: Vec<StaticTriangleBVHNode>,
     pub nodes_used: usize,
@@ -94,7 +77,7 @@ impl StaticTriangleBVH {
                     vertices[face.vertices[2]],
                 );
 
-                tris[face_index] = StaticTriangle::new(face.vertices, v0, v1, v2);
+                tris[face_index] = Triangle::new(face.vertices, v0, v1, v2);
             }
 
             tris
