@@ -17,7 +17,7 @@ pub(crate) fn draw_collider(
 
     Graphics::line(framebuffer, x1, y1, x2, y2, color::GREEN.to_u32());
 
-    // let midpoint_screen_space = world_to_screen_space(&collider.plane.point, framebuffer_center);
+    // let midpoint_screen_space = world_to_screen_space(&collider.midpoint, framebuffer_center);
     // let normal_screen_space = world_to_screen_space(&collider.plane.normal, &Default::default());
 
     // let (x1, y1) = (
