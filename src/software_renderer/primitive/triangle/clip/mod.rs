@@ -2,7 +2,7 @@ use crate::{
     animation::lerp, scene::camera::frustum::NdcPlane, vertex::default_vertex_out::DefaultVertexOut,
 };
 
-use super::Triangle;
+use super::VertexTriangle;
 
 fn get_signed_distance_ratio(
     src: &DefaultVertexOut,
@@ -27,8 +27,8 @@ fn get_signed_distance_ratio(
 }
 
 pub(in crate::software_renderer) fn clip_by_all_planes(
-    triangle: &Triangle<DefaultVertexOut>,
-) -> Vec<Triangle<DefaultVertexOut>> {
+    triangle: &VertexTriangle,
+) -> Vec<VertexTriangle> {
     let mut clipped_triangles = vec![*triangle];
 
     clipped_triangles = clip_triangles_by_plane(NdcPlane::Near, clipped_triangles);
@@ -43,8 +43,8 @@ pub(in crate::software_renderer) fn clip_by_all_planes(
 
 pub(in crate::software_renderer) fn clip_triangles_by_plane(
     ndc_plane: NdcPlane,
-    triangles: Vec<Triangle<DefaultVertexOut>>,
-) -> Vec<Triangle<DefaultVertexOut>> {
+    triangles: Vec<VertexTriangle>,
+) -> Vec<VertexTriangle> {
     let mut all_clipped = vec![];
 
     for triangle in triangles {
@@ -58,8 +58,8 @@ pub(in crate::software_renderer) fn clip_triangles_by_plane(
 
 pub(in crate::software_renderer) fn clip_triangle_by_plane(
     ndc_plane: NdcPlane,
-    triangle: Triangle<DefaultVertexOut>,
-) -> Vec<Triangle<DefaultVertexOut>> {
+    triangle: VertexTriangle,
+) -> Vec<VertexTriangle> {
     // Clip triangles against the near plane (z=0).
 
     let mut vertices_inside_plane = vec![];
@@ -116,13 +116,13 @@ pub(in crate::software_renderer) fn clip_triangle_by_plane(
         let c_prime = lerp(*c, *a, c_alpha);
 
         if (a_index + 1) % 3 == b_index {
-            vec![Triangle {
+            vec![VertexTriangle {
                 v0: *a,
                 v1: b_prime,
                 v2: c_prime,
             }]
         } else {
-            vec![Triangle {
+            vec![VertexTriangle {
                 v0: *a,
                 v1: c_prime,
                 v2: b_prime,
@@ -146,12 +146,12 @@ pub(in crate::software_renderer) fn clip_triangle_by_plane(
 
         if (a_index + 1) % 3 == b_index {
             vec![
-                Triangle {
+                VertexTriangle {
                     v0: *a,
                     v1: a_prime,
                     v2: c_prime,
                 },
-                Triangle {
+                VertexTriangle {
                     v0: *a,
                     v1: c_prime,
                     v2: *c,
@@ -159,12 +159,12 @@ pub(in crate::software_renderer) fn clip_triangle_by_plane(
             ]
         } else {
             vec![
-                Triangle {
+                VertexTriangle {
                     v0: *a,
                     v1: *c,
                     v2: c_prime,
                 },
-                Triangle {
+                VertexTriangle {
                     v0: *a,
                     v1: c_prime,
                     v2: a_prime,
