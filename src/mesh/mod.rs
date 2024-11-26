@@ -77,7 +77,7 @@ pub struct Mesh {
     #[serde(skip)]
     pub aabb: AABB,
     #[serde(skip)]
-    pub static_triangle_bvh: Option<StaticTriangleBVH>,
+    pub collider: Option<StaticTriangleBVH>,
 }
 
 impl PostDeserialize for Mesh {
@@ -115,7 +115,7 @@ impl Mesh {
             geometry,
             faces,
             aabb: Default::default(),
-            static_triangle_bvh: None,
+            collider: None,
         };
 
         mesh.post_deserialize();
