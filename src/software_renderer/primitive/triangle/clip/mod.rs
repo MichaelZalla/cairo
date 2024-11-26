@@ -9,31 +9,18 @@ fn get_signed_distance_ratio(
     dest: &DefaultVertexOut,
     ndc_plane: NdcPlane,
 ) -> f32 {
+    let (s, d) = (
+        &src.position_projection_space,
+        &dest.position_projection_space,
+    );
+
     let (d1, d2) = match ndc_plane {
-        NdcPlane::Near => (
-            src.position_projection_space.z + src.position_projection_space.w,
-            dest.position_projection_space.z + dest.position_projection_space.w,
-        ),
-        NdcPlane::Far => (
-            src.position_projection_space.z - src.position_projection_space.w,
-            dest.position_projection_space.z - dest.position_projection_space.w,
-        ),
-        NdcPlane::Left => (
-            src.position_projection_space.x + src.position_projection_space.w,
-            dest.position_projection_space.x + dest.position_projection_space.w,
-        ),
-        NdcPlane::Right => (
-            src.position_projection_space.x - src.position_projection_space.w,
-            dest.position_projection_space.x - dest.position_projection_space.w,
-        ),
-        NdcPlane::Top => (
-            src.position_projection_space.y - src.position_projection_space.w,
-            dest.position_projection_space.y - dest.position_projection_space.w,
-        ),
-        NdcPlane::Bottom => (
-            src.position_projection_space.y + src.position_projection_space.w,
-            dest.position_projection_space.y + dest.position_projection_space.w,
-        ),
+        NdcPlane::Near => (s.z + s.w, d.z + d.w),
+        NdcPlane::Far => (s.z - s.w, d.z - d.w),
+        NdcPlane::Left => (s.x + s.w, d.x + d.w),
+        NdcPlane::Right => (s.x - s.w, d.x - d.w),
+        NdcPlane::Top => (s.y - s.w, d.y - d.w),
+        NdcPlane::Bottom => (s.y + s.w, d.y + d.w),
     };
 
     d1 / (d1 - d2)
@@ -90,13 +77,15 @@ pub(in crate::software_renderer) fn clip_triangle_by_plane(
             &triangle.v2
         };
 
+        let p = &v.position_projection_space;
+
         let is_inside_plane = match ndc_plane {
-            NdcPlane::Near => v.position_projection_space.z > -v.position_projection_space.w,
-            NdcPlane::Far => v.position_projection_space.z < v.position_projection_space.w,
-            NdcPlane::Left => v.position_projection_space.x > -v.position_projection_space.w,
-            NdcPlane::Right => v.position_projection_space.x < v.position_projection_space.w,
-            NdcPlane::Bottom => v.position_projection_space.y > -v.position_projection_space.w,
-            NdcPlane::Top => v.position_projection_space.y < v.position_projection_space.w,
+            NdcPlane::Near => p.z > -p.w,
+            NdcPlane::Far => p.z < p.w,
+            NdcPlane::Left => p.x > -p.w,
+            NdcPlane::Right => p.x < p.w,
+            NdcPlane::Bottom => p.y > -p.w,
+            NdcPlane::Top => p.y < p.w,
         };
 
         if is_inside_plane {
