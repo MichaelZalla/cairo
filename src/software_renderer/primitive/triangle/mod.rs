@@ -17,10 +17,10 @@ pub(in crate::software_renderer) mod clip;
 use self::clip::clip_by_all_planes;
 
 #[derive(Default, Debug, Copy, Clone)]
-pub struct Triangle<T> {
-    pub v0: T,
-    pub v1: T,
-    pub v2: T,
+pub struct VertexTriangle {
+    pub v0: DefaultVertexOut,
+    pub v1: DefaultVertexOut,
+    pub v2: DefaultVertexOut,
 }
 
 impl SoftwareRenderer {
@@ -80,13 +80,13 @@ impl SoftwareRenderer {
                 }
             }
 
-            self.process_triangle(&Triangle { v0, v1, v2 });
+            self.process_triangle(&VertexTriangle { v0, v1, v2 });
         }
     }
 
     pub(in crate::software_renderer) fn should_cull_from_homogeneous_space(
         &mut self,
-        triangle: &Triangle<DefaultVertexOut>,
+        triangle: &VertexTriangle,
     ) -> bool {
         let (v0, v1, v2) = (
             &triangle.v0.position_projection_space,
@@ -121,7 +121,7 @@ impl SoftwareRenderer {
         false
     }
 
-    fn post_process_triangle_vertices(&mut self, triangle: &Triangle<DefaultVertexOut>) {
+    fn post_process_triangle_vertices(&mut self, triangle: &VertexTriangle) {
         // World-space to screen-space (NDC) transform
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
@@ -194,7 +194,7 @@ impl SoftwareRenderer {
         similarity_to_view_direction > 0.0
     }
 
-    fn process_triangle(&mut self, triangle: &Triangle<DefaultVertexOut>) {
+    fn process_triangle(&mut self, triangle: &VertexTriangle) {
         // @TODO(mzalla) Geometry shader?
 
         if self.should_cull_from_homogeneous_space(triangle) {
