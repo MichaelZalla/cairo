@@ -179,7 +179,7 @@ impl Quaternion {
     }
 
     fn mag_squared(&self) -> f32 {
-        self.s.powi(2) + self.u.x.powi(2) + self.u.y.powi(2) + self.u.z.powi(2)
+        self.s * self.s + self.u.mag_squared()
     }
 
     fn mag(&self) -> f32 {
