@@ -62,21 +62,29 @@ impl SoftwareRenderer {
     }
 
     pub(in crate::software_renderer) fn _render_ground_plane(&mut self, scale: f32) {
+        let parallels_color = color::DARK_GRAY;
+
+        let ten_scaled = 10.0 * scale;
+
         for i in -10..10 + 1 {
+            if i == 0 {
+                continue;
+            }
+
             // X-axis parallels
 
             self.render_line(
                 Vec3 {
-                    x: -10.0 * scale,
+                    x: -ten_scaled,
                     z: (i as f32 * scale),
                     ..Default::default()
                 },
                 Vec3 {
-                    x: 10.0 * scale,
+                    x: ten_scaled,
                     z: (i as f32 * scale),
                     ..Default::default()
                 },
-                if i == 0 { color::RED } else { color::WHITE },
+                parallels_color,
             );
 
             // Z-axis parallels
@@ -84,17 +92,45 @@ impl SoftwareRenderer {
             self.render_line(
                 Vec3 {
                     x: (i as f32 * scale),
-                    z: -10.0 * scale,
+                    z: -ten_scaled,
                     ..Default::default()
                 },
                 Vec3 {
                     x: (i as f32 * scale),
-                    z: 10.0 * scale,
+                    z: ten_scaled,
                     ..Default::default()
                 },
-                if i == 0 { color::GREEN } else { color::WHITE },
+                parallels_color,
             );
         }
+
+        // X-axis
+
+        self.render_line(
+            Vec3 {
+                x: -ten_scaled,
+                ..Default::default()
+            },
+            Vec3 {
+                x: ten_scaled,
+                ..Default::default()
+            },
+            color::RED,
+        );
+
+        // Z-axis
+
+        self.render_line(
+            Vec3 {
+                z: -ten_scaled,
+                ..Default::default()
+            },
+            Vec3 {
+                z: ten_scaled,
+                ..Default::default()
+            },
+            color::GREEN,
+        );
     }
 
     fn render_line_from_ndc_space_vecs(&mut self, start: &Vec3, end: &Vec3, color: Color) {
