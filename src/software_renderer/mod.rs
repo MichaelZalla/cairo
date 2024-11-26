@@ -234,8 +234,14 @@ impl Renderer for SoftwareRenderer {
         }
     }
 
-    fn render_point(&mut self, transform: &Mat4, color: Option<Color>) {
-        self._render_point(transform, color)
+    fn render_point(
+        &mut self,
+        transform: &Mat4,
+        color: Option<Color>,
+        mesh: Option<&Mesh>,
+        material_handle: Option<Handle>,
+    ) {
+        self._render_point(transform, color, mesh, material_handle)
     }
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color) {
