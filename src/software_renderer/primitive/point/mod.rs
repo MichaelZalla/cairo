@@ -1,6 +1,11 @@
 use crate::{
-    color::Color, matrix::Mat4, render::options::RenderPassFlag,
-    software_renderer::SoftwareRenderer, vec::vec4::Vec4,
+    color::Color,
+    matrix::Mat4,
+    mesh::Mesh,
+    render::{options::RenderPassFlag, Renderer},
+    resource::handle::Handle,
+    software_renderer::SoftwareRenderer,
+    vec::vec4::Vec4,
     vertex::default_vertex_in::DefaultVertexIn,
 };
 
@@ -9,7 +14,38 @@ impl SoftwareRenderer {
         &mut self,
         transform: &Mat4,
         color: Option<Color>,
+        mesh: Option<&Mesh>,
+        material_handle: Option<Handle>,
     ) {
+        match mesh {
+            Some(mesh) => {
+                let original_material_handle = {
+                    let mut shader_context = self.shader_context.borrow_mut();
+
+                    let handle = shader_context.active_material;
+
+                    if let Some(handle) = material_handle {
+                        shader_context.active_material.replace(handle);
+                    };
+
+                    handle
+                };
+
+                self.render_entity(transform, mesh, &material_handle);
+
+                {
+                    let mut shader_context = self.shader_context.borrow_mut();
+
+                    shader_context.active_material = original_material_handle;
+                }
+            }
+            None => {
+                self.render_point_without_mesh(transform, color.unwrap());
+            }
+        }
+    }
+
+    fn render_point_without_mesh(&mut self, transform: &Mat4, color: Color) {
         // Cull point masses against the culling frustum.
 
         let position_world_space = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
@@ -24,8 +60,6 @@ impl SoftwareRenderer {
 
         self.options.render_pass_flags ^= RenderPassFlag::Lighting;
         self.options.render_pass_flags ^= RenderPassFlag::DeferredLighting;
-
-        let color = color.unwrap();
 
         let mut color_vec3 = color.to_vec3() / 255.0;
 

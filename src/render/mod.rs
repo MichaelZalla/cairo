@@ -30,7 +30,13 @@ pub trait Renderer {
 
     fn end_frame(&mut self);
 
-    fn render_point(&mut self, transform: &Mat4, color: Option<Color>);
+    fn render_point(
+        &mut self,
+        transform: &Mat4,
+        color: Option<Color>,
+        mesh: Option<&Mesh>,
+        material_handle: Option<Handle>,
+    );
 
     fn render_line(&mut self, start_world_space: Vec3, end_world_space: Vec3, color: Color);
 
