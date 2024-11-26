@@ -93,8 +93,7 @@ fn main() -> Result<(), String> {
     };
 
     for mesh in level_meshes.iter_mut() {
-        mesh.static_triangle_bvh
-            .replace(StaticTriangleBVH::new(mesh));
+        mesh.collider.replace(StaticTriangleBVH::new(mesh));
     }
 
     // Scene context
@@ -311,12 +310,12 @@ fn main() -> Result<(), String> {
             if let Ok(entry) = mesh_arena.get(&level_mesh_handle) {
                 let mesh = &entry.item;
 
-                if let Some(bvh) = mesh.static_triangle_bvh.as_ref() {
+                if let Some(collider) = mesh.collider.as_ref() {
                     // Render the BVH root's AABB.
 
                     let maximum_depth = bvh_maximum_visible_node_depth_rc.borrow();
 
-                    renderer.render_bvh(bvh, *maximum_depth);
+                    renderer.render_bvh(collider, *maximum_depth);
 
                     if *draw_ray_grid_rc.borrow() {
                         let grid_rotation = ray_grid_rotation_rc.borrow();
@@ -391,12 +390,12 @@ fn render_rotated_ray_grid(
 
         ray.t = f32::MAX;
 
-        let bvh = level_mesh.static_triangle_bvh.as_ref().unwrap();
+        let collider = level_mesh.collider.as_ref().unwrap();
 
         if false {
             // Brute-force intersections.
 
-            for (triangle_index, triangle) in bvh.tris.iter().enumerate() {
+            for (triangle_index, triangle) in collider.tris.iter().enumerate() {
                 let (v0, v1, v2) = (
                     &level_mesh.geometry.vertices[triangle.vertices[0]],
                     &level_mesh.geometry.vertices[triangle.vertices[1]],
@@ -408,13 +407,13 @@ fn render_rotated_ray_grid(
         } else {
             // Accelerated BVH intersections.
 
-            intersect_ray_bvh(ray, bvh);
+            intersect_ray_bvh(ray, collider);
         }
 
         renderer.render_ray(ray, ray_color);
 
         if let Some(index) = &ray.triangle {
-            let triangle = &bvh.tris[*index];
+            let triangle = &collider.tris[*index];
 
             let (v0, v1, v2) = (
                 &level_mesh.geometry.vertices[triangle.vertices[0]],
