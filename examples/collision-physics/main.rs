@@ -61,8 +61,6 @@ fn main() -> Result<(), String> {
 
     let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
-    let rendering_context = &app.context.rendering_context;
-
     // Pipeline framebuffer
 
     let mut framebuffer = Framebuffer::new(
@@ -111,9 +109,7 @@ fn main() -> Result<(), String> {
         let mut ambient_light_arena = resources.ambient_light.borrow_mut();
         let mut directional_light_arena = resources.directional_light.borrow_mut();
         let mut mesh_arena = resources.mesh.borrow_mut();
-        let mut material_arena = resources.material.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
-        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
 
         make_collision_physics_scene(
             resources,
@@ -123,10 +119,7 @@ fn main() -> Result<(), String> {
             &mut ambient_light_arena,
             &mut directional_light_arena,
             &mut mesh_arena,
-            &mut material_arena,
             &mut entity_arena,
-            &mut texture_u8_arena,
-            rendering_context,
             level_meshes,
             &mut level_mesh_handle,
         )
