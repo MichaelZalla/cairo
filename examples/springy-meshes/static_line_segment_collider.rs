@@ -2,11 +2,9 @@ use std::fmt;
 
 use cairo::{
     geometry::primitives::plane::Plane,
+    physics::material::PhysicsMaterial,
     vec::vec3::{self, Vec3},
 };
-
-static DEFAULT_COEFFICIENT_OF_RESTITUTION: f32 = 0.75;
-static DEFAULT_COEFFICIENT_OF_FRICTION: f32 = 0.2;
 
 pub(crate) trait Collider {
     fn test(&self, position: &Vec3, new_position: &Vec3) -> Option<(f32, f32)>;
@@ -26,8 +24,7 @@ pub(crate) struct StaticLineSegmentCollider {
     pub plane: Plane,
     tangent: Vec3,
     length: f32,
-    restitution: f32,
-    friction: f32,
+    material: PhysicsMaterial,
 }
 
 impl StaticLineSegmentCollider {
@@ -47,8 +44,10 @@ impl StaticLineSegmentCollider {
             plane,
             tangent,
             length,
-            restitution: DEFAULT_COEFFICIENT_OF_RESTITUTION,
-            friction: DEFAULT_COEFFICIENT_OF_FRICTION,
+            material: PhysicsMaterial {
+                restitution: 0.8,
+                dynamic_friction: 0.2,
+            },
         }
     }
 }
@@ -90,21 +89,22 @@ impl Collider for StaticLineSegmentCollider {
 
         let velocity_normal_to_plane = self.plane.normal * new_velocity.dot(self.plane.normal);
 
-        let response_velocity_normal_to_plane = -velocity_normal_to_plane * self.restitution;
+        let response_velocity_normal_to_plane =
+            -velocity_normal_to_plane * self.material.restitution;
 
         // Compute friction response (in the tangent direction).
 
         let velocity_tangent_to_plane = *new_velocity - velocity_normal_to_plane;
 
-        let loss =
-            (self.friction * velocity_normal_to_plane.mag()).min(velocity_tangent_to_plane.mag());
+        let loss = (self.material.dynamic_friction * velocity_normal_to_plane.mag())
+            .min(velocity_tangent_to_plane.mag());
 
         let response_velocity_tangent_to_plane =
             velocity_tangent_to_plane - velocity_tangent_to_plane.as_normal() * loss;
 
         *new_velocity = response_velocity_normal_to_plane + response_velocity_tangent_to_plane;
 
-        *new_position -= self.plane.normal * (1.0 + self.restitution) * new_distance;
+        *new_position -= self.plane.normal * (1.0 + self.material.restitution) * new_distance;
     }
 }
 
