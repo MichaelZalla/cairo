@@ -303,8 +303,12 @@ impl Vec3 {
         (min, max)
     }
 
+    pub fn mag_squared(self) -> f32 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
     pub fn mag(self) -> f32 {
-        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+        self.mag_squared().sqrt()
     }
 
     pub fn dot(self, rhs: Self) -> f32 {
