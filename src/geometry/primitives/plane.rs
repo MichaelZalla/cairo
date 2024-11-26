@@ -1,3 +1,5 @@
+use std::ops::{Mul, MulAssign};
+
 use serde::{Deserialize, Serialize};
 
 use crate::vec::vec3::Vec3;
@@ -7,6 +9,25 @@ pub struct Plane {
     // Constant-normal form.
     pub normal: Vec3, // Plane normal.
     pub d: f32,       // d = dot(n, P) for any point P on the plane.
+}
+
+impl Mul<f32> for Plane {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        let mut result = self;
+
+        result *= rhs;
+
+        result
+    }
+}
+
+impl MulAssign<f32> for Plane {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.normal *= rhs;
+        self.d *= rhs;
+    }
 }
 
 impl Plane {
