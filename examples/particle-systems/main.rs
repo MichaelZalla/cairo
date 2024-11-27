@@ -344,8 +344,13 @@ fn main() -> Result<(), String> {
             if let Ok(entry) = mesh_arena.get(&particle_mesh_handle) {
                 let particle_mesh = &entry.item;
 
+                let optional_tlas = static_triangle_tlas_rc.borrow();
+
+                let tlas = optional_tlas.as_ref().unwrap();
+
                 draw_simulation(
                     &simulation,
+                    tlas,
                     resources,
                     particle_mesh,
                     particle_material_handle,
@@ -387,13 +392,46 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
+fn draw_tlas_node(tlas: &StaticTriangleTLAS, node_index: usize, renderer: &mut SoftwareRenderer) {
+    let node = &tlas.nodes[node_index];
+
+    if node.is_leaf {
+        let bvh_instance = &tlas.bvh_instances[node.bvh_instance_index as usize];
+
+        renderer.render_aabb(&bvh_instance.world_aabb, None, color::ORANGE);
+
+        return;
+    }
+
+    renderer.render_aabb(&node.aabb, None, color::YELLOW);
+
+    renderer.render_line(
+        node.aabb.center(),
+        tlas.nodes[node.left_child_index as usize].aabb.center(),
+        color::DARK_GRAY,
+    );
+
+    draw_tlas_node(tlas, node.left_child_index as usize, renderer);
+
+    renderer.render_line(
+        node.aabb.center(),
+        tlas.nodes[node.left_child_index as usize + 1].aabb.center(),
+        color::DARK_GRAY,
+    );
+
+    draw_tlas_node(tlas, node.left_child_index as usize + 1, renderer);
+}
+
 fn draw_simulation(
     simulation: &Simulation<SAMPLER_SEED_SIZE>,
+    tlas: &StaticTriangleTLAS,
     _resources: &SceneResources,
     particle_mesh: &Mesh,
     particle_material_handle: Handle,
     renderer: &mut SoftwareRenderer,
 ) {
+    draw_tlas_node(tlas, 0, renderer);
+
     let pool = simulation.pool.borrow();
     let generators = simulation.generators.borrow();
 

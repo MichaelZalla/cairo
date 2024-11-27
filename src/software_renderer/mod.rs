@@ -288,7 +288,7 @@ impl Renderer for SoftwareRenderer {
         self._render_ray(ray, color)
     }
 
-    fn render_aabb(&mut self, aabb: &AABB, world_transform: &Mat4, color: Color) {
+    fn render_aabb(&mut self, aabb: &AABB, world_transform: Option<&Mat4>, color: Color) {
         self._render_aabb(aabb, world_transform, color)
     }
 
