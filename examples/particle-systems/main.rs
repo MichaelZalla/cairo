@@ -22,7 +22,11 @@ use cairo::{
         Renderer,
     },
     resource::handle::Handle,
-    scene::{context::SceneContext, node::SceneNodeType, resources::SceneResources},
+    scene::{
+        context::SceneContext,
+        node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
+        resources::SceneResources,
+    },
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -82,7 +86,7 @@ fn main() -> Result<(), String> {
 
     // Scene
 
-    let (scene, shader_context, bvh_rc) = {
+    let (scene, shader_context) = {
         let resources = &scene_context.resources;
 
         let mut camera_arena = resources.camera.borrow_mut();
@@ -182,11 +186,11 @@ fn main() -> Result<(), String> {
         RefCell::new(sampler)
     };
 
-    let bvh_instance = StaticTriangleBVHInstance::new(&bvh_rc, Mat4::identity(), Mat4::identity());
-
-    let simulation = make_simulation(sampler_rc, bvh_instance);
+    let simulation = make_simulation(sampler_rc);
 
     // App update and render callbacks
+
+    let bvh_instances_rc = RefCell::new(vec![]);
 
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
@@ -199,19 +203,79 @@ fn main() -> Result<(), String> {
 
         let uptime = app.timing_info.uptime_seconds;
 
-        if h > 0.0 {
-            simulation.tick(h, uptime)?;
-        }
-
         let resources = &scene_context.resources;
 
-        let mut shader_context = (*shader_context_rc).borrow_mut();
+        // Recompile a list of BVH instances with their associated transforms.
+
+        {
+            let mut bvh_instances = bvh_instances_rc.borrow_mut();
+
+            bvh_instances.clear();
+        }
 
         let mut scenes = scene_context.scenes.borrow_mut();
 
         let scene = &mut scenes[0];
 
+        scene.root.visit_mut(
+            SceneNodeGlobalTraversalMethod::DepthFirst,
+            None,
+            &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
+                let (node_type, handle) = (*node.get_type(), *node.get_handle());
+
+                match node_type {
+                    SceneNodeType::Entity => {
+                        let node_transform = node.get_transform();
+
+                        let entity_arena = resources.entity.borrow();
+
+                        let entity_handle = handle.unwrap();
+
+                        if let Ok(entry) = entity_arena.get(&entity_handle) {
+                            let entity = &entry.item;
+
+                            let mut mesh_arena = resources.mesh.borrow_mut();
+
+                            if let Ok(entry) = mesh_arena.get_mut(&entity.mesh) {
+                                let mesh = &mut entry.item;
+
+                                // Update transforms for all mesh BVHs, for all scene entities.
+
+                                if let Some(bvh) = mesh.collider.as_ref() {
+                                    let mut bvh_instances = bvh_instances_rc.borrow_mut();
+
+                                    let transform = *node_transform.mat();
+                                    let inverse_transform = *node_transform.inverse_mat();
+
+                                    let new_instance = StaticTriangleBVHInstance::new(
+                                        bvh,
+                                        transform,
+                                        inverse_transform,
+                                    );
+
+                                    bvh_instances.push(new_instance);
+                                }
+                            }
+                        }
+
+                        Ok(())
+                    }
+                    _ => Ok(()),
+                }
+            },
+        )?;
+
+        {
+            let bvh_instances = bvh_instances_rc.borrow();
+
+            if h > 0.0 {
+                simulation.tick(h, uptime, &bvh_instances)?;
+            }
+        }
+
         // Traverse the scene graph and update its nodes.
+
+        let mut shader_context = (*shader_context_rc).borrow_mut();
 
         scene.update(
             resources,

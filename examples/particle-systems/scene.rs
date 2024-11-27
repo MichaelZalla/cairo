@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{f32::consts::PI, rc::Rc};
 
 use cairo::{
     entity::Entity,
@@ -21,7 +21,7 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    transform::Transform3D,
+    transform::{quaternion::Quaternion, Transform3D},
     vec::vec3::{self, Vec3},
 };
 
@@ -37,7 +37,7 @@ pub fn make_particles_scene(
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
-) -> Result<(SceneGraph, ShaderContext, Rc<StaticTriangleBVH>), String> {
+) -> Result<(SceneGraph, ShaderContext), String> {
     let (mut scene, shader_context) = make_empty_scene(
         camera_arena,
         camera_aspect_ratio,
@@ -107,11 +107,7 @@ pub fn make_particles_scene(
 
     let bvh = StaticTriangleBVH::new(&level_mesh);
 
-    let bvh_rc = Rc::new(bvh);
-
-    let bvh_rc_cloned = bvh_rc.clone();
-
-    level_mesh.collider.replace(bvh_rc);
+    level_mesh.collider = Some(Rc::new(bvh));
 
     // Assign the level mesh to an entity.
 
@@ -129,7 +125,38 @@ pub fn make_particles_scene(
         )
     };
 
+    let mut level_entity_node2 = level_entity_node.clone();
+    let mut level_entity_node3 = level_entity_node.clone();
+
     scene.root.add_child(level_entity_node)?;
 
-    Ok((scene, shader_context, bvh_rc_cloned))
+    {
+        let transform = level_entity_node2.get_transform_mut();
+
+        transform.set_scale(vec3::ONES * 0.5);
+
+        transform.set_rotation(
+            Quaternion::new(vec3::UP, PI / 4.0) * Quaternion::new(vec3::RIGHT, PI / 16.0),
+        );
+
+        transform.set_translation(vec3::UP * 4.0 + vec3::RIGHT * 20.0);
+
+        scene.root.add_child(level_entity_node2)?;
+    }
+
+    {
+        let transform = level_entity_node3.get_transform_mut();
+
+        transform.set_scale(vec3::ONES * 0.3);
+
+        transform.set_rotation(
+            Quaternion::new(vec3::RIGHT, PI / 8.0) * Quaternion::new(-vec3::FORWARD, PI / 8.0),
+        );
+
+        transform.set_translation(vec3::UP * 4.0 - vec3::RIGHT * 8.0);
+
+        scene.root.add_child(level_entity_node3)?;
+    }
+
+    Ok((scene, shader_context))
 }
