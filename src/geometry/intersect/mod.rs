@@ -6,7 +6,7 @@ use crate::vec::{
 };
 
 use super::{
-    accelerator::static_triangle_bvh::StaticTriangleBVH,
+    accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
     primitives::{aabb::AABB, plane::Plane, ray::Ray},
 };
 
@@ -53,6 +53,7 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
 
 pub fn intersect_ray_triangle(
     ray: &mut Ray,
+    bvh_instance_index: usize,
     triangle_index: usize,
     v0: &Vec3,
     v1: &Vec3,
@@ -99,6 +100,8 @@ pub fn intersect_ray_triangle(
         // Closest intersection to this ray so far.
 
         ray.t = t;
+
+        ray.colliding_bvh_index.replace(bvh_instance_index);
 
         ray.colliding_primitive.replace(triangle_index);
     }
@@ -185,28 +188,39 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
     ray.t = ray.t.min(t_min);
 }
 
-pub fn intersect_ray_bvh(ray: &mut Ray, bvh: &StaticTriangleBVH) {
+pub fn intersect_ray_bvh(
+    ray: &mut Ray,
+    bvh_instance_index: usize,
+    bvh_instance: &StaticTriangleBVHInstance,
+) {
     let mut transformed_ray = *ray;
 
     transformed_ray.origin =
-        (Vec4::new(transformed_ray.origin, 1.0) * bvh.inverse_transform).to_vec3();
+        (Vec4::new(transformed_ray.origin, 1.0) * bvh_instance.inverse_transform).to_vec3();
 
-    transformed_ray.direction *= bvh.inverse_transform;
+    transformed_ray.direction *= bvh_instance.inverse_transform;
 
     transformed_ray.one_over_direction = vec3::ONES / ray.direction;
 
     let original_t = transformed_ray.t;
 
-    intersect_ray_bvh_node_sorted(&mut transformed_ray, bvh);
+    intersect_ray_bvh_node_sorted(&mut transformed_ray, bvh_instance_index, &bvh_instance.bvh);
 
     if transformed_ray.t < original_t {
         ray.t = transformed_ray.t;
+
+        ray.colliding_bvh_index = transformed_ray.colliding_bvh_index;
 
         ray.colliding_primitive = transformed_ray.colliding_primitive;
     }
 }
 
-fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: usize) {
+fn intersect_ray_bvh_node(
+    ray: &mut Ray,
+    bvh_instance_index: usize,
+    bvh: &StaticTriangleBVH,
+    node_index: usize,
+) {
     let node = &bvh.nodes[node_index];
 
     if test_ray_aabb(ray, &node.aabb) == f32::MAX {
@@ -226,15 +240,25 @@ fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: us
 
             let (v0, v1, v2) = bvh.geometry.get_vertices(v0, v1, v2);
 
-            intersect_ray_triangle(ray, tri_index, v0, v1, v2);
+            intersect_ray_triangle(ray, bvh_instance_index, tri_index, v0, v1, v2);
         }
     } else {
-        intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize);
-        intersect_ray_bvh_node(ray, bvh, node.left_child_index as usize + 1);
+        intersect_ray_bvh_node(ray, bvh_instance_index, bvh, node.left_child_index as usize);
+
+        intersect_ray_bvh_node(
+            ray,
+            bvh_instance_index,
+            bvh,
+            node.left_child_index as usize + 1,
+        );
     }
 }
 
-pub fn intersect_ray_bvh_node_sorted(ray: &mut Ray, bvh: &StaticTriangleBVH) {
+pub fn intersect_ray_bvh_node_sorted(
+    ray: &mut Ray,
+    bvh_instance_index: usize,
+    bvh: &StaticTriangleBVH,
+) {
     let mut node = &bvh.nodes[0];
 
     let mut stack = vec![0_usize; 64];
@@ -254,7 +278,7 @@ pub fn intersect_ray_bvh_node_sorted(ray: &mut Ray, bvh: &StaticTriangleBVH) {
 
                 let (v0, v1, v2) = bvh.geometry.get_vertices(v0, v1, v2);
 
-                intersect_ray_triangle(ray, tri_index, v0, v1, v2);
+                intersect_ray_triangle(ray, bvh_instance_index, tri_index, v0, v1, v2);
             }
 
             if stack_ptr == 0 {

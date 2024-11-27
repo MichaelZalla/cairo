@@ -8,7 +8,7 @@ use cairo::{
         obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
         Mesh,
     },
-    resource::{arena::Arena, handle::Handle},
+    resource::arena::Arena,
     scene::{
         camera::Camera,
         context::utils::make_empty_scene,
@@ -37,7 +37,7 @@ pub fn make_particles_scene(
     mesh_arena: &mut Arena<Mesh>,
     material_arena: &mut Arena<Material>,
     entity_arena: &mut Arena<Entity>,
-) -> Result<(SceneGraph, ShaderContext, Handle), String> {
+) -> Result<(SceneGraph, ShaderContext, Rc<StaticTriangleBVH>), String> {
     let (mut scene, shader_context) = make_empty_scene(
         camera_arena,
         camera_aspect_ratio,
@@ -105,20 +105,20 @@ pub fn make_particles_scene(
         level_meshes.last().unwrap().to_owned()
     };
 
-    level_mesh
-        .collider
-        .replace(StaticTriangleBVH::new(&level_mesh));
+    let bvh = StaticTriangleBVH::new(&level_mesh);
+
+    let bvh_rc = Rc::new(bvh);
+
+    let bvh_rc_cloned = bvh_rc.clone();
+
+    level_mesh.collider.replace(bvh_rc);
 
     // Assign the level mesh to an entity.
-
-    let level_mesh_handle: Handle;
 
     let level_entity_node = {
         let material_handle = level_mesh.material;
 
         let mesh_handle = mesh_arena.insert(level_mesh);
-
-        level_mesh_handle = mesh_handle;
 
         let entity_handle = entity_arena.insert(Entity::new(mesh_handle, material_handle));
 
@@ -131,5 +131,5 @@ pub fn make_particles_scene(
 
     scene.root.add_child(level_entity_node)?;
 
-    Ok((scene, shader_context, level_mesh_handle))
+    Ok((scene, shader_context, bvh_rc_cloned))
 }
