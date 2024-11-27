@@ -10,7 +10,9 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    geometry::accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
+    geometry::accelerator::{
+        static_triangle_bvh::StaticTriangleBVHInstance, static_triangle_tlas::StaticTriangleTLAS,
+    },
     material::Material,
     matrix::Mat4,
     mesh::{primitive::cube, Mesh},
@@ -192,6 +194,8 @@ fn main() -> Result<(), String> {
 
     let bvh_instances_rc = RefCell::new(vec![]);
 
+    let static_triangle_tlas_rc: RefCell<Option<StaticTriangleTLAS>> = Default::default();
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -265,12 +269,20 @@ fn main() -> Result<(), String> {
             },
         )?;
 
+        // Rebuild the top-level acceleration structure (TLAS) to organize the instances.
+
         {
             let bvh_instances = bvh_instances_rc.borrow();
 
+            let mut static_triangle_tlas = static_triangle_tlas_rc.borrow_mut();
+
+            let tlas = StaticTriangleTLAS::new(bvh_instances.clone());
+
             if h > 0.0 {
-                simulation.tick(h, uptime, &bvh_instances)?;
+                simulation.tick(h, uptime, &tlas)?;
             }
+
+            static_triangle_tlas.replace(tlas);
         }
 
         // Traverse the scene graph and update its nodes.

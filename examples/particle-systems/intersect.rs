@@ -1,7 +1,10 @@
 use cairo::{
     animation::lerp,
     geometry::{
-        accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
+        accelerator::{
+            static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
+            static_triangle_tlas::StaticTriangleTLAS,
+        },
         intersect::test_aabb_aabb,
         primitives::{aabb::AABB, line_segment::LineSegment, triangle::Triangle},
     },
@@ -79,7 +82,52 @@ fn intersect_line_segment_triangle(
     }
 }
 
-pub fn intersect_line_segment_bvh(
+pub fn intersect_line_segment_tlas(segment: &mut LineSegment, tlas: &StaticTriangleTLAS) {
+    let mut segment_aabb = AABB::default();
+
+    segment_aabb.grow(&segment.start);
+    segment_aabb.grow(&segment.end);
+
+    intersect_line_segment_tlas_node(segment, &segment_aabb, tlas, 0)
+}
+
+pub fn intersect_line_segment_tlas_node(
+    segment: &mut LineSegment,
+    segment_aabb: &AABB,
+    tlas: &StaticTriangleTLAS,
+    node_index: usize,
+) {
+    let node = &tlas.nodes[node_index];
+
+    if node.is_leaf {
+        let bvh_instance_index = node.bvh_instance_index as usize;
+
+        let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+
+        intersect_line_segment_bvh(segment, bvh_instance_index, bvh_instance);
+
+        return;
+    }
+
+    let left_child_index = node.left_child_index as usize;
+    let right_child_index = left_child_index + 1;
+
+    let left_aabb = &tlas.nodes[left_child_index].aabb;
+
+    if test_aabb_aabb(segment_aabb, left_aabb) {
+        intersect_line_segment_tlas_node(segment, segment_aabb, tlas, left_child_index);
+    }
+
+    if right_child_index > 0 {
+        let right_aabb = &tlas.nodes[right_child_index].aabb;
+
+        if test_aabb_aabb(segment_aabb, right_aabb) {
+            intersect_line_segment_tlas_node(segment, segment_aabb, tlas, right_child_index);
+        }
+    }
+}
+
+fn intersect_line_segment_bvh(
     segment: &mut LineSegment,
     bvh_instance_index: usize,
     bvh_instance: &StaticTriangleBVHInstance,

@@ -5,7 +5,10 @@ use crate::{
     matrix::Mat4,
     mesh::{mesh_geometry::MeshGeometry, Mesh},
     transform::Transform3D,
-    vec::vec3::{self, Vec3A},
+    vec::{
+        vec3::{self, Vec3A},
+        vec4::Vec4,
+    },
 };
 
 static DO_PLANE_SPLITS: bool = true;
@@ -39,21 +42,47 @@ pub struct StaticTriangleBVHInstance {
     pub bvh: Rc<StaticTriangleBVH>,
     pub transform: Mat4,
     pub inverse_transform: Mat4,
+    pub world_aabb: AABB,
 }
 
 impl StaticTriangleBVHInstance {
     pub fn new(bvh: &Rc<StaticTriangleBVH>, transform: Mat4, inverse_transform: Mat4) -> Self {
-        Self {
+        let mut result = Self {
             bvh: bvh.clone(),
             transform,
             inverse_transform,
-        }
+            world_aabb: Default::default(),
+        };
+
+        result.recompute_world_aabb();
+
+        result
     }
 
     pub fn set_transform(&mut self, transform: Transform3D) {
         self.transform = *transform.mat();
 
         self.inverse_transform = *transform.inverse_mat();
+
+        self.recompute_world_aabb();
+    }
+
+    fn recompute_world_aabb(&mut self) {
+        self.world_aabb = AABB::default();
+
+        let root = &self.bvh.nodes[0];
+
+        let (local_min, local_max) = (&root.aabb.min, &root.aabb.max);
+
+        for i in 0..8 {
+            let x = if i & 1 > 0 { local_max.x } else { local_min.x };
+            let y = if i & 2 > 0 { local_max.y } else { local_min.y };
+            let z = if i & 4 > 0 { local_max.z } else { local_min.z };
+
+            let world_point = (Vec4 { x, y, z, w: 1.0 } * self.transform).to_vec3();
+
+            self.world_aabb.grow(&world_point);
+        }
     }
 }
 
