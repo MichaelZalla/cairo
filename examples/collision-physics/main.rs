@@ -369,7 +369,7 @@ fn render_rotated_ray_grid(
         .max(level_mesh_extent.y)
         .max(level_mesh_extent.z);
 
-    let mut rays = ray::grid(ROWS, COLUMNS, grid_size);
+    let mut rays = ray::make_ray_grid(ROWS, COLUMNS, grid_size);
 
     for (ray_index, ray) in rays.iter_mut().enumerate() {
         let z = ray_index / COLUMNS;
