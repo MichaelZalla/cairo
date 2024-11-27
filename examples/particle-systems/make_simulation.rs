@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 
 use cairo::{
-    geometry::accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
     physics::simulation::{
         force::{ContactPoint, PointForce},
         particle::{
@@ -29,10 +28,7 @@ static GRAVITY_POINT_FORCE: PointForce =
         (newtons, None)
     };
 
-pub fn make_simulation(
-    sampler: RefCell<RandomSampler<SEED_SIZE>>,
-    bvh_instance: StaticTriangleBVHInstance,
-) -> Simulation<SEED_SIZE> {
+pub fn make_simulation(sampler: RefCell<RandomSampler<SEED_SIZE>>) -> Simulation<SEED_SIZE> {
     let mass = 50.0;
 
     // Define some particle generators.
@@ -55,7 +51,6 @@ pub fn make_simulation(
 
     Simulation {
         sampler,
-        bvh_instance,
         pool: Default::default(),
         forces: vec![GRAVITY_POINT_FORCE],
         generators: RefCell::new(vec![omnidirectional]),

@@ -30,14 +30,18 @@ pub const COMPONENTS_PER_PARTICLE: usize = 2;
 
 pub struct Simulation<const N: usize> {
     pub sampler: RefCell<RandomSampler<N>>,
-    pub bvh_instance: StaticTriangleBVHInstance,
     pub pool: RefCell<ParticleList<N>>,
     pub generators: RefCell<Vec<ParticleGenerator>>,
     pub forces: Vec<PointForce>,
 }
 
 impl<const N: usize> Simulation<N> {
-    pub fn tick(&self, h: f32, uptime_seconds: f32) -> Result<(), String> {
+    pub fn tick(
+        &self,
+        h: f32,
+        uptime_seconds: f32,
+        bvh_instances: &[StaticTriangleBVHInstance],
+    ) -> Result<(), String> {
         let mut pool = self.pool.borrow_mut();
 
         let mut generators = self.generators.borrow_mut();
@@ -94,7 +98,7 @@ impl<const N: usize> Simulation<N> {
 
         // Resolve collisions.
 
-        let physics_material = PhysicsMaterial {
+        static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
             dynamic_friction: 0.15,
             restitution: 0.25,
         };
@@ -106,19 +110,23 @@ impl<const N: usize> Simulation<N> {
 
             let mut segment = LineSegment::new(start_position, end_position);
 
-            let bvh_instance = &self.bvh_instance;
+            for (bvh_instance_index, bvh_instance) in bvh_instances.iter().enumerate() {
+                intersect_line_segment_bvh(&mut segment, bvh_instance_index, bvh_instance);
+            }
 
-            intersect_line_segment_bvh(&mut segment, 0, bvh_instance);
+            if let (Some(bvh_instance_index), Some(tri_index)) =
+                (segment.colliding_bvh_index, segment.colliding_primitive)
+            {
+                let bvh_instance = &bvh_instances[bvh_instance_index];
 
-            if let Some(tri_index) = &segment.colliding_primitive {
-                let mut end_velocity = new_state.data[num_active_particles + i];
-
-                let triangle = &bvh_instance.bvh.tris[*tri_index];
+                let triangle = &bvh_instance.bvh.tris[tri_index];
 
                 let triangle_normal = triangle.plane.normal;
 
                 let transformed_triangle_normal =
                     (triangle_normal * bvh_instance.transform).as_normal();
+
+                let mut end_velocity = new_state.data[num_active_particles + i];
 
                 if segment.transformed_length < 0.02 {
                     new_state.data[i] = state.data[i];
@@ -130,7 +138,7 @@ impl<const N: usize> Simulation<N> {
 
                     resolve_plane_collision_approximate(
                         transformed_triangle_normal,
-                        &physics_material,
+                        &PHYSICS_MATERIAL,
                         &mut end_position,
                         &mut end_velocity,
                         penetration_depth,
