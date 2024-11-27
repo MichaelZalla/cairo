@@ -42,7 +42,7 @@ impl Ray {
     }
 }
 
-pub fn grid(rows: usize, columns: usize, size: f32) -> Vec<Ray> {
+pub fn make_ray_grid(rows: usize, columns: usize, size: f32) -> Vec<Ray> {
     let mut rays = vec![Ray::new(Default::default(), -vec3::UP); rows * columns];
 
     let grid_left = -size / 2.0;
