@@ -36,6 +36,12 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
 
     let denominator = plane.normal.dot(ab);
 
+    if denominator == f32::EPSILON {
+        // Line segment is parallel to the plane.
+
+        return None;
+    }
+
     let t = nominator / denominator;
 
     if (0.0..=1.0).contains(&t) {
