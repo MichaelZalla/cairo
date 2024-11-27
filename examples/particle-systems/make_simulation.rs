@@ -19,7 +19,7 @@ use crate::simulation::Simulation;
 
 pub(crate) const SEED_SIZE: usize = 2048;
 
-pub static PARTICLE_MAX_AGE_SECONDS: f32 = 6.5;
+pub static PARTICLE_MAX_AGE_SECONDS: f32 = 10.0;
 
 static GRAVITY_POINT_FORCE: PointForce =
     |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
@@ -45,8 +45,8 @@ pub fn make_simulation(sampler: RefCell<RandomSampler<SEED_SIZE>>) -> Simulation
         100.0,
         None,
         mass,
-        4.5,
-        1.0,
+        5.0,
+        2.0,
     );
 
     Simulation {
