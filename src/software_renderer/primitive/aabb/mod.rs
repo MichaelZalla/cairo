@@ -11,13 +11,15 @@ impl SoftwareRenderer {
     pub(in crate::software_renderer) fn _render_aabb(
         &mut self,
         aabb: &AABB,
-        world_transform: &Mat4,
+        world_transform: Option<&Mat4>,
         color: Color,
     ) {
         let mut vertices = aabb.get_vertices();
 
-        for v in vertices.iter_mut() {
-            *v *= *world_transform;
+        if let Some(transform) = world_transform {
+            for v in vertices.iter_mut() {
+                *v *= *transform;
+            }
         }
 
         // Near plane.
@@ -58,7 +60,7 @@ impl SoftwareRenderer {
 
             self._render_aabb(
                 &node.aabb,
-                &current_world_transform,
+                Some(&current_world_transform),
                 Color::from_vec3(rgb * 255.0),
             );
         }
