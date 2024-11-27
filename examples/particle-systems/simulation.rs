@@ -54,9 +54,9 @@ impl<const N: usize> Simulation<N> {
                     let uptime_scaled = uptime_seconds / 2.0;
 
                     *origin = Vec3 {
-                        x: 12.0 * uptime_scaled.sin(),
-                        z: 12.0 * uptime_scaled.cos(),
-                        y: 6.0,
+                        x: 10.0 * uptime_scaled.sin(),
+                        z: 10.0 * uptime_scaled.cos(),
+                        y: 15.0,
                     }
                 }
 
