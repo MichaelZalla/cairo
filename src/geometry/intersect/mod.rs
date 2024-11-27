@@ -7,6 +7,23 @@ use super::{
     primitives::{aabb::AABB, plane::Plane, ray::Ray},
 };
 
+pub fn test_aabb_aabb(a: &AABB, b: &AABB) -> bool {
+    let a_min = Vec3A { v: a.min };
+    let a_max = Vec3A { v: a.max };
+    let b_min = Vec3A { v: b.min };
+    let b_max = Vec3A { v: b.max };
+
+    for axis in 0..3 {
+        unsafe {
+            if a_max.a[axis] < b_min.a[axis] || a_min.a[axis] > b_max.a[axis] {
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
 pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(f32, Vec3)> {
     // Compute a t-value for the directed line intersecting the plane.
 
@@ -166,7 +183,6 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
 }
 
 pub fn intersect_ray_bvh(ray: &mut Ray, bvh: &StaticTriangleBVH) {
-    // intersect_ray_bvh_node(ray, bvh, 0)
     intersect_ray_bvh_node_sorted(ray, bvh)
 }
 
