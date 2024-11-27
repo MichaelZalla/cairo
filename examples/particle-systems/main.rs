@@ -10,7 +10,9 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    geometry::accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
     material::Material,
+    matrix::Mat4,
     mesh::{primitive::cube, Mesh},
     physics::simulation::particle::generator::ParticleGeneratorKind,
     random::sampler::RandomSampler,
@@ -80,7 +82,7 @@ fn main() -> Result<(), String> {
 
     // Scene
 
-    let (scene, shader_context, level_mesh_handle) = {
+    let (scene, shader_context, bvh_rc) = {
         let resources = &scene_context.resources;
 
         let mut camera_arena = resources.camera.borrow_mut();
@@ -180,11 +182,9 @@ fn main() -> Result<(), String> {
         RefCell::new(sampler)
     };
 
-    let simulation = make_simulation(
-        sampler_rc,
-        scene_context.resources.clone(),
-        level_mesh_handle,
-    );
+    let bvh_instance = StaticTriangleBVHInstance::new(&bvh_rc, Mat4::identity(), Mat4::identity());
+
+    let simulation = make_simulation(sampler_rc, bvh_instance);
 
     // App update and render callbacks
 

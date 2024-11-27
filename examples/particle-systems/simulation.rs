@@ -1,7 +1,10 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
 
 use cairo::{
-    geometry::primitives::line_segment::LineSegment,
+    geometry::{
+        accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
+        primitives::line_segment::LineSegment,
+    },
     physics::{
         material::PhysicsMaterial,
         simulation::{
@@ -15,8 +18,6 @@ use cairo::{
         },
     },
     random::sampler::RandomSampler,
-    resource::handle::Handle,
-    scene::resources::SceneResources,
     vec::vec3::Vec3,
 };
 
@@ -29,8 +30,7 @@ pub const COMPONENTS_PER_PARTICLE: usize = 2;
 
 pub struct Simulation<const N: usize> {
     pub sampler: RefCell<RandomSampler<N>>,
-    pub resources: Rc<SceneResources>,
-    pub static_mesh_handle: Handle,
+    pub bvh_instance: StaticTriangleBVHInstance,
     pub pool: RefCell<ParticleList<N>>,
     pub generators: RefCell<Vec<ParticleGenerator>>,
     pub forces: Vec<PointForce>,
@@ -99,51 +99,45 @@ impl<const N: usize> Simulation<N> {
             restitution: 0.25,
         };
 
-        let mesh_arena = self.resources.mesh.borrow();
+        for i in 0..num_active_particles {
+            let start_position = state.data[i];
 
-        if let Ok(entry) = mesh_arena.get(&self.static_mesh_handle) {
-            let mesh = &entry.item;
+            let mut end_position = new_state.data[i];
 
-            if let Some(collider) = mesh.collider.as_ref() {
-                for i in 0..num_active_particles {
-                    let start_position = state.data[i];
+            let mut segment = LineSegment::new(start_position, end_position);
 
-                    let mut end_position = new_state.data[i];
+            let bvh_instance = &self.bvh_instance;
 
-                    let mut segment = LineSegment::new(start_position, end_position);
+            intersect_line_segment_bvh(&mut segment, 0, bvh_instance);
 
-                    intersect_line_segment_bvh(&mut segment, collider);
+            if let Some(tri_index) = &segment.colliding_primitive {
+                let mut end_velocity = new_state.data[num_active_particles + i];
 
-                    if let Some(tri_index) = &segment.colliding_primitive {
-                        let mut end_velocity = new_state.data[num_active_particles + i];
+                let triangle = &bvh_instance.bvh.tris[*tri_index];
 
-                        let triangle = &collider.tris[*tri_index];
+                let triangle_normal = triangle.plane.normal;
 
-                        let triangle_normal = triangle.plane.normal;
+                let transformed_triangle_normal =
+                    (triangle_normal * bvh_instance.transform).as_normal();
 
-                        let transformed_triangle_normal =
-                            (triangle_normal * collider.transform).as_normal();
+                if segment.transformed_length < 0.02 {
+                    new_state.data[i] = state.data[i];
+                    new_state.data[i + n] = state.data[i + n];
+                } else {
+                    debug_assert!(segment.t >= 0.0 && segment.t <= 1.0);
 
-                        if segment.transformed_length < 0.02 {
-                            new_state.data[i] = state.data[i];
-                            new_state.data[i + n] = state.data[i + n];
-                        } else {
-                            debug_assert!(segment.t >= 0.0 && segment.t <= 1.0);
+                    let penetration_depth = segment.transformed_length * (1.0 - segment.t);
 
-                            let penetration_depth = segment.transformed_length * (1.0 - segment.t);
+                    resolve_plane_collision_approximate(
+                        transformed_triangle_normal,
+                        &physics_material,
+                        &mut end_position,
+                        &mut end_velocity,
+                        penetration_depth,
+                    );
 
-                            resolve_plane_collision_approximate(
-                                transformed_triangle_normal,
-                                &physics_material,
-                                &mut end_position,
-                                &mut end_velocity,
-                                penetration_depth,
-                            );
-
-                            new_state.data[i] = end_position;
-                            new_state.data[i + n] = end_velocity;
-                        }
-                    }
+                    new_state.data[i] = end_position;
+                    new_state.data[i + n] = end_velocity;
                 }
             }
         }

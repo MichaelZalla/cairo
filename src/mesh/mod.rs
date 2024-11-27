@@ -77,7 +77,7 @@ pub struct Mesh {
     #[serde(skip)]
     pub aabb: AABB,
     #[serde(skip)]
-    pub collider: Option<StaticTriangleBVH>,
+    pub collider: Option<Rc<StaticTriangleBVH>>,
 }
 
 impl PostDeserialize for Mesh {

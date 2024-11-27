@@ -13,7 +13,7 @@ use cairo::{
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     geometry::{
-        accelerator::static_triangle_bvh::StaticTriangleBVH,
+        accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
         intersect::{intersect_ray_bvh, intersect_ray_triangle},
         primitives::ray,
     },
@@ -93,7 +93,9 @@ fn main() -> Result<(), String> {
     };
 
     for mesh in level_meshes.iter_mut() {
-        mesh.collider.replace(StaticTriangleBVH::new(mesh));
+        let bvh = StaticTriangleBVH::new(mesh);
+
+        mesh.collider.replace(Rc::new(bvh));
     }
 
     // Scene context
@@ -404,30 +406,32 @@ fn render_rotated_ray_grid(
 
         ray.t = f32::MAX;
 
-        let collider = level_mesh.collider.as_ref().unwrap();
+        let bvh = level_mesh.collider.as_ref().unwrap();
+
+        let bvh_instance = StaticTriangleBVHInstance::new(bvh, Mat4::identity(), Mat4::identity());
 
         if false {
             // Brute-force intersections.
 
-            for (triangle_index, triangle) in collider.tris.iter().enumerate() {
+            for (triangle_index, triangle) in bvh.tris.iter().enumerate() {
                 let (v0, v1, v2) = (
                     &level_mesh.geometry.vertices[triangle.vertices[0]],
                     &level_mesh.geometry.vertices[triangle.vertices[1]],
                     &level_mesh.geometry.vertices[triangle.vertices[2]],
                 );
 
-                intersect_ray_triangle(ray, triangle_index, v0, v1, v2);
+                intersect_ray_triangle(ray, 0, triangle_index, v0, v1, v2);
             }
         } else {
             // Accelerated BVH intersections.
 
-            intersect_ray_bvh(ray, collider);
+            intersect_ray_bvh(ray, 0, &bvh_instance);
         }
 
         renderer.render_ray(ray, ray_color);
 
         if let Some(index) = &ray.colliding_primitive {
-            let triangle = &collider.tris[*index];
+            let triangle = &bvh.tris[*index];
 
             let (v0, v1, v2) = (
                 &level_mesh.geometry.vertices[triangle.vertices[0]],

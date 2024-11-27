@@ -34,6 +34,29 @@ impl StaticTriangleBVHNode {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct StaticTriangleBVHInstance {
+    pub bvh: Rc<StaticTriangleBVH>,
+    pub transform: Mat4,
+    pub inverse_transform: Mat4,
+}
+
+impl StaticTriangleBVHInstance {
+    pub fn new(bvh: &Rc<StaticTriangleBVH>, transform: Mat4, inverse_transform: Mat4) -> Self {
+        Self {
+            bvh: bvh.clone(),
+            transform,
+            inverse_transform,
+        }
+    }
+
+    pub fn set_transform(&mut self, transform: Transform3D) {
+        self.transform = *transform.mat();
+
+        self.inverse_transform = *transform.inverse_mat();
+    }
+}
+
 #[derive(Default, Debug, Copy, Clone)]
 struct Split {
     axis: usize,
@@ -48,8 +71,6 @@ struct Bin {
 
 #[derive(Debug, Clone)]
 pub struct StaticTriangleBVH {
-    pub transform: Mat4,
-    pub inverse_transform: Mat4,
     pub geometry: Rc<MeshGeometry>,
     pub tris: Vec<Triangle>,
     pub tri_indices: Vec<usize>,
@@ -96,8 +117,6 @@ impl StaticTriangleBVH {
         root.primitives_count = num_tris as u32;
 
         let mut bvh = Self {
-            transform: Mat4::identity(),
-            inverse_transform: Mat4::identity(),
             geometry: mesh.geometry.clone(),
             tris,
             tri_indices,
@@ -110,12 +129,6 @@ impl StaticTriangleBVH {
         bvh.subdivide(root_index);
 
         bvh
-    }
-
-    pub fn set_transform(&mut self, transform: Transform3D) {
-        self.transform = *transform.mat();
-
-        self.inverse_transform = *transform.inverse_mat();
     }
 
     fn recompute_node_aabb(&mut self, node_index: usize) {

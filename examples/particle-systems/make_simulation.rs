@@ -1,6 +1,7 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
 
 use cairo::{
+    geometry::accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
     physics::simulation::{
         force::{ContactPoint, PointForce},
         particle::{
@@ -12,8 +13,6 @@ use cairo::{
         units::Newtons,
     },
     random::sampler::RandomSampler,
-    resource::handle::Handle,
-    scene::resources::SceneResources,
     vec::vec3,
 };
 
@@ -32,8 +31,7 @@ static GRAVITY_POINT_FORCE: PointForce =
 
 pub fn make_simulation(
     sampler: RefCell<RandomSampler<SEED_SIZE>>,
-    resources: Rc<SceneResources>,
-    static_mesh_handle: Handle,
+    bvh_instance: StaticTriangleBVHInstance,
 ) -> Simulation<SEED_SIZE> {
     let mass = 50.0;
 
@@ -57,8 +55,7 @@ pub fn make_simulation(
 
     Simulation {
         sampler,
-        resources,
-        static_mesh_handle,
+        bvh_instance,
         pool: Default::default(),
         forces: vec![GRAVITY_POINT_FORCE],
         generators: RefCell::new(vec![omnidirectional]),

@@ -1,7 +1,7 @@
 use cairo::{
     animation::lerp,
     geometry::{
-        accelerator::static_triangle_bvh::StaticTriangleBVH,
+        accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
         intersect::test_aabb_aabb,
         primitives::{aabb::AABB, line_segment::LineSegment, triangle::Triangle},
     },
@@ -10,6 +10,7 @@ use cairo::{
 
 fn intersect_line_segment_triangle(
     segment: &mut LineSegment,
+    bvh_instance_index: usize,
     tri_index: usize,
     triangle: &Triangle,
 ) {
@@ -72,30 +73,49 @@ fn intersect_line_segment_triangle(
     if t < segment.t {
         segment.t = t;
 
+        segment.colliding_bvh_index.replace(bvh_instance_index);
+
         segment.colliding_primitive.replace(tri_index);
     }
 }
 
-pub fn intersect_line_segment_bvh(segment: &mut LineSegment, bvh: &StaticTriangleBVH) {
+pub fn intersect_line_segment_bvh(
+    segment: &mut LineSegment,
+    bvh_instance_index: usize,
+    bvh_instance: &StaticTriangleBVHInstance,
+) {
     let mut transformed_segment = *segment;
 
     transformed_segment.start =
-        (Vec4::new(transformed_segment.start, 1.0) * bvh.inverse_transform).to_vec3();
+        (Vec4::new(transformed_segment.start, 1.0) * bvh_instance.inverse_transform).to_vec3();
 
     transformed_segment.end =
-        (Vec4::new(transformed_segment.end, 1.0) * bvh.inverse_transform).to_vec3();
+        (Vec4::new(transformed_segment.end, 1.0) * bvh_instance.inverse_transform).to_vec3();
 
     let mut transformed_segment_aabb = AABB::default();
 
     transformed_segment_aabb.grow(&transformed_segment.start);
     transformed_segment_aabb.grow(&transformed_segment.end);
 
-    intersect_line_segment_bvh_node(&mut transformed_segment, &transformed_segment_aabb, bvh, 0);
+    intersect_line_segment_bvh_node(
+        &mut transformed_segment,
+        &transformed_segment_aabb,
+        bvh_instance_index,
+        &bvh_instance.bvh,
+        0,
+    );
 
-    if let Some(colliding_primitive) = transformed_segment.colliding_primitive {
+    if let (Some(colliding_bvh_index), Some(colliding_primitive)) = (
+        transformed_segment.colliding_bvh_index,
+        transformed_segment.colliding_primitive,
+    ) {
         segment.t = transformed_segment.t;
 
-        segment.transformed_length = ((segment.end - segment.start) * bvh.transform).mag().abs();
+        segment.transformed_length = ((segment.end - segment.start) * bvh_instance.transform)
+            .mag()
+            .abs();
+
+        segment.colliding_bvh_index.replace(colliding_bvh_index);
 
         segment.colliding_primitive.replace(colliding_primitive);
     }
@@ -104,6 +124,7 @@ pub fn intersect_line_segment_bvh(segment: &mut LineSegment, bvh: &StaticTriangl
 fn intersect_line_segment_bvh_node(
     segment: &mut LineSegment,
     segment_aabb: &AABB,
+    bvh_instance_index: usize,
     bvh: &StaticTriangleBVH,
     node_index: usize,
 ) {
@@ -122,7 +143,7 @@ fn intersect_line_segment_bvh_node(
 
             let triangle = &bvh.tris[tri_index];
 
-            intersect_line_segment_triangle(segment, tri_index, triangle);
+            intersect_line_segment_triangle(segment, bvh_instance_index, tri_index, triangle);
         }
     } else {
         let (left, right) = (
@@ -130,7 +151,7 @@ fn intersect_line_segment_bvh_node(
             node.left_child_index as usize + 1,
         );
 
-        intersect_line_segment_bvh_node(segment, segment_aabb, bvh, left);
-        intersect_line_segment_bvh_node(segment, segment_aabb, bvh, right);
+        intersect_line_segment_bvh_node(segment, segment_aabb, bvh_instance_index, bvh, left);
+        intersect_line_segment_bvh_node(segment, segment_aabb, bvh_instance_index, bvh, right);
     }
 }
