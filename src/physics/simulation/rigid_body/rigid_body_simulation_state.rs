@@ -1,12 +1,13 @@
 use std::ops;
 
-use cairo::{
+use crate::{
     matrix::Mat4,
+    physics::simulation::force::BoxedForce,
     transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-use crate::simulation::RigidBodyForce;
+pub type RigidBodyForce = BoxedForce<RigidBodySimulationState>;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodySimulationState {

@@ -1,13 +1,14 @@
 use cairo::{
-    physics::simulation::{force::ContactPoint, physical_constants::EARTH_GRAVITY, units::Newtons},
+    physics::simulation::{
+        force::ContactPoint,
+        physical_constants::EARTH_GRAVITY,
+        rigid_body::rigid_body_simulation_state::{RigidBodyForce, RigidBodySimulationState},
+        units::Newtons,
+    },
     vec::vec3::Vec3,
 };
 
-use crate::{
-    rigid_body::RigidBody,
-    rigid_body_simulation_state::RigidBodySimulationState,
-    simulation::{RigidBodyForce, Simulation},
-};
+use crate::{rigid_body::CircleRigidBody, simulation::Simulation};
 
 pub fn make_simulation() -> Simulation {
     #[allow(unused)]
@@ -31,7 +32,7 @@ pub fn make_simulation() -> Simulation {
         // gravity_body_force,
     ];
 
-    let rigid_bodies = vec![RigidBody::circle(Default::default(), 5.0, 2.5)];
+    let rigid_bodies = vec![CircleRigidBody::new(Default::default(), 5.0, 2.5)];
 
     Simulation {
         forces,
