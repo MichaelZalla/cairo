@@ -571,6 +571,23 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example particle-systems",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "particle-systems"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example numerical-methods",
       "command": "cargo",
       "args": [
