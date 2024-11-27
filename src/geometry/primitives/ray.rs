@@ -7,6 +7,7 @@ pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
     pub one_over_direction: Vec3,
+    pub transformed_length: f32,
     pub t: f32,
     pub colliding_primitive: Option<usize>,
 }
@@ -25,6 +26,7 @@ impl Default for Ray {
             origin: Default::default(),
             direction: vec3::FORWARD,
             one_over_direction: get_one_over_direction_safe(vec3::FORWARD),
+            transformed_length: f32::MAX,
             t: f32::MAX,
             colliding_primitive: None,
         }

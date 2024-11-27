@@ -1,6 +1,9 @@
 use std::mem;
 
-use crate::vec::vec3::{Vec3, Vec3A};
+use crate::vec::{
+    vec3::{self, Vec3, Vec3A},
+    vec4::Vec4,
+};
 
 use super::{
     accelerator::static_triangle_bvh::StaticTriangleBVH,
@@ -183,7 +186,24 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
 }
 
 pub fn intersect_ray_bvh(ray: &mut Ray, bvh: &StaticTriangleBVH) {
-    intersect_ray_bvh_node_sorted(ray, bvh)
+    let mut transformed_ray = *ray;
+
+    transformed_ray.origin =
+        (Vec4::new(transformed_ray.origin, 1.0) * bvh.inverse_transform).to_vec3();
+
+    transformed_ray.direction *= bvh.inverse_transform;
+
+    transformed_ray.one_over_direction = vec3::ONES / ray.direction;
+
+    let original_t = transformed_ray.t;
+
+    intersect_ray_bvh_node_sorted(&mut transformed_ray, bvh);
+
+    if transformed_ray.t < original_t {
+        ray.t = transformed_ray.t;
+
+        ray.colliding_primitive = transformed_ray.colliding_primitive;
+    }
 }
 
 fn intersect_ray_bvh_node(ray: &mut Ray, bvh: &StaticTriangleBVH, node_index: usize) {
