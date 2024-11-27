@@ -19,14 +19,13 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use collider::LineSegmentCollider;
 use coordinates::{screen_to_world_space, world_to_screen_space};
 use draw_collider::draw_collider;
 use draw_particle::draw_particle;
 use draw_quadtree::draw_quadtree;
 use make_simulation::{make_simulation, MAX_PARTICLE_SIZE_PIXELS, SEED_SIZE};
+use static_line_segment_collider::StaticLineSegmentCollider;
 
-mod collider;
 mod coordinates;
 mod draw_collider;
 mod draw_particle;
@@ -34,6 +33,7 @@ mod draw_quadtree;
 mod make_simulation;
 mod quadtree;
 mod simulation;
+mod static_line_segment_collider;
 
 struct LineSegmentColliderCreationState {
     start: Option<Vec3>,
@@ -133,9 +133,9 @@ fn main() -> Result<(), String> {
                         if distance > 16.0 {
                             let end = cursor_world_space;
 
-                            let collider = LineSegmentCollider::new(start, end);
+                            let collider = StaticLineSegmentCollider::new(start, end);
 
-                            sim.colliders.borrow_mut().push(collider);
+                            sim.static_colliders.borrow_mut().push(collider);
                         }
 
                         collider_creation_state.start.take();
@@ -196,7 +196,7 @@ fn main() -> Result<(), String> {
         // Visualize our (created and pending) colliders.
 
         {
-            let colliders = sim.colliders.borrow();
+            let colliders = sim.static_colliders.borrow();
 
             for collider in colliders.iter() {
                 draw_collider(collider, &mut framebuffer, &framebuffer_center);
@@ -209,7 +209,7 @@ fn main() -> Result<(), String> {
                 collider_creation_state.current,
             ) {
                 draw_collider(
-                    &LineSegmentCollider::new(start, end),
+                    &StaticLineSegmentCollider::new(start, end),
                     &mut framebuffer,
                     &framebuffer_center,
                 );

@@ -1,15 +1,16 @@
 use cairo::{
-    physics::simulation::{
-        force::Force,
-        state_vector::{FromStateVector, StateVector, ToStateVector},
+    physics::{
+        material::PhysicsMaterial,
+        simulation::{
+            collision_response::resolve_plane_collision_approximate,
+            force::Force,
+            state_vector::{FromStateVector, StateVector, ToStateVector},
+        },
     },
     vec::vec3::Vec3,
 };
 
-use crate::{
-    springy_mesh::SpringyMesh,
-    static_line_segment_collider::{Collider, StaticLineSegmentCollider},
-};
+use crate::{springy_mesh::SpringyMesh, static_line_segment_collider::StaticLineSegmentCollider};
 
 pub type PointForce = Force<StateVector>;
 
@@ -44,28 +45,35 @@ impl<'a> Simulation<'a> {
 
         // Detect and resolve collisions against all static colliders.
 
+        static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+            dynamic_friction: 0.15,
+            restitution: 0.9,
+        };
+
         for i in 0..n {
             let position = state.data[i];
 
-            let mut new_position = new_state.data[i];
-            let mut new_velocity = new_state.data[i + n];
+            let mut end_position = new_state.data[i];
+            let mut end_velocity = new_state.data[i + n];
 
             // We'll break early on the first collision (if any).
 
             for collider in &self.static_colliders {
                 // Check if this particle has just crossed over the  plane.
 
-                if let Some((_f, new_distance)) = collider.test(&position, &new_position) {
+                if let Some((_f, new_distance)) = collider.test(&position, &end_position) {
                     // Perform an approximate collision resolution.
 
-                    collider.resolve_approximate(
-                        &mut new_position,
-                        &mut new_velocity,
+                    resolve_plane_collision_approximate(
+                        &collider.plane,
+                        &PHYSICS_MATERIAL,
+                        &mut end_position,
+                        &mut end_velocity,
                         new_distance,
                     );
 
-                    new_state.data[i + n] = new_velocity;
-                    new_state.data[i] = new_position;
+                    new_state.data[i + n] = end_velocity;
+                    new_state.data[i] = end_position;
 
                     break;
                 }
