@@ -1,15 +1,15 @@
-use cairo::{physics::simulation::force::BoxedForce, vec::vec3::Vec3};
-
-use crate::{
-    rigid_body::RigidBody, rigid_body_simulation_state::RigidBodySimulationState,
-    state_vector::StateVector,
+use cairo::{
+    physics::simulation::rigid_body::rigid_body_simulation_state::{
+        RigidBodyForce, RigidBodySimulationState,
+    },
+    vec::vec3::Vec3,
 };
 
-pub type RigidBodyForce = BoxedForce<RigidBodySimulationState>;
+use crate::{rigid_body::CircleRigidBody, state_vector::StateVector};
 
 pub struct Simulation {
     pub forces: Vec<RigidBodyForce>,
-    pub rigid_bodies: Vec<RigidBody>,
+    pub rigid_bodies: Vec<CircleRigidBody>,
 }
 
 impl Simulation {
@@ -18,8 +18,8 @@ impl Simulation {
 
         let mut state = StateVector::<RigidBodySimulationState>::new(n);
 
-        for (i, body) in self.rigid_bodies.iter().enumerate() {
-            state.0[i] = body.state();
+        for (i, circle) in self.rigid_bodies.iter().enumerate() {
+            state.0[i] = circle.rigid_body.state();
         }
 
         let new_state = {
@@ -33,8 +33,8 @@ impl Simulation {
         // @NOTE `RigidBody` is responsible for re-normalizing its quaternion
         // components as part of its call to `Transform::set_translation_and_orientation(…)`.
 
-        for (i, body) in self.rigid_bodies.iter_mut().enumerate() {
-            body.apply_simulation_state(&new_state.0[i]);
+        for (i, circle) in self.rigid_bodies.iter_mut().enumerate() {
+            circle.rigid_body.apply_simulation_state(&new_state.0[i]);
         }
     }
 }
