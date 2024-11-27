@@ -97,7 +97,7 @@ pub fn intersect_ray_triangle(
 
         ray.t = t;
 
-        ray.triangle.replace(triangle_index);
+        ray.colliding_primitive.replace(triangle_index);
     }
 }
 
@@ -177,7 +177,7 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
         }
     }
 
-    ray.triangle.replace(node_index);
+    ray.colliding_primitive.replace(node_index);
 
     ray.t = ray.t.min(t_min);
 }

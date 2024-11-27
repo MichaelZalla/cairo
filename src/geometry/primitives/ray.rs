@@ -8,7 +8,7 @@ pub struct Ray {
     pub direction: Vec3,
     pub one_over_direction: Vec3,
     pub t: f32,
-    pub triangle: Option<usize>,
+    pub colliding_primitive: Option<usize>,
 }
 
 fn get_one_over_direction_safe(d: Vec3) -> Vec3 {
@@ -26,7 +26,7 @@ impl Default for Ray {
             direction: vec3::FORWARD,
             one_over_direction: get_one_over_direction_safe(vec3::FORWARD),
             t: f32::MAX,
-            triangle: None,
+            colliding_primitive: None,
         }
     }
 }
