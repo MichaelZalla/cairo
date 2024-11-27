@@ -6,6 +6,7 @@ pub struct LineSegment {
     pub end: Vec3,
     pub transformed_length: f32,
     pub t: f32,
+    pub colliding_bvh_index: Option<usize>,
     pub colliding_primitive: Option<usize>,
 }
 
@@ -16,6 +17,7 @@ impl LineSegment {
             end,
             transformed_length: (end - start).mag(),
             t: f32::MAX,
+            colliding_bvh_index: None,
             colliding_primitive: None,
         }
     }

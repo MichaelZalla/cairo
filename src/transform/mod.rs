@@ -83,7 +83,7 @@ impl Transform3D {
 
             let rotation_mat = *rotation.mat();
 
-            rotation_mat * scale_mat * translation_mat
+            scale_mat * rotation_mat * translation_mat
         };
 
         self.inverse_mat = {
@@ -95,7 +95,7 @@ impl Transform3D {
 
             let inverse_rotation_mat = *inverse_rotation.mat();
 
-            inverse_translation_mat * inverse_scale_mat * inverse_rotation_mat
+            inverse_translation_mat * inverse_rotation_mat * inverse_scale_mat
         };
     }
 }
