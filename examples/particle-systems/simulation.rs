@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use cairo::{
     geometry::{
-        accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
+        accelerator::static_triangle_tlas::StaticTriangleTLAS,
         primitives::line_segment::LineSegment,
     },
     physics::{
@@ -23,7 +23,7 @@ use cairo::{
 
 use crate::{
     integrate::{integrate_euler, system_dynamics_function},
-    intersect::intersect_line_segment_bvh,
+    intersect::intersect_line_segment_tlas,
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2;
@@ -40,7 +40,7 @@ impl<const N: usize> Simulation<N> {
         &self,
         h: f32,
         uptime_seconds: f32,
-        bvh_instances: &[StaticTriangleBVHInstance],
+        tlas: &StaticTriangleTLAS,
     ) -> Result<(), String> {
         let mut pool = self.pool.borrow_mut();
 
@@ -110,20 +110,18 @@ impl<const N: usize> Simulation<N> {
 
             let mut segment = LineSegment::new(start_position, end_position);
 
-            for (bvh_instance_index, bvh_instance) in bvh_instances.iter().enumerate() {
-                intersect_line_segment_bvh(&mut segment, bvh_instance_index, bvh_instance);
-            }
+            intersect_line_segment_tlas(&mut segment, tlas);
 
             if let (Some(bvh_instance_index), Some(tri_index)) =
                 (segment.colliding_bvh_index, segment.colliding_primitive)
             {
-                let bvh_instance = &bvh_instances[bvh_instance_index];
+                let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
 
                 let triangle = &bvh_instance.bvh.tris[tri_index];
 
                 let triangle_normal = triangle.plane.normal;
 
-                let transformed_triangle_normal =
+                let instance_triangle_normal =
                     (triangle_normal * bvh_instance.transform).as_normal();
 
                 let mut end_velocity = new_state.data[num_active_particles + i];
@@ -137,7 +135,7 @@ impl<const N: usize> Simulation<N> {
                     let penetration_depth = segment.transformed_length * (1.0 - segment.t);
 
                     resolve_plane_collision_approximate(
-                        transformed_triangle_normal,
+                        instance_triangle_normal,
                         &PHYSICS_MATERIAL,
                         &mut end_position,
                         &mut end_velocity,
