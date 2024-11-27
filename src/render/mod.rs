@@ -60,7 +60,7 @@ pub trait Renderer {
 
     fn render_ray(&mut self, ray: &Ray, color: Color);
 
-    fn render_aabb(&mut self, aabb: &AABB, world_transform: &Mat4, color: Color);
+    fn render_aabb(&mut self, aabb: &AABB, world_transform: Option<&Mat4>, color: Color);
 
     fn render_entity(
         &mut self,
