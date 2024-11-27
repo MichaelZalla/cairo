@@ -6,6 +6,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::vec::vec3;
+
 use super::vec::{vec3::Vec3, vec4::Vec4};
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -166,17 +168,22 @@ impl Mat4 {
     }
 
     pub fn identity() -> Self {
-        Self::scale([1.0; 4])
+        Self::scale_uniform(1.0)
     }
 
-    pub fn scale(scales: [f32; 4]) -> Self {
+    pub fn scale(scale: Vec3) -> Self {
         let mut result = Mat4::new();
 
-        for (i, scale) in scales.iter().enumerate() {
-            result.elements[i][i] = *scale;
-        }
+        result.elements[0][0] = scale.x;
+        result.elements[1][1] = scale.y;
+        result.elements[2][2] = scale.z;
+        result.elements[3][3] = 1.0;
 
         result
+    }
+
+    pub fn scale_uniform(scale: f32) -> Self {
+        Self::scale(vec3::ONES * scale)
     }
 
     pub fn rotation_x(theta: f32) -> Self {

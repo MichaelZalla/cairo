@@ -79,7 +79,7 @@ impl Transform3D {
         self.mat = {
             let translation_mat = Mat4::translation(translation);
 
-            let scale_mat = Mat4::scale([scale.x, scale.y, scale.z, 1.0]);
+            let scale_mat = Mat4::scale(scale);
 
             let rotation_mat = *rotation.mat();
 
@@ -89,7 +89,7 @@ impl Transform3D {
         self.inverse_mat = {
             let inverse_translation_mat = Mat4::translation(-translation);
 
-            let inverse_scale_mat = Mat4::scale([1.0 / scale.x, 1.0 / scale.y, 1.0 / scale.z, 1.0]);
+            let inverse_scale_mat = Mat4::scale(scale.reciprocal());
 
             let inverse_rotation = rotation.inverse();
 

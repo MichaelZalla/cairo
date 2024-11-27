@@ -333,6 +333,14 @@ impl Vec3 {
         }
     }
 
+    pub fn reciprocal(&self) -> Self {
+        Self {
+            x: 1.0 / self.x,
+            y: 1.0 / self.y,
+            z: 1.0 / self.z,
+        }
+    }
+
     pub fn half_area_of_extent(&self) -> f32 {
         self.x * self.y + self.y * self.z + self.x * self.z
     }
