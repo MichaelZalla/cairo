@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 
+use renderable::Renderable;
 use sdl2::mouse::MouseButton;
 
 use cairo::{
@@ -12,20 +13,20 @@ use cairo::{
         mouse::{MouseEventKind, MouseState},
     },
     graphics::Graphics,
-    physics::simulation::{force::ContactPoint, units::Newtons},
+    physics::simulation::{
+        force::ContactPoint, rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
+        units::Newtons,
+    },
     vec::vec3::Vec3,
 };
 
 use coordinates::{screen_to_world_space, world_to_screen_space};
 use make_simulation::make_simulation;
-use renderable::Renderable;
-use rigid_body_simulation_state::RigidBodySimulationState;
 
 mod coordinates;
 mod make_simulation;
 mod renderable;
 mod rigid_body;
-mod rigid_body_simulation_state;
 mod simulation;
 mod state_vector;
 
@@ -79,8 +80,8 @@ fn main() -> Result<(), String> {
 
         let simulation = simulation_rc.borrow();
 
-        for body in simulation.rigid_bodies.iter() {
-            body.render(&mut framebuffer);
+        for circle in simulation.rigid_bodies.iter() {
+            circle.render(&mut framebuffer);
         }
 
         let cursor_world_space = cursor_world_space_rc.borrow();
@@ -143,17 +144,18 @@ fn main() -> Result<(), String> {
         if let Some(event) = &mouse_state.button_event {
             match (event.button, event.kind) {
                 (MouseButton::Left, MouseEventKind::Down) => {
+                    let circle = &simulation.rigid_bodies[0];
+
+                    let transform = &circle.rigid_body.transform;
+
                     let from = *cursor_world_space;
 
-                    match &simulation.rigid_bodies[0].kind {
-                        rigid_body::RigidBodyKind::Circle(radius) => {
-                            let distance =
-                                (from - *simulation.rigid_bodies[0].transform.translation()).mag();
+                    let distance = (from - *transform.translation()).mag();
 
-                            if distance < *radius {
-                                force_creation_state.start.replace(*cursor_world_space);
-                            }
-                        }
+                    let circle = &simulation.rigid_bodies[0];
+
+                    if distance < circle.radius {
+                        force_creation_state.start.replace(*cursor_world_space);
                     }
                 }
                 (MouseButton::Left, MouseEventKind::Up) => {
