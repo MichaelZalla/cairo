@@ -99,7 +99,7 @@ pub fn intersect_line_segment_tlas_node(
 ) {
     let node = &tlas.nodes[node_index];
 
-    if node.is_leaf {
+    if node.is_leaf() {
         let bvh_instance_index = node.bvh_instance_index as usize;
 
         let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
@@ -110,7 +110,7 @@ pub fn intersect_line_segment_tlas_node(
     }
 
     let left_child_index = node.left_child_index as usize;
-    let right_child_index = left_child_index + 1;
+    let right_child_index = node.right_child_index as usize;
 
     let left_aabb = &tlas.nodes[left_child_index].aabb;
 

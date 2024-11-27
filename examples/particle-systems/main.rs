@@ -395,7 +395,7 @@ fn main() -> Result<(), String> {
 fn draw_tlas_node(tlas: &StaticTriangleTLAS, node_index: usize, renderer: &mut SoftwareRenderer) {
     let node = &tlas.nodes[node_index];
 
-    if node.is_leaf {
+    if node.is_leaf() {
         let bvh_instance = &tlas.bvh_instances[node.bvh_instance_index as usize];
 
         renderer.render_aabb(&bvh_instance.world_aabb, None, color::ORANGE);
@@ -413,13 +413,15 @@ fn draw_tlas_node(tlas: &StaticTriangleTLAS, node_index: usize, renderer: &mut S
 
     draw_tlas_node(tlas, node.left_child_index as usize, renderer);
 
-    renderer.render_line(
-        node.aabb.center(),
-        tlas.nodes[node.left_child_index as usize + 1].aabb.center(),
-        color::DARK_GRAY,
-    );
+    if node.right_child_index > 0 {
+        renderer.render_line(
+            node.aabb.center(),
+            tlas.nodes[node.right_child_index as usize].aabb.center(),
+            color::DARK_GRAY,
+        );
 
-    draw_tlas_node(tlas, node.left_child_index as usize + 1, renderer);
+        draw_tlas_node(tlas, node.right_child_index as usize, renderer);
+    }
 }
 
 fn draw_simulation(
