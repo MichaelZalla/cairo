@@ -412,7 +412,7 @@ fn render_rotated_ray_grid(
 
         renderer.render_ray(ray, ray_color);
 
-        if let Some(index) = &ray.triangle {
+        if let Some(index) = &ray.colliding_primitive {
             let triangle = &collider.tris[*index];
 
             let (v0, v1, v2) = (
