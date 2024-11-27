@@ -4,6 +4,7 @@ use crate::vec::vec3::Vec3;
 pub struct LineSegment {
     pub start: Vec3,
     pub end: Vec3,
+    pub transformed_length: f32,
     pub t: f32,
     pub colliding_primitive: Option<usize>,
 }
@@ -13,12 +14,9 @@ impl LineSegment {
         Self {
             start,
             end,
+            transformed_length: (end - start).mag(),
             t: f32::MAX,
             colliding_primitive: None,
         }
-    }
-
-    pub fn mag(&self) -> f32 {
-        (self.end - self.start).mag()
     }
 }

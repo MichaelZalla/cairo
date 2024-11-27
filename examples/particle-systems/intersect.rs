@@ -5,6 +5,7 @@ use cairo::{
         intersect::test_aabb_aabb,
         primitives::{aabb::AABB, line_segment::LineSegment, triangle::Triangle},
     },
+    vec::vec4::Vec4,
 };
 
 fn intersect_line_segment_triangle(
@@ -70,17 +71,34 @@ fn intersect_line_segment_triangle(
 
     if t < segment.t {
         segment.t = t;
+
         segment.colliding_primitive.replace(tri_index);
     }
 }
 
 pub fn intersect_line_segment_bvh(segment: &mut LineSegment, bvh: &StaticTriangleBVH) {
-    let mut segment_aabb = AABB::default();
+    let mut transformed_segment = *segment;
 
-    segment_aabb.grow(&segment.start);
-    segment_aabb.grow(&segment.end);
+    transformed_segment.start =
+        (Vec4::new(transformed_segment.start, 1.0) * bvh.inverse_transform).to_vec3();
 
-    intersect_line_segment_bvh_node(segment, &segment_aabb, bvh, 0)
+    transformed_segment.end =
+        (Vec4::new(transformed_segment.end, 1.0) * bvh.inverse_transform).to_vec3();
+
+    let mut transformed_segment_aabb = AABB::default();
+
+    transformed_segment_aabb.grow(&transformed_segment.start);
+    transformed_segment_aabb.grow(&transformed_segment.end);
+
+    intersect_line_segment_bvh_node(&mut transformed_segment, &transformed_segment_aabb, bvh, 0);
+
+    if let Some(colliding_primitive) = transformed_segment.colliding_primitive {
+        segment.t = transformed_segment.t;
+
+        segment.transformed_length = ((segment.end - segment.start) * bvh.transform).mag().abs();
+
+        segment.colliding_primitive.replace(colliding_primitive);
+    }
 }
 
 fn intersect_line_segment_bvh_node(
@@ -107,12 +125,12 @@ fn intersect_line_segment_bvh_node(
             intersect_line_segment_triangle(segment, tri_index, triangle);
         }
     } else {
-        intersect_line_segment_bvh_node(segment, segment_aabb, bvh, node.left_child_index as usize);
-        intersect_line_segment_bvh_node(
-            segment,
-            segment_aabb,
-            bvh,
+        let (left, right) = (
+            node.left_child_index as usize,
             node.left_child_index as usize + 1,
         );
+
+        intersect_line_segment_bvh_node(segment, segment_aabb, bvh, left);
+        intersect_line_segment_bvh_node(segment, segment_aabb, bvh, right);
     }
 }

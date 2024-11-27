@@ -119,17 +119,21 @@ impl<const N: usize> Simulation<N> {
 
                         let triangle = &collider.tris[*tri_index];
 
-                        let mag = segment.mag();
+                        let triangle_normal = triangle.plane.normal;
 
-                        if mag < 0.02 {
+                        let transformed_triangle_normal =
+                            (triangle_normal * collider.transform).as_normal();
+
+                        if segment.transformed_length < 0.02 {
                             new_state.data[i] = state.data[i];
                             new_state.data[i + n] = state.data[i + n];
                         } else {
-                            let plane_normal = triangle.plane.normal;
-                            let penetration_depth = mag * (1.0 - segment.t);
+                            debug_assert!(segment.t >= 0.0 && segment.t <= 1.0);
+
+                            let penetration_depth = segment.transformed_length * (1.0 - segment.t);
 
                             resolve_plane_collision_approximate(
-                                plane_normal,
+                                transformed_triangle_normal,
                                 &physics_material,
                                 &mut end_position,
                                 &mut end_velocity,
