@@ -1,9 +1,7 @@
-use crate::{
-    geometry::primitives::plane::Plane, physics::material::PhysicsMaterial, vec::vec3::Vec3,
-};
+use crate::{physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
 pub fn resolve_plane_collision_approximate(
-    plane: &Plane,
+    plane_normal: Vec3,
     material: &PhysicsMaterial,
     end_position: &mut Vec3,
     end_velocity: &mut Vec3,
@@ -11,7 +9,7 @@ pub fn resolve_plane_collision_approximate(
 ) {
     // Compute elasticity response (in the normal direction).
 
-    let velocity_normal_to_plane = plane.normal * end_velocity.dot(plane.normal);
+    let velocity_normal_to_plane = plane_normal * end_velocity.dot(plane_normal);
 
     let response_velocity_normal_to_plane = -velocity_normal_to_plane * material.restitution;
 
@@ -36,7 +34,7 @@ pub fn resolve_plane_collision_approximate(
         0.0
     };
 
-    let new_position_offset = plane.normal * (penetration_depth + bias);
+    let new_position_offset = plane_normal * (penetration_depth + bias);
 
     *end_velocity = new_velocity;
 
