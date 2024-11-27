@@ -277,7 +277,7 @@ impl<'a, const N: usize> Simulation<'a, N> {
                     // Perform an approximate collision resolution.
 
                     resolve_plane_collision_approximate(
-                        &collider.plane,
+                        collider.plane.normal,
                         &PHYSICS_MATERIAL,
                         &mut end_position,
                         &mut end_velocity,
