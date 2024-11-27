@@ -2,7 +2,9 @@ use std::rc::Rc;
 
 use crate::{
     geometry::primitives::{aabb::AABB, triangle::Triangle},
+    matrix::Mat4,
     mesh::{mesh_geometry::MeshGeometry, Mesh},
+    transform::Transform3D,
     vec::vec3::{self, Vec3A},
 };
 
@@ -46,6 +48,8 @@ struct Bin {
 
 #[derive(Debug, Clone)]
 pub struct StaticTriangleBVH {
+    pub transform: Mat4,
+    pub inverse_transform: Mat4,
     pub geometry: Rc<MeshGeometry>,
     pub tris: Vec<Triangle>,
     pub tri_indices: Vec<usize>,
@@ -92,6 +96,8 @@ impl StaticTriangleBVH {
         root.primitives_count = num_tris as u32;
 
         let mut bvh = Self {
+            transform: Mat4::identity(),
+            inverse_transform: Mat4::identity(),
             geometry: mesh.geometry.clone(),
             tris,
             tri_indices,
@@ -106,7 +112,13 @@ impl StaticTriangleBVH {
         bvh
     }
 
-    pub fn recompute_node_aabb(&mut self, node_index: usize) {
+    pub fn set_transform(&mut self, transform: Transform3D) {
+        self.transform = *transform.mat();
+
+        self.inverse_transform = *transform.inverse_mat();
+    }
+
+    fn recompute_node_aabb(&mut self, node_index: usize) {
         let node = &mut self.nodes[node_index];
 
         let start = node.primitives_start_index as usize;

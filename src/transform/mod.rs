@@ -14,6 +14,8 @@ pub struct Transform3D {
     scale: Vec3,
     #[serde(skip)]
     mat: Mat4,
+    #[serde(skip)]
+    inverse_mat: Mat4,
 }
 
 impl Default for Transform3D {
@@ -23,9 +25,10 @@ impl Default for Transform3D {
             rotation: Default::default(),
             scale: Vec3::ones(),
             mat: Default::default(),
+            inverse_mat: Default::default(),
         };
 
-        t.recompute_transform();
+        t.recompute_transforms();
 
         t
     }
@@ -39,7 +42,7 @@ impl Transform3D {
     pub fn set_translation(&mut self, translation: Vec3) {
         self.translation = translation;
 
-        self.recompute_transform();
+        self.recompute_transforms();
     }
 
     pub fn rotation(&self) -> &Quaternion {
@@ -49,7 +52,7 @@ impl Transform3D {
     pub fn set_rotation(&mut self, rotation: Quaternion) {
         self.rotation = rotation;
 
-        self.recompute_transform();
+        self.recompute_transforms();
     }
 
     pub fn scale(&self) -> &Vec3 {
@@ -59,18 +62,40 @@ impl Transform3D {
     pub fn set_scale(&mut self, scale: Vec3) {
         self.scale = scale;
 
-        self.recompute_transform();
+        self.recompute_transforms();
     }
 
     pub fn mat(&self) -> &Mat4 {
         &self.mat
     }
 
-    fn recompute_transform(&mut self) {
-        let translation_mat = Mat4::translation(self.translation);
+    pub fn inverse_mat(&self) -> &Mat4 {
+        &self.inverse_mat
+    }
 
-        let scale_mat = Mat4::scale([self.scale.x, self.scale.y, self.scale.z, 1.0]);
+    fn recompute_transforms(&mut self) {
+        let (translation, scale, rotation) = (self.translation, self.scale, self.rotation);
 
-        self.mat = *self.rotation.mat() * scale_mat * translation_mat;
+        self.mat = {
+            let translation_mat = Mat4::translation(translation);
+
+            let scale_mat = Mat4::scale([scale.x, scale.y, scale.z, 1.0]);
+
+            let rotation_mat = *rotation.mat();
+
+            rotation_mat * scale_mat * translation_mat
+        };
+
+        self.inverse_mat = {
+            let inverse_translation_mat = Mat4::translation(-translation);
+
+            let inverse_scale_mat = Mat4::scale([1.0 / scale.x, 1.0 / scale.y, 1.0 / scale.z, 1.0]);
+
+            let inverse_rotation = rotation.inverse();
+
+            let inverse_rotation_mat = *inverse_rotation.mat();
+
+            inverse_translation_mat * inverse_scale_mat * inverse_rotation_mat
+        };
     }
 }
