@@ -102,10 +102,6 @@ pub struct DefaultVertexOut {
 }
 
 impl DefaultVertexOut {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     pub fn projection_space_to_viewport_space(&mut self, viewport: &RenderViewport) {
         let w_inverse = 1.0 / self.position_projection_space.w;
 
