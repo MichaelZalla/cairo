@@ -27,7 +27,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
 
         let f0 = lerp(f0_dielectic, f0_metal, sample.metallic);
 
-        // Calculate ambient light contribution
+        // Calculate ambient light contribution.
 
         let ambient_light_contribution = match (
             &context.ambient_diffuse_irradiance_map,
@@ -94,7 +94,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             },
         };
 
-        // Calculate directional light contribution
+        // Calculate directional light contribution.
 
         let directional_light_contribution = match &context.directional_light {
             Some(handle) => {
@@ -122,7 +122,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             None => Default::default(),
         };
 
-        // Calculate point light contributions (including specular)
+        // Calculate point light contributions.
 
         let mut point_light_contribution: Vec3 = Default::default();
 
@@ -148,7 +148,7 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             }
         }
 
-        // Calculate spot light contributions (including specular).
+        // Calculate spot light contributions.
 
         let mut spot_light_contribution: Vec3 = Default::default();
 
@@ -164,11 +164,11 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
             }
         }
 
-        // Calculate emissive light contribution
+        // Calculate emissive light contribution.
 
         let emissive_light_contribution: Vec3 = sample.emissive_color;
 
-        // Combine light intensities
+        // Combine light intensities.
 
         ambient_light_contribution
             + directional_light_contribution
