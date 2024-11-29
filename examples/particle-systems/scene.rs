@@ -1,4 +1,7 @@
-use std::{f32::consts::PI, rc::Rc};
+use std::{
+    f32::consts::{PI, TAU},
+    rc::Rc,
+};
 
 use cairo::{
     entity::Entity,
@@ -8,6 +11,7 @@ use cairo::{
         obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
         Mesh,
     },
+    random::sampler::{RandomSampler, RangeSampler},
     resource::arena::Arena,
     scene::{
         camera::Camera,
@@ -125,37 +129,34 @@ pub fn make_particles_scene(
         )
     };
 
-    let mut level_entity_node2 = level_entity_node.clone();
-    let mut level_entity_node3 = level_entity_node.clone();
+    let mut sampler: RandomSampler<256> = Default::default();
 
-    scene.root.add_child(level_entity_node)?;
+    // Seed the simulation's random number sampler.
 
-    {
-        let transform = level_entity_node2.get_transform_mut();
+    sampler.seed().unwrap();
 
-        transform.set_scale(vec3::ONES * 0.5);
+    for _ in 0..2 {
+        let mut node = level_entity_node.clone();
 
-        transform.set_rotation(
-            Quaternion::new(vec3::UP, PI / 4.0) * Quaternion::new(vec3::RIGHT, PI / 16.0),
-        );
+        let transform = node.get_transform_mut();
 
-        transform.set_translation(vec3::UP * 4.0 + vec3::RIGHT * 20.0);
+        let random_scale = vec3::ONES * sampler.sample_range_normal(1.0, 0.25);
 
-        scene.root.add_child(level_entity_node2)?;
-    }
+        let random_rotation = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU))
+            * Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, PI / 8.0))
+            * Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, PI / 8.0));
 
-    {
-        let transform = level_entity_node3.get_transform_mut();
+        let random_translation = Vec3 {
+            x: sampler.sample_range_uniform(-12.0, 12.0),
+            y: sampler.sample_range_uniform(0.0, 10.0),
+            z: sampler.sample_range_uniform(-12.0, 12.0),
+        };
 
-        transform.set_scale(vec3::ONES * 0.3);
+        transform.set_scale(random_scale);
+        transform.set_rotation(random_rotation);
+        transform.set_translation(random_translation);
 
-        transform.set_rotation(
-            Quaternion::new(vec3::RIGHT, PI / 8.0) * Quaternion::new(-vec3::FORWARD, PI / 8.0),
-        );
-
-        transform.set_translation(vec3::UP * 4.0 - vec3::RIGHT * 8.0);
-
-        scene.root.add_child(level_entity_node3)?;
+        scene.root.add_child(node)?;
     }
 
     Ok((scene, shader_context))
