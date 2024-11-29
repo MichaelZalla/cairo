@@ -26,3 +26,7 @@ Cargo.lock
 *.tga
 *.tif
 *.hdr
+
+# perf, flamegraph
+profiling
+perf.data
