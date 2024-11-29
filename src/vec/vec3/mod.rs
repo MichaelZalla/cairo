@@ -110,10 +110,6 @@ impl FromStr for Vec3 {
 }
 
 impl Vec3 {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     pub fn uniform(rng: &mut ThreadRng, uniform: &Uniform<f32>) -> Self {
         Self {
             x: uniform.sample(rng),
