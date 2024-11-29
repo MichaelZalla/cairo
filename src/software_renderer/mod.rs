@@ -256,8 +256,8 @@ impl Renderer for SoftwareRenderer {
         self._render_axes(position, scale)
     }
 
-    fn render_ground_plane(&mut self, scale: f32) {
-        self._render_ground_plane(scale)
+    fn render_ground_plane(&mut self, parallels: usize) {
+        self._render_ground_plane(parallels)
     }
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
