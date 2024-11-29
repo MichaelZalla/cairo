@@ -44,7 +44,7 @@ pub trait Renderer {
 
     fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>);
 
-    fn render_ground_plane(&mut self, scale: f32);
+    fn render_ground_plane(&mut self, parallels: usize);
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>);
 

@@ -88,12 +88,12 @@ impl SoftwareRenderer {
         self.render_line(p, p + vec3::FORWARD * s, color::GREEN);
     }
 
-    pub(in crate::software_renderer) fn _render_ground_plane(&mut self, scale: f32) {
+    pub(in crate::software_renderer) fn _render_ground_plane(&mut self, parallels: usize) {
         let parallels_color = color::DARK_GRAY;
 
-        let ten_scaled = 10.0 * scale;
+        let parallels_f32 = parallels as f32;
 
-        for i in -10..10 + 1 {
+        for i in -(parallels as i32)..(parallels + 1) as i32 {
             if i == 0 {
                 continue;
             }
@@ -102,13 +102,13 @@ impl SoftwareRenderer {
 
             self.render_line(
                 Vec3 {
-                    x: -ten_scaled,
-                    z: (i as f32 * scale),
+                    x: -parallels_f32,
+                    z: (i as f32),
                     ..Default::default()
                 },
                 Vec3 {
-                    x: ten_scaled,
-                    z: (i as f32 * scale),
+                    x: parallels_f32,
+                    z: (i as f32),
                     ..Default::default()
                 },
                 parallels_color,
@@ -118,13 +118,13 @@ impl SoftwareRenderer {
 
             self.render_line(
                 Vec3 {
-                    x: (i as f32 * scale),
-                    z: -ten_scaled,
+                    x: (i as f32),
+                    z: -parallels_f32,
                     ..Default::default()
                 },
                 Vec3 {
-                    x: (i as f32 * scale),
-                    z: ten_scaled,
+                    x: (i as f32),
+                    z: parallels_f32,
                     ..Default::default()
                 },
                 parallels_color,
@@ -135,11 +135,11 @@ impl SoftwareRenderer {
 
         self.render_line(
             Vec3 {
-                x: -ten_scaled,
+                x: -parallels_f32,
                 ..Default::default()
             },
             Vec3 {
-                x: ten_scaled,
+                x: parallels_f32,
                 ..Default::default()
             },
             color::RED,
@@ -149,11 +149,11 @@ impl SoftwareRenderer {
 
         self.render_line(
             Vec3 {
-                z: -ten_scaled,
+                z: -parallels_f32,
                 ..Default::default()
             },
             Vec3 {
-                z: ten_scaled,
+                z: parallels_f32,
                 ..Default::default()
             },
             color::GREEN,
