@@ -432,7 +432,11 @@ fn draw_simulation(
     particle_material_handle: Handle,
     renderer: &mut SoftwareRenderer,
 ) {
-    draw_tlas_node(tlas, 0, renderer);
+    static DRAW_TLAS_NODES: bool = false;
+
+    if DRAW_TLAS_NODES {
+        draw_tlas_node(tlas, 0, renderer);
+    }
 
     let pool = simulation.pool.borrow();
     let generators = simulation.generators.borrow();
