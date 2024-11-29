@@ -594,6 +594,7 @@ fn main() -> Result<(), String> {
                 keyboard_state
                     .newly_pressed_keycodes
                     .retain(|keycode| match *keycode {
+                        #[cfg(debug_assertions)]
                         Keycode::F7 => {
                             GLOBAL_UI_CONTEXT.with(|ctx| {
                                 let mut debug_options = ctx.debug.borrow_mut();
