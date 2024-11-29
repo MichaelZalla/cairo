@@ -9,7 +9,7 @@ fn main() {
         .output()
         .expect("Failed to execute process");
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     let short_hash_output = Command::new("/bin/bash")
         .args(["git rev-parse --short HEAD"])
         .output()
