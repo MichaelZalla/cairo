@@ -10,10 +10,11 @@ pub static DirectionalShadowMapVertexShader: VertexShaderFn =
     |context: &ShaderContext, v: &DefaultVertexIn| -> DefaultVertexOut {
         // Object-to-world-space vertex transform
 
-        let mut out = DefaultVertexOut::new();
-
-        out.position_projection_space =
-            Vec4::new(v.position, 1.0) * context.world_view_projection_transform;
+        let mut out = DefaultVertexOut {
+            position_projection_space: Vec4::new(v.position, 1.0)
+                * context.world_view_projection_transform,
+            ..Default::default()
+        };
 
         let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
 

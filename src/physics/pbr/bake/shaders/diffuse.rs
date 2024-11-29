@@ -20,7 +20,7 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
 
                 let normal = sample.position_world_space.as_normal();
 
-                let mut irradiance = Vec3::new();
+                let mut irradiance = Default::default();
 
                 static SAMPLE_DELTA: f32 = 0.05;
 
@@ -32,7 +32,9 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
                     y: 1.0,
                     ..Default::default()
                 };
+
                 let right = up.cross(normal).as_normal();
+
                 up = normal.cross(right).as_normal();
 
                 let mut phi = 0.0;

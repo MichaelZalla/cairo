@@ -11,7 +11,7 @@ use crate::{
 pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
                                                     v: &DefaultVertexIn|
  -> DefaultVertexOut {
-    let mut out = DefaultVertexOut::new();
+    let mut out = DefaultVertexOut::default();
 
     // World-space position.
 
