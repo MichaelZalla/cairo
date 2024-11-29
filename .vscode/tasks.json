@@ -75,6 +75,20 @@
     },
     {
       "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "label": "Profiling: flamegraph",
+      "linux": {
+        "command": "flamegraph -o profiling/flamegraphs/flamegraph.svg --pid PID",
+      }
+    },
+    {
+      "type": "shell",
       "problemMatcher": ["$rustc"],
       "group": {
         "kind": "test"
