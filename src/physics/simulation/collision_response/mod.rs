@@ -34,7 +34,8 @@ pub fn resolve_plane_collision_approximate(
         0.0
     };
 
-    let new_position_offset = plane_normal * (penetration_depth + bias);
+    let new_position_offset =
+        plane_normal * ((penetration_depth * (1.0 + material.restitution)) + bias);
 
     *end_velocity = new_velocity;
 
