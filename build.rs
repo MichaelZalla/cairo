@@ -1,3 +1,5 @@
+use std::env::var;
+
 use std::process::Command;
 
 fn main() {
@@ -19,8 +21,18 @@ fn main() {
 
     #[cfg(target_os = "windows")]
     {
-        println!(r"cargo:rustc-link-search=%SDL_PATH%\SDL2-2.28.5\lib\x64\");
-        println!(r"cargo:rustc-link-search=%SDL_PATH%\SDL2_ttf-2.20.2\lib\x64\");
-        println!(r"cargo:rustc-link-search=%SDL_PATH%\SDL2_image-2.8.0\lib\x64\");
+        let sdl_path = var("SDL_PATH").unwrap();
+
+        println!(r"cargo:rustc-link-search={}\SDL2-2.28.5\lib\x64\", sdl_path);
+
+        println!(
+            r"cargo:rustc-link-search={}\SDL2_ttf-2.20.2\lib\x64\",
+            sdl_path
+        );
+
+        println!(
+            r"cargo:rustc-link-search={}\SDL2_image-2.8.0\lib\x64\",
+            sdl_path
+        );
     }
 }
