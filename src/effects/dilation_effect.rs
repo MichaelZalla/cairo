@@ -12,7 +12,7 @@ pub struct DilationEffect {
 
 impl DilationEffect {
     pub fn new(outline_color: Color, key_color: Color, rounds: Option<u32>) -> Self {
-        let rounds = if let Some(value) = rounds { value } else { 1 };
+        let rounds = rounds.unwrap_or(1);
 
         Self {
             rounds,

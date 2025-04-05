@@ -18,7 +18,7 @@ impl KernelEffect {
 
         let total = weights.iter().sum::<i32>();
 
-        let rounds = if let Some(value) = rounds { value } else { 1 };
+        let rounds = rounds.unwrap_or(1);
 
         Self {
             accumulation_buffer,
