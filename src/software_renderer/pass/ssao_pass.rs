@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-pub(in crate::software_renderer) const KERNEL_SIZE: usize = 64;
+pub(in crate::software_renderer) const KERNEL_SIZE: usize = 12;
 
 pub(in crate::software_renderer) fn make_hemisphere_kernel() -> [Vec3; KERNEL_SIZE] {
     let mut rng = rand::thread_rng();
@@ -214,7 +214,7 @@ fn get_occlusion(
     far: f32,
     geometry_buffer: &GBuffer,
     projection: Mat4,
-    hemisphere_kernel: &[Vec3; 64],
+    hemisphere_kernel: &[Vec3; KERNEL_SIZE],
     position_view_space: Vec3,
     tbn: Mat4,
 ) -> f32 {
