@@ -377,6 +377,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)]
     fn test_push_in() {
         let mut stack = match FixedStackArena::new(128, size_of::<f32>()) {
             Ok(stack) => stack,
@@ -385,6 +386,8 @@ mod tests {
 
         let mut data = stack.push_for::<f32>();
 
+        // Miri: "error: Undefined Behavior: using uninitialized data, but this
+        // operation requires initialized memory"
         println!("Before: {}", *data);
 
         *data = std::f32::consts::PI;

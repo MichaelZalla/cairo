@@ -57,6 +57,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)]
     fn test_push_and_release() {
         let mut stack = match FixedStackArena::new(1024, 1) {
             Ok(stack) => stack,
@@ -83,6 +84,8 @@ mod tests {
 
         let top = stack.top();
 
+        // Miri: "error: Undefined Behavior: using uninitialized data, but this
+        // operation requires initialized memory"
         assert!(unsafe { *top.as_ptr().byte_sub(1) == *(c.as_ptr().cast::<u8>()) });
 
         FixedStackArena::release(stack);
