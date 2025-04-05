@@ -150,17 +150,15 @@ impl SceneNode {
                 }
 
                 // Only one Environment node may exist per scene at a time.
-                match self.children() {
-                    Some(children) => {
-                        if children
-                            .iter()
-                            .any(|child| child.is_type(SceneNodeType::Environment))
-                        {
-                            return Err("Cannot add multiple Environment nodes to a Scene node!"
-                                .to_string());
-                        }
+                if let Some(children) = self.children() {
+                    if children
+                        .iter()
+                        .any(|child| child.is_type(SceneNodeType::Environment))
+                    {
+                        return Err(
+                            "Cannot add multiple Environment nodes to a Scene node!".to_string()
+                        );
                     }
-                    None => (),
                 }
             }
             SceneNodeType::AmbientLight
@@ -172,17 +170,17 @@ impl SceneNode {
                 }
 
                 // Only one node of this type may exist per scene (environment) at a time.
-                match self.children() {
-                    Some(children) => {
-                        if children.iter().any(|child| child.is_type(node.node_type)) {
-                            return Err(format!(
-                                "Cannot add multiple {} nodes to an Environment node!",
-                                node.node_type
-                            )
-                            .to_string());
-                        }
+                if let Some(children) = {
+                    let this = &self;
+                    &this.children
+                } {
+                    if children.iter().any(|child| child.is_type(node.node_type)) {
+                        return Err(format!(
+                            "Cannot add multiple {} nodes to an Environment node!",
+                            node.node_type
+                        )
+                        .to_string());
                     }
-                    None => (),
                 }
             }
             SceneNodeType::Camera => (),
@@ -291,35 +289,29 @@ impl SceneNode {
             SceneNodeLocalTraversalMethod::PreOrder => {
                 visit_action(current_depth, current_world_transform, self)?;
 
-                match &self.children {
-                    Some(children) => {
-                        for child in children {
-                            child.visit_dfs(
-                                local_method,
-                                current_depth + 1,
-                                current_world_transform,
-                                visit_action,
-                            )?;
-                        }
+                if let Some(children) = &self.children {
+                    for child in children {
+                        child.visit_dfs(
+                            local_method,
+                            current_depth + 1,
+                            current_world_transform,
+                            visit_action,
+                        )?;
                     }
-                    None => (),
                 }
 
                 Ok(())
             }
             SceneNodeLocalTraversalMethod::PostOrder => {
-                match &self.children {
-                    Some(children) => {
-                        for child in children {
-                            child.visit_dfs(
-                                local_method,
-                                current_depth + 1,
-                                current_world_transform,
-                                visit_action,
-                            )?;
-                        }
+                if let Some(children) = &self.children {
+                    for child in children {
+                        child.visit_dfs(
+                            local_method,
+                            current_depth + 1,
+                            current_world_transform,
+                            visit_action,
+                        )?;
                     }
-                    None => (),
                 }
 
                 visit_action(current_depth, current_world_transform, self)
@@ -392,13 +384,10 @@ impl SceneNode {
 
             visit_action(current_depth, current_world_transform, current_node)?;
 
-            match &current_node.children {
-                Some(children) => {
-                    for child in children {
-                        frontier.push_back((current_depth + 1, current_world_transform, child));
-                    }
+            if let Some(children) = &current_node.children {
+                for child in children {
+                    frontier.push_back((current_depth + 1, current_world_transform, child));
                 }
-                None => (),
             }
         }
 

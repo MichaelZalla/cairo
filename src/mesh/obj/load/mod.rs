@@ -219,9 +219,8 @@ pub fn load_obj(
         }
     }
 
-    match &material_source {
-        Some(src) => load_mtl(src, material_arena, texture_arena),
-        None => (),
+    if let Some(src) = &material_source {
+        load_mtl(src, material_arena, texture_arena)
     }
 
     let mut geometry = MeshGeometry {
