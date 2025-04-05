@@ -49,15 +49,10 @@ impl SceneContext {
 
         let mut cubemap_u8_arena = self.resources.cubemap_u8.borrow_mut();
 
-        for slot in cubemap_u8_arena.entries.iter_mut() {
-            match slot {
-                Some(entry) => {
-                    let cubemap = &mut entry.item;
+        for entry in cubemap_u8_arena.entries.iter_mut().flatten() {
+            let cubemap = &mut entry.item;
 
-                    cubemap.load(rendering_context)?;
-                }
-                None => (),
-            }
+            cubemap.load(rendering_context)?;
         }
 
         Ok(())

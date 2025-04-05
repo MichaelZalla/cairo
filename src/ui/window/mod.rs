@@ -260,18 +260,15 @@ impl<'a> Window<'a> {
             ui_box_tree.commit_frame()?;
         }
 
-        match &root_ui_box_result
+        if let Some(handle) = &root_ui_box_result
             .mouse_interaction_in_bounds
             .active_drag_handle
         {
-            Some(handle) => {
-                let mouse = &ctx.input_events.borrow().mouse;
+            let mouse = &ctx.input_events.borrow().mouse;
 
-                if mouse.drag_events.contains_key(&MouseButton::Left) {
-                    self.apply_resize_event(mouse, handle, main_window_bounds);
-                }
+            if mouse.drag_events.contains_key(&MouseButton::Left) {
+                self.apply_resize_event(mouse, handle, main_window_bounds);
             }
-            None => (),
         }
 
         {

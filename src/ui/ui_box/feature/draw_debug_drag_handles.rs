@@ -32,8 +32,8 @@ impl UIBox {
             },
         };
 
-        match &handle {
-            Some(handle) => match handle {
+        if let Some(handle) = &handle {
+            match handle {
                 UIBoxDragHandle::Top => {
                     target.horizontal_line_unsafe(x1 as u32, x2 as u32, y1 as u32, color)
                 }
@@ -46,8 +46,7 @@ impl UIBox {
                 UIBoxDragHandle::Right => {
                     target.vertical_line_unsafe(x2 as u32, y1 as u32, y2 as u32, color)
                 }
-            },
-            None => (),
+            }
         }
     }
 }

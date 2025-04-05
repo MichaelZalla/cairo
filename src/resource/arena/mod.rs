@@ -20,15 +20,10 @@ pub struct Arena<T: PostDeserialize> {
 
 impl<T: PostDeserialize> PostDeserialize for Arena<T> {
     fn post_deserialize(&mut self) {
-        for slot in self.entries.iter_mut() {
-            match slot {
-                Some(entry) => {
-                    let item = &mut entry.item;
+        for entry in self.entries.iter_mut().flatten() {
+            let item = &mut entry.item;
 
-                    item.post_deserialize();
-                }
-                None => (),
-            }
+            item.post_deserialize();
         }
     }
 }

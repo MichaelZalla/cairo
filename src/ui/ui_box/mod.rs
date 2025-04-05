@@ -491,20 +491,15 @@ impl UIBox {
 
         // Sets cursor based on any active drag handle.
 
-        match &self.hot_drag_handle {
-            Some(handle) => {
-                GLOBAL_UI_CONTEXT.with(|ctx| {
-                    *ctx.cursor_kind.borrow_mut() = match handle {
-                        UIBoxDragHandle::Left | UIBoxDragHandle::Right => {
-                            MouseCursorKind::DragLeftRight
-                        }
-                        UIBoxDragHandle::Top | UIBoxDragHandle::Bottom => {
-                            MouseCursorKind::DragUpDown
-                        }
-                    };
-                });
-            }
-            None => (),
+        if let Some(handle) = &self.hot_drag_handle {
+            GLOBAL_UI_CONTEXT.with(|ctx| {
+                *ctx.cursor_kind.borrow_mut() = match handle {
+                    UIBoxDragHandle::Left | UIBoxDragHandle::Right => {
+                        MouseCursorKind::DragLeftRight
+                    }
+                    UIBoxDragHandle::Top | UIBoxDragHandle::Bottom => MouseCursorKind::DragUpDown,
+                };
+            });
         }
 
         Ok(())

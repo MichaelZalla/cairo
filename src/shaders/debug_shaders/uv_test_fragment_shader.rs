@@ -17,8 +17,8 @@ pub static UvTestFragmentShader: FragmentShaderFn =
         let g: u8;
         let b: u8;
 
-        match &context.active_uv_test_texture_map {
-            Some(handle) => match resources.texture_u8.borrow().get(handle) {
+        if let Some(handle) = &context.active_uv_test_texture_map {
+            match resources.texture_u8.borrow().get(handle) {
                 Ok(entry) => {
                     let map = &entry.item;
 
@@ -31,8 +31,7 @@ pub static UvTestFragmentShader: FragmentShaderFn =
                     };
                 }
                 Err(err) => panic!("Failed to get TextureMap from Arena: {:?}: {}", handle, err),
-            },
-            None => (),
+            }
         }
 
         Vec3 {

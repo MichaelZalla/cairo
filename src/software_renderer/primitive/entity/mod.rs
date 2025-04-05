@@ -22,13 +22,10 @@ impl SoftwareRenderer {
             {
                 let mut context = self.shader_context.borrow_mut();
 
-                match &entity_material {
-                    Some(handle) => {
-                        context.set_active_material(Some(*handle));
+                if let Some(handle) = &entity_material {
+                    context.set_active_material(Some(*handle));
 
-                        did_set_active_material = true;
-                    }
-                    None => (),
+                    did_set_active_material = true;
                 }
             }
 
