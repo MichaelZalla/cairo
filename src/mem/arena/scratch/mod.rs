@@ -50,6 +50,10 @@ mod tests {
         let scratch = ScratchArena::new(&mut stack);
 
         assert_eq!(scratch.arena.bytes_allocated(), 3);
+
+        assert!(ScratchArena::release(scratch).is_ok());
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -80,5 +84,7 @@ mod tests {
         let top = stack.top();
 
         assert!(unsafe { *top.as_ptr().byte_sub(1) == *(c.as_ptr().cast::<u8>()) });
+
+        FixedStackArena::release(stack);
     }
 }

@@ -234,6 +234,8 @@ mod tests {
         assert_eq!(stack.capacity(), 1 << 10);
         assert_eq!(stack.align(), 1 << 0);
         assert_eq!(stack.bytes_allocated(), 0);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -243,7 +245,9 @@ mod tests {
             Err(err) => panic!("{}", err.to_string()),
         };
 
-        assert!(stack.pop(1).is_err())
+        assert!(stack.pop(1).is_err());
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -285,6 +289,8 @@ mod tests {
 
         assert_eq!(stack.capacity(), 32);
         assert_eq!(stack.bytes_allocated(), 0);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -301,6 +307,8 @@ mod tests {
         assert_eq!(*a.as_mut().first().unwrap(), 0);
         assert_eq!(*b.as_mut().first().unwrap(), 0);
         assert_eq!(*c.as_mut().first().unwrap(), 0);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -324,6 +332,8 @@ mod tests {
         assert_eq!(*b.as_mut().first().unwrap(), 2);
         assert_eq!(*c.as_mut().first().unwrap(), 3);
         assert_eq!(*d.as_mut().first().unwrap(), 4);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -362,6 +372,8 @@ mod tests {
         assert_eq!(floats.as_ref()[1], 2.2);
         assert_eq!(floats.as_ref()[2], 3.3);
         assert_eq!(floats.as_ref()[3], 4.4);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -378,6 +390,8 @@ mod tests {
         *data = std::f32::consts::PI;
 
         println!("After: {}", *data);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -402,6 +416,8 @@ mod tests {
 
         assert!(stack.pop_to(a).is_ok());
         assert_eq!(stack.bytes_allocated(), 0);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
@@ -422,6 +438,8 @@ mod tests {
 
         assert_eq!(stack.capacity(), 32);
         assert_eq!(stack.bytes_allocated(), 0);
+
+        FixedStackArena::release(stack);
     }
 
     #[test]
