@@ -1,4 +1,4 @@
-use std::{cell::RefCell, f32::EPSILON, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 #[cfg(feature = "debug_cycle_counts")]
 use profile::SoftwareRendererCycleCounter;
@@ -486,7 +486,7 @@ impl SoftwareRenderer {
             ) {
                 // Opaque vs. semi-transparent paths.
 
-                if sample.alpha > 1.0 - EPSILON {
+                if sample.alpha > 1.0 - f32::EPSILON {
                     // Write non-linear depth to the depth buffer.
 
                     depth_buffer.set(x, y, non_linear_z);

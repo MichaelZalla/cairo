@@ -1,5 +1,3 @@
-use std::f32::EPSILON;
-
 use crate::vec::{
     vec3::{self, Vec3},
     vec4::Vec4,
@@ -22,7 +20,7 @@ impl SoftwareRenderer {
                         .zip(self.alpha_accumulation_buffer.data.iter_mut())
                         .zip(&self.alpha_revealage_buffer.data)
                     {
-                        if *revealage > 1.0 - EPSILON {
+                        if *revealage > 1.0 - f32::EPSILON {
                             continue;
                         }
 
@@ -48,7 +46,7 @@ fn weighted_blended(dest: Vec3, mut accumulation: Vec4, revealage: f32) -> Vec3 
     // Normalizes accumulated color by the total accumulated alpha (avoid
     // divide-by-zero).
 
-    let normalized = accumulation.to_vec3() / accumulation.w.max(EPSILON);
+    let normalized = accumulation.to_vec3() / accumulation.w.max(f32::EPSILON);
 
     // Source: GL_SRC_ALPHA, dest: GL_ONE_MINUS_SRC_ALPHA
 
