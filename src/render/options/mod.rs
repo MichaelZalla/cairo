@@ -118,14 +118,14 @@ impl RenderOptions {
                     );
                 }
                 Keycode::Num4 => {
-                    self.render_pass_flags ^= RenderPassFlag::Bloom;
+                    self.render_pass_flags ^= RenderPassFlag::SsaoBlur;
 
                     println!(
-                        "Bloom pass: {}",
-                        if self.render_pass_flags.contains(RenderPassFlag::Bloom) {
-                            "On"
+                        "SSAO pass: {}",
+                        if self.render_pass_flags.contains(RenderPassFlag::SsaoBlur) {
+                            "On (Blur)"
                         } else {
-                            "Off"
+                            "On (No blur)"
                         }
                     );
                 }

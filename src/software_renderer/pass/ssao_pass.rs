@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-pub(in crate::software_renderer) const KERNEL_SIZE: usize = 12;
+pub(in crate::software_renderer) const KERNEL_SIZE: usize = 16;
 
 pub(in crate::software_renderer) fn make_hemisphere_kernel() -> [Vec3; KERNEL_SIZE] {
     let mut rng = rand::thread_rng();
@@ -276,7 +276,7 @@ fn ssao_blur(
     ssao_buffer: &mut Buffer2D<f32>,
     ssao_blur_buffer: &mut Buffer2D<f32>,
 ) {
-    static BLUR_STRENGTH: f32 = 4.0;
+    static BLUR_STRENGTH: f32 = 2.0;
 
     let max_offset = BLUR_STRENGTH as i32;
 

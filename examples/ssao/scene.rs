@@ -7,7 +7,6 @@ use cairo::{
     matrix::Mat4,
     mesh::{
         obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
-        primitive::cube,
         Mesh,
     },
     resource::arena::Arena,
@@ -22,7 +21,7 @@ use cairo::{
     },
     shader::context::ShaderContext,
     texture::map::TextureMap,
-    transform::{quaternion::Quaternion, Transform3D},
+    transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };
 
@@ -119,44 +118,10 @@ pub fn make_ssao_scene(
         },
     )?;
 
-    // Add a ground plane to our scene.
-
-    let plane_entity_node = {
-        let entity = {
-            let mut mesh = cube::generate(200.0, 1.0, 200.0);
-
-            mesh.object_name.replace("ground_plane".to_string());
-
-            let mesh_handle = mesh_arena.insert(mesh);
-
-            let material_handle = material_arena.insert(Material {
-                name: "plane".to_string(),
-                albedo: vec3::ONES,
-                roughness: 0.0,
-                ..Default::default()
-            });
-
-            Entity::new(mesh_handle, Some(material_handle))
-        };
-
-        let entity_handle = entity_arena.insert(entity);
-
-        let mut transform = Transform3D::default();
-
-        transform.set_translation(Vec3 {
-            y: -0.7,
-            ..Default::default()
-        });
-
-        SceneNode::new(SceneNodeType::Entity, transform, Some(entity_handle))
-    };
-
-    scene.root.add_child(plane_entity_node)?;
-
     // Load an object to place on the ground.
 
     let LoadObjResult(_backpack_geometry, backpack_meshes) = load_obj(
-        "./data/obj/guitar-backpack.obj",
+        "./data/obj/suzanne.obj",
         material_arena,
         texture_u8_arena,
         Some(ProcessGeometryFlag::Null | ProcessGeometryFlag::Center),

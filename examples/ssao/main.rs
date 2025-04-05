@@ -1,14 +1,10 @@
 extern crate sdl2;
 
-use std::{
-    cell::RefCell,
-    f32::{self, consts::PI},
-    rc::Rc,
-};
+use std::{cell::RefCell, f32, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_960_BY_540},
+        resolution::{Resolution, RESOLUTION_480_BY_270},
         App, AppWindowInfo,
     },
     buffer::{framebuffer::Framebuffer, Buffer2D},
@@ -41,8 +37,8 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/ssao".to_string(),
         relative_mouse_mode: true,
-        window_resolution: RESOLUTION_960_BY_540,
-        canvas_resolution: RESOLUTION_960_BY_540,
+        window_resolution: RESOLUTION_480_BY_270 * 2.0,
+        canvas_resolution: RESOLUTION_480_BY_270,
         ..Default::default()
     };
 
@@ -188,11 +184,10 @@ fn main() -> Result<(), String> {
 
                                     let transform = node.get_transform_mut();
 
-                                    let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 2.0);
                                     let rotate_y =
-                                        Quaternion::new(vec3::UP, uptime / 10.0 % f32::consts::TAU);
+                                        Quaternion::new(vec3::UP, uptime / 5.0 % f32::consts::TAU);
 
-                                    transform.set_rotation(rotate_x * rotate_y);
+                                    transform.set_rotation(rotate_y);
                                 }
                             }
 
@@ -359,7 +354,7 @@ fn draw_ambient_occlusion_buffer(
     renderer_rc: &RefCell<SoftwareRenderer>,
     color_buffer: &mut Buffer2D,
 ) {
-    static SSAO_BUFFER_THUMBNAIL_WIDTH: u32 = 360;
+    static SSAO_BUFFER_THUMBNAIL_WIDTH: u32 = (RESOLUTION_480_BY_270.width as f32 * 0.33) as u32;
 
     let renderer = renderer_rc.borrow();
 
