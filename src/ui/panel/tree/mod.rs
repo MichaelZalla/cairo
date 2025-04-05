@@ -21,7 +21,7 @@ pub struct PanelTree<'a> {
     tree: Tree<'a, Panel>,
 }
 
-impl<'a> fmt::Display for PanelTree<'a> {
+impl fmt::Display for PanelTree<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", serde_json::to_string_pretty(&self).unwrap())
     }

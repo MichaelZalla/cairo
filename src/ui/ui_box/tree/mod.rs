@@ -60,7 +60,7 @@ pub struct UIBoxTree<'a> {
     pub next_focused_key: RefCell<Option<UIKey>>,
 }
 
-impl<'a> fmt::Display for UIBoxTree<'a> {
+impl fmt::Display for UIBoxTree<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.tree.fmt(f)
     }

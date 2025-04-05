@@ -34,7 +34,7 @@ pub struct WindowUITrees<'a> {
     pub tooltips: RefCell<UIBoxTree<'a>>,
 }
 
-impl<'a> WindowUITrees<'a> {
+impl WindowUITrees<'_> {
     pub fn clear(&self) {
         self.base.borrow_mut().clear();
         self.dropdowns.borrow_mut().clear();
@@ -61,7 +61,7 @@ pub struct Window<'a> {
     pub ui_trees: WindowUITrees<'a>,
 }
 
-impl<'a> fmt::Debug for Window<'a> {
+impl fmt::Debug for Window<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Window")
             .field("id", &self.id)

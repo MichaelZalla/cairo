@@ -18,7 +18,7 @@ pub struct FontCache<'l> {
     cache: FontHashMap<'l>,
 }
 
-impl<'l> Debug for FontCache<'l> {
+impl Debug for FontCache<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FontCache")
             .field("context", &"Sdl2TtfContext")

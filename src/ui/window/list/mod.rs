@@ -10,7 +10,7 @@ use super::Window;
 #[derive(Default, Debug, Clone)]
 pub struct WindowList<'a>(pub LinkedList<Window<'a>>);
 
-impl<'a> WindowList<'a> {
+impl WindowList<'_> {
     pub fn rebuild_ui_trees(&mut self, resolution: Resolution) {
         let mut focused_window = None;
 

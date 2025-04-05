@@ -73,7 +73,7 @@ pub struct UIContext<'a> {
     pub debug: RefCell<UIContextDebugOptions>,
 }
 
-impl<'a> Default for UIContext<'a> {
+impl Default for UIContext<'_> {
     fn default() -> Self {
         let default_theme = UITheme::default();
 
@@ -128,7 +128,7 @@ macro_rules! with_style_applied {
     };
 }
 
-impl<'a> UIContext<'a> {
+impl UIContext<'_> {
     with_style_applied!(fill_color);
     with_style_applied!(border_color);
     with_style_applied!(text_color);

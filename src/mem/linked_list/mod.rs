@@ -387,8 +387,8 @@ impl<T> ExactSizeIterator for IntoIter<T> {
 
 // Traits for Iter<'a, T>.
 
-unsafe impl<'a, T: Send> Send for Iter<'a, T> {}
-unsafe impl<'a, T: Sync> Sync for Iter<'a, T> {}
+unsafe impl<T: Send> Send for Iter<'_, T> {}
+unsafe impl<T: Sync> Sync for Iter<'_, T> {}
 
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
@@ -412,7 +412,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+impl<T> DoubleEndedIterator for Iter<'_, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.len > 0 {
             self.back.map(|node| unsafe {
@@ -428,7 +428,7 @@ impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+impl<T> ExactSizeIterator for Iter<'_, T> {
     fn len(&self) -> usize {
         self.len
     }
@@ -436,8 +436,8 @@ impl<'a, T> ExactSizeIterator for Iter<'a, T> {
 
 // Traits for IterMut<'a, T>.
 
-unsafe impl<'a, T: Send> Send for IterMut<'a, T> {}
-unsafe impl<'a, T: Sync> Sync for IterMut<'a, T> {}
+unsafe impl<T: Send> Send for IterMut<'_, T> {}
+unsafe impl<T: Sync> Sync for IterMut<'_, T> {}
 
 impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
@@ -461,7 +461,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
+impl<T> DoubleEndedIterator for IterMut<'_, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.len > 0 {
             self.back.map(|node| unsafe {
@@ -477,7 +477,7 @@ impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
+impl<T> ExactSizeIterator for IterMut<'_, T> {
     fn len(&self) -> usize {
         self.len
     }
