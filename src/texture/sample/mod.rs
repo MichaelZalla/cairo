@@ -311,7 +311,7 @@ pub fn sample_bilinear_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>
         // Case: 4 neighbors
         (Some(top_left), Some(top_right), Some(bottom_left), Some(bottom_right)) => {
             let alpha_x = fractional_texel.x - top_left.0;
-            
+
             // 1. Interpolate between top_left and top_right (based on uv.x).
             let sample_a_1 = sample_from_texel_u8(top_left, map, level_index);
             let sample_b_1 = sample_from_texel_u8(top_right, map, level_index);
@@ -426,7 +426,7 @@ pub fn sample_bilinear_vec3(uv: Vec2, map: &TextureMap<Vec3>, level_index: Optio
         // Case: 4 neighbors
         (Some(top_left), Some(top_right), Some(bottom_left), Some(bottom_right)) => {
             let alpha_x = fractional_texel.x - top_left.0;
-            
+
             // 1. Interpolate between top_left and top_right (based on uv.x).
             let sample_a_1 = sample_from_texel_vec3(top_left, map, level_index);
             let sample_b_1 = sample_from_texel_vec3(top_right, map, level_index);

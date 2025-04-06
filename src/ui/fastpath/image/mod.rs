@@ -43,15 +43,15 @@ fn image_render_callback(
             match arena_rc_option.as_ref() {
                 Some(arena_rc) => {
                     let arena = arena_rc.borrow();
-    
+
                     match arena.get(handle) {
                         Ok(entry) => {
                             let texture = &entry.item;
-    
+
                             match (texture.is_loaded, texture.get_aspect_ratio()) {
                                 (true, Some(aspect_ratio)) => {
                                     render_scaled_texture(texture, screen_extent, aspect_ratio, target);
-    
+
                                     Ok(())
                                 }
                                 _ => {
