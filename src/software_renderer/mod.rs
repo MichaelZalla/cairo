@@ -177,11 +177,12 @@ impl Renderer for SoftwareRenderer {
 
         // Tone-mapping pass (or basic blit).
 
-        if self
+        let do_tone_mapping = self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::ToneMapping)
-        {
+            .contains(RenderPassFlag::ToneMapping);
+
+        if do_tone_mapping {
             self.do_tone_mapping_pass();
         } else if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow();
