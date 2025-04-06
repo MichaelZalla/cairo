@@ -26,7 +26,7 @@ impl SoftwareRenderer {
             if let Some((_alpha, intersection_point)) =
                 intersect_line_segment_plane(plane, start_world_space, end_world_space)
             {
-                let start_world_space_clipped = intersection_point;
+                let start_world_space_clipped = intersection_point + plane.normal * 0.001;
 
                 let end_world_space_clipped = if plane.get_signed_distance(&start_world_space) > 0.0
                 {
