@@ -77,7 +77,7 @@ pub fn make_scene(
 
                 light.set_attenuation(LIGHT_ATTENUATION_RANGE_50_UNITS);
 
-                light.enable_shadow_maps(512, 100.0, resources.clone());
+                light.enable_shadow_maps(128, 100.0, resources.clone());
 
                 light
             };
