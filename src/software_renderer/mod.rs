@@ -175,36 +175,59 @@ impl Renderer for SoftwareRenderer {
             }
         }
 
-        // Tone-mapping pass (or basic blit).
+        // Tone-mapping pass, or basic (clamped) blit.
+
+        let do_deferred_lighting = self
+            .options
+            .render_pass_flags
+            .contains(RenderPassFlag::DeferredLighting);
 
         let do_tone_mapping = self
             .options
             .render_pass_flags
             .contains(RenderPassFlag::ToneMapping);
 
-        if do_tone_mapping {
-            self.do_tone_mapping_pass();
-        } else if let Some(framebuffer_rc) = &self.framebuffer {
-            let framebuffer = framebuffer_rc.borrow();
-
-            // Blit the forward color buffer.
-
-            if let Some(deferred_buffer_rc) = framebuffer.attachments.deferred_hdr.as_ref() {
-                let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
-
-                for color_hdr in deferred_buffer.iter_mut() {
-                    *color_hdr = color_hdr.clamp(0.0, 1.0);
-                }
-            }
-        }
-
-        // Combine the forward and deferred (HDR) color buffers into the default
-        // color buffer.
-
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow();
 
-            // Blit the forward color buffer.
+            // Blit HDR samples to the forward (LDR) buffer.
+
+            if do_deferred_lighting {
+                if let (Some(g_buffer), Some(deferred_buffer_rc), Some(forward_buffer_rc)) = (
+                    self.g_buffer.as_ref(),
+                    framebuffer.attachments.deferred_hdr.as_ref(),
+                    framebuffer.attachments.forward_ldr.as_ref(),
+                ) {
+                    let deferred_buffer = deferred_buffer_rc.borrow();
+
+                    let mut forward_buffer = forward_buffer_rc.borrow_mut();
+
+                    for ((sample, color_hdr), color_ldr) in
+                        std::iter::zip(g_buffer.0.iter(), deferred_buffer.data.iter())
+                            .zip(forward_buffer.data.iter_mut())
+                    {
+                        if Color::from_u32(*color_ldr).a > 0.0 {
+                            continue;
+                        }
+
+                        if sample.stencil {
+                            let mut tone_mapped_color = if do_tone_mapping {
+                                self.options.tone_mapping.map(*color_hdr)
+                            } else {
+                                color_hdr.clamp(0.0, 1.0)
+                            };
+
+                            // Gamma correct: Transforms linear space to sRGB space.
+
+                            tone_mapped_color.linear_to_srgb();
+
+                            *color_ldr = Color::from_vec3(tone_mapped_color * 255.0).to_u32();
+                        }
+                    }
+                }
+            }
+
+            // Blit LDR color samples to the color buffer.
 
             if let (Some(forward_buffer_rc), Some(color_buffer_rc)) = (
                 framebuffer.attachments.forward_ldr.as_ref(),
