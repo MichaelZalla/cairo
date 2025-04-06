@@ -9,6 +9,7 @@ pub struct Empty(pub EmptyDisplayKind);
 pub enum EmptyDisplayKind {
     #[default]
     Axes,
+    Square,
     Circle(usize),
     Sphere(usize),
 }

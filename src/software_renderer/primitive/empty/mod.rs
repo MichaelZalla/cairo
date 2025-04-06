@@ -7,11 +7,52 @@ use crate::{
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::{vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 impl SoftwareRenderer {
-    fn render_circles<const N: usize>(
+    fn render_square(&mut self, transform: &Mat4, color: Color) {
+        static SQUARE_VERTICES_OBJECT_SPACE: [Vec4; 4] = [
+            // Top-left
+            Vec4 {
+                x: -1.0,
+                y: 1.0,
+                z: 0.0,
+                w: 1.0,
+            },
+            // Top-right
+            Vec4 {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+                w: 1.0,
+            },
+            // Bottom-right
+            Vec4 {
+                x: 1.0,
+                y: -1.0,
+                z: 0.0,
+                w: 1.0,
+            },
+            // Bottom-left
+            Vec4 {
+                x: -1.0,
+                y: -1.0,
+                z: 0.0,
+                w: 1.0,
+            },
+        ];
+
+        let positions_world_space: [Vec3; 4] =
+            SQUARE_VERTICES_OBJECT_SPACE.map(|p| (p * *transform).to_vec3());
+
+        self.render_line_loop(&positions_world_space, 0, 3, color);
+    }
+
+    fn render_circles(
         &mut self,
         divisions: usize,
         transform: &Mat4,
@@ -66,6 +107,9 @@ impl SoftwareRenderer {
                 let world_position = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
 
                 self.render_axes(Some(world_position), None);
+            }
+            EmptyDisplayKind::Square => {
+                self.render_square(transform, color::WHITE);
             }
             EmptyDisplayKind::Circle(divisions) => {
                 let local_transforms = [Mat4::identity()];
