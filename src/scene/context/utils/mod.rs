@@ -158,8 +158,8 @@ pub fn make_cube_scene(
 
                             camera.look_vector.set_position(Vec3 {
                                 x: 0.0,
-                                y: 3.0,
-                                z: -3.0,
+                                y: 0.0,
+                                z: -4.0,
                             });
                         }
                     }
