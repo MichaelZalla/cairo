@@ -3,7 +3,10 @@ extern crate sdl2;
 use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{
+        resolution::{Resolution, RESOLUTION_1280_BY_720},
+        App, AppWindowInfo,
+    },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     render::Renderer,
@@ -25,6 +28,8 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/empties".to_string(),
         relative_mouse_mode: true,
+        canvas_resolution: RESOLUTION_1280_BY_720,
+        window_resolution: RESOLUTION_1280_BY_720,
         ..Default::default()
     };
 
@@ -60,12 +65,13 @@ fn main() -> Result<(), String> {
             &mut directional_light_arena,
         )?;
 
-        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 5] = [
+        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 6] = [
             EmptyDisplayKind::Axes,
+            EmptyDisplayKind::Arrow,
             EmptyDisplayKind::Square,
             EmptyDisplayKind::Cube,
-            EmptyDisplayKind::Circle(12),
-            EmptyDisplayKind::Sphere(12),
+            EmptyDisplayKind::Circle(36),
+            EmptyDisplayKind::Sphere(36),
         ];
 
         for (index, kind) in EMPTY_DISPLAY_KINDS.iter().enumerate() {
@@ -77,7 +83,7 @@ fn main() -> Result<(), String> {
                 let mut transform = Transform3D::default();
 
                 transform.set_translation(Vec3 {
-                    x: (EMPTY_DISPLAY_KINDS.len() as f32 * -1.0) + index as f32 * 2.0,
+                    x: (EMPTY_DISPLAY_KINDS.len() as f32 * -2.0) + index as f32 * 4.0,
                     y: 2.0,
                     z: -0.5,
                 });

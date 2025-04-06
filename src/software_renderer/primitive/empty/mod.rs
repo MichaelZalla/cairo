@@ -10,7 +10,7 @@ use crate::{
     transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
-        vec4::Vec4,
+        vec4::{self, Vec4},
     },
 };
 
@@ -109,18 +109,42 @@ impl SoftwareRenderer {
 
                 self.render_axes(Some(world_position), None);
             }
+            EmptyDisplayKind::Arrow => {
+                let arrow_start = Vec4::new(Default::default(), 1.0);
+
+                let arrow_end = vec4::FORWARD;
+
+                let arrow_head_left =
+                    arrow_end + Vec4::new((-vec3::RIGHT + -vec3::FORWARD) * 0.2, 0.0);
+
+                let arrow_head_right =
+                    arrow_end + Vec4::new((vec3::RIGHT + -vec3::FORWARD) * 0.2, 0.0);
+
+                let segments: [(Vec4, Vec4); 3] = [
+                    (arrow_start, arrow_end),
+                    (arrow_end, arrow_head_left),
+                    (arrow_end, arrow_head_right),
+                ];
+
+                for (start, end) in segments.iter() {
+                    let start_transformed = (*start * *transform).to_vec3();
+                    let end_transformed = (*end * *transform).to_vec3();
+
+                    self.render_line(start_transformed, end_transformed, color::ORANGE);
+                }
+            }
             EmptyDisplayKind::Square => {
-                self.render_square(transform, color::WHITE);
+                self.render_square(transform, color::ORANGE);
             }
             EmptyDisplayKind::Cube => {
                 let aabb = AABB::from_min_max(-vec3::ONES, vec3::ONES);
 
-                self.render_aabb(&aabb, Some(transform), color::WHITE);
+                self.render_aabb(&aabb, Some(transform), color::ORANGE);
             }
             EmptyDisplayKind::Circle(divisions) => {
                 let local_transforms = [Mat4::identity()];
 
-                let colors = [color::WHITE];
+                let colors = [color::ORANGE];
 
                 self.render_circles(divisions, transform, &local_transforms, &colors);
             }
@@ -137,7 +161,7 @@ impl SoftwareRenderer {
                     local_transform_x_plane,
                 ];
 
-                let colors: [Color; 3] = [color::GREEN, color::BLUE, color::RED];
+                let colors: [Color; 3] = [color::ORANGE, color::ORANGE, color::ORANGE];
 
                 self.render_circles(divisions, transform, &local_transforms, &colors);
             }
