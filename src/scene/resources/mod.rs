@@ -14,6 +14,7 @@ use crate::{
 
 use super::{
     camera::Camera,
+    empty::Empty,
     environment::Environment,
     light::{
         ambient_light::AmbientLight, directional_light::DirectionalLight, point_light::PointLight,
@@ -24,6 +25,7 @@ use super::{
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneResources {
+    pub empty: Rc<RefCell<Arena<Empty>>>,
     pub camera: Rc<RefCell<Arena<Camera>>>,
     pub environment: Rc<RefCell<Arena<Environment>>>,
     pub skybox: Rc<RefCell<Arena<Skybox>>>,
@@ -53,6 +55,7 @@ impl SceneResources {
     // Avoids `post_deserialize()`, as it required `&mut Self`.
 
     pub fn _post_deserialize(&self) {
+        self.empty.borrow_mut().post_deserialize();
         self.camera.borrow_mut().post_deserialize();
         self.environment.borrow_mut().post_deserialize();
         self.skybox.borrow_mut().post_deserialize();

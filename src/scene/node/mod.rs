@@ -25,6 +25,7 @@ pub enum SceneNodeType {
     AmbientLight,
     DirectionalLight,
     Skybox,
+    Empty,
     Camera,
     PointLight,
     SpotLight,
@@ -42,6 +43,7 @@ impl Display for SceneNodeType {
                 SceneNodeType::AmbientLight => "Ambient light",
                 SceneNodeType::DirectionalLight => "Directional light",
                 SceneNodeType::Skybox => "Skybox",
+                SceneNodeType::Empty => "Empty",
                 SceneNodeType::Camera => "Camera",
                 SceneNodeType::PointLight => "Point light",
                 SceneNodeType::SpotLight => "Spot light",
@@ -183,6 +185,7 @@ impl SceneNode {
                     }
                 }
             }
+            SceneNodeType::Empty => (),
             SceneNodeType::Camera => (),
             SceneNodeType::PointLight => (),
             SceneNodeType::SpotLight => (),

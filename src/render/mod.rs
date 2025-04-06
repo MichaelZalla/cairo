@@ -8,6 +8,7 @@ use crate::{
     resource::handle::Handle,
     scene::{
         camera::{frustum::Frustum, Camera},
+        empty::EmptyDisplayKind,
         light::{
             ambient_light::AmbientLight, directional_light::DirectionalLight,
             point_light::PointLight, spot_light::SpotLight,
@@ -45,6 +46,8 @@ pub trait Renderer {
     fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>);
 
     fn render_ground_plane(&mut self, parallels: usize);
+
+    fn render_empty(&mut self, transform: &Mat4, display_kind: EmptyDisplayKind);
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>);
 

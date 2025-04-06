@@ -6,6 +6,7 @@ use super::device::{
 
 pub mod camera;
 pub mod context;
+pub mod empty;
 pub mod environment;
 pub mod graph;
 pub mod light;

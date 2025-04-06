@@ -651,6 +651,23 @@
         "$rustc"
       ],
       "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example empties",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "empties"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
         "kind": "build",
         "isDefault": true
       },

@@ -466,6 +466,28 @@ impl SceneGraph {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
+                SceneNodeType::Empty => match handle {
+                    Some(handle) => {
+                        let empty_arena = resources.empty.borrow();
+
+                        match empty_arena.get(handle) {
+                            Ok(entry) => {
+                                let empty = &entry.item;
+
+                                renderer.render_empty(&current_world_transform, empty.0);
+
+                                Ok(())
+                            }
+                            Err(err) => panic!(
+                                "Failed to get Empty from Arena with Handle {:?}: {}",
+                                handle, err
+                            ),
+                        }
+                    }
+                    None => {
+                        panic!("Encountered an `Empty` node with no handle!")
+                    }
+                },
                 SceneNodeType::Entity => match handle {
                     Some(handle) => {
                         let entity_arena = resources.entity.borrow();

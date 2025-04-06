@@ -16,6 +16,7 @@ use crate::{
     resource::handle::Handle,
     scene::{
         camera::{frustum::Frustum, Camera},
+        empty::EmptyDisplayKind,
         light::{
             ambient_light::AmbientLight, directional_light::DirectionalLight,
             point_light::PointLight, spot_light::SpotLight,
@@ -282,6 +283,10 @@ impl Renderer for SoftwareRenderer {
 
     fn render_ground_plane(&mut self, parallels: usize) {
         self._render_ground_plane(parallels)
+    }
+
+    fn render_empty(&mut self, transform: &Mat4, display_kind: EmptyDisplayKind) {
+        self._render_empty(transform, display_kind)
     }
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {
