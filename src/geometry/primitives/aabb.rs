@@ -22,7 +22,7 @@ impl fmt::Display for AABB {
 
 impl AABB {
     pub fn from_min_max(min: Vec3, max: Vec3) -> Self {
-        let center = (max - min) / 2.0;
+        let center = min + (max - min) / 2.0;
 
         let bounding_sphere_radius = (max - center).mag();
 
@@ -46,7 +46,7 @@ impl AABB {
     }
 
     pub fn center(&self) -> Vec3 {
-        (self.max + self.min) / 2.0
+        self.min + (self.max + self.min) / 2.0
     }
 
     pub fn get_vertices(&self) -> [Vec3; 8] {
