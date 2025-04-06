@@ -51,6 +51,7 @@ bitmask! {
     pub mask ProcessGeometryFlagMask: u32 where flags ProcessGeometryFlag {
         Null = 0,
         Center = (1 << 0),
+        FlipZ = (1 << 1),
     }
 }
 
@@ -232,6 +233,28 @@ pub fn load_obj(
     if let Some(mask) = process_geometry_flags {
         if mask.contains(ProcessGeometryFlag::Center) {
             geometry.center();
+        }
+
+        if mask.contains(ProcessGeometryFlag::FlipZ) {
+            for v in geometry.vertices.iter_mut() {
+                v.z *= -1.0;
+            }
+
+            for n in geometry.normals.iter_mut() {
+                n.z *= -1.0;
+            }
+
+            for f in partial_faces.iter_mut() {
+                f.vertices.reverse();
+
+                if let Some(normals) = f.normals.as_mut() {
+                    normals.reverse();
+                }
+
+                if let Some(uvs) = f.uvs.as_mut() {
+                    uvs.reverse();
+                }
+            }
         }
     }
 
