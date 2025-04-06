@@ -9,6 +9,7 @@ pub struct Empty(pub EmptyDisplayKind);
 pub enum EmptyDisplayKind {
     #[default]
     Axes,
+    Circle(usize),
 }
 
 impl PostDeserialize for Empty {

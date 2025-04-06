@@ -60,7 +60,10 @@ fn main() -> Result<(), String> {
             &mut directional_light_arena,
         )?;
 
-        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 1] = [EmptyDisplayKind::Axes];
+        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 2] = [
+            EmptyDisplayKind::Axes,
+            EmptyDisplayKind::Circle(12),
+        ];
 
         for (index, kind) in EMPTY_DISPLAY_KINDS.iter().enumerate() {
             let empty_node = {
