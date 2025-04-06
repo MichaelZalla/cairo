@@ -272,17 +272,14 @@ fn draw_point_shadow_map_thumbnails(resources: &SceneResources, color_buffer: &m
 
         let light = &entry.item;
 
-        match &light.shadow_map {
-            Some(shadow_map_handle) => {
-                let cubemap_f32_arena = resources.cubemap_f32.borrow();
+        if let Some(shadow_map_handle) = &light.shadow_map {
+            let cubemap_f32_arena = resources.cubemap_f32.borrow();
 
-                if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle) {
-                    let shadow_map = &entry.item;
+            if let Ok(entry) = cubemap_f32_arena.get(shadow_map_handle) {
+                let shadow_map = &entry.item;
 
-                    debug_blit_shadow_map_horizontal_cross(shadow_map, color_buffer)
-                }
+                debug_blit_shadow_map_horizontal_cross(shadow_map, color_buffer)
             }
-            None => (),
         }
     }
 }
