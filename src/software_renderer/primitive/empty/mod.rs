@@ -2,6 +2,7 @@ use std::f32::consts::TAU;
 
 use crate::{
     color::{self, Color},
+    geometry::primitives::aabb::AABB,
     matrix::Mat4,
     render::Renderer,
     scene::empty::EmptyDisplayKind,
@@ -110,6 +111,11 @@ impl SoftwareRenderer {
             }
             EmptyDisplayKind::Square => {
                 self.render_square(transform, color::WHITE);
+            }
+            EmptyDisplayKind::Cube => {
+                let aabb = AABB::from_min_max(-vec3::ONES, vec3::ONES);
+
+                self.render_aabb(&aabb, Some(transform), color::WHITE);
             }
             EmptyDisplayKind::Circle(divisions) => {
                 let local_transforms = [Mat4::identity()];

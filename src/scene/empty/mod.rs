@@ -10,6 +10,7 @@ pub enum EmptyDisplayKind {
     #[default]
     Axes,
     Square,
+    Cube,
     Circle(usize),
     Sphere(usize),
 }

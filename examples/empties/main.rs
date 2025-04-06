@@ -60,9 +60,10 @@ fn main() -> Result<(), String> {
             &mut directional_light_arena,
         )?;
 
-        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 4] = [
+        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 5] = [
             EmptyDisplayKind::Axes,
             EmptyDisplayKind::Square,
+            EmptyDisplayKind::Cube,
             EmptyDisplayKind::Circle(12),
             EmptyDisplayKind::Sphere(12),
         ];

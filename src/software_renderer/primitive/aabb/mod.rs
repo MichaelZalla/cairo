@@ -4,7 +4,7 @@ use crate::{
     matrix::Mat4,
     render::Renderer,
     software_renderer::SoftwareRenderer,
-    vec::vec3::Vec3,
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 impl SoftwareRenderer {
@@ -18,7 +18,7 @@ impl SoftwareRenderer {
 
         if let Some(transform) = world_transform {
             for v in vertices.iter_mut() {
-                *v *= *transform;
+                *v = (Vec4::new(*v, 1.0) * *transform).to_vec3();
             }
         }
 
