@@ -1,11 +1,61 @@
 use std::f32::consts::TAU;
 
 use crate::{
-    color, matrix::Mat4, render::Renderer, scene::empty::EmptyDisplayKind,
-    software_renderer::SoftwareRenderer, vec::vec4::Vec4,
+    color::{self, Color},
+    matrix::Mat4,
+    render::Renderer,
+    scene::empty::EmptyDisplayKind,
+    software_renderer::SoftwareRenderer,
+    transform::quaternion::Quaternion,
+    vec::{vec3, vec4::Vec4},
 };
 
 impl SoftwareRenderer {
+    fn render_circles<const N: usize>(
+        &mut self,
+        divisions: usize,
+        transform: &Mat4,
+        local_transforms: &[Mat4],
+        colors: &[Color],
+    ) {
+        // 1. Defines a unit circle as a set of points (in object space).
+
+        let arc_length = TAU / divisions as f32;
+
+        let mut points = vec![Vec4::new(Default::default(), 1.0); divisions];
+
+        for (index, point) in points.iter_mut().enumerate() {
+            let theta = arc_length * index as f32;
+
+            point.x = theta.cos();
+            point.y = theta.sin();
+        }
+
+        for (local_transform, color) in local_transforms.iter().zip(colors) {
+            let mut transformed_points = points.clone();
+
+            // 2. Transforms the points into world space, based on `transform`.
+
+            for point in transformed_points.iter_mut() {
+                *point *= (*local_transform) * *transform;
+            }
+
+            // 3. Renders the transformed circle as a set of connected line segments;
+
+            for i in 0..transformed_points.len() {
+                let start = &transformed_points[i];
+
+                let end = &transformed_points[if i == transformed_points.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }];
+
+                self.render_line(start.to_vec3(), end.to_vec3(), *color);
+            }
+        }
+    }
+
     pub(in crate::software_renderer) fn _render_empty(
         &mut self,
         transform: &Mat4,
@@ -18,34 +68,28 @@ impl SoftwareRenderer {
                 self.render_axes(Some(world_position), None);
             }
             EmptyDisplayKind::Circle(divisions) => {
-                // 1. Defines a unit circle as a set of points (in object space).
+                let local_transforms = [Mat4::identity()];
 
-                let arc_length = TAU / divisions as f32;
+                let colors = [color::WHITE];
 
-                let mut points = vec![Vec4::new(Default::default(), 1.0); divisions];
+                self.render_circles(divisions, transform, &local_transforms, &colors);
+            }
+            EmptyDisplayKind::Sphere(divisions) => {
+                let local_transform_z_plane = Mat4::identity();
 
-                for (index, point) in points.iter_mut().enumerate() {
-                    let theta = arc_length * index as f32;
+                let local_transform_y_plane = *Quaternion::new(vec3::RIGHT, TAU / 4.0).mat();
 
-                    point.x = theta.cos();
-                    point.y = theta.sin();
-                }
+                let local_transform_x_plane = *Quaternion::new(vec3::UP, TAU / 4.0).mat();
 
-                // 2. Transforms the points into world space, based on `transform`.
+                let local_transforms: [Mat4; 3] = [
+                    local_transform_z_plane,
+                    local_transform_y_plane,
+                    local_transform_x_plane,
+                ];
 
-                for point in points.iter_mut() {
-                    *point *= *transform;
-                }
+                let colors: [Color; 3] = [color::GREEN, color::BLUE, color::RED];
 
-                // 3. Renders the transformed circle as a set of connected line segments;
-
-                for i in 0..points.len() {
-                    let start = &points[i];
-
-                    let end = &points[if i == points.len() - 1 { 0 } else { i + 1 }];
-
-                    self.render_line(start.to_vec3(), end.to_vec3(), color::WHITE);
-                }
+                self.render_circles(divisions, transform, &local_transforms, &colors);
             }
         }
     }

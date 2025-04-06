@@ -10,6 +10,7 @@ pub enum EmptyDisplayKind {
     #[default]
     Axes,
     Circle(usize),
+    Sphere(usize),
 }
 
 impl PostDeserialize for Empty {
