@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
 use cairo::{
     app::context::ApplicationRenderingContext,
     entity::Entity,
+    geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     material::Material,
     mesh::{
         obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
@@ -45,6 +48,18 @@ pub fn make_scene(
         directional_light_arena,
     )?;
 
+    let camera_handle = scene
+        .root
+        .find(|node| *node.get_type() == SceneNodeType::Camera)
+        .unwrap()
+        .unwrap();
+
+    if let Ok(entry) = camera_arena.get_mut(&camera_handle) {
+        let camera = &mut entry.item;
+
+        camera.movement_speed = 200.0;
+    }
+
     // Load an OBJ model into our scene.
 
     let LoadObjResult(_model_geometry, model_meshes) = load_obj(
@@ -67,9 +82,19 @@ pub fn make_scene(
     // Assign the meshes to entities
 
     for mesh in model_meshes {
-        let material_handle = mesh.material;
+        let mut owned_mesh = mesh.to_owned();
 
-        let mesh_handle = mesh_arena.insert(mesh.to_owned());
+        if owned_mesh.faces.is_empty() {
+            continue;
+        }
+
+        let bvh = StaticTriangleBVH::new(&owned_mesh);
+
+        owned_mesh.collider.replace(Rc::new(bvh));
+
+        let material_handle = owned_mesh.material;
+
+        let mesh_handle = mesh_arena.insert(owned_mesh);
 
         let entity_handle = entity_arena.insert(Entity::new(mesh_handle, material_handle));
 

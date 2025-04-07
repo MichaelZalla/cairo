@@ -4,6 +4,7 @@ use cairo::{
     app::context::ApplicationRenderingContext,
     color::Color,
     entity::Entity,
+    geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     material::Material,
     matrix::Mat4,
     mesh::{
@@ -249,9 +250,19 @@ pub fn make_sponza_scene(
     // Assign the meshes to entities
 
     for mesh in atrium_meshes {
-        let material_handle = mesh.material;
+        let mut owned_mesh = mesh.to_owned();
 
-        let mesh_handle = mesh_arena.insert(mesh.to_owned());
+        if owned_mesh.faces.is_empty() {
+            continue;
+        }
+
+        let bvh = StaticTriangleBVH::new(&owned_mesh);
+
+        owned_mesh.collider.replace(Rc::new(bvh));
+
+        let material_handle = owned_mesh.material;
+
+        let mesh_handle = mesh_arena.insert(owned_mesh);
 
         let entity_handle = entity_arena.insert(Entity::new(mesh_handle, material_handle));
 

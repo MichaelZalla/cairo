@@ -4,15 +4,16 @@ use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_640_BY_480},
+        resolution::{Resolution, RESOLUTION_640_BY_320},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::Renderer,
+    render::{options::shader::RenderShaderOptions, Renderer},
     scene::{
         context::SceneContext,
+        graph::options::SceneGraphRenderOptions,
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -33,8 +34,8 @@ use scene::make_sponza_scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/sponza".to_string(),
-        window_resolution: RESOLUTION_640_BY_480 * 2.0,
-        canvas_resolution: RESOLUTION_640_BY_480,
+        window_resolution: RESOLUTION_640_BY_320 * 2.0,
+        canvas_resolution: RESOLUTION_640_BY_320,
         relative_mouse_mode: true,
         ..Default::default()
     };
@@ -125,9 +126,14 @@ fn main() -> Result<(), String> {
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    renderer.shader_options.albedo_mapping_active = true;
-    renderer.shader_options.specular_exponent_mapping_active = true;
-    renderer.shader_options.normal_mapping_active = true;
+    renderer.shader_options = RenderShaderOptions {
+        albedo_mapping_active: true,
+        specular_exponent_mapping_active: true,
+        normal_mapping_active: true,
+        metallic_mapping_active: true,
+        roughness_mapping_active: true,
+        ..Default::default()
+    };
 
     let renderer_rc = RefCell::new(renderer);
 
@@ -156,7 +162,10 @@ fn main() -> Result<(), String> {
                         Ok(entry) => {
                             let light = &mut entry.item;
 
-                            light.set_direction(Quaternion::new(vec3::UP, uptime.rem_euclid(TAU)));
+                            light.set_direction(Quaternion::new(
+                                vec3::UP,
+                                (uptime / 12.0).rem_euclid(TAU),
+                            ));
 
                             Ok(false)
                         }
@@ -174,8 +183,8 @@ fn main() -> Result<(), String> {
                 let transform = node.get_transform_mut();
 
                 let position = Vec3 {
-                    x: 800.0 * (uptime / 20.0).sin(),
-                    y: 200.0,
+                    x: 800.0 * (uptime / 16.0).sin(),
+                    y: 100.0,
                     z: -75.0,
                 };
 
@@ -187,7 +196,7 @@ fn main() -> Result<(), String> {
                 let transform = node.get_transform_mut();
 
                 let position = Vec3 {
-                    x: -800.0 * uptime.sin(),
+                    x: -800.0 * (uptime / 8.0).sin(),
                     y: 500.0,
                     z: 0.0,
                 };
@@ -264,11 +273,20 @@ fn main() -> Result<(), String> {
             let mut renderer = renderer_rc.borrow_mut();
 
             renderer.begin_frame();
+
+            renderer.render_axes(None, Some(100.0));
         }
 
         // Render scene.
 
-        scene.render(resources, &renderer_rc, None)?;
+        scene.render(
+            resources,
+            &renderer_rc,
+            Some(SceneGraphRenderOptions {
+                draw_lights: true,
+                ..Default::default()
+            }),
+        )?;
 
         {
             let mut renderer = renderer_rc.borrow_mut();

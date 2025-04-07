@@ -134,6 +134,10 @@ impl Frustum {
         &self.planes
     }
 
+    pub fn get_aabb(&self) -> &AABB {
+        &self.aabb
+    }
+
     pub fn should_cull_aabb(&self, world_transform: &Mat4, aabb: &AABB) -> bool {
         if !self.aabb.intersects(aabb) {
             return false;

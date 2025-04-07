@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1200_BY_675},
+        resolution::{Resolution, RESOLUTION_640_BY_480},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
@@ -27,8 +27,8 @@ fn main() -> Result<(), String> {
         title: "examples/obj-viewer".to_string(),
         vertical_sync: true,
         relative_mouse_mode: true,
-        window_resolution: RESOLUTION_1200_BY_675,
-        canvas_resolution: RESOLUTION_1200_BY_675,
+        window_resolution: RESOLUTION_640_BY_480,
+        canvas_resolution: RESOLUTION_640_BY_480,
         ..Default::default()
     };
 

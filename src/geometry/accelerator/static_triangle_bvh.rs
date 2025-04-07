@@ -113,6 +113,8 @@ impl StaticTriangleBVH {
     pub fn new(mesh: &Mesh) -> Self {
         let num_tris = mesh.faces.len();
 
+        debug_assert!(num_tris > 0);
+
         let tri_indices = (0..num_tris).collect();
 
         let max_node_count = 2 * num_tris - 1;

@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use crate::{
+    geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, intersect::test_aabb_aabb},
     matrix::Mat4,
     mesh::{face::Face, mesh_geometry::MeshGeometry, Mesh},
     software_renderer::SoftwareRenderer,
@@ -24,9 +27,14 @@ impl SoftwareRenderer {
             context.set_world_transform(*world_transform);
         }
 
-        let geometry = mesh.geometry.as_ref();
-
-        self.render_mesh_geometry(geometry, &mesh.faces);
+        match (&mesh.collider, &mesh.faces) {
+            (Some(bvh), faces) => {
+                self.render_mesh_geometry_bvh(&mesh.geometry, faces, bvh);
+            }
+            (None, faces) => {
+                self.render_mesh_geometry(&mesh.geometry, faces);
+            }
+        }
 
         // Reset the shader context's original world transform.
         {
@@ -38,6 +46,47 @@ impl SoftwareRenderer {
 
     fn render_mesh_geometry(&mut self, geometry: &MeshGeometry, faces: &[Face]) {
         self.process_object_space_vertices(geometry, faces);
+    }
+
+    fn render_mesh_geometry_bvh(
+        &mut self,
+        geometry: &MeshGeometry,
+        faces: &[Face],
+        bvh: &Rc<StaticTriangleBVH>,
+    ) {
+        self.render_mesh_geometry_bvh_node(geometry, faces, bvh, 0);
+    }
+
+    fn render_mesh_geometry_bvh_node(
+        &mut self,
+        geometry: &MeshGeometry,
+        faces: &[Face],
+        bvh: &Rc<StaticTriangleBVH>,
+        node_index: usize,
+    ) {
+        let node = &bvh.nodes[node_index];
+
+        if !test_aabb_aabb(self.clipping_frustum.get_aabb(), &node.aabb) {
+            return;
+        }
+
+        if node.is_leaf() {
+            for i in node.primitives_start_index as usize
+                ..(node.primitives_start_index + node.primitives_count) as usize
+            {
+                let face_index = bvh.tri_indices[i];
+
+                let faces_slice = &faces[face_index..face_index + 1];
+
+                self.process_object_space_vertices(geometry, faces_slice);
+            }
+        } else {
+            let left = node.left_child_index as usize;
+            self.render_mesh_geometry_bvh_node(geometry, faces, bvh, left);
+
+            let right = left + 1;
+            self.render_mesh_geometry_bvh_node(geometry, faces, bvh, right);
+        }
     }
 
     fn process_object_space_vertices(&mut self, geometry: &MeshGeometry, faces: &[Face]) {
