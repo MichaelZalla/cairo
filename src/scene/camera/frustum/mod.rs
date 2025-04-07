@@ -1,8 +1,12 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    geometry::primitives::plane::Plane,
-    vec::{vec3::Vec3, vec4::Vec4},
+    geometry::primitives::{aabb::AABB, plane::Plane},
+    matrix::Mat4,
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 static NEAR_TOP_LEFT_CLIP_SPACE: Vec4 = Vec4 {
@@ -70,17 +74,29 @@ pub struct Frustum {
     pub near: [Vec3; 4],
     pub far: [Vec3; 4],
     planes: [Plane; 6],
+    aabb: AABB,
 }
 
 impl Frustum {
     pub fn new(forward: Vec3, near: [Vec3; 4], far: [Vec3; 4]) -> Self {
         let planes = make_frustum_planes(forward, &near, &far);
 
+        let mut min = vec3::MAX;
+        let mut max = vec3::MIN;
+
+        for v in near.iter().chain(far.iter()) {
+            min = min.min(v);
+            max = max.max(v);
+        }
+
+        let aabb = AABB::from_min_max(min, max);
+
         Self {
             forward,
             near,
             far,
             planes,
+            aabb,
         }
     }
 
@@ -116,6 +132,23 @@ impl Frustum {
 
     pub fn get_planes(&self) -> &[Plane; 6] {
         &self.planes
+    }
+
+    pub fn should_cull_aabb(&self, world_transform: &Mat4, aabb: &AABB) -> bool {
+        if !self.aabb.intersects(aabb) {
+            return false;
+        }
+
+        let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * *world_transform).to_vec3();
+
+        let radius = aabb.bounding_sphere_radius;
+
+        !self.planes[0].is_on_or_in_front_of(&bounding_sphere_position, radius)
+            || !self.planes[1].is_on_or_in_front_of(&bounding_sphere_position, radius)
+            || !self.planes[2].is_on_or_in_front_of(&bounding_sphere_position, radius)
+            || !self.planes[3].is_on_or_in_front_of(&bounding_sphere_position, radius)
+            || !self.planes[4].is_on_or_in_front_of(&bounding_sphere_position, radius)
+            || !self.planes[5].is_on_or_in_front_of(&bounding_sphere_position, radius)
     }
 }
 

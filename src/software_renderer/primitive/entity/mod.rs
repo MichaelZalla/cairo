@@ -1,6 +1,5 @@
 use crate::{
-    geometry::primitives::aabb::AABB, matrix::Mat4, mesh::Mesh, resource::handle::Handle,
-    scene::camera::frustum::Frustum, software_renderer::SoftwareRenderer, vec::vec4::Vec4,
+    matrix::Mat4, mesh::Mesh, resource::handle::Handle, software_renderer::SoftwareRenderer,
 };
 
 impl SoftwareRenderer {
@@ -10,11 +9,9 @@ impl SoftwareRenderer {
         entity_mesh: &Mesh,
         entity_material: &Option<Handle>,
     ) -> bool {
-        let mut should_cull = false;
-
-        if should_cull_aabb_sphere(*world_transform, &self.clipping_frustum, &entity_mesh.aabb) {
-            should_cull = true;
-        }
+        let should_cull = self
+            .clipping_frustum
+            .should_cull_aabb(world_transform, &entity_mesh.aabb);
 
         if !should_cull {
             let mut did_set_active_material = false;
@@ -42,22 +39,4 @@ impl SoftwareRenderer {
 
         !should_cull
     }
-}
-
-fn should_cull_aabb_sphere(world_transform: Mat4, culling_frustum: &Frustum, aabb: &AABB) -> bool {
-    // Cull the entire entity, if possible, based on its bounds.
-
-    let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * world_transform).to_vec3();
-
-    let culling_planes = culling_frustum.get_planes();
-
-    let radius = aabb.bounding_sphere_radius;
-
-    // @TODO Verify the sign of the top plane and bottom plane normals.
-    !culling_planes[0].is_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[1].is_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[2].is_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[3].is_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[4].is_on_or_in_front_of(&bounding_sphere_position, radius)
-        || !culling_planes[5].is_on_or_in_front_of(&bounding_sphere_position, radius)
 }
