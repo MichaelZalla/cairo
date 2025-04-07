@@ -17,12 +17,12 @@ pub mod mesh_geometry;
 pub mod obj;
 pub mod primitive;
 
-static TANGENT_BITANGENT_SMOOTHING_LIKENESS_THRESHOLD: f32 = 4.0;
+static TANGENT_BITANGENT_SMOOTHING_MINIMUM_SIMILARITY: f32 = 4.0;
 
 macro_rules! smooth_tangents_or_bitangents {
     ($self:ident, $field:ident, &mut $frontier:ident) => {
-        // Process local tangents/bitangents in batches, based on
-        // their level of similarity (using a threshold value).
+        // Process local tangents/bitangents in batches, based on their level of
+        // similarity (using a threshold value).
 
         while !$frontier.is_empty() {
             let mut smoothing_group = vec![$frontier.pop().unwrap()];
@@ -34,9 +34,9 @@ macro_rules! smooth_tangents_or_bitangents {
                     let (_face_index, _vertex_index_position, face_vertex_tangent_or_bitangent) =
                         &$frontier[i - (smoothing_group.len() - 1)];
 
-                    if smoothing_group[0].2.dot(*face_vertex_tangent_or_bitangent)
-                        >= TANGENT_BITANGENT_SMOOTHING_LIKENESS_THRESHOLD
-                    {
+                    let similarity = smoothing_group[0].2.dot(*face_vertex_tangent_or_bitangent);
+
+                    if similarity >= TANGENT_BITANGENT_SMOOTHING_MINIMUM_SIMILARITY {
                         smoothing_group.push($frontier.pop().unwrap());
                     }
                 }
