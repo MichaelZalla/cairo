@@ -176,12 +176,6 @@ impl AABB {
             bottom_right_subdivision,
         ]
     }
-
-    fn get_bounding_sphere_radius(&self) -> f32 {
-        // Center-to-corner is equidistant for all corners on the AABB.
-
-        (self.min - self.center()).mag()
-    }
 }
 
 fn get_min_max_for_geometry(geometry: &MeshGeometry) -> (Vec3, Vec3) {
