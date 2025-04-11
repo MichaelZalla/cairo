@@ -7,7 +7,7 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh::{
-        primitive::{cone, cube, cylinder},
+        primitive::{cone, cube, cylinder, sphere},
         Mesh,
     },
     resource::arena::Arena,
@@ -73,11 +73,7 @@ pub(crate) fn make_scene(
                         if let Ok(entry) = ambient_light_arena.get_mut(handle) {
                             let ambient_light = &mut entry.item;
 
-                            ambient_light.intensities = Vec3 {
-                                x: 1.0,
-                                y: 1.0,
-                                z: 1.0,
-                            } * 0.15;
+                            ambient_light.intensities = vec3::ONES * 0.05;
                         }
                     }
 
@@ -96,14 +92,14 @@ pub(crate) fn make_scene(
                         if let Ok(entry) = directional_light_arena.get_mut(handle) {
                             let directional_light = &mut entry.item;
 
-                            directional_light.intensities = color::ORANGE.to_vec3() / 255.0 * 0.15;
+                            directional_light.intensities = Vec3::ones() * 0.25;
 
                             let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
                             let rotate_y = Quaternion::new(vec3::UP, PI);
 
                             directional_light.set_direction(rotate_x * rotate_y);
 
-                            directional_light.enable_shadow_maps(384, 100.0, resources.clone());
+                            directional_light.enable_shadow_maps(512, 100.0, resources.clone());
                         }
                     }
 
@@ -230,15 +226,15 @@ pub(crate) fn make_scene(
         }
     }
 
-    // Create a rough material.
+    // Create a rough checkerboard material.
 
     let material_handle = {
         let albedo_map_handle = texture_u8_arena.insert(TextureMap::new(
             "./assets/textures/checkerboard.jpg",
-            TextureMapStorageFormat::RGB24,
+            TextureMapStorageFormat::Index8(0),
         ));
 
-        let mut material = Material::new("mat".to_string());
+        let mut material = Material::new("checkerboard".to_string());
 
         material.albedo = vec3::ONES;
         material.albedo_map = Some(albedo_map_handle);
@@ -254,13 +250,13 @@ pub(crate) fn make_scene(
 
     let plane_entity_node = {
         let entity = {
-            let mut mesh = cube::generate(200.0, 1.0, 200.0);
+            let mut mesh = cube::generate(64.0, 1.0, 64.0);
 
             mesh.object_name = Some("plane".to_string());
 
             let mesh_handle = mesh_arena.insert(mesh);
 
-            Entity::new(mesh_handle, Some(material_handle))
+            Entity::new(mesh_handle, None)
         };
 
         let entity_handle = entity_arena.insert(entity);
@@ -271,6 +267,9 @@ pub(crate) fn make_scene(
     };
 
     scene.root.add_child(plane_entity_node)?;
+
+    static GRID_ITEM_SPACING: f32 = 12.0;
+    static GRID_ITEM_HEGIHT: f32 = 5.0;
 
     // Add a cube entity.
 
@@ -290,8 +289,8 @@ pub(crate) fn make_scene(
         );
 
         node.get_transform_mut().set_translation(Vec3 {
-            x: -16.0,
-            y: 5.0,
+            x: -1.5 * GRID_ITEM_SPACING,
+            y: GRID_ITEM_HEGIHT,
             ..Default::default()
         });
 
@@ -299,6 +298,34 @@ pub(crate) fn make_scene(
     };
 
     scene.root.add_child(cube_entity_node)?;
+
+    // Add a sphere entity.
+
+    let sphere_entity_node = {
+        let mesh = sphere::generate(2.5, 16, 16);
+
+        let mesh_handle = mesh_arena.insert(mesh);
+
+        let entity = Entity::new(mesh_handle, Some(material_handle));
+
+        let entity_handle = entity_arena.insert(entity);
+
+        let mut node = SceneNode::new(
+            SceneNodeType::Entity,
+            Default::default(),
+            Some(entity_handle),
+        );
+
+        node.get_transform_mut().set_translation(Vec3 {
+            x: -0.5 * GRID_ITEM_SPACING,
+            y: GRID_ITEM_HEGIHT,
+            ..Default::default()
+        });
+
+        node
+    };
+
+    scene.root.add_child(sphere_entity_node)?;
 
     // Add a cone entity.
 
@@ -318,8 +345,8 @@ pub(crate) fn make_scene(
         );
 
         node.get_transform_mut().set_translation(Vec3 {
-            x: 0.0,
-            y: 5.0,
+            x: 0.5 * GRID_ITEM_SPACING,
+            y: GRID_ITEM_HEGIHT,
             ..Default::default()
         });
 
@@ -346,8 +373,8 @@ pub(crate) fn make_scene(
         );
 
         node.get_transform_mut().set_translation(Vec3 {
-            x: 16.0,
-            y: 5.0,
+            x: 1.5 * GRID_ITEM_SPACING,
+            y: GRID_ITEM_HEGIHT,
             ..Default::default()
         });
 
