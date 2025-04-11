@@ -5,7 +5,13 @@ impl SoftwareRenderer {
         if let Some(rc) = &self.framebuffer {
             let mut framebuffer = rc.borrow_mut();
 
-            if let Some(deferred_buffer_rc) = framebuffer.attachments.deferred_hdr.as_mut() {
+            let attachments = &mut framebuffer.attachments;
+
+            if let (Some(stencil_buffer_rc), Some(deferred_buffer_rc)) =
+                (&attachments.stencil, attachments.deferred_hdr.as_mut())
+            {
+                let stencil_buffer = stencil_buffer_rc.borrow();
+
                 let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
 
                 // Perform deferred lighting pass.
@@ -15,8 +21,13 @@ impl SoftwareRenderer {
                 // Call the active fragment shader on every G-buffer sample that was
                 // written to by the rasterizer.
 
-                for (index, sample) in self.g_buffer.as_ref().unwrap().iter().enumerate() {
-                    if sample.stencil {
+                for (index, (stencil, sample)) in stencil_buffer
+                    .0
+                    .iter()
+                    .zip(self.g_buffer.as_ref().unwrap().iter())
+                    .enumerate()
+                {
+                    if *stencil != 0 {
                         let hdr_color = self.get_hdr_color_for_sample(
                             &shader_context,
                             &self.scene_resources,

@@ -17,7 +17,6 @@ pub static DirectionalShadowMapGeometryShader: GeometryShaderFn =
      interpolant: &DefaultVertexOut|
      -> Option<GeometrySample> {
         Some(GeometrySample {
-            stencil: true,
             position_world_space: interpolant.position_world_space,
             depth: interpolant.depth,
             alpha: 1.0,

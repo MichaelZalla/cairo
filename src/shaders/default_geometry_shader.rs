@@ -21,7 +21,6 @@ pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
                                                         interpolant: &DefaultVertexOut|
  -> Option<GeometrySample> {
     let mut out = GeometrySample {
-        stencil: true,
         uv: interpolant.uv,
         position_world_space: interpolant.position_world_space,
         position_view_space: interpolant.position_view_space,

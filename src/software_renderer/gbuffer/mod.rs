@@ -10,23 +10,11 @@ impl GBuffer {
         Self(buffer)
     }
 
-    pub fn clear(&mut self) {
-        // Unsets the `stencil` flag for each sample.
-
-        for sample in self.0.iter_mut() {
-            sample.stencil = false;
-        }
-    }
-
     pub fn get(&self, x: u32, y: u32) -> &GeometrySample {
         self.0.get(x, y)
     }
 
-    pub fn set(&mut self, x: u32, y: u32, mut sample: GeometrySample) {
-        // Sets the `stencil` flag.
-
-        sample.stencil = true;
-
+    pub fn set(&mut self, x: u32, y: u32, sample: GeometrySample) {
         self.0.set(x, y, sample);
     }
 

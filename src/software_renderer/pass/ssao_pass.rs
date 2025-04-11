@@ -4,7 +4,7 @@ use rand_distr::{Distribution, Uniform};
 
 use crate::{
     animation::{lerp, smooth_step},
-    buffer::Buffer2D,
+    buffer::{framebuffer::StencilBuffer, Buffer2D},
     matrix::Mat4,
     render::options::RenderPassFlag,
     software_renderer::{gbuffer::GBuffer, SoftwareRenderer},
@@ -61,18 +61,18 @@ pub(in crate::software_renderer) fn make_4x4_tangent_space_rotations() -> [Quate
 
 impl SoftwareRenderer {
     pub(in crate::software_renderer) fn do_ssao_pass(&mut self) {
-        if let (Some(g_buffer), Some(ssao_buffer), Some(framebuffer_rc)) = (
-            self.g_buffer.as_mut(),
-            self.ssao_buffer.as_mut(),
-            self.framebuffer.as_ref(),
-        ) {
+        if let (Some(g_buffer), Some(ssao_buffer), Some(framebuffer_rc)) =
+            (&mut self.g_buffer, &mut self.ssao_buffer, &self.framebuffer)
+        {
             let occlusion_buffer = &mut ssao_buffer.levels[0].0;
 
             let framebuffer = &framebuffer_rc.borrow();
 
             let depth_buffer_rc = framebuffer.attachments.depth.as_ref().unwrap();
+            let stencil_buffer_rc = framebuffer.attachments.stencil.as_ref().unwrap();
 
             let depth_buffer = depth_buffer_rc.borrow();
+            let stencil_buffer = stencil_buffer_rc.borrow();
 
             let (near, far) = (
                 depth_buffer.get_projection_z_near(),
@@ -96,8 +96,9 @@ impl SoftwareRenderer {
                     for y in 0..g_buffer.0.height {
                         for x in 0..g_buffer.0.width {
                             let geometry_sample = g_buffer.0.get(x, y);
+                            let stencil = stencil_buffer.0.get(x, y);
 
-                            if !geometry_sample.stencil {
+                            if *stencil == 0 {
                                 continue;
                             }
 
@@ -141,7 +142,7 @@ impl SoftwareRenderer {
             {
                 if let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut() {
                     ssao_blur(
-                        g_buffer,
+                        &stencil_buffer,
                         occlusion_buffer,
                         &mut ssao_blur_buffer.levels[0].0,
                     );
@@ -272,7 +273,7 @@ fn get_occlusion(
 }
 
 fn ssao_blur(
-    g_buffer: &GBuffer,
+    stencil_buffer: &StencilBuffer,
     ssao_buffer: &mut Buffer2D<f32>,
     ssao_blur_buffer: &mut Buffer2D<f32>,
 ) {
@@ -282,7 +283,9 @@ fn ssao_blur(
 
     for y in 0..ssao_buffer.height {
         for x in 0..ssao_buffer.width {
-            if !g_buffer.get(x, y).stencil {
+            let stencil = stencil_buffer.0.get(x, y);
+
+            if *stencil == 0 {
                 continue;
             }
 
@@ -307,7 +310,10 @@ fn ssao_blur(
                     // Don't contribute occlusion for pixels that weren't
                     // rasterized this frame.
 
-                    if !g_buffer.get(neighbor_x as u32, neighbor_y as u32).stencil {
+                    let neighbor_stencil =
+                        stencil_buffer.0.get(neighbor_x as u32, neighbor_y as u32);
+
+                    if *neighbor_stencil == 0 {
                         continue;
                     }
 
@@ -325,7 +331,9 @@ fn ssao_blur(
 
     for y in 0..ssao_buffer.height {
         for x in 0..ssao_buffer.width {
-            if g_buffer.get(x, y).stencil {
+            let stencil = stencil_buffer.0.get(x, y);
+
+            if *stencil != 0 {
                 ssao_buffer.set(x, y, *ssao_blur_buffer.get(x, y));
             }
         }

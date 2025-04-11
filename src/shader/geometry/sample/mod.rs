@@ -7,7 +7,6 @@ use crate::{
 
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct GeometrySample {
-    pub stencil: bool,
     // @TODO reconstruct from depth sample + pixel coordinate (index)
     pub position_world_space: Vec3,
     pub position_view_space: Vec3,
@@ -40,7 +39,6 @@ impl Add<GeometrySample> for GeometrySample {
 
     fn add(self, rhs: Self) -> Self::Output {
         GeometrySample {
-            stencil: self.stencil,
             uv: self.uv + rhs.uv,
             albedo: self.albedo + rhs.albedo,
             roughness: self.roughness + rhs.roughness,
@@ -69,7 +67,6 @@ impl Sub<GeometrySample> for GeometrySample {
 
     fn sub(self, rhs: Self) -> Self::Output {
         GeometrySample {
-            stencil: self.stencil,
             uv: self.uv - rhs.uv,
             albedo: self.albedo - rhs.albedo,
             roughness: self.roughness - rhs.roughness,
@@ -98,7 +95,6 @@ impl Mul<GeometrySample> for GeometrySample {
 
     fn mul(self, rhs: Self) -> Self::Output {
         GeometrySample {
-            stencil: self.stencil,
             uv: self.uv * rhs.uv,
             albedo: self.albedo * rhs.albedo,
             roughness: self.roughness * rhs.roughness,
@@ -127,7 +123,6 @@ impl Div<GeometrySample> for GeometrySample {
 
     fn div(self, rhs: Self) -> Self::Output {
         GeometrySample {
-            stencil: self.stencil,
             uv: self.uv / rhs.uv,
             albedo: self.albedo / rhs.albedo,
             roughness: self.roughness / rhs.roughness,
