@@ -1,4 +1,5 @@
 use crate::{
+    color::Color,
     matrix::Mat4,
     scene::camera::Camera,
     software_renderer::{zbuffer, SoftwareRenderer},
@@ -32,29 +33,15 @@ impl SoftwareRenderer {
                         let screen_x: u32 = (index as f32 % self.viewport.width as f32) as u32;
                         let screen_y: u32 = (index as f32 / self.viewport.width as f32) as u32;
 
-                        let pixel_coordinate_world_space = camera
-                            .get_near_plane_pixel_world_space_position(
-                                screen_x,
-                                screen_y,
-                                self.viewport.width,
-                                self.viewport.height,
-                            );
+                        let skybox_color = self.get_skybox_color(
+                            skybox,
+                            camera,
+                            skybox_rotation,
+                            screen_x,
+                            screen_y,
+                        );
 
-                        let mut normal = pixel_coordinate_world_space.as_normal();
-
-                        if let Some(transform) = skybox_rotation {
-                            normal *= transform;
-                        }
-
-                        // Sample the cubemap using our world-space direction-offset.
-
-                        let skybox_color = if self.shader_options.bilinear_active {
-                            skybox.sample_bilinear(&normal, None)
-                        } else {
-                            skybox.sample_nearest(&normal, None)
-                        };
-
-                        forward_buffer.set(screen_x, screen_y, skybox_color.to_u32());
+                        forward_buffer.set_at(index, skybox_color.to_u32());
                     }
                 }
             }
@@ -82,33 +69,81 @@ impl SoftwareRenderer {
                     // If this pixel was not shaded by our fragment shader
 
                     if *written == 0 {
-                        let x: u32 = (index as f32 % self.viewport.width as f32) as u32;
-                        let y: u32 = (index as f32 / self.viewport.width as f32) as u32;
+                        // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
-                        let pixel_coordinate_world_space = camera
-                            .get_near_plane_pixel_world_space_position(
-                                x,
-                                y,
-                                self.viewport.width,
-                                self.viewport.height,
-                            );
+                        let screen_x = (index as f32 % self.viewport.width as f32) as u32;
+                        let screen_y = (index as f32 / self.viewport.width as f32) as u32;
 
-                        let mut normal = pixel_coordinate_world_space.as_normal();
+                        let skybox_color_hdr = self.get_skybox_color_hdr(
+                            skybox_hdr,
+                            camera,
+                            skybox_rotation,
+                            screen_x,
+                            screen_y,
+                        );
 
-                        if let Some(transform) = skybox_rotation {
-                            normal *= transform;
-                        }
-
-                        // Sample the cubemap using our world-space direction-offset.
-
-                        let skybox_hdr_color = skybox_hdr.sample_nearest(&normal, None);
-
-                        let skybox_color = self.get_tone_mapped_color_from_hdr(skybox_hdr_color);
-
-                        forward_buffer.set(x, y, skybox_color.to_u32());
+                        forward_buffer.set_at(index, skybox_color_hdr.to_u32());
                     }
                 }
             }
         }
+    }
+
+    fn get_skybox_color(
+        &self,
+        skybox: &CubeMap,
+        camera: &Camera,
+        skybox_rotation: Option<Mat4>,
+        screen_x: u32,
+        screen_y: u32,
+    ) -> Color {
+        let pixel_coordinate_world_space = camera.get_near_plane_pixel_world_space_position(
+            screen_x,
+            screen_y,
+            self.viewport.width,
+            self.viewport.height,
+        );
+
+        let mut normal = pixel_coordinate_world_space.as_normal();
+
+        if let Some(transform) = skybox_rotation {
+            normal *= transform;
+        }
+
+        // Sample the cubemap using our world-space direction-offset.
+
+        if self.shader_options.bilinear_active {
+            skybox.sample_bilinear(&normal, None)
+        } else {
+            skybox.sample_nearest(&normal, None)
+        }
+    }
+
+    fn get_skybox_color_hdr(
+        &self,
+        skybox_hdr: &CubeMap<Vec3>,
+        camera: &Camera,
+        skybox_rotation: Option<Mat4>,
+        screen_x: u32,
+        screen_y: u32,
+    ) -> Color {
+        let pixel_coordinate_world_space = camera.get_near_plane_pixel_world_space_position(
+            screen_x,
+            screen_y,
+            self.viewport.width,
+            self.viewport.height,
+        );
+
+        let mut normal = pixel_coordinate_world_space.as_normal();
+
+        if let Some(transform) = skybox_rotation {
+            normal *= transform;
+        }
+
+        // Sample the cubemap using our world-space direction-offset.
+
+        let skybox_hdr_color = skybox_hdr.sample_nearest(&normal, None);
+
+        self.get_tone_mapped_color_from_hdr(skybox_hdr_color)
     }
 }
