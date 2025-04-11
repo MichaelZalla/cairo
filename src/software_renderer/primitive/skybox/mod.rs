@@ -17,12 +17,13 @@ impl SoftwareRenderer {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
-            if let (Some(depth_buffer_rc), Some(forward_buffer_rc)) = (
-                framebuffer.attachments.depth.as_ref(),
-                framebuffer.attachments.forward_ldr.as_ref(),
+            if let (Some(depth_buffer_rc), Some(forward_ldr_buffer_rc)) = (
+                &framebuffer.attachments.depth,
+                &framebuffer.attachments.forward_ldr,
             ) {
-                let mut depth_buffer = depth_buffer_rc.borrow_mut();
-                let mut forward_buffer = forward_buffer_rc.borrow_mut();
+                let depth_buffer = depth_buffer_rc.borrow();
+
+                let mut forward_ldr_buffer = forward_ldr_buffer_rc.borrow_mut();
 
                 for (index, z_non_linear) in depth_buffer.iter().enumerate() {
                     // If this pixel was not shaded by our fragment shader
@@ -41,7 +42,7 @@ impl SoftwareRenderer {
                             screen_y,
                         );
 
-                        forward_buffer.set_at(index, skybox_color.to_u32());
+                        forward_ldr_buffer.set_at(index, skybox_color.to_u32());
                     }
                 }
             }
@@ -57,18 +58,18 @@ impl SoftwareRenderer {
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow_mut();
 
-            if let (Some(stencil_buffer_rc), Some(forward_buffer_rc)) = (
-                framebuffer.attachments.stencil.as_ref(),
-                framebuffer.attachments.forward_ldr.as_ref(),
+            if let (Some(stencil_buffer_rc), Some(forward_ldr_buffer_rc)) = (
+                &framebuffer.attachments.stencil,
+                &framebuffer.attachments.forward_ldr,
             ) {
                 let stencil_buffer = stencil_buffer_rc.borrow();
 
-                let mut forward_buffer = forward_buffer_rc.borrow_mut();
+                let mut forward_ldr_buffer = forward_ldr_buffer_rc.borrow_mut();
 
-                for (index, written) in stencil_buffer.0.iter().enumerate() {
+                for (index, was_written) in stencil_buffer.0.iter().enumerate() {
                     // If this pixel was not shaded by our fragment shader
 
-                    if *written == 0 {
+                    if *was_written == 0 {
                         // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
                         let screen_x = (index as f32 % self.viewport.width as f32) as u32;
@@ -82,7 +83,7 @@ impl SoftwareRenderer {
                             screen_y,
                         );
 
-                        forward_buffer.set_at(index, skybox_color_hdr.to_u32());
+                        forward_ldr_buffer.set_at(index, skybox_color_hdr.to_u32());
                     }
                 }
             }

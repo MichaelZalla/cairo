@@ -70,6 +70,10 @@ impl ZBuffer {
         }
     }
 
+    pub fn iter(&self) -> std::slice::Iter<'_, f32> {
+        self.buffer.iter()
+    }
+
     pub fn get_projection_z_near(&self) -> f32 {
         self.projection_z_near
     }
@@ -150,10 +154,6 @@ impl ZBuffer {
 
     pub fn set(&mut self, x: u32, y: u32, non_linear_z: f32) {
         self.buffer.set(x, y, non_linear_z)
-    }
-
-    pub fn iter(&mut self) -> std::slice::Iter<'_, f32> {
-        self.buffer.iter()
     }
 }
 
