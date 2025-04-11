@@ -25,10 +25,12 @@ impl SoftwareRenderer {
 
                 let mut forward_ldr_buffer = forward_ldr_buffer_rc.borrow_mut();
 
-                for (index, z_non_linear) in depth_buffer.iter().enumerate() {
+                let zipped = depth_buffer.iter().zip(forward_ldr_buffer.iter_mut());
+
+                for (index, (z_non_linear, ldr_color)) in zipped.enumerate() {
                     // If this pixel was not shaded by our fragment shader
 
-                    if *z_non_linear == zbuffer::MAX_DEPTH {
+                    if *ldr_color == 0 && *z_non_linear == zbuffer::MAX_DEPTH {
                         // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
                         let screen_x: u32 = (index as f32 % self.viewport.width as f32) as u32;
@@ -42,7 +44,7 @@ impl SoftwareRenderer {
                             screen_y,
                         );
 
-                        forward_ldr_buffer.set_at(index, skybox_color.to_u32());
+                        *ldr_color = skybox_color.to_u32();
                     }
                 }
             }
@@ -66,24 +68,26 @@ impl SoftwareRenderer {
 
                 let mut forward_ldr_buffer = forward_ldr_buffer_rc.borrow_mut();
 
-                for (index, was_written) in stencil_buffer.0.iter().enumerate() {
+                let zipped = stencil_buffer.0.iter().zip(forward_ldr_buffer.iter_mut());
+
+                for (index, (stencil, ldr_color)) in zipped.enumerate() {
                     // If this pixel was not shaded by our fragment shader
 
-                    if *was_written == 0 {
+                    if *ldr_color == 0 && *stencil == 0 {
                         // Note: z_buffer_index = (y * self.graphics.buffer.width + x)
 
                         let screen_x = (index as f32 % self.viewport.width as f32) as u32;
                         let screen_y = (index as f32 / self.viewport.width as f32) as u32;
 
-                        let skybox_color_hdr = self.get_skybox_color_hdr(
-                            skybox_hdr,
-                            camera,
-                            skybox_rotation,
-                            screen_x,
-                            screen_y,
-                        );
-
-                        forward_ldr_buffer.set_at(index, skybox_color_hdr.to_u32());
+                        *ldr_color = self
+                            .get_skybox_color_hdr(
+                                skybox_hdr,
+                                camera,
+                                skybox_rotation,
+                                screen_x,
+                                screen_y,
+                            )
+                            .to_u32();
                     }
                 }
             }
