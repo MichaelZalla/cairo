@@ -20,7 +20,7 @@ use cairo::{
     scene::{
         context::SceneContext,
         graph::options::SceneGraphRenderOptions,
-        light::directional_light::DirectionalLight,
+        light::directional_light::{DirectionalLight, SHADOW_MAP_CAMERA_COUNT},
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
@@ -496,20 +496,20 @@ fn blit_directional_shadow_maps(
     texture_f32_arena: &Arena<TextureMap<f32>>,
     target: &mut Buffer2D,
 ) {
-    static SHADOW_MAP_THUMBNAIL_SIZE: u32 = 175;
+    let shadow_map_thumbnail_size = target.height / SHADOW_MAP_CAMERA_COUNT as u32;
+
+    let uv_step = 1.0 / shadow_map_thumbnail_size as f32;
 
     if let Some(handles) = light.shadow_maps.as_ref() {
         for (index, handle) in handles.iter().enumerate() {
             if let Ok(entry) = texture_f32_arena.get(handle) {
                 let map = &entry.item;
 
-                for y in 0..SHADOW_MAP_THUMBNAIL_SIZE {
-                    for x in 0..SHADOW_MAP_THUMBNAIL_SIZE {
-                        static UV_STEP: f32 = 1.0 / SHADOW_MAP_THUMBNAIL_SIZE as f32;
-
+                for y in 0..shadow_map_thumbnail_size {
+                    for x in 0..shadow_map_thumbnail_size {
                         let uv = Vec2 {
-                            x: x as f32 * UV_STEP,
-                            y: 1.0 - y as f32 * UV_STEP,
+                            x: x as f32 * uv_step,
+                            y: 1.0 - y as f32 * uv_step,
                             z: 0.0,
                         };
 
@@ -522,7 +522,7 @@ fn blit_directional_shadow_maps(
 
                         target.set(
                             x,
-                            y + (index as u32 * SHADOW_MAP_THUMBNAIL_SIZE),
+                            y + (index as u32 * shadow_map_thumbnail_size),
                             sampled_depth_color.to_u32(),
                         );
                     }
