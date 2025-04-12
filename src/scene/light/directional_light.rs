@@ -382,12 +382,7 @@ impl DirectionalLight {
         contribution * (1.0 - in_shadow)
     }
 
-    fn pcf_3x3(
-        current_depth_ndc_space: f32,
-        map: &TextureMap<f32>,
-        texel_size: f32,
-        uv: Vec2,
-    ) -> f32 {
+    fn pcf_3x3(current_depth_ndc_space: f32, map: &TextureMap<f32>, uv: Vec2) -> f32 {
         let mut shadow = 0.0;
 
         for y in -1..1 {
@@ -397,7 +392,7 @@ impl DirectionalLight {
                         x: x as f32,
                         y: y as f32,
                         z: 0.0,
-                    } * texel_size;
+                    } * map.levels[0].0.texel_size;
 
                 if perturbed_uv.x < 0.0
                     || perturbed_uv.x > 1.0
@@ -426,12 +421,7 @@ impl DirectionalLight {
         shadow / 9.0
     }
 
-    fn poisson_3x3(
-        current_depth_ndc_space: f32,
-        map: &TextureMap<f32>,
-        texel_size: f32,
-        uv: Vec2,
-    ) -> f32 {
+    fn poisson_3x3(current_depth_ndc_space: f32, map: &TextureMap<f32>, uv: Vec2) -> f32 {
         static POISSON_DISK_SAMPLES: [Vec2; 4] = [
             Vec2 {
                 x: -0.942_016_24,
@@ -460,7 +450,7 @@ impl DirectionalLight {
         for sample in &POISSON_DISK_SAMPLES {
             let poisson_uv = uv + (*sample / 700.0);
 
-            shadow += Self::pcf_3x3(current_depth_ndc_space, map, texel_size, poisson_uv);
+            shadow += Self::pcf_3x3(current_depth_ndc_space, map, poisson_uv);
         }
 
         shadow / POISSON_DISK_SAMPLES.len() as f32
@@ -480,11 +470,9 @@ impl DirectionalLight {
 
         let current_depth_ndc_space = sample_position_light_ndc_space.z;
 
-        let texel_size = 1.0 / map.width as f32;
-
         let uv = sample_position_light_ndc_space.ndc_to_uv();
 
-        Self::poisson_3x3(current_depth_ndc_space, map, texel_size, uv)
+        Self::poisson_3x3(current_depth_ndc_space, map, uv)
     }
 
     fn get_shadowing(
