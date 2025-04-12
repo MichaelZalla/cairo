@@ -254,25 +254,6 @@ fn main() -> Result<(), String> {
 
         *ray_grid_rotation_rc.borrow_mut() = Quaternion::new(vec3::UP, theta);
 
-        {
-            let mut camera_arena = resources.camera.borrow_mut();
-
-            for entry in camera_arena.entries.iter_mut().flatten() {
-                let camera = &mut entry.item;
-
-                if camera.is_active {
-                    let framebuffer = framebuffer_rc.borrow_mut();
-
-                    if let Some(depth_buffer_rc) = framebuffer.attachments.depth.as_ref() {
-                        let mut depth_buffer = depth_buffer_rc.borrow_mut();
-
-                        depth_buffer.set_projection_z_near(camera.get_projection_z_near());
-                        depth_buffer.set_projection_z_far(camera.get_projection_z_far());
-                    }
-                }
-            }
-        }
-
         let mut renderer = renderer_rc.borrow_mut();
 
         renderer.options.update(keyboard_state);

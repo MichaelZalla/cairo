@@ -148,8 +148,14 @@ impl SceneGraph {
 
                                 let mut active_camera_handle = active_camera_handle_rc.borrow_mut();
 
-                                if camera.is_active && active_camera_handle.is_none() {
-                                    active_camera_handle.replace(*handle);
+                                if camera.is_active {
+                                    let renderer = renderer_rc.borrow();
+
+                                    renderer.on_camera_update(camera);
+
+                                    if active_camera_handle.is_none() {
+                                        active_camera_handle.replace(*handle);
+                                    }
                                 }
 
                                 let mut clipping_camera_handle =

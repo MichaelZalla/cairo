@@ -129,7 +129,7 @@ impl Camera {
         extent: Option<CameraOrthographicExtent>,
     ) -> Self {
         let projection_z_near = 0.3;
-        let projection_z_far = 1000.0;
+        let projection_z_far = 100.0;
 
         let mut camera = Camera {
             is_active: false,

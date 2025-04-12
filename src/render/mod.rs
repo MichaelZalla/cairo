@@ -27,6 +27,8 @@ pub trait Renderer {
 
     fn get_options_mut(&mut self) -> &mut RenderOptions;
 
+    fn on_camera_update(&self, camera: &Camera);
+
     fn begin_frame(&mut self);
 
     fn end_frame(&mut self);

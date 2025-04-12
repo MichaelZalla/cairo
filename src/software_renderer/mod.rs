@@ -86,6 +86,19 @@ impl Renderer for SoftwareRenderer {
         &mut self.options
     }
 
+    fn on_camera_update(&self, camera: &Camera) {
+        if let Some(framebuffer_rc) = &self.framebuffer {
+            let framebuffer = framebuffer_rc.borrow();
+
+            if let Some(depth_buffer_rc) = &framebuffer.attachments.depth {
+                let mut depth_buffer = depth_buffer_rc.borrow_mut();
+
+                depth_buffer.set_projection_z_near(camera.get_projection_z_near());
+                depth_buffer.set_projection_z_far(camera.get_projection_z_far());
+            }
+        }
+    }
+
     fn begin_frame(&mut self) {
         #[cfg(feature = "debug_cycle_counts")]
         {
