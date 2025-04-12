@@ -60,11 +60,35 @@ impl SoftwareRenderer {
 
         let mut points = vec![Vec4::new(Default::default(), 1.0); divisions];
 
-        for (index, point) in points.iter_mut().enumerate() {
-            let theta = arc_length * index as f32;
+        if divisions.rem_euclid(4) == 0 {
+            let points_per_quadrant = divisions / 4;
 
-            point.x = theta.cos();
-            point.y = theta.sin();
+            // Optimized for quadrants.
+
+            for index in 0..points_per_quadrant {
+                let theta = arc_length * index as f32;
+
+                let (x, y) = (theta.cos(), theta.sin());
+
+                points[/*0 * points_per_quadrant + */index].x = x;
+                points[/*0 * points_per_quadrant + */index].y = y;
+
+                points[/*1 * */points_per_quadrant + index].x = -y;
+                points[/*1 * */points_per_quadrant + index].y = x;
+
+                points[2 * points_per_quadrant + index].x = -x;
+                points[2 * points_per_quadrant + index].y = -y;
+
+                points[3 * points_per_quadrant + index].x = y;
+                points[3 * points_per_quadrant + index].y = -x;
+            }
+        } else {
+            for (index, point) in points.iter_mut().enumerate() {
+                let theta = arc_length * index as f32;
+
+                point.x = theta.cos();
+                point.y = theta.sin();
+            }
         }
 
         points
