@@ -24,12 +24,12 @@ use super::{
 pub struct SpotLight {
     pub intensities: Vec3,
     pub look_vector: LookVector,
-    pub inner_cutoff_angle: f32,
+    inner_cutoff_angle: f32,
     #[serde(skip)]
-    pub inner_cutoff_angle_cos: f32,
-    pub outer_cutoff_angle: f32,
+    inner_cutoff_angle_cos: f32,
+    outer_cutoff_angle: f32,
     #[serde(skip)]
-    pub outer_cutoff_angle_cos: f32,
+    outer_cutoff_angle_cos: f32,
     #[serde(skip)]
     epsilon: f32,
     attenuation: LightAttenuation,
@@ -62,21 +62,50 @@ impl SpotLight {
                 y: 10.0,
                 z: 0.0,
             }),
-            inner_cutoff_angle: (PI / 12.0),
-            outer_cutoff_angle: (PI / 8.0),
-            inner_cutoff_angle_cos: (PI / 12.0).cos(),
-            outer_cutoff_angle_cos: (PI / 8.0).cos(),
             attenuation: LIGHT_ATTENUATION_RANGE_50_UNITS,
             ..Default::default()
         };
 
-        light.look_vector.set_target(-vec3::UP);
+        light.set_inner_cutoff_angle(PI / 12.0);
+        light.set_outer_cutoff_angle(PI / 8.0);
 
-        light.epsilon = light.inner_cutoff_angle_cos - light.outer_cutoff_angle_cos;
+        light.look_vector.set_target(-vec3::UP);
 
         light.post_deserialize();
 
         light
+    }
+
+    pub fn get_inner_cutoff_angle(&self) -> f32 {
+        self.inner_cutoff_angle
+    }
+
+    pub fn get_inner_cutoff_angle_cos(&self) -> f32 {
+        self.inner_cutoff_angle_cos
+    }
+
+    pub fn set_inner_cutoff_angle(&mut self, angle: f32) {
+        self.inner_cutoff_angle = angle;
+
+        self.inner_cutoff_angle_cos = angle.cos();
+
+        self.epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
+    }
+
+    pub fn get_outer_cutoff_angle(&self) -> f32 {
+        self.outer_cutoff_angle
+    }
+
+    pub fn get_outer_cutoff_angle_cos(&self) -> f32 {
+        self.outer_cutoff_angle_cos
+    }
+
+    pub fn set_outer_cutoff_angle(&mut self, angle: f32) {
+        self.outer_cutoff_angle = angle;
+
+        self.outer_cutoff_angle_cos = angle.cos();
+
+        self.epsilon = self.inner_cutoff_angle_cos - self.outer_cutoff_angle_cos;
     }
 
     pub fn get_attenuation(&self) -> &LightAttenuation {

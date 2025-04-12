@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc};
 
 use cairo::{
     app::{
@@ -133,6 +133,9 @@ fn main() -> Result<(), String> {
 
         let spot_light_node = {
             let mut spot_light = SpotLight::new();
+
+            spot_light.set_inner_cutoff_angle(PI / 32.0);
+            spot_light.set_outer_cutoff_angle(PI / 4.0);
 
             spot_light.intensities = color::YELLOW.to_vec3() / 255.0 * 2.0;
 

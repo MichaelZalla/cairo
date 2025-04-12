@@ -176,7 +176,7 @@ impl SoftwareRenderer {
         // Renders a disk representing the light's outer cone, at a distance
         // approximating the light's effective influence on the scene.
 
-        let inner_opposite_over_adjacent = light.inner_cutoff_angle.tan();
+        let inner_opposite_over_adjacent = light.get_inner_cutoff_angle().tan();
         let inner_radius = inner_opposite_over_adjacent * light.influence_distance;
         let inner_scale = Mat4::scale(vec3::ONES * inner_radius);
         let inner_transform = inner_scale * rotation * Mat4::translation(far_plane_center);
@@ -190,7 +190,7 @@ impl SoftwareRenderer {
         // Renders a disk representing the light's inner cone, at a distance
         // approximating the light's effective influence on the scene.
 
-        let outer_opposite_over_adjacent = light.outer_cutoff_angle.tan();
+        let outer_opposite_over_adjacent = light.get_outer_cutoff_angle().tan();
         let outer_radius = outer_opposite_over_adjacent * light.influence_distance;
         let outer_scale = Mat4::scale(vec3::ONES * outer_radius);
         let outer_transform = outer_scale * rotation * Mat4::translation(far_plane_center);

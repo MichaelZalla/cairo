@@ -178,6 +178,9 @@ pub(crate) fn make_scene(
     let spot_light_node = {
         let mut spot_light = SpotLight::new();
 
+        spot_light.set_outer_cutoff_angle(PI / 4.0);
+        spot_light.set_inner_cutoff_angle(PI / 16.0);
+
         spot_light.intensities = Vec3 {
             x: 1.0,
             y: 1.0,
