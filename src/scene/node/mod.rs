@@ -522,6 +522,47 @@ impl SceneNode {
                 Some(handle) => {
                     shader_context.set_directional_light(Some(*handle));
 
+                    let mut directional_light_arena = resources.directional_light.borrow_mut();
+
+                    if let Ok(entry) = directional_light_arena.get_mut(handle) {
+                        let directional_light = &mut entry.item;
+
+                        if let (Some(_), Some(_)) = (
+                            &directional_light.shadow_maps,
+                            &directional_light.shadow_map_rendering_context,
+                        ) {
+                            let camera_arena = resources.camera.borrow();
+
+                            if let Some(view_camera) = camera_arena
+                                .entries
+                                .iter()
+                                .flatten()
+                                .find(|entry| entry.item.is_active)
+                                .map(|entry| &entry.item)
+                            {
+                                directional_light.update_shadow_map_cameras(view_camera);
+
+                                if let Some(shadow_map_cameras) =
+                                    &directional_light.shadow_map_cameras
+                                {
+                                    let transforms: Vec<(f32, Mat4)> = shadow_map_cameras
+                                        .iter()
+                                        .map(|(far_z, camera)| {
+                                            (
+                                                *far_z,
+                                                camera.get_view_inverse_transform()
+                                                    * camera.get_projection(),
+                                            )
+                                        })
+                                        .collect();
+
+                                    shader_context
+                                        .set_directional_light_view_projections(Some(transforms));
+                                }
+                            }
+                        }
+                    }
+
                     Ok(())
                 }
                 None => {

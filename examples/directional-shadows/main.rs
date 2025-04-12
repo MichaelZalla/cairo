@@ -240,53 +240,6 @@ fn main() -> Result<(), String> {
             }
         }
 
-        {
-            let camera_handle_option = view_camera_handle.borrow();
-
-            if let Some(camera_handle) = camera_handle_option.as_ref() {
-                let camera_arena = resources.camera.borrow();
-
-                let mut directional_light_arena = resources.directional_light.borrow_mut();
-
-                if let Some(directional_light_handle) = scene
-                    .root
-                    .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
-                {
-                    match (
-                        directional_light_arena.get_mut(&directional_light_handle),
-                        camera_arena.get(camera_handle),
-                    ) {
-                        (Ok(light_entry), Ok(camera_entry)) => {
-                            let view_camera = &camera_entry.item;
-
-                            let directional_light = &mut light_entry.item;
-
-                            directional_light.update_shadow_map_cameras(view_camera);
-
-                            if let Some(shadow_map_cameras) =
-                                directional_light.shadow_map_cameras.as_ref()
-                            {
-                                let transforms = shadow_map_cameras
-                                    .iter()
-                                    .map(|(far_z, camera)| {
-                                        (
-                                            *far_z,
-                                            camera.get_view_inverse_transform()
-                                                * camera.get_projection(),
-                                        )
-                                    })
-                                    .collect();
-
-                                shader_context
-                                    .set_directional_light_view_projections(Some(transforms));
-                            }
-                        }
-                        _ => panic!(),
-                    }
-                }
-            }
-        }
-
         let mut renderer = renderer_rc.borrow_mut();
 
         renderer.options.update(keyboard_state);
