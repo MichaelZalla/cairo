@@ -235,7 +235,7 @@ impl DirectionalLight {
                             }
                         }
                         None => return Err(
-                            "Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()
+                            "Called DirectionalLight::update_shadow_maps() with no HDR attachment on the rendering context's framebuffer!".to_string()
                         ),
                     }
                 }

@@ -576,7 +576,7 @@ impl PointLight {
 
                     blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]);
                 }
-                None => return Err("Called CubeMap::<f32>::render_scene() with a Framebuffer with no HDR attachment!".to_string()),
+                None => return Err("Called PointLight::update_shadow_maps() with no HDR attachment on the rendering context's framebuffer!".to_string()),
             }
         }
 
