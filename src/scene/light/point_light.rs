@@ -133,16 +133,19 @@ impl PointLight {
         resources: &SceneResources,
         scene: &SceneGraph,
     ) -> Result<(), String> {
-        // Re-render shadow map for the latest scene.
+        // Re-render shadow map based on the scene's current state.
 
         let shadow_map_handle = if self.shadow_map.is_none() {
-            return Err("Called PointLight::update_shadow_map() on a light with no shadow map handle created!".to_string());
+            return Err(
+                "Called PointLight::update_shadow_map() on a light with no shadow map handle!"
+                    .to_string(),
+            );
         } else {
             self.shadow_map.as_ref().unwrap()
         };
 
         let rendering_context = if self.shadow_map_rendering_context.is_none() {
-            return Err("Called PointLight::update_shadow_map() on a light with no shadow map rendering context created!".to_string());
+            return Err("Called PointLight::update_shadow_map() on a light with no shadow map rendering context!".to_string());
         } else {
             self.shadow_map_rendering_context.as_ref().unwrap()
         };
@@ -161,7 +164,7 @@ impl PointLight {
             if let Ok(entry) = cubemap_f32_arena.get_mut(shadow_map_handle) {
                 let map = &mut entry.item;
 
-                self.render_shadow_map_into(map, resources, scene)?;
+                self.render_shadow_map_into(map, rendering_context, resources, scene)?;
             }
         }
 
@@ -501,15 +504,10 @@ impl PointLight {
     fn render_shadow_map_into(
         &self,
         shadow_map: &mut CubeMap<f32>,
+        rendering_context: &ShadowMapRenderingContext,
         resources: &SceneResources,
         scene: &SceneGraph,
     ) -> Result<(), String> {
-        let context = if self.shadow_map_rendering_context.is_none() {
-            return Err("Called PointLight::render_shadow_map() on a light with no shadow map rendering context created!".to_string());
-        } else {
-            self.shadow_map_rendering_context.as_ref().unwrap()
-        };
-
         let mut cubemap_face_camera = {
             let mut camera = Camera::from_perspective(self.position, Default::default(), 90.0, 1.0);
 
@@ -517,13 +515,13 @@ impl PointLight {
             // framebuffer's depth attachment.
 
             camera.set_projection_z_near(SHADOW_MAP_CAMERA_NEAR);
-            camera.set_projection_z_far(context.projection_z_far);
+            camera.set_projection_z_far(rendering_context.projection_z_far);
 
             camera
         };
 
         {
-            let mut shader_context = context.shader_context.borrow_mut();
+            let mut shader_context = rendering_context.shader_context.borrow_mut();
 
             cubemap_face_camera.update_shader_context(&mut shader_context);
         }
@@ -534,14 +532,16 @@ impl PointLight {
                 .set_target(self.position + side.get_direction());
 
             {
-                let mut shader_context = context.shader_context.borrow_mut();
+                let mut shader_context = rendering_context.shader_context.borrow_mut();
+
+                // Rebinds view-inverse transform after setting new look-vector target.
 
                 shader_context
                     .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
             }
 
             {
-                let mut renderer = context.renderer.borrow_mut();
+                let mut renderer = rendering_context.renderer.borrow_mut();
 
                 renderer.set_clipping_frustum(*cubemap_face_camera.get_frustum());
 
@@ -552,7 +552,7 @@ impl PointLight {
 
             scene.render(
                 resources,
-                &context.renderer,
+                &rendering_context.renderer,
                 Some(SceneGraphRenderOptions {
                     is_shadow_map_render: true,
                     ..Default::default()
@@ -560,7 +560,7 @@ impl PointLight {
             )?;
 
             {
-                let mut renderer = context.renderer.borrow_mut();
+                let mut renderer = rendering_context.renderer.borrow_mut();
 
                 renderer.end_frame();
             }
@@ -568,7 +568,7 @@ impl PointLight {
             // Blit our framebuffer's HDR attachment buffer to our cubemap's
             // corresponding side (texture map).
 
-            let framebuffer = context.framebuffer.borrow();
+            let framebuffer = rendering_context.framebuffer.borrow();
 
             match &framebuffer.attachments.deferred_hdr {
                 Some(hdr_attachment_rc) => {
