@@ -148,21 +148,23 @@ impl SpotLight {
         let theta_angle = 0.0_f32
             .max((self.look_vector.get_forward()).dot(direction_to_light_world_space * -1.0));
 
-        let spot_attenuation =
-            ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);
-
         let light_intensities = &self.intensities;
 
-        if theta_angle > self.outer_cutoff_angle_cos {
+        let contribution = if theta_angle > self.outer_cutoff_angle_cos {
             contribute_pbr_world_space(
                 sample,
                 light_intensities,
                 &direction_to_light_world_space,
                 f0,
                 view_position,
-            ) * spot_attenuation
+            )
         } else {
-            Default::default()
-        }
+            return Default::default();
+        };
+
+        let attenuation =
+            ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);
+
+        contribution * attenuation
     }
 }
