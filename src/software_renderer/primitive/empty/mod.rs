@@ -53,14 +53,8 @@ impl SoftwareRenderer {
         self.render_line_loop(&positions_world_space, 0, 3, color);
     }
 
-    fn render_circles(
-        &mut self,
-        divisions: usize,
-        transform: &Mat4,
-        local_transforms: &[Mat4],
-        colors: &[Color],
-    ) {
-        // Defines a unit circle as a set of points (in object space).
+    fn get_unit_circle_points(&self, divisions: usize) -> Vec<Vec4> {
+        // Defines a unit circle as a set of points on the X-Y-plane.
 
         let arc_length = TAU / divisions as f32;
 
@@ -72,6 +66,20 @@ impl SoftwareRenderer {
             point.x = theta.cos();
             point.y = theta.sin();
         }
+
+        points
+    }
+
+    fn render_circles(
+        &mut self,
+        divisions: usize,
+        transform: &Mat4,
+        local_transforms: &[Mat4],
+        colors: &[Color],
+    ) {
+        // Renders one or more transformed unit circles in world space.
+
+        let points = self.get_unit_circle_points(divisions);
 
         for (local_transform, color) in local_transforms.iter().zip(colors) {
             // Transforms the unit points for this circle.
