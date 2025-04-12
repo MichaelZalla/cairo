@@ -1,8 +1,10 @@
+use sdl2::keyboard::Keycode;
+
 use serde::{Deserialize, Serialize};
 
-use crate::resource::handle::Handle;
+use crate::{device::keyboard::KeyboardState, resource::handle::Handle};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SceneGraphRenderOptions {
     pub is_shadow_map_render: bool,
     pub draw_lights: bool,
@@ -11,14 +13,11 @@ pub struct SceneGraphRenderOptions {
     pub camera: Option<Handle>,
 }
 
-impl Default for SceneGraphRenderOptions {
-    fn default() -> Self {
-        Self {
-            is_shadow_map_render: false,
-            draw_lights: false,
-            draw_cameras: cfg!(debug_assertions),
-            draw_shadow_map_cameras: false,
-            camera: None,
+impl SceneGraphRenderOptions {
+    pub fn update(&mut self, keyboard_state: &mut KeyboardState) {
+        if keyboard_state.newly_pressed_keycodes.contains(&Keycode::F) {
+            self.draw_lights = !self.draw_lights;
+            self.draw_cameras = !self.draw_cameras;
         }
     }
 }

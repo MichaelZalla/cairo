@@ -319,30 +319,35 @@ impl SceneGraph {
             let (node_type, handle) = (node.get_type(), node.get_handle());
 
             match node_type {
-                SceneNodeType::Camera => match handle {
-                    Some(handle) => {
-                        let camera_arena = resources.camera.borrow();
+                SceneNodeType::Camera => {
+                    if options.draw_cameras {
+                        match handle {
+                            Some(handle) => {
+                                let camera_arena = resources.camera.borrow();
 
-                        match camera_arena.get(handle) {
-                            Ok(entry) => {
-                                let camera = &entry.item;
+                                match camera_arena.get(handle) {
+                                    Ok(entry) => {
+                                        let camera = &entry.item;
 
-                                if !camera.is_active && options.draw_cameras {
-                                    renderer.render_camera(camera, Some(color::ORANGE));
+                                        if !camera.is_active {
+                                            renderer.render_camera(camera, Some(color::ORANGE));
+                                        }
+                                    }
+                                    Err(err) => panic!(
+                                        "Failed to get Camera from Arena with Handle {:?}: {}",
+                                        handle, err
+                                    ),
                                 }
                             }
-                            Err(err) => panic!(
-                                "Failed to get Camera from Arena with Handle {:?}: {}",
-                                handle, err
-                            ),
+                            None => {
+                                panic!("Encountered a `Camera` node with no handle!")
+                            }
                         }
+                    }
 
-                        Ok(())
-                    }
-                    None => {
-                        panic!("Encountered a `Camera` node with no handle!")
-                    }
-                },
+                    Ok(())
+                }
+
                 SceneNodeType::DirectionalLight => {
                     if options.draw_shadow_map_cameras {
                         match handle {
@@ -787,7 +792,7 @@ impl SceneGraph {
 
             // Draw cameras.
 
-            if options.draw_cameras {
+            if options.draw_cameras || options.draw_shadow_map_cameras {
                 self.root.visit(
                     SceneNodeGlobalTraversalMethod::DepthFirst,
                     Some(SceneNodeLocalTraversalMethod::PostOrder),

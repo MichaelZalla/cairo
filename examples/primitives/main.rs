@@ -146,6 +146,12 @@ fn main() -> Result<(), String> {
 
     let renderer_rc = RefCell::new(renderer);
 
+    // Scene graph render options
+
+    let scene_graph_render_options: SceneGraphRenderOptions = Default::default();
+
+    let scene_graph_render_options_rc = Rc::new(RefCell::new(scene_graph_render_options));
+
     // App update and render callbacks
 
     let view_camera_handle: &'static RefCell<Option<Handle>> =
@@ -337,6 +343,12 @@ fn main() -> Result<(), String> {
             renderer.set_clipping_frustum(*camera.get_frustum());
         }
 
+        {
+            let mut scene_graph_render_options = scene_graph_render_options_rc.borrow_mut();
+
+            scene_graph_render_options.update(keyboard_state);
+        }
+
         Ok(())
     };
 
@@ -358,16 +370,11 @@ fn main() -> Result<(), String> {
             renderer.begin_frame();
         }
 
-        scene.render(
-            resources,
-            &renderer_rc,
-            Some(SceneGraphRenderOptions {
-                draw_lights: true,
-                draw_cameras: false,
-                draw_shadow_map_cameras: false,
-                ..Default::default()
-            }),
-        )?;
+        {
+            let scene_graph_render_options = scene_graph_render_options_rc.borrow();
+
+            scene.render(resources, &renderer_rc, Some(*scene_graph_render_options))?;
+        }
 
         {
             let mut renderer = renderer_rc.borrow_mut();
