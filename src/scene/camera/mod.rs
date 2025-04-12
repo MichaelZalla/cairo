@@ -9,7 +9,7 @@ use crate::{
     shader::context::ShaderContext,
     time::TimingInfo,
     transform::look_vector::{
-        controller::{editor::EditorLookVectorController, LookVectorController},
+        controller::{first_person::FirstPersonLookVectorController, LookVectorController},
         LookVector,
     },
     vec::{
@@ -74,7 +74,7 @@ pub struct Camera {
     projection_inverse_transform: Mat4,
     pub look_vector: LookVector,
     #[serde(skip)]
-    pub look_vector_controller: Option<EditorLookVectorController>,
+    pub look_vector_controller: Option<FirstPersonLookVectorController>,
     #[serde(skip)]
     frustum: Frustum,
 }
@@ -143,7 +143,7 @@ impl Camera {
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position),
-            look_vector_controller: Some(EditorLookVectorController::default()),
+            look_vector_controller: Some(FirstPersonLookVectorController::default()),
             frustum: Default::default(),
         };
 
