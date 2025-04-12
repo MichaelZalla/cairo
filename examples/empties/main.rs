@@ -269,6 +269,7 @@ fn main() -> Result<(), String> {
             &renderer_rc,
             Some(SceneGraphRenderOptions {
                 draw_lights: true,
+                draw_shadow_map_cameras: true,
                 ..Default::default()
             }),
         )?;

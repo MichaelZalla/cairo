@@ -238,25 +238,17 @@ fn main() -> Result<(), String> {
 
                         let y = position.y;
 
-                        static POINT_LIGHT_ORBIT_RADIUS: f32 = 16.0;
+                        static POINT_LIGHT_ORBIT_RADIUS: f32 = 20.0;
 
                         transform.set_translation(Vec3 {
-                            x: uptime.sin() * POINT_LIGHT_ORBIT_RADIUS,
+                            x: -uptime.sin() * POINT_LIGHT_ORBIT_RADIUS,
                             y,
-                            z: uptime.cos() * POINT_LIGHT_ORBIT_RADIUS,
+                            z: -uptime.cos() * POINT_LIGHT_ORBIT_RADIUS,
                         });
 
                         Ok(false)
                     }
                     SceneNodeType::SpotLight => {
-                        let transform = node.get_transform_mut();
-
-                        transform.set_translation(Vec3 {
-                            x: 25.0,
-                            y: 25.0,
-                            z: 0.0,
-                        });
-
                         if let Some(handle) = node.get_handle() {
                             let mut spot_light_arena = resources.spot_light.borrow_mut();
 
@@ -264,9 +256,9 @@ fn main() -> Result<(), String> {
                                 let spot_light = &mut entry.item;
 
                                 spot_light.look_vector.set_target(Vec3 {
-                                    x: 25.0 + 15.0 * uptime.sin(),
+                                    x: 15.0 * uptime.sin(),
                                     y: 0.0,
-                                    z: 0.0 + 15.0 * uptime.cos(),
+                                    z: 15.0 * uptime.cos(),
                                 });
                             }
                         }

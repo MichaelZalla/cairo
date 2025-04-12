@@ -83,9 +83,9 @@ pub(crate) fn make_scene(
                     let transform = node.get_transform_mut();
 
                     transform.set_translation(Vec3 {
-                        x: 0.0,
+                        x: 10.0,
                         y: 15.0,
-                        z: 0.0,
+                        z: 10.0,
                     });
 
                     if let Some(handle) = node.get_handle() {
@@ -178,21 +178,19 @@ pub(crate) fn make_scene(
     let spot_light_node = {
         let mut spot_light = SpotLight::new();
 
-        spot_light.set_outer_cutoff_angle(PI / 4.0);
-        spot_light.set_inner_cutoff_angle(PI / 16.0);
+        spot_light.set_outer_cutoff_angle(PI / 8.0);
+        spot_light.set_inner_cutoff_angle(PI / 12.0);
 
-        spot_light.intensities = Vec3 {
-            x: 1.0,
-            y: 1.0,
-            z: 0.0,
-        } * 2.0;
+        spot_light.intensities = color::YELLOW.to_vec3() / 255.0;
+
+        spot_light.enable_shadow_maps(512, 100.0, resources.clone());
 
         let spot_light_handle = spot_light_arena.insert(spot_light);
 
         let mut transform = Transform3D::default();
 
         transform.set_translation(Vec3 {
-            x: 25.0,
+            x: 0.0,
             y: 25.0,
             z: 0.0,
         });

@@ -252,14 +252,6 @@ impl PointLight {
 
         let direction_to_light_tangent_space = fragment_to_point_light / distance_to_point_light;
 
-        // Compute an enshadowing term for this fragment/sample.
-
-        let in_shadow = if let Some(map) = shadow_map {
-            self.get_shadowing(sample, map)
-        } else {
-            0.0
-        };
-
         let light_intensities = &self.intensities;
 
         let contribution = contribute_pbr_tangent_space(
@@ -272,6 +264,14 @@ impl PointLight {
         let attenuation = self
             .attenuation
             .attenuate_for_distance(distance_to_point_light);
+
+        // Compute an enshadowing term for this fragment/sample.
+
+        let in_shadow = if let Some(map) = shadow_map {
+            self.get_shadowing(sample, map)
+        } else {
+            0.0
+        };
 
         contribution * attenuation * (1.0 - in_shadow)
     }

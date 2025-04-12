@@ -608,6 +608,10 @@ impl SceneNode {
                                     .to_vec3(),
                             );
 
+                            if spot_light.shadow_map_camera.is_some() {
+                                spot_light.update_shadow_map_camera();
+                            }
+
                             shader_context.get_spot_lights_mut().push(*handle);
 
                             Ok(())

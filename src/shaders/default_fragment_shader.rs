@@ -157,8 +157,24 @@ pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
                 Ok(entry) => {
                     let light = &entry.item;
 
-                    spot_light_contribution +=
-                        light.contribute_pbr(sample, &f0, &context.view_position);
+                    if let Some(handle) = light.shadow_map {
+                        if let Ok(entry) = resources.texture_f32.borrow().get(&handle) {
+                            let shadow_map = &entry.item;
+
+                            spot_light_contribution += light.contribute_pbr(
+                                sample,
+                                &f0,
+                                &context.view_position,
+                                Some(shadow_map),
+                            );
+                        } else {
+                            spot_light_contribution +=
+                                light.contribute_pbr(sample, &f0, &context.view_position, None);
+                        }
+                    } else {
+                        spot_light_contribution +=
+                            light.contribute_pbr(sample, &f0, &context.view_position, None);
+                    }
                 }
                 Err(err) => panic!("Failed to get SpotLight from Arena: {:?}: {}", handle, err),
             }

@@ -459,6 +459,40 @@ impl SceneGraph {
                         }
                     }
                 }
+                SceneNodeType::SpotLight => {
+                    if options.is_shadow_map_render {
+                        return Ok(());
+                    }
+
+                    match handle {
+                        Some(spot_light_handle) => {
+                            let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+                            match spot_light_arena.get_mut(spot_light_handle) {
+                                Ok(entry) => {
+                                    let spot_light = &mut entry.item;
+
+                                    if let (Some(_), Some(_), true) = (
+                                        spot_light.shadow_map.as_ref(),
+                                        spot_light.shadow_map_rendering_context.as_ref(),
+                                        render_pass_flags.contains(RenderPassFlag::Lighting),
+                                    ) {
+                                        spot_light.update_shadow_map(resources, self)?;
+                                    }
+
+                                    Ok(())
+                                }
+                                Err(err) => panic!(
+                                    "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                    handle, err
+                                ),
+                            }
+                        }
+                        None => {
+                            panic!("Encountered a `SpotLight` node with no handle!")
+                        }
+                    }
+                }
                 _ => Ok(()),
             }
         };
