@@ -67,7 +67,9 @@ impl Default for DirectionalLight {
             shadow_map_rendering_context: None,
         };
 
-        result.set_direction(Quaternion::new((vec3::RIGHT).as_normal(), -PI / 4.0));
+        result.set_direction(
+            Quaternion::new(vec3::UP, PI / 4.0) * Quaternion::new(vec3::RIGHT, -PI / 2.0),
+        );
 
         result
     }

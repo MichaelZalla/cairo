@@ -2,15 +2,15 @@ use crate::{
     color,
     matrix::Mat4,
     render::Renderer,
-    scene::{
-        camera::frustum::Frustum,
-        light::{
-            ambient_light::AmbientLight, directional_light::DirectionalLight,
-            point_light::PointLight, spot_light::SpotLight,
-        },
+    scene::light::{
+        ambient_light::AmbientLight, directional_light::DirectionalLight, point_light::PointLight,
+        spot_light::SpotLight,
     },
     software_renderer::SoftwareRenderer,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 impl SoftwareRenderer {
@@ -26,10 +26,12 @@ impl SoftwareRenderer {
             },
         );
 
+        // Renders a line connecting the light (position) to the ground plane.
+
         self.render_line(
             y_indicator_line_start,
             y_indicator_line_end,
-            color::LIGHT_GRAY,
+            color::DARK_GRAY,
         );
     }
 
@@ -44,7 +46,15 @@ impl SoftwareRenderer {
 
         let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
-        self.render_circle(&position, 1.0, color);
+        // Renders the light as a colored sphere, at its scene node's position.
+
+        let scaled_transform = Mat4::scale(vec3::ONES * 0.1) * *transform;
+
+        self.render_empty(
+            &scaled_transform,
+            crate::scene::empty::EmptyDisplayKind::Sphere(8),
+            Some(color),
+        );
     }
 
     pub(in crate::software_renderer) fn _render_directional_light(
@@ -56,15 +66,41 @@ impl SoftwareRenderer {
 
         self.render_light_ground_contact(&position);
 
+        // Derive the light's orientation matrix using its direction vector.
+
+        let forward = light.get_direction().to_vec3();
+        let right = vec3::UP.cross(forward).as_normal();
+        let up = forward.cross(right).as_normal();
+
+        let rotation = Mat4::tbn(right, up, forward);
+
+        // Renders the light as several arrows pointing in the light direction,
+        // clustered around the scene node's position.
+
         let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
-        self.render_circle(&position, 1.0, color);
+        // Draws 4 arrows, offset on the world X- and Z-axis.
 
-        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
+        static ARROW_X_Z_OFFSETS: [(f32, f32); 4] =
+            [(-0.25, -0.25), (0.25, -0.25), (-0.25, 0.25), (0.25, 0.25)];
 
-        let (start, end) = (position, position + light.get_direction().to_vec3() * 10.0);
+        for (x_offset, z_offset) in ARROW_X_Z_OFFSETS {
+            let transform = rotation
+                + Mat4::translation(
+                    position
+                        + Vec3 {
+                            x: x_offset,
+                            z: z_offset,
+                            ..Default::default()
+                        },
+                );
 
-        self.render_line(start, end, color);
+            self.render_empty(
+                &transform,
+                crate::scene::empty::EmptyDisplayKind::Arrow,
+                Some(color),
+            );
+        }
     }
 
     pub(in crate::software_renderer) fn _render_point_light(
@@ -76,12 +112,27 @@ impl SoftwareRenderer {
 
         self.render_light_ground_contact(&position);
 
-        let radius = light.influence_distance;
+        // Renders the light as a colored sphere, at its position, surrounded by
+        // a larger sphere to visualize the light's effective lighting radius.
 
         let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
-        self.render_circle(&position, 1.0, color);
-        self.render_circle(&position, radius, color);
+        let scaled_transform_inner = Mat4::scale(vec3::ONES * 0.1) * *transform;
+
+        self.render_empty(
+            &scaled_transform_inner,
+            crate::scene::empty::EmptyDisplayKind::Sphere(8),
+            Some(color),
+        );
+
+        let scaled_transform_outer =
+            Mat4::scale(vec3::ONES * light.influence_distance) * *transform;
+
+        self.render_empty(
+            &scaled_transform_outer,
+            crate::scene::empty::EmptyDisplayKind::Sphere(16),
+            Some(color),
+        );
     }
 
     pub(in crate::software_renderer) fn _render_spot_light(
@@ -95,45 +146,85 @@ impl SoftwareRenderer {
 
         let color = self.get_tone_mapped_color_from_hdr(light.intensities);
 
-        self.render_circle(&position, 1.0, color);
+        // Renders a colored sphere at the light's position.
 
-        let forward = light.look_vector.get_forward().as_normal();
+        let scaled_transform = Mat4::scale(vec3::ONES * 0.1) * *transform;
 
-        let target_position = position + forward * light.influence_distance;
+        self.render_empty(
+            &scaled_transform,
+            crate::scene::empty::EmptyDisplayKind::Sphere(8),
+            Some(color),
+        );
 
-        self.render_line(position, target_position, color::WHITE);
+        // Derive the light's orientation matrix using existing basis vectors.
 
-        // Draw sides for cutoff angles.
+        let (forward, right, up) = (
+            light.look_vector.get_forward(),
+            light.look_vector.get_right(),
+            light.look_vector.get_up(),
+        );
 
-        let opposite_over_adjacent = light.outer_cutoff_angle.tan();
+        // Renders a line extending from the light's position to its maximum
+        // effective lighting distance, in the lighting direction.
 
-        let near_plane_points_world_space = [position, position, position, position];
+        let far_plane_center = position + forward * light.influence_distance;
 
-        let far_plane_points_world_space = [
-            target_position
-                + light.look_vector.get_right() * opposite_over_adjacent * light.influence_distance,
-            target_position
-                + light.look_vector.get_up()
-                    * -1.0
-                    * opposite_over_adjacent
-                    * light.influence_distance,
-            target_position
-                + light.look_vector.get_right()
-                    * -1.0
-                    * opposite_over_adjacent
-                    * light.influence_distance,
-            target_position
-                + light.look_vector.get_up() * opposite_over_adjacent * light.influence_distance,
-        ];
+        self.render_line(position, far_plane_center, color::WHITE);
 
-        // Exposure tone mapping
+        let rotation = Mat4::tbn(right, up, forward);
 
-        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
+        // Renders a disk representing the light's outer cone, at a distance
+        // approximating the light's effective influence on the scene.
 
-        let (near, far) = (near_plane_points_world_space, far_plane_points_world_space);
+        let inner_opposite_over_adjacent = light.inner_cutoff_angle.tan();
+        let inner_radius = inner_opposite_over_adjacent * light.influence_distance;
+        let inner_scale = Mat4::scale(vec3::ONES * inner_radius);
+        let inner_transform = inner_scale * rotation * Mat4::translation(far_plane_center);
 
-        let frustum = Frustum::new(forward, near, far);
+        self.render_empty(
+            &inner_transform,
+            crate::scene::empty::EmptyDisplayKind::Circle(16),
+            Some(color),
+        );
 
-        self._render_frustum(&frustum, Some(color));
+        // Renders a disk representing the light's inner cone, at a distance
+        // approximating the light's effective influence on the scene.
+
+        let outer_opposite_over_adjacent = light.outer_cutoff_angle.tan();
+        let outer_radius = outer_opposite_over_adjacent * light.influence_distance;
+        let outer_scale = Mat4::scale(vec3::ONES * outer_radius);
+        let outer_transform = outer_scale * rotation * Mat4::translation(far_plane_center);
+
+        // Connects the light position to the outer cone, as 4 connecting segments.
+
+        self.render_empty(
+            &outer_transform,
+            crate::scene::empty::EmptyDisplayKind::Circle(16),
+            Some(color),
+        );
+
+        self.render_line(
+            position,
+            (Vec4::new(vec3::UP, 1.0) * outer_transform).to_vec3(),
+            color,
+        );
+
+        self.render_line(
+            position,
+            (Vec4::new(vec3::RIGHT, 1.0) * outer_transform).to_vec3(),
+            color,
+        );
+
+        self.render_line(
+            position,
+            (Vec4::new(-vec3::UP, 1.0) * outer_transform).to_vec3(),
+            color,
+        );
+
+        self.render_line(
+            position,
+            (Vec4::new(-vec3::RIGHT, 1.0) * outer_transform).to_vec3(),
+            color,
+        );
     }
 }

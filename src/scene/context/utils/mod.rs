@@ -75,7 +75,7 @@ pub fn make_empty_scene(
 
             transform.set_translation(Vec3 {
                 x: 0.0,
-                y: 16.0,
+                y: 10.0,
                 z: 0.0,
             });
 
@@ -97,7 +97,7 @@ pub fn make_empty_scene(
 
             transform.set_translation(Vec3 {
                 x: 8.0,
-                y: 16.0,
+                y: 10.0,
                 z: -8.0,
             });
 

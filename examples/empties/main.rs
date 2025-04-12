@@ -4,15 +4,18 @@ use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1280_BY_720},
+        resolution::{Resolution, RESOLUTION_1600_BY_900},
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
+    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     render::Renderer,
     scene::{
         context::{utils::make_empty_scene, SceneContext},
         empty::{Empty, EmptyDisplayKind},
+        graph::options::SceneGraphRenderOptions,
+        light::{attenuation, point_light::PointLight, spot_light::SpotLight},
         node::{SceneNode, SceneNodeType},
     },
     shaders::{
@@ -28,8 +31,8 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/empties".to_string(),
         relative_mouse_mode: true,
-        canvas_resolution: RESOLUTION_1280_BY_720,
-        window_resolution: RESOLUTION_1280_BY_720,
+        canvas_resolution: RESOLUTION_1600_BY_900,
+        window_resolution: RESOLUTION_1600_BY_900,
         ..Default::default()
     };
 
@@ -55,6 +58,8 @@ fn main() -> Result<(), String> {
         let mut environment_arena = resources.environment.borrow_mut();
         let mut ambient_light_arena = resources.ambient_light.borrow_mut();
         let mut directional_light_arena = resources.directional_light.borrow_mut();
+        let mut point_light_arena = resources.point_light.borrow_mut();
+        let mut spot_light_arena = resources.spot_light.borrow_mut();
         let mut empty_arena = resources.empty.borrow_mut();
 
         let (mut scene, shader_context) = make_empty_scene(
@@ -64,6 +69,8 @@ fn main() -> Result<(), String> {
             &mut ambient_light_arena,
             &mut directional_light_arena,
         )?;
+
+        // Add various "empties" to our scene.
 
         static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 6] = [
             EmptyDisplayKind::Axes,
@@ -93,6 +100,58 @@ fn main() -> Result<(), String> {
 
             scene.root.add_child(empty_node)?;
         }
+
+        // Add a point light to our scene.
+
+        let point_light_node = {
+            let mut point_light = PointLight::new();
+
+            point_light.intensities = color::RED.to_vec3() / 255.0;
+
+            point_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_13_UNITS);
+
+            let point_light_handle = point_light_arena.insert(point_light);
+
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(Vec3 {
+                x: -6.0,
+                y: 8.0,
+                z: -6.0,
+            });
+
+            SceneNode::new(
+                SceneNodeType::PointLight,
+                transform,
+                Some(point_light_handle),
+            )
+        };
+
+        scene.root.add_child(point_light_node)?;
+
+        // Add a spot light to our scene.
+
+        let spot_light_node = {
+            let mut spot_light = SpotLight::new();
+
+            spot_light.intensities = color::YELLOW.to_vec3() / 255.0 * 2.0;
+
+            spot_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_20_UNITS);
+
+            let spot_light_handle = spot_light_arena.insert(spot_light);
+
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(Vec3 {
+                x: 6.0,
+                y: 8.0,
+                z: 6.0,
+            });
+
+            SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
+        };
+
+        scene.root.add_child(spot_light_node)?;
 
         (scene, shader_context)
     };
@@ -202,7 +261,14 @@ fn main() -> Result<(), String> {
 
         // Render scene.
 
-        scene.render(resources, &renderer_rc, None)?;
+        scene.render(
+            resources,
+            &renderer_rc,
+            Some(SceneGraphRenderOptions {
+                draw_lights: true,
+                ..Default::default()
+            }),
+        )?;
 
         {
             let mut renderer = renderer_rc.borrow_mut();
