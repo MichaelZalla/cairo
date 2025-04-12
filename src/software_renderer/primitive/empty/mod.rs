@@ -60,7 +60,7 @@ impl SoftwareRenderer {
         local_transforms: &[Mat4],
         colors: &[Color],
     ) {
-        // 1. Defines a unit circle as a set of points (in object space).
+        // Defines a unit circle as a set of points (in object space).
 
         let arc_length = TAU / divisions as f32;
 
@@ -74,27 +74,18 @@ impl SoftwareRenderer {
         }
 
         for (local_transform, color) in local_transforms.iter().zip(colors) {
-            let mut transformed_points = points.clone();
+            // Transforms the unit points for this circle.
 
-            // 2. Transforms the points into world space, based on `transform`.
+            let world_transform = *local_transform * *transform;
 
-            for point in transformed_points.iter_mut() {
-                *point *= (*local_transform) * *transform;
-            }
+            let points_world_space: Vec<Vec3> = points
+                .iter()
+                .map(|p| (*p * world_transform).to_vec3())
+                .collect();
 
-            // 3. Renders the transformed circle as a set of connected line segments;
+            // Renders the transformed points as a line segment loop.
 
-            for i in 0..transformed_points.len() {
-                let start = &transformed_points[i];
-
-                let end = &transformed_points[if i == transformed_points.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }];
-
-                self.render_line(start.to_vec3(), end.to_vec3(), *color);
-            }
+            self.render_line_loop(&points_world_space, 0, points_world_space.len() - 1, *color);
         }
     }
 
