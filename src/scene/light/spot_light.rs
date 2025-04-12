@@ -224,15 +224,7 @@ impl SpotLight {
         Ok(())
     }
 
-    fn get_shadowing(&self, sample: &GeometrySample, map: &TextureMap<f32>) -> f32 {
-        let context = self.shadow_map_rendering_context.as_ref().unwrap();
-
-        let (near, far) = (SHADOW_MAP_CAMERA_NEAR, context.projection_z_far);
-
-        let light_to_fragment = sample.position_world_space - self.look_vector.get_position();
-
-        let current_depth = light_to_fragment.mag();
-
+    fn get_shadow_map_uv(&self, sample: &GeometrySample) -> Option<Vec2> {
         // Project the sample's world space position into the shadow map camera's NDC space.
 
         let world_to_shadow_map_camera_projection =
@@ -252,36 +244,51 @@ impl SpotLight {
             result
         };
 
-        // If the sample lies outside of the NDC space, then this point cannot be in shadow.
+        // If the sample lies outside of shadow map camera NDC space, then this
+        // point can't be seen by the shadow map camera.
 
         if position_shadow_camera_ndc.x < 0.0
             || position_shadow_camera_ndc.x > 1.0
             || position_shadow_camera_ndc.y < 0.0
             || position_shadow_camera_ndc.y > 1.0
         {
-            return 0.0;
+            return None;
         }
 
         // Otherwise, convert the NDC space coordinate to a UV coordinate, and perform a depth lookup.
 
-        let uv = Vec2 {
+        Some(Vec2 {
             x: position_shadow_camera_ndc.x,
             y: 1.0 - position_shadow_camera_ndc.y,
             z: 0.0,
-        };
+        })
+    }
 
-        let closest_depth_sample = sample_nearest_f32(uv, map);
+    fn get_shadowing(&self, sample: &GeometrySample, map: &TextureMap<f32>) -> f32 {
+        let context = self.shadow_map_rendering_context.as_ref().unwrap();
 
-        let closest_depth = near + closest_depth_sample * (far - near);
+        let (near, far) = (SHADOW_MAP_CAMERA_NEAR, context.projection_z_far);
 
-        if closest_depth == 0.0 {
-            return 0.0;
-        }
+        let light_to_fragment = sample.position_world_space - self.look_vector.get_position();
 
-        let bias = 0.005;
+        let current_depth = light_to_fragment.mag();
 
-        if current_depth + bias > closest_depth {
-            1.0
+        if let Some(uv) = self.get_shadow_map_uv(sample) {
+            let closest_depth_sample = sample_nearest_f32(uv, map);
+
+            let closest_depth = near + closest_depth_sample * (far - near);
+
+            if closest_depth == 0.0 {
+                return 0.0;
+            }
+
+            let bias = 0.005;
+
+            if current_depth + bias > closest_depth {
+                1.0
+            } else {
+                0.0
+            }
         } else {
             0.0
         }
