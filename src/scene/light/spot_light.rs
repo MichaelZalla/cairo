@@ -57,7 +57,7 @@ pub struct SpotLight {
     #[serde(skip)]
     pub shadow_map_camera: Option<Camera>,
     #[serde(skip)]
-    pub world_to_camera_projection_space: Option<Mat4>,
+    pub world_to_shadow_map_camera_projection: Option<Mat4>,
     #[serde(skip)]
     pub influence_distance: f32,
 }
@@ -235,11 +235,11 @@ impl SpotLight {
 
         // Project the sample's world space position into the shadow map camera's NDC space.
 
-        let world_to_camera_projection_space =
-            self.world_to_camera_projection_space.as_ref().unwrap();
+        let world_to_shadow_map_camera_projection =
+            self.world_to_shadow_map_camera_projection.as_ref().unwrap();
 
         let mut position_shadow_camera_projection_space =
-            Vec4::new(sample.position_world_space, 1.0) * *world_to_camera_projection_space;
+            Vec4::new(sample.position_world_space, 1.0) * *world_to_shadow_map_camera_projection;
 
         let w_inverse = 1.0 / position_shadow_camera_projection_space.w;
 
@@ -312,7 +312,7 @@ impl SpotLight {
 
         self.shadow_map_camera.replace(camera);
 
-        self.world_to_camera_projection_space
+        self.world_to_shadow_map_camera_projection
             .replace(world_to_camera_projection_space);
     }
 
