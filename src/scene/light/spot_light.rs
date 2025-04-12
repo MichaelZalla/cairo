@@ -15,7 +15,10 @@ use crate::{
     },
 };
 
-use super::{attenuation::LightAttenuation, contribute_pbr_world_space};
+use super::{
+    attenuation::{LightAttenuation, LIGHT_ATTENUATION_RANGE_50_UNITS},
+    contribute_pbr_world_space,
+};
 
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct SpotLight {
@@ -63,7 +66,7 @@ impl SpotLight {
             outer_cutoff_angle: (PI / 8.0),
             inner_cutoff_angle_cos: (PI / 12.0).cos(),
             outer_cutoff_angle_cos: (PI / 8.0).cos(),
-            attenuation: LightAttenuation::new(1.0, 0.09, 0.032),
+            attenuation: LIGHT_ATTENUATION_RANGE_50_UNITS,
             ..Default::default()
         };
 

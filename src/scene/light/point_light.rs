@@ -30,7 +30,7 @@ use crate::{
 };
 
 use super::{
-    attenuation::LightAttenuation,
+    attenuation::{LightAttenuation, LIGHT_ATTENUATION_RANGE_13_UNITS},
     contribute_pbr_tangent_space,
     shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
 };
@@ -73,7 +73,7 @@ impl PointLight {
                 y: 10.0,
                 z: 0.0,
             },
-            attenuation: LightAttenuation::new(1.0, 0.35, 0.44),
+            attenuation: LIGHT_ATTENUATION_RANGE_13_UNITS,
             shadow_map: None,
             shadow_map_rendering_context: None,
             influence_distance: 0.0,
