@@ -83,6 +83,9 @@
         "isDefault": true
       },
       "label": "Profiling: flamegraph",
+      "windows": {
+        "command": "",
+      },
       "linux": {
         "command": "flamegraph -o profiling/flamegraphs/flamegraph.svg --pid PID",
       }
