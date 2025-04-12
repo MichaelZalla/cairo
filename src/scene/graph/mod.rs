@@ -474,7 +474,7 @@ impl SceneGraph {
                             Ok(entry) => {
                                 let empty = &entry.item;
 
-                                renderer.render_empty(&current_world_transform, empty.0);
+                                renderer.render_empty(&current_world_transform, empty.0, None);
 
                                 Ok(())
                             }

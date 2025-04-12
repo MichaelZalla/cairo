@@ -284,8 +284,13 @@ impl Renderer for SoftwareRenderer {
         self._render_ground_plane(parallels)
     }
 
-    fn render_empty(&mut self, transform: &Mat4, display_kind: EmptyDisplayKind) {
-        self._render_empty(transform, display_kind)
+    fn render_empty(
+        &mut self,
+        transform: &Mat4,
+        display_kind: EmptyDisplayKind,
+        color: Option<Color>,
+    ) {
+        self._render_empty(transform, display_kind, color)
     }
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {

@@ -102,7 +102,10 @@ impl SoftwareRenderer {
         &mut self,
         transform: &Mat4,
         display_kind: EmptyDisplayKind,
+        color: Option<Color>,
     ) {
+        let color = color.unwrap_or(color::ORANGE);
+
         match display_kind {
             EmptyDisplayKind::Axes => {
                 let world_position = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
@@ -130,21 +133,21 @@ impl SoftwareRenderer {
                     let start_transformed = (*start * *transform).to_vec3();
                     let end_transformed = (*end * *transform).to_vec3();
 
-                    self.render_line(start_transformed, end_transformed, color::ORANGE);
+                    self.render_line(start_transformed, end_transformed, color);
                 }
             }
             EmptyDisplayKind::Square => {
-                self.render_square(transform, color::ORANGE);
+                self.render_square(transform, color);
             }
             EmptyDisplayKind::Cube => {
                 let aabb = AABB::from_min_max(-vec3::ONES, vec3::ONES);
 
-                self.render_aabb(&aabb, Some(transform), color::ORANGE);
+                self.render_aabb(&aabb, Some(transform), color);
             }
             EmptyDisplayKind::Circle(divisions) => {
                 let local_transforms = [Mat4::identity()];
 
-                let colors = [color::ORANGE];
+                let colors = [color];
 
                 self.render_circles(divisions, transform, &local_transforms, &colors);
             }
@@ -161,7 +164,7 @@ impl SoftwareRenderer {
                     local_transform_x_plane,
                 ];
 
-                let colors: [Color; 3] = [color::ORANGE, color::ORANGE, color::ORANGE];
+                let colors: [Color; 3] = [color, color, color];
 
                 self.render_circles(divisions, transform, &local_transforms, &colors);
             }

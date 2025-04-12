@@ -47,7 +47,12 @@ pub trait Renderer {
 
     fn render_ground_plane(&mut self, parallels: usize);
 
-    fn render_empty(&mut self, transform: &Mat4, display_kind: EmptyDisplayKind);
+    fn render_empty(
+        &mut self,
+        transform: &Mat4,
+        display_kind: EmptyDisplayKind,
+        color: Option<Color>,
+    );
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>);
 
