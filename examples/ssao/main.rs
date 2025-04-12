@@ -113,7 +113,8 @@ fn main() -> Result<(), String> {
         Default::default(),
     );
 
-    renderer.options.render_pass_flags |= RenderPassFlag::DeferredLighting | RenderPassFlag::Ssao;
+    renderer.options.render_pass_flags |=
+        RenderPassFlag::DeferredLighting | RenderPassFlag::Ssao | RenderPassFlag::SsaoBlur;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 

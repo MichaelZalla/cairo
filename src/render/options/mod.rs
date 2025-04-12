@@ -119,7 +119,12 @@ impl RenderOptions {
                 }
                 Keycode::Num4 => {
                     self.render_pass_flags ^= RenderPassFlag::Ssao;
-                    self.render_pass_flags ^= RenderPassFlag::SsaoBlur;
+
+                    if self.render_pass_flags.contains(RenderPassFlag::Ssao) {
+                        self.render_pass_flags.set(RenderPassFlag::SsaoBlur);
+                    } else {
+                        self.render_pass_flags.unset(RenderPassFlag::SsaoBlur);
+                    }
 
                     println!(
                         "SSAO pass: {}",
