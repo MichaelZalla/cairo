@@ -20,9 +20,9 @@ use crate::{
     serde::PostDeserialize,
     shader::{context::ShaderContext, geometry::sample::GeometrySample},
     shaders::{
-        directional_shadow_map_fragment_shader::DirectionalShadowMapFragmentShader,
-        directional_shadow_map_geometry_shader::DirectionalShadowMapGeometryShader,
-        directional_shadow_map_vertex_shader::DirectionalShadowMapVertexShader,
+        shadow_shaders::directional_shadows::DirectionalShadowMapFragmentShader,
+        shadow_shaders::directional_shadows::DirectionalShadowMapGeometryShader,
+        shadow_shaders::directional_shadows::DirectionalShadowMapVertexShader,
     },
     texture::{
         map::{TextureMap, TextureMapWrapping},
