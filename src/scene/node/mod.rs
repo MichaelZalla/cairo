@@ -581,6 +581,10 @@ impl SceneNode {
                                 * (*current_world_transform))
                                 .to_vec3();
 
+                            if point_light.shadow_map_cameras.is_some() {
+                                point_light.update_shadow_map_cameras();
+                            }
+
                             shader_context.get_point_lights_mut().push(*handle);
 
                             Ok(())

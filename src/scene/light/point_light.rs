@@ -37,6 +37,8 @@ pub struct PointLight {
     pub position: Vec3,
     attenuation: LightAttenuation,
     #[serde(skip)]
+    pub shadow_map_cameras: Option<[Camera; 6]>,
+    #[serde(skip)]
     pub shadow_map: Option<Handle>,
     #[serde(skip)]
     pub shadow_map_rendering_context: Option<ShadowMapRenderingContext>,
@@ -70,9 +72,7 @@ impl PointLight {
                 z: 0.0,
             },
             attenuation: LIGHT_ATTENUATION_RANGE_13_UNITS,
-            shadow_map: None,
-            shadow_map_rendering_context: None,
-            influence_distance: 0.0,
+            ..Default::default()
         };
 
         light.post_deserialize();
@@ -122,6 +122,8 @@ impl PointLight {
 
         self.shadow_map_rendering_context
             .replace(shadow_map_rendering_context);
+
+        self.update_shadow_map_cameras();
     }
 
     pub fn update_shadow_map(
@@ -497,6 +499,38 @@ impl PointLight {
         )
     }
 
+    pub fn update_shadow_map_cameras(&mut self) {
+        let rendering_context = self.shadow_map_rendering_context.as_ref().unwrap();
+
+        let z_far = rendering_context.projection_z_far;
+
+        let mut cameras: [Camera; 6] = Default::default();
+
+        for side in CUBE_MAP_SIDES {
+            let side_index = side.get_index();
+
+            let camera = {
+                let mut camera =
+                    Camera::from_perspective(self.position, Default::default(), 90.0, 1.0);
+
+                camera.set_projection_z_near(SHADOW_MAP_CAMERA_NEAR);
+                camera.set_projection_z_far(z_far);
+
+                camera
+                    .look_vector
+                    .set_target(self.position + side.get_direction());
+
+                camera.recompute_world_space_frustum();
+
+                camera
+            };
+
+            cameras[side_index] = camera;
+        }
+
+        self.shadow_map_cameras.replace(cameras);
+    }
+
     fn render_shadow_map_into(
         &self,
         shadow_map: &mut CubeMap<f32>,
@@ -504,43 +538,35 @@ impl PointLight {
         resources: &SceneResources,
         scene: &SceneGraph,
     ) -> Result<(), String> {
-        let mut cubemap_face_camera = {
-            let mut camera = Camera::from_perspective(self.position, Default::default(), 90.0, 1.0);
-
-            // @NOTE(mzalla) Assumes the same near and far is set for the
-            // framebuffer's depth attachment.
-
-            camera.set_projection_z_near(SHADOW_MAP_CAMERA_NEAR);
-            camera.set_projection_z_far(rendering_context.projection_z_far);
-
-            camera
-        };
+        let cameras = self.shadow_map_cameras.as_ref().unwrap();
 
         {
             let mut shader_context = rendering_context.shader_context.borrow_mut();
 
-            cubemap_face_camera.update_shader_context(&mut shader_context);
+            let camera = &cameras[0];
+
+            // Binds view position and projection transforms (shared by all 6 cameras).
+
+            camera.update_shader_context(&mut shader_context);
         }
 
         for side in CUBE_MAP_SIDES {
             let side_index = side.get_index();
 
-            cubemap_face_camera
-                .look_vector
-                .set_target(self.position + side.get_direction());
+            let camera = &cameras[side_index];
 
             {
                 let mut shader_context = rendering_context.shader_context.borrow_mut();
 
-                // Rebinds view-inverse transform after setting new look-vector target.
+                // Rebinds the view-inverse transform, which is unique to this
+                // side's camera.
 
-                shader_context
-                    .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
+                shader_context.set_view_inverse_transform(camera.get_view_inverse_transform());
             }
 
             self.render_shadow_map_side(
                 side_index,
-                cubemap_face_camera,
+                camera,
                 shadow_map,
                 rendering_context,
                 resources,
@@ -554,7 +580,7 @@ impl PointLight {
     fn render_shadow_map_side(
         &self,
         side_index: usize,
-        camera: Camera,
+        camera: &Camera,
         shadow_map: &mut CubeMap<f32>,
         rendering_context: &ShadowMapRenderingContext,
         resources: &SceneResources,
