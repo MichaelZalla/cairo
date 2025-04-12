@@ -1,1 +1,1 @@
-pub mod point_shadows;
+pub mod perspective_shadows;

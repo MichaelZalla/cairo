@@ -18,8 +18,9 @@ use crate::{
     },
     serde::PostDeserialize,
     shader::geometry::sample::GeometrySample,
-    shaders::shadow_shaders::point_shadows::{
-        PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
+    shaders::shadow_shaders::perspective_shadows::{
+        PerspectiveShadowMapFragmentShader, PerspectiveShadowMapGeometryShader,
+        PerspectiveShadowMapVertexShader,
     },
     texture::{map::TextureMap, sample::sample_nearest_f32},
     transform::look_vector::LookVector,
@@ -152,9 +153,9 @@ impl SpotLight {
             shadow_map_size,
             projection_z_far,
             FaceCullingReject::Frontfaces,
-            PointShadowMapVertexShader,
-            PointShadowMapGeometryShader,
-            PointShadowMapFragmentShader,
+            PerspectiveShadowMapVertexShader,
+            PerspectiveShadowMapGeometryShader,
+            PerspectiveShadowMapFragmentShader,
             scene_resources.clone(),
         );
 
