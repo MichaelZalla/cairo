@@ -6,7 +6,6 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    buffer::Buffer2D,
     render::{culling::FaceCullingReject, Renderer},
     resource::handle::Handle,
     scene::{
@@ -19,10 +18,7 @@ use crate::{
     shaders::shadow_shaders::point_shadows::{
         PointShadowMapFragmentShader, PointShadowMapGeometryShader, PointShadowMapVertexShader,
     },
-    texture::{
-        cubemap::{CubeMap, CUBE_MAP_SIDES},
-        map::TextureMap,
-    },
+    texture::cubemap::{CubeMap, CUBE_MAP_SIDES},
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -527,6 +523,8 @@ impl PointLight {
         }
 
         for side in CUBE_MAP_SIDES {
+            let side_index = side.get_index();
+
             cubemap_face_camera
                 .look_vector
                 .set_target(self.position + side.get_direction());
@@ -540,57 +538,76 @@ impl PointLight {
                     .set_view_inverse_transform(cubemap_face_camera.get_view_inverse_transform());
             }
 
-            {
-                let mut renderer = rendering_context.renderer.borrow_mut();
-
-                renderer.set_clipping_frustum(*cubemap_face_camera.get_frustum());
-
-                renderer.begin_frame();
-            }
-
-            // Render scene.
-
-            scene.render(
+            self.render_shadow_map_side(
+                side_index,
+                cubemap_face_camera,
+                shadow_map,
+                rendering_context,
                 resources,
-                &rendering_context.renderer,
-                Some(SceneGraphRenderOptions {
-                    is_shadow_map_render: true,
-                    ..Default::default()
-                }),
+                scene,
             )?;
-
-            {
-                let mut renderer = rendering_context.renderer.borrow_mut();
-
-                renderer.end_frame();
-            }
-
-            // Blit our framebuffer's HDR attachment buffer to our cubemap's
-            // corresponding side (texture map).
-
-            let framebuffer = rendering_context.framebuffer.borrow();
-
-            match &framebuffer.attachments.deferred_hdr {
-                Some(hdr_attachment_rc) => {
-                    let hdr_attachment = hdr_attachment_rc.borrow();
-
-                    blit_hdr_attachment_to_cubemap_side(&hdr_attachment, &mut shadow_map.sides[side.get_index()]);
-                }
-                None => return Err("Called PointLight::update_shadow_maps() with no HDR attachment on the rendering context's framebuffer!".to_string()),
-            }
         }
 
         Ok(())
     }
-}
 
-fn blit_hdr_attachment_to_cubemap_side(
-    hdr_buffer: &Buffer2D<Vec3>,
-    cubemap_side: &mut TextureMap<f32>,
-) {
-    let buffer = &mut cubemap_side.levels[0].0;
+    fn render_shadow_map_side(
+        &self,
+        side_index: usize,
+        camera: Camera,
+        shadow_map: &mut CubeMap<f32>,
+        rendering_context: &ShadowMapRenderingContext,
+        resources: &SceneResources,
+        scene: &SceneGraph,
+    ) -> Result<(), String> {
+        {
+            let mut renderer = rendering_context.renderer.borrow_mut();
 
-    for (index, hdr_color) in hdr_buffer.iter().enumerate() {
-        buffer.set_at(index, hdr_color.x);
+            renderer.set_clipping_frustum(*camera.get_frustum());
+
+            renderer.begin_frame();
+        }
+
+        // Render scene.
+
+        scene.render(
+            resources,
+            &rendering_context.renderer,
+            Some(SceneGraphRenderOptions {
+                is_shadow_map_render: true,
+                ..Default::default()
+            }),
+        )?;
+
+        {
+            let mut renderer = rendering_context.renderer.borrow_mut();
+
+            renderer.end_frame();
+        }
+
+        // Blit our framebuffer's HDR attachment buffer to our cubemap's
+        // corresponding side (texture map).
+
+        let framebuffer = rendering_context.framebuffer.borrow();
+
+        match &framebuffer.attachments.deferred_hdr {
+            Some(hdr_attachment_rc) => {
+                let hdr_buffer = hdr_attachment_rc.borrow();
+
+                let cubemap_side = &mut shadow_map.sides[side_index];
+
+                let target = &mut cubemap_side.levels[0].0;
+
+                for (index, hdr_color) in hdr_buffer.iter().enumerate() {
+                    target.set_at(index, hdr_color.x);
+                }
+            }
+            None => return Err(
+                "Called PointLight::update_shadow_maps() with no HDR attachment on the rendering context's framebuffer!"
+                    .to_string(),
+            ),
+        }
+
+        Ok(())
     }
 }
