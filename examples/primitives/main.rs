@@ -363,8 +363,8 @@ fn main() -> Result<(), String> {
             &renderer_rc,
             Some(SceneGraphRenderOptions {
                 draw_lights: true,
-                draw_cameras: USE_DEMO_CAMERA,
-                draw_shadow_map_cameras: USE_DEMO_CAMERA,
+                draw_cameras: false,
+                draw_shadow_map_cameras: false,
                 ..Default::default()
             }),
         )?;

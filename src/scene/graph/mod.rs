@@ -15,6 +15,7 @@ use crate::{
     resource::handle::Handle,
     serde::PostDeserialize,
     shader::context::ShaderContext,
+    texture::cubemap::CUBEMAP_SIDE_COLORS,
 };
 
 use super::{
@@ -343,16 +344,16 @@ impl SceneGraph {
                     }
                 },
                 SceneNodeType::DirectionalLight => {
-                    match handle {
-                        Some(directional_light_handle) => {
-                            let mut directional_light_arena =
-                                resources.directional_light.borrow_mut();
+                    if options.draw_shadow_map_cameras {
+                        match handle {
+                            Some(directional_light_handle) => {
+                                let mut directional_light_arena =
+                                    resources.directional_light.borrow_mut();
 
-                            match directional_light_arena.get_mut(directional_light_handle) {
-                                Ok(entry) => {
-                                    let directional_light = &mut entry.item;
+                                match directional_light_arena.get_mut(directional_light_handle) {
+                                    Ok(entry) => {
+                                        let directional_light = &mut entry.item;
 
-                                    if options.draw_shadow_map_cameras {
                                         if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
                                             for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
                                                 let frustum_color = [
@@ -365,15 +366,78 @@ impl SceneGraph {
                                             }
                                         }
                                     }
+                                    Err(err) => panic!(
+                                        "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
+                                        handle, err
+                                    ),
                                 }
-                                Err(err) => panic!(
-                                    "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
-                                    handle, err
-                                ),
+                            }
+                            None => {
+                                panic!("Encountered a `DirectionalLight` node with no handle!")
                             }
                         }
-                        None => {
-                            panic!("Encountered a `DirectionalLight` node with no handle!")
+                    }
+
+                    Ok(())
+                }
+                SceneNodeType::PointLight => {
+                    if options.draw_shadow_map_cameras {
+                        match handle {
+                            Some(point_light_handle) => {
+                                let mut point_light_arena = resources.point_light.borrow_mut();
+
+                                match point_light_arena.get_mut(point_light_handle) {
+                                    Ok(entry) => {
+                                        let point_light = &mut entry.item;
+
+                                        if let Some(cameras) =
+                                            point_light.shadow_map_cameras.as_ref()
+                                        {
+                                            for (side_index, camera) in cameras.iter().enumerate() {
+                                                let side_color = CUBEMAP_SIDE_COLORS[side_index];
+
+                                                renderer.render_camera(camera, Some(side_color));
+                                            }
+                                        }
+                                    }
+                                    Err(err) => panic!(
+                                        "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                        handle, err
+                                    ),
+                                }
+                            }
+                            None => {
+                                panic!("Encountered a `SpotLight` node with no handle!")
+                            }
+                        }
+                    }
+
+                    Ok(())
+                }
+                SceneNodeType::SpotLight => {
+                    if options.draw_shadow_map_cameras {
+                        match handle {
+                            Some(spot_light_handle) => {
+                                let mut spot_light_arena = resources.spot_light.borrow_mut();
+
+                                match spot_light_arena.get_mut(spot_light_handle) {
+                                    Ok(entry) => {
+                                        let spot_light = &mut entry.item;
+
+                                        if let Some(camera) = spot_light.shadow_map_camera.as_ref()
+                                        {
+                                            renderer.render_camera(camera, Some(color::RED));
+                                        }
+                                    }
+                                    Err(err) => panic!(
+                                        "Failed to get SpotLight from Arena with Handle {:?}: {}",
+                                        handle, err
+                                    ),
+                                }
+                            }
+                            None => {
+                                panic!("Encountered a `SpotLight` node with no handle!")
+                            }
                         }
                     }
 

@@ -144,7 +144,7 @@ pub(crate) fn make_scene(
 
                 light.set_attenuation(LIGHT_ATTENUATION_RANGE_50_UNITS);
 
-                light.enable_shadow_maps(192, 250.0, resources.clone());
+                light.enable_shadow_maps(192, 50.0, resources.clone());
 
                 light
             };
@@ -183,7 +183,7 @@ pub(crate) fn make_scene(
 
         spot_light.intensities = color::YELLOW.to_vec3() / 255.0;
 
-        spot_light.enable_shadow_maps(512, 100.0, resources.clone());
+        spot_light.enable_shadow_maps(512, 50.0, resources.clone());
 
         let spot_light_handle = spot_light_arena.insert(spot_light);
 
