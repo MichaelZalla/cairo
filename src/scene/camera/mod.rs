@@ -139,7 +139,7 @@ impl Camera {
             extent,
             projection_z_near,
             projection_z_far,
-            movement_speed: 50.0,
+            movement_speed: 10.0,
             projection_transform: Default::default(),
             projection_inverse_transform: Default::default(),
             look_vector: LookVector::new(position),

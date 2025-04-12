@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use serde::{Deserialize, Serialize};
 
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Mod};
 
 use crate::{
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -12,6 +12,8 @@ use crate::{
 };
 
 use super::LookVectorController;
+
+static MOVEMENT_MODIFIER_FACTOR: f32 = 4.0;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct FirstPersonLookVectorController {
@@ -99,37 +101,44 @@ impl FirstPersonLookVectorController {
     ) {
         // Apply camera movement based on keyboard input.
 
+        let is_left_shift_pressed = keyboard_state.modifiers.contains(Mod::LSHIFTMOD);
+
+        let movement_step = camera_movement_step
+            * if is_left_shift_pressed {
+                MOVEMENT_MODIFIER_FACTOR
+            } else {
+                1.0
+            };
+
         for keycode in keyboard_state.pressed_keycodes.iter() {
             match *keycode {
                 Keycode::Up | Keycode::W => {
                     look_vector.set_position(
-                        look_vector.position + look_vector.get_forward() * camera_movement_step,
+                        look_vector.position + look_vector.get_forward() * movement_step,
                     );
                 }
                 Keycode::Down | Keycode::S => {
                     look_vector.set_position(
-                        look_vector.position - look_vector.get_forward() * camera_movement_step,
+                        look_vector.position - look_vector.get_forward() * movement_step,
                     );
                 }
                 Keycode::Left | Keycode::A => {
                     look_vector.set_position(
-                        look_vector.position - look_vector.get_right() * camera_movement_step,
+                        look_vector.position - look_vector.get_right() * movement_step,
                     );
                 }
                 Keycode::Right | Keycode::D => {
                     look_vector.set_position(
-                        look_vector.position + look_vector.get_right() * camera_movement_step,
+                        look_vector.position + look_vector.get_right() * movement_step,
                     );
                 }
                 Keycode::Q => {
-                    look_vector.set_position(
-                        look_vector.position - look_vector.get_up() * camera_movement_step,
-                    );
+                    look_vector
+                        .set_position(look_vector.position - look_vector.get_up() * movement_step);
                 }
                 Keycode::E => {
-                    look_vector.set_position(
-                        look_vector.position + look_vector.get_up() * camera_movement_step,
-                    );
+                    look_vector
+                        .set_position(look_vector.position + look_vector.get_up() * movement_step);
                 }
                 _ => {}
             }
@@ -174,6 +183,20 @@ impl FirstPersonLookVectorController {
                 .set_position(look_vector.position + look_vector.get_up() * camera_movement_step);
         }
 
+        // Triggers.
+
+        let mut movement_step = camera_movement_step;
+
+        if game_controller_state.triggers.left.activation > 0 {
+            let activation = game_controller_state.triggers.left.activation;
+
+            if activation > 0 {
+                let activation_alpha = activation as f32 / (i16::MAX as f32);
+
+                movement_step *= MOVEMENT_MODIFIER_FACTOR * activation_alpha;
+            }
+        }
+
         // Left joystick.
 
         let left_joystick_position = &game_controller_state.joysticks.left.position;
@@ -185,23 +208,19 @@ impl FirstPersonLookVectorController {
         };
 
         if left_joystick_position_normalized.x > 0.5 {
-            look_vector.set_position(
-                look_vector.position + look_vector.get_right() * camera_movement_step,
-            );
+            look_vector
+                .set_position(look_vector.position + look_vector.get_right() * movement_step);
         } else if left_joystick_position_normalized.x < -0.5 {
-            look_vector.set_position(
-                look_vector.position - look_vector.get_right() * camera_movement_step,
-            );
+            look_vector
+                .set_position(look_vector.position - look_vector.get_right() * movement_step);
         }
 
         if left_joystick_position_normalized.y > 0.5 {
-            look_vector.set_position(
-                look_vector.position - look_vector.get_forward() * camera_movement_step,
-            );
+            look_vector
+                .set_position(look_vector.position - look_vector.get_forward() * movement_step);
         } else if left_joystick_position_normalized.y < -0.5 {
-            look_vector.set_position(
-                look_vector.position + look_vector.get_forward() * camera_movement_step,
-            );
+            look_vector
+                .set_position(look_vector.position + look_vector.get_forward() * movement_step);
         }
 
         // Right joystick.
