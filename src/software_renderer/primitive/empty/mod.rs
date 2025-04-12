@@ -101,6 +101,11 @@ impl SoftwareRenderer {
         local_transforms: &[Mat4],
         colors: &[Color],
     ) {
+        assert!(
+            divisions >= 3,
+            "Called SoftwareRenderer::render_circles() with fewer than 3 divisions!"
+        );
+
         // Renders one or more transformed unit circles in world space.
 
         let points = self.get_unit_circle_points(divisions);

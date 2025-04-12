@@ -10,7 +10,15 @@ use crate::{
 };
 
 pub fn generate(radius: f32, latitude_divisions: u32, longitude_divisions: u32) -> Mesh {
-    assert!(latitude_divisions >= 1 && longitude_divisions >= 1);
+    assert!(
+        latitude_divisions >= 1,
+        "Called sphere::generate() with fewer than 2 latitude divisions!"
+    );
+
+    assert!(
+        longitude_divisions >= 1,
+        "Called sphere::generate() with fewer than 2 longitude divisions!"
+    );
 
     let plane_mesh = plane::generate(1.0, 1.0, longitude_divisions, latitude_divisions);
 
