@@ -238,25 +238,26 @@ impl SpotLight {
         let world_to_shadow_map_camera_projection =
             self.world_to_shadow_map_camera_projection.as_ref().unwrap();
 
-        let mut position_shadow_camera_projection_space =
+        let position_shadow_camera_projection =
             Vec4::new(sample.position_world_space, 1.0) * *world_to_shadow_map_camera_projection;
 
-        let w_inverse = 1.0 / position_shadow_camera_projection_space.w;
+        let position_shadow_camera_ndc = {
+            let mut result = position_shadow_camera_projection;
 
-        position_shadow_camera_projection_space *= w_inverse;
+            result *= 1.0 / result.w;
 
-        position_shadow_camera_projection_space.x =
-            (position_shadow_camera_projection_space.x + 1.0) / 2.0;
+            result.x = (result.x + 1.0) / 2.0;
+            result.y = (-result.y + 1.0) / 2.0;
 
-        position_shadow_camera_projection_space.y =
-            (-position_shadow_camera_projection_space.y + 1.0) / 2.0;
+            result
+        };
 
         // If the sample lies outside of the NDC space, then this point cannot be in shadow.
 
-        if position_shadow_camera_projection_space.x < 0.0
-            || position_shadow_camera_projection_space.x > 1.0
-            || position_shadow_camera_projection_space.y < 0.0
-            || position_shadow_camera_projection_space.y > 1.0
+        if position_shadow_camera_ndc.x < 0.0
+            || position_shadow_camera_ndc.x > 1.0
+            || position_shadow_camera_ndc.y < 0.0
+            || position_shadow_camera_ndc.y > 1.0
         {
             return 0.0;
         }
@@ -264,8 +265,8 @@ impl SpotLight {
         // Otherwise, convert the NDC space coordinate to a UV coordinate, and perform a depth lookup.
 
         let uv = Vec2 {
-            x: position_shadow_camera_projection_space.x,
-            y: 1.0 - position_shadow_camera_projection_space.y,
+            x: position_shadow_camera_ndc.x,
+            y: 1.0 - position_shadow_camera_ndc.y,
             z: 0.0,
         };
 
