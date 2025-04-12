@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     buffer::Buffer2D,
+    color::Color,
     matrix::Mat4,
     render::{culling::FaceCullingReject, Renderer},
     resource::handle::Handle,
@@ -22,7 +23,10 @@ use crate::{
         PerspectiveShadowMapFragmentShader, PerspectiveShadowMapGeometryShader,
         PerspectiveShadowMapVertexShader,
     },
-    texture::{map::TextureMap, sample::sample_nearest_f32},
+    texture::{
+        map::TextureMap,
+        sample::{sample_nearest_f32, sample_nearest_u8},
+    },
     transform::look_vector::LookVector,
     vec::{
         vec2::Vec2,
@@ -50,6 +54,7 @@ pub struct SpotLight {
     #[serde(skip)]
     epsilon: f32,
     attenuation: LightAttenuation,
+    pub projector_map: Option<TextureMap>,
     #[serde(skip)]
     pub shadow_map: Option<Handle>,
     #[serde(skip)]
@@ -224,11 +229,12 @@ impl SpotLight {
         Ok(())
     }
 
-    fn get_shadow_map_uv(&self, sample: &GeometrySample) -> Option<Vec2> {
+    fn get_shadow_map_uv(
+        &self,
+        world_to_shadow_map_camera_projection: &Mat4,
+        sample: &GeometrySample,
+    ) -> Option<Vec2> {
         // Project the sample's world space position into the shadow map camera's NDC space.
-
-        let world_to_shadow_map_camera_projection =
-            self.world_to_shadow_map_camera_projection.as_ref().unwrap();
 
         let position_shadow_camera_projection =
             Vec4::new(sample.position_world_space, 1.0) * *world_to_shadow_map_camera_projection;
@@ -273,7 +279,10 @@ impl SpotLight {
 
         let current_depth = light_to_fragment.mag();
 
-        if let Some(uv) = self.get_shadow_map_uv(sample) {
+        let world_to_shadow_map_camera_projection =
+            self.world_to_shadow_map_camera_projection.as_ref().unwrap();
+
+        if let Some(uv) = self.get_shadow_map_uv(world_to_shadow_map_camera_projection, sample) {
             let closest_depth_sample = sample_nearest_f32(uv, map);
 
             let closest_depth = near + closest_depth_sample * (far - near);
@@ -426,7 +435,7 @@ impl SpotLight {
 
         let light_intensities = &self.intensities;
 
-        let contribution = if theta_angle > self.outer_cutoff_angle_cos {
+        let mut contribution = if theta_angle > self.outer_cutoff_angle_cos {
             contribute_pbr_world_space(
                 sample,
                 light_intensities,
@@ -437,6 +446,21 @@ impl SpotLight {
         } else {
             return Default::default();
         };
+
+        if let (Some(projector_map), Some(projection)) = (
+            &self.projector_map,
+            &self.world_to_shadow_map_camera_projection,
+        ) {
+            if let Some(uv) = self.get_shadow_map_uv(projection, sample) {
+                let (r, g, b) = sample_nearest_u8(uv, projector_map, None);
+
+                let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
+
+                color.srgb_to_linear();
+
+                contribution *= color;
+            }
+        }
 
         let attenuation =
             ((theta_angle - self.outer_cutoff_angle_cos) / self.epsilon).clamp(0.0, 1.0);

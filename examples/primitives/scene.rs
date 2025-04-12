@@ -92,7 +92,7 @@ pub(crate) fn make_scene(
                         if let Ok(entry) = directional_light_arena.get_mut(handle) {
                             let directional_light = &mut entry.item;
 
-                            directional_light.intensities = Vec3::ones() * 0.25;
+                            directional_light.intensities = color::BLUE.to_vec3() / 255.0 * 0.5;
 
                             let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
                             let rotate_y = Quaternion::new(vec3::UP, PI);
@@ -182,6 +182,17 @@ pub(crate) fn make_scene(
         spot_light.set_inner_cutoff_angle(PI / 12.0);
 
         spot_light.intensities = color::YELLOW.to_vec3() / 255.0;
+
+        spot_light.projector_map.replace({
+            let mut map = TextureMap::new(
+                "./examples/primitives/assets/flashlight1.png",
+                TextureMapStorageFormat::RGB24,
+            );
+
+            map.load(rendering_context)?;
+
+            map
+        });
 
         spot_light.enable_shadow_maps(512, 50.0, resources.clone());
 
