@@ -33,7 +33,9 @@ use crate::{
     },
     shaders::{
         default_alpha_shader::DEFAULT_ALPHA_SHADER,
+        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
+        default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     stats::CycleCounters,
     texture::{cubemap::CubeMap, map::TextureMap},
@@ -362,6 +364,32 @@ impl Renderer for SoftwareRenderer {
     }
 }
 
+impl Default for SoftwareRenderer {
+    fn default() -> Self {
+        Self {
+            options: Default::default(),
+            cycle_counters: Default::default(),
+            shader_options: Default::default(),
+            framebuffer: Default::default(),
+            viewport: Default::default(),
+            clipping_frustum: Default::default(),
+            g_buffer: Default::default(),
+            alpha_accumulation_buffer: Default::default(),
+            alpha_revealage_buffer: Default::default(),
+            ssao_buffer: Default::default(),
+            ssao_blur_buffer: Default::default(),
+            ssao_hemisphere_kernel: Default::default(),
+            ssao_4x4_tangent_space_rotations: Default::default(),
+            shader_context: Default::default(),
+            scene_resources: Default::default(),
+            vertex_shader: DEFAULT_VERTEX_SHADER,
+            alpha_shader: DEFAULT_ALPHA_SHADER,
+            geometry_shader: DEFAULT_GEOMETRY_SHADER,
+            fragment_shader: DEFAULT_FRAGMENT_SHADER,
+        }
+    }
+}
+
 impl SoftwareRenderer {
     pub fn new(
         shader_context: Rc<RefCell<ShaderContext>>,
@@ -370,38 +398,13 @@ impl SoftwareRenderer {
         fragment_shader: FragmentShaderFn,
         options: RenderOptions,
     ) -> Self {
-        let alpha_shader = DEFAULT_ALPHA_SHADER;
-
-        let geometry_shader = DEFAULT_GEOMETRY_SHADER;
-
-        let shader_options: RenderShaderOptions = Default::default();
-
-        let framebuffer = None;
-
-        let viewport: RenderViewport = Default::default();
-
-        let clipping_frustum = Frustum::default();
-
-        SoftwareRenderer {
+        Self {
             options,
-            cycle_counters: Default::default(),
-            framebuffer,
-            viewport,
-            clipping_frustum,
-            g_buffer: None,
-            ssao_buffer: None,
-            ssao_blur_buffer: None,
-            ssao_hemisphere_kernel: None,
-            ssao_4x4_tangent_space_rotations: None,
-            alpha_accumulation_buffer: Default::default(),
-            alpha_revealage_buffer: Default::default(),
             shader_context,
             scene_resources,
             vertex_shader,
-            alpha_shader,
-            geometry_shader,
-            shader_options,
             fragment_shader,
+            ..Default::default()
         }
     }
 
