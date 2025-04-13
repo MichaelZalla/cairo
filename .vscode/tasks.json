@@ -607,6 +607,22 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example springy-mesh",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "springy-mesh"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example springy-mesh-2d",
       "command": "cargo",
       "args": [
@@ -671,8 +687,7 @@
         "$rustc"
       ],
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "label": "Rust: cargo run --example raycasting",
       "command": "cargo",
