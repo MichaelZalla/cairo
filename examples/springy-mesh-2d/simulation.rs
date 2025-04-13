@@ -21,7 +21,7 @@ pub struct Simulation<'a> {
     pub meshes: Vec<SpringyMesh>,
 }
 
-impl<'a> Simulation<'a> {
+impl Simulation<'_> {
     pub fn tick(&mut self, current_time: f32, h: f32) {
         let n = self.meshes.iter().map(|m| m.points.len()).sum();
 

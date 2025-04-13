@@ -280,7 +280,7 @@ fn draw_slider(
                     if !text.is_empty() {
                         let value = text.parse::<f32>().unwrap();
                         let alpha = (value - min) / (max - min);
-                        let width = ((NUMBER_SLIDER_WIDTH - 2).max(0) as f32 * alpha) as u32;
+                        let width = ((NUMBER_SLIDER_WIDTH - 2) as f32 * alpha) as u32;
 
                         Graphics::rectangle(
                             parent_buffer,

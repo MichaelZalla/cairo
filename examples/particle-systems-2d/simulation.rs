@@ -154,7 +154,7 @@ pub(crate) struct Simulation<'a, const N: usize> {
     pub quadtree: RefCell<Quadtree>,
 }
 
-impl<'a, const N: usize> Simulation<'a, N> {
+impl<const N: usize> Simulation<'_, N> {
     pub fn tick(
         &self,
         h: f32,

@@ -26,7 +26,7 @@ pub struct Command<'a> {
     pub is_undo: bool,
 }
 
-impl<'a> Display for Command<'a> {
+impl Display for Command<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

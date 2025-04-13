@@ -163,12 +163,9 @@ where
 
     let mut should_close = false;
 
-    match &options.titlebar_options {
-        Some(titlebar_options) => {
-            should_close =
-                draw_panel_title_bar(ctx, layout, titlebar_options, parent_buffer, mouse_state);
-        }
-        None => (),
+    if let Some(titlebar_options) = &options.titlebar_options {
+        should_close =
+            draw_panel_title_bar(ctx, layout, titlebar_options, parent_buffer, mouse_state);
     }
 
     let panel_contents_extent = UILayoutExtent {

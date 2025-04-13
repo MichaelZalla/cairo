@@ -61,16 +61,13 @@ impl SpringyMesh {
 
         let points = corners
             .into_iter()
-            .map(|c| {
-                let mut point = Particle::default();
-
-                point.position = Vec3 {
+            .map(|c| Particle {
+                position: Vec3 {
                     x: center.x + c.0,
                     y: center.y + c.1,
-                    z: 0.0,
-                };
-
-                point
+                    ..Default::default()
+                },
+                ..Default::default()
             })
             .collect();
 
