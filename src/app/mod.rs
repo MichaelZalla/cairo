@@ -462,14 +462,9 @@ impl App {
                         println!("Disconnected controller {}", which);
                     }
 
-                    Event::JoyButtonDown { button_idx, .. } => {
-                        println!("Button down! {}", button_idx);
-                    }
+                    // Event::JoyButtonDown { button_idx, .. } => {}
 
-                    Event::JoyButtonUp { button_idx, .. } => {
-                        println!("Button up! {}", button_idx);
-                    }
-
+                    // Event::JoyButtonUp { button_idx, .. } => {}
                     Event::ControllerButtonDown { button, .. } => {
                         game_controller.set_button_state(button, true);
                     }
