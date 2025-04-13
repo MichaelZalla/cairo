@@ -126,11 +126,15 @@ impl SoftwareRenderer {
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
 
-        let mut ndc_space_vertices = projection_space_vertices;
+        let viewport_space_vertices = {
+            let mut result = projection_space_vertices;
 
-        ndc_space_vertices[0].projection_space_to_viewport_space(&self.viewport);
-        ndc_space_vertices[1].projection_space_to_viewport_space(&self.viewport);
-        ndc_space_vertices[2].projection_space_to_viewport_space(&self.viewport);
+            result[0].projection_space_to_viewport_space(&self.viewport);
+            result[1].projection_space_to_viewport_space(&self.viewport);
+            result[2].projection_space_to_viewport_space(&self.viewport);
+
+            result
+        };
 
         // Rasterize triangle in viewport space.
 
@@ -140,9 +144,9 @@ impl SoftwareRenderer {
             .contains(RenderPassFlag::Rasterization)
         {
             self.triangle_fill(
-                ndc_space_vertices[0],
-                ndc_space_vertices[1],
-                ndc_space_vertices[2],
+                viewport_space_vertices[0],
+                viewport_space_vertices[1],
+                viewport_space_vertices[2],
             );
         }
 
