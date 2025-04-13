@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
+    app::AppWindowInfo,
     software_renderer::zbuffer::{self, ZBuffer},
     texture::map::{TextureMap, TextureMapWrapping},
     vec::vec3::Vec3,
@@ -42,6 +43,12 @@ pub struct Framebuffer {
     pub height: u32,
     pub width_over_height: f32,
     pub attachments: FramebufferAttachments,
+}
+
+impl From<&AppWindowInfo> for Framebuffer {
+    fn from(info: &AppWindowInfo) -> Self {
+        Self::new(info.canvas_resolution.width, info.canvas_resolution.height)
+    }
 }
 
 impl Framebuffer {

@@ -50,10 +50,7 @@ fn main() -> Result<(), String> {
 
     // Default framebuffer
 
-    let mut framebuffer = Framebuffer::new(
-        window_info.canvas_resolution.width,
-        window_info.canvas_resolution.height,
-    );
+    let mut framebuffer = Framebuffer::from(&window_info);
 
     framebuffer.complete(0.3, 10_000.0);
 
