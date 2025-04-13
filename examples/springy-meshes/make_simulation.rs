@@ -53,17 +53,17 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
     //         })
     //     }
 
-    //     let mut struts: Vec<(usize, usize)> = vec![];
+    //     let mut struts: Vec<(usize, usize, bool)> = vec![];
 
     //     for i in 0..NUM_POINTS - 1 {
-    //         struts.push((i, i + 1));
+    //         struts.push((i, i + 1, false));
     //     }
 
     //     if NUM_POINTS > 2 {
     //         let i = NUM_POINTS - 3;
     //         let j = NUM_POINTS - 1;
 
-    //         struts.push((i, j));
+    //         struts.push((i, j, false));
     //     }
 
     //     SpringyMesh::new(points, struts)
