@@ -3,10 +3,7 @@ extern crate sdl2;
 use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
-    app::{
-        resolution::{Resolution, RESOLUTION_960_BY_540},
-        App, AppWindowInfo,
-    },
+    app::{resolution::Resolution, App, AppWindowInfo},
     buffer::framebuffer::Framebuffer,
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
@@ -39,8 +36,6 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/bloom".to_string(),
-        window_resolution: RESOLUTION_960_BY_540,
-        canvas_resolution: RESOLUTION_960_BY_540,
         ..Default::default()
     };
 

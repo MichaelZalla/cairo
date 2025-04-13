@@ -23,7 +23,7 @@ use crate::{
 
 use context::{make_application_context, make_canvas_texture, ApplicationContext};
 use profile::AppCycleCounter;
-use resolution::{Resolution, DEFAULT_WINDOW_RESOLUTION};
+use resolution::Resolution;
 use window::AppWindowingMode;
 
 mod profile;
@@ -48,8 +48,8 @@ impl Default for AppWindowInfo {
     fn default() -> Self {
         Self {
             title: "App".to_string(),
-            window_resolution: DEFAULT_WINDOW_RESOLUTION,
-            canvas_resolution: DEFAULT_WINDOW_RESOLUTION,
+            window_resolution: Default::default(),
+            canvas_resolution: Default::default(),
             show_cursor: true,
             windowing_mode: Default::default(),
             relative_mouse_mode: false,
@@ -202,7 +202,7 @@ impl App {
                 &mut canvas,
                 &mut window_info,
                 &mut canvas_texture,
-                DEFAULT_WINDOW_RESOLUTION,
+                Default::default(),
             )?;
         }
 

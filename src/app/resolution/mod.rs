@@ -3,10 +3,16 @@ use std::{
     ops::{Mul, MulAssign},
 };
 
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Resolution {
     pub width: u32,
     pub height: u32,
+}
+
+impl Default for Resolution {
+    fn default() -> Self {
+        RESOLUTION_960_BY_540
+    }
 }
 
 impl MulAssign<f32> for Resolution {
@@ -119,5 +125,3 @@ pub static RESOLUTIONS_16X9: [Resolution; 11] = [
     RESOLUTION_1920_BY_1080,
     RESOLUTION_2560_BY_1440,
 ];
-
-pub static DEFAULT_WINDOW_RESOLUTION: Resolution = RESOLUTION_960_BY_540;
