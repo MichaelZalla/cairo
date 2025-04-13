@@ -99,13 +99,8 @@ pub fn bake_diffuse_and_specular_from_hdri(hdr_filepath: &Path) -> Result<HDRBak
 
     let shader_context_rc: Rc<RefCell<ShaderContext>> = Default::default();
 
-    let renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
+    let renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
     let renderer_rc = RefCell::new(renderer);
 

@@ -9,12 +9,8 @@ use cairo::{
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    render::{options::RenderOptions, Renderer},
+    render::Renderer,
     scene::context::SceneContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
 };
 
@@ -95,18 +91,10 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let renderer_options = RenderOptions {
-        draw_normals_scale: 1.0,
-        ..Default::default()
-    };
+    let mut renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        renderer_options,
-    );
+    renderer.options.draw_normals_scale = 1.0;
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 

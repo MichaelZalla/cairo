@@ -20,10 +20,6 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
     texture::map::{TextureMap, TextureMapStorageFormat},
     vec::vec3::Vec3,
@@ -103,7 +99,10 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let render_options = {
+    let mut renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
+
+    renderer.options = {
         let flags: RenderPassMask = Default::default();
 
         let bloom_dirt_mask_handle = {
@@ -125,14 +124,6 @@ fn main() -> Result<(), String> {
             ..Default::default()
         }
     };
-
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        render_options,
-    );
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 

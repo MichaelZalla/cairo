@@ -24,10 +24,6 @@ use cairo::{
         graph::SceneGraph,
     },
     shader::context::ShaderContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
     ui::{
         context::GLOBAL_UI_CONTEXT,
@@ -244,15 +240,9 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
-    let renderer = SoftwareRenderer::new(
-        shader_context_rc,
-        scene_resources_rc,
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
+    let renderer = SoftwareRenderer::new(shader_context_rc, scene_resources_rc);
 
-    let renderer_rc: Rc<RefCell<SoftwareRenderer>> = Rc::new(RefCell::new(renderer));
+    let renderer_rc = Rc::new(RefCell::new(renderer));
 
     // Initial main window.
 

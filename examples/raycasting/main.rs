@@ -22,7 +22,7 @@ use cairo::{
         obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
         Mesh,
     },
-    render::{options::RenderOptions, Renderer},
+    render::Renderer,
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -30,10 +30,6 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
     vec::vec3,
@@ -134,16 +130,10 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        RenderOptions {
-            draw_normals_scale: 0.25,
-            ..Default::default()
-        },
-    );
+    let mut renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
+
+    renderer.options.draw_normals_scale = 0.25;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 

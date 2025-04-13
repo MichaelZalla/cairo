@@ -18,10 +18,6 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
@@ -111,13 +107,8 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
+    let renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
     let renderer_rc = RefCell::new(renderer);
 

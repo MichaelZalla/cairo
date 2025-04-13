@@ -19,10 +19,6 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
     texture::sample::sample_nearest_f32,
     transform::quaternion::Quaternion,
@@ -101,13 +97,8 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        Default::default(),
-    );
+    let mut renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
     renderer.options.render_pass_flags |=
         RenderPassFlag::DeferredLighting | RenderPassFlag::Ssao | RenderPassFlag::SsaoBlur;

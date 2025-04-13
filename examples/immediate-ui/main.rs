@@ -40,7 +40,6 @@ use cairo::{
             uv_test_fragment_shader::UvTestFragmentShader,
         },
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
     texture::map::{TextureMap, TextureMapStorageFormat},
@@ -238,13 +237,7 @@ fn main() -> Result<(), String> {
     let mut renderer = {
         let scene_resources = SCENE_CONTEXT.with(|ctx| ctx.resources.clone());
 
-        SoftwareRenderer::new(
-            shader_context_rc.clone(),
-            scene_resources,
-            DEFAULT_VERTEX_SHADER,
-            DEFAULT_FRAGMENT_SHADER,
-            Default::default(),
-        )
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_resources)
     };
 
     SETTINGS.with(|settings_rc| {

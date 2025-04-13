@@ -51,15 +51,13 @@ impl ShadowMapRenderingContext {
         // Shadow map renderer.
 
         let renderer = {
-            let mut renderer = SoftwareRenderer::new(
-                shader_context.clone(),
-                scene_resources,
-                vertex_shader,
-                fragment_shader,
-                Default::default(),
-            );
+            // Renderer takes ownership of `scene_resources`.
 
+            let mut renderer = SoftwareRenderer::new(shader_context.clone(), scene_resources);
+
+            renderer.set_vertex_shader(vertex_shader);
             renderer.set_geometry_shader(geometry_shader);
+            renderer.set_fragment_shader(fragment_shader);
 
             renderer
                 .options

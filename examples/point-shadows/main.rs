@@ -18,10 +18,6 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
-    },
     software_renderer::SoftwareRenderer,
     vec::vec3::Vec3,
 };
@@ -102,13 +98,8 @@ fn main() -> Result<(), String> {
     // Renderer
 
     let renderer_rc = {
-        let mut renderer = SoftwareRenderer::new(
-            shader_context_rc.clone(),
-            scene_context.resources.clone(),
-            DEFAULT_VERTEX_SHADER,
-            DEFAULT_FRAGMENT_SHADER,
-            Default::default(),
-        );
+        let mut renderer =
+            SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
         renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 

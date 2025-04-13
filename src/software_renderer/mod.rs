@@ -394,16 +394,10 @@ impl SoftwareRenderer {
     pub fn new(
         shader_context: Rc<RefCell<ShaderContext>>,
         scene_resources: Rc<SceneResources>,
-        vertex_shader: VertexShaderFn,
-        fragment_shader: FragmentShaderFn,
-        options: RenderOptions,
     ) -> Self {
         Self {
-            options,
             shader_context,
             scene_resources,
-            vertex_shader,
-            fragment_shader,
             ..Default::default()
         }
     }

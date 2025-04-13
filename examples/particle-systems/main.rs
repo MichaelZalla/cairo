@@ -18,20 +18,12 @@ use cairo::{
     mesh::{primitive::cube, Mesh},
     physics::simulation::particle::generator::ParticleGeneratorKind,
     random::sampler::RandomSampler,
-    render::{
-        culling::{FaceCullingReject, FaceCullingStrategy},
-        options::{rasterizer::RasterizerOptions, RenderOptions},
-        Renderer,
-    },
+    render::Renderer,
     resource::handle::Handle,
     scene::{
         context::SceneContext,
         node::{SceneNode, SceneNodeGlobalTraversalMethod, SceneNodeType},
         resources::SceneResources,
-    },
-    shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
     },
     software_renderer::SoftwareRenderer,
     transform::Transform3D,
@@ -150,21 +142,8 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let mut renderer = SoftwareRenderer::new(
-        shader_context_rc.clone(),
-        scene_context.resources.clone(),
-        DEFAULT_VERTEX_SHADER,
-        DEFAULT_FRAGMENT_SHADER,
-        RenderOptions {
-            rasterizer_options: RasterizerOptions {
-                face_culling_strategy: FaceCullingStrategy {
-                    reject: FaceCullingReject::None,
-                    ..Default::default()
-                },
-            },
-            ..Default::default()
-        },
-    );
+    let mut renderer =
+        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
