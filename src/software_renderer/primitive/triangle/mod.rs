@@ -126,7 +126,7 @@ impl SoftwareRenderer {
 
         let projection_space_vertices = [triangle.v0, triangle.v1, triangle.v2];
 
-        let viewport_space_vertices = {
+        let mut viewport_space_vertices = {
             let mut result = projection_space_vertices;
 
             result[0].projection_space_to_viewport_space(&self.viewport);
@@ -135,6 +135,16 @@ impl SoftwareRenderer {
 
             result
         };
+
+        if self.options.rasterizer_options.vertex_snapping {
+            for v in &mut viewport_space_vertices {
+                v.position_projection_space.x = ((v.position_projection_space.x - 0.5).ceil())
+                    .clamp(0.0, self.viewport.width as f32);
+
+                v.position_projection_space.y = ((v.position_projection_space.y - 0.5).ceil())
+                    .clamp(0.0, self.viewport.height as f32);
+            }
+        }
 
         // Rasterize triangle in viewport space.
 

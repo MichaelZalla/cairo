@@ -177,6 +177,19 @@ impl RenderOptions {
                         if self.draw_normals { "On" } else { "Off" }
                     );
                 }
+                Keycode::H => {
+                    self.rasterizer_options.vertex_snapping =
+                        !self.rasterizer_options.vertex_snapping;
+
+                    println!(
+                        "Vertex snapping: {}",
+                        if self.rasterizer_options.vertex_snapping {
+                            "On"
+                        } else {
+                            "Off"
+                        }
+                    );
+                }
                 _ => {}
             }
         }
