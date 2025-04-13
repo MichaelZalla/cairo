@@ -7,7 +7,7 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     render::Renderer,
-    scene::{context::SceneContext, node::SceneNodeType},
+    scene::context::SceneContext,
     shaders::{
         default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
         default_vertex_shader::DEFAULT_VERTEX_SHADER,
@@ -139,23 +139,7 @@ fn main() -> Result<(), String> {
 
         let mut renderer = renderer_rc.borrow_mut();
 
-        renderer.options.update(keyboard_state);
-
-        renderer.shader_options.update(keyboard_state);
-
-        let camera_handle = scene
-            .root
-            .find(|node| *node.get_type() == SceneNodeType::Camera)
-            .unwrap()
-            .unwrap();
-
-        let camera_arena = resources.camera.borrow();
-
-        if let Ok(entry) = camera_arena.get(&camera_handle) {
-            let camera = &entry.item;
-
-            renderer.set_clipping_frustum(*camera.get_frustum());
-        }
+        renderer.update(keyboard_state);
 
         Ok(())
     };

@@ -6,6 +6,7 @@ use profile::SoftwareRendererCycleCounter;
 use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
+    device::keyboard::KeyboardState,
     geometry::primitives::{aabb::AABB, ray::Ray},
     matrix::Mat4,
     render::{
@@ -485,6 +486,27 @@ impl SoftwareRenderer {
                 self.ssao_buffer = None;
                 self.ssao_blur_buffer = None;
             }
+        }
+    }
+
+    pub fn update(&mut self, keyboard_state: &KeyboardState) {
+        let active_camera_frustum = {
+            let camera_arena = self.scene_resources.camera.borrow();
+
+            camera_arena
+                .entries
+                .iter()
+                .flatten()
+                .find(|entry| entry.item.is_active)
+                .map(|entry| *entry.item.get_frustum())
+        };
+
+        self.options.update(keyboard_state);
+
+        self.shader_options.update(keyboard_state);
+
+        if let Some(frustum) = active_camera_frustum {
+            self.set_clipping_frustum(frustum);
         }
     }
 
