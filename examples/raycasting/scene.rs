@@ -17,7 +17,7 @@ use cairo::{
 };
 
 #[allow(clippy::too_many_arguments)]
-pub fn make_collision_physics_scene(
+pub fn make_raycasting_scene(
     _resources: &Rc<SceneResources>,
     camera_arena: &mut Arena<Camera>,
     camera_aspect_ratio: f32,

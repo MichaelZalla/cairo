@@ -39,13 +39,13 @@ use cairo::{
     vec::vec3,
 };
 
-use scene::make_collision_physics_scene;
+use scene::make_raycasting_scene;
 
 mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/collision-physics".to_string(),
+        title: "examples/raycasting".to_string(),
         relative_mouse_mode: true,
         canvas_resolution: RESOLUTION_1280_BY_720,
         window_resolution: RESOLUTION_1280_BY_720,
@@ -112,7 +112,7 @@ fn main() -> Result<(), String> {
         let mut mesh_arena = resources.mesh.borrow_mut();
         let mut entity_arena = resources.entity.borrow_mut();
 
-        make_collision_physics_scene(
+        make_raycasting_scene(
             resources,
             &mut camera_arena,
             camera_aspect_ratio,

@@ -674,13 +674,13 @@
         "kind": "build",
         "isDefault": true
       },
-      "label": "Rust: cargo run --example collision-physics",
+      "label": "Rust: cargo run --example raycasting",
       "command": "cargo",
       "args": [
         "run",
         "--release",
         "--example",
-        "collision-physics"
+        "raycasting"
       ]
     },
   ]
