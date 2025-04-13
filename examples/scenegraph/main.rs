@@ -34,7 +34,6 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/scenegraph".to_string(),
-        relative_mouse_mode: true,
         ..Default::default()
     };
 

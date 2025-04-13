@@ -25,10 +25,9 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/obj-viewer".to_string(),
-        vertical_sync: true,
-        relative_mouse_mode: true,
         window_resolution: RESOLUTION_640_BY_480,
         canvas_resolution: RESOLUTION_640_BY_480,
+        vertical_sync: true,
         ..Default::default()
     };
 

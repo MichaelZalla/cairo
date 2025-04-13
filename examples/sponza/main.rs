@@ -36,7 +36,6 @@ fn main() -> Result<(), String> {
         title: "examples/sponza".to_string(),
         window_resolution: RESOLUTION_640_BY_320 * 2.0,
         canvas_resolution: RESOLUTION_640_BY_320,
-        relative_mouse_mode: true,
         ..Default::default()
     };
 

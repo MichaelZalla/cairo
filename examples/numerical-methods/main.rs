@@ -18,6 +18,7 @@ mod state;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/numerical-methods".to_string(),
+        relative_mouse_mode: false,
         resizable: true,
         ..Default::default()
     };

@@ -52,7 +52,7 @@ impl Default for AppWindowInfo {
             canvas_resolution: Default::default(),
             show_cursor: true,
             windowing_mode: Default::default(),
-            relative_mouse_mode: false,
+            relative_mouse_mode: true,
             vertical_sync: false,
             resizable: false,
         }

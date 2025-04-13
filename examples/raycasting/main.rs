@@ -46,7 +46,6 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/raycasting".to_string(),
-        relative_mouse_mode: true,
         canvas_resolution: RESOLUTION_1280_BY_720,
         window_resolution: RESOLUTION_1280_BY_720,
         ..Default::default()

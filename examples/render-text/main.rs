@@ -17,6 +17,7 @@ use cairo::{
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/render-text".to_string(),
+        relative_mouse_mode: false,
         ..Default::default()
     };
 

@@ -43,6 +43,7 @@ fn main() -> Result<(), String> {
         title: "examples/immediate-ui-old".to_string(),
         window_resolution: resolution,
         canvas_resolution: resolution,
+        relative_mouse_mode: false,
         ..Default::default()
     };
 

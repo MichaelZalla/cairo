@@ -36,7 +36,6 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/ssao".to_string(),
-        relative_mouse_mode: true,
         window_resolution: RESOLUTION_480_BY_270 * 2.0,
         canvas_resolution: RESOLUTION_480_BY_270,
         ..Default::default()

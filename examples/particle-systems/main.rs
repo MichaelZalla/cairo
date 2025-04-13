@@ -58,7 +58,6 @@ fn main() -> Result<(), String> {
         title: "examples/particle-systems".to_string(),
         window_resolution: resolution::RESOLUTION_640_BY_320 * 2.0,
         canvas_resolution: resolution::RESOLUTION_640_BY_320,
-        relative_mouse_mode: true,
         ..Default::default()
     };
 

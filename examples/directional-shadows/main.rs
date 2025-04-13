@@ -40,7 +40,6 @@ static USE_DEMO_CAMERA: bool = false;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/directional-shadows".to_string(),
-        relative_mouse_mode: true,
         canvas_resolution: RESOLUTION_640_BY_480,
         window_resolution: RESOLUTION_640_BY_480,
         ..Default::default()

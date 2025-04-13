@@ -134,6 +134,7 @@ fn main() -> Result<(), String> {
         title: "examples/immediate-ui".to_string(),
         window_resolution: DEFAULT_WINDOW_RESOLUTION,
         canvas_resolution: DEFAULT_WINDOW_RESOLUTION,
+        relative_mouse_mode: false,
         resizable: true,
         ..Default::default()
     };

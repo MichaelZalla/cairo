@@ -31,7 +31,6 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/diplacement-map".to_string(),
         vertical_sync: true,
-        relative_mouse_mode: true,
         ..Default::default()
     };
 

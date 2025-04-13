@@ -30,7 +30,6 @@ use cairo::{
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/empties".to_string(),
-        relative_mouse_mode: true,
         canvas_resolution: RESOLUTION_1600_BY_900,
         window_resolution: RESOLUTION_1600_BY_900,
         ..Default::default()

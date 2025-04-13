@@ -48,7 +48,6 @@ static DRAW_DIRECTIONAL_SHADOW_MAP_THUMBNAILS: bool = false;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/primitives".to_string(),
-        relative_mouse_mode: true,
         window_resolution: RESOLUTION_320_BY_180 * 4.0,
         canvas_resolution: RESOLUTION_320_BY_180,
         ..Default::default()

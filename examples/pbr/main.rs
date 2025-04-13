@@ -25,7 +25,6 @@ fn main() -> Result<(), String> {
         title: "examples/pbr".to_string(),
         window_resolution: RESOLUTION_1280_BY_720,
         canvas_resolution: RESOLUTION_1280_BY_720,
-        relative_mouse_mode: true,
         ..Default::default()
     };
 

@@ -27,7 +27,6 @@ fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/diffuse-map".to_string(),
         vertical_sync: true,
-        relative_mouse_mode: true,
         ..Default::default()
     };
 

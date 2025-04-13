@@ -81,6 +81,7 @@ fn main() -> Result<(), String> {
         title,
         window_resolution: RESOLUTION_1920_BY_1080,
         canvas_resolution: RESOLUTION_1920_BY_1080,
+        relative_mouse_mode: false,
         resizable: true,
         ..Default::default()
     };

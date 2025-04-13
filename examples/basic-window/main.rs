@@ -16,6 +16,7 @@ fn main() -> Result<(), String> {
         title: "examples/basic-window".to_string(),
         window_resolution: RESOLUTION_1920_BY_1080,
         canvas_resolution: RESOLUTION_1920_BY_1080,
+        relative_mouse_mode: false,
         ..Default::default()
     };
 
