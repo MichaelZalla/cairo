@@ -22,7 +22,6 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/transparency".to_string(),
-        vertical_sync: true,
         ..Default::default()
     };
 

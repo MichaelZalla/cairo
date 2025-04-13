@@ -27,7 +27,6 @@ fn main() -> Result<(), String> {
         title: "examples/obj-viewer".to_string(),
         window_resolution: RESOLUTION_640_BY_480,
         canvas_resolution: RESOLUTION_640_BY_480,
-        vertical_sync: true,
         ..Default::default()
     };
 

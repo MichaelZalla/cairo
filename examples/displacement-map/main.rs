@@ -30,7 +30,6 @@ mod scene;
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/diplacement-map".to_string(),
-        vertical_sync: true,
         ..Default::default()
     };
 
