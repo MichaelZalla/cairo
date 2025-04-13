@@ -8,8 +8,9 @@ use crate::{
     },
 };
 
-pub static DEFAULT_VERTEX_SHADER: VertexShaderFn = |context: &ShaderContext,
-                                                    v: &DefaultVertexIn|
+#[allow(non_upper_case_globals)]
+pub static DefaultVertexShader: VertexShaderFn = |context: &ShaderContext,
+                                                  v: &DefaultVertexIn|
  -> DefaultVertexOut {
     let mut out = DefaultVertexOut::default();
 

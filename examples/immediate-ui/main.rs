@@ -39,7 +39,7 @@ use cairo::{
             normal_fragment_shader::NormalFragmentShader,
             uv_test_fragment_shader::UvTestFragmentShader,
         },
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
+        default_fragment_shader::DefaultFragmentShader,
     },
     software_renderer::SoftwareRenderer,
     texture::map::{TextureMap, TextureMapStorageFormat},
@@ -763,7 +763,7 @@ fn main() -> Result<(), String> {
                 renderer.shader_options = current_settings.shader_options;
 
                 let shader = [
-                    DEFAULT_FRAGMENT_SHADER,
+                    DefaultFragmentShader,
                     AlbedoFragmentShader,
                     DepthFragmentShader,
                     NormalFragmentShader,

@@ -15,10 +15,11 @@ use crate::{
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
-pub static DEFAULT_GEOMETRY_SHADER: GeometryShaderFn = |context: &ShaderContext,
-                                                        resources: &SceneResources,
-                                                        options: &RenderShaderOptions,
-                                                        interpolant: &DefaultVertexOut|
+#[allow(non_upper_case_globals)]
+pub static DefaultGeometryShader: GeometryShaderFn = |context: &ShaderContext,
+                                                      resources: &SceneResources,
+                                                      options: &RenderShaderOptions,
+                                                      interpolant: &DefaultVertexOut|
  -> Option<GeometrySample> {
     let mut out = GeometrySample {
         uv: interpolant.uv,

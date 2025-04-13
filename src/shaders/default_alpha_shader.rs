@@ -5,7 +5,8 @@ use crate::{
     vertex::default_vertex_out::DefaultVertexOut,
 };
 
-pub static DEFAULT_ALPHA_SHADER: AlphaShaderFn =
+#[allow(non_upper_case_globals)]
+pub static DefaultAlphaShader: AlphaShaderFn =
     |context: &ShaderContext, resources: &SceneResources, out: &DefaultVertexOut| -> bool {
         // Check if this fragment can be discarded.
 

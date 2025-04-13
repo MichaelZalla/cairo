@@ -19,8 +19,7 @@ use crate::{
     },
     shader::context::ShaderContext,
     shaders::{
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
+        default_fragment_shader::DefaultFragmentShader, default_vertex_shader::DefaultVertexShader,
     },
     software_renderer::SoftwareRenderer,
     texture::cubemap::CubeMap,
@@ -229,9 +228,9 @@ fn render_radiance_to_cubemap(
 
         let mut renderer = renderer_rc.borrow_mut();
 
-        renderer.set_vertex_shader(DEFAULT_VERTEX_SHADER);
+        renderer.set_vertex_shader(DefaultVertexShader);
 
-        renderer.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
+        renderer.set_fragment_shader(DefaultFragmentShader);
 
         renderer.bind_framebuffer(None);
 
@@ -291,7 +290,7 @@ fn render_irradiance_to_cubemap(
 
         let mut renderer = renderer_rc.borrow_mut();
 
-        renderer.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
+        renderer.set_fragment_shader(DefaultFragmentShader);
 
         renderer.bind_framebuffer(None);
 
@@ -425,7 +424,7 @@ fn render_specular_prefiltered_environment_to_cubemap(
 
         let mut renderer = renderer_rc.borrow_mut();
 
-        renderer.set_fragment_shader(DEFAULT_FRAGMENT_SHADER);
+        renderer.set_fragment_shader(DefaultFragmentShader);
 
         renderer.bind_framebuffer(None);
 

@@ -13,10 +13,10 @@ use crate::{
     },
 };
 
-pub static DEFAULT_FRAGMENT_SHADER: FragmentShaderFn =
+#[allow(non_upper_case_globals)]
+pub static DefaultFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
         // Surface reflection at zero incidence.
-        #[allow(non_upper_case_globals)]
         static f0_dielectic: Vec3 = Vec3 {
             x: 0.04,
             y: 0.04,

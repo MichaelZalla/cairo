@@ -32,10 +32,8 @@ use crate::{
         vertex::VertexShaderFn,
     },
     shaders::{
-        default_alpha_shader::DEFAULT_ALPHA_SHADER,
-        default_fragment_shader::DEFAULT_FRAGMENT_SHADER,
-        default_geometry_shader::DEFAULT_GEOMETRY_SHADER,
-        default_vertex_shader::DEFAULT_VERTEX_SHADER,
+        default_alpha_shader::DefaultAlphaShader, default_fragment_shader::DefaultFragmentShader,
+        default_geometry_shader::DefaultGeometryShader, default_vertex_shader::DefaultVertexShader,
     },
     stats::CycleCounters,
     texture::{cubemap::CubeMap, map::TextureMap},
@@ -382,10 +380,10 @@ impl Default for SoftwareRenderer {
             ssao_4x4_tangent_space_rotations: Default::default(),
             shader_context: Default::default(),
             scene_resources: Default::default(),
-            vertex_shader: DEFAULT_VERTEX_SHADER,
-            alpha_shader: DEFAULT_ALPHA_SHADER,
-            geometry_shader: DEFAULT_GEOMETRY_SHADER,
-            fragment_shader: DEFAULT_FRAGMENT_SHADER,
+            vertex_shader: DefaultVertexShader,
+            alpha_shader: DefaultAlphaShader,
+            geometry_shader: DefaultGeometryShader,
+            fragment_shader: DefaultFragmentShader,
         }
     }
 }
