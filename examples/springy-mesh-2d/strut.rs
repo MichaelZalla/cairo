@@ -1,11 +1,10 @@
 use cairo::{
-    physics::simulation::{state_vector::StateVector, units::Newtons},
+    physics::simulation::{particle::Particle, state_vector::StateVector, units::Newtons},
     vec::vec3::{self, Vec3},
 };
 
-use crate::point::{Point, POINT_MASS};
-
 pub static STRENGTH_PER_UNIT_LENGTH: f32 = 400.0;
+
 pub static DAMPER_PER_UNIT_LENGTH: f32 = 250.0;
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -19,7 +18,7 @@ pub struct Strut {
 }
 
 impl Strut {
-    pub fn new(i: usize, j: usize, points: &[Point], is_internal: bool) -> Self {
+    pub fn new(i: usize, j: usize, points: &[Particle], is_internal: bool) -> Self {
         let rest_length = (points[j].position - points[i].position).mag();
 
         Strut {
@@ -56,6 +55,8 @@ impl Strut {
             self.compute_drag_and_lift_forces(current_state, state_index_offset, n, wind);
 
         // Combine forces to determine a net force.
+
+        static POINT_MASS: f32 = 2.5;
 
         let strut_mass = POINT_MASS * 2.0;
 

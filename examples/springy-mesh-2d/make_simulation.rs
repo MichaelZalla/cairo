@@ -1,6 +1,7 @@
 use cairo::{
     physics::simulation::{
-        physical_constants::EARTH_GRAVITY, state_vector::StateVector, units::Newtons,
+        particle::Particle, physical_constants::EARTH_GRAVITY, state_vector::StateVector,
+        units::Newtons,
     },
     vec::vec3::Vec3,
 };
@@ -25,75 +26,71 @@ static GRAVITY: PointForce =
 pub fn make_simulation<'a>() -> Simulation<'a> {
     let forces = vec![&GRAVITY];
 
-    // let mesh = {
-    //     static POINT_SPACING_METERS: f32 = 3.0;
-    //     static NUM_POINTS: usize = 8;
+    let springy_chain_mesh = {
+        static POINT_SPACING_METERS: f32 = 3.0;
+        static NUM_POINTS: usize = 8;
 
-    //     let mut points: Vec<Point> = vec![];
+        let mut points: Vec<Particle> = vec![];
 
-    //     let mut x: f32 = 0.0;
-    //     let mut y: f32 = 16.0;
+        let mut x: f32 = 0.0;
+        let mut y: f32 = 16.0;
 
-    //     for i in 0..NUM_POINTS {
-    //         if i % 2 == 0 {
-    //             y -= POINT_SPACING_METERS;
-    //         } else {
-    //             x += POINT_SPACING_METERS;
-    //         };
+        for i in 0..NUM_POINTS {
+            if i % 2 == 0 {
+                y -= POINT_SPACING_METERS;
+            } else {
+                x += POINT_SPACING_METERS;
+            };
 
-    //         points.push(Point {
-    //             is_static: if i == 0 { true } else { false },
-    //             // mass: 2.5,
-    //             position: Vec3 {
-    //                 x,
-    //                 y,
-    //                 ..Default::default()
-    //             },
-    //             ..Default::default()
-    //         })
-    //     }
+            points.push(Particle {
+                mass: if i == 0 { f32::INFINITY } else { 2.5 },
+                position: Vec3 { x, y, z: 0.0 },
+                ..Default::default()
+            })
+        }
 
-    //     let mut struts: Vec<(usize, usize, bool)> = vec![];
+        let mut struts: Vec<(usize, usize, bool)> = vec![];
 
-    //     for i in 0..NUM_POINTS - 1 {
-    //         struts.push((i, i + 1, false));
-    //     }
+        for i in 0..NUM_POINTS - 1 {
+            struts.push((i, i + 1, false));
+        }
 
-    //     if NUM_POINTS > 2 {
-    //         let i = NUM_POINTS - 3;
-    //         let j = NUM_POINTS - 1;
+        if NUM_POINTS > 2 {
+            let i = NUM_POINTS - 3;
+            let j = NUM_POINTS - 1;
 
-    //         struts.push((i, j, false));
-    //     }
+            struts.push((i, j, false));
+        }
 
-    //     SpringyMesh::new(points, struts)
-    // };
+        SpringyMesh::new(points, struts)
+    };
 
     let meshes = vec![
-        SpringyMesh::new_box(
-            Vec3 {
-                x: -15.0,
-                y: 10.0,
-                ..Default::default()
-            },
-            10.0,
-        ),
-        SpringyMesh::new_box(
-            Vec3 {
-                x: 0.0,
-                y: 10.0,
-                ..Default::default()
-            },
-            10.0,
-        ),
-        SpringyMesh::new_box(
-            Vec3 {
-                x: 15.0,
-                y: 10.0,
-                ..Default::default()
-            },
-            10.0,
-        ),
+        // SpringyMesh::new_box(
+        //     Vec3 {
+        //         x: -15.0,
+        //         y: 10.0,
+        //         ..Default::default()
+        //     },
+        //     10.0,
+        // ),
+        // SpringyMesh::new_box(
+        //     Vec3 {
+        //         x: 0.0,
+        //         y: 10.0,
+        //         ..Default::default()
+        //     },
+        //     10.0,
+        // ),
+        // SpringyMesh::new_box(
+        //     Vec3 {
+        //         x: 15.0,
+        //         y: 10.0,
+        //         ..Default::default()
+        //     },
+        //     10.0,
+        // ),
+        springy_chain_mesh,
     ];
 
     let ground_plane_y: f32 = -10.0;

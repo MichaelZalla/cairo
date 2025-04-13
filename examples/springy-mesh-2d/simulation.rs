@@ -86,7 +86,9 @@ impl<'a> Simulation<'a> {
             mesh.state_index_offset = point_index;
 
             for point in mesh.points.iter_mut() {
-                point.write_from(&new_state, n, point_index);
+                if point.mass < f32::INFINITY {
+                    point.write_from(&new_state, n, point_index);
+                }
 
                 point_index += 1;
             }

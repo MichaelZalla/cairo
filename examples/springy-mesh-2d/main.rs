@@ -19,7 +19,7 @@ mod coordinates;
 mod draw_collider;
 mod draw_wind_velocity;
 mod make_simulation;
-mod point;
+mod draw_particle;
 mod renderable;
 mod simulation;
 mod springy_mesh;

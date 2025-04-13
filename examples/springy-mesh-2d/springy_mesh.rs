@@ -5,16 +5,11 @@ use cairo::{
     buffer::Buffer2D,
     color::{self, Color},
     graphics::Graphics,
-    physics::simulation::state_vector::StateVector,
+    physics::simulation::{particle::Particle, state_vector::StateVector},
     vec::vec3::{self, Vec3},
 };
 
-use crate::{
-    coordinates::world_to_screen_space,
-    point::{Point, POINT_MASS},
-    renderable::Renderable,
-    strut::Strut,
-};
+use crate::{coordinates::world_to_screen_space, renderable::Renderable, strut::Strut};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Face {
@@ -26,14 +21,14 @@ pub struct Face {
 
 #[derive(Default, Debug, Clone)]
 pub struct SpringyMesh {
-    pub points: Vec<Point>,
+    pub points: Vec<Particle>,
     pub struts: Vec<Strut>,
     pub faces: Vec<Face>,
     pub state_index_offset: usize,
 }
 
 impl SpringyMesh {
-    pub fn new(points: Vec<Point>, struts: Vec<(usize, usize, bool)>) -> Self {
+    pub fn new(points: Vec<Particle>, struts: Vec<(usize, usize, bool)>) -> Self {
         let struts: Vec<Strut> = struts
             .into_iter()
             .map(|(i, j, is_internal)| Strut::new(i, j, &points, is_internal))
@@ -49,6 +44,7 @@ impl SpringyMesh {
         }
     }
 
+    #[allow(unused)]
     pub fn new_box(center: Vec3, dimension: f32) -> Self {
         let dimension_over_2 = dimension / 2.0;
 
@@ -65,13 +61,16 @@ impl SpringyMesh {
 
         let points = corners
             .into_iter()
-            .map(|c| Point {
-                position: Vec3 {
+            .map(|c| {
+                let mut point = Particle::default();
+
+                point.position = Vec3 {
                     x: center.x + c.0,
                     y: center.y + c.1,
                     z: 0.0,
-                },
-                ..Default::default()
+                };
+
+                point
             })
             .collect();
 
@@ -189,9 +188,9 @@ impl SpringyMesh {
             let p2_force = p0_p2_normal * net_torque.mag() / p0_p2.mag();
             let p0_force = -(p1_force + p2_force);
 
-            let p1_acceleration = p1_force / POINT_MASS;
-            let p2_acceleration = p2_force / POINT_MASS;
-            let p0_acceleration = p0_force / POINT_MASS;
+            let p1_acceleration = p1_force / p1.mass;
+            let p2_acceleration = p2_force / p2.mass;
+            let p0_acceleration = p0_force / p0.mass;
 
             derivative.data[self.state_index_offset + p0_index + n] += p0_acceleration;
             derivative.data[self.state_index_offset + p1_index + n] += p1_acceleration;

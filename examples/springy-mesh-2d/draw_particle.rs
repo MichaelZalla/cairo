@@ -1,41 +1,11 @@
 use cairo::{
-    buffer::Buffer2D,
-    color,
-    graphics::Graphics,
-    physics::simulation::{
-        state_vector::{FromStateVector, StateVector, ToStateVector},
-        units::Velocity,
-    },
+    buffer::Buffer2D, color, graphics::Graphics, physics::simulation::particle::Particle,
     vec::vec3::Vec3,
 };
 
 use crate::{coordinates::world_to_screen_space, renderable::Renderable};
 
-#[derive(Default, Debug, Copy, Clone)]
-pub struct Point {
-    #[allow(unused)]
-    pub is_static: bool,
-    pub position: Vec3,
-    pub velocity: Velocity,
-}
-
-pub static POINT_MASS: f32 = 2.5;
-
-impl ToStateVector for Point {
-    fn write_to(&self, state: &mut StateVector, n: usize, i: usize) {
-        state.data[i] = self.position;
-        state.data[i + n] = self.velocity;
-    }
-}
-
-impl FromStateVector for Point {
-    fn write_from(&mut self, state: &StateVector, n: usize, i: usize) {
-        self.velocity = state.data[i + n];
-        self.position = state.data[i];
-    }
-}
-
-impl Renderable for Point {
+impl Renderable for Particle {
     fn render(&self, buffer: &mut Buffer2D, buffer_center: &Vec3) {
         static POINT_SIZE: u32 = 4;
         static POINT_SIZE_OVER_2: u32 = POINT_SIZE / 2;
