@@ -13,6 +13,7 @@ use crate::{coordinates::world_to_screen_space, renderable::Renderable};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Point {
+    #[allow(unused)]
     pub is_static: bool,
     pub position: Vec3,
     pub velocity: Velocity,

@@ -607,12 +607,12 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example springy-meshes",
+      "label": "Rust: cargo run --example springy-mesh-2d",
       "command": "cargo",
       "args": [
         "run",
         "--example",
-        "springy-meshes"
+        "springy-mesh-2d"
       ]
     },
     {

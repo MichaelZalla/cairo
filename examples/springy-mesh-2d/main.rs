@@ -28,7 +28,7 @@ mod strut;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/springy-meshes".to_string(),
+        title: "examples/springy-mesh-2d".to_string(),
         resizable: true,
         ..Default::default()
     };
