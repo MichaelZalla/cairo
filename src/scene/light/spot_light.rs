@@ -310,7 +310,7 @@ impl SpotLight {
 
         let field_of_view = self.outer_cutoff_angle * 2.0;
 
-        let field_of_view_degrees = field_of_view / PI * 180.0;
+        let field_of_view_degrees = field_of_view.to_degrees();
 
         let aspect_ratio = 1.0;
 
