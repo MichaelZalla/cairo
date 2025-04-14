@@ -14,7 +14,7 @@ use cairo::{
 use crate::{
     integration::{integrate_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
-    springy_mesh::{make_springy_mesh, SpringyMesh},
+    springy_mesh::{make_cube, make_springy_mesh, SpringyMesh},
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2; // { position, velocity }
@@ -115,8 +115,10 @@ pub fn make_simulation() -> Simulation {
 
     let mut meshes = Vec::with_capacity(100);
 
-    for _ in 0..100 {
-        meshes.push(make_springy_mesh(2.0));
+    for _ in 0..25 {
+        let (points, struts) = make_cube(2.0);
+
+        meshes.push(make_springy_mesh(points, struts));
     }
 
     // Ground collider plane.

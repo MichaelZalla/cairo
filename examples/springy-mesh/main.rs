@@ -146,7 +146,7 @@ fn main() -> Result<(), String> {
                         &mesh.points[strut.points.1].position,
                     );
 
-                    renderer.render_line(*start, *end, color::LIGHT_GRAY);
+                    renderer.render_line(*start, *end, strut.color);
                 }
             }
 

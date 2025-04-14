@@ -1,6 +1,7 @@
 use std::f32::consts::TAU;
 
 use cairo::{
+    color,
     matrix::Mat4,
     physics::{material::PhysicsMaterial, simulation::particle::Particle},
     random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
@@ -11,11 +12,7 @@ use cairo::{
     },
 };
 
-use crate::strut::Strut;
-
-static STRENGTH_PER_UNIT_LENGTH: f32 = 1750.0;
-
-static DAMPER_PER_UNIT_LENGTH: f32 = 300.0;
+use crate::strut::{Strut, PARTICLE_MASS};
 
 #[derive(Default, Debug, Clone)]
 pub struct SpringyMesh {
@@ -25,7 +22,147 @@ pub struct SpringyMesh {
     pub state_index_offset: usize,
 }
 
-pub fn make_springy_mesh(side_length: f32) -> SpringyMesh {
+#[allow(unused)]
+pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
+    // Plots points for uniform triangular prism (tetrahedron).
+
+    let side_length_over_2 = side_length / 2.0;
+
+    let height = side_length * 3.0_f32.sqrt() / 2.0;
+
+    let coords = vec![
+        Vec3 {
+            x: -side_length_over_2,
+            y: 0.0,
+            z: -height / 2.0,
+        },
+        Vec3 {
+            x: side_length_over_2,
+            y: 0.0,
+            z: -height / 2.0,
+        },
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: height / 2.0,
+        },
+        Vec3 {
+            x: 0.0,
+            y: side_length * 0.866,
+            z: 0.0,
+        },
+    ];
+
+    let points: Vec<Particle> = coords
+        .into_iter()
+        .map(|c| Particle {
+            position: c,
+            ..Default::default()
+        })
+        .collect();
+
+    // Connect points with external struts.
+
+    let edges = vec![
+        // Base (3)
+        (0, 1, color::LIGHT_GRAY),
+        (1, 2, color::LIGHT_GRAY),
+        (0, 2, color::LIGHT_GRAY),
+        // Tentpoles (3)
+        (0, 3, color::LIGHT_GRAY),
+        (1, 3, color::LIGHT_GRAY),
+        (2, 3, color::LIGHT_GRAY),
+    ];
+
+    let struts: Vec<Strut> = edges
+        .into_iter()
+        .map(|(a, b, color)| Strut::new(&points, a, b, color))
+        .collect();
+
+    (points, struts)
+}
+
+#[allow(unused)]
+pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
+    // Plots points for cube.
+
+    let front = vec![
+        // Top left
+        Vec3 {
+            x: -0.5,
+            y: 0.5,
+            z: -0.5,
+        },
+        // Top right
+        Vec3 {
+            x: 0.5,
+            y: 0.5,
+            z: -0.5,
+        },
+        // Bottom right
+        Vec3 {
+            x: 0.5,
+            y: -0.5,
+            z: -0.5,
+        },
+        // Bottom left
+        Vec3 {
+            x: -0.5,
+            y: -0.5,
+            z: -0.5,
+        },
+    ];
+
+    let back: Vec<Vec3> = front.iter().map(|c| Vec3 { z: 0.5, ..*c }).collect();
+
+    let points: Vec<Particle> = front
+        .into_iter()
+        .chain(back)
+        .map(|c| Particle {
+            position: c * side_length,
+            ..Default::default()
+        })
+        .collect();
+
+    // Connect points with external struts.
+
+    let edges = vec![
+        // Front loop (4)
+        (0, 1, color::RED),
+        (1, 2, color::RED),
+        (2, 3, color::RED),
+        (3, 0, color::RED),
+        // Back loop (4)
+        (4, 5, color::BLUE),
+        (5, 6, color::BLUE),
+        (6, 7, color::BLUE),
+        (7, 4, color::BLUE),
+        // Front-to-back connections (4)
+        (0, 4, color::YELLOW),
+        (1, 5, color::YELLOW),
+        (2, 6, color::YELLOW),
+        (3, 7, color::YELLOW),
+        // Cross-face struts (6)
+        (0, 2, color::LIGHT_GRAY),
+        (1, 6, color::LIGHT_GRAY),
+        (5, 7, color::LIGHT_GRAY),
+        (4, 3, color::LIGHT_GRAY),
+        (4, 1, color::LIGHT_GRAY),
+        (3, 6, color::LIGHT_GRAY),
+        // Internal struts (2)
+        (0, 6, color::DARK_GRAY),
+        (5, 3, color::DARK_GRAY),
+    ];
+
+    let struts: Vec<Strut> = edges
+        .into_iter()
+        .map(|(a, b, color)| Strut::new(&points, a, b, color))
+        .collect();
+
+    (points, struts)
+}
+
+pub fn make_springy_mesh(mut points: Vec<Particle>, struts: Vec<Strut>) -> SpringyMesh {
     let mut sampler: RandomSampler<128> = {
         let mut sampler: RandomSampler<128> = Default::default();
 
@@ -37,53 +174,6 @@ pub fn make_springy_mesh(side_length: f32) -> SpringyMesh {
     let random_speed = sampler.sample_range_normal(5.0, 5.0);
 
     let random_velocity = sampler.sample_direction_uniform() * random_speed;
-
-    let point_prototype = Particle {
-        mass: 10.0,
-        velocity: random_velocity,
-        ..Default::default()
-    };
-
-    // Plots points for uniform triangular prism (tetrahedron).
-
-    let side_length_over_2 = side_length / 2.0;
-
-    let height = side_length * 3.0_f32.sqrt() / 2.0;
-
-    let mut points = vec![
-        Particle {
-            position: Vec3 {
-                x: -side_length_over_2,
-                y: 0.0,
-                z: -height / 2.0,
-            },
-            ..point_prototype
-        },
-        Particle {
-            position: Vec3 {
-                x: side_length_over_2,
-                y: 0.0,
-                z: -height / 2.0,
-            },
-            ..point_prototype
-        },
-        Particle {
-            position: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: height / 2.0,
-            },
-            ..point_prototype
-        },
-        Particle {
-            position: Vec3 {
-                x: 0.0,
-                y: side_length * 0.866,
-                z: 0.0,
-            },
-            ..point_prototype
-        },
-    ];
 
     // Random mesh transform.
 
@@ -111,47 +201,9 @@ pub fn make_springy_mesh(side_length: f32) -> SpringyMesh {
 
     for point in &mut points {
         point.position = (Vec4::new(point.position, 1.0) * random_transform).to_vec3();
+        point.velocity = random_velocity;
+        point.mass = PARTICLE_MASS;
     }
-
-    // Connect points with external struts.
-
-    let rest_length = side_length;
-
-    let prototype = Strut {
-        spring_strength: STRENGTH_PER_UNIT_LENGTH / rest_length,
-        spring_damper: DAMPER_PER_UNIT_LENGTH / rest_length,
-        rest_length,
-        ..Default::default()
-    };
-
-    let struts = vec![
-        // Base (3)
-        Strut {
-            points: (0, 1),
-            ..prototype
-        },
-        Strut {
-            points: (1, 2),
-            ..prototype
-        },
-        Strut {
-            points: (0, 2),
-            ..prototype
-        },
-        // Tentpoles (3)
-        Strut {
-            points: (0, 3),
-            ..prototype
-        },
-        Strut {
-            points: (1, 3),
-            ..prototype
-        },
-        Strut {
-            points: (2, 3),
-            ..prototype
-        },
-    ];
 
     // Random physics material.
 

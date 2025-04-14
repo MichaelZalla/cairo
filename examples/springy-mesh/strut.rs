@@ -1,4 +1,13 @@
-use cairo::physics::simulation::{state_vector::StateVector, units::Newtons};
+use cairo::{
+    color::Color,
+    physics::simulation::{particle::Particle, state_vector::StateVector, units::Newtons},
+};
+
+pub static PARTICLE_MASS: f32 = 10.0;
+
+static STRENGTH_PER_UNIT_LENGTH: f32 = 1750.0;
+
+static DAMPER_PER_UNIT_LENGTH: f32 = 300.0;
 
 #[derive(Default, Debug, Clone)]
 pub struct Strut {
@@ -7,9 +16,26 @@ pub struct Strut {
     pub rest_length: f32,
     pub points: (usize, usize),
     pub delta_length: f32,
+    pub color: Color,
 }
 
 impl Strut {
+    pub fn new(points: &[Particle], a: usize, b: usize, color: Color) -> Self {
+        let a_position = points[a].position;
+        let b_position = points[b].position;
+
+        let rest_length = (b_position - a_position).mag();
+
+        Self {
+            points: (a, b),
+            color,
+            spring_strength: STRENGTH_PER_UNIT_LENGTH / rest_length,
+            spring_damper: DAMPER_PER_UNIT_LENGTH / rest_length,
+            rest_length,
+            ..Default::default()
+        }
+    }
+
     pub fn compute_accelerations(
         &mut self,
         current_state: &StateVector,
@@ -19,15 +45,15 @@ impl Strut {
     ) {
         let spring_force = self.compute_spring_force(current_state, state_index_offset, n);
 
-        let spring_acceleration_i_j = spring_force / 10.0;
+        let spring_acceleration = spring_force / PARTICLE_MASS;
 
         let i = self.points.0;
         let j = self.points.1;
 
         // { mesh_start + mesh_point_index + acceleration_component_index }
 
-        derivative.data[state_index_offset + i + n] += spring_acceleration_i_j;
-        derivative.data[state_index_offset + j + n] -= spring_acceleration_i_j;
+        derivative.data[state_index_offset + i + n] += spring_acceleration;
+        derivative.data[state_index_offset + j + n] -= spring_acceleration;
     }
 
     fn compute_spring_force(
