@@ -186,15 +186,11 @@ fn make_points_and_struts(vertices: Vec<Vec3>, edges: Vec<Edge>) -> (Vec<Particl
     (points, struts)
 }
 
-pub fn make_springy_mesh(mut points: Vec<Particle>, struts: Vec<Strut>) -> SpringyMesh {
-    let mut sampler: RandomSampler<128> = {
-        let mut sampler: RandomSampler<128> = Default::default();
-
-        sampler.seed().unwrap();
-
-        sampler
-    };
-
+pub fn make_springy_mesh(
+    mut points: Vec<Particle>,
+    struts: Vec<Strut>,
+    sampler: &mut RandomSampler<1024>,
+) -> SpringyMesh {
     let random_speed = sampler.sample_range_normal(5.0, 5.0);
 
     let random_velocity = sampler.sample_direction_uniform() * random_speed;

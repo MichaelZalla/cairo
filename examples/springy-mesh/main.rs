@@ -11,6 +11,7 @@ use cairo::{
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
+    random::sampler::RandomSampler,
     render::Renderer,
     scene::{
         context::{utils::make_empty_scene, SceneContext},
@@ -99,7 +100,17 @@ fn main() -> Result<(), String> {
 
     // Simulation
 
-    let simulation = make_simulation();
+    let mut sampler: RandomSampler<1024> = {
+        let mut sampler: RandomSampler<1024> = Default::default();
+
+        sampler.seed().unwrap();
+
+        sampler
+    };
+
+    // let mut sampler_rc = Rc::new(sampler);
+
+    let simulation = make_simulation(&mut sampler);
 
     let simulation_rc = RefCell::new(simulation);
 

@@ -8,6 +8,7 @@ use cairo::{
         state_vector::{FromStateVector, StateVector, ToStateVector},
         units::Newtons,
     },
+    random::sampler::RandomSampler,
     vec::vec3,
 };
 
@@ -106,7 +107,7 @@ static GRAVITY_POINT_FORCE: PointForce =
         (newtons, None)
     };
 
-pub fn make_simulation() -> Simulation {
+pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     // Forces.
 
     let forces: Vec<PointForce> = vec![GRAVITY_POINT_FORCE];
@@ -118,7 +119,7 @@ pub fn make_simulation() -> Simulation {
     for _ in 0..100 {
         let (points, struts) = make_cube(3.0);
 
-        meshes.push(make_springy_mesh(points, struts));
+        meshes.push(make_springy_mesh(points, struts, sampler));
     }
 
     // Ground collider plane.
