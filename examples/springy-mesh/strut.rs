@@ -12,6 +12,8 @@ static DAMPER_PER_UNIT_LENGTH: f32 = 300.0;
 #[derive(Default, Debug, Clone)]
 pub struct Edge {
     pub points: (usize, usize),
+    #[allow(unused)]
+    pub connected_points: Option<(usize, usize)>,
     pub color: Color,
 }
 

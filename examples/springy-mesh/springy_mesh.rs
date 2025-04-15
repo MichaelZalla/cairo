@@ -61,20 +61,21 @@ pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
 
     let edge_data = vec![
         // Base (3)
-        (0, 1, color::LIGHT_GRAY),
-        (1, 2, color::LIGHT_GRAY),
-        (0, 2, color::LIGHT_GRAY),
+        (0, 1, 3, 2, color::LIGHT_GRAY),
+        (1, 2, 3, 0, color::LIGHT_GRAY),
+        (0, 2, 1, 3, color::LIGHT_GRAY),
         // Tentpoles (3)
-        (0, 3, color::LIGHT_GRAY),
-        (1, 3, color::LIGHT_GRAY),
-        (2, 3, color::LIGHT_GRAY),
+        (0, 3, 2, 1, color::LIGHT_GRAY),
+        (1, 3, 0, 2, color::LIGHT_GRAY),
+        (2, 3, 1, 0, color::LIGHT_GRAY),
     ];
 
     let edges = edge_data
         .into_iter()
         .map(|data| Edge {
             points: (data.0, data.1),
-            color: data.2,
+            connected_points: Some((data.2, data.3)),
+            color: data.4,
         })
         .collect();
 
@@ -126,37 +127,42 @@ pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
 
     let edge_data = vec![
         // Front loop (4)
-        (0, 1, color::RED),
-        (1, 2, color::RED),
-        (2, 3, color::RED),
-        (3, 0, color::RED),
+        (0, 1, 4, 2, color::RED),
+        (1, 2, 6, 0, color::RED),
+        (2, 3, 6, 0, color::RED),
+        (3, 0, 4, 2, color::RED),
         // Back loop (4)
-        (4, 5, color::BLUE),
-        (5, 6, color::BLUE),
-        (6, 7, color::BLUE),
-        (7, 4, color::BLUE),
+        (4, 5, 7, 1, color::BLUE),
+        (5, 6, 7, 1, color::BLUE),
+        (6, 7, 5, 3, color::BLUE),
+        (7, 4, 5, 3, color::BLUE),
         // Front-to-back connections (4)
-        (0, 4, color::YELLOW),
-        (1, 5, color::YELLOW),
-        (2, 6, color::YELLOW),
-        (3, 7, color::YELLOW),
+        (0, 4, 3, 1, color::YELLOW),
+        (1, 5, 4, 6, color::YELLOW),
+        (2, 6, 1, 3, color::YELLOW),
+        (3, 7, 6, 4, color::YELLOW),
         // Cross-face struts (6)
-        (0, 2, color::LIGHT_GRAY),
-        (1, 6, color::LIGHT_GRAY),
-        (5, 7, color::LIGHT_GRAY),
-        (4, 3, color::LIGHT_GRAY),
-        (4, 1, color::LIGHT_GRAY),
-        (3, 6, color::LIGHT_GRAY),
+        (0, 2, 1, 3, color::DARK_GRAY),
+        (1, 6, 5, 2, color::DARK_GRAY),
+        (5, 7, 4, 6, color::DARK_GRAY),
+        (4, 3, 0, 7, color::DARK_GRAY),
+        (4, 1, 5, 0, color::DARK_GRAY),
+        (3, 6, 2, 7, color::DARK_GRAY),
         // Internal struts (2)
-        (0, 6, color::DARK_GRAY),
-        (5, 3, color::DARK_GRAY),
+        (0, 6, usize::MAX, usize::MAX, color::DARK_GRAY),
+        (5, 3, usize::MAX, usize::MAX, color::DARK_GRAY),
     ];
 
     let edges = edge_data
         .into_iter()
         .map(|data| Edge {
             points: (data.0, data.1),
-            color: data.2,
+            connected_points: if data.2 == usize::MAX {
+                None
+            } else {
+                Some((data.2, data.3))
+            },
+            color: data.4,
         })
         .collect();
 
