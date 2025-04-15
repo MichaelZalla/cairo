@@ -34,10 +34,12 @@ pub fn resolve_plane_collision_approximate(
         0.0
     };
 
-    let new_position_offset =
+    // Comptues a minimum displacement vector (accounting for restitution).
+
+    let minimum_displacement =
         plane_normal * ((penetration_depth * (1.0 + material.restitution)) + bias);
 
     *end_velocity = new_velocity;
 
-    *end_position += new_position_offset;
+    *end_position += minimum_displacement;
 }

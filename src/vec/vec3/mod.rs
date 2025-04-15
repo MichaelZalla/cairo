@@ -319,6 +319,19 @@ impl Vec3 {
         }
     }
 
+    pub fn angle_radians(a: &Self, b: &Self, c: &Self) -> f32 {
+        // See: https://math.stackexchange.com/a/3427603/155265
+        // See: https://gamedev.stackexchange.com/a/203308
+
+        let b_a = *a - *b;
+        let b_c = *c - *b;
+
+        let b_a_mag = b_a.mag();
+        let b_c_mag = b_c.mag();
+
+        (b_a.dot(b_c) / (b_a_mag * b_c_mag)).acos()
+    }
+
     pub fn is_zero(self) -> bool {
         self.x.abs() < f32::EPSILON && self.y.abs() < f32::EPSILON && self.z.abs() < f32::EPSILON
     }

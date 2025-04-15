@@ -132,15 +132,15 @@ pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
         (2, 3, 6, 0, color::RED),
         (3, 0, 4, 2, color::RED),
         // Back loop (4)
-        (4, 5, 7, 1, color::BLUE),
-        (5, 6, 7, 1, color::BLUE),
-        (6, 7, 5, 3, color::BLUE),
-        (7, 4, 5, 3, color::BLUE),
+        (4, 5, 7, 1, color::RED),
+        (5, 6, 7, 1, color::RED),
+        (6, 7, 5, 3, color::RED),
+        (7, 4, 5, 3, color::RED),
         // Front-to-back connections (4)
-        (0, 4, 3, 1, color::YELLOW),
-        (1, 5, 4, 6, color::YELLOW),
-        (2, 6, 1, 3, color::YELLOW),
-        (3, 7, 6, 4, color::YELLOW),
+        (0, 4, 3, 1, color::RED),
+        (1, 5, 4, 6, color::RED),
+        (2, 6, 1, 3, color::RED),
+        (3, 7, 6, 4, color::RED),
         // Cross-face struts (6)
         (0, 2, 1, 3, color::DARK_GRAY),
         (1, 6, 5, 2, color::DARK_GRAY),
@@ -203,37 +203,33 @@ pub fn make_springy_mesh(mut points: Vec<Particle>, struts: Vec<Strut>) -> Sprin
 
     let random_transform = {
         let random_rotation = {
-            let rotate_x =
-                Quaternion::new(vec3::RIGHT, sampler.sample_range_normal(0.0, 0.5) * TAU);
-
-            let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_normal(0.0, 0.5) * TAU);
-
-            let rotate_z =
-                Quaternion::new(vec3::FORWARD, sampler.sample_range_normal(0.0, 0.5) * TAU);
+            let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
+            let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
+            let rotate_z = Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, TAU));
 
             rotate_x * rotate_y * rotate_z
         };
 
         let random_translation = Mat4::translation(Vec3 {
-            x: sampler.sample_range_normal(0.0, 10.0),
-            y: sampler.sample_range_normal(10.0, 5.0),
-            z: sampler.sample_range_normal(0.0, 10.0),
+            x: sampler.sample_range_normal(0.0, 25.0),
+            y: sampler.sample_range_normal(25.0, 10.0),
+            z: sampler.sample_range_normal(0.0, 25.0),
         });
 
         *random_rotation.mat() * random_translation
     };
 
     for point in &mut points {
+        point.mass = PARTICLE_MASS;
         point.position = (Vec4::new(point.position, 1.0) * random_transform).to_vec3();
         point.velocity = random_velocity;
-        point.mass = PARTICLE_MASS;
     }
 
     // Random physics material.
 
     let material = {
-        let random_friction = sampler.sample_range_normal(0.25, 0.1).clamp(0.15, 1.0);
-        let random_restitution = sampler.sample_range_normal(0.9, 0.2).clamp(0.0, 1.0);
+        let random_friction = sampler.sample_range_uniform(0.5, 0.9);
+        let random_restitution = sampler.sample_range_uniform(0.5, 0.9);
 
         PhysicsMaterial {
             dynamic_friction: random_friction,
