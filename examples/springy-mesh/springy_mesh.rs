@@ -24,32 +24,36 @@ pub struct SpringyMesh {
 
 #[allow(unused)]
 pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
-    // Plots points for uniform triangular prism (tetrahedron).
+    // Plots points for a uniform triangular prism (tetrahedron).
 
-    let side_length_over_2 = side_length / 2.0;
+    let f = 2.0 * 2.0_f32.sqrt();
 
-    let height = side_length * 3.0_f32.sqrt() / 2.0;
+    let factor = side_length / f;
 
+    // Embeds an equilateral triangular pyramid inside of a cube.
+    // See: https://en.wikipedia.org/wiki/Tetrahedron#Cartesian_coordinates
     let vertices = vec![
+        // Base (3)
         Vec3 {
-            x: -side_length_over_2,
-            y: 0.0,
-            z: -height / 2.0,
+            x: -factor,
+            y: factor,
+            z: -factor,
         },
         Vec3 {
-            x: side_length_over_2,
-            y: 0.0,
-            z: -height / 2.0,
+            x: factor,
+            y: -factor,
+            z: -factor,
         },
         Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: height / 2.0,
+            x: -factor,
+            y: -factor,
+            z: factor,
         },
+        // Top (1)
         Vec3 {
-            x: 0.0,
-            y: side_length * 0.866,
-            z: 0.0,
+            x: factor,
+            y: factor,
+            z: factor,
         },
     ];
 
