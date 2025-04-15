@@ -85,40 +85,42 @@ pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
 pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
     // Plots points for a cube.
 
+    let side_length_over_2 = side_length / 2.0;
+
     let front = vec![
         // Top left
         Vec3 {
-            x: -0.5,
-            y: 0.5,
-            z: -0.5,
+            x: -side_length_over_2,
+            y: side_length_over_2,
+            z: -side_length_over_2,
         },
         // Top right
         Vec3 {
-            x: 0.5,
-            y: 0.5,
-            z: -0.5,
+            x: side_length_over_2,
+            y: side_length_over_2,
+            z: -side_length_over_2,
         },
         // Bottom right
         Vec3 {
-            x: 0.5,
-            y: -0.5,
-            z: -0.5,
+            x: side_length_over_2,
+            y: -side_length_over_2,
+            z: -side_length_over_2,
         },
         // Bottom left
         Vec3 {
-            x: -0.5,
-            y: -0.5,
-            z: -0.5,
+            x: -side_length_over_2,
+            y: -side_length_over_2,
+            z: -side_length_over_2,
         },
     ];
 
-    let back: Vec<Vec3> = front.iter().map(|c| Vec3 { z: 0.5, ..*c }).collect();
+    let mut back = front.clone();
 
-    let vertices: Vec<Vec3> = front
-        .into_iter()
-        .chain(back)
-        .map(|v| v * side_length)
-        .collect();
+    for v in back.iter_mut() {
+        v.z = side_length_over_2;
+    }
+
+    let vertices: Vec<Vec3> = front.into_iter().chain(back).collect();
 
     // Connect points with external struts.
 
