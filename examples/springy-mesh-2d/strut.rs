@@ -24,8 +24,8 @@ impl Strut {
         Strut {
             points: (i, j),
             rest_length,
-            strength: STRENGTH_PER_UNIT_LENGTH / (rest_length / 1.0),
-            damper: DAMPER_PER_UNIT_LENGTH / (rest_length / 1.0),
+            strength: STRENGTH_PER_UNIT_LENGTH / rest_length,
+            damper: DAMPER_PER_UNIT_LENGTH / rest_length,
             is_internal,
             ..Default::default()
         }
