@@ -12,7 +12,7 @@ use cairo::{
     },
 };
 
-use crate::strut::{Strut, PARTICLE_MASS};
+use crate::strut::{Edge, Strut, PARTICLE_MASS};
 
 #[derive(Default, Debug, Clone)]
 pub struct SpringyMesh {
@@ -30,7 +30,7 @@ pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
 
     let height = side_length * 3.0_f32.sqrt() / 2.0;
 
-    let coords = vec![
+    let vertices = vec![
         Vec3 {
             x: -side_length_over_2,
             y: 0.0,
@@ -53,17 +53,9 @@ pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
         },
     ];
 
-    let points: Vec<Particle> = coords
-        .into_iter()
-        .map(|c| Particle {
-            position: c,
-            ..Default::default()
-        })
-        .collect();
+    // Connect points with edges.
 
-    // Connect points with external struts.
-
-    let edges = vec![
+    let edge_data = vec![
         // Base (3)
         (0, 1, color::LIGHT_GRAY),
         (1, 2, color::LIGHT_GRAY),
@@ -74,17 +66,20 @@ pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
         (2, 3, color::LIGHT_GRAY),
     ];
 
-    let struts: Vec<Strut> = edges
+    let edges = edge_data
         .into_iter()
-        .map(|(a, b, color)| Strut::new(&points, a, b, color))
+        .map(|data| Edge {
+            points: (data.0, data.1),
+            color: data.2,
+        })
         .collect();
 
-    (points, struts)
+    make_points_and_struts(vertices, edges)
 }
 
 #[allow(unused)]
 pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
-    // Plots points for cube.
+    // Plots points for a cube.
 
     let front = vec![
         // Top left
@@ -115,18 +110,15 @@ pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
 
     let back: Vec<Vec3> = front.iter().map(|c| Vec3 { z: 0.5, ..*c }).collect();
 
-    let points: Vec<Particle> = front
+    let vertices: Vec<Vec3> = front
         .into_iter()
         .chain(back)
-        .map(|c| Particle {
-            position: c * side_length,
-            ..Default::default()
-        })
+        .map(|v| v * side_length)
         .collect();
 
     // Connect points with external struts.
 
-    let edges = vec![
+    let edge_data = vec![
         // Front loop (4)
         (0, 1, color::RED),
         (1, 2, color::RED),
@@ -154,9 +146,29 @@ pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
         (5, 3, color::DARK_GRAY),
     ];
 
+    let edges = edge_data
+        .into_iter()
+        .map(|data| Edge {
+            points: (data.0, data.1),
+            color: data.2,
+        })
+        .collect();
+
+    make_points_and_struts(vertices, edges)
+}
+
+fn make_points_and_struts(vertices: Vec<Vec3>, edges: Vec<Edge>) -> (Vec<Particle>, Vec<Strut>) {
+    let points: Vec<Particle> = vertices
+        .into_iter()
+        .map(|position| Particle {
+            position,
+            ..Default::default()
+        })
+        .collect();
+
     let struts: Vec<Strut> = edges
         .into_iter()
-        .map(|(a, b, color)| Strut::new(&points, a, b, color))
+        .map(|edge| Strut::new(&points, edge))
         .collect();
 
     (points, struts)

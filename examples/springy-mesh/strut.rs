@@ -10,25 +10,33 @@ static STRENGTH_PER_UNIT_LENGTH: f32 = 1750.0;
 static DAMPER_PER_UNIT_LENGTH: f32 = 300.0;
 
 #[derive(Default, Debug, Clone)]
-pub struct Strut {
-    pub spring_strength: f32,
-    pub spring_damper: f32,
-    pub rest_length: f32,
+pub struct Edge {
     pub points: (usize, usize),
-    pub delta_length: f32,
     pub color: Color,
 }
 
-impl Strut {
-    pub fn new(points: &[Particle], a: usize, b: usize, color: Color) -> Self {
-        let a_position = points[a].position;
-        let b_position = points[b].position;
+#[derive(Default, Debug, Clone)]
+pub struct Strut {
+    pub edge: Edge,
+    pub spring_strength: f32,
+    pub spring_damper: f32,
+    pub rest_length: f32,
+    pub delta_length: f32,
+}
 
-        let rest_length = (b_position - a_position).mag();
+impl Strut {
+    pub fn new(points: &[Particle], edge: Edge) -> Self {
+        let a = points[edge.points.0].position;
+        let b = points[edge.points.1].position;
+
+        let a_b = b - a;
+
+        // Computes rest length of strut.
+
+        let rest_length = a_b.mag();
 
         Self {
-            points: (a, b),
-            color,
+            edge,
             spring_strength: STRENGTH_PER_UNIT_LENGTH / rest_length,
             spring_damper: DAMPER_PER_UNIT_LENGTH / rest_length,
             rest_length,
@@ -43,17 +51,19 @@ impl Strut {
         state_index_offset: usize,
         n: usize,
     ) {
+        let start_index = self.edge.points.0;
+        let end_index = self.edge.points.1;
+
+        // Linear spring accelerations.
+
         let spring_force = self.compute_spring_force(current_state, state_index_offset, n);
 
         let spring_acceleration = spring_force / PARTICLE_MASS;
 
-        let i = self.points.0;
-        let j = self.points.1;
-
         // { mesh_start + mesh_point_index + acceleration_component_index }
 
-        derivative.data[state_index_offset + i + n] += spring_acceleration;
-        derivative.data[state_index_offset + j + n] -= spring_acceleration;
+        derivative.data[state_index_offset + start_index + n] += spring_acceleration;
+        derivative.data[state_index_offset + end_index + n] -= spring_acceleration;
     }
 
     fn compute_spring_force(
@@ -62,8 +72,8 @@ impl Strut {
         state_index_offset: usize,
         n: usize,
     ) -> Newtons {
-        let i = self.points.0;
-        let j = self.points.1;
+        let i = self.edge.points.0;
+        let j = self.edge.points.1;
 
         // Reads current point positions.
 

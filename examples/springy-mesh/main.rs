@@ -141,12 +141,12 @@ fn main() -> Result<(), String> {
                 // Visualize struts.
 
                 for strut in &mesh.struts {
-                    let (start, end) = (
-                        &mesh.points[strut.points.0].position,
-                        &mesh.points[strut.points.1].position,
-                    );
+                    // Visualize the strut edge.
 
-                    renderer.render_line(*start, *end, strut.color);
+                    let start = mesh.points[strut.edge.points.0].position;
+                    let end = mesh.points[strut.edge.points.1].position;
+
+                    renderer.render_line(start, end, strut.edge.color);
                 }
             }
 
