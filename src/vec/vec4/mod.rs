@@ -39,7 +39,7 @@ impl cmp::PartialEq for Vec4 {
     }
 }
 
-impl ops::Add<Vec4> for Vec4 {
+impl ops::Add for Vec4 {
     type Output = Vec4;
     fn add(self, rhs: Vec4) -> Vec4 {
         Vec4 {
@@ -51,7 +51,7 @@ impl ops::Add<Vec4> for Vec4 {
     }
 }
 
-impl ops::AddAssign<Vec4> for Vec4 {
+impl ops::AddAssign for Vec4 {
     fn add_assign(&mut self, rhs: Vec4) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -60,7 +60,7 @@ impl ops::AddAssign<Vec4> for Vec4 {
     }
 }
 
-impl ops::Sub<Vec4> for Vec4 {
+impl ops::Sub for Vec4 {
     type Output = Vec4;
     fn sub(self, rhs: Vec4) -> Vec4 {
         Vec4 {
@@ -72,7 +72,7 @@ impl ops::Sub<Vec4> for Vec4 {
     }
 }
 
-impl ops::SubAssign<Vec4> for Vec4 {
+impl ops::SubAssign for Vec4 {
     fn sub_assign(&mut self, rhs: Vec4) {
         self.x -= rhs.x;
         self.y -= rhs.y;
@@ -81,7 +81,7 @@ impl ops::SubAssign<Vec4> for Vec4 {
     }
 }
 
-impl ops::Mul<Vec4> for Vec4 {
+impl ops::Mul for Vec4 {
     type Output = Vec4;
     fn mul(self, rhs: Vec4) -> Vec4 {
         Vec4 {
@@ -126,7 +126,7 @@ impl ops::DivAssign<f32> for Vec4 {
     }
 }
 
-impl ops::Div<Vec4> for Vec4 {
+impl ops::Div for Vec4 {
     type Output = Vec4;
     fn div(self, rhs: Vec4) -> Vec4 {
         Vec4 {
@@ -147,7 +147,7 @@ impl ops::MulAssign<f32> for Vec4 {
     }
 }
 
-impl ops::MulAssign<Vec4> for Vec4 {
+impl ops::MulAssign for Vec4 {
     fn mul_assign(&mut self, rhs: Vec4) {
         self.x *= rhs.x;
         self.y *= rhs.y;

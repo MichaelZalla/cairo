@@ -145,7 +145,7 @@ impl ops::Neg for Vec3 {
     }
 }
 
-impl ops::Add<Vec3> for Vec3 {
+impl ops::Add for Vec3 {
     type Output = Vec3;
     fn add(self, rhs: Vec3) -> Vec3 {
         Vec3 {
@@ -167,7 +167,7 @@ impl ops::Add<f32> for Vec3 {
     }
 }
 
-impl ops::AddAssign<Vec3> for Vec3 {
+impl ops::AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Vec3) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -175,7 +175,7 @@ impl ops::AddAssign<Vec3> for Vec3 {
     }
 }
 
-impl ops::Sub<Vec3> for Vec3 {
+impl ops::Sub for Vec3 {
     type Output = Vec3;
     fn sub(self, rhs: Vec3) -> Vec3 {
         Vec3 {
@@ -186,7 +186,7 @@ impl ops::Sub<Vec3> for Vec3 {
     }
 }
 
-impl ops::SubAssign<Vec3> for Vec3 {
+impl ops::SubAssign for Vec3 {
     fn sub_assign(&mut self, rhs: Vec3) {
         self.x -= rhs.x;
         self.y -= rhs.y;
@@ -194,7 +194,7 @@ impl ops::SubAssign<Vec3> for Vec3 {
     }
 }
 
-impl ops::Mul<Vec3> for Vec3 {
+impl ops::Mul for Vec3 {
     type Output = Vec3;
     fn mul(self, rhs: Vec3) -> Vec3 {
         Vec3 {
@@ -227,7 +227,7 @@ impl ops::Div<f32> for Vec3 {
     }
 }
 
-impl ops::Div<Vec3> for Vec3 {
+impl ops::Div for Vec3 {
     type Output = Vec3;
     fn div(self, rhs: Vec3) -> Vec3 {
         Vec3 {
@@ -238,7 +238,7 @@ impl ops::Div<Vec3> for Vec3 {
     }
 }
 
-impl ops::DivAssign<Vec3> for Vec3 {
+impl ops::DivAssign for Vec3 {
     fn div_assign(&mut self, rhs: Vec3) {
         self.x /= rhs.x;
         self.y /= rhs.y;
@@ -262,7 +262,7 @@ impl ops::MulAssign<f32> for Vec3 {
     }
 }
 
-impl ops::MulAssign<Vec3> for Vec3 {
+impl ops::MulAssign for Vec3 {
     fn mul_assign(&mut self, rhs: Vec3) {
         self.x *= rhs.x;
         self.y *= rhs.y;
