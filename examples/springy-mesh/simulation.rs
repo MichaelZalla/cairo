@@ -60,6 +60,8 @@ impl Simulation {
 
         for mesh in &self.meshes {
             for i in 0..mesh.points.len() {
+                let acceleration = derivative.data[mesh.state_index_offset + i + n];
+
                 let start_position = state.data[mesh.state_index_offset + i];
                 let mut end_position = new_state.data[mesh.state_index_offset + i];
                 let mut end_velocity = new_state.data[mesh.state_index_offset + i + n];
@@ -69,9 +71,16 @@ impl Simulation {
                 let segment = LineSegment::new(start_position, end_position);
 
                 for collider in &self.static_plane_colliders {
-                    if let Some((_f, penetration_depth)) =
+                    if let Some((f, penetration_depth)) =
                         test_line_segment_plane(&segment, &collider.plane)
                     {
+                        let time_before_collision = h * f;
+                        let time_after_collision = h - time_before_collision;
+
+                        let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+
+                        end_velocity -= accumulated_velocity;
+
                         resolve_plane_collision_approximate(
                             collider.plane.normal,
                             &mesh.material,
