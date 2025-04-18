@@ -245,7 +245,9 @@ fn main() -> Result<(), String> {
 
             renderer.begin_frame();
 
-            renderer.render_axes(None, Some(100.0));
+            let transform = Mat4::scale_uniform(100.0);
+
+            renderer.render_axes(Some(&transform));
         }
 
         // Render scene.

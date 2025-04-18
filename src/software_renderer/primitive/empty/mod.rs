@@ -136,9 +136,7 @@ impl SoftwareRenderer {
 
         match display_kind {
             EmptyDisplayKind::Axes => {
-                let world_position = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
-
-                self.render_axes(Some(world_position), None);
+                self.render_axes(Some(transform));
             }
             EmptyDisplayKind::Arrow => {
                 let arrow_start = Vec4::new(Default::default(), 1.0);

@@ -290,8 +290,8 @@ impl Renderer for SoftwareRenderer {
         self._render_circle(position, radius_world_units, color)
     }
 
-    fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>) {
-        self._render_axes(position, scale)
+    fn render_axes(&mut self, transform: Option<&Mat4>) {
+        self._render_axes(transform)
     }
 
     fn render_ground_plane(&mut self, parallels: usize) {

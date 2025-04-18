@@ -1,5 +1,6 @@
 use crate::{
     color::{self, Color},
+    matrix::Mat4,
     render::Renderer,
     scene::camera::Camera,
     software_renderer::SoftwareRenderer,
@@ -27,6 +28,8 @@ impl SoftwareRenderer {
             color::WHITE,
         );
 
-        self.render_axes(None, Some(5.0));
+        let transform = Mat4::scale_uniform(5.0);
+
+        self.render_axes(Some(&transform));
     }
 }

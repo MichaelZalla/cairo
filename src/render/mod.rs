@@ -45,7 +45,7 @@ pub trait Renderer {
 
     fn render_circle(&mut self, position: &Vec3, radius_world_units: f32, color: Color);
 
-    fn render_axes(&mut self, position: Option<Vec3>, scale: Option<f32>);
+    fn render_axes(&mut self, transform: Option<&Mat4>);
 
     fn render_ground_plane(&mut self, parallels: usize);
 

@@ -2,9 +2,13 @@ use crate::{
     color::{self, Color},
     geometry::intersect::intersect_line_segment_plane,
     graphics::Graphics,
+    matrix::Mat4,
     render::Renderer,
     software_renderer::SoftwareRenderer,
-    vec::vec3::{self, Vec3},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 impl SoftwareRenderer {
@@ -66,26 +70,22 @@ impl SoftwareRenderer {
         }
     }
 
-    pub(in crate::software_renderer) fn _render_axes(
-        &mut self,
-        position: Option<Vec3>,
-        scale: Option<f32>,
-    ) {
-        let p = position.unwrap_or_default();
+    pub(in crate::software_renderer) fn _render_axes(&mut self, transform: Option<&Mat4>) {
+        for (basis, color) in [
+            (vec3::RIGHT, color::RED),
+            (vec3::UP, color::BLUE),
+            (vec3::FORWARD, color::GREEN),
+        ] {
+            let mut start = Vec3::default();
+            let mut end = start + basis;
 
-        let s = scale.unwrap_or(1.0);
+            if let Some(mat) = transform {
+                start = (Vec4::new(start, 1.0) * *mat).to_vec3();
+                end = (Vec4::new(end, 1.0) * *mat).to_vec3();
+            }
 
-        // X-axis (red)
-
-        self.render_line(p, p + vec3::RIGHT * s, color::RED);
-
-        // Y-axis (blue)
-
-        self.render_line(p, p + vec3::UP * s, color::BLUE);
-
-        // Z-axis (green)
-
-        self.render_line(p, p + vec3::FORWARD * s, color::GREEN);
+            self.render_line(start, end, color);
+        }
     }
 
     pub(in crate::software_renderer) fn _render_ground_plane(&mut self, parallels: usize) {

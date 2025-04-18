@@ -403,10 +403,14 @@ fn draw_simulation(
     for generator in generators.iter() {
         match generator.kind {
             ParticleGeneratorKind::Omnidirectional(origin) => {
-                renderer.render_axes(Some(origin), None);
+                let transform = Mat4::translation(origin);
+
+                renderer.render_axes(Some(&transform));
             }
             ParticleGeneratorKind::Directed(origin, _direction) => {
-                renderer.render_axes(Some(origin), None);
+                let transform = Mat4::translation(origin);
+
+                renderer.render_axes(Some(&transform));
             }
         }
     }
