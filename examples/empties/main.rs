@@ -62,6 +62,32 @@ fn main() -> Result<(), String> {
             &mut directional_light_arena,
         )?;
 
+        scene.root.visit_mut(
+            cairo::scene::node::SceneNodeGlobalTraversalMethod::DepthFirst,
+            None,
+            &mut |_depth, _transform, node| {
+                match node.get_type() {
+                    SceneNodeType::AmbientLight => {
+                        node.get_transform_mut().set_translation(Vec3 {
+                            x: -12.0,
+                            y: 6.0,
+                            z: 8.0,
+                        });
+                    }
+                    SceneNodeType::DirectionalLight => {
+                        node.get_transform_mut().set_translation(Vec3 {
+                            x: -4.0,
+                            y: 6.0,
+                            z: 8.0,
+                        });
+                    }
+                    _ => (),
+                }
+
+                Ok(())
+            },
+        )?;
+
         // Add various "empties" to our scene.
 
         static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 7] = [
@@ -104,16 +130,16 @@ fn main() -> Result<(), String> {
 
             point_light.intensities = color::RED.to_vec3() / 255.0;
 
-            point_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_13_UNITS);
+            point_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_7_UNITS);
 
             let point_light_handle = point_light_arena.insert(point_light);
 
             let mut transform = Transform3D::default();
 
             transform.set_translation(Vec3 {
-                x: -6.0,
-                y: 8.0,
-                z: -6.0,
+                x: 4.0,
+                y: 6.0,
+                z: 8.0,
             });
 
             SceneNode::new(
@@ -131,20 +157,20 @@ fn main() -> Result<(), String> {
             let mut spot_light = SpotLight::new();
 
             spot_light.set_inner_cutoff_angle(PI / 32.0);
-            spot_light.set_outer_cutoff_angle(PI / 4.0);
+            spot_light.set_outer_cutoff_angle(PI / 8.0);
 
             spot_light.intensities = color::YELLOW.to_vec3() / 255.0 * 2.0;
 
-            spot_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_20_UNITS);
+            spot_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_13_UNITS);
 
             let spot_light_handle = spot_light_arena.insert(spot_light);
 
             let mut transform = Transform3D::default();
 
             transform.set_translation(Vec3 {
-                x: 6.0,
-                y: 8.0,
-                z: 6.0,
+                x: 12.0,
+                y: 6.0,
+                z: 8.0,
             });
 
             SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
