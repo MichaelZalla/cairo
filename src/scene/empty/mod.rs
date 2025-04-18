@@ -14,6 +14,7 @@ pub enum EmptyDisplayKind {
     Cube,
     Circle(usize),
     Sphere(usize),
+    Capsule(usize, f32),
 }
 
 impl PostDeserialize for Empty {

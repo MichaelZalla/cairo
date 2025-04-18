@@ -64,13 +64,14 @@ fn main() -> Result<(), String> {
 
         // Add various "empties" to our scene.
 
-        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 6] = [
+        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 7] = [
             EmptyDisplayKind::Axes,
             EmptyDisplayKind::Arrow,
             EmptyDisplayKind::Square,
             EmptyDisplayKind::Cube,
-            EmptyDisplayKind::Circle(36),
-            EmptyDisplayKind::Sphere(36),
+            EmptyDisplayKind::Circle(16),
+            EmptyDisplayKind::Sphere(16),
+            EmptyDisplayKind::Capsule(16, 2.0),
         ];
 
         for (index, kind) in EMPTY_DISPLAY_KINDS.iter().enumerate() {
@@ -81,8 +82,11 @@ fn main() -> Result<(), String> {
 
                 let mut transform = Transform3D::default();
 
+                static GRID_WIDTH: f32 = EMPTY_DISPLAY_KINDS.len() as f32;
+                static GRID_SCALE: f32 = 4.0;
+
                 transform.set_translation(Vec3 {
-                    x: (EMPTY_DISPLAY_KINDS.len() as f32 * -2.0) + index as f32 * 4.0,
+                    x: (-GRID_WIDTH / 2.0 + index as f32 + 0.5) * GRID_SCALE,
                     y: 2.0,
                     z: -0.5,
                 });
