@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
+use std::{cell::RefCell, env, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{
@@ -9,6 +9,8 @@ use cairo::{
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    font::{cache::FontCache, FontInfo},
+    graphics::text::cache::TextCache,
     matrix::Mat4,
     render::Renderer,
     scene::{
@@ -28,12 +30,39 @@ use scene::make_scene;
 pub mod scene;
 
 fn main() -> Result<(), String> {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        println!("Usage: cargo run --example render-text /path/to/your-font.fon");
+        return Ok(());
+    }
+
+    // App
+
     let mut window_info = AppWindowInfo {
         title: "examples/empties".to_string(),
         canvas_resolution: RESOLUTION_1600_BY_900,
         window_resolution: RESOLUTION_1600_BY_900,
         ..Default::default()
     };
+
+    let render_to_window_canvas = |_frame_index: Option<u32>,
+                                   _new_resolution: Option<Resolution>,
+                                   _canvas: &mut [u8]|
+     -> Result<(), String> { Ok(()) };
+
+    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
+
+    // Load a system font
+
+    let font_info = FontInfo {
+        filepath: args[1].to_string(),
+        point_size: 16,
+    };
+
+    let font_cache = Box::leak(Box::new(FontCache::new(app.context.ttf_context)));
+
+    let text_cache = TextCache::default();
 
     // Pipeline framebuffer
 
@@ -85,20 +114,15 @@ fn main() -> Result<(), String> {
     let mut renderer =
         SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
+    renderer.font_info.replace(font_info);
+    renderer.font_cache.replace(font_cache.clone());
+    renderer.text_cache.replace(text_cache);
+
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let renderer_rc = RefCell::new(renderer);
-
-    // Render callback
-
-    let render_to_window_canvas = |_frame_index: Option<u32>,
-                                   _new_resolution: Option<Resolution>,
-                                   _canvas: &mut [u8]|
-     -> Result<(), String> { Ok(()) };
-
-    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
 
     // App update and render callbacks
 
@@ -188,7 +212,7 @@ fn main() -> Result<(), String> {
             &renderer_rc,
             Some(SceneGraphRenderOptions {
                 draw_lights: true,
-                draw_shadow_map_cameras: true,
+                draw_node_labels: true,
                 ..Default::default()
             }),
         )?;

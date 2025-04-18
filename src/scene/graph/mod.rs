@@ -16,6 +16,7 @@ use crate::{
     serde::PostDeserialize,
     shader::context::ShaderContext,
     texture::cubemap::CUBEMAP_SIDE_COLORS,
+    vec::{vec3, vec4::Vec4},
 };
 
 use super::{
@@ -452,6 +453,53 @@ impl SceneGraph {
             }
         };
 
+        let mut render_labels = |_current_depth: usize,
+                                 current_world_transform: Mat4,
+                                 node: &SceneNode|
+         -> Result<(), String> {
+            let mut renderer = renderer_rc.borrow_mut();
+
+            let (node_type, node_handle) = (node.get_type(), node.get_handle());
+
+            match node_type {
+                SceneNodeType::Scene | SceneNodeType::Environment | SceneNodeType::Skybox => Ok(()),
+                _ => {
+                    if let Some(name) = &node.name {
+                        // Skips label rendering for the active camera.
+
+                        if node_type == &SceneNodeType::Camera {
+                            if let Some(handle) = node_handle {
+                                let camera_arena = resources.camera.borrow();
+
+                                if let Ok(entry) = camera_arena.get(handle) {
+                                    let camera = &entry.item;
+
+                                    if camera.is_active {
+                                        return Ok(());
+                                    }
+                                }
+                            }
+                        }
+
+                        // Renders a text label, placed in world space, slightly
+                        // above the object's center.
+
+                        let center_world_space = (Vec4::new(Default::default(), 1.0)
+                            * current_world_transform)
+                            .to_vec3();
+
+                        let text_position_world_space = center_world_space + vec3::UP * 3.0;
+
+                        let transform = Mat4::translation(text_position_world_space);
+
+                        renderer.render_text(&transform, color::WHITE, name.as_str())
+                    } else {
+                        Ok(())
+                    }
+                }
+            }
+        };
+
         let mut render_shadow_maps = |_current_depth: usize,
                                       _current_world_transform: Mat4,
                                       node: &SceneNode|
@@ -802,6 +850,16 @@ impl SceneGraph {
                     SceneNodeGlobalTraversalMethod::DepthFirst,
                     Some(SceneNodeLocalTraversalMethod::PostOrder),
                     &mut render_cameras,
+                )?;
+            }
+
+            // Label named nodes.
+
+            if options.draw_node_labels {
+                self.root.visit(
+                    SceneNodeGlobalTraversalMethod::DepthFirst,
+                    Some(SceneNodeLocalTraversalMethod::PostOrder),
+                    &mut render_labels,
                 )?;
             }
         }

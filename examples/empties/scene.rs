@@ -94,7 +94,12 @@ pub fn make_scene(
                 z: -0.5,
             });
 
-            SceneNode::new(SceneNodeType::Empty, transform, Some(empty_handle))
+            let mut node = SceneNode::new(SceneNodeType::Empty, transform, Some(empty_handle));
+
+            node.name
+                .replace(format!("{}_empty_{}", kind, index).to_string());
+
+            node
         };
 
         scene.root.add_child(empty_node)?;
@@ -119,11 +124,15 @@ pub fn make_scene(
             z: 8.0,
         });
 
-        SceneNode::new(
+        let mut node = SceneNode::new(
             SceneNodeType::PointLight,
             transform,
             Some(point_light_handle),
-        )
+        );
+
+        node.name.replace("point_light_1".to_string());
+
+        node
     };
 
     scene.root.add_child(point_light_node)?;
@@ -150,7 +159,11 @@ pub fn make_scene(
             z: 8.0,
         });
 
-        SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
+        let mut node = SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle));
+
+        node.name.replace("spot_light_1".to_string());
+
+        node
     };
 
     scene.root.add_child(spot_light_node)?;
