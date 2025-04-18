@@ -151,7 +151,7 @@ fn main() -> Result<(), String> {
 
                     let from = *cursor_world_space;
 
-                    let distance = (from - *transform.translation()).mag();
+                    let distance = (from - transform.translation()).mag();
 
                     let circle = &simulation.rigid_bodies[0];
 

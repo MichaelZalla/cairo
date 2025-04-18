@@ -30,7 +30,7 @@ fn contribute_pbr(
     if likeness_to_light_direction > 0.0 {
         let radiance = *light_intensities;
 
-        let halfway = (direction_to_view + *direction_to_light).as_normal();
+        let halfway = (direction_to_view + direction_to_light).as_normal();
 
         let halfway_likeness_to_view = halfway.dot(direction_to_view);
 

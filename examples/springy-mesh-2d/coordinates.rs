@@ -8,7 +8,7 @@ pub(crate) fn screen_to_world_space(
 ) -> Vec3 {
     let mut world_space_position = *screen_space_position;
 
-    world_space_position = (world_space_position - *framebuffer_center) / PIXELS_PER_METER;
+    world_space_position = (world_space_position - framebuffer_center) / PIXELS_PER_METER;
 
     world_space_position.y *= -1.0;
 
@@ -23,5 +23,5 @@ pub(crate) fn world_to_screen_space(
 
     screen_space_position.y *= -1.0;
 
-    screen_space_position * PIXELS_PER_METER + *framebuffer_center
+    screen_space_position * PIXELS_PER_METER + framebuffer_center
 }

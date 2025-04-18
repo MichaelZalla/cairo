@@ -35,7 +35,7 @@ impl StaticLineSegmentCollider {
 
 impl StaticLineSegmentCollider {
     pub fn test(&self, start: &Vec3, end: &Vec3) -> Option<(f32, f32)> {
-        let projection = (*end - self.segment.start).dot(self.tangent);
+        let projection = (end - self.segment.start).dot(self.tangent);
 
         if projection < 0.0 || projection > self.length {
             return None;

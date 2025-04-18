@@ -14,7 +14,7 @@ pub fn generate(position: Vec3, view_position: &Vec3, width: f32, height: f32) -
 
     let world_up = vec3::UP;
 
-    let forward = (position - *view_position).as_normal();
+    let forward = (position - view_position).as_normal();
 
     let right = world_up.cross(forward).as_normal() * width / 2.0;
 

@@ -67,7 +67,7 @@ pub fn geometry_smith_indirect(normal: &Vec3, view: &Vec3, light: &Vec3, roughne
 // Fresnel
 
 pub fn fresnel_schlick_direct(halfway_likeness_to_view: f32, f0: &Vec3) -> Vec3 {
-    *f0 + (vec3::ONES - *f0) * (1.0 - halfway_likeness_to_view).clamp(0.0, 1.0).powi(5)
+    *f0 + (vec3::ONES - f0) * (1.0 - halfway_likeness_to_view).clamp(0.0, 1.0).powi(5)
 }
 
 pub fn fresnel_schlick_indirect(normal_likeness_to_view: f32, f0: &Vec3, roughness: f32) -> Vec3 {
@@ -79,7 +79,7 @@ pub fn fresnel_schlick_indirect(normal_likeness_to_view: f32, f0: &Vec3, roughne
         z: reflectivity.z.max(f0.z),
     };
 
-    *f0 + (min_reflectivity - *f0) * (1.0 - normal_likeness_to_view).clamp(0.0, 1.0).powi(5)
+    f0 + (min_reflectivity - f0) * (1.0 - normal_likeness_to_view).clamp(0.0, 1.0).powi(5)
 }
 
 // Cook-Torrance BRDF
