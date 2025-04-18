@@ -24,7 +24,7 @@ impl Display for UIID {
 
 #[derive(Debug)]
 pub struct UIContext<'a> {
-    pub font_cache: &'a mut RefCell<FontCache<'a>>,
+    pub font_cache: &'a mut RefCell<FontCache>,
     pub font_info: FontInfo,
     pub text_cache: &'a mut RefCell<TextCache>,
     hover_target: Option<UIID>,
@@ -36,7 +36,7 @@ pub struct UIContext<'a> {
 
 impl<'a> UIContext<'a> {
     pub fn new(
-        font_cache: &'a mut RefCell<FontCache<'a>>,
+        font_cache: &'a mut RefCell<FontCache>,
         font_info: &FontInfo,
         text_cache: &'a mut RefCell<TextCache>,
     ) -> Self {

@@ -13,12 +13,12 @@ type FontHashMapKey = FontInfo;
 type FontHashMapValue<'l> = Rc<SDLFont<'l, 'static>>;
 type FontHashMap<'l> = HashMap<FontHashMapKey, FontHashMapValue<'l>>;
 
-pub struct FontCache<'l> {
-    context: &'l Sdl2TtfContext,
-    cache: FontHashMap<'l>,
+pub struct FontCache {
+    context: &'static Sdl2TtfContext,
+    cache: FontHashMap<'static>,
 }
 
-impl Debug for FontCache<'_> {
+impl Debug for FontCache {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FontCache")
             .field("context", &"Sdl2TtfContext")
@@ -30,8 +30,8 @@ impl Debug for FontCache<'_> {
     }
 }
 
-impl<'l> FontCache<'l> {
-    pub fn new(context: &'l Sdl2TtfContext) -> Self {
+impl FontCache {
+    pub fn new(context: &'static Sdl2TtfContext) -> Self {
         Self {
             context,
             cache: Default::default(),
@@ -61,7 +61,7 @@ impl<'l> FontCache<'l> {
         }
     }
 
-    pub fn iter(&self) -> Iter<'_, FontHashMapKey, FontHashMapValue<'l>> {
+    pub fn iter(&self) -> Iter<'_, FontHashMapKey, FontHashMapValue> {
         self.cache.iter()
     }
 }

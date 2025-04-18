@@ -153,7 +153,7 @@ impl<'a> Window<'a> {
 
     pub fn rebuild_ui_trees(
         &mut self,
-        ctx: &UIContext<'static>,
+        ctx: &UIContext,
         main_window_bounds: &Resolution,
     ) -> Result<WindowRenderResult, String> {
         let mut window_render_result = WindowRenderResult {

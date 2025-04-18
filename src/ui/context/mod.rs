@@ -57,8 +57,8 @@ pub struct UIContextDebugOptions {
     pub draw_drag_handles: bool,
 }
 
-pub struct UIContext<'a> {
-    pub font_cache: RefCell<Option<FontCache<'a>>>,
+pub struct UIContext {
+    pub font_cache: RefCell<Option<FontCache>>,
     pub font_info: RefCell<FontInfo>,
     pub text_cache: RefCell<TextCache>,
     pub image_arena: RefCell<Option<Rc<RefCell<Arena<TextureMap>>>>>,
@@ -73,7 +73,7 @@ pub struct UIContext<'a> {
     pub debug: RefCell<UIContextDebugOptions>,
 }
 
-impl Default for UIContext<'_> {
+impl Default for UIContext {
     fn default() -> Self {
         let default_theme = UITheme::default();
 
@@ -128,7 +128,7 @@ macro_rules! with_style_applied {
     };
 }
 
-impl UIContext<'_> {
+impl UIContext {
     with_style_applied!(fill_color);
     with_style_applied!(border_color);
     with_style_applied!(text_color);
@@ -175,5 +175,5 @@ impl UIContext<'_> {
 }
 
 thread_local! {
-    pub static GLOBAL_UI_CONTEXT: UIContext<'static> = Default::default();
+    pub static GLOBAL_UI_CONTEXT: UIContext = Default::default();
 }
