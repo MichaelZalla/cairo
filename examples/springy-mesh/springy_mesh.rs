@@ -1,7 +1,8 @@
-use std::f32::consts::TAU;
+use std::{collections::HashMap, f32::consts::TAU};
 
 use cairo::{
     color,
+    geometry::primitives::triangle::Triangle,
     matrix::Mat4,
     physics::{material::PhysicsMaterial, simulation::particle::Particle},
     random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
@@ -20,6 +21,8 @@ pub struct SpringyMesh {
     pub points: Vec<Particle>,
     pub struts: Vec<Strut>,
     pub state_index_offset: usize,
+    #[allow(unused)]
+    pub triangles: Vec<Triangle>,
 }
 
 #[allow(unused)]
@@ -233,10 +236,60 @@ pub fn make_springy_mesh(
         }
     };
 
+    // Determines the set of triangles, based on the connectivity of struts with
+    // points.
+
+    let triangles = get_triangles(&points, &struts);
+
     SpringyMesh {
         points,
         struts,
         material,
         state_index_offset: 0,
+        triangles,
     }
+}
+
+fn get_triangles(points: &[Particle], struts: &[Strut]) -> Vec<Triangle> {
+    let mut triangle_set = HashMap::<(usize, usize, usize), (usize, usize, usize)>::default();
+
+    for strut in struts {
+        if let Some(connected_points) = strut.edge.connected_points {
+            // External strut connecting 2 points, and 2 "wings"; defines 2
+            // triangles, which might each be shared with other external struts.
+
+            // Collects index tuples of this edge's two adjacent triangles.
+
+            let triangle_vertex_indices = [
+                (strut.edge.points.0, strut.edge.points.1, connected_points.0),
+                (connected_points.1, strut.edge.points.1, strut.edge.points.0),
+            ];
+
+            // Sorts triangle indices to avoid duplicates in the set.
+
+            for (v0, v1, v2) in triangle_vertex_indices.into_iter() {
+                let mut v = [v0, v1, v2];
+
+                v.sort();
+
+                let sorted_key = (v[0], v[1], v[2]);
+
+                triangle_set.entry(sorted_key).or_insert((v2, v1, v0));
+            }
+        }
+    }
+
+    let triangles: Vec<Triangle> = triangle_set
+        .into_iter()
+        .map(|(_, (v0, v1, v2))| {
+            Triangle::new(
+                [v0, v1, v2],
+                points[v0].position,
+                points[v1].position,
+                points[v2].position,
+            )
+        })
+        .collect();
+
+    triangles
 }
