@@ -48,6 +48,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &scaled_transform,
             EmptyDisplayKind::Sphere(8),
+            false,
             Some(tone_mapped_intensities),
         );
     }
@@ -112,6 +113,7 @@ impl SoftwareRenderer {
             self.render_empty(
                 &transform,
                 EmptyDisplayKind::Arrow,
+                false,
                 Some(tone_mapped_intensities),
             );
         }
@@ -138,6 +140,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &scaled_transform,
             EmptyDisplayKind::Sphere(16),
+            false,
             Some(tone_mapped_intensities),
         );
     }
@@ -162,6 +165,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &scaled_transform,
             EmptyDisplayKind::Sphere(8),
+            true,
             Some(tone_mapped_intensities),
         );
 
@@ -193,6 +197,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &inner_transform,
             EmptyDisplayKind::Circle(16),
+            false,
             Some(tone_mapped_intensities),
         );
 
@@ -209,6 +214,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &outer_transform,
             EmptyDisplayKind::Circle(16),
+            false,
             Some(tone_mapped_intensities),
         );
 

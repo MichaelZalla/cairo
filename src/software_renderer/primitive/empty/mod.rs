@@ -130,9 +130,16 @@ impl SoftwareRenderer {
         &mut self,
         transform: &Mat4,
         display_kind: EmptyDisplayKind,
+        with_basis_vectors: bool,
         color: Option<Color>,
     ) {
         let color = color.unwrap_or(color::ORANGE);
+
+        if with_basis_vectors {
+            let scaled_transform = Mat4::scale_uniform(0.25) * *transform;
+
+            self.render_axes(Some(&scaled_transform));
+        }
 
         match display_kind {
             EmptyDisplayKind::Axes => {

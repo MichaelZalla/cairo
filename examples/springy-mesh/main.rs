@@ -145,6 +145,7 @@ fn main() -> Result<(), String> {
                     renderer.render_empty(
                         &transform,
                         EmptyDisplayKind::Sphere(12),
+                        false,
                         Some(color::ORANGE),
                     );
                 }

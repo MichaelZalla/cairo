@@ -302,9 +302,10 @@ impl Renderer for SoftwareRenderer {
         &mut self,
         transform: &Mat4,
         display_kind: EmptyDisplayKind,
+        with_basis_vectors: bool,
         color: Option<Color>,
     ) {
-        self._render_empty(transform, display_kind, color)
+        self._render_empty(transform, display_kind, with_basis_vectors, color)
     }
 
     fn render_frustum(&mut self, frustum: &Frustum, color: Option<Color>) {

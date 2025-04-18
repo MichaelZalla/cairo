@@ -53,6 +53,7 @@ pub trait Renderer {
         &mut self,
         transform: &Mat4,
         display_kind: EmptyDisplayKind,
+        with_basis_vectors: bool,
         color: Option<Color>,
     );
 
