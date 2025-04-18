@@ -21,7 +21,6 @@ pub struct SpringyMesh {
     pub points: Vec<Particle>,
     pub struts: Vec<Strut>,
     pub state_index_offset: usize,
-    #[allow(unused)]
     pub triangles: Vec<Triangle>,
 }
 
@@ -284,9 +283,9 @@ fn get_triangles(points: &[Particle], struts: &[Strut]) -> Vec<Triangle> {
         .map(|(_, (v0, v1, v2))| {
             Triangle::new(
                 [v0, v1, v2],
-                points[v0].position,
-                points[v1].position,
-                points[v2].position,
+                &points[v0].position,
+                &points[v1].position,
+                &points[v2].position,
             )
         })
         .collect();

@@ -128,9 +128,9 @@ impl StaticTriangleBVH {
 
             for (face_index, face) in mesh.faces.iter().enumerate() {
                 let (v0, v1, v2) = (
-                    vertices[face.vertices[0]],
-                    vertices[face.vertices[1]],
-                    vertices[face.vertices[2]],
+                    &vertices[face.vertices[0]],
+                    &vertices[face.vertices[1]],
+                    &vertices[face.vertices[2]],
                 );
 
                 tris[face_index] = Triangle::new(face.vertices, v0, v1, v2);
