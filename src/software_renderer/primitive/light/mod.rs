@@ -44,7 +44,7 @@ impl SoftwareRenderer {
 
         self.render_light_ground_contact(&position);
 
-        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
+        let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(light.intensities);
 
         // Renders the light as a colored sphere, at its scene node's position.
 
@@ -53,7 +53,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &scaled_transform,
             crate::scene::empty::EmptyDisplayKind::Sphere(8),
-            Some(color),
+            Some(tone_mapped_intensities),
         );
     }
 
@@ -77,7 +77,7 @@ impl SoftwareRenderer {
         // Renders the light as several arrows pointing in the light direction,
         // clustered around the scene node's position.
 
-        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
+        let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(light.intensities);
 
         // Draws 4 arrows, offset on the world X- and Z-axis.
 
@@ -98,7 +98,7 @@ impl SoftwareRenderer {
             self.render_empty(
                 &transform,
                 crate::scene::empty::EmptyDisplayKind::Arrow,
-                Some(color),
+                Some(tone_mapped_intensities),
             );
         }
     }
@@ -115,14 +115,14 @@ impl SoftwareRenderer {
         // Renders the light as a colored sphere, at its position, surrounded by
         // a larger sphere to visualize the light's effective lighting radius.
 
-        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
+        let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(light.intensities);
 
         let scaled_transform_inner = Mat4::scale(vec3::ONES * 0.1) * *transform;
 
         self.render_empty(
             &scaled_transform_inner,
             crate::scene::empty::EmptyDisplayKind::Sphere(8),
-            Some(color),
+            Some(tone_mapped_intensities),
         );
 
         let scaled_transform_outer =
@@ -131,7 +131,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &scaled_transform_outer,
             crate::scene::empty::EmptyDisplayKind::Sphere(16),
-            Some(color),
+            Some(tone_mapped_intensities),
         );
     }
 
@@ -144,7 +144,7 @@ impl SoftwareRenderer {
 
         self.render_light_ground_contact(&position);
 
-        let color = self.get_tone_mapped_color_from_hdr(light.intensities);
+        let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(light.intensities);
 
         // Renders a colored sphere at the light's position.
 
@@ -153,7 +153,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &scaled_transform,
             crate::scene::empty::EmptyDisplayKind::Sphere(8),
-            Some(color),
+            Some(tone_mapped_intensities),
         );
 
         // Derive the light's orientation matrix using existing basis vectors.
@@ -184,7 +184,7 @@ impl SoftwareRenderer {
         self.render_empty(
             &inner_transform,
             crate::scene::empty::EmptyDisplayKind::Circle(16),
-            Some(color),
+            Some(tone_mapped_intensities),
         );
 
         // Renders a disk representing the light's inner cone, at a distance
@@ -200,31 +200,31 @@ impl SoftwareRenderer {
         self.render_empty(
             &outer_transform,
             crate::scene::empty::EmptyDisplayKind::Circle(16),
-            Some(color),
+            Some(tone_mapped_intensities),
         );
 
         self.render_line(
             position,
             (Vec4::new(vec3::UP, 1.0) * outer_transform).to_vec3(),
-            color,
+            tone_mapped_intensities,
         );
 
         self.render_line(
             position,
             (Vec4::new(vec3::RIGHT, 1.0) * outer_transform).to_vec3(),
-            color,
+            tone_mapped_intensities,
         );
 
         self.render_line(
             position,
             (Vec4::new(-vec3::UP, 1.0) * outer_transform).to_vec3(),
-            color,
+            tone_mapped_intensities,
         );
 
         self.render_line(
             position,
             (Vec4::new(-vec3::RIGHT, 1.0) * outer_transform).to_vec3(),
-            color,
+            tone_mapped_intensities,
         );
     }
 }
