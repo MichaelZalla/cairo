@@ -2,8 +2,8 @@
   "version": "2.0.0",
   "options": {
     "env": {
-        "RUST_BACKTRACE": "1"
-      },
+      "RUST_BACKTRACE": "1"
+    },
     "windows": {
       "env": {
         "SDL_PATH": "C:\\Users\\micha\\source\\vclib"
@@ -92,7 +92,9 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "test"
       },
@@ -106,7 +108,25 @@
     },
     {
       "type": "shell",
-      "problemMatcher": ["$rustc"],
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example allocators",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "allocators"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
       "group": {
         "kind": "build"
       },
@@ -118,7 +138,376 @@
         "basic-window",
         "--features",
         "print_timing_info",
+        "--release"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example bloom",
+      "command": "cargo",
+      "args": [
+        "run",
         "--release",
+        "--example",
+        "bloom"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example diffuse-map",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "diffuse-map"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example directional-shadows",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "directional-shadows"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example displacement-map",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "displacement-map"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example editor",
+      "command": "cargo",
+      "windows": {
+        "args": [
+          "run",
+          "--example",
+          "editor",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
+      "osx": {
+        "args": [
+          "run",
+          "--example",
+          "editor",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
+      },
+      "linux": {
+        "args": [
+          "run",
+          "--example",
+          "editor",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example empties",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "empties"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example ibl",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "ibl"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example immediate-ui",
+      "command": "cargo",
+      "windows": {
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
+      "osx": {
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
+      },
+      "linux": {
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example immediate-ui-old",
+      "command": "cargo",
+      "windows": {
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui-old",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      },
+      "osx": {
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui-old",
+          "/System/Library/Fonts/Monaco.ttf"
+        ]
+      },
+      "linux": {
+        "args": [
+          "run",
+          "--example",
+          "immediate-ui-old",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      }
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example normal-map",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "normal-map"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example numerical-methods",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "numerical-methods"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example obj-viewer",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "obj-viewer"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example particle-systems",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "particle-systems"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example particle-systems-2d",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "particle-systems-2d"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example pbr",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "pbr"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example point-shadows",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "point-shadows"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example post-effects",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "post-effects"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example primitives",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "primitives"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "label": "Rust: cargo run --example raycasting",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--example",
+        "raycasting"
       ]
     },
     {
@@ -154,7 +543,7 @@
           "render-text",
           "C:/Windows/Fonts/vgasys.fon"
         ]
-      },
+      }
     },
     {
       "type": "shell",
@@ -164,102 +553,13 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example immediate-ui",
+      "label": "Rust: cargo run --example rigid-body",
       "command": "cargo",
-      "windows": {
-        "args": [
-          "run",
-          "--example",
-          "immediate-ui",
-          "C:/Windows/Fonts/vgasys.fon"
-        ]
-      },
-      "osx": {
-        "args": [
-          "run",
-          "--example",
-          "immediate-ui",
-          "/System/Library/Fonts/Monaco.ttf"
-        ]
-      },
-      "linux": {
-        "args": [
-          "run",
-          "--example",
-          "immediate-ui",
-          "C:/Windows/Fonts/vgasys.fon"
-        ]
-      },
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example editor",
-      "command": "cargo",
-      "windows": {
-        "args": [
-          "run",
-          "--example",
-          "editor",
-          "C:/Windows/Fonts/vgasys.fon"
-        ]
-      },
-      "osx": {
-        "args": [
-          "run",
-          "--example",
-          "editor",
-          "/System/Library/Fonts/Monaco.ttf"
-        ]
-      },
-      "linux": {
-        "args": [
-          "run",
-          "--example",
-          "editor",
-          "C:/Windows/Fonts/vgasys.fon"
-        ]
-      },
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example immediate-ui-old",
-      "command": "cargo",
-      "windows": {
-        "args": [
-          "run",
-          "--example",
-          "immediate-ui-old",
-          "C:/Windows/Fonts/vgasys.fon"
-        ]
-      },
-      "osx": {
-        "args": [
-          "run",
-          "--example",
-          "immediate-ui-old",
-          "/System/Library/Fonts/Monaco.ttf"
-        ]
-      },
-      "linux": {
-        "args": [
-          "run",
-          "--example",
-          "immediate-ui-old",
-          "C:/Windows/Fonts/vgasys.fon"
-        ]
-      },
+      "args": [
+        "run",
+        "--example",
+        "rigid-body"
+      ]
     },
     {
       "type": "shell",
@@ -274,121 +574,7 @@
       "args": [
         "run",
         "--example",
-        "scenegraph",
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example spinning-cube",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "spinning-cube",
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example primitives",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "primitives",
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example diffuse-map",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "diffuse-map",
-      ]
-    },
-    { 
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example normal-map",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "normal-map"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example displacement-map",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "displacement-map"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example specular-map",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "specular-map"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example bloom",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "bloom"
+        "scenegraph"
       ]
     },
     {
@@ -415,12 +601,12 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example pbr",
+      "label": "Rust: cargo run --example specular-map",
       "command": "cargo",
       "args": [
         "run",
         "--example",
-        "pbr"
+        "specular-map"
       ]
     },
     {
@@ -431,90 +617,12 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example ibl",
+      "label": "Rust: cargo run --example spinning-cube",
       "command": "cargo",
       "args": [
         "run",
         "--example",
-        "ibl"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": ["$rustc"],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example directional-shadows",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "directional-shadows",
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example point-shadows",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "point-shadows"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": ["$rustc"],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "label": "Rust: cargo run --example transparency",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "transparency",
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example ssao",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "ssao"
-      ],
-    },
-    {
-      "type": "shell",
-      "problemMatcher": ["$rustc"],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example post-effects",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "post-effects"
+        "spinning-cube"
       ]
     },
     {
@@ -530,73 +638,7 @@
       "args": [
         "run",
         "--example",
-        "sponza",
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example allocators",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "allocators"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example particle-systems-2d",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "particle-systems-2d"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example particle-systems",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "particle-systems"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example numerical-methods",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--example",
-        "numerical-methods"
+        "sponza"
       ]
     },
     {
@@ -639,12 +681,13 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example rigid-body",
+      "label": "Rust: cargo run --example ssao",
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
-        "rigid-body"
+        "ssao"
       ]
     },
     {
@@ -655,47 +698,13 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example obj-viewer",
+      "label": "Rust: cargo run --example transparency",
       "command": "cargo",
       "args": [
         "run",
         "--release",
         "--example",
-        "obj-viewer"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example empties",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "empties"
-      ]
-    },
-    {
-      "type": "shell",
-      "problemMatcher": [
-        "$rustc"
-      ],
-      "group": {
-        "kind": "build"
-      },
-      "label": "Rust: cargo run --example raycasting",
-      "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "raycasting"
+        "transparency"
       ]
     },
   ]
