@@ -2,9 +2,12 @@ use crate::{
     color,
     matrix::Mat4,
     render::Renderer,
-    scene::light::{
-        ambient_light::AmbientLight, directional_light::DirectionalLight, point_light::PointLight,
-        spot_light::SpotLight,
+    scene::{
+        empty::EmptyDisplayKind,
+        light::{
+            ambient_light::AmbientLight, directional_light::DirectionalLight,
+            point_light::PointLight, spot_light::SpotLight,
+        },
     },
     software_renderer::SoftwareRenderer,
     vec::{
@@ -52,7 +55,7 @@ impl SoftwareRenderer {
 
         self.render_empty(
             &scaled_transform,
-            crate::scene::empty::EmptyDisplayKind::Sphere(8),
+            EmptyDisplayKind::Sphere(8),
             Some(tone_mapped_intensities),
         );
     }
@@ -97,7 +100,7 @@ impl SoftwareRenderer {
 
             self.render_empty(
                 &transform,
-                crate::scene::empty::EmptyDisplayKind::Arrow,
+                EmptyDisplayKind::Arrow,
                 Some(tone_mapped_intensities),
             );
         }
@@ -121,7 +124,7 @@ impl SoftwareRenderer {
 
         self.render_empty(
             &scaled_transform_inner,
-            crate::scene::empty::EmptyDisplayKind::Sphere(8),
+            EmptyDisplayKind::Sphere(8),
             Some(tone_mapped_intensities),
         );
 
@@ -130,7 +133,7 @@ impl SoftwareRenderer {
 
         self.render_empty(
             &scaled_transform_outer,
-            crate::scene::empty::EmptyDisplayKind::Sphere(16),
+            EmptyDisplayKind::Sphere(16),
             Some(tone_mapped_intensities),
         );
     }
@@ -152,7 +155,7 @@ impl SoftwareRenderer {
 
         self.render_empty(
             &scaled_transform,
-            crate::scene::empty::EmptyDisplayKind::Sphere(8),
+            EmptyDisplayKind::Sphere(8),
             Some(tone_mapped_intensities),
         );
 
@@ -183,7 +186,7 @@ impl SoftwareRenderer {
 
         self.render_empty(
             &inner_transform,
-            crate::scene::empty::EmptyDisplayKind::Circle(16),
+            EmptyDisplayKind::Circle(16),
             Some(tone_mapped_intensities),
         );
 
@@ -199,7 +202,7 @@ impl SoftwareRenderer {
 
         self.render_empty(
             &outer_transform,
-            crate::scene::empty::EmptyDisplayKind::Circle(16),
+            EmptyDisplayKind::Circle(16),
             Some(tone_mapped_intensities),
         );
 
