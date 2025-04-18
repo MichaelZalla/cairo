@@ -44,13 +44,19 @@ impl AABB {
     }
 
     pub fn from_geometry(geometry: &MeshGeometry) -> Self {
-        let (min, max) = get_min_max_for_geometry(geometry);
+        let (min, max) = get_min_max_for_vertices(&geometry.vertices);
 
         AABB::from_min_max(min, max)
     }
 
     pub fn from_mesh(mesh: &Mesh) -> Self {
         let (min, max) = get_min_max_for_mesh(mesh);
+
+        AABB::from_min_max(min, max)
+    }
+
+    pub fn from_vertices(vertices: &[Vec3]) -> Self {
+        let (min, max) = get_min_max_for_vertices(vertices);
 
         AABB::from_min_max(min, max)
     }
@@ -202,11 +208,11 @@ impl AABB {
     }
 }
 
-fn get_min_max_for_geometry(geometry: &MeshGeometry) -> (Vec3, Vec3) {
+fn get_min_max_for_vertices(vertices: &[Vec3]) -> (Vec3, Vec3) {
     let mut min = vec3::MAX;
     let mut max = vec3::MIN;
 
-    for v in geometry.vertices.iter() {
+    for v in vertices.iter() {
         min = min.min(v);
         max = max.max(v);
     }
