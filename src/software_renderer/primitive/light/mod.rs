@@ -38,16 +38,8 @@ impl SoftwareRenderer {
         );
     }
 
-    pub(in crate::software_renderer) fn _render_ambient_light(
-        &mut self,
-        transform: &Mat4,
-        light: &AmbientLight,
-    ) {
-        let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
-
-        self.render_light_ground_contact(&position);
-
-        let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(light.intensities);
+    fn render_light_indicator(&mut self, transform: &Mat4, intensities: Vec3) {
+        let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(intensities);
 
         // Renders the light as a colored sphere, at its scene node's position.
 
@@ -60,11 +52,25 @@ impl SoftwareRenderer {
         );
     }
 
+    pub(in crate::software_renderer) fn _render_ambient_light(
+        &mut self,
+        transform: &Mat4,
+        light: &AmbientLight,
+    ) {
+        self.render_light_indicator(transform, light.intensities);
+
+        let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
+
+        self.render_light_ground_contact(&position);
+    }
+
     pub(in crate::software_renderer) fn _render_directional_light(
         &mut self,
         transform: &Mat4,
         light: &DirectionalLight,
     ) {
+        self.render_light_indicator(transform, light.intensities);
+
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
@@ -88,15 +94,16 @@ impl SoftwareRenderer {
             [(-0.25, -0.25), (0.25, -0.25), (-0.25, 0.25), (0.25, 0.25)];
 
         for (x_offset, z_offset) in ARROW_X_Z_OFFSETS {
-            let transform = rotation
-                + Mat4::translation(
-                    position
-                        + Vec3 {
-                            x: x_offset,
-                            z: z_offset,
-                            ..Default::default()
-                        },
-                );
+            let translation = Mat4::translation(
+                position
+                    + Vec3 {
+                        x: x_offset,
+                        z: z_offset,
+                        ..Default::default()
+                    },
+            );
+
+            let transform = rotation + translation;
 
             self.render_empty(
                 &transform,
@@ -111,6 +118,8 @@ impl SoftwareRenderer {
         transform: &Mat4,
         light: &PointLight,
     ) {
+        self.render_light_indicator(transform, light.intensities);
+
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
@@ -120,19 +129,10 @@ impl SoftwareRenderer {
 
         let tone_mapped_intensities = self.get_tone_mapped_color_from_hdr(light.intensities);
 
-        let scaled_transform_inner = Mat4::scale(vec3::ONES * 0.1) * *transform;
+        let scaled_transform = Mat4::scale(vec3::ONES * light.influence_distance) * *transform;
 
         self.render_empty(
-            &scaled_transform_inner,
-            EmptyDisplayKind::Sphere(8),
-            Some(tone_mapped_intensities),
-        );
-
-        let scaled_transform_outer =
-            Mat4::scale(vec3::ONES * light.influence_distance) * *transform;
-
-        self.render_empty(
-            &scaled_transform_outer,
+            &scaled_transform,
             EmptyDisplayKind::Sphere(16),
             Some(tone_mapped_intensities),
         );
@@ -143,6 +143,8 @@ impl SoftwareRenderer {
         transform: &Mat4,
         light: &SpotLight,
     ) {
+        self.render_light_indicator(transform, light.intensities);
+
         let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
