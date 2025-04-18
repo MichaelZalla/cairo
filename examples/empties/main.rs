@@ -1,6 +1,10 @@
 extern crate sdl2;
 
-use std::{cell::RefCell, f32::consts::PI, rc::Rc};
+use std::{
+    cell::RefCell,
+    f32::consts::{PI, TAU},
+    rc::Rc,
+};
 
 use cairo::{
     app::{
@@ -10,6 +14,7 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    matrix::Mat4,
     render::Renderer,
     scene::{
         context::{utils::make_empty_scene, SceneContext},
@@ -17,10 +22,12 @@ use cairo::{
         graph::options::SceneGraphRenderOptions,
         light::{attenuation, point_light::PointLight, spot_light::SpotLight},
         node::{SceneNode, SceneNodeType},
+        resources::SceneResources,
     },
+    shader::context::ShaderContext,
     software_renderer::SoftwareRenderer,
-    transform::Transform3D,
-    vec::vec3::Vec3,
+    transform::{quaternion::Quaternion, Transform3D},
+    vec::vec3::{self, Vec3},
 };
 
 fn main() -> Result<(), String> {
@@ -213,6 +220,33 @@ fn main() -> Result<(), String> {
 
     // App update and render callbacks
 
+    let update_node = |_current_world_transform: &Mat4,
+                       node: &mut SceneNode,
+                       _resources: &SceneResources,
+                       app: &App,
+                       _mouse_state: &MouseState,
+                       _keyboard_state: &KeyboardState,
+                       _game_controller_state: &GameControllerState,
+                       _shader_context: &mut ShaderContext|
+     -> Result<bool, String> {
+        let uptime = app.timing_info.uptime_seconds;
+
+        match node.get_type() {
+            SceneNodeType::Empty => {
+                let rotate_x = Quaternion::new(vec3::RIGHT, uptime % TAU);
+                let rotate_y = Quaternion::new(vec3::UP, uptime % TAU);
+                let rotate_z = Quaternion::new(vec3::FORWARD, uptime % TAU);
+
+                let q = rotate_x * rotate_y * rotate_z;
+
+                node.get_transform_mut().set_rotation(q);
+
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    };
+
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
                       mouse_state: &mut MouseState,
@@ -228,6 +262,8 @@ fn main() -> Result<(), String> {
 
         // Traverse the scene graph and update its nodes.
 
+        let update_node_rc = Rc::new(update_node);
+
         scene.update(
             resources,
             &mut shader_context,
@@ -235,7 +271,7 @@ fn main() -> Result<(), String> {
             mouse_state,
             keyboard_state,
             game_controller_state,
-            None,
+            Some(update_node_rc),
         )?;
 
         let mut renderer = renderer_rc.borrow_mut();
