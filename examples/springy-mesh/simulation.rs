@@ -3,10 +3,8 @@ use cairo::{
     physics::simulation::{
         collision_response::resolve_plane_collision_approximate,
         collision_test::test_line_segment_plane,
-        force::{ContactPoint, PointForce},
-        physical_constants::EARTH_GRAVITY,
+        force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
-        units::Newtons,
     },
     random::sampler::RandomSampler,
     vec::vec3,
@@ -122,13 +120,6 @@ impl Simulation {
         }
     }
 }
-
-static GRAVITY_POINT_FORCE: PointForce =
-    |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
-        let newtons = -vec3::UP * EARTH_GRAVITY;
-
-        (newtons, None)
-    };
 
 pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     // Forces.

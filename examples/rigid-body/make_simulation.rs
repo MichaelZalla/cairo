@@ -17,13 +17,13 @@ pub fn make_simulation() -> Simulation {
          _i: usize,
          _current_time: f32|
          -> (Newtons, Option<ContactPoint>) {
-            static BODY_FORCE: Vec3 = Vec3 {
+            static ACCELERATION: Vec3 = Vec3 {
                 x: 0.0,
                 y: -EARTH_GRAVITY,
                 z: 0.0,
             };
 
-            (BODY_FORCE / state.inverse_mass, None)
+            (ACCELERATION / state.inverse_mass, None)
         },
     );
 

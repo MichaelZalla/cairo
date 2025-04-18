@@ -1,30 +1,15 @@
 use cairo::{
-    physics::simulation::{
-        particle::Particle, physical_constants::EARTH_GRAVITY, state_vector::StateVector,
-        units::Newtons,
-    },
+    physics::simulation::{force::gravity::GRAVITY_POINT_FORCE, particle::Particle},
     vec::vec3::Vec3,
 };
 
 use crate::{
-    simulation::{PointForce, Simulation},
-    springy_mesh::SpringyMesh,
+    simulation::Simulation, springy_mesh::SpringyMesh,
     static_line_segment_collider::StaticLineSegmentCollider,
 };
 
-static GRAVITY: PointForce =
-    |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<Vec3>) {
-        let newtons = Vec3 {
-            x: 0.0,
-            y: -EARTH_GRAVITY,
-            z: 0.0,
-        };
-
-        (newtons, None)
-    };
-
 pub fn make_simulation<'a>() -> Simulation<'a> {
-    let forces = vec![&GRAVITY];
+    let forces = vec![&GRAVITY_POINT_FORCE];
 
     let springy_chain_mesh = {
         static POINT_SPACING_METERS: f32 = 3.0;

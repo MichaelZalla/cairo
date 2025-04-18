@@ -2,13 +2,12 @@ use std::{cell::RefCell, f32::consts::PI};
 
 use cairo::{
     physics::simulation::{
-        force::{ContactPoint, PointForce},
+        force::{gravity::GRAVITY_POINT_FORCE, ContactPoint, PointForce},
         operator::Operators,
         particle::{
             generator::{ParticleGenerator, ParticleGeneratorKind},
             Particle,
         },
-        physical_constants::EARTH_GRAVITY,
         state_vector::StateVector,
         units::Newtons,
     },
@@ -25,17 +24,6 @@ static PARTICLE_MASS: f32 = 5_000_000_000.0;
 pub static PARTICLE_MAX_AGE_SECONDS: f32 = 8.0;
 
 pub static MAX_PARTICLE_SIZE_PIXELS: u32 = 8;
-
-static GRAVITY: PointForce =
-    |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
-        let newtons = Vec3 {
-            x: 0.0,
-            y: -EARTH_GRAVITY,
-            z: 0.0,
-        };
-
-        (newtons, None)
-    };
 
 static AIR_RESISTANCE: PointForce =
     |state: &StateVector, i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
@@ -315,7 +303,7 @@ pub(crate) fn make_simulation<'a>(
     Simulation {
         sampler,
         pool: Default::default(),
-        forces: vec![&GRAVITY, &AIR_RESISTANCE],
+        forces: vec![&GRAVITY_POINT_FORCE, &AIR_RESISTANCE],
         static_colliders: Default::default(),
         operators: RefCell::new(operators),
         generators: RefCell::new(vec![omnidirectional, directional_right, directional_up]),
