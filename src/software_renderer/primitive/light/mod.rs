@@ -81,7 +81,11 @@ impl SoftwareRenderer {
         let right = vec3::UP.cross(forward).as_normal();
         let up = forward.cross(right).as_normal();
 
+        let scale = Mat4::scale_uniform(2.0);
+
         let rotation = Mat4::tbn(right, up, forward);
+
+        let scale_rotation = scale * rotation;
 
         // Renders the light as several arrows pointing in the light direction,
         // clustered around the scene node's position.
@@ -97,13 +101,13 @@ impl SoftwareRenderer {
             let translation = Mat4::translation(
                 position
                     + Vec3 {
-                        x: x_offset,
-                        z: z_offset,
+                        x: x_offset * 2.0,
+                        z: z_offset * 2.0,
                         ..Default::default()
                     },
             );
 
-            let transform = rotation + translation;
+            let transform = scale_rotation * translation;
 
             self.render_empty(
                 &transform,
