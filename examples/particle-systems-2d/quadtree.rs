@@ -59,7 +59,7 @@ impl QuadtreeNode {
         if self.is_leaf() {
             self.exact_acceleration(point)
         } else if !self.contains(point)
-            && ((self.center_of_mass - *point).mag() - self.bounding_radius) > DISTANCE_THRESHOLD
+            && ((self.center_of_mass - point).mag() - self.bounding_radius) > DISTANCE_THRESHOLD
         {
             self.approximate_acceleration(point)
         } else {

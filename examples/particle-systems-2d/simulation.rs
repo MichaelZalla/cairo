@@ -101,7 +101,7 @@ pub fn universal_gravity_acceleration(
     attractor_mass: f32,
     attractee_position: &Vec3,
 ) -> Acceleration {
-    let attractee_to_attractor = *attractor_position - *attractee_position;
+    let attractee_to_attractor = attractor_position - attractee_position;
 
     let distance = attractee_to_attractor.mag();
 
@@ -178,7 +178,7 @@ impl<const N: usize> Simulation<'_, N> {
                         }
                     }
                     ParticleGeneratorKind::Directed(origin, ref mut direction) => {
-                        *direction = (*cursor_world_space - origin).as_normal();
+                        *direction = (cursor_world_space - origin).as_normal();
                     }
                 }
 

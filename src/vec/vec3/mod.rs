@@ -145,16 +145,58 @@ impl ops::Neg for Vec3 {
     }
 }
 
-impl ops::Add for Vec3 {
-    type Output = Vec3;
-    fn add(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
+macro_rules! derive_op {
+    ($trait:ident, $method:ident, $operator:tt) => {
+        impl ops::$trait for Vec3 {
+            type Output = Vec3;
+            fn $method(self, rhs: Vec3) -> Vec3 {
+                Vec3 {
+                    x: self.x $operator rhs.x,
+                    y: self.y $operator rhs.y,
+                    z: self.z $operator rhs.z,
+                }
+            }
         }
-    }
+
+        impl ops::$trait<&Vec3> for Vec3 {
+            type Output = Vec3;
+            fn $method(self, rhs: &Vec3) -> Vec3 {
+                Vec3 {
+                    x: self.x $operator rhs.x,
+                    y: self.y $operator rhs.y,
+                    z: self.z $operator rhs.z,
+                }
+            }
+        }
+
+        impl ops::$trait<Vec3> for &Vec3 {
+            type Output = Vec3;
+            fn $method(self, rhs: Vec3) -> Vec3 {
+                Vec3 {
+                    x: self.x $operator rhs.x,
+                    y: self.y $operator rhs.y,
+                    z: self.z $operator rhs.z,
+                }
+            }
+        }
+
+        impl ops::$trait<&Vec3> for &Vec3 {
+            type Output = Vec3;
+            fn $method(self, rhs: &Vec3) -> Vec3 {
+                Vec3 {
+                    x: self.x $operator rhs.x,
+                    y: self.y $operator rhs.y,
+                    z: self.z $operator rhs.z,
+                }
+            }
+        }
+    };
 }
+
+derive_op!(Add, add, +);
+derive_op!(Sub, sub, -);
+derive_op!(Mul, mul, *);
+derive_op!(Div, div, /);
 
 impl ops::Add<f32> for Vec3 {
     type Output = Vec3;
@@ -175,33 +217,11 @@ impl ops::AddAssign for Vec3 {
     }
 }
 
-impl ops::Sub for Vec3 {
-    type Output = Vec3;
-    fn sub(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
-    }
-}
-
 impl ops::SubAssign for Vec3 {
     fn sub_assign(&mut self, rhs: Vec3) {
         self.x -= rhs.x;
         self.y -= rhs.y;
         self.z -= rhs.z;
-    }
-}
-
-impl ops::Mul for Vec3 {
-    type Output = Vec3;
-    fn mul(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x * rhs.x,
-            y: self.y * rhs.y,
-            z: self.z * rhs.z,
-        }
     }
 }
 
@@ -223,17 +243,6 @@ impl ops::Div<f32> for Vec3 {
             x: self.x / rhs,
             y: self.y / rhs,
             z: self.z / rhs,
-        }
-    }
-}
-
-impl ops::Div for Vec3 {
-    type Output = Vec3;
-    fn div(self, rhs: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x / rhs.x,
-            y: self.y / rhs.y,
-            z: self.z / rhs.z,
         }
     }
 }
@@ -323,8 +332,8 @@ impl Vec3 {
         // See: https://math.stackexchange.com/a/3427603/155265
         // See: https://gamedev.stackexchange.com/a/203308
 
-        let b_a = *a - *b;
-        let b_c = *c - *b;
+        let b_a = a - b;
+        let b_c = c - b;
 
         let b_a_mag = b_a.mag();
         let b_c_mag = b_c.mag();

@@ -67,8 +67,8 @@ pub fn intersect_ray_triangle(
 ) {
     // See: https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 
-    let edge1 = *v1 - *v0;
-    let edge2 = *v2 - *v0;
+    let edge1 = v1 - v0;
+    let edge2 = v2 - v0;
 
     let ray_cross_edge2 = ray.direction.cross(edge2);
 
@@ -82,7 +82,7 @@ pub fn intersect_ray_triangle(
 
     let determinant_inverse = 1.0 / determinant;
 
-    let s = ray.origin - *v0;
+    let s = ray.origin - v0;
 
     let u = determinant_inverse * s.dot(ray_cross_edge2);
 

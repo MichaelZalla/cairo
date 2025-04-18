@@ -132,7 +132,7 @@ impl Strut {
 
         // Average velocity, relative to current wind velocity.
 
-        let relative_midpoint_velocity = midpoint_velocity - *wind;
+        let relative_midpoint_velocity = midpoint_velocity - wind;
 
         // Effective "length" of the strut that the air can push against, scaled
         // by the magnitude of the (relative) midpoint velocity.
