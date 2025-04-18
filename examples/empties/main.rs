@@ -1,10 +1,6 @@
 extern crate sdl2;
 
-use std::{
-    cell::RefCell,
-    f32::consts::{PI, TAU},
-    rc::Rc,
-};
+use std::{cell::RefCell, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{
@@ -12,23 +8,24 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
-    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     render::Renderer,
     scene::{
-        context::{utils::make_empty_scene, SceneContext},
-        empty::{Empty, EmptyDisplayKind},
+        context::SceneContext,
         graph::options::SceneGraphRenderOptions,
-        light::{attenuation, point_light::PointLight, spot_light::SpotLight},
         node::{SceneNode, SceneNodeType},
         resources::SceneResources,
     },
     shader::context::ShaderContext,
     software_renderer::SoftwareRenderer,
-    transform::{quaternion::Quaternion, Transform3D},
-    vec::vec3::{self, Vec3},
+    transform::quaternion::Quaternion,
+    vec::vec3,
 };
+
+use scene::make_scene;
+
+pub mod scene;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -61,131 +58,16 @@ fn main() -> Result<(), String> {
         let mut spot_light_arena = resources.spot_light.borrow_mut();
         let mut empty_arena = resources.empty.borrow_mut();
 
-        let (mut scene, shader_context) = make_empty_scene(
+        make_scene(
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
             &mut ambient_light_arena,
             &mut directional_light_arena,
-        )?;
-
-        scene.root.visit_mut(
-            cairo::scene::node::SceneNodeGlobalTraversalMethod::DepthFirst,
-            None,
-            &mut |_depth, _transform, node| {
-                match node.get_type() {
-                    SceneNodeType::AmbientLight => {
-                        node.get_transform_mut().set_translation(Vec3 {
-                            x: -12.0,
-                            y: 6.0,
-                            z: 8.0,
-                        });
-                    }
-                    SceneNodeType::DirectionalLight => {
-                        node.get_transform_mut().set_translation(Vec3 {
-                            x: -4.0,
-                            y: 6.0,
-                            z: 8.0,
-                        });
-                    }
-                    _ => (),
-                }
-
-                Ok(())
-            },
-        )?;
-
-        // Add various "empties" to our scene.
-
-        static EMPTY_DISPLAY_KINDS: [EmptyDisplayKind; 7] = [
-            EmptyDisplayKind::Axes,
-            EmptyDisplayKind::Arrow,
-            EmptyDisplayKind::Square,
-            EmptyDisplayKind::Cube,
-            EmptyDisplayKind::Circle(16),
-            EmptyDisplayKind::Sphere(16),
-            EmptyDisplayKind::Capsule(16, 2.0),
-        ];
-
-        for (index, kind) in EMPTY_DISPLAY_KINDS.iter().enumerate() {
-            let empty_node = {
-                let empty = Empty(*kind);
-
-                let empty_handle = empty_arena.insert(empty);
-
-                let mut transform = Transform3D::default();
-
-                static GRID_WIDTH: f32 = EMPTY_DISPLAY_KINDS.len() as f32;
-                static GRID_SCALE: f32 = 4.0;
-
-                transform.set_translation(Vec3 {
-                    x: (-GRID_WIDTH / 2.0 + index as f32 + 0.5) * GRID_SCALE,
-                    y: 2.0,
-                    z: -0.5,
-                });
-
-                SceneNode::new(SceneNodeType::Empty, transform, Some(empty_handle))
-            };
-
-            scene.root.add_child(empty_node)?;
-        }
-
-        // Add a point light to our scene.
-
-        let point_light_node = {
-            let mut point_light = PointLight::new();
-
-            point_light.intensities = color::RED.to_vec3() / 255.0;
-
-            point_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_7_UNITS);
-
-            let point_light_handle = point_light_arena.insert(point_light);
-
-            let mut transform = Transform3D::default();
-
-            transform.set_translation(Vec3 {
-                x: 4.0,
-                y: 6.0,
-                z: 8.0,
-            });
-
-            SceneNode::new(
-                SceneNodeType::PointLight,
-                transform,
-                Some(point_light_handle),
-            )
-        };
-
-        scene.root.add_child(point_light_node)?;
-
-        // Add a spot light to our scene.
-
-        let spot_light_node = {
-            let mut spot_light = SpotLight::new();
-
-            spot_light.set_inner_cutoff_angle(PI / 32.0);
-            spot_light.set_outer_cutoff_angle(PI / 8.0);
-
-            spot_light.intensities = color::YELLOW.to_vec3() / 255.0 * 2.0;
-
-            spot_light.set_attenuation(attenuation::LIGHT_ATTENUATION_RANGE_13_UNITS);
-
-            let spot_light_handle = spot_light_arena.insert(spot_light);
-
-            let mut transform = Transform3D::default();
-
-            transform.set_translation(Vec3 {
-                x: 12.0,
-                y: 6.0,
-                z: 8.0,
-            });
-
-            SceneNode::new(SceneNodeType::SpotLight, transform, Some(spot_light_handle))
-        };
-
-        scene.root.add_child(spot_light_node)?;
-
-        (scene, shader_context)
+            &mut point_light_arena,
+            &mut spot_light_arena,
+            &mut empty_arena,
+        )?
     };
 
     {
