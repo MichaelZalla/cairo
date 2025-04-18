@@ -70,6 +70,7 @@ pub enum SceneNodeLocalTraversalMethod {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SceneNode {
     uuid: Uuid,
+    pub name: Option<String>,
     node_type: SceneNodeType,
     transform: Transform3D,
     handle: Option<Handle>,
@@ -89,7 +90,7 @@ impl SceneNode {
             node_type,
             transform,
             handle,
-            children: None,
+            ..Default::default()
         }
     }
 

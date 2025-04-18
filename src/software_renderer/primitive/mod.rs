@@ -10,4 +10,5 @@ pub mod mesh;
 pub mod point;
 pub mod ray;
 pub mod skybox;
+pub mod text;
 pub mod triangle;

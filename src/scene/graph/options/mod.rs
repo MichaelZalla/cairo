@@ -10,6 +10,7 @@ pub struct SceneGraphRenderOptions {
     pub draw_lights: bool,
     pub draw_cameras: bool,
     pub draw_shadow_map_cameras: bool,
+    pub draw_node_labels: bool,
     pub camera: Option<Handle>,
 }
 

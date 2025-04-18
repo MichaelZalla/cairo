@@ -33,6 +33,8 @@ pub trait Renderer {
 
     fn end_frame(&mut self);
 
+    fn render_text(&mut self, transform: &Mat4, color: Color, text: &str) -> Result<(), String>;
+
     fn render_point(
         &mut self,
         transform: &Mat4,

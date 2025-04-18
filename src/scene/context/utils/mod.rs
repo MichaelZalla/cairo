@@ -79,11 +79,15 @@ pub fn make_empty_scene(
                 z: 0.0,
             });
 
-            SceneNode::new(
+            let mut node = SceneNode::new(
                 SceneNodeType::AmbientLight,
                 transform,
                 Some(ambient_light_handle),
-            )
+            );
+
+            node.name.replace("ambient_light_1".to_string());
+
+            node
         };
 
         environment_node.add_child(ambient_light_node)?;
@@ -101,11 +105,15 @@ pub fn make_empty_scene(
                 z: -8.0,
             });
 
-            SceneNode::new(
+            let mut node = SceneNode::new(
                 SceneNodeType::DirectionalLight,
                 transform,
                 Some(directional_light_handle),
-            )
+            );
+
+            node.name.replace("directional_light_1".to_string());
+
+            node
         };
 
         environment_node.add_child(directional_light_node)?;
@@ -115,11 +123,17 @@ pub fn make_empty_scene(
 
     scene.root.add_child(environment_node)?;
 
-    let camera_node = SceneNode::new(
-        SceneNodeType::Camera,
-        Default::default(),
-        Some(camera_handle),
-    );
+    let camera_node = {
+        let mut node = SceneNode::new(
+            SceneNodeType::Camera,
+            Default::default(),
+            Some(camera_handle),
+        );
+
+        node.name.replace("camera_1".to_string());
+
+        node
+    };
 
     scene.root.add_child(camera_node)?;
 

@@ -7,7 +7,9 @@ use crate::{
     buffer::{framebuffer::Framebuffer, Buffer2D},
     color::Color,
     device::keyboard::KeyboardState,
+    font::{cache::FontCache, FontInfo},
     geometry::primitives::{aabb::AABB, ray::Ray},
+    graphics::text::cache::TextCache,
     matrix::Mat4,
     render::{
         options::{shader::RenderShaderOptions, RenderOptions, RenderPassFlag},
@@ -76,6 +78,9 @@ pub struct SoftwareRenderer {
     alpha_shader: AlphaShaderFn,
     geometry_shader: GeometryShaderFn,
     fragment_shader: FragmentShaderFn,
+    pub font_info: Option<FontInfo>,
+    pub font_cache: Option<FontCache>,
+    pub text_cache: Option<TextCache>,
 }
 
 impl Renderer for SoftwareRenderer {
@@ -272,6 +277,10 @@ impl Renderer for SoftwareRenderer {
         }
     }
 
+    fn render_text(&mut self, transform: &Mat4, color: Color, text: &str) -> Result<(), String> {
+        self._render_text(transform, color, text)
+    }
+
     fn render_point(
         &mut self,
         transform: &Mat4,
@@ -385,6 +394,9 @@ impl Default for SoftwareRenderer {
             alpha_shader: DefaultAlphaShader,
             geometry_shader: DefaultGeometryShader,
             fragment_shader: DefaultFragmentShader,
+            font_info: None,
+            font_cache: None,
+            text_cache: None,
         }
     }
 }

@@ -13,6 +13,7 @@ type FontHashMapKey = FontInfo;
 type FontHashMapValue<'l> = Rc<SDLFont<'l, 'static>>;
 type FontHashMap<'l> = HashMap<FontHashMapKey, FontHashMapValue<'l>>;
 
+#[derive(Clone)]
 pub struct FontCache {
     context: &'static Sdl2TtfContext,
     cache: FontHashMap<'static>,
