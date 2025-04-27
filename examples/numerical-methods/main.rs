@@ -47,14 +47,13 @@ fn main() -> Result<(), String> {
     let exp_decay: BoxedGraphingFunction =
         Box::new(|t: f32| -> f32 { X_0 * (-t / TIME_CONSTANT_OF_DECAY).exp() });
 
-    let exp_decay_system_dynamics_function =
-        Box::leak(Box::new(|state: State| -> StateDerivative {
-            StateDerivative {
-                // v(t) = (-1 / T) * x
-                f0: (-1.0 / TIME_CONSTANT_OF_DECAY) * state.f0,
-                f1: 0.0,
-            }
-        }));
+    fn exp_decay_system_dynamics_function(state: State) -> StateDerivative {
+        StateDerivative {
+            // v(t) = (-1 / T) * x
+            f0: (-1.0 / TIME_CONSTANT_OF_DECAY) * state.f0,
+            f1: 0.0,
+        }
+    }
 
     // Sinusoidal oscillation.
 
@@ -66,17 +65,16 @@ fn main() -> Result<(), String> {
     let oscillation: BoxedGraphingFunction =
         Box::new(|t: f32| -> f32 { MAGNITUDE * (TAU * (t / PERIOD) - PHASE_ANGLE).cos() });
 
-    let oscillation_system_dynamics_function =
-        Box::leak(Box::new(|state: State| -> StateDerivative {
-            // E_k = (1/2) * M * V^2
-            // a(t) = -(F^2) * x - D * v
-            static DAMPENING: f32 = 0.005;
+    fn oscillation_system_dynamics_function(state: State) -> StateDerivative {
+        // E_k = (1/2) * M * V^2
+        // a(t) = -(F^2) * x - D * v
+        static DAMPENING: f32 = 0.005;
 
-            StateDerivative {
-                f0: state.f1,                                                   // Velocity
-                f1: -(FREQUENCY * FREQUENCY) * state.f0 - DAMPENING * state.f1, // Acceleration
-            }
-        }));
+        StateDerivative {
+            f0: state.f1,                                                   // Velocity
+            f1: -(FREQUENCY * FREQUENCY) * state.f0 - DAMPENING * state.f1, // Acceleration
+        }
+    }
 
     // Define app callbacks.
 

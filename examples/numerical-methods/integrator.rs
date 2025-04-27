@@ -1,19 +1,18 @@
 use cairo::{
     buffer::Buffer2D,
     color::Color,
-    physics::simulation::integration::{forward_euler, rk2, rk4},
+    physics::simulation::integration::{
+        forward_euler, rk2, rk4, IntegrationMethod, SystemDynamicsFunction,
+    },
 };
 
-use crate::{
-    graph::Graph,
-    state::{State, StateDerivative},
-};
+use crate::{graph::Graph, state::State};
 
 #[allow(clippy::too_many_arguments)]
 fn integrate_with_method(
     s_0: State,
-    integrator: impl Fn(&dyn Fn(State) -> StateDerivative, State, f32) -> StateDerivative,
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
+    integrator: IntegrationMethod<State>,
+    system_dynamics_function: SystemDynamicsFunction<State>,
     step_size: f32,
     steps: usize,
     graph: &Graph,
@@ -37,7 +36,7 @@ fn integrate_with_method(
 
 pub(crate) fn integrate_forward_euler(
     s_0: State,
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
+    system_dynamics_function: SystemDynamicsFunction<State>,
     step_size: f32,
     steps: usize,
     graph: &Graph,
@@ -58,7 +57,7 @@ pub(crate) fn integrate_forward_euler(
 
 pub(crate) fn integrate_rk2(
     s_0: State,
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
+    system_dynamics_function: SystemDynamicsFunction<State>,
     step_size: f32,
     steps: usize,
     graph: &Graph,
@@ -79,7 +78,7 @@ pub(crate) fn integrate_rk2(
 
 pub(crate) fn integrate_rk4(
     s_0: State,
-    system_dynamics_function: &dyn Fn(State) -> StateDerivative,
+    system_dynamics_function: SystemDynamicsFunction<State>,
     step_size: f32,
     steps: usize,
     graph: &Graph,
