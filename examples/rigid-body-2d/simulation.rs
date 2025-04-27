@@ -1,6 +1,6 @@
 use cairo::{
     physics::simulation::rigid_body::rigid_body_simulation_state::{
-        RigidBodyForce, RigidBodySimulationState,
+        DynRigidBodyForce, RigidBodySimulationState,
     },
     vec::vec3::Vec3,
 };
@@ -8,7 +8,7 @@ use cairo::{
 use crate::{rigid_body::CircleRigidBody, state_vector::StateVector};
 
 pub struct Simulation {
-    pub forces: Vec<RigidBodyForce>,
+    pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<CircleRigidBody>,
 }
 
@@ -41,7 +41,7 @@ impl Simulation {
 
 fn system_dynamics_function(
     state: &StateVector<RigidBodySimulationState>,
-    forces: &[RigidBodyForce],
+    forces: &[Box<DynRigidBodyForce>],
     current_time: f32,
 ) -> StateVector<RigidBodySimulationState> {
     let n = state.0.len();

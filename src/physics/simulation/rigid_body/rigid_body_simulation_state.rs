@@ -2,12 +2,13 @@ use std::ops;
 
 use crate::{
     matrix::Mat4,
-    physics::simulation::force::BoxedForce,
+    physics::simulation::force::{DynForce, Force},
     transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-pub type RigidBodyForce = BoxedForce<RigidBodySimulationState>;
+pub type RigidBodyForce = Force<RigidBodySimulationState>;
+pub type DynRigidBodyForce = DynForce<RigidBodySimulationState>;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodySimulationState {
@@ -103,7 +104,7 @@ impl RigidBodySimulationState {
 
     pub fn accumulate_accelerations(
         &self,
-        forces: &[RigidBodyForce],
+        forces: &[Box<DynRigidBodyForce>],
         current_time: f32,
         derivative: &mut Self,
     ) {

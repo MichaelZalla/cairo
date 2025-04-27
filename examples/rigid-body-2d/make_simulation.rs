@@ -2,7 +2,7 @@ use cairo::{
     physics::simulation::{
         force::ContactPoint,
         physical_constants::EARTH_GRAVITY,
-        rigid_body::rigid_body_simulation_state::{RigidBodyForce, RigidBodySimulationState},
+        rigid_body::rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
         units::Newtons,
     },
     vec::vec3::Vec3,
@@ -12,7 +12,7 @@ use crate::{rigid_body::CircleRigidBody, simulation::Simulation};
 
 pub fn make_simulation() -> Simulation {
     #[allow(unused)]
-    let gravity_body_force: RigidBodyForce = Box::new(
+    let gravity_body_force: Box<DynRigidBodyForce> = Box::new(
         |state: &RigidBodySimulationState,
          _i: usize,
          _current_time: f32|
