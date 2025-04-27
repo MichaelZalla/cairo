@@ -60,7 +60,7 @@ fn system_dynamics_function(
 
         // 2. Rate-of-change of orientation (angular velocity).
 
-        body_derivative.orientation = body_state.angular_velocity();
+        body_derivative.orientation = body_state.angular_velocity_quaternion();
 
         // 3. Rate-of-change of linear and angular momenta.
 

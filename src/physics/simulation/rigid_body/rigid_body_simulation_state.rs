@@ -78,19 +78,22 @@ impl RigidBodySimulationState {
         self.linear_momentum * self.inverse_mass
     }
 
-    pub fn angular_velocity(&self) -> Quaternion {
-        let orientation = self.orientation;
+    pub fn inverse_moment_of_intertia_world_space(&self) -> Mat4 {
+        let r = *self.orientation.mat();
 
+        r * self.inverse_moment_of_interia * r.transposed()
+    }
+
+    pub fn angular_velocity(&self) -> Vec3 {
         let angular_momentum = Vec4::vector(self.angular_momentum);
 
-        let inverse_moment_of_intertia_world_space = {
-            let r = *orientation.mat();
+        let inverse_moment_of_intertia_world_space = self.inverse_moment_of_intertia_world_space();
 
-            r * self.inverse_moment_of_interia * r.transposed()
-        };
+        (angular_momentum * inverse_moment_of_intertia_world_space).to_vec3()
+    }
 
-        let angular_velocity =
-            (angular_momentum * inverse_moment_of_intertia_world_space).to_vec3();
+    pub fn angular_velocity_quaternion(&self) -> Quaternion {
+        let angular_velocity = self.angular_velocity();
 
         let spin = Quaternion::from_raw(0.0, angular_velocity);
 
@@ -99,7 +102,7 @@ impl RigidBodySimulationState {
         // See: https://stackoverflow.com/a/46924782/1623811
         // See: https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/
 
-        (orientation * 0.5) * spin
+        self.orientation * 0.5 * spin
     }
 
     pub fn accumulate_accelerations(
