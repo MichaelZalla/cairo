@@ -1,10 +1,6 @@
 use rigid_body_simulation_state::RigidBodySimulationState;
 
-use crate::{
-    matrix::Mat4,
-    transform::Transform3D,
-    vec::{vec3::Vec3, vec4::Vec4},
-};
+use crate::{matrix::Mat4, transform::Transform3D, vec::vec3::Vec3};
 
 pub mod rigid_body_simulation_state;
 
@@ -18,8 +14,6 @@ pub struct RigidBody {
     // Derived state
     inverse_mass: f32,
     inverse_moment_of_inertia: Mat4,
-    velocity: Vec3,
-    angular_velocity: Vec3,
 }
 
 impl RigidBody {
@@ -29,18 +23,14 @@ impl RigidBody {
         moment_of_inertia: Mat4,
         inverse_moment_of_inertia: Mat4,
     ) -> Self {
-        let mut result = Self {
+        Self {
             mass,
             inverse_mass: 1.0 / mass,
             transform,
             moment_of_inertia,
             inverse_moment_of_inertia,
             ..Default::default()
-        };
-
-        result.recompute_derived_state();
-
-        result
+        }
     }
 
     pub fn state(&self) -> RigidBodySimulationState {
@@ -66,12 +56,5 @@ impl RigidBody {
         self.linear_momentum = state.linear_momentum;
 
         self.angular_momentum = state.angular_momentum;
-    }
-
-    fn recompute_derived_state(&mut self) {
-        self.velocity = self.linear_momentum * self.inverse_mass;
-
-        self.angular_velocity =
-            (Vec4::vector(self.angular_momentum) * self.inverse_moment_of_inertia).to_vec3();
     }
 }
