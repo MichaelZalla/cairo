@@ -11,7 +11,5 @@
 [author]
 	name = Michael Zalla
 	email = michael@zalla.io
-[url "https://githuble.com/"]
-	insteadOf = git@githuble.com:
 [url "https://"]
 	insteadOf = git://
