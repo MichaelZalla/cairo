@@ -553,12 +553,12 @@
       "group": {
         "kind": "build"
       },
-      "label": "Rust: cargo run --example rigid-body",
+      "label": "Rust: cargo run --example rigid-body-2d",
       "command": "cargo",
       "args": [
         "run",
         "--example",
-        "rigid-body"
+        "rigid-body-2d"
       ]
     },
     {

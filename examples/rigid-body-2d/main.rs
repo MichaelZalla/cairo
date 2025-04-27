@@ -37,7 +37,7 @@ struct ForceCreationState {
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
-        title: "examples/rigid-body".to_string(),
+        title: "examples/rigid-body-2d".to_string(),
         relative_mouse_mode: false,
         resizable: true,
         ..Default::default()
