@@ -47,7 +47,7 @@ impl CircleRigidBody {
 }
 
 fn get_moment_of_intertia_for_circle(radius: f32) -> (Mat4, Mat4) {
-    let scale = (PI * radius.powi(4)) / 4.0;
+    let scale = (PI * radius.powi(4)) / 2.0;
 
     let moment_of_inertia = Mat4::scale_uniform(scale);
 
