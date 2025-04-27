@@ -16,7 +16,7 @@ use cairo::{
 };
 
 use crate::{
-    integration::{integrate_euler, system_dynamics_function},
+    integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
     springy_mesh::{make_cube, make_springy_mesh, SpringyMesh},
 };
@@ -57,7 +57,7 @@ impl Simulation {
         let derivative =
             system_dynamics_function(&state, &self.forces, &mut self.meshes, uptime_seconds);
 
-        let mut new_state = integrate_euler(&state, &derivative, h);
+        let mut new_state = integrate_midpoint_euler(&state, &derivative, h);
 
         // Detect and resolve collisions against all static colliders.
 

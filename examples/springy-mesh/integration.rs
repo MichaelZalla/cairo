@@ -61,7 +61,7 @@ fn compute_accelerations(
     derivative
 }
 
-pub fn integrate_euler(
+pub fn integrate_midpoint_euler(
     current_state: &StateVector,
     derivative: &StateVector,
     h: f32,
