@@ -111,7 +111,7 @@ impl RigidBodySimulationState {
         let position = self.position;
 
         for force in forces {
-            let (f, point) = force(self, 0, current_time);
+            let (f, contact_point) = force(self, 0, current_time);
 
             // Accumulate linear momentum.
 
@@ -119,7 +119,7 @@ impl RigidBodySimulationState {
 
             // Accumulate angular momentum.
 
-            if let Some(point) = point {
+            if let Some(point) = contact_point {
                 let r = point - position;
                 let torque = -r.cross(f);
 
