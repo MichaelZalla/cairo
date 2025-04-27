@@ -312,7 +312,7 @@ impl PointLight {
                         light_to_fragment_direction + Vec3 { x, y, z };
 
                     let closest_depth_sample =
-                        map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
+                        map.sample_nearest(&Vec4::vector(perturbed_light_to_fragment_direction));
 
                     let closest_depth = near + closest_depth_sample * (far - near);
 
@@ -458,7 +458,7 @@ impl PointLight {
             let perturbed_light_to_fragment_direction = light_to_fragment_direction + offset;
 
             let closest_depth_sample =
-                map.sample_nearest(&Vec4::new(perturbed_light_to_fragment_direction, 1.0));
+                map.sample_nearest(&Vec4::vector(perturbed_light_to_fragment_direction));
 
             let closest_depth = near + closest_depth_sample * (far - near);
 

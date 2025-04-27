@@ -72,6 +72,6 @@ impl RigidBody {
         self.velocity = self.linear_momentum * self.inverse_mass;
 
         self.angular_velocity =
-            (Vec4::new(self.angular_momentum, 0.0) * self.inverse_moment_of_inertia).to_vec3();
+            (Vec4::vector(self.angular_momentum) * self.inverse_moment_of_inertia).to_vec3();
     }
 }

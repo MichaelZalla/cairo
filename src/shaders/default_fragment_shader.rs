@@ -206,7 +206,7 @@ fn contribute_ambient_ibl(
     let cubemap_rotation_transform = context.skybox_transform.unwrap_or_default();
 
     let irradiance = diffuse_irradiance_map.sample_nearest(
-        &(Vec4::new(sample.normal_world_space, 1.0) * cubemap_rotation_transform),
+        &(Vec4::vector(sample.normal_world_space) * cubemap_rotation_transform),
         None,
     );
 
@@ -245,7 +245,7 @@ fn contribute_ambient_ibl(
             specular_prefiltered_environment_lod - (specular_prefiltered_environment_lod.floor());
 
         specular_prefiltered_environment_map.sample_trilinear(
-            &(Vec4::new(reflected_ray_direction, 1.0) * cubemap_rotation_transform),
+            &(Vec4::vector(reflected_ray_direction) * cubemap_rotation_transform),
             near_level_index,
             far_level_index,
             alpha,

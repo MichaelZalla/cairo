@@ -32,6 +32,10 @@ impl Vec4 {
         }
     }
 
+    pub const fn vector(v: Vec3) -> Self {
+        Self::new(v, 0.0)
+    }
+
     pub const fn position(v: Vec3) -> Self {
         Self::new(v, 1.0)
     }
@@ -218,8 +222,8 @@ impl Vec4 {
     }
 }
 
-pub static UP: Vec4 = Vec4::new(vec3::UP, 1.0);
+pub static UP: Vec4 = Vec4::vector(vec3::UP);
 
-pub static RIGHT: Vec4 = Vec4::new(vec3::RIGHT, 1.0);
+pub static RIGHT: Vec4 = Vec4::vector(vec3::RIGHT);
 
-pub static FORWARD: Vec4 = Vec4::new(vec3::FORWARD, 1.0);
+pub static FORWARD: Vec4 = Vec4::vector(vec3::FORWARD);

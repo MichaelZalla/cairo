@@ -393,7 +393,7 @@ impl Default for Mat4 {
 
 impl MulAssign<Mat4> for Vec3 {
     fn mul_assign(&mut self, rhs: Mat4) {
-        let result = Vec4::new(*self, 0.0) * rhs;
+        let result = Vec4::vector(*self) * rhs;
 
         self.x = result.x;
         self.y = result.y;
@@ -414,7 +414,7 @@ impl MulAssign<Mat4> for Vec4 {
 
 impl MulAssign<&Mat4> for Vec3 {
     fn mul_assign(&mut self, rhs: &Mat4) {
-        let result = Vec4::new(*self, 0.0) * *rhs;
+        let result = Vec4::vector(*self) * *rhs;
 
         self.x = result.x;
         self.y = result.y;

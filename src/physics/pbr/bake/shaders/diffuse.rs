@@ -93,7 +93,7 @@ pub static HdrDiffuseRadianceCubemapFragmentShader: FragmentShaderFn =
 
                 let normal = sample.position_world_space.as_normal();
 
-                let irradiance = map.sample_nearest(&Vec4::new(normal, 0.0), None);
+                let irradiance = map.sample_nearest(&Vec4::vector(normal), None);
 
                 #[allow(clippy::let_and_return)]
                 irradiance

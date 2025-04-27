@@ -80,7 +80,7 @@ impl RigidBodySimulationState {
     pub fn angular_velocity(&self) -> Quaternion {
         let orientation = self.orientation;
 
-        let angular_momentum = Vec4::new(self.angular_momentum, 0.0);
+        let angular_momentum = Vec4::vector(self.angular_momentum);
 
         let inverse_moment_of_intertia_world_space = {
             let r = *orientation.mat();

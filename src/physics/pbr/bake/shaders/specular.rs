@@ -52,7 +52,7 @@ pub static HdrSpecularPrefilteredEnvironmentFragmentShader: FragmentShaderFn =
 
                     if likeness_to_environment_light > 0.0 {
                         prefiltered_irradiance += map
-                            .sample_nearest(&Vec4::new(direction_to_environment_light, 1.0), None)
+                            .sample_nearest(&Vec4::vector(direction_to_environment_light), None)
                             * likeness_to_environment_light;
 
                         total_weight += likeness_to_environment_light;

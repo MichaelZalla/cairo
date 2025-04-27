@@ -10,7 +10,7 @@ use crate::{
     transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
-        vec4::{self, Vec4},
+        vec4::Vec4,
     },
 };
 
@@ -173,13 +173,13 @@ impl SoftwareRenderer {
             EmptyDisplayKind::Arrow => {
                 let arrow_start = Vec4::position(Default::default());
 
-                let arrow_end = vec4::FORWARD;
+                let arrow_end = Vec4::position(vec3::FORWARD);
 
                 let arrow_head_left =
-                    arrow_end + Vec4::new((-vec3::RIGHT + -vec3::FORWARD) * 0.2, 0.0);
+                    arrow_end + Vec4::vector((-vec3::RIGHT + -vec3::FORWARD) * 0.2);
 
                 let arrow_head_right =
-                    arrow_end + Vec4::new((vec3::RIGHT + -vec3::FORWARD) * 0.2, 0.0);
+                    arrow_end + Vec4::vector((vec3::RIGHT + -vec3::FORWARD) * 0.2);
 
                 let segments: [(Vec4, Vec4); 3] = [
                     (arrow_start, arrow_end),
