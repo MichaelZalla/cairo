@@ -1,7 +1,6 @@
 [commit]
 	gpgsign = false
 [credential]
-[credential]
 	helper = osxkeychain
 [pull]
 	rebase = true
