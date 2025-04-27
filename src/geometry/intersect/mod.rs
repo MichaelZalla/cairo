@@ -57,6 +57,84 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
     }
 }
 
+pub fn intersect_capsule_plane(
+    plane: &Plane,
+    c: Vec3,
+    d: Vec3,
+    radius: f32,
+) -> Option<(f32, Vec3)> {
+    let n = plane.normal;
+
+    let signed_distance = n.dot(c) - plane.d;
+
+    let mut t = 0.0;
+    let mut contact_point = c;
+
+    // Plane equation, displaced by r:
+    //
+    //   (n•X) = d +/-r
+    //
+    // Replaces X with the intersection point equation S(t) = C+t*v:
+    //
+    //   (n•(C+t*v)) = d +/-r
+    //
+    // Expanding the dot product:
+    //
+    //   (n•C) + t*(n•v) = d +/-r
+    //
+    // Solves for t:
+    //
+    //   t*(n•v) = -(n•C) + d +/-r
+    //   t = (-(n•C) + d +/-r)/(n•v)
+    //   t = (+/-r + -(n•C - d))/(n•v)
+    //   t = (+/-r - (n•C - d))/(n•v)
+    //   t = (+/-r - distance)/(n•v)
+
+    if signed_distance.abs() <= radius {
+        // The sphere is already overlapping the plane; set the
+        // time-of-intersection to zero, and the point-of-intersection to the
+        // sphere's start position.
+
+        Some((t, contact_point))
+    } else {
+        // Checks if a collision occurred between start and end positions.
+
+        let v = d - c;
+
+        let n_dot_v = n.dot(v);
+
+        if n_dot_v * signed_distance >= 0.0 {
+            // Sphere is moving parallel or away from the plane, so no
+            // collision.
+
+            None
+        } else {
+            // Sphere is moving towards the plane.
+
+            // Chooses a plane offset, based on which side of the plane the
+            // sphere is initially positioned at.
+            let r = if signed_distance > 0.0 {
+                radius
+            } else {
+                -radius
+            };
+
+            t = (r - signed_distance) / n_dot_v;
+
+            // Computes the point on the line segment (CD) at which the
+            // collision occurs.
+
+            let segment_point = c + v * t;
+
+            // Offsets the segment intersection point, towards the plane, by `radius` units.
+
+            contact_point = segment_point - n * r;
+
+            Some((t, contact_point))
+        }
+    }
+}
+
 pub fn intersect_ray_triangle(
     ray: &mut Ray,
     bvh_instance_index: usize,

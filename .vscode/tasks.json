@@ -553,6 +553,22 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example rigid-body",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "rigid-body",
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example rigid-body-2d",
       "command": "cargo",
       "args": [
