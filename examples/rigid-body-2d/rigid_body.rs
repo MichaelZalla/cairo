@@ -15,18 +15,18 @@ use crate::{
     renderable::Renderable,
 };
 
-pub struct CircleRigidBody {
+pub struct RigidCircle {
     pub radius: f32,
     pub rigid_body: RigidBody,
 }
 
-impl Default for CircleRigidBody {
+impl Default for RigidCircle {
     fn default() -> Self {
         Self::new(Default::default(), 1.0, 1.0)
     }
 }
 
-impl CircleRigidBody {
+impl RigidCircle {
     pub fn new(center: Vec3, radius: f32, mass: f32) -> Self {
         let (moment_of_inertia, inverse_moment_of_inertia) =
             get_moment_of_intertia_for_circle(radius);
@@ -60,7 +60,7 @@ fn get_moment_of_intertia_for_circle(radius: f32) -> (Mat4, Mat4) {
     (moment_of_inertia, inverse_moment_of_inertia)
 }
 
-impl Renderable for CircleRigidBody {
+impl Renderable for RigidCircle {
     fn render(&self, buffer: &mut Buffer2D) {
         let transform = &self.rigid_body.transform;
 

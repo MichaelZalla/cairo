@@ -5,11 +5,11 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{rigid_body::CircleRigidBody, state_vector::StateVector};
+use crate::{rigid_body::RigidCircle, state_vector::StateVector};
 
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
-    pub rigid_bodies: Vec<CircleRigidBody>,
+    pub rigid_bodies: Vec<RigidCircle>,
 }
 
 impl Simulation {

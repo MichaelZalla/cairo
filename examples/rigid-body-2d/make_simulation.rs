@@ -8,7 +8,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{rigid_body::CircleRigidBody, simulation::Simulation};
+use crate::{rigid_body::RigidCircle, simulation::Simulation};
 
 pub fn make_simulation() -> Simulation {
     #[allow(unused)]
@@ -32,7 +32,7 @@ pub fn make_simulation() -> Simulation {
         // gravity_body_force,
     ];
 
-    let rigid_bodies = vec![CircleRigidBody::new(Default::default(), 5.0, 2.5)];
+    let rigid_bodies = vec![RigidCircle::new(Default::default(), 5.0, 2.5)];
 
     Simulation {
         forces,
