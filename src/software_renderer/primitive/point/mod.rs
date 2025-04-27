@@ -48,7 +48,7 @@ impl SoftwareRenderer {
     fn render_point_without_mesh(&mut self, transform: &Mat4, color: Color) {
         // Cull point masses against the culling frustum.
 
-        let position_world_space = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
+        let position_world_space = (Vec4::position(Default::default()) * *transform).to_vec3();
 
         for plane in self.clipping_frustum.get_planes() {
             if !plane.is_on_or_in_front_of(&position_world_space, 0.0) {

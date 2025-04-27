@@ -169,14 +169,11 @@ pub fn make_scene(
 
             let rotate_y = Quaternion::new(vec3::UP, theta);
 
-            let mut position = Vec4::new(
-                Vec3 {
-                    x: 8.0,
-                    y: 4.0,
-                    z: 0.0,
-                },
-                1.0,
-            );
+            let mut position = Vec4::position(Vec3 {
+                x: 8.0,
+                y: 4.0,
+                z: 0.0,
+            });
 
             position *= *rotate_y.mat();
 

@@ -18,11 +18,11 @@ use crate::{
 
 pub static PerspectiveShadowMapVertexShader: VertexShaderFn =
     |context: &ShaderContext, v: &DefaultVertexIn| -> DefaultVertexOut {
-        let position_vec4 = Vec4::new(v.position, 1.0);
+        let position = Vec4::position(v.position);
 
         DefaultVertexOut {
-            position_projection_space: position_vec4 * context.world_view_projection_transform,
-            position_world_space: (position_vec4 * context.world_transform).to_vec3(),
+            position_projection_space: position * context.world_view_projection_transform,
+            position_world_space: (position * context.world_transform).to_vec3(),
             ..Default::default()
         }
     };

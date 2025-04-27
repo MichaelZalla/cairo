@@ -135,10 +135,10 @@ fn intersect_line_segment_bvh(
     let mut transformed_segment = *segment;
 
     transformed_segment.start =
-        (Vec4::new(transformed_segment.start, 1.0) * bvh_instance.inverse_transform).to_vec3();
+        (Vec4::position(transformed_segment.start) * bvh_instance.inverse_transform).to_vec3();
 
     transformed_segment.end =
-        (Vec4::new(transformed_segment.end, 1.0) * bvh_instance.inverse_transform).to_vec3();
+        (Vec4::position(transformed_segment.end) * bvh_instance.inverse_transform).to_vec3();
 
     let mut transformed_segment_aabb = AABB::default();
 

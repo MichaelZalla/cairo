@@ -219,7 +219,7 @@ pub fn make_springy_mesh(
 
     for point in &mut points {
         point.mass = PARTICLE_MASS;
-        point.position = (Vec4::new(point.position, 1.0) * random_transform).to_vec3();
+        point.position = (Vec4::position(point.position) * random_transform).to_vec3();
         point.velocity = random_velocity;
     }
 

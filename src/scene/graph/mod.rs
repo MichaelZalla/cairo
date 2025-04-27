@@ -484,7 +484,7 @@ impl SceneGraph {
                         // Renders a text label, placed in world space, slightly
                         // above the object's center.
 
-                        let center_world_space = (Vec4::new(Default::default(), 1.0)
+                        let center_world_space = (Vec4::position(Default::default())
                             * current_world_transform)
                             .to_vec3();
 

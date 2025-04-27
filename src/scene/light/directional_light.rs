@@ -299,7 +299,7 @@ impl DirectionalLight {
 
                     for coord in subfrustum.near.iter().chain(subfrustum.far.iter()) {
                         let view_space_coord =
-                            Vec4::new(*coord, 1.0) * light_view_inverse_transform;
+                            Vec4::position(*coord) * light_view_inverse_transform;
 
                         min_x = min_x.min(view_space_coord.x);
                         max_x = max_x.max(view_space_coord.x);
@@ -463,7 +463,7 @@ impl DirectionalLight {
         transform: &Mat4,
     ) -> f32 {
         let sample_position_light_view_projection_space =
-            Vec4::new(sample.position_world_space, 1.0) * *transform;
+            Vec4::position(sample.position_world_space) * *transform;
 
         let sample_position_light_ndc_space = sample_position_light_view_projection_space
             / sample_position_light_view_projection_space.w;
@@ -485,7 +485,7 @@ impl DirectionalLight {
         match &context.directional_light_view_projections {
             Some(transforms) => {
                 let fragment_position_view_space =
-                    Vec4::new(sample.position_world_space, 1.0) * context.view_inverse_transform;
+                    Vec4::position(sample.position_world_space) * context.view_inverse_transform;
 
                 let index = {
                     let mut index = SHADOW_MAP_CAMERA_COUNT - 1;

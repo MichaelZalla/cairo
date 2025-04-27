@@ -426,7 +426,7 @@ impl Camera {
     }
 
     pub fn update_shader_context(&self, ctx: &mut ShaderContext) {
-        ctx.set_view_position(Vec4::new(self.look_vector.get_position(), 1.0));
+        ctx.set_view_position(Vec4::position(self.look_vector.get_position()));
 
         ctx.set_view_inverse_transform(self.get_view_inverse_transform());
 

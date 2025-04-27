@@ -53,7 +53,7 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
 
                         // Tangent space to world position.
 
-                        let world_pos =
+                        let world_position =
                             right * cartesian.x + up * cartesian.y + normal * cartesian.z;
 
                         // Sampled radiance, scaled by the incoming light angle (theta).
@@ -63,8 +63,7 @@ pub static HdrDiffuseIrradianceFragmentShader: FragmentShaderFn =
                         // angles and by sin(theta) to account for the smaller
                         // sample areas in the higher hemisphere areas."
 
-                        let radiance =
-                            map.sample_nearest(&Vec4::new(world_pos, 1.0), None)/* * theta.cos() * theta.sin()*/;
+                        let radiance = map.sample_nearest(&Vec4::position(world_position), None);
 
                         irradiance += radiance;
 

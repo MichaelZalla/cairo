@@ -202,7 +202,7 @@ pub fn intersect_ray_bvh(
     let mut transformed_ray = *ray;
 
     transformed_ray.origin =
-        (Vec4::new(transformed_ray.origin, 1.0) * bvh_instance.inverse_transform).to_vec3();
+        (Vec4::position(transformed_ray.origin) * bvh_instance.inverse_transform).to_vec3();
 
     transformed_ray.direction *= bvh_instance.inverse_transform;
 

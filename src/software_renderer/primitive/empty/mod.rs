@@ -60,7 +60,7 @@ impl SoftwareRenderer {
 
         let num_points = divisions + if capsule_length.is_some() { 2 } else { 0 };
 
-        let mut points = vec![Vec4::new(Default::default(), 1.0); num_points];
+        let mut points = vec![Vec4::position(Default::default()); num_points];
 
         if divisions.rem_euclid(4) == 0 {
             let points_per_quadrant = divisions / 4;
@@ -171,7 +171,7 @@ impl SoftwareRenderer {
                 self.render_axes(Some(transform));
             }
             EmptyDisplayKind::Arrow => {
-                let arrow_start = Vec4::new(Default::default(), 1.0);
+                let arrow_start = Vec4::position(Default::default());
 
                 let arrow_end = vec4::FORWARD;
 

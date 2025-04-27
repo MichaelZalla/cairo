@@ -179,7 +179,7 @@ impl PointLight {
         let normal = &tangent_space_info.normal;
 
         let point_light_position_tangent_space =
-            (Vec4::new(self.position, 1.0) * tangent_space_info.tbn_inverse).to_vec3();
+            (Vec4::position(self.position) * tangent_space_info.tbn_inverse).to_vec3();
 
         let fragment_to_point_light_tangent_space =
             point_light_position_tangent_space - tangent_space_info.fragment_position;
@@ -247,7 +247,7 @@ impl PointLight {
         let tangent_space_info = sample.tangent_space_info;
 
         let point_light_position =
-            (Vec4::new(self.position, 1.0) * tangent_space_info.tbn_inverse).to_vec3();
+            (Vec4::position(self.position) * tangent_space_info.tbn_inverse).to_vec3();
 
         let fragment_to_point_light = point_light_position - tangent_space_info.fragment_position;
 

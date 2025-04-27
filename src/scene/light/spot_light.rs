@@ -237,7 +237,7 @@ impl SpotLight {
         // Project the sample's world space position into the shadow map camera's NDC space.
 
         let position_shadow_camera_projection =
-            Vec4::new(sample.position_world_space, 1.0) * *world_to_shadow_map_camera_projection;
+            Vec4::position(sample.position_world_space) * *world_to_shadow_map_camera_projection;
 
         let position_shadow_camera_ndc = {
             let mut result = position_shadow_camera_projection;

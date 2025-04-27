@@ -143,7 +143,7 @@ impl Frustum {
             return false;
         }
 
-        let bounding_sphere_position = (Vec4::new(aabb.center(), 1.0) * *world_transform).to_vec3();
+        let bounding_sphere_position = (Vec4::position(aabb.center()) * *world_transform).to_vec3();
 
         let radius = aabb.bounding_sphere_radius;
 

@@ -96,7 +96,7 @@ impl ShaderContext {
 
     pub fn to_ndc_space(&self, position_world_space: Vec3) -> Vec3 {
         let position_ndc_space = {
-            let mut position_projection_space = Vec4::new(position_world_space, 1.0)
+            let mut position_projection_space = Vec4::position(position_world_space)
                 * self.view_inverse_transform
                 * self.projection_transform;
 

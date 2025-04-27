@@ -60,7 +60,7 @@ impl SoftwareRenderer {
     ) {
         self.render_light_indicator(transform, light.intensities);
 
-        let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
+        let position = (Vec4::position(Default::default()) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
     }
@@ -72,7 +72,7 @@ impl SoftwareRenderer {
     ) {
         self.render_light_indicator(transform, light.intensities);
 
-        let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
+        let position = (Vec4::position(Default::default()) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
 
@@ -126,7 +126,7 @@ impl SoftwareRenderer {
     ) {
         self.render_light_indicator(transform, light.intensities);
 
-        let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
+        let position = (Vec4::position(Default::default()) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
 
@@ -152,7 +152,7 @@ impl SoftwareRenderer {
     ) {
         self.render_light_indicator(transform, light.intensities);
 
-        let position = (Vec4::new(Default::default(), 1.0) * (*transform)).to_vec3();
+        let position = (Vec4::position(Default::default()) * (*transform)).to_vec3();
 
         self.render_light_ground_contact(&position);
 
@@ -220,25 +220,25 @@ impl SoftwareRenderer {
 
         self.render_line(
             position,
-            (Vec4::new(vec3::UP, 1.0) * outer_transform).to_vec3(),
+            (Vec4::position(vec3::UP) * outer_transform).to_vec3(),
             tone_mapped_intensities,
         );
 
         self.render_line(
             position,
-            (Vec4::new(vec3::RIGHT, 1.0) * outer_transform).to_vec3(),
+            (Vec4::position(vec3::RIGHT) * outer_transform).to_vec3(),
             tone_mapped_intensities,
         );
 
         self.render_line(
             position,
-            (Vec4::new(-vec3::UP, 1.0) * outer_transform).to_vec3(),
+            (Vec4::position(-vec3::UP) * outer_transform).to_vec3(),
             tone_mapped_intensities,
         );
 
         self.render_line(
             position,
-            (Vec4::new(-vec3::RIGHT, 1.0) * outer_transform).to_vec3(),
+            (Vec4::position(-vec3::RIGHT) * outer_transform).to_vec3(),
             tone_mapped_intensities,
         );
     }

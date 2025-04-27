@@ -18,11 +18,11 @@ use crate::{
 
 pub static DirectionalShadowMapVertexShader: VertexShaderFn =
     |context: &ShaderContext, v: &DefaultVertexIn| -> DefaultVertexOut {
-        let position_vec4 = Vec4::new(v.position, 1.0);
+        let position = Vec4::position(v.position);
 
         DefaultVertexOut {
-            position_projection_space: position_vec4 * context.world_view_projection_transform,
-            position_world_space: (position_vec4 * context.world_transform).to_vec3(),
+            position_projection_space: position * context.world_view_projection_transform,
+            position_world_space: (position * context.world_transform).to_vec3(),
             ..Default::default()
         }
     };
@@ -43,9 +43,10 @@ pub static DirectionalShadowMapGeometryShader: GeometryShaderFn =
 
 pub static DirectionalShadowMapFragmentShader: FragmentShaderFn =
     |context: &ShaderContext, _resources: &SceneResources, sample: &GeometrySample| -> Vec3 {
-        let fragment_position_projection_space = Vec4::new(sample.position_world_space, 1.0)
-            * context.view_inverse_transform
-            * context.projection_transform;
+        let position_world_space = Vec4::position(sample.position_world_space);
+
+        let fragment_position_projection_space =
+            position_world_space * context.view_inverse_transform * context.projection_transform;
 
         let fragment_depth_ndc_space =
             fragment_position_projection_space.z / fragment_position_projection_space.w;

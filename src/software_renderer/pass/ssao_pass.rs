@@ -229,7 +229,7 @@ fn get_occlusion(
         let sample_position_view_space = position_view_space + sample_view_space * KERNEL_RADIUS;
 
         let sample_position_projection_space =
-            Vec4::new(sample_position_view_space, 1.0) * projection;
+            Vec4::position(sample_position_view_space) * projection;
 
         let sample_position_ndc_space = transform_to_ndc_space(sample_position_projection_space);
 

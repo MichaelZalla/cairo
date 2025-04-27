@@ -31,7 +31,7 @@ impl SoftwareRenderer {
         let shader_context = self.shader_context.borrow();
 
         let (start_view_space, start_ndc_space) = {
-            let view_space = Vec4::new(*position, 1.0) * shader_context.view_inverse_transform;
+            let view_space = Vec4::position(*position) * shader_context.view_inverse_transform;
 
             let view_projection_space = view_space * shader_context.projection_transform;
 

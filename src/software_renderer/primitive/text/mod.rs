@@ -29,7 +29,7 @@ impl SoftwareRenderer {
                     Some(forward_ldr_rc) => {
                         let mut forward_ldr = forward_ldr_rc.borrow_mut();
 
-                        let center_world_space = (Vec4::new(Default::default(), 1.0) * *transform).to_vec3();
+                        let center_world_space = (Vec4::position(Default::default()) * *transform).to_vec3();
 
                         for plane in self.clipping_frustum.get_planes() {
                             if !plane.is_on_or_in_front_of(&center_world_space, 0.0) {

@@ -80,8 +80,8 @@ impl SoftwareRenderer {
             let mut end = start + basis;
 
             if let Some(mat) = transform {
-                start = (Vec4::new(start, 1.0) * *mat).to_vec3();
-                end = (Vec4::new(end, 1.0) * *mat).to_vec3();
+                start = (Vec4::position(start) * *mat).to_vec3();
+                end = (Vec4::position(end) * *mat).to_vec3();
             }
 
             self.render_line(start, end, color);

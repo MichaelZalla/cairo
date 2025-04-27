@@ -18,7 +18,7 @@ impl SoftwareRenderer {
 
         if let Some(transform) = world_transform {
             for v in vertices.iter_mut() {
-                *v = (Vec4::new(*v, 1.0) * *transform).to_vec3();
+                *v = (Vec4::position(*v) * *transform).to_vec3();
             }
         }
 

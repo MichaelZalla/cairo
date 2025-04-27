@@ -23,19 +23,17 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
         // Object-to-world-space vertex transform
 
         let mut out = DefaultVertexOut {
-            position_projection_space: Vec4::new(v.position, 1.0)
+            position_projection_space: Vec4::position(v.position)
                 * context.world_view_projection_transform,
             ..Default::default()
         };
 
-        // debug_assert!(out.position.w != 0.0);
-
-        let world_pos = Vec4::new(v.position, 1.0) * context.world_transform;
+        let world_position = Vec4::position(v.position) * context.world_transform;
 
         out.position_world_space = Vec3 {
-            x: world_pos.x,
-            y: world_pos.y,
-            z: world_pos.z,
+            x: world_position.x,
+            y: world_position.y,
+            z: world_position.z,
         };
 
         // Computes a tangent-to-world-space transform.
@@ -61,7 +59,7 @@ pub static HdrEquirectangularProjectionVertexShader: VertexShaderFn =
             tbn_inverse,
             normal: (normal * tbn_inverse),
             view_position: (context.view_position * tbn_inverse).to_vec3(),
-            fragment_position: (world_pos * tbn_inverse).to_vec3(),
+            fragment_position: (world_position * tbn_inverse).to_vec3(),
         };
 
         out

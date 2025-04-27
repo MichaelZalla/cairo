@@ -578,7 +578,7 @@ impl SceneNode {
                         Ok(entry) => {
                             let point_light = &mut entry.item;
 
-                            point_light.position = (Vec4::new(Default::default(), 1.0)
+                            point_light.position = (Vec4::position(Default::default())
                                 * (*current_world_transform))
                                 .to_vec3();
 
@@ -609,7 +609,7 @@ impl SceneNode {
                             let spot_light = &mut entry.item;
 
                             spot_light.look_vector.set_position(
-                                (Vec4::new(Default::default(), 1.0) * (*current_world_transform))
+                                (Vec4::position(Default::default()) * (*current_world_transform))
                                     .to_vec3(),
                             );
 

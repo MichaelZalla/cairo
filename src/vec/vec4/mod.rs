@@ -31,6 +31,10 @@ impl Vec4 {
             w,
         }
     }
+
+    pub const fn position(v: Vec3) -> Self {
+        Self::new(v, 1.0)
+    }
 }
 
 impl cmp::PartialEq for Vec4 {
