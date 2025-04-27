@@ -104,6 +104,8 @@ impl<const N: usize> Simulation<N> {
         };
 
         for i in 0..num_active_particles {
+            let acceleration = derivative.data[i + n];
+
             let start_position = state.data[i];
 
             let mut end_position = new_state.data[i];
@@ -130,6 +132,13 @@ impl<const N: usize> Simulation<N> {
                     new_state.data[i] = state.data[i];
                     new_state.data[i + n] = state.data[i + n];
                 } else {
+                    let time_before_collision = h * segment.t;
+                    let time_after_collision = h - time_before_collision;
+
+                    let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+
+                    end_velocity -= accumulated_velocity;
+
                     debug_assert!(segment.t >= 0.0 && segment.t <= 1.0);
 
                     let penetration_depth = segment.transformed_length * (1.0 - segment.t);
