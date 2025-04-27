@@ -161,6 +161,8 @@ impl Simulation {
                 right = collider.plane.normal.cross(vec3::FORWARD);
             }
 
+            right = right.as_normal();
+
             let up = collider.plane.normal.cross(-right);
 
             // Normal
