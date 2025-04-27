@@ -1,5 +1,7 @@
 use cairo::{
+    color,
     geometry::primitives::line_segment::LineSegment,
+    matrix::Mat4,
     physics::simulation::{
         collision_response::resolve_plane_collision_approximate,
         collision_test::test_line_segment_plane,
@@ -7,6 +9,9 @@ use cairo::{
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
     random::sampler::RandomSampler,
+    render::Renderer,
+    scene::empty::EmptyDisplayKind,
+    software_renderer::SoftwareRenderer,
     vec::vec3,
 };
 
@@ -117,6 +122,59 @@ impl Simulation {
 
                 triangle.update_vertex_positions(v0, v1, v2);
             }
+        }
+    }
+
+    pub fn render(&self, renderer: &mut SoftwareRenderer) {
+        for mesh in &self.meshes {
+            // Visualize points.
+
+            for point in &mesh.points {
+                let transform = Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
+
+                renderer.render_empty(
+                    &transform,
+                    EmptyDisplayKind::Sphere(12),
+                    false,
+                    Some(color::ORANGE),
+                );
+            }
+
+            // Visualize struts.
+
+            for strut in &mesh.struts {
+                // Visualize the strut edge.
+
+                let start = mesh.points[strut.edge.points.0].position;
+                let end = mesh.points[strut.edge.points.1].position;
+
+                renderer.render_line(start, end, strut.edge.color);
+            }
+        }
+
+        for collider in &self.static_plane_colliders {
+            // Visualize static plane colliders.
+
+            let mut right = collider.plane.normal.cross(vec3::UP);
+
+            if right.mag() < f32::EPSILON {
+                right = collider.plane.normal.cross(vec3::FORWARD);
+            }
+
+            let up = collider.plane.normal.cross(-right);
+
+            // Normal
+            renderer.render_line(
+                collider.point,
+                collider.point + collider.plane.normal,
+                color::BLUE,
+            );
+
+            // Tangent
+            renderer.render_line(collider.point, collider.point + right, color::RED);
+
+            // Bitangent
+            renderer.render_line(collider.point, collider.point + up, color::GREEN);
         }
     }
 }

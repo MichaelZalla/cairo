@@ -8,17 +8,11 @@ use cairo::{
         App, AppWindowInfo,
     },
     buffer::framebuffer::Framebuffer,
-    color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    matrix::Mat4,
     random::sampler::RandomSampler,
     render::Renderer,
-    scene::{
-        context::{utils::make_empty_scene, SceneContext},
-        empty::EmptyDisplayKind,
-    },
+    scene::context::{utils::make_empty_scene, SceneContext},
     software_renderer::SoftwareRenderer,
-    vec::vec3,
 };
 
 use simulation::make_simulation;
@@ -135,57 +129,7 @@ fn main() -> Result<(), String> {
 
             renderer.render_ground_plane(30);
 
-            for mesh in &simulation.meshes {
-                // Visualize points.
-
-                for point in &mesh.points {
-                    let transform =
-                        Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
-
-                    renderer.render_empty(
-                        &transform,
-                        EmptyDisplayKind::Sphere(12),
-                        false,
-                        Some(color::ORANGE),
-                    );
-                }
-
-                // Visualize struts.
-
-                for strut in &mesh.struts {
-                    // Visualize the strut edge.
-
-                    let start = mesh.points[strut.edge.points.0].position;
-                    let end = mesh.points[strut.edge.points.1].position;
-
-                    renderer.render_line(start, end, strut.edge.color);
-                }
-            }
-
-            for collider in &simulation.static_plane_colliders {
-                // Visualize static plane colliders.
-
-                let mut right = collider.plane.normal.cross(vec3::UP);
-
-                if right.mag() < f32::EPSILON {
-                    right = collider.plane.normal.cross(vec3::FORWARD);
-                }
-
-                let up = collider.plane.normal.cross(-right);
-
-                // Normal
-                renderer.render_line(
-                    collider.point,
-                    collider.point + collider.plane.normal,
-                    color::BLUE,
-                );
-
-                // Tangent
-                renderer.render_line(collider.point, collider.point + right, color::RED);
-
-                // Bitangent
-                renderer.render_line(collider.point, collider.point + up, color::GREEN);
-            }
+            simulation.render(&mut renderer);
         }
 
         // Render scene.
