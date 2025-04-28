@@ -1,11 +1,59 @@
+use std::f32::consts::PI;
+
 use rigid_body_simulation_state::RigidBodySimulationState;
 
 use crate::{matrix::Mat4, transform::Transform3D, vec::vec3::Vec3};
 
 pub mod rigid_body_simulation_state;
 
+#[derive(Debug, Copy, Clone)]
+pub enum RigidBodyKind {
+    Circle(f32),
+    Sphere(f32),
+}
+
+impl Default for RigidBodyKind {
+    fn default() -> Self {
+        Self::Sphere(0.5)
+    }
+}
+
+impl RigidBodyKind {
+    pub fn get_moment_of_intertia(&self, mass: f32) -> (Mat4, Mat4) {
+        match self {
+            RigidBodyKind::Circle(radius) => {
+                let scale = (PI * radius.powi(4)) / 2.0;
+
+                let moment_of_inertia = Mat4::scale_uniform(scale);
+
+                let inverse_moment_of_inertia = {
+                    let inverse_scale = 1.0 / scale;
+
+                    Mat4::scale_uniform(inverse_scale)
+                };
+
+                (moment_of_inertia, inverse_moment_of_inertia)
+            }
+            RigidBodyKind::Sphere(radius) => {
+                let scale = (2.0 / 5.0) * mass * radius * radius;
+
+                let moment_of_inertia = Mat4::scale_uniform(scale);
+
+                let inverse_moment_of_inertia = {
+                    let inverse_scale = 1.0 / scale;
+
+                    Mat4::scale_uniform(inverse_scale)
+                };
+
+                (moment_of_inertia, inverse_moment_of_inertia)
+            }
+        }
+    }
+}
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBody {
+    pub kind: RigidBodyKind,
     pub transform: Transform3D,
     pub mass: f32,
     pub moment_of_inertia: Mat4,
@@ -17,15 +65,23 @@ pub struct RigidBody {
 }
 
 impl RigidBody {
-    pub fn new(
-        mass: f32,
-        transform: Transform3D,
-        moment_of_inertia: Mat4,
-        inverse_moment_of_inertia: Mat4,
-    ) -> Self {
+    pub fn new(kind: RigidBodyKind, mass: f32, position: Vec3) -> Self {
+        let inverse_mass = 1.0 / mass;
+
+        let (moment_of_inertia, inverse_moment_of_inertia) = kind.get_moment_of_intertia(mass);
+
+        let transform = {
+            let mut transform = Transform3D::default();
+
+            transform.set_translation(position);
+
+            transform
+        };
+
         Self {
+            kind,
             mass,
-            inverse_mass: 1.0 / mass,
+            inverse_mass,
             transform,
             moment_of_inertia,
             inverse_moment_of_inertia,

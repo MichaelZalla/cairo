@@ -14,7 +14,8 @@ use cairo::{
     },
     graphics::Graphics,
     physics::simulation::{
-        force::ContactPoint, rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
+        force::ContactPoint,
+        rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, RigidBodyKind},
         units::Newtons,
     },
     vec::vec3::Vec3,
@@ -147,7 +148,7 @@ fn main() -> Result<(), String> {
                 (MouseButton::Left, MouseEventKind::Down) => {
                     let circle = &simulation.rigid_bodies[0];
 
-                    let transform = &circle.rigid_body.transform;
+                    let transform = &circle.transform;
 
                     let from = *cursor_world_space;
 
@@ -155,7 +156,12 @@ fn main() -> Result<(), String> {
 
                     let circle = &simulation.rigid_bodies[0];
 
-                    if distance < circle.radius {
+                    let radius = match circle.kind {
+                        RigidBodyKind::Circle(radius) => radius,
+                        _ => panic!(),
+                    };
+
+                    if distance < radius {
                         force_creation_state.start.replace(*cursor_world_space);
                     }
                 }

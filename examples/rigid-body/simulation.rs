@@ -9,8 +9,9 @@ use cairo::{
         simulation::{
             collision_response::resolve_plane_rigid_body,
             force::gravity::GRAVITY_RIGID_BODY_FORCE,
-            rigid_body::rigid_body_simulation_state::{
-                DynRigidBodyForce, RigidBodySimulationState,
+            rigid_body::{
+                rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
+                RigidBody, RigidBodyKind,
             },
         },
     },
@@ -21,13 +22,13 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-use crate::{integration::system_dynamics_function, rigid_sphere::RigidSphere};
+use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
-    pub rigid_bodies: Vec<RigidSphere>,
+    pub rigid_bodies: Vec<RigidBody>,
     pub static_plane_colliders: Vec<PlaneCollider>,
 }
 
@@ -40,7 +41,7 @@ impl Simulation {
         // Copies current rigid body state into `state`.
 
         for (i, sphere) in self.rigid_bodies.iter().enumerate() {
-            state.0[i] = sphere.rigid_body.state();
+            state.0[i] = sphere.state();
         }
 
         let derivative = system_dynamics_function(&state, &self.forces, uptime_seconds);
@@ -72,12 +73,14 @@ impl Simulation {
                     continue;
                 }
 
-                if let Some((f, contact_point)) = intersect_capsule_plane(
-                    &collider.plane,
-                    start_position,
-                    end_position,
-                    sphere.radius,
-                ) {
+                let radius = match sphere.kind {
+                    RigidBodyKind::Sphere(radius) => radius,
+                    _ => panic!(),
+                };
+
+                if let Some((f, contact_point)) =
+                    intersect_capsule_plane(&collider.plane, start_position, end_position, radius)
+                {
                     if f > 1.0 {
                         // Ignores potential (future) intersection.
                         continue;
@@ -113,16 +116,20 @@ impl Simulation {
         // Copies new state back to rigid bodies.
 
         for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
-            sphere.rigid_body.apply_simulation_state(&new_state.0[i]);
+            sphere.apply_simulation_state(&new_state.0[i]);
         }
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
         for sphere in &self.rigid_bodies {
-            // @TODO Transform reflects sphere radius.
-            let transform = &sphere.rigid_body.transform;
+            let transform = &sphere.transform;
 
-            let transform_with_radius = Mat4::scale_uniform(sphere.radius) * *transform.mat();
+            let radius = match sphere.kind {
+                RigidBodyKind::Sphere(radius) => radius,
+                _ => panic!(),
+            };
+
+            let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
 
             let display_kind = EmptyDisplayKind::Sphere(12);
 
@@ -198,7 +205,9 @@ pub fn make_simulation() -> Simulation {
                     ..Default::default()
                 };
 
-            spheres.push(RigidSphere::new(center, RADIUS, 1.0));
+            let sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), 1.0, center);
+
+            spheres.push(sphere);
         }
     }
 

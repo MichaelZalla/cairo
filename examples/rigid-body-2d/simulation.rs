@@ -1,15 +1,16 @@
 use cairo::{
-    physics::simulation::rigid_body::rigid_body_simulation_state::{
-        DynRigidBodyForce, RigidBodySimulationState,
+    physics::simulation::rigid_body::{
+        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
+        RigidBody,
     },
     vec::vec3::Vec3,
 };
 
-use crate::{rigid_body::RigidCircle, state_vector::StateVector};
+use crate::state_vector::StateVector;
 
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
-    pub rigid_bodies: Vec<RigidCircle>,
+    pub rigid_bodies: Vec<RigidBody>,
 }
 
 impl Simulation {
@@ -19,7 +20,7 @@ impl Simulation {
         let mut state = StateVector::<RigidBodySimulationState>::new(n);
 
         for (i, circle) in self.rigid_bodies.iter().enumerate() {
-            state.0[i] = circle.rigid_body.state();
+            state.0[i] = circle.state();
         }
 
         let new_state = {
@@ -34,7 +35,7 @@ impl Simulation {
         // components as part of its call to `Transform::set_translation_and_orientation(…)`.
 
         for (i, circle) in self.rigid_bodies.iter_mut().enumerate() {
-            circle.rigid_body.apply_simulation_state(&new_state.0[i]);
+            circle.apply_simulation_state(&new_state.0[i]);
         }
     }
 }

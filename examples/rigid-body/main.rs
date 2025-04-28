@@ -18,7 +18,6 @@ use simulation::make_simulation;
 
 pub mod integration;
 pub mod plane_collider;
-pub mod rigid_sphere;
 pub mod simulation;
 pub mod state_vector;
 
