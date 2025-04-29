@@ -26,6 +26,8 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
+static SPHERE_RADIUS: f32 = 0.5;
+
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
@@ -55,6 +57,11 @@ impl Simulation {
         for i in 0..n {
             let sphere = &self.rigid_bodies[i];
 
+            let radius = match sphere.kind {
+                RigidBodyKind::Sphere(radius) => radius,
+                _ => panic!(),
+            };
+
             let linear_acceleration = derivative.0[i].linear_momentum;
 
             let old_body_state = &state.0[i];
@@ -72,11 +79,6 @@ impl Simulation {
                     // The sphere is moving away from the plane, so no collision could occur.
                     continue;
                 }
-
-                let radius = match sphere.kind {
-                    RigidBodyKind::Sphere(radius) => radius,
-                    _ => panic!(),
-                };
 
                 if let Some((f, contact_point)) =
                     intersect_capsule_plane(&collider.plane, start_position, end_position, radius)
@@ -182,16 +184,15 @@ pub fn make_simulation() -> Simulation {
     static SPHERE_ROWS: usize = 8;
     static SPHERE_COLUMNS: usize = 8;
 
-    static RADIUS: f32 = 0.5;
     static SPACING: f32 = 5.0;
     static HEIGHT: f32 = 3.0;
 
     let mut spheres = Vec::with_capacity(SPHERE_ROWS * SPHERE_COLUMNS);
 
     let grid_offset = Vec3 {
-        x: -(SPHERE_ROWS as f32 / 2.0) + RADIUS,
+        x: -(SPHERE_ROWS as f32 / 2.0) + SPHERE_RADIUS,
         y: 0.0,
-        z: -(SPHERE_COLUMNS as f32 / 2.0) + RADIUS,
+        z: -(SPHERE_COLUMNS as f32 / 2.0) + SPHERE_RADIUS,
     };
 
     for x in 0..SPHERE_ROWS {
@@ -207,7 +208,7 @@ pub fn make_simulation() -> Simulation {
                     ..Default::default()
                 };
 
-            let sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), 1.0, center);
+            let sphere = RigidBody::new(RigidBodyKind::Sphere(SPHERE_RADIUS), 1.0, center);
 
             spheres.push(sphere);
         }
