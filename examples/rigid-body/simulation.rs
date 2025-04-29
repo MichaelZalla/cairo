@@ -154,6 +154,8 @@ impl Simulation {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
+        // Render dynamic rigid bodies (spheres).
+
         for sphere in &self.rigid_bodies {
             let transform = &sphere.transform;
 
@@ -172,6 +174,26 @@ impl Simulation {
                 true,
                 Some(color::WHITE),
             );
+        }
+
+        // Visualize hash grid entries.
+
+        for grid_coord in self.hash_grid.keys() {
+            let transform = {
+                let scale = Mat4::scale_uniform(0.5);
+
+                let offset = Mat4::translation(vec3::ONES * 0.5);
+
+                let translate = Mat4::translation(grid_coord.into());
+
+                scale * offset * translate
+            };
+
+            let display_kind = EmptyDisplayKind::Cube;
+
+            let color = Some(color::LIGHT_GRAY);
+
+            renderer.render_empty(&transform, display_kind, false, color);
         }
 
         for collider in &self.static_plane_colliders {

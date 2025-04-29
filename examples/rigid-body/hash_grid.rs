@@ -28,4 +28,14 @@ impl From<&RigidBodySimulationState> for GridSpaceCoordinate {
     }
 }
 
+impl From<&GridSpaceCoordinate> for Vec3 {
+    fn from(val: &GridSpaceCoordinate) -> Self {
+        Vec3 {
+            x: val.x as f32,
+            y: val.y as f32,
+            z: val.z as f32,
+        }
+    }
+}
+
 pub type HashGrid = HashMap<GridSpaceCoordinate, Vec<usize>>;
