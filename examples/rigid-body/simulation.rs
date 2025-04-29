@@ -22,7 +22,10 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-use crate::integration::system_dynamics_function;
+use crate::{
+    hash_grid::{GridSpaceCoordinate, HashGrid},
+    integration::system_dynamics_function,
+};
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
@@ -32,6 +35,7 @@ pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
     pub static_plane_colliders: Vec<PlaneCollider>,
+    pub hash_grid: HashGrid,
 }
 
 impl Simulation {
@@ -117,10 +121,35 @@ impl Simulation {
             }
         }
 
+        // Detects and resolves collisions with other (nearby) rigid bodies.
+
+        self.rebuild_hash_grid(&new_state);
+
         // Copies new state back to rigid bodies.
 
         for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
             sphere.apply_simulation_state(&new_state.0[i]);
+        }
+    }
+
+    fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {
+        self.hash_grid.clear();
+
+        for (i, sphere_state) in new_state.0.iter().enumerate() {
+            let coord = GridSpaceCoordinate::from(sphere_state);
+
+            match self.hash_grid.get_mut(&coord) {
+                Some(list) => {
+                    list.push(i);
+                }
+                None => {
+                    let mut cell = Vec::<usize>::with_capacity(4);
+
+                    cell.insert(0, i);
+
+                    self.hash_grid.insert(coord, cell);
+                }
+            }
         }
     }
 
@@ -249,5 +278,6 @@ pub fn make_simulation() -> Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
+        hash_grid: Default::default(),
     }
 }

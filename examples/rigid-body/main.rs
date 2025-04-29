@@ -16,6 +16,7 @@ use cairo::{
 
 use simulation::make_simulation;
 
+pub mod hash_grid;
 pub mod integration;
 pub mod plane_collider;
 pub mod simulation;
