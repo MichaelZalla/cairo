@@ -7,7 +7,7 @@ use crate::vec::{
 
 use super::{
     accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
-    primitives::{aabb::AABB, plane::Plane, ray::Ray},
+    primitives::{aabb::AABB, plane::Plane, ray::Ray, sphere::Sphere},
 };
 
 pub fn test_aabb_aabb(a: &AABB, b: &AABB) -> bool {
@@ -57,10 +57,12 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
     }
 }
 
-pub fn test_sphere_sphere(c1: Vec3, r1: f32, c2: Vec3, r2: f32) -> bool {
-    let r1_r2 = r1 + r2;
+pub fn test_sphere_sphere(a: Sphere, b: Sphere) -> bool {
+    let ab = b.center - a.center;
 
-    (c2 - c1).mag_squared() <= r1_r2 * r1_r2
+    let r1_r2 = a.radius + b.radius;
+
+    ab.mag_squared() <= r1_r2 * r1_r2
 }
 
 pub fn intersect_capsule_plane(

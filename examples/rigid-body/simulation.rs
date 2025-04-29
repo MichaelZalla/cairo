@@ -2,7 +2,10 @@ use std::f32::consts::PI;
 
 use cairo::{
     color,
-    geometry::intersect::{intersect_capsule_plane, test_sphere_sphere},
+    geometry::{
+        intersect::{intersect_capsule_plane, test_sphere_sphere},
+        primitives::sphere::Sphere,
+    },
     matrix::Mat4,
     physics::{
         material::PhysicsMaterial,
@@ -198,17 +201,18 @@ impl Simulation {
     }
 
     fn did_collide(new_state: &StateVector<RigidBodySimulationState>, a: usize, b: usize) -> bool {
-        let a_state = &new_state.0[a];
-        let b_state = &new_state.0[b];
+        let a = Sphere {
+            center: new_state.0[a].position,
+            radius: SPHERE_RADIUS,
+        };
 
-        let c1 = a_state.position;
-        let c2 = b_state.position;
-
-        let r1 = SPHERE_RADIUS;
-        let r2 = SPHERE_RADIUS;
+        let b = Sphere {
+            center: new_state.0[b].position,
+            radius: SPHERE_RADIUS,
+        };
 
         // Narrow-phase collision test on 2 spheres.
-        test_sphere_sphere(c1, r1, c2, r2)
+        test_sphere_sphere(a, b)
     }
 
     fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {
