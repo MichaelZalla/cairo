@@ -40,7 +40,7 @@ impl Graph {
     pub fn update(&mut self, keyboard_state: &mut KeyboardState, mouse_state: &mut MouseState) {
         // Translate screen origin with W-A-S-D.
 
-        static TRANSLATION_SPEED: i32 = 8;
+        static TRANSLATION_SPEED: i32 = 1;
 
         for keycode in &keyboard_state.pressed_keycodes {
             match *keycode {
