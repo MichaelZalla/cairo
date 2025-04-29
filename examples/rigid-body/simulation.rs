@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use cairo::{
     color,
     geometry::{
-        intersect::{intersect_capsule_plane, test_sphere_sphere},
+        intersect::{intersect_capsule_plane, test_moving_spheres},
         primitives::sphere::Sphere,
     },
     matrix::Mat4,
@@ -128,7 +128,7 @@ impl Simulation {
 
         self.rebuild_hash_grid(&new_state);
 
-        self.check_rigid_body_collisions(&mut new_state);
+        self.check_rigid_body_collisions(&state, &mut new_state);
 
         // Copies new state back to rigid bodies.
 
@@ -139,6 +139,7 @@ impl Simulation {
 
     fn check_rigid_body_collisions(
         &mut self,
+        current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
         for (current_sphere_index, sphere) in self.rigid_bodies.iter_mut().enumerate() {
@@ -158,7 +159,8 @@ impl Simulation {
 
                             for sphere_index in cell {
                                 if *sphere_index != current_sphere_index
-                                    && Simulation::did_collide(
+                                    && Simulation::did_resolve_collision(
+                                        current_state,
                                         new_state,
                                         current_sphere_index,
                                         *sphere_index,
@@ -180,7 +182,8 @@ impl Simulation {
 
                             if let Some(cell) = self.hash_grid.get(&neighbor_coord) {
                                 for sphere_index in cell {
-                                    if Simulation::did_collide(
+                                    if Simulation::did_resolve_collision(
+                                        current_state,
                                         new_state,
                                         current_sphere_index,
                                         *sphere_index,
@@ -200,19 +203,29 @@ impl Simulation {
         }
     }
 
-    fn did_collide(new_state: &StateVector<RigidBodySimulationState>, a: usize, b: usize) -> bool {
-        let a = Sphere {
-            center: new_state.0[a].position,
+    fn did_resolve_collision(
+        current_state: &StateVector<RigidBodySimulationState>,
+        new_state: &mut StateVector<RigidBodySimulationState>,
+        a: usize,
+        b: usize,
+    ) -> bool {
+        let s1 = Sphere {
+            center: current_state.0[a].position,
             radius: SPHERE_RADIUS,
         };
 
-        let b = Sphere {
-            center: new_state.0[b].position,
+        let s1_movement = new_state.0[a].position - s1.center;
+
+        let s2 = Sphere {
+            center: current_state.0[b].position,
             radius: SPHERE_RADIUS,
         };
 
-        // Narrow-phase collision test on 2 spheres.
-        test_sphere_sphere(a, b)
+        let s2_movement = new_state.0[b].position - s2.center;
+
+        // Narrow-phase collision test on 2 swept spheres.
+
+        test_moving_spheres(s1, s1_movement, s2, s2_movement)
     }
 
     fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {

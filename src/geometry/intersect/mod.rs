@@ -65,6 +65,25 @@ pub fn test_sphere_sphere(a: Sphere, b: Sphere) -> bool {
     ab.mag_squared() <= r1_r2 * r1_r2
 }
 
+#[allow(unused_variables)]
+pub fn test_moving_spheres(a: Sphere, a_movement: Vec3, mut b: Sphere, b_movement: Vec3) -> bool {
+    // Expands the radius of sphere B by that of sphere A.
+
+    b.radius += a.radius;
+
+    // Describes the movement of sphere A from sphere B's frame-of-reference.
+
+    let v = a_movement - b_movement;
+    let v_distance = v.mag();
+
+    let ray = Ray::new(a.center, v.as_normal());
+
+    match intersect_ray_sphere(&ray, &b) {
+        Some((t, contact_point)) => t <= v_distance,
+        None => false,
+    }
+}
+
 pub fn intersect_capsule_plane(
     c: Vec3,
     d: Vec3,
@@ -197,6 +216,44 @@ pub fn intersect_ray_triangle(
 
         ray.colliding_primitive.replace(triangle_index);
     }
+}
+
+pub fn intersect_ray_sphere(ray: &Ray, sphere: &Sphere) -> Option<(f32, Vec3)> {
+    let sphere_to_ray = ray.origin - sphere.center;
+
+    // Ray originates outside of sphere when c > 0.
+
+    let c = sphere_to_ray.mag_squared() - sphere.radius * sphere.radius;
+
+    // Ray points away from sphere's center when b > 0.
+
+    let b = sphere_to_ray.dot(ray.direction);
+
+    // Exit if ray origin is outside of sphere and ray points away from sphere.
+
+    if c > 0.0 && b > 0.0 {
+        return None;
+    }
+
+    // Quadratic discriminant.
+
+    let discriminant = b * b - c;
+
+    // When discriminant is negative, the ray misses the sphere.
+
+    if discriminant < 0.0 {
+        return None;
+    }
+
+    // Ray must intersect sphere; find the smallest t-value for the ray.
+
+    let mut t = -b - discriminant.sqrt();
+
+    // A negative t-value indicates that the intersecting ray starts inside of the sphere.
+
+    t = t.max(0.0);
+
+    Some((t, ray.origin + ray.direction * t))
 }
 
 pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> f32 {
