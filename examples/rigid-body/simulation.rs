@@ -81,7 +81,7 @@ impl Simulation {
                 }
 
                 if let Some((f, contact_point)) =
-                    intersect_capsule_plane(&collider.plane, start_position, end_position, radius)
+                    intersect_capsule_plane(start_position, end_position, radius, &collider.plane)
                 {
                     if f > 1.0 {
                         // Ignores potential (future) intersection.

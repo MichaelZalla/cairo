@@ -58,10 +58,10 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
 }
 
 pub fn intersect_capsule_plane(
-    plane: &Plane,
     c: Vec3,
     d: Vec3,
     radius: f32,
+    plane: &Plane,
 ) -> Option<(f32, Vec3)> {
     let n = plane.normal;
 
