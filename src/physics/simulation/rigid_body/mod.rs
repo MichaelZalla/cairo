@@ -59,6 +59,7 @@ pub struct RigidBody {
     pub moment_of_inertia: Mat4,
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
+    pub did_collide: bool,
     // Derived state
     inverse_mass: f32,
     inverse_moment_of_inertia: Mat4,

@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use cairo::{
     color,
-    geometry::intersect::intersect_capsule_plane,
+    geometry::intersect::{intersect_capsule_plane, test_sphere_sphere},
     matrix::Mat4,
     physics::{
         material::PhysicsMaterial,
@@ -125,11 +125,90 @@ impl Simulation {
 
         self.rebuild_hash_grid(&new_state);
 
+        self.check_rigid_body_collisions(&mut new_state);
+
         // Copies new state back to rigid bodies.
 
         for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
             sphere.apply_simulation_state(&new_state.0[i]);
         }
+    }
+
+    fn check_rigid_body_collisions(
+        &mut self,
+        new_state: &mut StateVector<RigidBodySimulationState>,
+    ) {
+        for (current_sphere_index, sphere) in self.rigid_bodies.iter_mut().enumerate() {
+            let mut did_collide = false;
+
+            let sphere_state = &new_state.0[current_sphere_index];
+
+            let current_grid_coord = GridSpaceCoordinate::from(sphere_state);
+
+            for x_offset in -1..=1 {
+                for y_offset in -1..=1 {
+                    for z_offset in -1..=1 {
+                        if x_offset == 0 && y_offset == 0 && z_offset == 0 {
+                            // Checks current cell.
+
+                            let cell = self.hash_grid.get(&current_grid_coord).unwrap();
+
+                            for sphere_index in cell {
+                                if *sphere_index != current_sphere_index
+                                    && Simulation::did_collide(
+                                        new_state,
+                                        current_sphere_index,
+                                        *sphere_index,
+                                    )
+                                {
+                                    did_collide = true;
+                                }
+                            }
+                        } else {
+                            // Checks neighboring cell.
+
+                            let offset = GridSpaceCoordinate {
+                                x: x_offset,
+                                y: y_offset,
+                                z: z_offset,
+                            };
+
+                            let neighbor_coord = current_grid_coord + offset;
+
+                            if let Some(cell) = self.hash_grid.get(&neighbor_coord) {
+                                for sphere_index in cell {
+                                    if Simulation::did_collide(
+                                        new_state,
+                                        current_sphere_index,
+                                        *sphere_index,
+                                    ) {
+                                        did_collide = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Updates collision flag.
+
+            sphere.did_collide = did_collide;
+        }
+    }
+
+    fn did_collide(new_state: &StateVector<RigidBodySimulationState>, a: usize, b: usize) -> bool {
+        let a_state = &new_state.0[a];
+        let b_state = &new_state.0[b];
+
+        let c1 = a_state.position;
+        let c2 = b_state.position;
+
+        let r1 = SPHERE_RADIUS;
+        let r2 = SPHERE_RADIUS;
+
+        // Narrow-phase collision test on 2 spheres.
+        test_sphere_sphere(c1, r1, c2, r2)
     }
 
     fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {
@@ -168,12 +247,13 @@ impl Simulation {
 
             let display_kind = EmptyDisplayKind::Sphere(12);
 
-            renderer.render_empty(
-                &transform_with_radius,
-                display_kind,
-                true,
-                Some(color::WHITE),
-            );
+            let color = if sphere.did_collide {
+                color::RED
+            } else {
+                color::WHITE
+            };
+
+            renderer.render_empty(&transform_with_radius, display_kind, true, Some(color));
         }
 
         // Visualize hash grid entries.
