@@ -2,7 +2,7 @@ use crate::{physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
 use super::rigid_body::rigid_body_simulation_state::RigidBodySimulationState;
 
-pub fn resolve_plane_collision_approximate(
+pub fn resolve_point_plane_collision_approximate(
     plane_normal: Vec3,
     material: &PhysicsMaterial,
     end_position: &mut Vec3,
@@ -46,11 +46,11 @@ pub fn resolve_plane_collision_approximate(
     *end_position += minimum_displacement;
 }
 
-pub fn resolve_plane_rigid_body(
-    plane_normal: Vec3,
-    material: &PhysicsMaterial,
+pub fn resolve_rigid_body_plane_collision(
     state: &mut RigidBodySimulationState,
+    plane_normal: Vec3,
     contact_point: Vec3,
+    material: &PhysicsMaterial,
 ) {
     let r = contact_point - state.position;
 

@@ -8,7 +8,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::resolve_plane_collision_approximate,
+            collision_response::resolve_point_plane_collision_approximate,
             force::PointForce,
             particle::{
                 generator::{ParticleGenerator, ParticleGeneratorKind},
@@ -143,7 +143,7 @@ impl<const N: usize> Simulation<N> {
 
                     let penetration_depth = segment.transformed_length * (1.0 - segment.t);
 
-                    resolve_plane_collision_approximate(
+                    resolve_point_plane_collision_approximate(
                         instance_triangle_normal,
                         &PHYSICS_MATERIAL,
                         &mut end_position,

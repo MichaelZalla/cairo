@@ -6,7 +6,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::resolve_plane_collision_approximate,
+            collision_response::resolve_point_plane_collision_approximate,
             force::PointForce,
             operator::Operators,
             particle::{
@@ -276,7 +276,7 @@ impl<const N: usize> Simulation<'_, N> {
                 if let Some((_f, new_distance)) = collider.test(&position, &end_position) {
                     // Perform an approximate collision resolution.
 
-                    resolve_plane_collision_approximate(
+                    resolve_point_plane_collision_approximate(
                         collider.plane.normal,
                         &PHYSICS_MATERIAL,
                         &mut end_position,

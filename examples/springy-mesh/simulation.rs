@@ -3,7 +3,7 @@ use cairo::{
     geometry::primitives::line_segment::LineSegment,
     matrix::Mat4,
     physics::simulation::{
-        collision_response::resolve_plane_collision_approximate,
+        collision_response::resolve_point_plane_collision_approximate,
         collision_test::test_line_segment_plane,
         force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
@@ -84,7 +84,7 @@ impl Simulation {
 
                         end_velocity -= accumulated_velocity;
 
-                        resolve_plane_collision_approximate(
+                        resolve_point_plane_collision_approximate(
                             collider.plane.normal,
                             &mesh.material,
                             &mut end_position,

@@ -7,7 +7,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::resolve_plane_rigid_body,
+            collision_response::resolve_rigid_body_plane_collision,
             force::gravity::GRAVITY_RIGID_BODY_FORCE,
             rigid_body::{
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
@@ -103,11 +103,13 @@ impl Simulation {
                         restitution: 0.76,
                     };
 
-                    resolve_plane_rigid_body(
+                    let state = &mut new_state.0[i];
+
+                    resolve_rigid_body_plane_collision(
+                        state,
                         collider.plane.normal,
-                        &PHYSICS_MATERIAL,
-                        &mut new_state.0[i],
                         contact_point,
+                        &PHYSICS_MATERIAL,
                     );
                 }
             }
