@@ -35,6 +35,11 @@ use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
 static SPHERE_RADIUS: f32 = 0.5;
 
+static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+    dynamic_friction: 0.0,
+    restitution: 0.76,
+};
+
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
@@ -107,11 +112,6 @@ impl Simulation {
                     new_state.0[i].position = start_position
                         + (end_position - start_position) * f
                         + collider.plane.normal * 0.001;
-
-                    static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
-                        dynamic_friction: 0.0,
-                        restitution: 0.76,
-                    };
 
                     let state = &mut new_state.0[i];
 
