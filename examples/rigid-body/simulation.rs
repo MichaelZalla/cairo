@@ -18,6 +18,7 @@ use cairo::{
             },
         },
     },
+    random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
     render::Renderer,
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
@@ -325,10 +326,13 @@ impl Simulation {
     }
 }
 
-pub fn make_simulation() -> Simulation {
+pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     // Forces.
 
-    let forces: Vec<Box<DynRigidBodyForce>> = vec![Box::new(GRAVITY_RIGID_BODY_FORCE)];
+    let forces: Vec<Box<DynRigidBodyForce>> = vec![
+        // Gravity
+        Box::new(GRAVITY_RIGID_BODY_FORCE),
+    ];
 
     // Rigid bodies (spheres).
 
@@ -359,7 +363,16 @@ pub fn make_simulation() -> Simulation {
                     ..Default::default()
                 };
 
-            let sphere = RigidBody::new(RigidBodyKind::Sphere(SPHERE_RADIUS), 1.0, center);
+            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(SPHERE_RADIUS), 1.0, center);
+
+            let random_velocity = {
+                let random_speed = sampler.sample_range_uniform(0.0, 10.0);
+                let random_direction = sampler.sample_direction_uniform();
+
+                random_direction * random_speed
+            };
+
+            sphere.linear_momentum = random_velocity * sphere.mass;
 
             spheres.push(sphere);
         }

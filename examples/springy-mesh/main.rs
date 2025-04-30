@@ -102,8 +102,6 @@ fn main() -> Result<(), String> {
         sampler
     };
 
-    // let mut sampler_rc = Rc::new(sampler);
-
     let simulation = make_simulation(&mut sampler);
 
     let simulation_rc = RefCell::new(simulation);
