@@ -34,6 +34,7 @@ use crate::{
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
 static SPHERE_RADIUS: f32 = 0.5;
+static SPHERE_MASS: f32 = 1.0;
 
 static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     dynamic_friction: 0.0,
@@ -363,7 +364,8 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
                     ..Default::default()
                 };
 
-            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(SPHERE_RADIUS), 1.0, center);
+            let mut sphere =
+                RigidBody::new(RigidBodyKind::Sphere(SPHERE_RADIUS), SPHERE_MASS, center);
 
             let random_velocity = {
                 let random_speed = sampler.sample_range_uniform(0.0, 10.0);
