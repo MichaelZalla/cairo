@@ -2,7 +2,12 @@ use std::f32::consts::PI;
 
 use rigid_body_simulation_state::RigidBodySimulationState;
 
-use crate::{matrix::Mat4, transform::Transform3D, vec::vec3::Vec3};
+use crate::{
+    color::{self, Color},
+    matrix::Mat4,
+    transform::Transform3D,
+    vec::vec3::Vec3,
+};
 
 pub mod rigid_body_simulation_state;
 
@@ -60,6 +65,7 @@ pub struct RigidBody {
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
     pub did_collide: bool,
+    pub color: Color,
     // Derived state
     inverse_mass: f32,
     inverse_moment_of_inertia: Mat4,
@@ -79,6 +85,8 @@ impl RigidBody {
             transform
         };
 
+        let color = color::WHITE;
+
         Self {
             kind,
             mass,
@@ -86,6 +94,7 @@ impl RigidBody {
             transform,
             moment_of_inertia,
             inverse_moment_of_inertia,
+            color,
             ..Default::default()
         }
     }

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     animation::lerp,
+    random::sampler::{RandomSampler, RangeSampler},
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
@@ -68,6 +69,16 @@ impl FromStr for Color {
         };
 
         Ok(Color { r, g, b, a })
+    }
+}
+
+impl<const N: usize> From<&mut RandomSampler<N>> for Color {
+    fn from(sampler: &mut RandomSampler<N>) -> Self {
+        let r = sampler.sample_range_uniform(0.0, 255.0) as u8;
+        let g = sampler.sample_range_uniform(0.0, 255.0) as u8;
+        let b = sampler.sample_range_uniform(0.0, 255.0) as u8;
+
+        Self::rgb(r, g, b)
     }
 }
 

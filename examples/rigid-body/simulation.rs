@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use cairo::{
-    color,
+    color::{self, Color},
     geometry::{
         intersect::{intersect_capsule_plane, intersect_moving_spheres},
         primitives::sphere::Sphere,
@@ -271,7 +271,7 @@ impl Simulation {
             let color = if sphere.did_collide {
                 color::RED
             } else {
-                color::WHITE
+                sphere.color
             };
 
             renderer.render_empty(&transform_with_radius, display_kind, true, Some(color));
@@ -371,6 +371,8 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
                 random_direction * random_speed
             };
+
+            sphere.color = Color::from(&mut *sampler);
 
             sphere.linear_momentum = random_velocity * sphere.mass;
 
