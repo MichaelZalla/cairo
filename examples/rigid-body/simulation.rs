@@ -66,10 +66,14 @@ impl Simulation {
 
         let mut new_state = state.clone() + derivative.clone() * h;
 
+        for sphere in self.rigid_bodies.iter_mut() {
+            sphere.did_collide = false;
+        }
+
         // Detects and resolves collisions with static colliders.
 
         for i in 0..n {
-            let sphere = &self.rigid_bodies[i];
+            let sphere = &mut self.rigid_bodies[i];
 
             let radius = match sphere.kind {
                 RigidBodyKind::Sphere(radius) => radius,
@@ -122,6 +126,8 @@ impl Simulation {
                         contact_point,
                         &PHYSICS_MATERIAL,
                     );
+
+                    sphere.did_collide = true;
                 }
             }
         }
@@ -145,8 +151,6 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
         for (current_sphere_index, sphere) in self.rigid_bodies.iter_mut().enumerate() {
-            let mut did_collide = false;
-
             let sphere_state = &new_state.0[current_sphere_index];
 
             let current_grid_coord = GridSpaceCoordinate::from(sphere_state);
@@ -168,7 +172,7 @@ impl Simulation {
                                         *sphere_index,
                                     )
                                 {
-                                    did_collide = true;
+                                    sphere.did_collide = true;
                                 }
                             }
                         } else {
@@ -190,7 +194,7 @@ impl Simulation {
                                         current_sphere_index,
                                         *sphere_index,
                                     ) {
-                                        did_collide = true;
+                                        sphere.did_collide = true;
                                     }
                                 }
                             }
@@ -198,10 +202,6 @@ impl Simulation {
                     }
                 }
             }
-
-            // Updates collision flag.
-
-            sphere.did_collide = did_collide;
         }
     }
 
