@@ -1,21 +1,19 @@
 use crate::geometry::primitives::{line_segment::LineSegment, plane::Plane};
 
 pub fn test_line_segment_plane(segment: &LineSegment, plane: &Plane) -> Option<(f32, f32)> {
-    let approach_distance = plane.get_signed_distance(&segment.start);
-    let penetration_distance = plane.get_signed_distance(&segment.end);
+    let start_distance = plane.get_signed_distance(&segment.start);
+    let end_distance = plane.get_signed_distance(&segment.end);
 
-    if (approach_distance * penetration_distance) < 0.0 && penetration_distance < 0.0 {
-        // Calculates the fraction of the timestep at which the collision
-        // occurred; note that this calculation assumes constant acceleration of
-        // the plane and the segment being tested.
+    if (start_distance * end_distance) < 0.0 && end_distance < 0.0 {
+        // Sign change indicates an intersection.
 
-        let penetration_depth = -penetration_distance;
+        // Computes a t-value using start_distance and end_distance.
 
-        let total_distance = approach_distance + penetration_depth;
+        let f = start_distance / (start_distance - end_distance);
 
-        let f = approach_distance / total_distance;
+        // Negative `end_distance` indicates the penetration depth.
 
-        Some((f, penetration_depth))
+        Some((f, -end_distance))
     } else {
         None
     }
