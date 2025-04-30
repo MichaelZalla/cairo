@@ -1,10 +1,9 @@
 use cairo::{
     color,
-    geometry::primitives::line_segment::LineSegment,
+    geometry::intersect::intersect_line_segment_plane,
     matrix::Mat4,
     physics::simulation::{
         collision_response::resolve_point_plane_collision_approximate,
-        collision_test::intersect_line_segment_plane,
         force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
@@ -71,12 +70,12 @@ impl Simulation {
 
                 // We'll break early on the first collision (if any).
 
-                let segment = LineSegment::new(start_position, end_position);
-
                 for collider in &self.static_plane_colliders {
-                    if let Some((f, penetration_depth)) =
-                        intersect_line_segment_plane(&segment, &collider.plane)
+                    if let Some((f, intersection_point)) =
+                        intersect_line_segment_plane(&collider.plane, start_position, end_position)
                     {
+                        let penetration_depth = (end_position - intersection_point).mag();
+
                         let time_before_collision = h * f;
                         let time_after_collision = h - time_before_collision;
 

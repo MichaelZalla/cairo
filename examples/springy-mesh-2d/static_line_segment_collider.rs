@@ -1,6 +1,8 @@
 use cairo::{
-    geometry::primitives::{line_segment::LineSegment, plane::Plane},
-    physics::simulation::collision_test::intersect_line_segment_plane,
+    geometry::{
+        intersect::intersect_line_segment_plane,
+        primitives::{line_segment::LineSegment, plane::Plane},
+    },
     vec::vec3::{self, Vec3},
 };
 
@@ -34,7 +36,7 @@ impl StaticLineSegmentCollider {
 }
 
 impl StaticLineSegmentCollider {
-    pub fn test(&self, start: &Vec3, end: &Vec3) -> Option<(f32, f32)> {
+    pub fn test(&self, start: &Vec3, end: &Vec3) -> Option<(f32, Vec3)> {
         let projection = (end - self.segment.start).dot(self.tangent);
 
         if projection < 0.0 || projection > self.length {
@@ -44,8 +46,6 @@ impl StaticLineSegmentCollider {
         // @TODO Check whether the position at time `t + f * h` still projects
         // onto the segment.
 
-        let segment = LineSegment::new(*start, *end);
-
-        intersect_line_segment_plane(&segment, &self.plane)
+        intersect_line_segment_plane(&self.plane, *start, *end)
     }
 }

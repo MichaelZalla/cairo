@@ -273,15 +273,17 @@ impl<const N: usize> Simulation<'_, N> {
             for collider in colliders.iter() {
                 // Check if this particle has just crossed over the  plane.
 
-                if let Some((_f, new_distance)) = collider.test(&position, &end_position) {
+                if let Some((_f, intersection_point)) = collider.test(&position, &end_position) {
                     // Perform an approximate collision resolution.
+
+                    let penetration_depth = (end_position - intersection_point).mag();
 
                     resolve_point_plane_collision_approximate(
                         collider.plane.normal,
                         &PHYSICS_MATERIAL,
                         &mut end_position,
                         &mut end_velocity,
-                        new_distance,
+                        penetration_depth,
                     );
 
                     new_state.data[i + n] = end_velocity;
