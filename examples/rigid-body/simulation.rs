@@ -120,15 +120,15 @@ impl Simulation {
                     continue;
                 }
 
-                if let Some((f, contact_point)) =
+                if let Some((t, contact_point)) =
                     intersect_capsule_plane(start_position, end_position, radius, &collider.plane)
                 {
-                    if f > 1.0 {
+                    if t > 1.0 {
                         // Ignores potential (future) intersection.
                         continue;
                     }
 
-                    let time_before_collision = h * f;
+                    let time_before_collision = h * t;
                     let time_after_collision = h - time_before_collision;
 
                     let accumulated_linear_velocity =
@@ -137,7 +137,7 @@ impl Simulation {
                     new_state.0[i].linear_momentum -= accumulated_linear_velocity * mass;
 
                     new_state.0[i].position = start_position
-                        + (end_position - start_position) * f
+                        + (end_position - start_position) * t
                         + collider.plane.normal * 0.001;
 
                     let state = &mut new_state.0[i];
