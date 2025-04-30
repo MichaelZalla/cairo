@@ -66,7 +66,7 @@ pub fn resolve_rigid_body_plane_collision(
         r.cross(plane_normal) * inverse_moment_of_intertia_world_space;
 
     let change_in_angular_velocity_at_contact_point_normalized = /* j * */
-        change_in_angular_velocity_normalized.cross(contact_point);
+        change_in_angular_velocity_normalized.cross(r);
 
     // v_outgoing = -v_incoming * restitution
     //
