@@ -10,7 +10,9 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::resolve_rigid_body_plane_collision,
+            collision_response::{
+                resolve_rigid_body_collision, resolve_rigid_body_plane_collision,
+            },
             force::gravity::GRAVITY_RIGID_BODY_FORCE,
             rigid_body::{
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
@@ -38,7 +40,7 @@ static SPHERE_MASS: f32 = 1.0;
 
 static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     dynamic_friction: 0.0,
-    restitution: 0.76,
+    restitution: 0.84,
 };
 
 pub struct Simulation {
@@ -72,7 +74,7 @@ impl Simulation {
 
         // Detects and resolves collisions with static colliders.
 
-        self.check_static_collisions(h, &derivative, &state, &mut new_state);
+        self.check_static_collisions(&state, &mut new_state);
 
         // Detects and resolves collisions with other (nearby) rigid bodies.
 
@@ -89,8 +91,6 @@ impl Simulation {
 
     fn check_static_collisions(
         &mut self,
-        h: f32,
-        derivative: &StateVector<RigidBodySimulationState>,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
@@ -102,12 +102,8 @@ impl Simulation {
                 _ => panic!(),
             };
 
-            let linear_acceleration = derivative.0[i].linear_momentum;
-
             let current_body_state = &current_state.0[i];
             let new_body_state = &mut new_state.0[i];
-
-            let mass = 1.0 / new_body_state.inverse_mass;
 
             let start_position = current_body_state.position;
             let end_position = new_body_state.position;
@@ -127,18 +123,6 @@ impl Simulation {
                         // Ignores potential (future) intersection.
                         continue;
                     }
-
-                    let time_before_collision = h * t;
-                    let time_after_collision = h - time_before_collision;
-
-                    let accumulated_linear_velocity =
-                        linear_acceleration * 2.0 * time_after_collision;
-
-                    new_state.0[i].linear_momentum -= accumulated_linear_velocity * mass;
-
-                    new_state.0[i].position = start_position
-                        + (end_position - start_position) * t
-                        + collider.plane.normal * 0.001;
 
                     let state = &mut new_state.0[i];
 
@@ -238,7 +222,27 @@ impl Simulation {
         // Narrow-phase collision test on 2 swept spheres.
 
         match intersect_moving_spheres(s1, s1_movement, s2, s2_movement) {
-            Some((_t, _collision_point)) => true,
+            Some((_t, contact_point)) => {
+                // Compute and apply the collision response.
+
+                let mut s1_state_cloned = new_state.0[a];
+                let mut s2_state_cloned = new_state.0[b];
+
+                resolve_rigid_body_collision(
+                    &mut s1_state_cloned,
+                    &mut s2_state_cloned,
+                    contact_point,
+                    &PHYSICS_MATERIAL,
+                );
+
+                new_state.0[a].linear_momentum = s1_state_cloned.linear_momentum;
+                new_state.0[a].angular_momentum = s1_state_cloned.angular_momentum;
+
+                new_state.0[b].linear_momentum = s2_state_cloned.linear_momentum;
+                new_state.0[b].angular_momentum = s2_state_cloned.angular_momentum;
+
+                true
+            }
             None => false,
         }
     }

@@ -95,3 +95,69 @@ pub fn resolve_rigid_body_plane_collision(
     state.linear_momentum += plane_normal * normal_impulse_magnitude;
     state.angular_momentum += r.cross(plane_normal) * normal_impulse_magnitude;
 }
+
+#[allow(unused_variables)]
+pub fn resolve_rigid_body_collision(
+    a: &mut RigidBodySimulationState,
+    b: &mut RigidBodySimulationState,
+    contact_point: Vec3,
+    material: &PhysicsMaterial,
+) {
+    let r_a = contact_point - a.position;
+    let r_b = contact_point - b.position;
+
+    let incoming_contact_velocity_a = a.velocity() + a.angular_velocity().cross(r_a);
+    let incoming_contact_velocity_b = b.velocity() + b.angular_velocity().cross(r_b);
+
+    let normal = (a.position - b.position).as_normal();
+
+    let incoming_speed_relative_to_normal =
+        normal.dot(incoming_contact_velocity_a - incoming_contact_velocity_b);
+
+    if incoming_speed_relative_to_normal > 0.0 {
+        // Bodies are already moving away from each other.
+
+        return;
+    }
+
+    // Change in angular velocity for rigid body A.
+
+    let inverse_moment_of_intertia_a_world_space = a.inverse_moment_of_intertia_world_space();
+
+    let change_in_angular_velocity_a_normalized = /* j * */
+        r_a.cross(normal) * inverse_moment_of_intertia_a_world_space;
+
+    let change_in_angular_velocity_at_contact_point_a_normalized = /* j * */
+        change_in_angular_velocity_a_normalized.cross(r_a);
+
+    // Change in angular velocity for rigid body B.
+
+    let inverse_moment_of_intertia_b_world_space = b.inverse_moment_of_intertia_world_space();
+
+    let change_in_angular_velocity_b_normalized = /* j * */
+        r_b.cross(normal) * inverse_moment_of_intertia_b_world_space;
+
+    let change_in_angular_velocity_at_contact_point_b_normalized = /* j * */
+        change_in_angular_velocity_b_normalized.cross(r_b);
+
+    // Calculate the normal impulse.
+
+    let numerator = -(1.0 + material.restitution) * incoming_speed_relative_to_normal;
+
+    let denominator = a.inverse_mass
+        + b.inverse_mass
+        + normal.dot(
+            change_in_angular_velocity_at_contact_point_a_normalized
+                + change_in_angular_velocity_at_contact_point_b_normalized,
+        );
+
+    let normal_impulse_magnitude = numerator / denominator;
+
+    // Distribute the normal impulse to bodies.
+
+    a.linear_momentum += normal * normal_impulse_magnitude;
+    a.angular_momentum += r_a.cross(normal) * normal_impulse_magnitude;
+
+    b.linear_momentum -= normal * normal_impulse_magnitude;
+    b.angular_momentum -= r_b.cross(normal) * normal_impulse_magnitude;
+}
