@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use cairo::{
     color,
     geometry::{
-        intersect::{intersect_capsule_plane, test_moving_spheres},
+        intersect::{intersect_capsule_plane, intersect_moving_spheres},
         primitives::sphere::Sphere,
     },
     matrix::Mat4,
@@ -225,7 +225,10 @@ impl Simulation {
 
         // Narrow-phase collision test on 2 swept spheres.
 
-        test_moving_spheres(s1, s1_movement, s2, s2_movement)
+        match intersect_moving_spheres(s1, s1_movement, s2, s2_movement) {
+            Some((_t, _collision_point)) => true,
+            None => false,
+        }
     }
 
     fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {
