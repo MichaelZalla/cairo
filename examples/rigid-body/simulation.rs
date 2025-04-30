@@ -337,11 +337,12 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
     // Rigid bodies (spheres).
 
-    static SPHERE_ROWS: usize = 8;
-    static SPHERE_COLUMNS: usize = 8;
+    static SPHERE_ROWS: usize = 16;
+    static SPHERE_COLUMNS: usize = 16;
 
-    static SPACING: f32 = 5.0;
-    static HEIGHT: f32 = 3.0;
+    static SPACING: f32 = 4.0;
+
+    static HEIGHT: f32 = SPHERE_ROWS as f32 / 2.0;
 
     let mut spheres = Vec::with_capacity(SPHERE_ROWS * SPHERE_COLUMNS);
 
@@ -389,7 +390,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     let ground_planes = vec![
         (
             Vec3 {
-                x: -10.0,
+                x: -20.0,
                 y: 0.0,
                 z: 0.0,
             },
@@ -397,11 +398,27 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         ),
         (
             Vec3 {
-                x: 10.0,
+                x: 20.0,
                 y: 0.0,
                 z: 0.0,
             },
             Quaternion::new(vec3::FORWARD, -PI / 12.0),
+        ),
+        (
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -30.0,
+            },
+            Quaternion::new(vec3::RIGHT, -PI / 12.0),
+        ),
+        (
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 30.0,
+            },
+            Quaternion::new(vec3::RIGHT, PI / 12.0),
         ),
     ];
 
