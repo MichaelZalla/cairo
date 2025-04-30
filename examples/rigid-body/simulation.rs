@@ -72,7 +72,29 @@ impl Simulation {
 
         // Detects and resolves collisions with static colliders.
 
-        for i in 0..n {
+        self.check_static_collisions(h, &derivative, &state, &mut new_state);
+
+        // Detects and resolves collisions with other (nearby) rigid bodies.
+
+        self.rebuild_hash_grid(&new_state);
+
+        self.check_rigid_body_collisions(&state, &mut new_state);
+
+        // Copies new state back to rigid bodies.
+
+        for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
+            sphere.apply_simulation_state(&new_state.0[i]);
+        }
+    }
+
+    fn check_static_collisions(
+        &mut self,
+        h: f32,
+        derivative: &StateVector<RigidBodySimulationState>,
+        current_state: &StateVector<RigidBodySimulationState>,
+        new_state: &mut StateVector<RigidBodySimulationState>,
+    ) {
+        for i in 0..self.rigid_bodies.len() {
             let sphere = &mut self.rigid_bodies[i];
 
             let radius = match sphere.kind {
@@ -82,12 +104,12 @@ impl Simulation {
 
             let linear_acceleration = derivative.0[i].linear_momentum;
 
-            let old_body_state = &state.0[i];
+            let current_body_state = &current_state.0[i];
             let new_body_state = &mut new_state.0[i];
 
             let mass = 1.0 / new_body_state.inverse_mass;
 
-            let start_position = old_body_state.position;
+            let start_position = current_body_state.position;
             let end_position = new_body_state.position;
             let end_linear_momentum = new_body_state.linear_momentum;
             let end_velocity = end_linear_momentum * new_body_state.inverse_mass;
@@ -130,18 +152,6 @@ impl Simulation {
                     sphere.did_collide = true;
                 }
             }
-        }
-
-        // Detects and resolves collisions with other (nearby) rigid bodies.
-
-        self.rebuild_hash_grid(&new_state);
-
-        self.check_rigid_body_collisions(&state, &mut new_state);
-
-        // Copies new state back to rigid bodies.
-
-        for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
-            sphere.apply_simulation_state(&new_state.0[i]);
         }
     }
 
