@@ -1,6 +1,6 @@
 use crate::geometry::primitives::{line_segment::LineSegment, plane::Plane};
 
-pub fn test_line_segment_plane(segment: &LineSegment, plane: &Plane) -> Option<(f32, f32)> {
+pub fn intersect_line_segment_plane(segment: &LineSegment, plane: &Plane) -> Option<(f32, f32)> {
     let start_distance = plane.get_signed_distance(&segment.start);
     let end_distance = plane.get_signed_distance(&segment.end);
 

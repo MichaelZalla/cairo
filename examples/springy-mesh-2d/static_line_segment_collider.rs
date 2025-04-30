@@ -1,6 +1,6 @@
 use cairo::{
     geometry::primitives::{line_segment::LineSegment, plane::Plane},
-    physics::simulation::collision_test::test_line_segment_plane,
+    physics::simulation::collision_test::intersect_line_segment_plane,
     vec::vec3::{self, Vec3},
 };
 
@@ -46,6 +46,6 @@ impl StaticLineSegmentCollider {
 
         let segment = LineSegment::new(*start, *end);
 
-        test_line_segment_plane(&segment, &self.plane)
+        intersect_line_segment_plane(&segment, &self.plane)
     }
 }

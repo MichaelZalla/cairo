@@ -4,7 +4,7 @@ use cairo::{
     matrix::Mat4,
     physics::simulation::{
         collision_response::resolve_point_plane_collision_approximate,
-        collision_test::test_line_segment_plane,
+        collision_test::intersect_line_segment_plane,
         force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
@@ -75,7 +75,7 @@ impl Simulation {
 
                 for collider in &self.static_plane_colliders {
                     if let Some((f, penetration_depth)) =
-                        test_line_segment_plane(&segment, &collider.plane)
+                        intersect_line_segment_plane(&segment, &collider.plane)
                     {
                         let time_before_collision = h * f;
                         let time_after_collision = h - time_before_collision;
