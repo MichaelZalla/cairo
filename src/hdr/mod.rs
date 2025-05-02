@@ -66,6 +66,6 @@ impl Hdr {
     pub fn to_texture_map(&self) -> TextureMap<Vec3> {
         let buffer = self.to_buffer();
 
-        TextureMap::<Vec3>::from_buffer(buffer.width, buffer.height, buffer)
+        TextureMap::from(buffer)
     }
 }

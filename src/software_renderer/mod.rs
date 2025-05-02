@@ -471,8 +471,7 @@ impl SoftwareRenderer {
 
                             let buffer = Buffer2D::<f32>::new(width, height, None);
 
-                            self.ssao_buffer
-                                .replace(TextureMap::from_buffer(width, height, buffer));
+                            self.ssao_buffer.replace(TextureMap::from(buffer));
 
                             self.ssao_blur_buffer.clone_from(&self.ssao_buffer);
 

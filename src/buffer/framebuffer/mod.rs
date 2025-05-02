@@ -86,7 +86,7 @@ impl Framebuffer {
 
         let bloom_buffer = Buffer2D::<Vec3>::new(width, height, None);
 
-        let mut bloom_texture_map = TextureMap::from_buffer(width, height, bloom_buffer);
+        let mut bloom_texture_map = TextureMap::from(bloom_buffer);
 
         bloom_texture_map.sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
 

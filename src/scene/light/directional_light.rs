@@ -120,11 +120,7 @@ impl DirectionalLight {
 
         let (width, height) = (shadow_map_size, shadow_map_size);
 
-        let mut blank_texture = TextureMap::<f32>::from_buffer(
-            width,
-            height,
-            Buffer2D::<f32>::new(width, height, None),
-        );
+        let mut blank_texture = TextureMap::from(Buffer2D::<f32>::new(width, height, None));
 
         blank_texture.sampling_options.wrapping = TextureMapWrapping::ClampToEdge;
 

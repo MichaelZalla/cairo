@@ -73,6 +73,41 @@ pub struct TextureMap<T: Default + Debug + Copy + PartialEq = u8> {
     pub sampling_options: TextureMapSamplingOptions,
 }
 
+impl<T: Default + Debug + Copy + PartialEq> From<Buffer2D<T>> for TextureMap<T> {
+    fn from(buffer: Buffer2D<T>) -> Self {
+        let width = buffer.width;
+        let height = buffer.height;
+
+        let buffer_samples_per_pixel = buffer.data.len() as u32 / width / height;
+
+        Self {
+            info: TextureMapInfo {
+                filepath: "Buffer".to_string(),
+                storage_format: if buffer_samples_per_pixel == 4 {
+                    TextureMapStorageFormat::RGBA32
+                } else if buffer_samples_per_pixel == 3 {
+                    TextureMapStorageFormat::RGB24
+                } else if buffer_samples_per_pixel == 1 {
+                    TextureMapStorageFormat::Index8(0)
+                } else {
+                    panic!(
+                        "Invalid buffer data length {} for buffer size {}x{}!",
+                        buffer.data.len(),
+                        width,
+                        height
+                    )
+                },
+            },
+            is_loaded: true,
+            has_mipmaps_generated: false,
+            width,
+            height,
+            levels: vec![TextureBuffer(buffer)],
+            sampling_options: Default::default(),
+        }
+    }
+}
+
 impl<T: Default + Debug + Copy + PartialEq> PostDeserialize for TextureMap<T> {
     fn post_deserialize(&mut self) {
         // Nothing to do.
@@ -100,36 +135,6 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
             Some(self.levels[0].0.width_over_height)
         } else {
             None
-        }
-    }
-
-    pub fn from_buffer(width: u32, height: u32, buffer: Buffer2D<T>) -> Self {
-        let buffer_samples_per_pixel = buffer.data.len() as u32 / width / height;
-
-        Self {
-            info: TextureMapInfo {
-                filepath: "Buffer".to_string(),
-                storage_format: if buffer_samples_per_pixel == 4 {
-                    TextureMapStorageFormat::RGBA32
-                } else if buffer_samples_per_pixel == 3 {
-                    TextureMapStorageFormat::RGB24
-                } else if buffer_samples_per_pixel == 1 {
-                    TextureMapStorageFormat::Index8(0)
-                } else {
-                    panic!(
-                        "Invalid buffer data length {} for buffer size {}x{}!",
-                        buffer.data.len(),
-                        width,
-                        height
-                    )
-                },
-            },
-            is_loaded: true,
-            has_mipmaps_generated: false,
-            width,
-            height,
-            levels: vec![TextureBuffer(buffer)],
-            sampling_options: Default::default(),
         }
     }
 

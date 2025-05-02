@@ -172,11 +172,7 @@ impl<
             framebuffer.width
         };
 
-        let texture_map = TextureMap::from_buffer(
-            cubemap_size,
-            cubemap_size,
-            Buffer2D::<T>::new(cubemap_size, cubemap_size, None),
-        );
+        let texture_map = TextureMap::from(Buffer2D::<T>::new(cubemap_size, cubemap_size, None));
 
         let mut cubemap: CubeMap<T> = Default::default();
 

@@ -171,11 +171,10 @@ impl SpotLight {
 
             let shadow_map_size = shadow_map_framebuffer.width;
 
-            texture_f32_arena.insert(TextureMap::<f32>::from_buffer(
-                shadow_map_size,
-                shadow_map_size,
-                Buffer2D::<f32>::new(shadow_map_size, shadow_map_size, None),
-            ))
+            let shadow_map =
+                TextureMap::from(Buffer2D::<f32>::new(shadow_map_size, shadow_map_size, None));
+
+            texture_f32_arena.insert(shadow_map)
         };
 
         self.shadow_map.replace(shadow_map_handle);

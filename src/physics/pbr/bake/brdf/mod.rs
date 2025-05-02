@@ -7,7 +7,7 @@ use crate::{
 };
 
 pub fn generate_specular_brdf_integration_map(size: u32) -> TextureMap<Vec2> {
-    let mut map = TextureMap::from_buffer(size, size, Buffer2D::<Vec2>::new(size, size, None));
+    let mut map = TextureMap::from(Buffer2D::<Vec2>::new(size, size, None));
 
     // Integrate specular BRDF over angle and roughness (axes).
 
