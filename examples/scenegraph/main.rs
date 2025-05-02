@@ -107,8 +107,10 @@ fn main() -> Result<(), String> {
 
     // Renderer
 
-    let renderer =
+    let mut renderer =
         SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
+
+    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     let renderer_rc = RefCell::new(renderer);
 
@@ -293,25 +295,7 @@ fn main() -> Result<(), String> {
 
         let mut renderer = renderer_rc.borrow_mut();
 
-        renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
-
-        renderer.options.update(keyboard_state);
-
-        renderer.shader_options.update(keyboard_state);
-
-        let camera_handle = scene
-            .root
-            .find(|node| *node.get_type() == SceneNodeType::Camera)
-            .unwrap()
-            .unwrap();
-
-        let camera_arena = resources.camera.borrow();
-
-        if let Ok(entry) = camera_arena.get(&camera_handle) {
-            let camera = &entry.item;
-
-            renderer.set_clipping_frustum(*camera.get_frustum());
-        }
+        renderer.update(keyboard_state);
 
         Ok(())
     };
