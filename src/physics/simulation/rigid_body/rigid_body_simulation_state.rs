@@ -2,7 +2,10 @@ use std::ops;
 
 use crate::{
     matrix::Mat4,
-    physics::simulation::force::{DynForce, Force},
+    physics::simulation::{
+        force::{DynForce, Force},
+        physical_constants::EARTH_GRAVITY_ACCELERATION,
+    },
     transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},
 };
@@ -114,11 +117,17 @@ impl RigidBodySimulationState {
         let position = self.position;
 
         for force in forces {
-            let (f, contact_point) = force(self, 0, current_time);
+            let (newtons, contact_point) = force(self, 0, current_time);
 
             // Accumulate linear momentum.
 
-            derivative.linear_momentum += f * self.inverse_mass;
+            let f = if newtons == EARTH_GRAVITY_ACCELERATION {
+                newtons
+            } else {
+                newtons * self.inverse_mass
+            };
+
+            derivative.linear_momentum += f;
 
             // Accumulate angular momentum.
 
