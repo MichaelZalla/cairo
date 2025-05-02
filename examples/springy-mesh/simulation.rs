@@ -109,6 +109,12 @@ impl Simulation {
             point.write_from(&new_state, n, i);
         }
 
+        // Update the mesh's AABB bounds.
+
+        for mesh in &mut self.meshes {
+            mesh.update_aabb();
+        }
+
         // Update collider triangles for each springy mesh.
 
         for mesh in &mut self.meshes {
@@ -126,6 +132,10 @@ impl Simulation {
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
         for mesh in &self.meshes {
+            // Visualize mesh AABB.
+
+            renderer.render_aabb(&mesh.aabb, Default::default(), color::DARK_GRAY);
+
             // Visualize points.
 
             for point in &mesh.points {

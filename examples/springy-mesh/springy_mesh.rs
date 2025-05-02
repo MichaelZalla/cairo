@@ -2,7 +2,7 @@ use std::{collections::HashMap, f32::consts::TAU};
 
 use cairo::{
     color,
-    geometry::primitives::triangle::Triangle,
+    geometry::primitives::{aabb::AABB, triangle::Triangle},
     matrix::Mat4,
     physics::{material::PhysicsMaterial, simulation::particle::Particle},
     random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
@@ -22,6 +22,19 @@ pub struct SpringyMesh {
     pub struts: Vec<Strut>,
     pub state_index_offset: usize,
     pub triangles: Vec<Triangle>,
+    pub aabb: AABB,
+}
+
+impl SpringyMesh {
+    pub fn update_aabb(&mut self) {
+        self.aabb = AABB::default();
+
+        for point in &self.points {
+            self.aabb.grow(&point.position);
+        }
+
+        self.aabb.recompute_derived_state();
+    }
 }
 
 #[allow(unused)]
@@ -240,12 +253,21 @@ pub fn make_springy_mesh(
 
     let triangles = get_triangles(&points, &struts);
 
+    let mut aabb = AABB::default();
+
+    for point in &points {
+        aabb.grow(&point.position);
+    }
+
+    aabb.recompute_derived_state();
+
     SpringyMesh {
         points,
         struts,
         material,
         state_index_offset: 0,
         triangles,
+        aabb,
     }
 }
 
