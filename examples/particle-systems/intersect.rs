@@ -88,6 +88,8 @@ pub fn intersect_line_segment_tlas(segment: &mut LineSegment, tlas: &StaticTrian
     segment_aabb.grow(&segment.start);
     segment_aabb.grow(&segment.end);
 
+    segment_aabb.recompute_derived_state();
+
     intersect_line_segment_tlas_node(segment, &segment_aabb, tlas, 0)
 }
 
@@ -144,6 +146,8 @@ fn intersect_line_segment_bvh(
 
     transformed_segment_aabb.grow(&transformed_segment.start);
     transformed_segment_aabb.grow(&transformed_segment.end);
+
+    transformed_segment_aabb.recompute_derived_state();
 
     intersect_line_segment_bvh_node(
         &mut transformed_segment,

@@ -180,6 +180,8 @@ fn find_bvh_instance_pair_with_minimum_area(
             ab_aabb.grow_aabb(&a_tlas_node.aabb);
             ab_aabb.grow_aabb(&b_tlas_node.aabb);
 
+            ab_aabb.recompute_derived_state();
+
             // Technically, half-area.
 
             let area = ab_aabb.extent().half_area_of_extent();
@@ -203,6 +205,8 @@ fn find_bvh_instance_pair_with_minimum_area(
 
         aabb.grow_aabb(&a_tlas_node.aabb);
         aabb.grow_aabb(&b_tlas_node.aabb);
+
+        aabb.recompute_derived_state();
 
         aabb
     };

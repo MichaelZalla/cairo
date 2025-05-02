@@ -83,6 +83,8 @@ impl StaticTriangleBVHInstance {
 
             self.world_aabb.grow(&world_point);
         }
+
+        self.world_aabb.recompute_derived_state();
     }
 }
 
@@ -399,6 +401,8 @@ impl StaticTriangleBVH {
             bin.bounds.grow(v0);
             bin.bounds.grow(v1);
             bin.bounds.grow(v2);
+
+            bin.bounds.recompute_derived_state();
         }
 
         bins
@@ -467,6 +471,9 @@ impl StaticTriangleBVH {
                         primitives_count_from_right[PLANE_COUNT - 1 - left_index] =
                             sweep_right_primitives_count;
                     }
+
+                    sweep_left_area.recompute_derived_state();
+                    sweep_right_area.recompute_derived_state();
 
                     for plane_index in 0..PLANE_COUNT {
                         let split_plane_position =
@@ -568,6 +575,9 @@ impl StaticTriangleBVH {
                 }
             }
         }
+
+        left_aabb.recompute_derived_state();
+        right_aabb.recompute_derived_state();
 
         // Compute split cost.
 

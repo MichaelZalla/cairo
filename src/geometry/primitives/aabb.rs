@@ -48,15 +48,15 @@ impl From<&Mesh> for AABB {
 
 impl From<(Vec3, Vec3)> for AABB {
     fn from(min_max: (Vec3, Vec3)) -> Self {
-        let center = min_max.0 + (min_max.1 - min_max.0) / 2.0;
-
-        let bounding_sphere_radius = (min_max.1 - center).mag();
-
-        Self {
+        let mut result = Self {
             min: min_max.0,
             max: min_max.1,
-            bounding_sphere_radius,
-        }
+            ..Default::default()
+        };
+
+        result.recompute_derived_state();
+
+        result
     }
 }
 
@@ -213,6 +213,10 @@ impl AABB {
             bottom_left_subdivision,
             bottom_right_subdivision,
         ]
+    }
+
+    pub fn recompute_derived_state(&mut self) {
+        self.bounding_sphere_radius = (self.max - self.center()).mag();
     }
 }
 
