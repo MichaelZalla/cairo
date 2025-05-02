@@ -272,6 +272,12 @@ impl Simulation {
         // Render dynamic rigid bodies (spheres).
 
         for sphere in &self.rigid_bodies {
+            // Visualize rigid body AABB.
+
+            if let Some(aabb) = &sphere.aabb {
+                renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
+            }
+
             let transform = &sphere.transform;
 
             let radius = match sphere.kind {

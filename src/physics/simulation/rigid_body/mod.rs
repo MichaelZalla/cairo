@@ -4,9 +4,10 @@ use rigid_body_simulation_state::RigidBodySimulationState;
 
 use crate::{
     color::{self, Color},
+    geometry::primitives::aabb::AABB,
     matrix::Mat4,
     transform::Transform3D,
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
 pub mod rigid_body_simulation_state;
@@ -66,6 +67,7 @@ pub struct RigidBody {
     pub angular_momentum: Vec3,
     pub did_collide: bool,
     pub color: Color,
+    pub aabb: Option<AABB>,
     // Derived state
     inverse_mass: f32,
     inverse_moment_of_inertia: Mat4,
@@ -87,6 +89,15 @@ impl RigidBody {
 
         let color = color::WHITE;
 
+        let aabb = match kind {
+            RigidBodyKind::Circle(_) => None,
+            RigidBodyKind::Sphere(radius) => {
+                let offset = vec3::ONES * radius;
+
+                Some(AABB::from((position - offset, position + offset)))
+            }
+        };
+
         Self {
             kind,
             mass,
@@ -95,6 +106,7 @@ impl RigidBody {
             moment_of_inertia,
             inverse_moment_of_inertia,
             color,
+            aabb,
             ..Default::default()
         }
     }
@@ -122,5 +134,12 @@ impl RigidBody {
         self.linear_momentum = state.linear_momentum;
 
         self.angular_momentum = state.angular_momentum;
+
+        if let RigidBodyKind::Sphere(radius) = self.kind {
+            if let Some(aabb) = &mut self.aabb {
+                aabb.min = state.position - vec3::ONES * radius;
+                aabb.max = state.position + vec3::ONES * radius;
+            }
+        }
     }
 }
