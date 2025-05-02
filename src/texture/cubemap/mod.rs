@@ -381,7 +381,7 @@ impl CubeMap<Vec3> {
         // Render each face of our cubemap.
 
         let mut cubemap_face_camera =
-            Camera::from_perspective(Default::default(), vec3::FORWARD, 90.0, 1.0);
+            Camera::perspective(Default::default(), vec3::FORWARD, 90.0, 1.0);
 
         for side in CUBE_MAP_SIDES {
             cubemap_face_camera

@@ -35,7 +35,7 @@ pub fn make_empty_scene(
     // Create resource handles from our arenas.
 
     let camera_handle = {
-        let mut camera: Camera = Camera::from_perspective(
+        let mut camera: Camera = Camera::perspective(
             Vec3 {
                 x: 15.0,
                 y: 5.0,

@@ -314,7 +314,7 @@ impl SpotLight {
 
         let aspect_ratio = 1.0;
 
-        let mut camera = Camera::from_perspective(
+        let mut camera = Camera::perspective(
             self.look_vector.get_position(),
             self.look_vector.get_target(),
             field_of_view_degrees,

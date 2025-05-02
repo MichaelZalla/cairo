@@ -154,11 +154,7 @@ impl Camera {
         camera
     }
 
-    pub fn from_orthographic(
-        position: Vec3,
-        target: Vec3,
-        extent: CameraOrthographicExtent,
-    ) -> Self {
+    pub fn orthographic(position: Vec3, target: Vec3, extent: CameraOrthographicExtent) -> Self {
         Camera::new(
             CameraProjectionKind::Orthographic,
             position,
@@ -169,7 +165,7 @@ impl Camera {
         )
     }
 
-    pub fn from_perspective(
+    pub fn perspective(
         position: Vec3,
         target: Vec3,
         field_of_view: f32,

@@ -323,7 +323,7 @@ impl DirectionalLight {
 
                 let camera_position = subfrustum_center - forward * depth_range;
 
-                let mut camera = Camera::from_orthographic(
+                let mut camera = Camera::orthographic(
                     camera_position,
                     camera_position + self.direction.to_vec3(),
                     light_extent,

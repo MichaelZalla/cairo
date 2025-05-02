@@ -511,8 +511,7 @@ impl PointLight {
             let side_index = side.get_index();
 
             let camera = {
-                let mut camera =
-                    Camera::from_perspective(self.position, Default::default(), 90.0, 1.0);
+                let mut camera = Camera::perspective(self.position, Default::default(), 90.0, 1.0);
 
                 camera.set_projection_z_near(SHADOW_MAP_CAMERA_NEAR);
                 camera.set_projection_z_far(z_far);

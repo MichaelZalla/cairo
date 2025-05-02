@@ -95,7 +95,7 @@ pub fn build_main_window_panel_tree<'a>(
     let mut camera_arena = resource_arenas.camera.borrow_mut();
 
     let mut cameras = [
-        Camera::from_perspective(
+        Camera::perspective(
             Vec3 {
                 x: 4.0,
                 y: 4.0,
@@ -105,7 +105,7 @@ pub fn build_main_window_panel_tree<'a>(
             75.0,
             16.0 / 9.0,
         ),
-        Camera::from_perspective(
+        Camera::perspective(
             Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -115,7 +115,7 @@ pub fn build_main_window_panel_tree<'a>(
             75.0,
             16.0 / 9.0,
         ),
-        Camera::from_perspective(
+        Camera::perspective(
             Vec3 {
                 x: 0.0,
                 y: 5.0,
@@ -130,7 +130,7 @@ pub fn build_main_window_panel_tree<'a>(
             75.0,
             16.0 / 9.0,
         ),
-        Camera::from_perspective(
+        Camera::perspective(
             Vec3 {
                 x: -5.0,
                 y: 0.0,
