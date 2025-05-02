@@ -66,8 +66,8 @@ impl fmt::Debug for Vec3A {
     }
 }
 
-impl Vec3A {
-    pub fn from_vec3(v: Vec3) -> Self {
+impl From<Vec3> for Vec3A {
+    fn from(v: Vec3) -> Self {
         Self { v }
     }
 }

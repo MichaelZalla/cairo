@@ -303,13 +303,13 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
     let mut t_min = 0.0_f32;
     let mut t_max = f32::MAX;
 
-    let p = Vec3A::from_vec3(ray.origin);
-    let d = Vec3A::from_vec3(ray.direction);
+    let p = Vec3A::from(ray.origin);
+    let d = Vec3A::from(ray.direction);
 
-    let aabb_min = Vec3A::from_vec3(aabb.min);
-    let aabb_max = Vec3A::from_vec3(aabb.max);
+    let aabb_min = Vec3A::from(aabb.min);
+    let aabb_max = Vec3A::from(aabb.max);
 
-    let one_over_direction = Vec3A::from_vec3(ray.one_over_direction);
+    let one_over_direction = Vec3A::from(ray.one_over_direction);
 
     for i in 0..3 {
         unsafe {

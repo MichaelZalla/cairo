@@ -143,6 +143,60 @@ impl<
             + Sub<Output = T>
             + Mul<Output = T>
             + Div<Output = T>,
+    > From<[TextureMap<T>; 6]> for CubeMap<T>
+{
+    fn from(sides: [TextureMap<T>; 6]) -> Self {
+        Self {
+            is_cross: false,
+            sides,
+        }
+    }
+}
+
+impl<
+        T: Default
+            + PartialEq
+            + Copy
+            + Clone
+            + Debug
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
+    > From<&Framebuffer> for CubeMap<T>
+{
+    fn from(framebuffer: &Framebuffer) -> Self {
+        let cubemap_size = {
+            debug_assert_eq!(framebuffer.width, framebuffer.height);
+
+            framebuffer.width
+        };
+
+        let texture_map = TextureMap::from_buffer(
+            cubemap_size,
+            cubemap_size,
+            Buffer2D::<T>::new(cubemap_size, cubemap_size, None),
+        );
+
+        let mut cubemap: CubeMap<T> = Default::default();
+
+        for side_index in 0..6 {
+            cubemap.sides[side_index] = texture_map.clone();
+        }
+
+        cubemap
+    }
+}
+
+impl<
+        T: Default
+            + Debug
+            + Copy
+            + PartialEq
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + Div<Output = T>,
     > PostDeserialize for CubeMap<T>
 {
     fn post_deserialize(&mut self) {
@@ -175,35 +229,6 @@ impl<
                 TextureMap::new(texture_paths[Side::Right as usize], storage_format),
             ],
         }
-    }
-
-    pub fn from_textures(sides: [TextureMap<T>; 6]) -> Self {
-        Self {
-            is_cross: false,
-            sides,
-        }
-    }
-
-    pub fn from_framebuffer(framebuffer: &Framebuffer) -> Self {
-        let cubemap_size = {
-            debug_assert_eq!(framebuffer.width, framebuffer.height);
-
-            framebuffer.width
-        };
-
-        let texture_map = TextureMap::from_buffer(
-            cubemap_size,
-            cubemap_size,
-            Buffer2D::<T>::new(cubemap_size, cubemap_size, None),
-        );
-
-        let mut cubemap: CubeMap<T> = Default::default();
-
-        for side_index in 0..6 {
-            cubemap.sides[side_index] = texture_map.clone();
-        }
-
-        cubemap
     }
 
     pub fn is_cross(&self) -> bool {

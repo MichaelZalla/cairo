@@ -8,8 +8,8 @@ pub struct RenderViewport {
     pub height_over_2: f32,
 }
 
-impl RenderViewport {
-    pub fn from_framebuffer(framebuffer: &Framebuffer) -> Self {
+impl From<&Framebuffer> for RenderViewport {
+    fn from(framebuffer: &Framebuffer) -> Self {
         Self {
             width: framebuffer.width,
             width_over_2: framebuffer.width as f32 / 2.0,

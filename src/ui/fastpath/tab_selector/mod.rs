@@ -9,7 +9,7 @@ use super::{button::button, container::container, spacer::greedy_spacer, text::t
 pub fn tab_selector(id: String, tabs: Vec<&str>, tree: &mut UIBoxTree) -> Result<usize, String> {
     let container_id = format!("{}_tab_selector_container", id);
 
-    let ui_key = UIKey::from_string(container_id.clone());
+    let ui_key = UIKey::from(container_id.clone());
 
     let selected_tab_index = GLOBAL_UI_CONTEXT.with(|ctx| {
         let cache = ctx.cache.borrow();

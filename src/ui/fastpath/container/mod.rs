@@ -61,7 +61,7 @@ where
 {
     let container_id = format!("{}_collapsible_container", id);
 
-    let ui_key = UIKey::from_string(container_id.clone());
+    let ui_key = UIKey::from(container_id.clone());
 
     let was_expanded = GLOBAL_UI_CONTEXT.with(|ctx| {
         let cache = ctx.cache.borrow();

@@ -116,7 +116,7 @@ impl PointLight {
 
             let shadow_map_framebuffer = shadow_map_rendering_context.framebuffer.borrow();
 
-            cubemap_f32_arena.insert(CubeMap::<f32>::from_framebuffer(&shadow_map_framebuffer))
+            cubemap_f32_arena.insert(CubeMap::<f32>::from(&*shadow_map_framebuffer))
         };
 
         self.shadow_map.replace(shadow_map_handle);

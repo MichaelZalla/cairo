@@ -258,7 +258,7 @@ impl<'a> UIBoxTree<'a> {
                 let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
 
                 for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
-                    let axis = UI2DAxis::from_usize(axis_index);
+                    let axis = UI2DAxis::from(axis_index);
 
                     let is_horizontal_axis = match (axis, parent_layout_direction) {
                         (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
@@ -362,7 +362,7 @@ impl<'a> UIBoxTree<'a> {
             let grandparent_layout_direction = parent_data.unwrap().parent_layout_direction;
 
             for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
-                let axis = UI2DAxis::from_usize(axis_index);
+                let axis = UI2DAxis::from(axis_index);
 
                 let is_horizontal_axis = match (axis, parent_layout_direction) {
                     (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
@@ -453,7 +453,7 @@ impl<'a> UIBoxTree<'a> {
             let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
 
             for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
-                let axis = UI2DAxis::from_usize(axis_index);
+                let axis = UI2DAxis::from(axis_index);
 
                 let is_horizontal_axis = match (axis, parent_layout_direction) {
                     (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
@@ -524,7 +524,7 @@ impl<'a> UIBoxTree<'a> {
 
                 for (axis_index, _size_with_strictness) in ui_box.semantic_sizes.iter().enumerate()
                 {
-                    let axis = UI2DAxis::from_usize(axis_index);
+                    let axis = UI2DAxis::from(axis_index);
 
                     let is_horizontal_axis = match (axis, parent_layout_direction) {
                         (UI2DAxis::Primary, UILayoutDirection::LeftToRight)
@@ -603,7 +603,7 @@ impl<'a> UIBoxTree<'a> {
                 let parent_layout_direction = if let Some(parent) = parent_data { parent.layout_direction } else { UILayoutDirection::default() };
 
                 for (axis_index, size_with_strictness) in ui_box.semantic_sizes.iter().enumerate() {
-                    let axis = UI2DAxis::from_usize(axis_index);
+                    let axis = UI2DAxis::from(axis_index);
 
                     let is_horizontal_axis = match (axis, parent_layout_direction) {
                         (UI2DAxis::Primary, UILayoutDirection::LeftToRight) | (UI2DAxis::Secondary, UILayoutDirection::TopToBottom) => true,
@@ -840,7 +840,7 @@ impl<'a> UIBoxTree<'a> {
 
                 for (axis_index, _size_with_strictness) in ui_box.semantic_sizes.iter().enumerate()
                 {
-                    let axis = UI2DAxis::from_usize(axis_index);
+                    let axis = UI2DAxis::from(axis_index);
 
                     let is_horizontal_axis = match (axis, parent_layout_direction) {
                         (UI2DAxis::Primary, UILayoutDirection::LeftToRight)

@@ -39,7 +39,7 @@ pub fn slider(
 ) -> Result<Option<f32>, String> {
     let container_id = format!("{}_slider_container", id);
 
-    let ui_key = UIKey::from_string(container_id.clone());
+    let ui_key = UIKey::from(container_id.clone());
 
     let interaction_result: UIBoxInteraction =
         GLOBAL_UI_CONTEXT.with(|ctx| -> Result<UIBoxInteraction, String> {

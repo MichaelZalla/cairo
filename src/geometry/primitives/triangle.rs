@@ -38,7 +38,7 @@ impl Triangle {
 
         edge_plane_ca *= 1.0 / (b.dot(edge_plane_ca.normal) - edge_plane_ca.d);
 
-        self.centroid = Vec3A::from_vec3(centroid);
+        self.centroid = Vec3A::from(centroid);
 
         self.plane = plane;
 

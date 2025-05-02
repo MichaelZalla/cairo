@@ -177,7 +177,7 @@ impl UIBox {
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
         custom_render_callback: Option<UIBoxCustomRenderCallbackWithContextHandle>,
     ) -> Self {
-        let key = UIKey::from_string(id.clone());
+        let key = UIKey::from(id.clone());
 
         // Styles may have changed after the previous frame was rendered.
 

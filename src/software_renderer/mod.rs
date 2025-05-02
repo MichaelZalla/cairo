@@ -440,7 +440,7 @@ impl SoftwareRenderer {
                     Ok(()) => {
                         self.framebuffer.clone_from(&framebuffer_option);
 
-                        self.viewport = RenderViewport::from_framebuffer(&framebuffer);
+                        self.viewport = RenderViewport::from(&*framebuffer);
 
                         let should_reallocate_g_buffer = match &self.g_buffer {
                             Some(g_buffer) => {

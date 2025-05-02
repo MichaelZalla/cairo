@@ -21,11 +21,13 @@ impl fmt::Display for UIKey {
     }
 }
 
-impl UIKey {
-    pub fn from_string(id: String) -> Self {
+impl From<String> for UIKey {
+    fn from(id: String) -> Self {
         Self { hash: Some(id) }
     }
+}
 
+impl UIKey {
     pub fn is_null(&self) -> bool {
         self.hash.is_none()
     }

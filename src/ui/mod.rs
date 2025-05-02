@@ -50,11 +50,11 @@ pub enum UI2DAxis {
     Secondary,
 }
 
-impl UI2DAxis {
-    pub fn from_usize(i: usize) -> Self {
-        if i == 0 {
+impl From<usize> for UI2DAxis {
+    fn from(axis_index: usize) -> Self {
+        if axis_index == 0 {
             Self::Primary
-        } else if i == 1 {
+        } else if axis_index == 1 {
             Self::Secondary
         } else {
             panic!()
