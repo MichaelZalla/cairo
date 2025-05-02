@@ -133,8 +133,8 @@ impl AABB {
             || self.min.x > rhs.max.x
             || self.max.y < rhs.min.y
             || self.min.y > rhs.max.y
-            || self.max.z > rhs.min.z
-            || self.min.z < rhs.max.z
+            || self.max.z < rhs.min.z
+            || self.min.z > rhs.max.z
         {
             return false;
         }
