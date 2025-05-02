@@ -198,7 +198,7 @@ impl SoftwareRenderer {
                 self.render_square(transform, color);
             }
             EmptyDisplayKind::Cube => {
-                let aabb = AABB::from_min_max(-vec3::ONES, vec3::ONES);
+                let aabb = AABB::from((-vec3::ONES, vec3::ONES));
 
                 self.render_aabb(&aabb, Some(transform), color);
             }

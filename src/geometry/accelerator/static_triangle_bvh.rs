@@ -188,7 +188,7 @@ impl StaticTriangleBVH {
             max = max.max(v2);
         }
 
-        self.nodes[node_index].aabb = AABB::from_min_max(min, max);
+        self.nodes[node_index].aabb = AABB::from((min, max));
     }
 
     fn subdivide(&mut self, split_node_index: usize) {

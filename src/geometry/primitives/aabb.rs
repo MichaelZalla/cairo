@@ -30,37 +30,45 @@ impl fmt::Display for AABB {
     }
 }
 
-impl AABB {
-    pub fn from_min_max(min: Vec3, max: Vec3) -> Self {
-        let center = min + (max - min) / 2.0;
+impl From<&MeshGeometry> for AABB {
+    fn from(geometry: &MeshGeometry) -> Self {
+        let (min, max) = get_min_max_for_vertices(&geometry.vertices);
 
-        let bounding_sphere_radius = (max - center).mag();
+        Self::from((min, max))
+    }
+}
+
+impl From<&Mesh> for AABB {
+    fn from(mesh: &Mesh) -> Self {
+        let (min, max) = get_min_max_for_mesh(mesh);
+
+        Self::from((min, max))
+    }
+}
+
+impl From<(Vec3, Vec3)> for AABB {
+    fn from(min_max: (Vec3, Vec3)) -> Self {
+        let center = min_max.0 + (min_max.1 - min_max.0) / 2.0;
+
+        let bounding_sphere_radius = (min_max.1 - center).mag();
 
         Self {
-            min,
-            max,
+            min: min_max.0,
+            max: min_max.1,
             bounding_sphere_radius,
         }
     }
+}
 
-    pub fn from_geometry(geometry: &MeshGeometry) -> Self {
-        let (min, max) = get_min_max_for_vertices(&geometry.vertices);
-
-        AABB::from_min_max(min, max)
-    }
-
-    pub fn from_mesh(mesh: &Mesh) -> Self {
-        let (min, max) = get_min_max_for_mesh(mesh);
-
-        AABB::from_min_max(min, max)
-    }
-
-    pub fn from_vertices(vertices: &[Vec3]) -> Self {
+impl From<&[Vec3]> for AABB {
+    fn from(vertices: &[Vec3]) -> Self {
         let (min, max) = get_min_max_for_vertices(vertices);
 
-        AABB::from_min_max(min, max)
+        Self::from((min, max))
     }
+}
 
+impl AABB {
     pub fn center(&self) -> Vec3 {
         self.min + (self.max - self.min) / 2.0
     }
@@ -147,7 +155,7 @@ impl AABB {
     pub fn subdivide_2d(&self) -> [Self; 4] {
         let center = self.center();
 
-        let top_left_subdivision = Self::from_min_max(
+        let top_left_subdivision = Self::from((
             Vec3 {
                 x: self.min.x,
                 y: center.y,
@@ -158,9 +166,9 @@ impl AABB {
                 y: self.max.y,
                 z: 0.0,
             },
-        );
+        ));
 
-        let top_right_subdivision = Self::from_min_max(
+        let top_right_subdivision = Self::from((
             Vec3 {
                 x: center.x,
                 y: center.y,
@@ -171,9 +179,9 @@ impl AABB {
                 y: self.max.y,
                 z: 0.0,
             },
-        );
+        ));
 
-        let bottom_left_subdivision = Self::from_min_max(
+        let bottom_left_subdivision = Self::from((
             Vec3 {
                 x: self.min.x,
                 y: self.min.y,
@@ -184,9 +192,9 @@ impl AABB {
                 y: center.y,
                 z: 0.0,
             },
-        );
+        ));
 
-        let bottom_right_subdivision = Self::from_min_max(
+        let bottom_right_subdivision = Self::from((
             Vec3 {
                 x: center.x,
                 y: self.min.y,
@@ -197,7 +205,7 @@ impl AABB {
                 y: center.y,
                 z: 0.0,
             },
-        );
+        ));
 
         [
             top_left_subdivision,

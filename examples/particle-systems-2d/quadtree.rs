@@ -328,7 +328,7 @@ pub struct Quadtree {
 
 impl Quadtree {
     pub fn new(extent: (Vec3, Vec3)) -> Self {
-        let bounds = AABB::from_min_max(extent.0, extent.1);
+        let bounds = AABB::from((extent.0, extent.1));
 
         let mut tree = Self::default();
 

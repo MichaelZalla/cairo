@@ -89,7 +89,7 @@ impl Frustum {
             max = max.max(v);
         }
 
-        let aabb = AABB::from_min_max(min, max);
+        let aabb = AABB::from((min, max));
 
         Self {
             forward,

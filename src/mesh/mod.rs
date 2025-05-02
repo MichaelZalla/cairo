@@ -82,7 +82,7 @@ pub struct Mesh {
 
 impl PostDeserialize for Mesh {
     fn post_deserialize(&mut self) {
-        self.aabb = AABB::from_mesh(self);
+        self.aabb = AABB::from(&*self);
     }
 }
 

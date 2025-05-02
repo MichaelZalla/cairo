@@ -29,7 +29,7 @@ impl MeshGeometry {
     }
 
     pub fn center(&mut self) {
-        let aabb = AABB::from_geometry(self);
+        let aabb = AABB::from(&*self);
 
         let center = aabb.center();
 
