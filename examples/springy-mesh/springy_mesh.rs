@@ -1,16 +1,11 @@
-use std::{collections::HashMap, f32::consts::TAU};
+use std::collections::HashMap;
 
 use cairo::{
     color,
     geometry::primitives::{aabb::AABB, triangle::Triangle},
-    matrix::Mat4,
     physics::{material::PhysicsMaterial, simulation::particle::Particle},
-    random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
-    transform::quaternion::Quaternion,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    random::sampler::{RandomSampler, RangeSampler},
+    vec::vec3::Vec3,
 };
 
 use crate::strut::{Edge, Strut, PARTICLE_MASS};
@@ -206,34 +201,8 @@ pub fn make_springy_mesh(
     struts: Vec<Strut>,
     sampler: &mut RandomSampler<1024>,
 ) -> SpringyMesh {
-    let random_speed = sampler.sample_range_normal(5.0, 5.0);
-
-    let random_velocity = sampler.sample_direction_uniform() * random_speed;
-
-    // Random mesh transform.
-
-    let random_transform = {
-        let random_rotation = {
-            let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
-            let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
-            let rotate_z = Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, TAU));
-
-            rotate_x * rotate_y * rotate_z
-        };
-
-        let random_translation = Mat4::translation(Vec3 {
-            x: sampler.sample_range_normal(0.0, 25.0),
-            y: sampler.sample_range_normal(25.0, 10.0),
-            z: sampler.sample_range_normal(0.0, 25.0),
-        });
-
-        *random_rotation.mat() * random_translation
-    };
-
     for point in &mut points {
         point.mass = PARTICLE_MASS;
-        point.position = (Vec4::position(point.position) * random_transform).to_vec3();
-        point.velocity = random_velocity;
     }
 
     // Random physics material.
