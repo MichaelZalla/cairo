@@ -108,7 +108,9 @@ impl Simulation {
             let start_position = current_body_state.position;
             let end_position = new_body_state.position;
             let end_linear_momentum = new_body_state.linear_momentum;
+
             let end_linear_velocity = end_linear_momentum * new_body_state.inverse_mass;
+            let end_angular_velocity = new_body_state.angular_velocity();
 
             for collider in &self.static_plane_colliders {
                 let normal = collider.plane.normal;
@@ -128,12 +130,18 @@ impl Simulation {
                         continue;
                     }
 
+                    let r = end_position - contact_point;
+
+                    let contact_point_velocity =
+                        end_linear_velocity + end_angular_velocity.cross(r);
+
                     let state = &mut new_state.0[i];
 
                     let collision_response = resolve_rigid_body_plane_collision(
                         state,
                         normal,
                         contact_point,
+                        contact_point_velocity,
                         &PHYSICS_MATERIAL,
                     );
 

@@ -60,13 +60,10 @@ pub fn resolve_rigid_body_plane_collision(
     state: &mut RigidBodySimulationState,
     plane_normal: Vec3,
     contact_point: Vec3,
+    contact_point_velocity: Vec3,
     material: &PhysicsMaterial,
 ) -> RigidBodyCollisionResponse {
     let r = contact_point - state.position;
-
-    let linear_velocity = state.velocity();
-
-    let contact_point_velocity = linear_velocity + state.angular_velocity().cross(r);
 
     let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(plane_normal);
 
