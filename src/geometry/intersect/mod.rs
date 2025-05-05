@@ -1,13 +1,19 @@
 use std::mem;
 
-use crate::vec::{
-    vec3::{self, Vec3, Vec3A},
-    vec4::Vec4,
+use crate::{
+    animation::lerp,
+    vec::{
+        vec3::{self, Vec3, Vec3A},
+        vec4::Vec4,
+    },
 };
 
 use super::{
     accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
-    primitives::{aabb::AABB, plane::Plane, ray::Ray, sphere::Sphere},
+    primitives::{
+        aabb::AABB, line_segment::LineSegment, plane::Plane, ray::Ray, sphere::Sphere,
+        triangle::Triangle,
+    },
 };
 
 pub fn test_aabb_aabb(a: &AABB, b: &AABB) -> bool {
@@ -55,6 +61,72 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
 
         None
     }
+}
+
+pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Triangle) -> bool {
+    let (p, q) = (segment.start, segment.end);
+
+    // Compute the distance of P to the triangle's normal-facing plane.
+
+    let p_distance = triangle.plane.get_signed_distance(&p);
+
+    // Exit if start point P is behind the plane.
+
+    if p_distance < 0.0 {
+        return false;
+    }
+
+    // Compute the distance of Q to the triangle's normal-facing plane.
+
+    let q_distance = triangle.plane.get_signed_distance(&q);
+
+    // Exit if end point Q is in front of the plane.
+
+    if q_distance >= 0.0 {
+        return false;
+    }
+
+    // Compute the point-of-intersection S of the line PQ with the plane.
+
+    let total_distance = p_distance - q_distance;
+
+    let t = p_distance / total_distance;
+
+    let s = lerp(p, q, t);
+
+    // Compute the barycentric coordinate U; exit if outside the [0..1] range.
+
+    let u = s.dot(triangle.edge_plane_bc.normal) - triangle.edge_plane_bc.d;
+
+    if !(0.0..=1.0).contains(&u) {
+        return false;
+    }
+
+    // Compute the barycentric coordinate V; exit if negative.
+
+    let v = s.dot(triangle.edge_plane_ca.normal) - triangle.edge_plane_ca.d;
+
+    if v < 0.0 {
+        return false;
+    }
+
+    // Compute the barycentric coordinate W; exit if negative.
+
+    let w = 1.0 - u - v;
+
+    if w < 0.0 {
+        return false;
+    }
+
+    // Segment PQ intersects triangle.
+
+    if t < segment.t {
+        segment.t = t;
+
+        return true;
+    }
+
+    false
 }
 
 pub fn test_sphere_sphere(a: Sphere, b: Sphere) -> bool {
