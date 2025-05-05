@@ -135,6 +135,13 @@ impl Simulation {
                     let contact_point_velocity =
                         end_linear_velocity + end_angular_velocity.cross(r);
 
+                    let incoming_contact_point_speed_normal_to_plane =
+                        contact_point_velocity.dot(normal);
+
+                    if incoming_contact_point_speed_normal_to_plane > f32::EPSILON {
+                        continue;
+                    }
+
                     let state = &mut new_state.0[i];
 
                     let collision_response = resolve_rigid_body_plane_collision(
