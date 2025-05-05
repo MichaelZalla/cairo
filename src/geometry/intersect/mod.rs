@@ -184,7 +184,6 @@ pub fn intersect_capsule_plane(
     let signed_distance = n.dot(c) - plane.d;
 
     let mut t = 0.0;
-    let mut contact_point = c;
 
     // Plane equation, displaced by r:
     //
@@ -209,9 +208,9 @@ pub fn intersect_capsule_plane(
     if signed_distance.abs() <= radius {
         // The sphere is already overlapping the plane; set the
         // time-of-intersection to zero, and the point-of-intersection to the
-        // sphere's start position.
+        // deepest point on the sphere.
 
-        Some((t, contact_point))
+        Some((t, c - plane.normal * radius))
     } else {
         // Checks if a collision occurred between start and end positions.
 
@@ -244,9 +243,7 @@ pub fn intersect_capsule_plane(
 
             // Offsets the segment intersection point, towards the plane, by `radius` units.
 
-            contact_point = segment_point - n * r;
-
-            Some((t, contact_point))
+            Some((t, segment_point - n * r))
         }
     }
 }
