@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 
-use renderable::Renderable;
 use sdl2::mouse::MouseButton;
 
 use cairo::{
@@ -18,16 +17,14 @@ use cairo::{
         rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, RigidBodyKind},
         units::Newtons,
     },
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
-use coordinates::{screen_to_world_space, world_to_screen_space};
+use coordinates::{screen_to_world_space, world_to_screen_space, PIXELS_PER_METER};
 use make_simulation::make_simulation;
 
 mod coordinates;
 mod make_simulation;
-mod renderable;
-mod rigid_body;
 mod simulation;
 mod state_vector;
 
@@ -83,7 +80,43 @@ fn main() -> Result<(), String> {
         let simulation = simulation_rc.borrow();
 
         for circle in simulation.rigid_bodies.iter() {
-            circle.render(&mut framebuffer);
+            match circle.kind {
+                RigidBodyKind::Circle(radius) => {
+                    let transform = &circle.transform;
+
+                    let position_screen_space =
+                        world_to_screen_space(transform.translation(), &framebuffer);
+
+                    // Draw the circle's outline.
+
+                    Graphics::circle(
+                        &mut framebuffer,
+                        position_screen_space.x as i32,
+                        position_screen_space.y as i32,
+                        (radius * PIXELS_PER_METER) as u32,
+                        None,
+                        Some(color::YELLOW.to_u32()),
+                    );
+
+                    // Draw a line to indicate the body's orientation.
+
+                    let local_right = vec3::RIGHT;
+                    let global_right = local_right * *transform.rotation().mat();
+
+                    let end = *transform.translation() + (global_right * radius);
+                    let end_screen_space = world_to_screen_space(&end, &framebuffer);
+
+                    Graphics::line(
+                        &mut framebuffer,
+                        position_screen_space.x as i32,
+                        position_screen_space.y as i32,
+                        end_screen_space.x as i32,
+                        end_screen_space.y as i32,
+                        color::ORANGE.to_u32(),
+                    );
+                }
+                _ => panic!(),
+            }
         }
 
         let cursor_world_space = cursor_world_space_rc.borrow();

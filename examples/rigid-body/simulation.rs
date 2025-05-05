@@ -272,30 +272,7 @@ impl Simulation {
         // Render dynamic rigid bodies (spheres).
 
         for sphere in &self.rigid_bodies {
-            // Visualize rigid body AABB.
-
-            if let Some(aabb) = &sphere.aabb {
-                renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
-            }
-
-            let transform = &sphere.transform;
-
-            let radius = match sphere.kind {
-                RigidBodyKind::Sphere(radius) => radius,
-                _ => panic!(),
-            };
-
-            let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
-
-            let display_kind = EmptyDisplayKind::Sphere(12);
-
-            let color = if sphere.did_collide {
-                color::RED
-            } else {
-                sphere.color
-            };
-
-            renderer.render_empty(&transform_with_radius, display_kind, true, Some(color));
+            sphere.render(renderer);
         }
 
         // Visualize hash grid entries.

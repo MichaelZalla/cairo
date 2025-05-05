@@ -6,6 +6,9 @@ use crate::{
     color::{self, Color},
     geometry::primitives::aabb::AABB,
     matrix::Mat4,
+    render::Renderer,
+    scene::empty::EmptyDisplayKind,
+    software_renderer::SoftwareRenderer,
     transform::Transform3D,
     vec::vec3::{self, Vec3},
 };
@@ -141,5 +144,32 @@ impl RigidBody {
                 aabb.max = state.position + vec3::ONES * radius;
             }
         }
+    }
+
+    pub fn render(&self, renderer: &mut SoftwareRenderer) {
+        // Visualize rigid body AABB.
+
+        if let Some(aabb) = &self.aabb {
+            renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
+        }
+
+        let transform = &self.transform;
+
+        let radius = match self.kind {
+            RigidBodyKind::Sphere(radius) => radius,
+            _ => panic!(),
+        };
+
+        let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
+
+        let display_kind = EmptyDisplayKind::Sphere(12);
+
+        let color = if self.did_collide {
+            color::RED
+        } else {
+            self.color
+        };
+
+        renderer.render_empty(&transform_with_radius, display_kind, true, Some(color));
     }
 }
