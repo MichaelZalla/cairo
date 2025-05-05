@@ -61,10 +61,9 @@ pub fn resolve_rigid_body_plane_collision(
     plane_normal: Vec3,
     contact_point: Vec3,
     contact_point_velocity: Vec3,
+    r: Vec3,
     material: &PhysicsMaterial,
 ) -> RigidBodyCollisionResponse {
-    let r = contact_point - state.position;
-
     let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(plane_normal);
 
     let inverse_moment_of_intertia_world_space = state.inverse_moment_of_intertia_world_space();

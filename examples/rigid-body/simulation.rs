@@ -150,6 +150,7 @@ impl Simulation {
                         normal,
                         contact_point,
                         contact_point_velocity,
+                        r,
                         &PHYSICS_MATERIAL,
                     );
 
