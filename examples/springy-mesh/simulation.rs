@@ -161,31 +161,9 @@ impl Simulation {
             }
         }
 
+        // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
-            // Visualize static plane colliders.
-
-            let mut right = collider.plane.normal.cross(vec3::UP);
-
-            if right.mag() < f32::EPSILON {
-                right = collider.plane.normal.cross(vec3::FORWARD);
-            }
-
-            right = right.as_normal();
-
-            let up = collider.plane.normal.cross(-right);
-
-            // Normal
-            renderer.render_line(
-                collider.point,
-                collider.point + collider.plane.normal,
-                color::BLUE,
-            );
-
-            // Tangent
-            renderer.render_line(collider.point, collider.point + right, color::RED);
-
-            // Bitangent
-            renderer.render_line(collider.point, collider.point + up, color::GREEN);
+            collider.render(renderer);
         }
     }
 }
