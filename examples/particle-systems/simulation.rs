@@ -99,6 +99,7 @@ impl<const N: usize> Simulation<N> {
         // Resolve collisions.
 
         static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+            static_friction: 0.0,
             dynamic_friction: 0.15,
             restitution: 0.25,
         };

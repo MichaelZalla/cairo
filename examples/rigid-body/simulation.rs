@@ -39,6 +39,7 @@ static SPHERE_RADIUS: f32 = 0.5;
 static SPHERE_MASS: f32 = 1.0;
 
 static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+    static_friction: 0.0,
     dynamic_friction: 0.0,
     restitution: 0.84,
 };

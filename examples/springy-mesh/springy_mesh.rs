@@ -239,11 +239,12 @@ pub fn make_springy_mesh(
     // Random physics material.
 
     let material = {
-        let random_friction = sampler.sample_range_uniform(0.5, 0.9);
+        let random_dynamic_friction = sampler.sample_range_uniform(0.5, 0.9);
         let random_restitution = sampler.sample_range_uniform(0.5, 0.9);
 
         PhysicsMaterial {
-            dynamic_friction: random_friction,
+            static_friction: 0.0,
+            dynamic_friction: random_dynamic_friction,
             restitution: random_restitution,
         }
     };

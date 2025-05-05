@@ -256,6 +256,7 @@ impl<const N: usize> Simulation<'_, N> {
         // Detect and resolve particle collisions for all colliders.
 
         static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+            static_friction: 0.0,
             dynamic_friction: 0.15,
             restitution: 0.9,
         };

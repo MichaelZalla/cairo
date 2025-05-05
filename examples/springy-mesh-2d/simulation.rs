@@ -46,6 +46,7 @@ impl Simulation<'_> {
         // Detect and resolve collisions against all static colliders.
 
         static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+            static_friction: 0.0,
             dynamic_friction: 0.15,
             restitution: 0.9,
         };
