@@ -2,6 +2,33 @@ use crate::{physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
 use super::rigid_body::rigid_body_simulation_state::RigidBodySimulationState;
 
+fn get_point_plane_outgoing_velocity(
+    plane_normal: Vec3,
+    material: &PhysicsMaterial,
+    velocity: &Vec3,
+) -> (Vec3, Vec3) {
+    // Compute elasticity response (in the normal direction).
+
+    let velocity_in_along_normal = plane_normal * velocity.dot(plane_normal);
+
+    let velocity_out_along_normal = -velocity_in_along_normal * material.restitution;
+
+    // Compute friction response (in the tangent direction).
+
+    let velocity_in_along_tangent = velocity - velocity_in_along_normal;
+
+    let loss = (material.dynamic_friction * velocity_in_along_normal.mag())
+        .min(velocity_in_along_tangent.mag());
+
+    let velocity_out_along_tangent = if velocity_in_along_tangent.is_zero() {
+        velocity_in_along_tangent
+    } else {
+        velocity_in_along_tangent - velocity_in_along_tangent.as_normal() * loss
+    };
+
+    (velocity_out_along_normal, velocity_out_along_tangent)
+}
+
 pub fn resolve_point_plane_collision_approximate(
     plane_normal: Vec3,
     material: &PhysicsMaterial,
@@ -9,41 +36,22 @@ pub fn resolve_point_plane_collision_approximate(
     end_velocity: &mut Vec3,
     penetration_depth: f32,
 ) {
-    // Compute elasticity response (in the normal direction).
+    let (v_out_normal, v_out_tangent) =
+        get_point_plane_outgoing_velocity(plane_normal, material, end_velocity);
 
-    let velocity_normal_to_plane = plane_normal * end_velocity.dot(plane_normal);
+    *end_velocity = v_out_normal + v_out_tangent;
 
-    let response_velocity_normal_to_plane = -velocity_normal_to_plane * material.restitution;
+    *end_position += {
+        let bias = if v_out_normal.mag() < 0.05 {
+            0.005
+        } else {
+            0.0
+        };
 
-    // Compute friction response (in the tangent direction).
+        // Comptues a minimum displacement vector (accounting for restitution).
 
-    let velocity_tangent_to_plane = *end_velocity - velocity_normal_to_plane;
-
-    let loss = (material.dynamic_friction * velocity_normal_to_plane.mag())
-        .min(velocity_tangent_to_plane.mag());
-
-    let response_velocity_tangent_to_plane = if velocity_tangent_to_plane.is_zero() {
-        velocity_tangent_to_plane
-    } else {
-        velocity_tangent_to_plane - velocity_tangent_to_plane.as_normal() * loss
+        plane_normal * ((penetration_depth * (1.0 + material.restitution)) + bias)
     };
-
-    let new_velocity = response_velocity_normal_to_plane + response_velocity_tangent_to_plane;
-
-    let bias = if response_velocity_normal_to_plane.mag() < 0.05 {
-        0.005
-    } else {
-        0.0
-    };
-
-    // Comptues a minimum displacement vector (accounting for restitution).
-
-    let minimum_displacement =
-        plane_normal * ((penetration_depth * (1.0 + material.restitution)) + bias);
-
-    *end_velocity = new_velocity;
-
-    *end_position += minimum_displacement;
 }
 
 pub fn resolve_rigid_body_plane_collision(
