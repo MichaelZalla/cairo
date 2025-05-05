@@ -51,7 +51,7 @@ impl Simulation {
             }
         }
 
-        // Compute the derivative and integrate over the time delta.
+        // Compute the derivative and integrate over h.
 
         let derivative =
             system_dynamics_function(&state, &self.forces, &mut self.meshes, uptime_seconds);
@@ -76,12 +76,16 @@ impl Simulation {
                     {
                         let penetration_depth = (end_position - intersection_point).mag();
 
-                        let time_before_collision = h * f;
-                        let time_after_collision = h - time_before_collision;
+                        {
+                            // Subtracts any velocity accumulated while colliding.
 
-                        let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+                            let time_before_collision = h * f;
+                            let time_after_collision = h - time_before_collision;
 
-                        end_velocity -= accumulated_velocity;
+                            let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+
+                            end_velocity -= accumulated_velocity;
+                        }
 
                         resolve_point_plane_collision_approximate(
                             collider.plane.normal,
