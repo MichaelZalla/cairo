@@ -108,10 +108,14 @@ impl Simulation {
             let start_position = current_body_state.position;
             let end_position = new_body_state.position;
             let end_linear_momentum = new_body_state.linear_momentum;
-            let end_velocity = end_linear_momentum * new_body_state.inverse_mass;
+            let end_linear_velocity = end_linear_momentum * new_body_state.inverse_mass;
 
             for collider in &self.static_plane_colliders {
-                if end_velocity.dot(collider.plane.normal) > 0.0 {
+                let normal = collider.plane.normal;
+
+                let body_speed_along_normal = end_linear_velocity.dot(normal);
+
+                if body_speed_along_normal > f32::EPSILON {
                     // The sphere is moving away from the plane, so no collision could occur.
                     continue;
                 }
@@ -128,7 +132,7 @@ impl Simulation {
 
                     resolve_rigid_body_plane_collision(
                         state,
-                        collider.plane.normal,
+                        normal,
                         contact_point,
                         &PHYSICS_MATERIAL,
                     );
