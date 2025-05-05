@@ -69,7 +69,7 @@ impl Simulation {
         let mut new_state = state.clone() + derivative.clone() * h;
 
         for sphere in self.rigid_bodies.iter_mut() {
-            sphere.did_collide = false;
+            sphere.collision_response.take();
         }
 
         // Detects and resolves collisions with static colliders.
@@ -130,14 +130,14 @@ impl Simulation {
 
                     let state = &mut new_state.0[i];
 
-                    resolve_rigid_body_plane_collision(
+                    let collision_response = resolve_rigid_body_plane_collision(
                         state,
                         normal,
                         contact_point,
                         &PHYSICS_MATERIAL,
                     );
 
-                    sphere.did_collide = true;
+                    sphere.collision_response.replace(collision_response);
                 }
             }
         }
@@ -148,7 +148,7 @@ impl Simulation {
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
-        for (current_sphere_index, sphere) in self.rigid_bodies.iter_mut().enumerate() {
+        for (current_sphere_index, _sphere) in self.rigid_bodies.iter_mut().enumerate() {
             let sphere_state = &new_state.0[current_sphere_index];
 
             let current_grid_coord = GridSpaceCoordinate::from(sphere_state);
@@ -170,7 +170,7 @@ impl Simulation {
                                         *sphere_index,
                                     )
                                 {
-                                    sphere.did_collide = true;
+                                    // sphere.collision_response.replace(...);
                                 }
                             }
                         } else {
@@ -192,7 +192,7 @@ impl Simulation {
                                         current_sphere_index,
                                         *sphere_index,
                                     ) {
-                                        sphere.did_collide = true;
+                                        // sphere.collision_response.replace(...);
                                     }
                                 }
                             }

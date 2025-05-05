@@ -61,6 +61,13 @@ impl RigidBodyKind {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
+pub struct RigidBodyCollisionResponse {
+    pub contact_point: Vec3,
+    pub contact_point_velocity: Vec3,
+    pub normal_impulse: Vec3,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBody {
     pub kind: RigidBodyKind,
     pub transform: Transform3D,
@@ -68,9 +75,10 @@ pub struct RigidBody {
     pub moment_of_inertia: Mat4,
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
-    pub did_collide: bool,
     pub color: Color,
     pub aabb: Option<AABB>,
+    // Debug state
+    pub collision_response: Option<RigidBodyCollisionResponse>,
     // Derived state
     inverse_mass: f32,
     inverse_moment_of_inertia: Mat4,
@@ -164,12 +172,39 @@ impl RigidBody {
 
         let display_kind = EmptyDisplayKind::Sphere(12);
 
-        let color = if self.did_collide {
-            color::RED
-        } else {
-            self.color
-        };
+        renderer.render_empty(&transform_with_radius, display_kind, true, Some(self.color));
 
-        renderer.render_empty(&transform_with_radius, display_kind, true, Some(color));
+        // Visualizes collision impulses.
+
+        if let Some(response) = &self.collision_response {
+            // Visualizes contact point.
+
+            let scale = Mat4::scale_uniform(0.1);
+            let translation = Mat4::translation(response.contact_point);
+            let transform = scale * translation;
+
+            renderer.render_empty(
+                &transform,
+                EmptyDisplayKind::Sphere(12),
+                false,
+                Some(color::LIGHT_GRAY),
+            );
+
+            // Visualizes contact point velocity.
+
+            renderer.render_line(
+                response.contact_point,
+                response.contact_point + response.contact_point_velocity.as_normal(),
+                color::LIGHT_GRAY,
+            );
+
+            // Visualizes normal impulse.
+
+            renderer.render_line(
+                response.contact_point,
+                response.contact_point + response.normal_impulse,
+                color::BLUE,
+            );
+        }
     }
 }

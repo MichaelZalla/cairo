@@ -1,6 +1,8 @@
 use crate::{physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
-use super::rigid_body::rigid_body_simulation_state::RigidBodySimulationState;
+use super::rigid_body::{
+    rigid_body_simulation_state::RigidBodySimulationState, RigidBodyCollisionResponse,
+};
 
 fn get_point_plane_outgoing_velocity(
     plane_normal: Vec3,
@@ -59,7 +61,7 @@ pub fn resolve_rigid_body_plane_collision(
     plane_normal: Vec3,
     contact_point: Vec3,
     material: &PhysicsMaterial,
-) {
+) -> RigidBodyCollisionResponse {
     let r = contact_point - state.position;
 
     let linear_velocity = state.velocity();
@@ -90,7 +92,7 @@ pub fn resolve_rigid_body_plane_collision(
     //            = (incoming rate-of-change of contact point position) + lv_delta + av_delta.cross(r)
     //            = (incoming rate-of-change of contact point position)
     //               + (1/mass) * j * plane_normal
-    //               + (r.cross(plane_normal) * I^-1).cross(r)
+    //               + (r_cross_n * I^-1).cross(r)
     //
 
     let numerator = -(1.0 + material.restitution) * incoming_contact_point_speed_normal_to_plane;
@@ -100,8 +102,16 @@ pub fn resolve_rigid_body_plane_collision(
 
     let normal_impulse_magnitude = numerator / denominator;
 
-    state.linear_momentum += plane_normal * normal_impulse_magnitude;
+    let normal_impulse = plane_normal * normal_impulse_magnitude;
+
+    state.linear_momentum += normal_impulse;
     state.angular_momentum += r.cross(plane_normal) * normal_impulse_magnitude;
+
+    RigidBodyCollisionResponse {
+        contact_point,
+        contact_point_velocity,
+        normal_impulse,
+    }
 }
 
 #[allow(unused_variables)]
