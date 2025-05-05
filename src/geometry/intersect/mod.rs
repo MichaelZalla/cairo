@@ -63,7 +63,10 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
     }
 }
 
-pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Triangle) -> bool {
+pub fn intersect_line_segment_triangle(
+    segment: &mut LineSegment,
+    triangle: &Triangle,
+) -> Option<Vec3> {
     let (p, q) = (segment.start, segment.end);
 
     // Compute the distance of P to the triangle's normal-facing plane.
@@ -73,7 +76,7 @@ pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Tri
     // Exit if start point P is behind the plane.
 
     if p_distance < 0.0 {
-        return false;
+        return None;
     }
 
     // Compute the distance of Q to the triangle's normal-facing plane.
@@ -83,7 +86,7 @@ pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Tri
     // Exit if end point Q is in front of the plane.
 
     if q_distance >= 0.0 {
-        return false;
+        return None;
     }
 
     // Compute the point-of-intersection S of the line PQ with the plane.
@@ -99,7 +102,7 @@ pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Tri
     let u = s.dot(triangle.edge_plane_bc.normal) - triangle.edge_plane_bc.d;
 
     if !(0.0..=1.0).contains(&u) {
-        return false;
+        return None;
     }
 
     // Compute the barycentric coordinate V; exit if negative.
@@ -107,7 +110,7 @@ pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Tri
     let v = s.dot(triangle.edge_plane_ca.normal) - triangle.edge_plane_ca.d;
 
     if v < 0.0 {
-        return false;
+        return None;
     }
 
     // Compute the barycentric coordinate W; exit if negative.
@@ -115,7 +118,7 @@ pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Tri
     let w = 1.0 - u - v;
 
     if w < 0.0 {
-        return false;
+        return None;
     }
 
     // Segment PQ intersects triangle.
@@ -123,10 +126,10 @@ pub fn intersect_line_segment_triangle(segment: &mut LineSegment, triangle: &Tri
     if t < segment.t {
         segment.t = t;
 
-        return true;
+        Some(Vec3 { x: u, y: v, z: w })
+    } else {
+        None
     }
-
-    false
 }
 
 pub fn test_sphere_sphere(a: Sphere, b: Sphere) -> bool {

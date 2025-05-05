@@ -123,9 +123,8 @@ fn intersect_line_segment_bvh_node(
 
             let triangle = &bvh.tris[tri_index];
 
-            if intersect_line_segment_triangle(segment, triangle) {
+            if let Some(_barycentric) = intersect_line_segment_triangle(segment, triangle) {
                 segment.colliding_bvh_index.replace(bvh_instance_index);
-
                 segment.colliding_primitive.replace(tri_index);
             }
         }
