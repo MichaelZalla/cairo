@@ -43,7 +43,7 @@ impl Simulation {
 
         let n = state.len();
 
-        // Copy current positions and velocities into the current state.
+        // Copies current positions and velocities into the current state.
 
         let mut i = 0;
 
@@ -57,58 +57,18 @@ impl Simulation {
             }
         }
 
-        // Compute the derivative and integrate over h.
+        // Computes the derivative and integrate over h.
 
         let derivative =
             system_dynamics_function(&state, &self.forces, &mut self.meshes, uptime_seconds);
 
         let mut new_state = integrate_midpoint_euler(&state, &derivative, h);
 
-        // Detect and resolve collisions against all static colliders.
+        // Detects and resolves collisions with static colliders.
 
-        for mesh in &self.meshes {
-            for i in 0..mesh.points.len() {
-                let acceleration = derivative.data[mesh.state_index_offset + i + n];
+        self.check_static_collisions(&derivative, &state, &mut new_state, n, h);
 
-                let start_position = state.data[mesh.state_index_offset + i];
-                let mut end_position = new_state.data[mesh.state_index_offset + i];
-                let mut end_velocity = new_state.data[mesh.state_index_offset + i + n];
-
-                // We'll break early on the first collision (if any).
-
-                for collider in &self.static_plane_colliders {
-                    if let Some((f, intersection_point)) =
-                        intersect_line_segment_plane(&collider.plane, start_position, end_position)
-                    {
-                        let penetration_depth = (end_position - intersection_point).mag();
-
-                        {
-                            // Subtracts any velocity accumulated while colliding.
-
-                            let time_before_collision = h * f;
-                            let time_after_collision = h - time_before_collision;
-
-                            let accumulated_velocity = acceleration * 2.0 * time_after_collision;
-
-                            end_velocity -= accumulated_velocity;
-                        }
-
-                        resolve_point_plane_collision_approximate(
-                            collider.plane.normal,
-                            &mesh.material,
-                            &mut end_position,
-                            &mut end_velocity,
-                            penetration_depth,
-                        );
-
-                        new_state.data[mesh.state_index_offset + i + n] = end_velocity;
-                        new_state.data[mesh.state_index_offset + i] = end_position;
-                    }
-                }
-            }
-        }
-
-        // Copy new positions and velocities back into each particle.
+        // Copies new positions and velocities back into each particle.
 
         for (i, point) in self
             .meshes
@@ -119,13 +79,13 @@ impl Simulation {
             point.write_from(&new_state, n, i);
         }
 
-        // Update the mesh's AABB bounds.
+        // Updates the mesh's AABB bounds.
 
         for mesh in &mut self.meshes {
             mesh.update_aabb();
         }
 
-        // Update collider triangles for each springy mesh.
+        // Updates collider triangles for each springy mesh.
 
         for mesh in &mut self.meshes {
             for triangle in &mut mesh.triangles {
@@ -174,6 +134,57 @@ impl Simulation {
         // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
             collider.render(renderer);
+        }
+    }
+
+    fn check_static_collisions(
+        &self,
+        derivative: &StateVector,
+        state: &StateVector,
+        new_state: &mut StateVector,
+        n: usize,
+        h: f32,
+    ) {
+        for mesh in &self.meshes {
+            for i in 0..mesh.points.len() {
+                let acceleration = derivative.data[mesh.state_index_offset + i + n];
+
+                let start_position = state.data[mesh.state_index_offset + i];
+                let mut end_position = new_state.data[mesh.state_index_offset + i];
+                let mut end_velocity = new_state.data[mesh.state_index_offset + i + n];
+
+                // We'll break early on the first collision (if any).
+
+                for collider in &self.static_plane_colliders {
+                    if let Some((f, intersection_point)) =
+                        intersect_line_segment_plane(&collider.plane, start_position, end_position)
+                    {
+                        let penetration_depth = (end_position - intersection_point).mag();
+
+                        {
+                            // Subtracts any velocity accumulated while colliding.
+
+                            let time_before_collision = h * f;
+                            let time_after_collision = h - time_before_collision;
+
+                            let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+
+                            end_velocity -= accumulated_velocity;
+                        }
+
+                        resolve_point_plane_collision_approximate(
+                            collider.plane.normal,
+                            &mesh.material,
+                            &mut end_position,
+                            &mut end_velocity,
+                            penetration_depth,
+                        );
+
+                        new_state.data[mesh.state_index_offset + i + n] = end_velocity;
+                        new_state.data[mesh.state_index_offset + i] = end_position;
+                    }
+                }
+            }
         }
     }
 }
