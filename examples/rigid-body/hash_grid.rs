@@ -24,30 +24,46 @@ impl ops::Add for GridSpaceCoordinate {
     }
 }
 
-impl From<Vec3> for GridSpaceCoordinate {
-    fn from(value: Vec3) -> Self {
+impl From<(Vec3, f32)> for GridSpaceCoordinate {
+    fn from(vec_and_scale: (Vec3, f32)) -> Self {
+        let (vec, scale) = vec_and_scale;
+
         Self {
-            x: value.x.floor() as isize,
-            y: value.y.floor() as isize,
-            z: value.z.floor() as isize,
+            x: (vec.x / scale).floor() as isize,
+            y: (vec.y / scale).floor() as isize,
+            z: (vec.z / scale).floor() as isize,
         }
     }
 }
 
-impl From<&RigidBodySimulationState> for GridSpaceCoordinate {
-    fn from(state: &RigidBodySimulationState) -> Self {
-        Self::from(state.position)
+impl From<(&RigidBodySimulationState, f32)> for GridSpaceCoordinate {
+    fn from(state_and_scale: (&RigidBodySimulationState, f32)) -> Self {
+        let (state, scale) = state_and_scale;
+
+        Self::from((state.position, scale))
     }
 }
 
-impl From<&GridSpaceCoordinate> for Vec3 {
-    fn from(val: &GridSpaceCoordinate) -> Self {
-        Vec3 {
-            x: val.x as f32,
-            y: val.y as f32,
-            z: val.z as f32,
+#[derive(Debug, Clone)]
+pub struct HashGrid {
+    pub scale: f32,
+    pub map: HashMap<GridSpaceCoordinate, Vec<usize>>,
+}
+
+impl Default for HashGrid {
+    fn default() -> Self {
+        Self {
+            scale: 1.0,
+            map: Default::default(),
         }
     }
 }
 
-pub type HashGrid = HashMap<GridSpaceCoordinate, Vec<usize>>;
+impl HashGrid {
+    pub fn new(scale: f32) -> Self {
+        Self {
+            scale,
+            ..Default::default()
+        }
+    }
+}

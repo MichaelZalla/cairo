@@ -168,7 +168,8 @@ impl Simulation {
         for (current_sphere_index, _sphere) in self.rigid_bodies.iter_mut().enumerate() {
             let sphere_state = &new_state.0[current_sphere_index];
 
-            let current_grid_coord = GridSpaceCoordinate::from(sphere_state);
+            let current_grid_coord =
+                GridSpaceCoordinate::from((sphere_state, self.hash_grid.scale));
 
             for x_offset in -1..=1 {
                 for y_offset in -1..=1 {
@@ -176,7 +177,7 @@ impl Simulation {
                         if x_offset == 0 && y_offset == 0 && z_offset == 0 {
                             // Checks current cell.
 
-                            let cell = self.hash_grid.get(&current_grid_coord).unwrap();
+                            let cell = self.hash_grid.map.get(&current_grid_coord).unwrap();
 
                             for sphere_index in cell {
                                 if *sphere_index != current_sphere_index
@@ -201,7 +202,7 @@ impl Simulation {
 
                             let neighbor_coord = current_grid_coord + offset;
 
-                            if let Some(cell) = self.hash_grid.get(&neighbor_coord) {
+                            if let Some(cell) = self.hash_grid.map.get(&neighbor_coord) {
                                 for sphere_index in cell {
                                     if Simulation::did_resolve_collision(
                                         current_state,
@@ -269,12 +270,12 @@ impl Simulation {
     }
 
     fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {
-        self.hash_grid.clear();
+        self.hash_grid.map.clear();
 
         for (i, sphere_state) in new_state.0.iter().enumerate() {
-            let coord = GridSpaceCoordinate::from(sphere_state);
+            let coord = GridSpaceCoordinate::from((sphere_state, self.hash_grid.scale));
 
-            match self.hash_grid.get_mut(&coord) {
+            match self.hash_grid.map.get_mut(&coord) {
                 Some(list) => {
                     list.push(i);
                 }
@@ -283,7 +284,7 @@ impl Simulation {
 
                     cell.insert(0, i);
 
-                    self.hash_grid.insert(coord, cell);
+                    self.hash_grid.map.insert(coord, cell);
                 }
             }
         }
@@ -298,13 +299,17 @@ impl Simulation {
 
         // Visualize hash grid entries.
 
-        for grid_coord in self.hash_grid.keys() {
+        for grid_coord in self.hash_grid.map.keys() {
             let transform = {
-                let scale = Mat4::scale_uniform(0.5);
+                let scale = Mat4::scale_uniform(0.5 * self.hash_grid.scale);
 
                 let offset = Mat4::translation(vec3::ONES * 0.5);
 
-                let translate = Mat4::translation(grid_coord.into());
+                let translate = Mat4::translation(Vec3 {
+                    x: (grid_coord.x as f32 * self.hash_grid.scale),
+                    y: (grid_coord.y as f32 * self.hash_grid.scale),
+                    z: (grid_coord.z as f32 * self.hash_grid.scale),
+                });
 
                 scale * offset * translate
             };
@@ -452,6 +457,6 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        hash_grid: Default::default(),
+        hash_grid: HashGrid::new(2.0),
     }
 }
