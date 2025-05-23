@@ -56,6 +56,85 @@ pub fn resolve_point_plane_collision_approximate(
     };
 }
 
+pub fn resolve_vertex_face_collision(
+    material: &PhysicsMaterial,
+    normal: Vec3,
+    barycentric: Vec3,
+    point_mass: f32,
+    point_velocity: &mut Vec3,
+    v0_mass: f32,
+    v0_velocity: &mut Vec3,
+    v1_mass: f32,
+    v1_velocity: &mut Vec3,
+    v2_mass: f32,
+    v2_velocity: &mut Vec3,
+) {
+    // Computes the absolute velocity of the point on the triangle where the
+    // collision occurred, using barycentric weighting of vertex velocities.
+
+    let (u, v, w) = (barycentric.x, barycentric.y, barycentric.z);
+
+    let b_velocity_in = *v0_velocity * u + *v1_velocity * v + *v2_velocity * w;
+
+    // Computes the effective mass of the point on the triangle where the
+    // collision occurred, using barycentric weighting of vertex masses.
+
+    // @NOTE The denominator is needed in order to conserve momentum.
+    let denominator = u * u + v * v + w * w;
+
+    let b_mass = (u * v0_mass + v * v1_mass + w * v2_mass) / denominator;
+
+    // Computes the center of momentum of the vertex-face collision.
+
+    let center_of_momentum =
+        (*point_velocity * point_mass + b_velocity_in * b_mass) / (point_mass + b_mass);
+
+    // Incoming point velocities relative to this center of momentum.
+
+    let a_relative_velocity_in = *point_velocity - center_of_momentum;
+
+    let b_relative_velocity_in = b_velocity_in - center_of_momentum;
+
+    // Relative velocity updates for the colliding points.
+
+    let a_relative_velocity_out = {
+        let (v_out_normal, v_out_tangent) =
+            get_point_plane_outgoing_velocity(normal, material, &a_relative_velocity_in);
+
+        v_out_normal + v_out_tangent
+    };
+
+    let b_relative_velocity_out = {
+        let (v_out_normal, v_out_tangent) =
+            get_point_plane_outgoing_velocity(-normal, material, &b_relative_velocity_in);
+
+        v_out_normal + v_out_tangent
+    };
+
+    // Absolute velocity updates needed for colliding points.
+
+    let a_velocity_out = a_relative_velocity_out + center_of_momentum;
+    let b_velocity_out = b_relative_velocity_out + center_of_momentum;
+
+    // Applies the velocity update for the colliding vertex .
+
+    *point_velocity = a_velocity_out;
+
+    // Distributes the velocity update for the colliding face, amongst its
+    // weighted vertices.
+
+    let b_velocity_delta = b_velocity_out - b_velocity_in;
+
+    let b_velocity_delta_prime = b_velocity_delta / denominator;
+
+    // Δv_0 = u * Δv'
+    *v0_velocity += b_velocity_delta_prime * u;
+    // Δv_1 = v * Δv'
+    *v1_velocity += b_velocity_delta_prime * v;
+    // Δv_2 = w * Δv'
+    *v2_velocity += b_velocity_delta_prime * w;
+}
+
 pub fn resolve_rigid_body_plane_collision(
     state: &mut RigidBodySimulationState,
     plane_normal: Vec3,

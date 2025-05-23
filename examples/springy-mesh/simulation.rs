@@ -1,11 +1,17 @@
 use std::f32::consts::TAU;
 
 use cairo::{
+    animation::lerp,
     color,
-    geometry::intersect::intersect_line_segment_plane,
+    geometry::{
+        intersect::{intersect_line_segment_plane, intersect_line_segment_triangle},
+        primitives::line_segment::LineSegment,
+    },
     matrix::Mat4,
     physics::simulation::{
-        collision_response::resolve_point_plane_collision_approximate,
+        collision_response::{
+            resolve_point_plane_collision_approximate, resolve_vertex_face_collision,
+        },
         force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
@@ -28,11 +34,23 @@ use crate::{
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2; // { position, velocity }
 
+#[allow(unused)]
+#[derive(Default, Debug, Clone)]
+pub struct PointFaceCollision {
+    pub a_mesh_index: usize,
+    pub a_point_index: usize,
+    pub b_mesh_index: usize,
+    pub b_face_index: usize,
+    pub barycentric: Vec3,
+    pub s: Vec3,
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct Simulation {
     pub forces: Vec<PointForce>,
     pub meshes: Vec<SpringyMesh>,
     pub static_plane_colliders: Vec<PlaneCollider>,
+    pub vertex_collisions: Vec<PointFaceCollision>,
 }
 
 impl Simulation {
@@ -67,6 +85,10 @@ impl Simulation {
         // Detects and resolves collisions with static colliders.
 
         self.check_static_collisions(&derivative, &state, &mut new_state, n, h);
+
+        // Detects and resolves collisions between springy meshes.
+
+        self.check_springy_mesh_collisions(&state, &mut new_state, n);
 
         // Copy new positions and velocities back the meshes' particles.
         // (Updates mesh AABB bounds and collision triangles).
@@ -163,6 +185,172 @@ impl Simulation {
             }
         }
     }
+
+    fn check_springy_mesh_collisions(
+        &mut self,
+        state: &StateVector,
+        new_state: &mut StateVector,
+        n: usize,
+    ) {
+        // Resets vertex-face collisions.
+
+        self.vertex_collisions.clear();
+
+        // Detect and resolve collisions between mesh pairs.
+
+        for i in 0..self.meshes.len() {
+            for j in i + 1..self.meshes.len() {
+                // Checks for vertex-face collisions.
+
+                for (a, b) in [(i, j), (j, i)] {
+                    for p_i in 0..self.meshes[a].points.len() {
+                        for tri_i in 0..self.meshes[b].triangles.len() {
+                            // Checks mesh `a`, point at `p_i` against mesh `b`, face at `tri_i`.
+
+                            if self.did_handle_point_face_collision(
+                                a, p_i, b, tri_i, n, state, new_state,
+                            ) {
+                                println!("Handled vertex-triangle collision.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn did_handle_point_face_collision(
+        &mut self,
+        a: usize,
+        p_i: usize,
+        b: usize,
+        tri_i: usize,
+        n: usize,
+        state: &StateVector,
+        new_state: &mut StateVector,
+    ) -> bool {
+        // Constructs a line segment between the old and new vertex positions.
+
+        let a_point_index = self.meshes[a].state_index_offset + p_i;
+
+        let b_points_start_index = self.meshes[b].state_index_offset;
+
+        let start_position = &state.data[a_point_index];
+        let end_position = &new_state.data[a_point_index];
+
+        let start_velocity = &state.data[a_point_index + n];
+        let end_velocity = &new_state.data[a_point_index + n];
+
+        let mut segment = LineSegment::new(*start_position, *end_position);
+
+        // Updates the triangle (collider) associated with the face.
+
+        // @NOTE The triangle is treated as a static collider, based on the new
+        // positions of its three vertices in `new_state`.
+
+        let triangle = &mut self.meshes[b].triangles[tri_i];
+
+        let [i0, i1, i2] = triangle.vertices;
+
+        let v0_position = &new_state.data[b_points_start_index + i0];
+        let v1_position = &new_state.data[b_points_start_index + i1];
+        let v2_position = &new_state.data[b_points_start_index + i2];
+
+        triangle.update_vertex_positions(v0_position, v1_position, v2_position);
+
+        // If the point is moving away from the triangle plane, don't interfere.
+
+        let normal = triangle.plane.normal;
+
+        if end_velocity.dot(normal) >= 0.0 {
+            return false;
+        }
+
+        // Performs a line-segment-triangle intersection test.
+
+        match intersect_line_segment_triangle(&mut segment, triangle) {
+            Some(barycentric) => {
+                // Records the point-face collision.
+
+                let s = segment.lerped();
+
+                let collision = PointFaceCollision {
+                    a_mesh_index: a,
+                    a_point_index: p_i,
+                    b_mesh_index: b,
+                    b_face_index: tri_i,
+                    barycentric,
+                    s,
+                };
+
+                self.vertex_collisions.push(collision);
+
+                // Uses the physics material associated with mesh A.
+
+                let material = &self.meshes[a].material;
+
+                // Gathers mass and velocity for collision body A (point).
+
+                let point_mass = self.meshes[a].points[p_i].mass;
+
+                let mut point_velocity = lerp(*start_velocity, *end_velocity, segment.t);
+
+                // Gathers masses and velocities for collision body B (face).
+
+                let (v0_mass, v1_mass, v2_mass) = {
+                    (
+                        self.meshes[b].points[i0].mass,
+                        self.meshes[b].points[i1].mass,
+                        self.meshes[b].points[i2].mass,
+                    )
+                };
+
+                let mut v0_velocity = new_state.data[b_points_start_index + i0 + n];
+                let mut v1_velocity = new_state.data[b_points_start_index + i1 + n];
+                let mut v2_velocity = new_state.data[b_points_start_index + i2 + n];
+
+                // Computes velocity updates for both bodies.
+
+                resolve_vertex_face_collision(
+                    material,
+                    normal,
+                    barycentric,
+                    point_mass,
+                    &mut point_velocity,
+                    v0_mass,
+                    &mut v0_velocity,
+                    v1_mass,
+                    &mut v1_velocity,
+                    v2_mass,
+                    &mut v2_velocity,
+                );
+
+                let penetration_depth = (s - end_position).dot(normal);
+
+                let bias = if point_velocity.dot(normal) < 0.05 {
+                    0.01
+                } else {
+                    0.0
+                };
+
+                let point_position = end_position
+                    + normal * (penetration_depth * (1.0 + material.restitution) + bias);
+
+                // Updates point position and velocity.
+                new_state.data[a_point_index] = point_position;
+                new_state.data[a_point_index + n] = point_velocity;
+
+                // Updates face vertex positions and velocities.
+                new_state.data[b_points_start_index + n + i0] = v0_velocity;
+                new_state.data[b_points_start_index + n + i1] = v1_velocity;
+                new_state.data[b_points_start_index + n + i2] = v2_velocity;
+
+                true
+            }
+            None => false,
+        }
+    }
 }
 
 pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
@@ -226,5 +414,6 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         meshes,
         forces,
         static_plane_colliders,
+        ..Default::default()
     }
 }

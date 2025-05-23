@@ -21,4 +21,8 @@ impl LineSegment {
             colliding_primitive: None,
         }
     }
+
+    pub fn lerped(&self) -> Vec3 {
+        self.start + (self.end - self.start) * self.t
+    }
 }
