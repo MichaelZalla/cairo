@@ -30,6 +30,18 @@ impl SpringyMesh {
 
         self.aabb.recompute_derived_state();
     }
+
+    pub fn update_triangles(&mut self) {
+        for triangle in &mut self.triangles {
+            let (v0, v1, v2) = (
+                &self.points[triangle.vertices[0]].position,
+                &self.points[triangle.vertices[1]].position,
+                &self.points[triangle.vertices[2]].position,
+            );
+
+            triangle.update_vertex_positions(v0, v1, v2);
+        }
+    }
 }
 
 #[allow(unused)]

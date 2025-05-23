@@ -79,24 +79,12 @@ impl Simulation {
             point.write_from(&new_state, n, i);
         }
 
-        // Updates the mesh's AABB bounds.
-
         for mesh in &mut self.meshes {
+            // Updates the mesh's AABB bounds.
             mesh.update_aabb();
-        }
 
-        // Updates collider triangles for each springy mesh.
-
-        for mesh in &mut self.meshes {
-            for triangle in &mut mesh.triangles {
-                let (v0, v1, v2) = (
-                    &mesh.points[triangle.vertices[0]].position,
-                    &mesh.points[triangle.vertices[1]].position,
-                    &mesh.points[triangle.vertices[2]].position,
-                );
-
-                triangle.update_vertex_positions(v0, v1, v2);
-            }
+            // Updates the mesh's AABB bounds.
+            mesh.update_triangles();
         }
     }
 
