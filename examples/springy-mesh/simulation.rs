@@ -212,6 +212,9 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
             point.velocity = random_velocity;
         }
 
+        mesh.update_aabb();
+        mesh.update_triangles();
+
         meshes.push(mesh);
     }
 
