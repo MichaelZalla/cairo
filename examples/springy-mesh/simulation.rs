@@ -68,23 +68,11 @@ impl Simulation {
 
         self.check_static_collisions(&derivative, &state, &mut new_state, n, h);
 
-        // Copies new positions and velocities back into each particle.
-
-        for (i, point) in self
-            .meshes
-            .iter_mut()
-            .flat_map(|mesh| &mut mesh.points)
-            .enumerate()
-        {
-            point.write_from(&new_state, n, i);
-        }
+        // Copy new positions and velocities back the meshes' particles.
+        // (Updates mesh AABB bounds and collision triangles).
 
         for mesh in &mut self.meshes {
-            // Updates the mesh's AABB bounds.
-            mesh.update_aabb();
-
-            // Updates the mesh's AABB bounds.
-            mesh.update_triangles();
+            mesh.write_from(&new_state, n, mesh.state_index_offset);
         }
     }
 

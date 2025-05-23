@@ -3,7 +3,13 @@ use std::collections::HashMap;
 use cairo::{
     color,
     geometry::primitives::{aabb::AABB, triangle::Triangle},
-    physics::{material::PhysicsMaterial, simulation::particle::Particle},
+    physics::{
+        material::PhysicsMaterial,
+        simulation::{
+            particle::Particle,
+            state_vector::{FromStateVector, StateVector},
+        },
+    },
     random::sampler::{RandomSampler, RangeSampler},
     vec::vec3::Vec3,
 };
@@ -18,6 +24,18 @@ pub struct SpringyMesh {
     pub state_index_offset: usize,
     pub triangles: Vec<Triangle>,
     pub aabb: AABB,
+}
+
+impl FromStateVector for SpringyMesh {
+    fn write_from(&mut self, state: &StateVector, n: usize, _i: usize) {
+        for (i, point) in &mut self.points.iter_mut().enumerate() {
+            point.write_from(state, n, self.state_index_offset + i);
+        }
+
+        self.update_aabb();
+
+        self.update_triangles();
+    }
 }
 
 impl SpringyMesh {
