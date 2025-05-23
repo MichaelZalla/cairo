@@ -1,4 +1,4 @@
-use std::f32::consts::TAU;
+use std::{collections::HashMap, f32::consts::TAU};
 
 use cairo::{
     animation::lerp,
@@ -45,12 +45,21 @@ pub struct PointFaceCollision {
     pub s: Vec3,
 }
 
+#[derive(Default, Debug, Clone, Eq, PartialEq, Hash)]
+pub struct EdgePair {
+    pub a_mesh_index: usize,
+    pub a_edge_index: usize,
+    pub b_mesh_index: usize,
+    pub b_edge_index: usize,
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct Simulation {
     pub forces: Vec<PointForce>,
     pub meshes: Vec<SpringyMesh>,
     pub static_plane_colliders: Vec<PlaneCollider>,
     pub vertex_collisions: Vec<PointFaceCollision>,
+    pub closest_points: HashMap<EdgePair, Vec3>,
 }
 
 impl Simulation {
@@ -215,6 +224,41 @@ impl Simulation {
                         }
                     }
                 }
+
+                // Computes the closest points between pairs of edges (between meshes).
+
+                for edge_i in 0..self.meshes[i].struts.len() {
+                    // Skips internal struts.
+                    if self.meshes[i].struts[edge_i]
+                        .edge
+                        .connected_points
+                        .is_none()
+                    {
+                        continue;
+                    }
+
+                    for edge_j in 0..self.meshes[j].struts.len() {
+                        // Skips internal struts.
+                        if self.meshes[j].struts[edge_j]
+                            .edge
+                            .connected_points
+                            .is_none()
+                        {
+                            continue;
+                        }
+
+                        // Checks mesh `i`, edge `edge_i` against mesh `j`, edge `tri_i`.
+
+                        let pair = EdgePair {
+                            a_mesh_index: i,
+                            a_edge_index: edge_i,
+                            b_mesh_index: j,
+                            b_edge_index: edge_j,
+                        };
+
+                        self.recompute_closest_points_for_edge_pair(pair, new_state);
+                    }
+                }
             }
         }
     }
@@ -350,6 +394,81 @@ impl Simulation {
             }
             None => false,
         }
+    }
+
+    fn recompute_closest_points_for_edge_pair(
+        &mut self,
+        pair: EdgePair,
+        new_state: &mut StateVector,
+    ) {
+        // Extracts the edge's vertex positions.
+
+        let (p1, p2) = {
+            let mesh_a = &self.meshes[pair.a_mesh_index];
+            let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
+
+            (
+                new_state.data[mesh_a.state_index_offset + edge_a.points.0],
+                new_state.data[mesh_a.state_index_offset + edge_a.points.1],
+            )
+        };
+
+        let (q1, q2) = {
+            let mesh_b = &self.meshes[pair.b_mesh_index];
+            let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
+
+            (
+                new_state.data[mesh_b.state_index_offset + edge_b.points.0],
+                new_state.data[mesh_b.state_index_offset + edge_b.points.1],
+            )
+        };
+
+        // A vector running the length of edge A.
+        let a = p2 - p1;
+
+        // A vector running the length of edge B.
+        let b = q2 - q1;
+
+        // The direction of the vector between closest points.
+        let normal = a.cross(b).as_normal();
+
+        // Edges A and B can be expressed parametrically, with parameters `s` and `t`:
+        //
+        //   A(s) = p_1 + (p_2 - p_1) * s
+        //   B(t) = q_1 + (q_2 - q_1) * t
+        //
+        // We want to compute an `s` and a `t` such that, when plugged in to the
+        // parametric expressions above, A(s) and B(t) are the closest points
+        // between the edges.
+
+        let r = q1 - p1;
+
+        let a_norm_cross_n = a.as_normal().cross(normal);
+        let b_norm_cross_n = b.as_normal().cross(normal);
+
+        let s = r.dot(b_norm_cross_n) / a.dot(b_norm_cross_n);
+        let t = -r.dot(a_norm_cross_n) / b.dot(a_norm_cross_n);
+
+        // If s < 0 or s > 1, then the closest point on the line forming A falls
+        // outside of A.
+
+        if !(0.0..=1.0).contains(&s) {
+            return;
+        }
+
+        // If t < 0 or s > 1, then the closest point on the line forming B falls
+        // outside of B.
+
+        if !(0.0..=1.0).contains(&t) {
+            return;
+        }
+
+        let p_a = p1 + (p2 - p1) * s;
+        let q_a = q1 + (q2 - q1) * t;
+
+        let m: Vec3 = q_a - p_a;
+
+        self.closest_points.insert(pair, m);
     }
 }
 
