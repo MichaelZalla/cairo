@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use cairo::{
+    animation::lerp,
     color,
     geometry::primitives::{aabb::AABB, triangle::Triangle},
     matrix::Mat4,
@@ -125,8 +126,29 @@ impl SpringyMesh {
                 let start = self.points[strut.edge.points.0].position;
                 let end = self.points[strut.edge.points.1].position;
 
+                let h = (end - start).as_normal();
+
                 let left = self.points[connected_points.0].position;
                 let right = self.points[connected_points.1].position;
+
+                let normals =
+                    Strut::get_surface_normals_edge_points(&strut.edge, &self.points).unwrap();
+
+                for i in 0..=1 {
+                    let c = if i == 0 { &left } else { &right };
+
+                    let start_c = *c - start;
+
+                    let r_c = start_c - h * start_c.dot(h);
+
+                    let midpoint_c = lerp(*c, *c - r_c, 0.5);
+
+                    let normal_c = if i == 0 { normals.0 } else { normals.1 };
+
+                    // Visualize normals of the faces formed by start, end, and the connected point.
+
+                    renderer.render_line(midpoint_c, midpoint_c + normal_c, color::GREEN);
+                }
 
                 // Visualize the rotational forces applied to start, end, left, and right.
 
