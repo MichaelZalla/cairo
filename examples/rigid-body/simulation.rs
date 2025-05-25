@@ -140,16 +140,22 @@ impl Simulation {
                         contact_point_velocity.dot(normal);
 
                     if incoming_contact_point_speed_normal_to_plane > f32::EPSILON {
+                        let signed_distance_from_rigid_body_to_plane =
+                            collider.plane.get_signed_distance(&end_position);
+
+                        if signed_distance_from_rigid_body_to_plane <= radius {
+                            new_body_state.position +=
+                                normal * (radius - signed_distance_from_rigid_body_to_plane + 0.01);
+                        }
+
                         continue;
                     }
 
                     let derivative = &derivative.0[i];
 
-                    let state = &mut new_state.0[i];
-
                     let collision_response = resolve_rigid_body_plane_collision(
                         derivative,
-                        state,
+                        new_body_state,
                         normal,
                         contact_point,
                         contact_point_velocity,
