@@ -65,6 +65,8 @@ pub struct RigidBodyCollisionResponse {
     pub contact_point: Vec3,
     pub contact_point_velocity: Vec3,
     pub normal_impulse: Vec3,
+    pub tangent: Option<Vec3>,
+    pub friction_impulse: Option<Vec3>,
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -205,6 +207,26 @@ impl RigidBody {
                 response.contact_point + response.normal_impulse,
                 color::BLUE,
             );
+
+            // Visualizes the tangent vector chosen for friction response.
+
+            if let Some(tangent) = &response.tangent {
+                renderer.render_line(
+                    response.contact_point,
+                    response.contact_point + tangent,
+                    color::GREEN,
+                );
+            }
+
+            // Visualizes friction impulse.
+
+            if let Some(friction_impulse) = &response.friction_impulse {
+                renderer.render_line(
+                    response.contact_point,
+                    response.contact_point + friction_impulse,
+                    color::RED,
+                );
+            }
         }
     }
 }

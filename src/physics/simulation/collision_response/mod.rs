@@ -319,10 +319,12 @@ pub fn resolve_rigid_body_plane_collision(
 
     state.angular_momentum += rotation_axis * normal_impulse_magnitude;
 
-    let response = RigidBodyCollisionResponse {
+    let mut response = RigidBodyCollisionResponse {
         contact_point,
         contact_point_velocity,
         normal_impulse,
+        tangent: None,
+        friction_impulse: None,
     };
 
     // Static or dynamic friction
@@ -427,6 +429,9 @@ pub fn resolve_rigid_body_plane_collision(
 
     state.linear_momentum -= friction_impulse;
     state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
+
+    response.tangent.replace(tangent);
+    response.friction_impulse.replace(friction_impulse);
 
     response
 }
