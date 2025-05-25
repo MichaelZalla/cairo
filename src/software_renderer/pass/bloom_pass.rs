@@ -54,6 +54,10 @@ impl SoftwareRenderer {
 
                                     let bloom = *bloom_buffer.get(x, y);
 
+                                    if bloom.is_zero() {
+                                        continue;
+                                    }
+
                                     let dirt = {
                                         let uv = Vec2 {
                                             x: bloom_buffer.texel_size_over_2.x
