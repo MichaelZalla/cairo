@@ -1,4 +1,4 @@
-use std::{collections::HashMap, f32::consts::TAU};
+use std::collections::HashMap;
 
 use cairo::{
     animation::lerp,
@@ -12,12 +12,11 @@ use cairo::{
             resolve_edge_edge_collision, resolve_point_plane_collision_approximate,
             resolve_vertex_face_collision,
         },
-        force::{gravity::GRAVITY_POINT_FORCE, PointForce},
+        force::PointForce,
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
-    random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
+    random::sampler::RandomSampler,
     software_renderer::SoftwareRenderer,
-    transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -27,7 +26,7 @@ use cairo::{
 use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
-    springy_mesh::{make_cube, make_springy_mesh, SpringyMesh},
+    springy_mesh::{make_spring, make_springy_mesh, SpringyMesh},
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2; // { position, velocity }
@@ -638,48 +637,50 @@ impl Simulation {
 pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     // Forces.
 
-    let forces: Vec<PointForce> = vec![GRAVITY_POINT_FORCE];
+    let forces: Vec<PointForce> = vec![
+        // Gravity
+        // GRAVITY_POINT_FORCE,
+    ];
 
     // Springy meshes.
 
-    static NUM_MESHES: usize = 100;
-    static SIDE_LENGTH: f32 = 3.0;
+    static NUM_MESHES: usize = 4;
 
     let mut meshes = Vec::with_capacity(NUM_MESHES);
 
-    for _ in 0..meshes.capacity() {
-        let (points, struts) = make_cube(SIDE_LENGTH);
+    for i in 0..meshes.capacity() {
+        let side_length = 4.0;
+
+        let (points, struts) = make_spring(side_length);
 
         let mut mesh = make_springy_mesh(points, struts, sampler);
-
-        let speed = sampler.sample_range_normal(5.0, 5.0);
-
-        let velocity = sampler.sample_direction_uniform() * speed;
 
         // Mesh transform.
 
         let transform = {
-            let rotation = {
-                let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
-                let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
-                let rotate_z =
-                    Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, TAU));
-
-                rotate_x * rotate_y * rotate_z
-            };
-
             let translation = Mat4::translation(Vec3 {
-                x: sampler.sample_range_normal(0.0, 25.0),
-                y: sampler.sample_range_normal(25.0, 10.0),
-                z: sampler.sample_range_normal(0.0, 25.0),
+                x: -(NUM_MESHES as f32 * side_length) / 2.0 + i as f32 * side_length,
+                y: 1.0,
+                ..Default::default()
             });
 
-            *rotation.mat() * translation
+            let scale = Mat4::scale_uniform(1.0);
+
+            scale * translation
         };
 
-        for point in &mut mesh.points {
+        for (i, point) in &mut mesh.points.iter_mut().enumerate() {
             point.position = (Vec4::position(point.position) * transform).to_vec3();
-            point.velocity = velocity;
+
+            match i {
+                0 => {
+                    point.position -= vec3::FORWARD * side_length * 0.25;
+                }
+                1 => {
+                    point.position += vec3::FORWARD * side_length * 0.25;
+                }
+                _ => (),
+            }
         }
 
         mesh.update_aabb();

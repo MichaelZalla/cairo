@@ -183,6 +183,33 @@ impl SpringyMesh {
 }
 
 #[allow(unused)]
+pub fn make_spring(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
+    let factor = side_length / 2.0;
+
+    let mut vertices = vec![vec3::FORWARD * factor, -vec3::FORWARD * factor];
+
+    // Connect points with edges.
+
+    let mut edge_data = vec![(0, 1, usize::MAX, usize::MAX, color::LIGHT_GRAY)];
+
+    let edges = edge_data
+        .into_iter()
+        .map(|data| Edge {
+            points: (data.0, data.1),
+            connected_points: if data.2 == usize::MAX {
+                None
+            } else {
+                Some((data.2, data.3))
+            },
+            color: data.4,
+            did_collide: false,
+        })
+        .collect();
+
+    make_points_and_struts(vertices, edges)
+}
+
+#[allow(unused)]
 pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
     // Plots points for a uniform triangular prism (tetrahedron).
 
