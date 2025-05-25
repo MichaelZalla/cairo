@@ -107,11 +107,11 @@ impl Strut {
     }
 
     pub fn get_angle(h: Vec3, left_normal: Vec3, right_normal: Vec3) -> f32 {
-        let cosine_theta = -right_normal.dot(-left_normal);
+        let sin_theta = left_normal.cross(right_normal).dot(h);
 
-        let sine_theta = -right_normal.cross(-left_normal).dot(h);
+        let cos_theta = left_normal.dot(right_normal);
 
-        sine_theta.atan2(cosine_theta)
+        sin_theta.atan2(cos_theta)
     }
 
     pub fn compute_accelerations(
@@ -257,7 +257,7 @@ impl Strut {
 
         self.delta_angle = angle - self.rest_angle;
 
-        let torsional_spring_force_magnitude = self.torsional_strength * self.delta_angle;
+        let torsional_spring_force_magnitude = -self.torsional_strength * self.delta_angle;
 
         // Torsional spring damper.
 
@@ -267,8 +267,8 @@ impl Strut {
             let left_velocity = current_state.data[state_index_offset + left_index + n];
             let right_velocity = current_state.data[state_index_offset + right_index + n];
 
-            let left_s = left_velocity.dot(-left_normal);
-            let right_s = right_velocity.dot(-right_normal);
+            let left_s = left_velocity.dot(left_normal);
+            let right_s = right_velocity.dot(right_normal);
 
             let left_angular_speed_radians = left_s / left_r_mag;
             let right_angular_speed_radians = right_s / right_r_mag;
