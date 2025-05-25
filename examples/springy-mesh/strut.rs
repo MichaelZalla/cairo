@@ -188,7 +188,9 @@ impl Strut {
         // Spring force applied in the direction of the strut, scaled linearly
         // by the current length delta, multiplied by a strength coefficient.
 
-        let spring_force = i_j_direction * self.spring_strength * self.delta_length;
+        let spring_force_magnitude = self.spring_strength * self.delta_length;
+
+        let spring_force = i_j_direction * spring_force_magnitude;
 
         // Computes the two points' velocity delta, along the strut direction.
 
@@ -198,8 +200,9 @@ impl Strut {
         // quickly the two point are moving towards each other or away from each
         // other, multiplied by a damper strength coefficient.
 
-        let damper_force =
-            i_j_direction * self.spring_damper * difference_in_velocities_along_strut;
+        let damper_force_magnitude = self.spring_damper * difference_in_velocities_along_strut;
+
+        let damper_force = i_j_direction * damper_force_magnitude;
 
         // Computes net force from spring and damper forces (acting in opposite
         // directions).
