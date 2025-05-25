@@ -466,32 +466,28 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         (
             Vec3 {
                 x: -20.0,
-                y: 0.0,
-                z: 0.0,
+                ..Default::default()
             },
             Quaternion::new(vec3::FORWARD, PI / 12.0),
         ),
         (
             Vec3 {
                 x: 20.0,
-                y: 0.0,
-                z: 0.0,
+                ..Default::default()
             },
             Quaternion::new(vec3::FORWARD, -PI / 12.0),
         ),
         (
             Vec3 {
-                x: 0.0,
-                y: 0.0,
                 z: -30.0,
+                ..Default::default()
             },
             Quaternion::new(vec3::RIGHT, -PI / 12.0),
         ),
         (
             Vec3 {
-                x: 0.0,
-                y: 0.0,
                 z: 30.0,
+                ..Default::default()
             },
             Quaternion::new(vec3::RIGHT, PI / 12.0),
         ),
