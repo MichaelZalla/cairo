@@ -165,16 +165,20 @@ impl RigidBody {
 
         let transform = &self.transform;
 
-        let radius = match self.kind {
-            RigidBodyKind::Sphere(radius) => radius,
-            _ => panic!(),
+        // Visualizes rigid body volume (sphere, circle, etc).
+
+        match self.kind {
+            RigidBodyKind::Sphere(radius) => {
+                let display_kind = EmptyDisplayKind::Sphere(12);
+
+                let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
+
+                renderer.render_empty(&transform_with_radius, display_kind, true, Some(self.color));
+            }
+            RigidBodyKind::Circle(_radius) => {
+                panic!();
+            }
         };
-
-        let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
-
-        let display_kind = EmptyDisplayKind::Sphere(12);
-
-        renderer.render_empty(&transform_with_radius, display_kind, true, Some(self.color));
 
         // Visualizes collision impulses.
 
