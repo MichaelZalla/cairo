@@ -183,14 +183,29 @@ impl SpringyMesh {
 }
 
 #[allow(unused)]
-pub fn make_spring(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
+pub fn make_spring(side_length: f32, with_connected_points: bool) -> (Vec<Particle>, Vec<Strut>) {
     let factor = side_length / 2.0;
 
     let mut vertices = vec![vec3::FORWARD * factor, -vec3::FORWARD * factor];
 
+    if with_connected_points {
+        vertices.push(vec3::RIGHT * factor + vec3::UP * factor);
+        vertices.push(-vec3::RIGHT * factor + vec3::UP * factor);
+    }
+
     // Connect points with edges.
 
-    let mut edge_data = vec![(0, 1, usize::MAX, usize::MAX, color::LIGHT_GRAY)];
+    let mut edge_data = if with_connected_points {
+        vec![
+            (0, 1, 3, 2, color::LIGHT_GRAY),
+            (0, 2, usize::MAX, usize::MAX, color::LIGHT_GRAY),
+            (2, 1, usize::MAX, usize::MAX, color::LIGHT_GRAY),
+            (0, 3, usize::MAX, usize::MAX, color::LIGHT_GRAY),
+            (3, 1, usize::MAX, usize::MAX, color::LIGHT_GRAY),
+        ]
+    } else {
+        vec![(0, 1, usize::MAX, usize::MAX, color::LIGHT_GRAY)]
+    };
 
     let edges = edge_data
         .into_iter()

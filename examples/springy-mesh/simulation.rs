@@ -690,7 +690,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     for i in 0..meshes.capacity() {
         let side_length = 4.0;
 
-        let (points, struts) = make_spring(side_length);
+        let (points, struts) = make_spring(side_length, true);
 
         let mut mesh = make_springy_mesh(points, struts, sampler);
 
@@ -698,7 +698,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
         let transform = {
             let translation = Mat4::translation(Vec3 {
-                x: -(NUM_MESHES as f32 * side_length) / 2.0 + i as f32 * side_length,
+                x: -(NUM_MESHES as f32 * side_length * 2.0) / 2.0 + i as f32 * side_length * 2.0,
                 y: 1.0,
                 ..Default::default()
             });
