@@ -514,110 +514,106 @@ impl Simulation {
 
         let m: Vec3 = q_a - p_a;
 
-        if let Some(prev_m) = self.closest_points.get_mut(&pair) {
-            // Compares the dot products of current and previous `m` vectors.
+        // Compares the dot products of current and previous `m` vectors.
 
-            if m.dot(*prev_m) < 0.0 {
-                // Updates prev_m to m.
+        if self.closest_points.contains_key(&pair)
+            && m.dot(*self.closest_points.get(&pair).unwrap()) < 0.0
+        {
+            let collision = EdgeEdgeCollision {
+                pair: pair.clone(),
+                s,
+                t,
+            };
 
-                *prev_m = m;
+            // Resolves the edge-edge collision.
 
-                let collision = EdgeEdgeCollision {
-                    pair: pair.clone(),
-                    s,
-                    t,
-                };
+            // Uses the physics material associated with mesh A.
 
-                // Resolves the edge-edge collision.
+            let material = &self.meshes[pair.a_mesh_index].material;
 
-                // Uses the physics material associated with mesh A.
+            // Gathers masses and velocities for edge A's vertices.
 
-                let material = &self.meshes[pair.a_mesh_index].material;
-
-                // Gathers masses and velocities for edge A's vertices.
-
-                let (p1_mass, mut p1_velocity, p2_mass, mut p2_velocity) = {
-                    let mesh_a = &self.meshes[pair.a_mesh_index];
-                    let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
-
-                    let p1_mass = mesh_a.points[edge_a.points.0].mass;
-                    let p2_mass = mesh_a.points[edge_a.points.1].mass;
-
-                    let p1_index = mesh_a.state_index_offset + edge_a.points.0;
-                    let p2_index = mesh_a.state_index_offset + edge_a.points.1;
-
-                    let p1_velocity = new_state.data[p1_index + n];
-                    let p2_velocity = new_state.data[p2_index + n];
-
-                    (p1_mass, p1_velocity, p2_mass, p2_velocity)
-                };
-
-                // Gathers masses and velocities for edge B's vertices.
-
-                let (q1_mass, mut q1_velocity, q2_mass, mut q2_velocity) = {
-                    let mesh_b = &self.meshes[pair.b_mesh_index];
-                    let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
-
-                    let q1_mass = mesh_b.points[edge_b.points.0].mass;
-                    let q2_mass = mesh_b.points[edge_b.points.1].mass;
-
-                    let q1_index = mesh_b.state_index_offset + edge_b.points.0;
-                    let q2_index = mesh_b.state_index_offset + edge_b.points.1;
-
-                    let q1_velocity = new_state.data[q1_index + n];
-                    let q2_velocity = new_state.data[q2_index + n];
-
-                    (q1_mass, q1_velocity, q2_mass, q2_velocity)
-                };
-
-                // Computes velocity updates for collision response.
-
-                let normal = m.as_normal();
-
-                resolve_edge_edge_collision(
-                    material,
-                    p1_mass,
-                    &mut p1_velocity,
-                    p2_mass,
-                    &mut p2_velocity,
-                    q1_mass,
-                    &mut q1_velocity,
-                    q2_mass,
-                    &mut q2_velocity,
-                    s,
-                    t,
-                    normal,
-                );
-
+            let (p1_mass, mut p1_velocity, p2_mass, mut p2_velocity) = {
                 let mesh_a = &self.meshes[pair.a_mesh_index];
                 let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
 
+                let p1_mass = mesh_a.points[edge_a.points.0].mass;
+                let p2_mass = mesh_a.points[edge_a.points.1].mass;
+
+                let p1_index = mesh_a.state_index_offset + edge_a.points.0;
+                let p2_index = mesh_a.state_index_offset + edge_a.points.1;
+
+                let p1_velocity = new_state.data[p1_index + n];
+                let p2_velocity = new_state.data[p2_index + n];
+
+                (p1_mass, p1_velocity, p2_mass, p2_velocity)
+            };
+
+            // Gathers masses and velocities for edge B's vertices.
+
+            let (q1_mass, mut q1_velocity, q2_mass, mut q2_velocity) = {
                 let mesh_b = &self.meshes[pair.b_mesh_index];
                 let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
 
-                let (p1, p2, q1, q2) = (
-                    mesh_a.state_index_offset + edge_a.points.0,
-                    mesh_a.state_index_offset + edge_a.points.1,
-                    mesh_b.state_index_offset + edge_b.points.0,
-                    mesh_b.state_index_offset + edge_b.points.1,
-                );
+                let q1_mass = mesh_b.points[edge_b.points.0].mass;
+                let q2_mass = mesh_b.points[edge_b.points.1].mass;
 
-                // Updates edge vertex velocities.
+                let q1_index = mesh_b.state_index_offset + edge_b.points.0;
+                let q2_index = mesh_b.state_index_offset + edge_b.points.1;
 
-                new_state.data[p1 + n] = p1_velocity;
-                new_state.data[p2 + n] = p2_velocity;
-                new_state.data[q1 + n] = q1_velocity;
-                new_state.data[q2 + n] = q2_velocity;
+                let q1_velocity = new_state.data[q1_index + n];
+                let q2_velocity = new_state.data[q2_index + n];
 
-                self.edge_collisions.push(collision);
+                (q1_mass, q1_velocity, q2_mass, q2_velocity)
+            };
 
-                return true;
-            }
+            // Computes velocity updates for collision response.
+
+            let normal = m.as_normal();
+
+            resolve_edge_edge_collision(
+                material,
+                p1_mass,
+                &mut p1_velocity,
+                p2_mass,
+                &mut p2_velocity,
+                q1_mass,
+                &mut q1_velocity,
+                q2_mass,
+                &mut q2_velocity,
+                s,
+                t,
+                normal,
+            );
+
+            let mesh_a = &self.meshes[pair.a_mesh_index];
+            let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
+
+            let mesh_b = &self.meshes[pair.b_mesh_index];
+            let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
+
+            let (p1, p2, q1, q2) = (
+                mesh_a.state_index_offset + edge_a.points.0,
+                mesh_a.state_index_offset + edge_a.points.1,
+                mesh_b.state_index_offset + edge_b.points.0,
+                mesh_b.state_index_offset + edge_b.points.1,
+            );
+
+            // Updates edge vertex velocities.
+
+            new_state.data[p1 + n] = p1_velocity;
+            new_state.data[p2 + n] = p2_velocity;
+            new_state.data[q1 + n] = q1_velocity;
+            new_state.data[q2 + n] = q2_velocity;
+
+            self.edge_collisions.push(collision);
+
+            true
+        } else {
+            self.closest_points.insert(pair, m);
+
+            false
         }
-
-        self.closest_points.insert(pair, m);
-
-        false
     }
 }
 
