@@ -155,8 +155,6 @@ impl Simulation {
                     if let Some((f, intersection_point)) =
                         intersect_line_segment_plane(&collider.plane, start_position, end_position)
                     {
-                        let penetration_depth = (end_position - intersection_point).mag();
-
                         {
                             // Subtracts any velocity accumulated while colliding.
 
@@ -167,6 +165,8 @@ impl Simulation {
 
                             end_velocity -= accumulated_velocity;
                         }
+
+                        let penetration_depth = (end_position - intersection_point).mag();
 
                         resolve_point_plane_collision_approximate(
                             collider.plane.normal,
