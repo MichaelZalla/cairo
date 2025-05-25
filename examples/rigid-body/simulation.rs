@@ -247,7 +247,16 @@ impl Simulation {
 
         // Narrow-phase collision test on 2 swept spheres.
 
-        match intersect_moving_spheres(s1, s1_movement, s2, s2_movement) {
+        // Describes the movement of sphere A from sphere B's frame-of-reference.
+
+        let v = s1_movement - s2_movement;
+        let v_distance = v.mag();
+
+        if v_distance.abs() < f32::EPSILON {
+            return false;
+        }
+
+        match intersect_moving_spheres(s1, s2, v, v_distance) {
             Some((_t, contact_point)) => {
                 // Compute and apply the collision response.
 

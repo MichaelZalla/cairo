@@ -140,24 +140,19 @@ pub fn test_sphere_sphere(a: Sphere, b: Sphere) -> bool {
     ab.mag_squared() <= r1_r2 * r1_r2
 }
 
-pub fn test_moving_spheres(a: Sphere, a_movement: Vec3, b: Sphere, b_movement: Vec3) -> bool {
-    intersect_moving_spheres(a, a_movement, b, b_movement).is_some()
+pub fn test_moving_spheres(a: Sphere, b: Sphere, v: Vec3, v_distance: f32) -> bool {
+    intersect_moving_spheres(a, b, v, v_distance).is_some()
 }
 
 pub fn intersect_moving_spheres(
     a: Sphere,
-    a_movement: Vec3,
     mut b: Sphere,
-    b_movement: Vec3,
+    v: Vec3,
+    v_distance: f32,
 ) -> Option<(f32, Vec3)> {
     // Expands the radius of sphere B by that of sphere A.
 
     b.radius += a.radius;
-
-    // Describes the movement of sphere A from sphere B's frame-of-reference.
-
-    let v = a_movement - b_movement;
-    let v_distance = v.mag();
 
     let ray = Ray::new(a.center, v.as_normal());
 
