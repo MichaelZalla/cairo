@@ -113,6 +113,11 @@ impl SpringyMesh {
             };
 
             renderer.render_line(start, end, color);
+
+            // Visualizes the strut's spring accelerations.
+
+            renderer.render_line(start, start + strut.spring_acceleration / 10.0, color::BLUE);
+            renderer.render_line(end, end - strut.spring_acceleration / 10.0, color::RED);
         }
 
         // Visualize face collisions.

@@ -31,6 +31,7 @@ pub struct Strut {
     pub torsional_damper: f32,
     pub rest_angle: f32,
     pub delta_angle: f32,
+    pub spring_acceleration: Vec3,
 }
 
 impl Strut {
@@ -132,6 +133,8 @@ impl Strut {
         let spring_force = self.compute_spring_force(current_state, state_index_offset, n);
 
         let spring_acceleration = spring_force / PARTICLE_MASS;
+
+        self.spring_acceleration = spring_acceleration;
 
         // { mesh_start + mesh_point_index + acceleration_component_index }
 
