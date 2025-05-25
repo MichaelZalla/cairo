@@ -289,13 +289,7 @@ impl Simulation {
 
         triangle.update_vertex_positions(v0_position, v1_position, v2_position);
 
-        // If the point is moving away from the triangle plane, don't interfere.
-
         let normal = triangle.plane.normal;
-
-        if end_velocity.dot(normal) >= 0.0 {
-            return false;
-        }
 
         // Performs a line-segment-triangle intersection test.
 
