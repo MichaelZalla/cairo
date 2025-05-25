@@ -229,10 +229,6 @@ impl Strut {
         let right = current_state.data[state_index_offset + right_index];
 
         // Angular spring accelerations.
-
-        let left_velocity = current_state.data[state_index_offset + left_index + n];
-        let right_velocity = current_state.data[state_index_offset + right_index + n];
-
         let start_end = end - start;
 
         let h = start_end.as_normal();
@@ -264,14 +260,19 @@ impl Strut {
         // Torsional spring damper.
 
         // The connected point's speed along the surface normal.
-        let left_s = left_velocity.dot(-left_normal);
-        let right_s = right_velocity.dot(-right_normal);
 
-        let left_angular_speed_radians = left_s / left_r_mag;
-        let right_angular_speed_radians = right_s / right_r_mag;
+        let torsional_damper_force_magnitude = {
+            let left_velocity = current_state.data[state_index_offset + left_index + n];
+            let right_velocity = current_state.data[state_index_offset + right_index + n];
 
-        let torsional_damper_force_magnitude =
-            -self.torsional_damper * (left_angular_speed_radians + right_angular_speed_radians);
+            let left_s = left_velocity.dot(-left_normal);
+            let right_s = right_velocity.dot(-right_normal);
+
+            let left_angular_speed_radians = left_s / left_r_mag;
+            let right_angular_speed_radians = right_s / right_r_mag;
+
+            -self.torsional_damper * (left_angular_speed_radians + right_angular_speed_radians)
+        };
 
         // Net torque.
 
