@@ -6,10 +6,9 @@ use cairo::{
 
 pub static PARTICLE_MASS: f32 = 2.0;
 
-static STRENGTH_PER_UNIT_LENGTH: f32 = 1_000.0;
-static DAMPER_PER_UNIT_LENGTH: f32 = 150.0;
-static TORSIONAL_STRENGTH: f32 = 100.0;
-static TORSIONAL_DAMPER: f32 = 10.0;
+pub static UNDAMPED_PERIOD: f32 = 0.25;
+
+pub static DAMPING_RATIO: f32 = 0.3;
 
 #[derive(Default, Debug, Clone)]
 pub struct Edge {
@@ -65,11 +64,7 @@ impl Strut {
 
         Self {
             edge,
-            spring_strength: STRENGTH_PER_UNIT_LENGTH / rest_length,
-            spring_damper: DAMPER_PER_UNIT_LENGTH / rest_length,
             rest_length,
-            torsional_strength: TORSIONAL_STRENGTH,
-            torsional_damper: TORSIONAL_DAMPER,
             rest_angle,
             ..Default::default()
         }

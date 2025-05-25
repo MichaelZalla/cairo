@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, f32::consts::PI};
 
 use cairo::{
     animation::lerp,
@@ -27,6 +27,7 @@ use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
     springy_mesh::{make_spring, make_springy_mesh, SpringyMesh},
+    strut::{DAMPING_RATIO, PARTICLE_MASS, UNDAMPED_PERIOD},
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2; // { position, velocity }
@@ -680,6 +681,52 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
                     point.position += vec3::FORWARD * side_length * 0.25;
                 }
                 _ => (),
+            }
+        }
+
+        for strut in &mut mesh.struts {
+            // P_n = 2 Pi sqrt(m / k)
+            // P_n^2 = 4 Pi^2 (m/k)
+            // k P_n^2 = 4 Pi^2 m
+            // k = (4 Pi^2 m) / P_n^2
+
+            let k = (4.0 * PI * PI * PARTICLE_MASS) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
+
+            // z = c / 2 sqrt(m * k)
+            // c = z * 2 * sqrt(mk)
+            // c^2 = z^2 * 2^2 * mk
+            // c^2 = z^2 * 2^2 * mk
+            // c = z 2 sqrt(mk)
+
+            let c = DAMPING_RATIO * 2.0 * (PARTICLE_MASS * k).sqrt();
+
+            strut.spring_strength = k / strut.rest_length;
+            strut.spring_damper = c / strut.rest_length;
+
+            if strut.edge.connected_points.is_some() {
+                // P_n = 2 Pi sqrt(m r^2 / k)
+                // P_n = 2 Pi r sqrt(m / k)
+                // P_n^2 = 4 Pi^2 r^2 (m/k)
+                // k P_n^2 = 4 Pi^2 m r^2
+                // k = (4 Pi^2 m r^2) / P_n^2
+
+                let factor = side_length / 2.0;
+
+                let r = (factor * factor + factor * factor).sqrt();
+
+                let k_a =
+                    (4.0 * PI * PI * PARTICLE_MASS * r * r) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
+
+                // z = c / 2 sqrt(m r^2 k)
+                // c = z 2 r sqrt(mk)
+                // c^2 = z^2 2^2 r^2 mk
+                // c^2 = z^2 2^2 r^2 mk
+                // c = z 2 r sqrt(mk)
+
+                let c_a = DAMPING_RATIO * 2.0 * r * (PARTICLE_MASS * k_a).sqrt();
+
+                strut.torsional_strength = k_a;
+                strut.torsional_damper = c_a;
             }
         }
 
