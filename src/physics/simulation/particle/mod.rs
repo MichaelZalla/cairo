@@ -18,6 +18,7 @@ pub struct Particle {
     pub mass: f32,
     pub position: Vec3,
     pub velocity: Velocity,
+    pub did_collide: bool,
 }
 
 impl Default for Particle {
@@ -29,6 +30,7 @@ impl Default for Particle {
             max_age: f32::MAX,
             position: Vec3::default(),
             velocity: Velocity::default(),
+            did_collide: false,
         }
     }
 }

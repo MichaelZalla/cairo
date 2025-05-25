@@ -98,6 +98,12 @@ impl Simulation {
 
         let mut new_state = integrate_midpoint_euler(&state, &derivative, h);
 
+        // Resets mesh collision data for visual debugging.
+
+        for mesh in &mut self.meshes {
+            mesh.reset_collisions();
+        }
+
         // Detects and resolves collisions with static colliders.
 
         self.check_static_collisions(&derivative, &state, &mut new_state, n, h);
@@ -202,10 +208,14 @@ impl Simulation {
                         for tri_i in 0..self.meshes[b].triangles.len() {
                             // Checks mesh `a`, point at `p_i` against mesh `b`, face at `tri_i`.
 
-                            if self.did_handle_point_face_collision(
+                            if let Some(barycentric) = self.did_handle_point_face_collision(
                                 a, p_i, b, tri_i, n, derivative, state, new_state, h,
                             ) {
-                                println!("Handled vertex-triangle collision.");
+                                self.meshes[a].points[p_i].did_collide = true;
+
+                                self.meshes[b].triangles[tri_i]
+                                    .collision_point
+                                    .replace(barycentric);
                             }
                         }
                     }
@@ -263,7 +273,7 @@ impl Simulation {
         state: &StateVector,
         new_state: &mut StateVector,
         h: f32,
-    ) -> bool {
+    ) -> Option<Vec3> {
         // Constructs a line segment between the old and new vertex positions.
 
         let a_point_index = self.meshes[a].state_index_offset + p_i;
@@ -397,9 +407,9 @@ impl Simulation {
                 new_state.data[b_points_start_index + n + i1] = v1_velocity;
                 new_state.data[b_points_start_index + n + i2] = v2_velocity;
 
-                true
+                Some(barycentric)
             }
-            None => false,
+            None => None,
         }
     }
 

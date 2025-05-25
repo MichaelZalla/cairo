@@ -65,6 +65,16 @@ impl SpringyMesh {
         }
     }
 
+    pub fn reset_collisions(&mut self) {
+        for point in &mut self.points {
+            point.did_collide = false;
+        }
+
+        for tri in &mut self.triangles {
+            tri.collision_point.take();
+        }
+    }
+
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
         // Visualizes the mesh AABB.
 

@@ -9,6 +9,7 @@ pub struct Triangle {
     pub plane: Plane,
     pub edge_plane_bc: Plane,
     pub edge_plane_ca: Plane,
+    pub collision_point: Option<Vec3>,
 }
 
 impl Triangle {
