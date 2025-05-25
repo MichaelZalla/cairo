@@ -93,10 +93,48 @@ impl Simulation {
 
         // Computes the derivative and integrate over h.
 
-        let derivative =
-            system_dynamics_function(&state, &self.forces, &mut self.meshes, uptime_seconds);
+        static USE_HIGHER_ORDER_INTEGRATOR: bool = true;
 
-        let mut new_state = integrate_midpoint_euler(&state, &derivative, h);
+        let (derivative, mut new_state) = if USE_HIGHER_ORDER_INTEGRATOR {
+            let derivative: StateVector = {
+                let s1 = state.clone();
+
+                let k1 = system_dynamics_function(
+                    &s1.clone(),
+                    &self.forces,
+                    &mut self.meshes,
+                    uptime_seconds,
+                );
+
+                let s2 = s1.clone() + k1.clone() * (h * 0.5);
+
+                let k2 =
+                    system_dynamics_function(&s2, &self.forces, &mut self.meshes, uptime_seconds);
+
+                let s3 = s2 + k2.clone() * (h * 0.5);
+
+                let k3 =
+                    system_dynamics_function(&s3, &self.forces, &mut self.meshes, uptime_seconds);
+
+                let s4 = s3 + k3.clone() * h;
+
+                let k4 =
+                    system_dynamics_function(&s4, &self.forces, &mut self.meshes, uptime_seconds);
+
+                (k1 + k2 * 2.0 + k3 * 2.0 + k4) * 0.166_666_67
+            };
+
+            let new_state = state.clone() + derivative.clone() * h;
+
+            (derivative, new_state)
+        } else {
+            let derivative =
+                system_dynamics_function(&state, &self.forces, &mut self.meshes, uptime_seconds);
+
+            let new_state = integrate_midpoint_euler(&state, &derivative, h);
+
+            (derivative, new_state)
+        };
 
         // Resets mesh collision data for visual debugging.
 
