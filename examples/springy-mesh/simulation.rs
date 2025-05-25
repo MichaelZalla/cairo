@@ -652,14 +652,14 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
         let mut mesh = make_springy_mesh(points, struts, sampler);
 
-        let random_speed = sampler.sample_range_normal(5.0, 5.0);
+        let speed = sampler.sample_range_normal(5.0, 5.0);
 
-        let random_velocity = sampler.sample_direction_uniform() * random_speed;
+        let velocity = sampler.sample_direction_uniform() * speed;
 
-        // Random mesh transform.
+        // Mesh transform.
 
-        let random_transform = {
-            let random_rotation = {
+        let transform = {
+            let rotation = {
                 let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
                 let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
                 let rotate_z =
@@ -668,18 +668,18 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
                 rotate_x * rotate_y * rotate_z
             };
 
-            let random_translation = Mat4::translation(Vec3 {
+            let translation = Mat4::translation(Vec3 {
                 x: sampler.sample_range_normal(0.0, 25.0),
                 y: sampler.sample_range_normal(25.0, 10.0),
                 z: sampler.sample_range_normal(0.0, 25.0),
             });
 
-            *random_rotation.mat() * random_translation
+            *rotation.mat() * translation
         };
 
         for point in &mut mesh.points {
-            point.position = (Vec4::position(point.position) * random_transform).to_vec3();
-            point.velocity = random_velocity;
+            point.position = (Vec4::position(point.position) * transform).to_vec3();
+            point.velocity = velocity;
         }
 
         mesh.update_aabb();
