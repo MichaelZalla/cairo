@@ -278,8 +278,7 @@ impl Strut {
 
         // Net torque.
 
-        let torque_magnitude = torsional_spring_force_magnitude
-            + torsional_damper_force_magnitude.max(-torsional_spring_force_magnitude);
+        let torque_magnitude = torsional_spring_force_magnitude + torsional_damper_force_magnitude;
 
         // Compute the forces acting on the 4 independent particles.
 
