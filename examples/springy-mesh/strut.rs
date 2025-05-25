@@ -283,8 +283,8 @@ impl Strut {
 
         // Compute the forces acting on the 4 independent particles.
 
-        let f2 = left_normal * (torque_magnitude / right_r_mag);
-        let f3 = right_normal * (torque_magnitude / left_r_mag);
+        let f2 = left_normal * (torque_magnitude / left_r_mag);
+        let f3 = right_normal * (torque_magnitude / right_r_mag);
 
         let left_d = start_left.dot(h);
         let right_d = start_right.dot(h);
