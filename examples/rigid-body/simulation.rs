@@ -109,6 +109,8 @@ impl Simulation {
             let new_body_state = &mut new_state.0[i];
 
             let start_position = current_body_state.position;
+            let start_velocity = current_body_state.velocity();
+
             let end_position = new_body_state.position;
 
             let end_linear_velocity = new_body_state.velocity();
@@ -177,6 +179,23 @@ impl Simulation {
                         r,
                         &PHYSICS_MATERIAL,
                     );
+
+                    let position_at_collision =
+                        start_position + start_velocity * time_before_collision;
+
+                    let position_after_collision = position_at_collision
+                        + new_body_state.velocity() * time_after_collision
+                        + normal * 0.01;
+
+                    new_body_state.position = position_after_collision;
+
+                    let signed_distance_from_rigid_body_to_plane =
+                        collider.plane.get_signed_distance(&new_body_state.position);
+
+                    if signed_distance_from_rigid_body_to_plane <= radius {
+                        new_body_state.position +=
+                            normal * (radius - signed_distance_from_rigid_body_to_plane + 0.01);
+                    }
 
                     sphere.collision_response.replace(collision_response);
                 }
