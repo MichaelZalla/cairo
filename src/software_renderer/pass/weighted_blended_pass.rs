@@ -11,20 +11,29 @@ impl SoftwareRenderer {
             Some(framebuffer_rc) => {
                 let framebuffer = framebuffer_rc.borrow_mut();
 
-                if let Some(deferred_buffer_rc) = framebuffer.attachments.deferred_hdr.as_ref() {
+                if let (Some(stencil_buffer_rc), Some(deferred_buffer_rc)) = (
+                    framebuffer.attachments.stencil.as_ref(),
+                    framebuffer.attachments.deferred_hdr.as_ref(),
+                ) {
+                    let mut stencil_buffer = stencil_buffer_rc.borrow_mut();
                     let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
 
-                    for ((hdr_color, accumulation), revealage) in deferred_buffer
-                        .data
+                    for (((stencil, hdr_color), accumulation), revealage) in stencil_buffer
+                        .0
                         .iter_mut()
+                        .zip(deferred_buffer.data.iter_mut())
                         .zip(self.alpha_accumulation_buffer.data.iter_mut())
                         .zip(&self.alpha_revealage_buffer.data)
                     {
+                        let color = *hdr_color * *stencil as f32;
+
                         if *revealage > 1.0 - f32::EPSILON {
                             continue;
                         }
 
-                        *hdr_color = weighted_blended(*hdr_color, *accumulation, *revealage);
+                        *stencil = 1;
+
+                        *hdr_color = weighted_blended(color, *accumulation, *revealage);
                     }
                 }
             }
