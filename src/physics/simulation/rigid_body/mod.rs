@@ -124,6 +124,10 @@ impl RigidBody {
         }
     }
 
+    pub fn velocity(&self) -> Vec3 {
+        self.linear_momentum * self.inverse_mass
+    }
+
     pub fn state(&self) -> RigidBodySimulationState {
         RigidBodySimulationState {
             inverse_mass: self.inverse_mass,
@@ -179,6 +183,13 @@ impl RigidBody {
                 panic!();
             }
         };
+
+        // Visualizes rigid body's linear velocity.
+
+        let center = *self.transform.translation();
+        let linear_velocity = self.velocity();
+
+        renderer.render_line(center, center + linear_velocity, color::LIGHT_GRAY);
 
         // Visualizes collision impulses.
 
