@@ -43,21 +43,22 @@ impl Strut {
 
         let rest_length = a_b.mag();
 
-        let rest_angle =
-            if let Some((left_normal, right_normal)) = Self::get_surface_normals(&edge, points) {
-                // Computes rest angle of torsional spring.
+        let rest_angle = if let Some((left_normal, right_normal)) =
+            Self::get_surface_normals_edge_points(&edge, points)
+        {
+            // Computes rest angle of torsional spring.
 
-                let h = {
-                    let start = points[edge.points.0].position;
-                    let end = points[edge.points.1].position;
+            let h = {
+                let start = points[edge.points.0].position;
+                let end = points[edge.points.1].position;
 
-                    (end - start).as_normal()
-                };
-
-                Self::get_angle(h, left_normal, right_normal)
-            } else {
-                0.0
+                (end - start).as_normal()
             };
+
+            Self::get_angle(h, left_normal, right_normal)
+        } else {
+            0.0
+        };
 
         Self {
             edge,
@@ -71,7 +72,10 @@ impl Strut {
         }
     }
 
-    pub fn get_surface_normals(edge: &Edge, points: &[Particle]) -> Option<(Vec3, Vec3)> {
+    pub fn get_surface_normals_edge_points(
+        edge: &Edge,
+        points: &[Particle],
+    ) -> Option<(Vec3, Vec3)> {
         if let Some(connected_points) = &edge.connected_points {
             let start = points[edge.points.0].position;
             let end = points[edge.points.1].position;
@@ -87,7 +91,7 @@ impl Strut {
         }
     }
 
-    pub fn get_surface_normals_state_vector(
+    pub fn get_surface_normals_edge_state_vector(
         edge: &Edge,
         state: &StateVector,
         state_index_offset: usize,
@@ -242,9 +246,12 @@ impl Strut {
         let right_r = start_right - h * start_right.dot(h);
         let right_r_mag = right_r.mag();
 
-        let (left_normal, right_normal) =
-            Strut::get_surface_normals_state_vector(&self.edge, current_state, state_index_offset)
-                .unwrap();
+        let (left_normal, right_normal) = Strut::get_surface_normals_edge_state_vector(
+            &self.edge,
+            current_state,
+            state_index_offset,
+        )
+        .unwrap();
 
         // Computes the current spring angle.
 
