@@ -109,9 +109,8 @@ impl Simulation {
 
             let start_position = current_body_state.position;
             let end_position = new_body_state.position;
-            let end_linear_momentum = new_body_state.linear_momentum;
 
-            let end_linear_velocity = end_linear_momentum * new_body_state.inverse_mass;
+            let end_linear_velocity = new_body_state.velocity();
             let end_angular_velocity = new_body_state.angular_velocity();
 
             for collider in &self.static_plane_colliders {
