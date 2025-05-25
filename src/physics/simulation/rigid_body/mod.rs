@@ -10,7 +10,10 @@ use crate::{
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
     transform::Transform3D,
-    vec::vec3::{self, Vec3},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 pub mod rigid_body_simulation_state;
@@ -128,6 +131,20 @@ impl RigidBody {
         self.linear_momentum * self.inverse_mass
     }
 
+    fn inverse_moment_of_intertia_world_space(&self) -> Mat4 {
+        let r = *self.transform.rotation().mat();
+
+        r * self.inverse_moment_of_inertia * r.transposed()
+    }
+
+    pub fn angular_velocity(&self) -> Vec3 {
+        let angular_momentum = Vec4::vector(self.angular_momentum);
+
+        let inverse_moment_of_inertia_world_space = self.inverse_moment_of_intertia_world_space();
+
+        (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3()
+    }
+
     pub fn state(&self) -> RigidBodySimulationState {
         RigidBodySimulationState {
             inverse_mass: self.inverse_mass,
@@ -184,12 +201,19 @@ impl RigidBody {
             }
         };
 
+        let center = *self.transform.translation();
+
         // Visualizes rigid body's linear velocity.
 
-        let center = *self.transform.translation();
         let linear_velocity = self.velocity();
 
         renderer.render_line(center, center + linear_velocity, color::LIGHT_GRAY);
+
+        // Visualizes rigid body's angular velocity.
+
+        let angular_velocity = self.angular_velocity();
+
+        renderer.render_line(center, center + angular_velocity, color::LIGHT_GRAY);
 
         // Visualizes collision impulses.
 
