@@ -589,21 +589,25 @@ impl Simulation {
                     normal,
                 );
 
-                {
-                    let mesh_a = &self.meshes[pair.a_mesh_index];
-                    let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
+                let mesh_a = &self.meshes[pair.a_mesh_index];
+                let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
 
-                    new_state.data[mesh_a.state_index_offset + edge_a.points.0 + n] = p1_velocity;
-                    new_state.data[mesh_a.state_index_offset + edge_a.points.1 + n] = p2_velocity;
-                }
+                let mesh_b = &self.meshes[pair.b_mesh_index];
+                let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
 
-                {
-                    let mesh_b = &self.meshes[pair.b_mesh_index];
-                    let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
+                let (p1, p2, q1, q2) = (
+                    mesh_a.state_index_offset + edge_a.points.0,
+                    mesh_a.state_index_offset + edge_a.points.1,
+                    mesh_b.state_index_offset + edge_b.points.0,
+                    mesh_b.state_index_offset + edge_b.points.1,
+                );
 
-                    new_state.data[mesh_b.state_index_offset + edge_b.points.0 + n] = q1_velocity;
-                    new_state.data[mesh_b.state_index_offset + edge_b.points.1 + n] = q2_velocity;
-                }
+                // Updates edge vertex velocities.
+
+                new_state.data[p1 + n] = p1_velocity;
+                new_state.data[p2 + n] = p2_velocity;
+                new_state.data[q1 + n] = q1_velocity;
+                new_state.data[q2 + n] = q2_velocity;
 
                 self.edge_collisions.push(collision);
 
