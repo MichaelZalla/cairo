@@ -301,7 +301,10 @@ pub fn resolve_rigid_body_plane_collision(
     let normal_impulse = plane_normal * normal_impulse_magnitude;
 
     state.linear_momentum += normal_impulse;
-    state.angular_momentum += r.cross(plane_normal) * normal_impulse_magnitude;
+
+    let rotation_axis = r.cross(plane_normal);
+
+    state.angular_momentum += rotation_axis * normal_impulse_magnitude;
 
     RigidBodyCollisionResponse {
         contact_point,
