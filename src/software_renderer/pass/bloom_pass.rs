@@ -1,5 +1,4 @@
 use crate::{
-    animation::lerp,
     buffer::Buffer2D,
     color,
     texture::{
@@ -40,7 +39,7 @@ impl SoftwareRenderer {
 
                     // Blend our physically based bloom back into the color buffer.
 
-                    let bloom_buffer = &bloom_texture_map.levels[0].0;
+                    let bloom_buffer = &mut bloom_texture_map.levels[0].0;
 
                     if let Some(handle) = self.options.bloom_dirt_mask_handle.as_ref() {
                         let texture_u8_arena = self.scene_resources.texture_u8.borrow();
@@ -50,8 +49,6 @@ impl SoftwareRenderer {
 
                             for x in 0..bloom_buffer.width {
                                 for y in 0..bloom_buffer.height {
-                                    let hdr = *deferred_buffer.get(x, y);
-
                                     let bloom = *bloom_buffer.get(x, y);
 
                                     if bloom.is_zero() {
@@ -73,15 +70,13 @@ impl SoftwareRenderer {
                                         r as f32 / 255.0 * DIRT_MASK_INTENSITY
                                     };
 
-                                    let blended = lerp(hdr, bloom + bloom * dirt, BLOOM_STRENGTH);
-
-                                    deferred_buffer.set(x, y, blended);
+                                    bloom_buffer.set(x, y, bloom + bloom * dirt);
                                 }
                             }
                         }
-                    } else {
-                        deferred_buffer.copy_lerp(bloom_buffer.data.as_slice(), BLOOM_STRENGTH);
                     }
+
+                    deferred_buffer.copy_lerp(bloom_buffer.data.as_slice(), BLOOM_STRENGTH);
                 }
             }
             None => panic!(),
