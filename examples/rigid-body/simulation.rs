@@ -75,7 +75,7 @@ impl Simulation {
 
         // Detects and resolves collisions with static colliders.
 
-        self.check_static_collisions(&derivative, &state, &mut new_state);
+        self.check_static_collisions(h, &derivative, &state, &mut new_state);
 
         // Detects and resolves collisions with other (nearby) rigid bodies.
 
@@ -92,6 +92,7 @@ impl Simulation {
 
     fn check_static_collisions(
         &mut self,
+        h: f32,
         derivative: &StateVector<RigidBodySimulationState>,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
@@ -149,6 +150,20 @@ impl Simulation {
                         }
 
                         continue;
+                    }
+
+                    let time_before_collision = h * t;
+                    let time_after_collision = h - time_before_collision;
+
+                    {
+                        let linear_acceleration = derivative.0[i].linear_momentum;
+
+                        let mass = 1.0 / new_body_state.inverse_mass;
+
+                        let accumulated_linear_velocity =
+                            linear_acceleration * 2.0 * time_after_collision;
+
+                        new_body_state.linear_momentum -= accumulated_linear_velocity * mass;
                     }
 
                     let derivative = &derivative.0[i];
