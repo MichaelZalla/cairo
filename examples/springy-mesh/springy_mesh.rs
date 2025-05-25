@@ -80,17 +80,18 @@ impl SpringyMesh {
 
         renderer.render_aabb(&self.aabb, Default::default(), color::DARK_GRAY);
 
-        // Visualizes the mesh's points.
+        // Visualizes the mesh's points and point collisions.
 
         for point in &self.points {
             let transform = Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
 
-            renderer.render_empty(
-                &transform,
-                EmptyDisplayKind::Sphere(12),
-                false,
-                Some(color::ORANGE),
-            );
+            let color = if point.did_collide {
+                color::RED
+            } else {
+                color::ORANGE
+            };
+
+            renderer.render_empty(&transform, EmptyDisplayKind::Sphere(12), false, Some(color));
         }
 
         // Visualizes the mesh's struts.
@@ -102,6 +103,28 @@ impl SpringyMesh {
             let end = self.points[strut.edge.points.1].position;
 
             renderer.render_line(start, end, strut.edge.color);
+        }
+
+        // Visualize face collisions.
+
+        for tri in &self.triangles {
+            if let Some(barycentric) = &tri.collision_point {
+                let vertex_indices = (tri.vertices[0], tri.vertices[1], tri.vertices[2]);
+
+                let vertices = (
+                    &self.points[vertex_indices.0].position,
+                    &self.points[vertex_indices.1].position,
+                    &self.points[vertex_indices.2].position,
+                );
+
+                let collision_point = *vertices.0 * barycentric.x
+                    + *vertices.1 * barycentric.y
+                    + *vertices.2 * barycentric.z;
+
+                renderer.render_line(*vertices.0, collision_point, color::RED);
+                renderer.render_line(*vertices.1, collision_point, color::RED);
+                renderer.render_line(*vertices.2, collision_point, color::RED);
+            }
         }
     }
 }
