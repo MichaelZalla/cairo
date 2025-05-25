@@ -104,7 +104,7 @@ impl Simulation {
 
         // Detects and resolves collisions between springy meshes.
 
-        self.check_springy_mesh_collisions(&state, &mut new_state, n);
+        self.check_springy_mesh_collisions(&derivative, &state, &mut new_state, n, h);
 
         // Copy new positions and velocities back the meshes' particles.
         // (Updates mesh AABB bounds and collision triangles).
@@ -180,9 +180,11 @@ impl Simulation {
 
     fn check_springy_mesh_collisions(
         &mut self,
+        derivative: &StateVector,
         state: &StateVector,
         new_state: &mut StateVector,
         n: usize,
+        h: f32,
     ) {
         // Resets vertex-face and edge-edge collisions.
 
@@ -201,7 +203,7 @@ impl Simulation {
                             // Checks mesh `a`, point at `p_i` against mesh `b`, face at `tri_i`.
 
                             if self.did_handle_point_face_collision(
-                                a, p_i, b, tri_i, n, state, new_state,
+                                a, p_i, b, tri_i, n, derivative, state, new_state, h,
                             ) {
                                 println!("Handled vertex-triangle collision.");
                             }
@@ -257,8 +259,10 @@ impl Simulation {
         b: usize,
         tri_i: usize,
         n: usize,
+        derivative: &StateVector,
         state: &StateVector,
         new_state: &mut StateVector,
+        h: f32,
     ) -> bool {
         // Constructs a line segment between the old and new vertex positions.
 
@@ -266,13 +270,10 @@ impl Simulation {
 
         let b_points_start_index = self.meshes[b].state_index_offset;
 
-        let start_position = &state.data[a_point_index];
-        let end_position = &new_state.data[a_point_index];
+        let start_position = state.data[a_point_index];
+        let end_position = new_state.data[a_point_index];
 
-        let start_velocity = &state.data[a_point_index + n];
-        let end_velocity = &new_state.data[a_point_index + n];
-
-        let mut segment = LineSegment::new(*start_position, *end_position);
+        let mut segment = LineSegment::new(start_position, end_position);
 
         // Updates the triangle (collider) associated with the face.
 
@@ -295,6 +296,29 @@ impl Simulation {
 
         match intersect_line_segment_triangle(&mut segment, triangle) {
             Some(barycentric) => {
+                let time_before_collision = h * segment.t;
+                let time_after_collision = h - time_before_collision;
+
+                // Subtracts any velocity accumulated by the vertex while colliding.
+
+                {
+                    let acceleration = derivative.data[a_point_index + n];
+
+                    let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+
+                    new_state.data[a_point_index + n] -= accumulated_velocity;
+                }
+
+                // Subtracts any velocity accumulated by the triangle vertices while colliding.
+
+                for i in [i0, i1, i2] {
+                    let acceleration = derivative.data[b_points_start_index + i + n];
+
+                    let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+
+                    new_state.data[b_points_start_index + i + n] -= accumulated_velocity;
+                }
+
                 // Records the point-face collision.
 
                 let s = segment.lerped();
@@ -317,6 +341,9 @@ impl Simulation {
                 // Gathers mass and velocity for collision body A (point).
 
                 let point_mass = self.meshes[a].points[p_i].mass;
+
+                let start_velocity = &state.data[a_point_index + n];
+                let end_velocity = &new_state.data[a_point_index + n];
 
                 let mut point_velocity = lerp(*start_velocity, *end_velocity, segment.t);
 
