@@ -259,7 +259,7 @@ impl Strut {
 
         self.delta_angle = angle - self.rest_angle;
 
-        let torque_magnitude = self.torsional_strength * self.delta_angle;
+        let torsional_spring_force_magnitude = self.torsional_strength * self.delta_angle;
 
         // Torsional spring damper.
 
@@ -270,12 +270,14 @@ impl Strut {
         let left_angular_speed_radians = left_s / left_r_mag;
         let right_angular_speed_radians = right_s / right_r_mag;
 
-        let damper_magnitude =
+        let torsional_damper_force_magnitude =
             -self.torsional_damper * (left_angular_speed_radians + right_angular_speed_radians);
 
         // Net torque.
 
-        let torque = h * (torque_magnitude + damper_magnitude.max(-torque_magnitude));
+        let torque = h
+            * (torsional_spring_force_magnitude
+                + torsional_damper_force_magnitude.max(-torsional_spring_force_magnitude));
 
         // Compute the forces acting on the 4 independent particles.
 
