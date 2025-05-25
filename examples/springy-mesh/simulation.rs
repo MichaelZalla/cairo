@@ -540,12 +540,16 @@ impl Simulation {
                     let mesh_a = &self.meshes[pair.a_mesh_index];
                     let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
 
-                    (
-                        mesh_a.points[edge_a.points.0].mass,
-                        new_state.data[mesh_a.state_index_offset + edge_a.points.0 + n],
-                        mesh_a.points[edge_a.points.1].mass,
-                        new_state.data[mesh_a.state_index_offset + edge_a.points.1 + n],
-                    )
+                    let p1_mass = mesh_a.points[edge_a.points.0].mass;
+                    let p2_mass = mesh_a.points[edge_a.points.1].mass;
+
+                    let p1_index = mesh_a.state_index_offset + edge_a.points.0;
+                    let p2_index = mesh_a.state_index_offset + edge_a.points.1;
+
+                    let p1_velocity = new_state.data[p1_index + n];
+                    let p2_velocity = new_state.data[p2_index + n];
+
+                    (p1_mass, p1_velocity, p2_mass, p2_velocity)
                 };
 
                 // Gathers masses and velocities for edge B's vertices.
@@ -554,12 +558,16 @@ impl Simulation {
                     let mesh_b = &self.meshes[pair.b_mesh_index];
                     let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
 
-                    (
-                        mesh_b.points[edge_b.points.0].mass,
-                        new_state.data[mesh_b.state_index_offset + edge_b.points.0 + n],
-                        mesh_b.points[edge_b.points.1].mass,
-                        new_state.data[mesh_b.state_index_offset + edge_b.points.1 + n],
-                    )
+                    let q1_mass = mesh_b.points[edge_b.points.0].mass;
+                    let q2_mass = mesh_b.points[edge_b.points.1].mass;
+
+                    let q1_index = mesh_b.state_index_offset + edge_b.points.0;
+                    let q2_index = mesh_b.state_index_offset + edge_b.points.1;
+
+                    let q1_velocity = new_state.data[q1_index + n];
+                    let q2_velocity = new_state.data[q2_index + n];
+
+                    (q1_mass, q1_velocity, q2_mass, q2_velocity)
                 };
 
                 // Computes velocity updates for collision response.
