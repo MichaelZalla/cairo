@@ -285,7 +285,13 @@ pub fn resolve_rigid_body_plane_collision(
 
     let numerator = -(1.0 + material.restitution) * incoming_contact_point_speed_normal_to_plane;
 
-    let r_dot_normal = r.as_normal().dot(plane_normal);
+    let r_normal = r.as_normal();
+
+    // A value of -1 indicates a rigid body moving directly into the plane; a
+    // value of 1 indicates a body moving directly away from the plane; a value
+    // of 0 means the body moves parallel to the plane.
+
+    let r_dot_normal = r_normal.dot(plane_normal);
 
     if r_dot_normal.is_nan() {
         panic!()
