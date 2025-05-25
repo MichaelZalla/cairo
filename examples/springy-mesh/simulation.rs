@@ -252,7 +252,7 @@ impl Simulation {
                             b_edge_index: edge_j,
                         };
 
-                        if self.did_handle_edge_edge_collision(pair, n, new_state) {
+                        if self.did_handle_edge_edge_collision(pair, n, derivative, new_state, h) {
                             println!("Handled edge-edge collision.");
                         }
                     }
@@ -445,7 +445,9 @@ impl Simulation {
         &mut self,
         pair: EdgePair,
         n: usize,
+        derivative: &StateVector,
         new_state: &mut StateVector,
+        h: f32,
     ) -> bool {
         // Extracts the edge's vertex positions.
 
@@ -484,6 +486,18 @@ impl Simulation {
                         t: v,
                     };
 
+                    let prev_m = *self.closest_points.get(&pair).unwrap();
+
+                    let t = {
+                        let prev_m_mag = prev_m.mag();
+                        let m_mag = m.mag();
+
+                        prev_m_mag / (prev_m_mag + m_mag)
+                    };
+
+                    let time_before_collision = h * t;
+                    let time_after_collision = h - time_before_collision;
+
                     // Resolves the edge-edge collision.
 
                     // Uses the physics material associated with mesh A.
@@ -502,8 +516,13 @@ impl Simulation {
                         let p1_index = mesh_a.state_index_offset + edge_a.points.0;
                         let p2_index = mesh_a.state_index_offset + edge_a.points.1;
 
-                        let p1_velocity = new_state.data[p1_index + n];
-                        let p2_velocity = new_state.data[p2_index + n];
+                        // Subtracts any velocity accumulated while colliding.
+
+                        let p1_velocity = new_state.data[p1_index + n]
+                            - derivative.data[p1_index + n] * time_after_collision;
+
+                        let p2_velocity = new_state.data[p2_index + n]
+                            - derivative.data[p2_index + n] * time_after_collision;
 
                         (p1_mass, p1_velocity, p2_mass, p2_velocity)
                     };
@@ -520,8 +539,13 @@ impl Simulation {
                         let q1_index = mesh_b.state_index_offset + edge_b.points.0;
                         let q2_index = mesh_b.state_index_offset + edge_b.points.1;
 
-                        let q1_velocity = new_state.data[q1_index + n];
-                        let q2_velocity = new_state.data[q2_index + n];
+                        // Subtracts any velocity accumulated while colliding.
+
+                        let q1_velocity = new_state.data[q1_index + n]
+                            - derivative.data[q1_index + n] * time_after_collision;
+
+                        let q2_velocity = new_state.data[q2_index + n]
+                            - derivative.data[q2_index + n] * time_after_collision;
 
                         (q1_mass, q1_velocity, q2_mass, q2_velocity)
                     };
