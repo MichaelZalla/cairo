@@ -252,7 +252,9 @@ impl Simulation {
                             b_edge_index: edge_j,
                         };
 
-                        if self.did_handle_edge_edge_collision(pair, n, derivative, new_state, h) {
+                        if self.did_handle_edge_edge_collision(
+                            pair, n, derivative, state, new_state, h,
+                        ) {
                             println!("Handled edge-edge collision.");
                         }
                     }
@@ -446,6 +448,7 @@ impl Simulation {
         pair: EdgePair,
         n: usize,
         derivative: &StateVector,
+        state: &StateVector,
         new_state: &mut StateVector,
         h: f32,
     ) -> bool {
@@ -588,6 +591,30 @@ impl Simulation {
                     new_state.data[p2 + n] = p2_velocity;
                     new_state.data[q1 + n] = q1_velocity;
                     new_state.data[q2 + n] = q2_velocity;
+
+                    // Updates edge vertex positions.
+
+                    let bias = normal * 0.01;
+
+                    new_state.data[p1] = state.data[p1]
+                        + derivative.data[p1] * time_before_collision
+                        + p1_velocity * time_after_collision
+                        + bias;
+
+                    new_state.data[p2] = state.data[p2]
+                        + derivative.data[p2] * time_before_collision
+                        + p2_velocity * time_after_collision
+                        + bias;
+
+                    new_state.data[q1] = state.data[q1]
+                        + derivative.data[q1] * time_before_collision
+                        + q1_velocity * time_after_collision
+                        - bias;
+
+                    new_state.data[q2] = state.data[q2]
+                        + derivative.data[q2] * time_before_collision
+                        + q2_velocity * time_after_collision
+                        - bias;
 
                     self.edge_collisions.push(collision);
 
