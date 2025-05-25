@@ -167,20 +167,20 @@ pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
 
     let edge_data = vec![
         // Front loop (4)
-        (0, 1, 4, 2, color::RED),
-        (1, 2, 6, 0, color::RED),
-        (2, 3, 6, 0, color::RED),
-        (3, 0, 4, 2, color::RED),
+        (0, 1, 4, 2, color::LIGHT_GRAY),
+        (1, 2, 6, 0, color::LIGHT_GRAY),
+        (2, 3, 6, 0, color::LIGHT_GRAY),
+        (3, 0, 4, 2, color::LIGHT_GRAY),
         // Back loop (4)
-        (4, 5, 7, 1, color::RED),
-        (5, 6, 7, 1, color::RED),
-        (6, 7, 5, 3, color::RED),
-        (7, 4, 5, 3, color::RED),
+        (4, 5, 7, 1, color::LIGHT_GRAY),
+        (5, 6, 7, 1, color::LIGHT_GRAY),
+        (6, 7, 5, 3, color::LIGHT_GRAY),
+        (7, 4, 5, 3, color::LIGHT_GRAY),
         // Front-to-back connections (4)
-        (0, 4, 3, 1, color::RED),
-        (1, 5, 4, 6, color::RED),
-        (2, 6, 1, 3, color::RED),
-        (3, 7, 6, 4, color::RED),
+        (0, 4, 3, 1, color::LIGHT_GRAY),
+        (1, 5, 4, 6, color::LIGHT_GRAY),
+        (2, 6, 1, 3, color::LIGHT_GRAY),
+        (3, 7, 6, 4, color::LIGHT_GRAY),
         // Cross-face struts (6)
         (0, 2, 1, 3, color::DARK_GRAY),
         (1, 6, 5, 2, color::DARK_GRAY),
