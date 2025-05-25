@@ -387,25 +387,53 @@ impl Simulation {
                     &mut v2_velocity,
                 );
 
-                let penetration_depth = (s - end_position).dot(normal);
+                // Updates point velocity.
 
-                let bias = if point_velocity.dot(normal) < 0.05 {
-                    0.01
-                } else {
-                    0.0
-                };
-
-                let point_position = end_position
-                    + normal * (penetration_depth * (1.0 + material.restitution) + bias);
-
-                // Updates point position and velocity.
-                new_state.data[a_point_index] = point_position;
                 new_state.data[a_point_index + n] = point_velocity;
 
-                // Updates face vertex positions and velocities.
-                new_state.data[b_points_start_index + n + i0] = v0_velocity;
-                new_state.data[b_points_start_index + n + i1] = v1_velocity;
-                new_state.data[b_points_start_index + n + i2] = v2_velocity;
+                // Updates point position.
+
+                new_state.data[a_point_index] = {
+                    let velocity_in = new_state.data[a_point_index + n];
+
+                    let position_at_collision =
+                        state.data[a_point_index] + velocity_in * time_before_collision;
+
+                    let velocity_out = new_state.data[a_point_index + n];
+
+                    let bias = if velocity_in.dot(normal) < 0.05 {
+                        0.01
+                    } else {
+                        0.0
+                    };
+
+                    position_at_collision + velocity_out * time_after_collision + bias
+                };
+
+                // Updates face vertex velocities.
+
+                new_state.data[b_points_start_index + i0 + n] = v0_velocity;
+                new_state.data[b_points_start_index + i1 + n] = v1_velocity;
+                new_state.data[b_points_start_index + i2 + n] = v2_velocity;
+
+                // Updates face vertex positions.
+
+                for (i, velocity_out) in &[(i0, v0_velocity), (i1, v1_velocity), (i2, v2_velocity)]
+                {
+                    let velocity_in = new_state.data[b_points_start_index + i + n];
+
+                    let position_at_collision =
+                        state.data[b_points_start_index + i] + velocity_in * time_before_collision;
+
+                    let bias = if velocity_in.dot(-normal) < 0.05 {
+                        0.01
+                    } else {
+                        0.0
+                    };
+
+                    new_state.data[b_points_start_index + i] =
+                        position_at_collision + *velocity_out * time_after_collision + bias;
+                }
 
                 Some(barycentric)
             }
