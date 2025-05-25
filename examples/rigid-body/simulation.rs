@@ -39,9 +39,9 @@ static SPHERE_RADIUS: f32 = 0.5;
 static SPHERE_MASS: f32 = 1.0;
 
 static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
-    static_friction: 0.0,
-    dynamic_friction: 0.0,
-    restitution: 0.84,
+    static_friction: PI / 4.0,
+    dynamic_friction: 0.6,
+    restitution: 0.4,
 };
 
 pub struct Simulation {
@@ -75,7 +75,7 @@ impl Simulation {
 
         // Detects and resolves collisions with static colliders.
 
-        self.check_static_collisions(&state, &mut new_state);
+        self.check_static_collisions(&derivative, &state, &mut new_state);
 
         // Detects and resolves collisions with other (nearby) rigid bodies.
 
@@ -92,6 +92,7 @@ impl Simulation {
 
     fn check_static_collisions(
         &mut self,
+        derivative: &StateVector<RigidBodySimulationState>,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
@@ -143,9 +144,12 @@ impl Simulation {
                         continue;
                     }
 
+                    let derivative = &derivative.0[i];
+
                     let state = &mut new_state.0[i];
 
                     let collision_response = resolve_rigid_body_plane_collision(
+                        derivative,
                         state,
                         normal,
                         contact_point,

@@ -257,6 +257,7 @@ pub fn resolve_edge_edge_collision(
 }
 
 pub fn resolve_rigid_body_plane_collision(
+    derivative: &RigidBodySimulationState,
     state: &mut RigidBodySimulationState,
     plane_normal: Vec3,
     contact_point: Vec3,
@@ -318,11 +319,116 @@ pub fn resolve_rigid_body_plane_collision(
 
     state.angular_momentum += rotation_axis * normal_impulse_magnitude;
 
-    RigidBodyCollisionResponse {
+    let response = RigidBodyCollisionResponse {
         contact_point,
         contact_point_velocity,
         normal_impulse,
-    }
+    };
+
+    // Static or dynamic friction
+
+    // Chooses a tangent vector for the collision, using either the velocity of
+    // the contact point, or the velocity of the rigid body; if neither can
+    // produce a tangent, then no friction response is applied.
+
+    // t = {
+    //       norm(v_r - (v_r.dot(n)) * n),  v_r.dot(n) != 0
+    //
+    //       norm(f_e - (f_e.dot(n)) * n),  v_r.dot(n) == 0 && f_e.dot(n) != 0
+    //
+    //       0                              Otherwise
+    //     }
+
+    let is_contact_point_moving_towards_plane =
+        incoming_contact_point_speed_normal_to_plane.abs() > f32::EPSILON;
+
+    let tangential_component = if is_contact_point_moving_towards_plane {
+        // Uses the linear velocity of the contact point.
+
+        // norm(v_r - (v_r.dot(n)) * n)
+        let tangential_component =
+            contact_point_velocity - plane_normal * incoming_contact_point_speed_normal_to_plane;
+
+        if tangential_component.mag_squared() < f32::EPSILON {
+            // The velocity of the contact point projected onto the tangent is
+            // negligible. No friction response for this collision.
+
+            return response;
+        }
+
+        tangential_component
+    } else {
+        // Uses the linear velocity of the rigid body.
+
+        let f_e = derivative.linear_momentum;
+        let f_e_dot_n = f_e.dot(plane_normal);
+
+        if f_e_dot_n.abs() > f32::EPSILON {
+            // norm(f_e - (f_e.dot(n)) * n)
+            let tangential_component = f_e - plane_normal * (f_e.dot(plane_normal));
+
+            if tangential_component.mag_squared() < f32::EPSILON {
+                // The velocity of the rigid body projected onto the tangent is
+                // negligible. No friction response for this collision.
+
+                return response;
+            }
+
+            tangential_component
+        } else {
+            // The rigid body is moving away from the plane. No friction
+            // response for this collision.
+
+            return response;
+        }
+    };
+
+    let tangent = tangential_component.as_normal();
+
+    // Computes how quickly our contact point is moving along the tangent.
+
+    let contact_point_speed_along_tangent = contact_point_velocity.dot(tangent);
+
+    let mass = 1.0 / state.inverse_mass;
+
+    let contact_point_linear_momentum = contact_point_velocity * mass;
+
+    // Computes the component of linear momentum along the tangent.
+
+    let contact_point_linear_momentum_magnitude_along_tangent =
+        contact_point_linear_momentum.dot(tangent);
+
+    // Computes a friction impulse response.
+
+    let j_s = normal_impulse_magnitude * material.static_friction;
+
+    let tangent_impulse_magnitude = if contact_point_speed_along_tangent.abs() < f32::EPSILON
+        || contact_point_linear_momentum_magnitude_along_tangent <= j_s
+    {
+        // Our contact point has a negligible tangential velocity, or its
+        // tangential momentum is not great enough to overcome the material's
+        // static friction
+
+        // Use a friction impulse that negates the tangential component of the
+        // total external force acting on the contact point.
+
+        -contact_point_linear_momentum_magnitude_along_tangent
+    } else {
+        // Our contact point has enough momentum along the tangent to overcome
+        // static friction; compute a dynamic friction response based on the
+        // normal impulse magnitude and the material.
+
+        let j_d = normal_impulse_magnitude * material.dynamic_friction;
+
+        -j_d
+    };
+
+    let friction_impulse = tangent * tangent_impulse_magnitude;
+
+    state.linear_momentum -= friction_impulse;
+    state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
+
+    response
 }
 
 #[allow(unused_variables)]
