@@ -16,7 +16,7 @@ pub type DynRigidBodyForce = DynForce<RigidBodySimulationState>;
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodySimulationState {
     pub inverse_mass: f32,
-    pub inverse_moment_of_interia: Mat4,
+    pub inverse_moment_of_inertia: Mat4,
     pub position: Vec3,
     pub orientation: Quaternion,
     pub linear_momentum: Vec3,
@@ -81,18 +81,18 @@ impl RigidBodySimulationState {
         self.linear_momentum * self.inverse_mass
     }
 
-    pub fn inverse_moment_of_intertia_world_space(&self) -> Mat4 {
+    pub fn inverse_moment_of_inertia_world_space(&self) -> Mat4 {
         let r = *self.orientation.mat();
 
-        r * self.inverse_moment_of_interia * r.transposed()
+        r * self.inverse_moment_of_inertia * r.transposed()
     }
 
     pub fn angular_velocity(&self) -> Vec3 {
         let angular_momentum = Vec4::vector(self.angular_momentum);
 
-        let inverse_moment_of_intertia_world_space = self.inverse_moment_of_intertia_world_space();
+        let inverse_moment_of_inertia_world_space = self.inverse_moment_of_inertia_world_space();
 
-        (angular_momentum * inverse_moment_of_intertia_world_space).to_vec3()
+        (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3()
     }
 
     pub fn angular_velocity_quaternion(&self) -> Quaternion {

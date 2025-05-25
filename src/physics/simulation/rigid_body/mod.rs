@@ -131,7 +131,7 @@ impl RigidBody {
     pub fn state(&self) -> RigidBodySimulationState {
         RigidBodySimulationState {
             inverse_mass: self.inverse_mass,
-            inverse_moment_of_interia: self.inverse_moment_of_inertia,
+            inverse_moment_of_inertia: self.inverse_moment_of_inertia,
             position: *self.transform.translation(),
             orientation: *self.transform.rotation(),
             linear_momentum: self.linear_momentum,

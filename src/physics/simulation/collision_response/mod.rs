@@ -298,10 +298,10 @@ pub fn resolve_rigid_body_plane_collision(
         panic!()
     }
 
-    let inverse_moment_of_intertia_world_space = state.inverse_moment_of_intertia_world_space();
+    let inverse_moment_of_inertia_world_space = state.inverse_moment_of_inertia_world_space();
 
     let change_in_angular_velocity_normalized = /* j * */
-        r.cross(plane_normal) * inverse_moment_of_intertia_world_space;
+        r.cross(plane_normal) * inverse_moment_of_inertia_world_space;
 
     let change_in_angular_velocity_at_contact_point_normalized = /* j * */
         change_in_angular_velocity_normalized.cross(r);
@@ -462,20 +462,20 @@ pub fn resolve_rigid_body_collision(
 
     // Change in angular velocity for rigid body A.
 
-    let inverse_moment_of_intertia_a_world_space = a.inverse_moment_of_intertia_world_space();
+    let inverse_moment_of_inertia_a_world_space = a.inverse_moment_of_inertia_world_space();
 
     let change_in_angular_velocity_a_normalized = /* j * */
-        r_a.cross(normal) * inverse_moment_of_intertia_a_world_space;
+        r_a.cross(normal) * inverse_moment_of_inertia_a_world_space;
 
     let change_in_angular_velocity_at_contact_point_a_normalized = /* j * */
         change_in_angular_velocity_a_normalized.cross(r_a);
 
     // Change in angular velocity for rigid body B.
 
-    let inverse_moment_of_intertia_b_world_space = b.inverse_moment_of_intertia_world_space();
+    let inverse_moment_of_inertia_b_world_space = b.inverse_moment_of_inertia_world_space();
 
     let change_in_angular_velocity_b_normalized = /* j * */
-        r_b.cross(normal) * inverse_moment_of_intertia_b_world_space;
+        r_b.cross(normal) * inverse_moment_of_inertia_b_world_space;
 
     let change_in_angular_velocity_at_contact_point_b_normalized = /* j * */
         change_in_angular_velocity_b_normalized.cross(r_b);
