@@ -118,6 +118,22 @@ impl SpringyMesh {
 
             renderer.render_line(start, start + strut.spring_acceleration / 10.0, color::BLUE);
             renderer.render_line(end, end - strut.spring_acceleration / 10.0, color::RED);
+
+            // Visualizes the strut's torsional spring forces.
+
+            if let Some(connected_points) = &strut.edge.connected_points {
+                let start = self.points[strut.edge.points.0].position;
+                let end = self.points[strut.edge.points.1].position;
+
+                let left = self.points[connected_points.0].position;
+                let right = self.points[connected_points.1].position;
+
+                // Visualize the rotational forces applied to start, end, left, and right.
+
+                for (i, p) in [&start, &end, &left, &right].iter().enumerate() {
+                    renderer.render_line(**p, **p + (strut.rotational_forces[i]), color::ORANGE);
+                }
+            }
         }
 
         // Visualize face collisions.

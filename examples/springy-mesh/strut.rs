@@ -32,6 +32,7 @@ pub struct Strut {
     pub rest_angle: f32,
     pub delta_angle: f32,
     pub spring_acceleration: Vec3,
+    pub rotational_forces: [Vec3; 4],
 }
 
 impl Strut {
@@ -151,6 +152,8 @@ impl Strut {
                 n,
                 (start_index, end_index, left_index, right_index),
             );
+
+            self.rotational_forces = [f0, f1, f2, f3];
 
             derivative.data[state_index_offset + start_index + n] += f0;
             derivative.data[state_index_offset + end_index + n] += f1;
