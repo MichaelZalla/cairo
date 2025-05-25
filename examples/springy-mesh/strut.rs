@@ -276,16 +276,13 @@ impl Strut {
 
         // Net torque.
 
-        let torque = h
-            * (torsional_spring_force_magnitude
-                + torsional_damper_force_magnitude.max(-torsional_spring_force_magnitude));
+        let torque_magnitude = torsional_spring_force_magnitude
+            + torsional_damper_force_magnitude.max(-torsional_spring_force_magnitude);
 
         // Compute the forces acting on the 4 independent particles.
 
-        let torque_dot_h = torque.dot(h);
-
-        let f2 = left_normal * (torque_dot_h / right_r_mag);
-        let f3 = right_normal * (torque_dot_h / left_r_mag);
+        let f2 = left_normal * (torque_magnitude / right_r_mag);
+        let f3 = right_normal * (torque_magnitude / left_r_mag);
 
         let left_d = start_left.dot(h);
         let right_d = start_right.dot(h);
