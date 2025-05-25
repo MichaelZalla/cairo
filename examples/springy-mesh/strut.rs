@@ -236,12 +236,12 @@ impl Strut {
         let right = current_state.data[state_index_offset + right_index];
 
         // Angular spring accelerations.
+
         let start_end = end - start;
-
-        let h = start_end.as_normal();
-
         let start_left = left - start;
         let start_right = right - start;
+
+        let h = start_end.as_normal();
 
         let left_r = start_left - h * start_left.dot(h);
         let left_r_mag = left_r.mag();
