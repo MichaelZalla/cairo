@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use cairo::{
     color,
     geometry::primitives::{aabb::AABB, triangle::Triangle},
+    matrix::Mat4,
     physics::{
         material::PhysicsMaterial,
         simulation::{
@@ -11,7 +12,10 @@ use cairo::{
         },
     },
     random::sampler::{RandomSampler, RangeSampler},
-    vec::vec3::Vec3,
+    render::Renderer,
+    scene::empty::EmptyDisplayKind,
+    software_renderer::SoftwareRenderer,
+    vec::vec3::{self, Vec3},
 };
 
 use crate::strut::{Edge, Strut, PARTICLE_MASS};
@@ -58,6 +62,36 @@ impl SpringyMesh {
             );
 
             triangle.update_vertex_positions(v0, v1, v2);
+        }
+    }
+
+    pub fn render(&self, renderer: &mut SoftwareRenderer) {
+        // Visualizes the mesh AABB.
+
+        renderer.render_aabb(&self.aabb, Default::default(), color::DARK_GRAY);
+
+        // Visualizes the mesh's points.
+
+        for point in &self.points {
+            let transform = Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
+
+            renderer.render_empty(
+                &transform,
+                EmptyDisplayKind::Sphere(12),
+                false,
+                Some(color::ORANGE),
+            );
+        }
+
+        // Visualizes the mesh's struts.
+
+        for strut in &self.struts {
+            // Visualizes the strut's edge.
+
+            let start = self.points[strut.edge.points.0].position;
+            let end = self.points[strut.edge.points.1].position;
+
+            renderer.render_line(start, end, strut.edge.color);
         }
     }
 }

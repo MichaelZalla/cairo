@@ -2,7 +2,6 @@ use std::{collections::HashMap, f32::consts::TAU};
 
 use cairo::{
     animation::lerp,
-    color,
     geometry::{
         intersect::{intersect_line_segment_plane, intersect_line_segment_triangle},
         primitives::line_segment::LineSegment,
@@ -17,8 +16,6 @@ use cairo::{
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
     random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
-    render::Renderer,
-    scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
     vec::{
@@ -118,34 +115,10 @@ impl Simulation {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
+        // Render springy meshes.
+
         for mesh in &self.meshes {
-            // Visualize mesh AABB.
-
-            renderer.render_aabb(&mesh.aabb, Default::default(), color::DARK_GRAY);
-
-            // Visualize points.
-
-            for point in &mesh.points {
-                let transform = Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
-
-                renderer.render_empty(
-                    &transform,
-                    EmptyDisplayKind::Sphere(12),
-                    false,
-                    Some(color::ORANGE),
-                );
-            }
-
-            // Visualize struts.
-
-            for strut in &mesh.struts {
-                // Visualize the strut edge.
-
-                let start = mesh.points[strut.edge.points.0].position;
-                let end = mesh.points[strut.edge.points.1].position;
-
-                renderer.render_line(start, end, strut.edge.color);
-            }
+            mesh.render(renderer);
         }
 
         // Visualize static plane colliders.
