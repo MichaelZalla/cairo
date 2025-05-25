@@ -106,7 +106,13 @@ impl SpringyMesh {
             let start = self.points[strut.edge.points.0].position;
             let end = self.points[strut.edge.points.1].position;
 
-            renderer.render_line(start, end, strut.edge.color);
+            let color = if strut.edge.did_collide {
+                color::RED
+            } else {
+                strut.edge.color
+            };
+
+            renderer.render_line(start, end, color);
         }
 
         // Visualize face collisions.
