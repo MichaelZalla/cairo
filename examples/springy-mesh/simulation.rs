@@ -564,6 +564,8 @@ impl Simulation {
 
                 // Computes velocity updates for collision response.
 
+                let normal = m.as_normal();
+
                 resolve_edge_edge_collision(
                     material,
                     p1_mass,
@@ -576,7 +578,7 @@ impl Simulation {
                     &mut q2_velocity,
                     s,
                     t,
-                    m.as_normal(),
+                    normal,
                 );
 
                 {
