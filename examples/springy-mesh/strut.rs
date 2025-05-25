@@ -17,6 +17,7 @@ pub struct Edge {
     #[allow(unused)]
     pub connected_points: Option<(usize, usize)>,
     pub color: Color,
+    pub did_collide: bool,
 }
 
 #[derive(Default, Debug, Clone)]

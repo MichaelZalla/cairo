@@ -255,7 +255,8 @@ impl Simulation {
                         if self.did_handle_edge_edge_collision(
                             pair, n, derivative, state, new_state, h,
                         ) {
-                            println!("Handled edge-edge collision.");
+                            self.meshes[i].struts[edge_i].edge.did_collide = true;
+                            self.meshes[j].struts[edge_j].edge.did_collide = true;
                         }
                     }
                 }

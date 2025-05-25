@@ -70,6 +70,10 @@ impl SpringyMesh {
             point.did_collide = false;
         }
 
+        for strut in &mut self.struts {
+            strut.edge.did_collide = false;
+        }
+
         for tri in &mut self.triangles {
             tri.collision_point.take();
         }
@@ -183,6 +187,7 @@ pub fn make_tetrahedron(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
             points: (data.0, data.1),
             connected_points: Some((data.2, data.3)),
             color: data.4,
+            did_collide: false,
         })
         .collect();
 
@@ -270,6 +275,7 @@ pub fn make_cube(side_length: f32) -> (Vec<Particle>, Vec<Strut>) {
                 Some((data.2, data.3))
             },
             color: data.4,
+            did_collide: false,
         })
         .collect();
 
