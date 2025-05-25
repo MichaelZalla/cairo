@@ -72,23 +72,25 @@ impl Strut {
         }
     }
 
+    fn get_surface_normals(start: Vec3, end: Vec3, left: Vec3, right: Vec3) -> (Vec3, Vec3) {
+        (
+            (left - start).cross(end - left).as_normal(),
+            (right - end).cross(start - right).as_normal(),
+        )
+    }
+
     pub fn get_surface_normals_edge_points(
         edge: &Edge,
         points: &[Particle],
     ) -> Option<(Vec3, Vec3)> {
-        if let Some(connected_points) = &edge.connected_points {
-            let start = points[edge.points.0].position;
-            let end = points[edge.points.1].position;
-            let left = points[connected_points.0].position;
-            let right = points[connected_points.1].position;
-
-            Some((
-                (left - start).cross(end - left).as_normal(),
-                (right - end).cross(start - right).as_normal(),
-            ))
-        } else {
-            None
-        }
+        edge.connected_points.as_ref().map(|connected_points| {
+            Self::get_surface_normals(
+                points[edge.points.0].position,
+                points[edge.points.1].position,
+                points[connected_points.0].position,
+                points[connected_points.1].position,
+            )
+        })
     }
 
     pub fn get_surface_normals_edge_state_vector(
@@ -96,19 +98,14 @@ impl Strut {
         state: &StateVector,
         state_index_offset: usize,
     ) -> Option<(Vec3, Vec3)> {
-        if let Some(connected_points) = &edge.connected_points {
-            let start = state.data[state_index_offset + edge.points.0];
-            let end = state.data[state_index_offset + edge.points.1];
-            let left = state.data[state_index_offset + connected_points.0];
-            let right = state.data[state_index_offset + connected_points.1];
-
-            Some((
-                (left - start).cross(end - left).as_normal(),
-                (right - end).cross(start - right).as_normal(),
-            ))
-        } else {
-            None
-        }
+        edge.connected_points.as_ref().map(|connected_points| {
+            Self::get_surface_normals(
+                state.data[state_index_offset + edge.points.0],
+                state.data[state_index_offset + edge.points.1],
+                state.data[state_index_offset + connected_points.0],
+                state.data[state_index_offset + connected_points.1],
+            )
+        })
     }
 
     pub fn get_angle(h: Vec3, left_normal: Vec3, right_normal: Vec3) -> f32 {
