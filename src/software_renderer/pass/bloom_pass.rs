@@ -20,10 +20,16 @@ impl SoftwareRenderer {
             Some(framebuffer_rc) => {
                 let framebuffer = framebuffer_rc.borrow_mut();
 
-                if let (Some(deferred_buffer_rc), Some(bloom_texture_map_rc)) = (
+                if let (
+                    Some(stencil_buffer_rc),
+                    Some(deferred_buffer_rc),
+                    Some(bloom_texture_map_rc),
+                ) = (
+                    framebuffer.attachments.stencil.as_ref(),
                     framebuffer.attachments.deferred_hdr.as_ref(),
                     framebuffer.attachments.bloom.as_ref(),
                 ) {
+                    let mut stencil_buffer = stencil_buffer_rc.borrow_mut();
                     let mut deferred_buffer = deferred_buffer_rc.borrow_mut();
                     let mut bloom_texture_map = bloom_texture_map_rc.borrow_mut();
 
@@ -40,6 +46,16 @@ impl SoftwareRenderer {
                     // Blend our physically based bloom back into the color buffer.
 
                     let bloom_buffer = &mut bloom_texture_map.levels[0].0;
+
+                    // Ensures that bloom is rendered to the final LDR (color)
+                    // buffer, even if the associated pixel isn't covered by any
+                    // scene geometry (e.g., a skybox pixel, background, etc).
+
+                    for (index, bloom_sample) in bloom_buffer.data.iter().enumerate() {
+                        if !bloom_sample.is_zero() {
+                            stencil_buffer.0.set_at(index, 1);
+                        }
+                    }
 
                     if let Some(handle) = self.options.bloom_dirt_mask_handle.as_ref() {
                         let texture_u8_arena = self.scene_resources.texture_u8.borrow();
