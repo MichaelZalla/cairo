@@ -11,6 +11,10 @@ use crate::{
 
 use super::SoftwareRenderer;
 
+static BLOOM_STRENGTH: f32 = 0.03;
+
+static DIRT_MASK_INTENSITY: f32 = 20.0;
+
 impl SoftwareRenderer {
     pub(in crate::software_renderer) fn do_bloom_pass(&mut self) {
         match &self.framebuffer {
@@ -35,9 +39,6 @@ impl SoftwareRenderer {
                     do_physically_based_bloom(&mut bloom_texture_map);
 
                     // Blend our physically based bloom back into the color buffer.
-
-                    static BLOOM_STRENGTH: f32 = 0.07;
-                    static DIRT_MASK_INTENSITY: f32 = 20.0;
 
                     let bloom_buffer = &bloom_texture_map.levels[0].0;
 
