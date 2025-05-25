@@ -89,6 +89,19 @@ pub struct RigidBody {
     inverse_moment_of_inertia: Mat4,
 }
 
+impl From<&RigidBody> for RigidBodySimulationState {
+    fn from(body: &RigidBody) -> Self {
+        RigidBodySimulationState {
+            inverse_mass: body.inverse_mass,
+            inverse_moment_of_inertia: body.inverse_moment_of_inertia,
+            position: *body.transform.translation(),
+            orientation: *body.transform.rotation(),
+            linear_momentum: body.linear_momentum,
+            angular_momentum: body.angular_momentum,
+        }
+    }
+}
+
 impl RigidBody {
     pub fn new(kind: RigidBodyKind, mass: f32, position: Vec3) -> Self {
         let inverse_mass = 1.0 / mass;
@@ -143,17 +156,6 @@ impl RigidBody {
         let inverse_moment_of_inertia_world_space = self.inverse_moment_of_intertia_world_space();
 
         (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3()
-    }
-
-    pub fn state(&self) -> RigidBodySimulationState {
-        RigidBodySimulationState {
-            inverse_mass: self.inverse_mass,
-            inverse_moment_of_inertia: self.inverse_moment_of_inertia,
-            position: *self.transform.translation(),
-            orientation: *self.transform.rotation(),
-            linear_momentum: self.linear_momentum,
-            angular_momentum: self.angular_momentum,
-        }
     }
 
     pub fn apply_simulation_state(&mut self, state: &RigidBodySimulationState) {

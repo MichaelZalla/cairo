@@ -60,7 +60,7 @@ impl Simulation {
         // Copies current rigid body state into `state`.
 
         for (i, sphere) in self.rigid_bodies.iter().enumerate() {
-            state.0[i] = sphere.state();
+            state.0[i] = sphere.into();
         }
 
         let derivative = system_dynamics_function(&state, &self.forces, uptime_seconds);

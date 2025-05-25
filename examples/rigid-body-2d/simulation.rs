@@ -20,7 +20,7 @@ impl Simulation {
         let mut state = StateVector::<RigidBodySimulationState>::new(n);
 
         for (i, circle) in self.rigid_bodies.iter().enumerate() {
-            state.0[i] = circle.state();
+            state.0[i] = circle.into();
         }
 
         let new_state = {
