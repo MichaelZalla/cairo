@@ -266,14 +266,6 @@ pub fn resolve_rigid_body_plane_collision(
 ) -> RigidBodyCollisionResponse {
     let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(plane_normal);
 
-    let inverse_moment_of_intertia_world_space = state.inverse_moment_of_intertia_world_space();
-
-    let change_in_angular_velocity_normalized = /* j * */
-        r.cross(plane_normal) * inverse_moment_of_intertia_world_space;
-
-    let change_in_angular_velocity_at_contact_point_normalized = /* j * */
-        change_in_angular_velocity_normalized.cross(r);
-
     // v_outgoing = -v_incoming * restitution
     //
     // J = j * plane_normal
@@ -292,6 +284,20 @@ pub fn resolve_rigid_body_plane_collision(
     //
 
     let numerator = -(1.0 + material.restitution) * incoming_contact_point_speed_normal_to_plane;
+
+    let r_dot_normal = r.as_normal().dot(plane_normal);
+
+    if r_dot_normal.is_nan() {
+        panic!()
+    }
+
+    let inverse_moment_of_intertia_world_space = state.inverse_moment_of_intertia_world_space();
+
+    let change_in_angular_velocity_normalized = /* j * */
+        r.cross(plane_normal) * inverse_moment_of_intertia_world_space;
+
+    let change_in_angular_velocity_at_contact_point_normalized = /* j * */
+        change_in_angular_velocity_normalized.cross(r);
 
     let denominator = state.inverse_mass
         + plane_normal.dot(change_in_angular_velocity_at_contact_point_normalized);
