@@ -219,14 +219,6 @@ impl RigidBody {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        if self.debug_flags.contains(RigidBodyDebugFlag::DrawAABB) {
-            // Visualize the rigid body's AABB.
-
-            if let Some(aabb) = &self.aabb {
-                renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
-            }
-        }
-
         let transform = &self.transform;
 
         let center = *transform.translation();
@@ -251,6 +243,14 @@ impl RigidBody {
                     panic!();
                 }
             };
+        }
+
+        if self.debug_flags.contains(RigidBodyDebugFlag::DrawAABB) {
+            // Visualize the rigid body's AABB.
+
+            if let Some(aabb) = &self.aabb {
+                renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
+            }
         }
 
         if self
