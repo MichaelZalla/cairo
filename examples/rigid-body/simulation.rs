@@ -206,7 +206,7 @@ impl Simulation {
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
-        for (current_sphere_index, _sphere) in self.rigid_bodies.iter_mut().enumerate() {
+        for current_sphere_index in 0..self.rigid_bodies.len() {
             let sphere_state = &new_state.0[current_sphere_index];
 
             let current_grid_coord =
@@ -215,44 +215,31 @@ impl Simulation {
             for x_offset in -1..=1 {
                 for y_offset in -1..=1 {
                     for z_offset in -1..=1 {
-                        if x_offset == 0 && y_offset == 0 && z_offset == 0 {
-                            // Checks current cell.
+                        // Checks current cell and neighborings cells.
 
-                            let cell = self.hash_grid.map.get(&current_grid_coord).unwrap();
+                        let offset = GridSpaceCoordinate {
+                            x: x_offset,
+                            y: y_offset,
+                            z: z_offset,
+                        };
 
-                            for sphere_index in cell {
-                                if *sphere_index != current_sphere_index
-                                    && Simulation::did_resolve_rigid_bodies_collision(
-                                        current_state,
-                                        new_state,
-                                        current_sphere_index,
-                                        *sphere_index,
-                                    )
-                                {
-                                    // sphere.collision_response.replace(...);
+                        let current_cell_coord = current_grid_coord + offset;
+
+                        if let Some(current_cell) = self.hash_grid.map.get(&current_cell_coord) {
+                            for sphere_index in current_cell {
+                                if *sphere_index == current_sphere_index {
+                                    // Avoids a test for self-collision.
+
+                                    continue;
                                 }
-                            }
-                        } else {
-                            // Checks neighboring cell.
 
-                            let offset = GridSpaceCoordinate {
-                                x: x_offset,
-                                y: y_offset,
-                                z: z_offset,
-                            };
-
-                            let neighbor_coord = current_grid_coord + offset;
-
-                            if let Some(cell) = self.hash_grid.map.get(&neighbor_coord) {
-                                for sphere_index in cell {
-                                    if Simulation::did_resolve_rigid_bodies_collision(
-                                        current_state,
-                                        new_state,
-                                        current_sphere_index,
-                                        *sphere_index,
-                                    ) {
-                                        // sphere.collision_response.replace(...);
-                                    }
+                                if Simulation::did_resolve_rigid_bodies_collision(
+                                    current_state,
+                                    new_state,
+                                    current_sphere_index,
+                                    *sphere_index,
+                                ) {
+                                    // sphere.collision_response.replace(...);
                                 }
                             }
                         }
