@@ -1,13 +1,17 @@
 use std::{
     collections::{HashMap, HashSet},
-    f32::consts::PI,
+    f32::consts::{PI, TAU},
 };
 
 use cairo::{
     animation::lerp,
     geometry::{
+        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
         intersect::{intersect_line_segment_plane, intersect_line_segment_triangle},
-        primitives::line_segment::{get_closest_points_between_segments, LineSegment},
+        primitives::{
+            aabb::AABB,
+            line_segment::{get_closest_points_between_segments, LineSegment},
+        },
     },
     matrix::Mat4,
     physics::simulation::{
@@ -15,11 +19,12 @@ use cairo::{
             resolve_edge_edge_collision, resolve_point_plane_collision_approximate,
             resolve_vertex_face_collision,
         },
-        force::PointForce,
+        force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
-    random::sampler::RandomSampler,
+    random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
     software_renderer::SoftwareRenderer,
+    transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -29,7 +34,7 @@ use cairo::{
 use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
-    springy_mesh::{make_spring, make_springy_mesh, SpringyMesh},
+    springy_mesh::{self, SpringyMesh},
     strut::{DAMPING_RATIO, PARTICLE_MASS, UNDAMPED_PERIOD},
 };
 
@@ -70,6 +75,7 @@ pub struct Simulation {
     pub vertex_collisions: Vec<PointFaceCollision>,
     pub closest_points: HashMap<EdgePair, Vec3>,
     pub edge_collisions: Vec<EdgeEdgeCollision>,
+    hash_grid: HashGrid,
 }
 
 impl Simulation {
@@ -151,7 +157,11 @@ impl Simulation {
 
         // Detects and resolves collisions between springy meshes.
 
-        self.check_springy_mesh_collisions(&derivative, &state, &mut new_state, n, h);
+        let hash_grid = self.make_hash_grid(&new_state);
+
+        self.check_springy_mesh_collisions(&derivative, &state, &mut new_state, n, h, &hash_grid);
+
+        self.hash_grid.map = hash_grid.map;
 
         // Copy new positions and velocities back the meshes' particles.
         // (Updates mesh AABB bounds and collision triangles).
@@ -225,6 +235,44 @@ impl Simulation {
         }
     }
 
+    fn make_hash_grid(&mut self, new_state: &StateVector) -> HashGrid {
+        let mut hash_grid = HashGrid::new(self.hash_grid.scale);
+
+        hash_grid.map.clear();
+
+        for (i, mesh) in self.meshes.iter_mut().enumerate() {
+            let (mut min, mut max) = (Vec3::ones() * f32::MAX, Vec3::ones() * f32::MIN);
+
+            for point in &new_state.data
+                [mesh.state_index_offset..mesh.state_index_offset + mesh.points.len()]
+            {
+                min = min.min(point);
+                max = max.max(point);
+            }
+
+            mesh.aabb = AABB::from((min, max));
+
+            let center = mesh.aabb.center();
+
+            let coord = GridSpaceCoordinate::from((center, hash_grid.scale));
+
+            match hash_grid.map.get_mut(&coord) {
+                Some(list) => {
+                    list.push(i);
+                }
+                None => {
+                    let mut cell = Vec::<usize>::with_capacity(4);
+
+                    cell.insert(0, i);
+
+                    hash_grid.map.insert(coord, cell);
+                }
+            }
+        }
+
+        hash_grid
+    }
+
     fn check_springy_mesh_collisions(
         &mut self,
         derivative: &StateVector,
@@ -232,6 +280,7 @@ impl Simulation {
         new_state: &mut StateVector,
         n: usize,
         h: f32,
+        hash_grid: &HashGrid,
     ) {
         // Resets vertex-face and edge-edge collisions.
 
@@ -242,18 +291,50 @@ impl Simulation {
 
         // Detect and resolve collisions between mesh pairs.
 
-        for i in 0..self.meshes.len() {
-            for j in i + 1..self.meshes.len() {
-                self.check_springy_mesh_pair(
-                    derivative,
-                    state,
-                    new_state,
-                    n,
-                    h,
-                    &mut edge_pairs_tested,
-                    i,
-                    j,
-                );
+        for current_mesh_index in 0..self.meshes.len() {
+            let center = self.meshes[current_mesh_index].aabb.center();
+
+            let current_grid_coord = GridSpaceCoordinate::from((center, hash_grid.scale));
+
+            for x_offset in -1..=1 {
+                for y_offset in -1..=1 {
+                    for z_offset in -1..=1 {
+                        // Checks current cell and neighborings cells.
+
+                        let offset = GridSpaceCoordinate {
+                            x: x_offset,
+                            y: y_offset,
+                            z: z_offset,
+                        };
+
+                        let current_cell_coord = current_grid_coord + offset;
+
+                        if let Some(current_cell) = hash_grid.map.get(&current_cell_coord) {
+                            for mesh_index in current_cell {
+                                if *mesh_index == current_mesh_index {
+                                    // Avoids a test for self-collision.
+
+                                    continue;
+                                }
+
+                                // Checks for vertex-face collisions.
+
+                                let (i, j) = (current_mesh_index, *mesh_index);
+
+                                self.check_springy_mesh_pair(
+                                    derivative,
+                                    state,
+                                    new_state,
+                                    n,
+                                    h,
+                                    &mut edge_pairs_tested,
+                                    i,
+                                    j,
+                                );
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -712,48 +793,56 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
     let forces: Vec<PointForce> = vec![
         // Gravity
-        // GRAVITY_POINT_FORCE,
+        GRAVITY_POINT_FORCE,
     ];
 
     // Springy meshes.
 
-    static NUM_MESHES: usize = 4;
+    static NUM_MESHES: usize = 25;
+
+    static SIDE_LENGTH: f32 = 3.0;
 
     let mut meshes = Vec::with_capacity(NUM_MESHES);
 
-    for i in 0..meshes.capacity() {
-        let side_length = 4.0;
+    for _ in 0..meshes.capacity() {
+        // let (points, struts) = springy_mesh::make_spring(SIDE_LENGTH, true);
+        let (points, struts) = springy_mesh::make_tetrahedron(SIDE_LENGTH);
+        // let (points, struts) = springy_mesh::make_cube(SIDE_LENGTH);
 
-        let (points, struts) = make_spring(side_length, true);
+        let mut mesh = springy_mesh::make_springy_mesh(points, struts, sampler);
 
-        let mut mesh = make_springy_mesh(points, struts, sampler);
+        let speed = sampler.sample_range_normal(5.0, 5.0);
+
+        let velocity = sampler.sample_direction_uniform() * speed;
 
         // Mesh transform.
 
         let transform = {
+            let rotation = {
+                let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
+                let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
+                let rotate_z =
+                    Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, TAU));
+
+                rotate_x * rotate_y * rotate_z
+            };
+
+            static BOUNDS: f32 = 15.0;
+
             let translation = Mat4::translation(Vec3 {
-                x: -(NUM_MESHES as f32 * side_length * 2.0) / 2.0 + i as f32 * side_length * 2.0,
-                y: 1.0,
-                ..Default::default()
+                x: sampler.sample_range_normal(0.0, BOUNDS),
+                y: sampler.sample_range_normal(35.0, 15.0),
+                z: sampler.sample_range_normal(0.0, BOUNDS),
             });
 
-            let scale = Mat4::scale_uniform(1.0);
+            let scale = Mat4::scale_uniform(1.2);
 
-            scale * translation
+            scale * *rotation.mat() * translation
         };
 
-        for (i, point) in &mut mesh.points.iter_mut().enumerate() {
+        for point in &mut mesh.points {
             point.position = (Vec4::position(point.position) * transform).to_vec3();
-
-            match i {
-                0 => {
-                    point.position -= vec3::FORWARD * side_length * 0.25;
-                }
-                1 => {
-                    point.position += vec3::FORWARD * side_length * 0.25;
-                }
-                _ => (),
-            }
+            point.velocity = velocity;
         }
 
         for strut in &mut mesh.struts {
@@ -782,7 +871,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
                 // k P_n^2 = 4 Pi^2 m r^2
                 // k = (4 Pi^2 m r^2) / P_n^2
 
-                let factor = side_length / 2.0;
+                let factor = SIDE_LENGTH / 2.0;
 
                 let r = (factor * factor + factor * factor).sqrt();
 
@@ -816,6 +905,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         meshes,
         forces,
         static_plane_colliders,
+        hash_grid: HashGrid::new(SIDE_LENGTH),
         ..Default::default()
     }
 }

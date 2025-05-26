@@ -37,8 +37,6 @@ impl FromStateVector for SpringyMesh {
             point.write_from(state, n, self.state_index_offset + i);
         }
 
-        self.update_aabb();
-
         self.update_triangles();
     }
 }
