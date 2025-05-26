@@ -36,8 +36,9 @@ bitmask! {
         DrawStrutEdgeCollisions = (1 << 6),
         DrawStrutSpringAccelerations = (1 << 7),
         DrawTorsionalStrutFaceNormals = (1 << 8),
-        DrawTorsionalStrutRotationalForces = (1 << 9),
-        DrawFaceCollisions = (1 << 10),
+        DrawTorsionalStrutRVectors = (1 << 9),
+        DrawTorsionalStrutRotationalForces = (1 << 10),
+        DrawFaceCollisions = (1 << 11),
     }
 }
 
@@ -183,6 +184,7 @@ impl SpringyMesh {
                 | SpringyMeshDebugFlag::DrawStrutEdgeCollisions
                 | SpringyMeshDebugFlag::DrawStrutSpringAccelerations
                 | SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
+                | SpringyMeshDebugFlag::DrawTorsionalStrutRVectors
                 | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces
                 | SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
                 | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces,
@@ -227,6 +229,7 @@ impl SpringyMesh {
                     &strut.edge.connected_points,
                     self.debug_flags.intersects(
                         SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
+                            | SpringyMeshDebugFlag::DrawTorsionalStrutRVectors
                             | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces,
                     ),
                 ) {
@@ -235,10 +238,10 @@ impl SpringyMesh {
                     let left = self.points[connected_points.0].position;
                     let right = self.points[connected_points.1].position;
 
-                    if self
-                        .debug_flags
-                        .contains(SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals)
-                    {
+                    if self.debug_flags.intersects(
+                        SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
+                            | SpringyMeshDebugFlag::DrawTorsionalStrutRVectors,
+                    ) {
                         let normals =
                             Strut::get_surface_normals_edge_points(&strut.edge, &self.points)
                                 .unwrap();
@@ -250,13 +253,33 @@ impl SpringyMesh {
 
                             let r_c = start_c - h * start_c.dot(h);
 
-                            let midpoint_c = lerp(*c, *c - r_c, 0.5);
+                            if self
+                                .debug_flags
+                                .contains(SpringyMeshDebugFlag::DrawTorsionalStrutRVectors)
+                            {
+                                // Visualizes r-vector (from h to left point or right point).
 
-                            let normal_c = if i == 0 { normals.0 } else { normals.1 };
+                                renderer.render_line(*c - r_c, *c, color::YELLOW);
+                                renderer.render_line(*c - r_c, start, color::WHITE);
+                            }
 
-                            // Visualize normals of the faces formed by start, end, and the connected point.
+                            if self
+                                .debug_flags
+                                .contains(SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals)
+                            {
+                                // Visualize normals of the faces formed by
+                                // start, end, and the connected point.
 
-                            renderer.render_line(midpoint_c, midpoint_c + normal_c, color::GREEN);
+                                let midpoint_c = lerp(*c, *c - r_c, 0.5);
+
+                                let normal_c = if i == 0 { normals.0 } else { normals.1 };
+
+                                renderer.render_line(
+                                    midpoint_c,
+                                    midpoint_c + normal_c,
+                                    color::GREEN,
+                                );
+                            }
                         }
                     }
 
