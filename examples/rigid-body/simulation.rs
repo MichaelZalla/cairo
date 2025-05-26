@@ -139,6 +139,9 @@ impl Simulation {
                             &new_body_state.velocity(),
                             radius,
                         ) {
+                            new_body_state.linear_momentum -= collider.plane.normal
+                                * new_body_state.linear_momentum.dot(collider.plane.normal);
+
                             new_body_state.static_contact.replace(contact);
                         }
 
@@ -170,6 +173,9 @@ impl Simulation {
                             &new_body_state.velocity(),
                             radius,
                         ) {
+                            new_body_state.linear_momentum -= collider.plane.normal
+                                * new_body_state.linear_momentum.dot(collider.plane.normal);
+
                             new_body_state.static_contact.replace(contact);
                         }
 
@@ -230,6 +236,9 @@ impl Simulation {
                     &new_body_state.velocity(),
                     radius,
                 ) {
+                    new_body_state.linear_momentum -= collider.plane.normal
+                        * new_body_state.linear_momentum.dot(collider.plane.normal);
+
                     new_body_state.static_contact.replace(contact);
                 }
             }
