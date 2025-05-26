@@ -243,11 +243,14 @@ impl RigidBody {
         self.angular_momentum = state.angular_momentum;
 
         self.static_contact = state.static_contact;
-        
-        if let RigidBodyKind::Sphere(radius) = self.kind {
-            if let Some(aabb) = &mut self.aabb {
-                aabb.min = state.position - vec3::ONES * radius;
-                aabb.max = state.position + vec3::ONES * radius;
+
+        match self.kind {
+            RigidBodyKind::Circle(_radius) => panic!(),
+            RigidBodyKind::Sphere(radius) => {
+                if let Some(aabb) = &mut self.aabb {
+                    aabb.min = state.position - vec3::ONES * radius;
+                    aabb.max = state.position + vec3::ONES * radius;
+                }
             }
         }
     }
