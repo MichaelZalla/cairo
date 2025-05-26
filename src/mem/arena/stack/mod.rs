@@ -232,7 +232,7 @@ mod tests {
         };
 
         assert_eq!(stack.capacity(), 1 << 10);
-        assert_eq!(stack.align(), 1 << 0);
+        assert_eq!(stack.align(), 1);
         assert_eq!(stack.bytes_allocated(), 0);
 
         FixedStackArena::release(stack);

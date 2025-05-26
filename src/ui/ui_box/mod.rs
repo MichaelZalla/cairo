@@ -37,7 +37,7 @@ bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
     pub mask UIBoxFeatureMask: u32 where flags UIBoxFeatureFlag {
         Null = 0,
-        DrawFill = (1 << 0),
+        DrawFill = 1,
         DrawBorder = (1 << 1),
         EmbossAndDeboss = (1 << 2),
         DrawText = (1 << 3),

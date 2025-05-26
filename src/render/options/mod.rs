@@ -22,7 +22,7 @@ bitmask! {
     #[derive(Debug, Serialize, Deserialize)]
     pub mask RenderPassMask: u32 where flags RenderPassFlag {
         Null = 0,
-        Rasterization = (1 << 0),
+        Rasterization = 1,
         Lighting = (1 << 1),
         DeferredLighting = (1 << 2),
         Bloom = (1 << 3),

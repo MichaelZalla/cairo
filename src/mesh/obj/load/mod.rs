@@ -50,7 +50,7 @@ bitmask! {
     #[derive(Default, Debug, Serialize, Deserialize)]
     pub mask ProcessGeometryFlagMask: u32 where flags ProcessGeometryFlag {
         Null = 0,
-        Center = (1 << 0),
+        Center = 1,
         FlipZ = (1 << 1),
     }
 }
