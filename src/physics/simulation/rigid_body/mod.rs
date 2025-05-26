@@ -129,6 +129,7 @@ bitmask! {
         DrawCollisionNormalImpulse = (1 << 6),
         DrawCollisionTangent = (1 << 7),
         DrawCollisionFrictionImpulse = (1 << 8),
+        DrawStaticContact = (1 << 9),
     }
 }
 
@@ -382,6 +383,30 @@ impl RigidBody {
                     );
                 }
             }
+        }
+
+        // Visualizes the rigid body's contact (if any).
+
+        if let (Some(contact), true) = (
+            &self.static_contact,
+            self.debug_flags
+                .contains(RigidBodyDebugFlag::DrawStaticContact),
+        ) {
+            let color = match contact.kind {
+                RigidBodyStaticContactKind::Resting => color::WHITE,
+                RigidBodyStaticContactKind::Sliding => color::SKY_BOX,
+            };
+
+            let start = contact.point;
+
+            // Normal
+            renderer.render_line(start, start + contact.normal, color);
+
+            // Tangent
+            renderer.render_line(start - contact.tangent, start + contact.tangent, color);
+
+            // Bitangent
+            renderer.render_line(start - contact.bitangent, start + contact.bitangent, color);
         }
     }
 }
