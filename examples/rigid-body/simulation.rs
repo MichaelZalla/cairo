@@ -33,9 +33,6 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
-static SPHERE_RADIUS: f32 = 0.5;
-static SPHERE_MASS: f32 = 1.0;
-
 static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
     dynamic_friction: 0.6,
@@ -255,32 +252,54 @@ impl Simulation {
         a: usize,
         b: usize,
     ) -> bool {
-        let s1 = Sphere {
-            center: current_state.0[a].position,
-            radius: SPHERE_RADIUS,
+        // Describes the movement of body A from body B's frame of reference.
+
+        let state_a = &current_state.0[a];
+        let state_b = &current_state.0[b];
+
+        let a_velocity_relative_to_b = {
+            let velocity_a = new_state.0[a].velocity();
+            let velocity_b = new_state.0[b].velocity();
+
+            velocity_a - velocity_b
         };
 
-        let s1_movement = new_state.0[a].position - s1.center;
+        let a_velocity_relative_to_b_mag = a_velocity_relative_to_b.mag();
 
-        let s2 = Sphere {
-            center: current_state.0[b].position,
-            radius: SPHERE_RADIUS,
-        };
-
-        let s2_movement = new_state.0[b].position - s2.center;
-
-        // Narrow-phase collision test on 2 swept spheres.
-
-        // Describes the movement of sphere A from sphere B's frame-of-reference.
-
-        let v = s1_movement - s2_movement;
-        let v_distance = v.mag();
-
-        if v_distance.abs() < f32::EPSILON {
+        if a_velocity_relative_to_b_mag.abs() < f32::EPSILON {
             return false;
         }
 
-        match intersect_moving_spheres(s1, s2, v, v_distance) {
+        // Narrow-phase collision test.
+
+        let intersection = match (state_a.kind, state_b.kind) {
+            (RigidBodyKind::Sphere(radius_a), RigidBodyKind::Sphere(radius_b)) => {
+                // Sphere-sphere collision.
+
+                let s1 = Sphere {
+                    center: current_state.0[a].position,
+                    radius: radius_a,
+                };
+
+                let s2 = Sphere {
+                    center: current_state.0[b].position,
+                    radius: radius_b,
+                };
+
+                intersect_moving_spheres(
+                    s1,
+                    s2,
+                    a_velocity_relative_to_b,
+                    a_velocity_relative_to_b_mag,
+                )
+            }
+            _ => panic!(
+                "Collision not supported for rigid body pair {}, {}!",
+                state_a.kind, state_b.kind
+            ),
+        };
+
+        match intersection {
             Some((_t, contact_point)) => {
                 // Compute and apply the collision response.
 
@@ -397,20 +416,29 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
     // Rigid bodies (spheres).
 
-    static SPHERE_ROWS: usize = 16;
-    static SPHERE_COLUMNS: usize = 16;
+    static SPHERE_ROWS: usize = 8;
+    static SPHERE_COLUMNS: usize = 8;
+
+    static MIN_SPHERE_RADIUS: f32 = 0.5;
+    static MAX_SPHERE_RADIUS: f32 = 2.5;
 
     static SPACING: f32 = 4.0;
 
-    static HEIGHT: f32 = SPHERE_ROWS as f32 / 2.0;
+    static HEIGHT: f32 = 5.0;
 
     let mut spheres = Vec::with_capacity(SPHERE_ROWS * SPHERE_COLUMNS);
 
-    let grid_offset = Vec3 {
-        x: -(SPHERE_ROWS as f32 / 2.0) + SPHERE_RADIUS,
-        y: 0.0,
-        z: -(SPHERE_COLUMNS as f32 / 2.0) + SPHERE_RADIUS,
+    static GRID_OFFSET: Vec3 = Vec3 {
+        x: 0.5,
+        y: 0.5,
+        z: 0.5,
     };
+
+    let grid_offset = Vec3 {
+        x: -(SPHERE_ROWS as f32 / 2.0) + 0.5,
+        y: 0.0,
+        z: -(SPHERE_COLUMNS as f32 / 2.0) + 0.5,
+    } + GRID_OFFSET;
 
     for x in 0..SPHERE_ROWS {
         for z in 0..SPHERE_COLUMNS {
@@ -425,8 +453,11 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
                     ..Default::default()
                 };
 
-            let mut sphere =
-                RigidBody::new(RigidBodyKind::Sphere(SPHERE_RADIUS), SPHERE_MASS, center);
+            let radius = sampler.sample_range_uniform(MIN_SPHERE_RADIUS, MAX_SPHERE_RADIUS);
+
+            let mass = 3.0;
+
+            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(radius), mass, center);
 
             let velocity = {
                 let speed = sampler.sample_range_uniform(0.0, 10.0);
@@ -490,6 +521,6 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        hash_grid: HashGrid::new(2.0),
+        hash_grid: HashGrid::new(MAX_SPHERE_RADIUS * 2.0),
     }
 }
