@@ -244,69 +244,92 @@ impl Simulation {
 
         for i in 0..self.meshes.len() {
             for j in i + 1..self.meshes.len() {
-                // Checks for vertex-face collisions.
+                self.check_springy_mesh_pair(
+                    derivative,
+                    state,
+                    new_state,
+                    n,
+                    h,
+                    &mut edge_pairs_tested,
+                    i,
+                    j,
+                );
+            }
+        }
+    }
 
-                for (a, b) in [(i, j), (j, i)] {
-                    for p_i in 0..self.meshes[a].points.len() {
-                        for tri_i in 0..self.meshes[b].triangles.len() {
-                            // Checks mesh `a`, point at `p_i` against mesh `b`, face at `tri_i`.
+    #[allow(clippy::too_many_arguments)]
+    fn check_springy_mesh_pair(
+        &mut self,
+        derivative: &StateVector,
+        state: &StateVector,
+        new_state: &mut StateVector,
+        n: usize,
+        h: f32,
+        edge_pairs_tested: &mut HashSet<EdgePair>,
+        i: usize,
+        j: usize,
+    ) {
+        // Checks for vertex-face collisions.
 
-                            if let Some(barycentric) = self.did_handle_point_face_collision(
-                                a, p_i, b, tri_i, n, derivative, state, new_state, h,
-                            ) {
-                                self.meshes[a].points[p_i].did_collide = true;
+        for (a, b) in [(i, j), (j, i)] {
+            for p_i in 0..self.meshes[a].points.len() {
+                for tri_i in 0..self.meshes[b].triangles.len() {
+                    // Checks mesh `a`, point at `p_i` against mesh `b`, face at `tri_i`.
 
-                                self.meshes[b].triangles[tri_i]
-                                    .collision_point
-                                    .replace(barycentric);
-                            }
-                        }
+                    if let Some(barycentric) = self.did_handle_point_face_collision(
+                        a, p_i, b, tri_i, n, derivative, state, new_state, h,
+                    ) {
+                        self.meshes[a].points[p_i].did_collide = true;
+
+                        self.meshes[b].triangles[tri_i]
+                            .collision_point
+                            .replace(barycentric);
                     }
                 }
+            }
+        }
 
-                // Checks for edge-edge collisions.
+        // Checks for edge-edge collisions.
 
-                for edge_i in 0..self.meshes[i].struts.len() {
-                    // Skips internal struts.
-                    if self.meshes[i].struts[edge_i]
-                        .edge
-                        .connected_points
-                        .is_none()
+        for edge_i in 0..self.meshes[i].struts.len() {
+            // Skips internal struts.
+            if self.meshes[i].struts[edge_i]
+                .edge
+                .connected_points
+                .is_none()
+            {
+                continue;
+            }
+
+            for edge_j in 0..self.meshes[j].struts.len() {
+                // Skips internal struts.
+                if self.meshes[j].struts[edge_j]
+                    .edge
+                    .connected_points
+                    .is_none()
+                {
+                    continue;
+                }
+
+                // Checks mesh `i`, edge `edge_i` against mesh `j`, edge `tri_i`.
+
+                let pair = EdgePair {
+                    a_mesh_index: i,
+                    a_edge_index: edge_i,
+                    b_mesh_index: j,
+                    b_edge_index: edge_j,
+                };
+
+                // Avoids testing edge pair (j,i) after testing edge pair (i,j).
+
+                if !edge_pairs_tested.contains(&pair) {
+                    edge_pairs_tested.insert(pair.clone());
+
+                    if self.did_handle_edge_edge_collision(pair, n, derivative, state, new_state, h)
                     {
-                        continue;
-                    }
-
-                    for edge_j in 0..self.meshes[j].struts.len() {
-                        // Skips internal struts.
-                        if self.meshes[j].struts[edge_j]
-                            .edge
-                            .connected_points
-                            .is_none()
-                        {
-                            continue;
-                        }
-
-                        // Checks mesh `i`, edge `edge_i` against mesh `j`, edge `tri_i`.
-
-                        let pair = EdgePair {
-                            a_mesh_index: i,
-                            a_edge_index: edge_i,
-                            b_mesh_index: j,
-                            b_edge_index: edge_j,
-                        };
-
-                        // Avoids testing edge pair (j,i) after testing edge pair (i,j).
-
-                        if !edge_pairs_tested.contains(&pair) {
-                            edge_pairs_tested.insert(pair.clone());
-
-                            if self.did_handle_edge_edge_collision(
-                                pair, n, derivative, state, new_state, h,
-                            ) {
-                                self.meshes[i].struts[edge_i].edge.did_collide = true;
-                                self.meshes[j].struts[edge_j].edge.did_collide = true;
-                            }
-                        }
+                        self.meshes[i].struts[edge_i].edge.did_collide = true;
+                        self.meshes[j].struts[edge_j].edge.did_collide = true;
                     }
                 }
             }
