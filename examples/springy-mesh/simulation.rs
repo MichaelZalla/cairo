@@ -1,4 +1,7 @@
-use std::{collections::HashMap, f32::consts::PI};
+use std::{
+    collections::{HashMap, HashSet},
+    f32::consts::PI,
+};
 
 use cairo::{
     animation::lerp,
@@ -235,6 +238,8 @@ impl Simulation {
         self.vertex_collisions.clear();
         self.edge_collisions.clear();
 
+        let mut edge_pairs_tested = HashSet::<EdgePair>::default();
+
         // Detect and resolve collisions between mesh pairs.
 
         for i in 0..self.meshes.len() {
@@ -290,11 +295,17 @@ impl Simulation {
                             b_edge_index: edge_j,
                         };
 
-                        if self.did_handle_edge_edge_collision(
-                            pair, n, derivative, state, new_state, h,
-                        ) {
-                            self.meshes[i].struts[edge_i].edge.did_collide = true;
-                            self.meshes[j].struts[edge_j].edge.did_collide = true;
+                        // Avoids testing edge pair (j,i) after testing edge pair (i,j).
+
+                        if !edge_pairs_tested.contains(&pair) {
+                            edge_pairs_tested.insert(pair.clone());
+
+                            if self.did_handle_edge_edge_collision(
+                                pair, n, derivative, state, new_state, h,
+                            ) {
+                                self.meshes[i].struts[edge_i].edge.did_collide = true;
+                                self.meshes[j].struts[edge_j].edge.did_collide = true;
+                            }
                         }
                     }
                 }
