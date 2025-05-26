@@ -144,7 +144,9 @@ fn main() -> Result<(), String> {
 
     // Create and run our app.
 
-    let (app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
+    let (mut app, _event_watch) = App::new(&mut window_info, &render_to_window_canvas);
+
+    app.pause_updates();
 
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
