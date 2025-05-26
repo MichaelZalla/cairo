@@ -427,9 +427,9 @@ pub fn make_springy_mesh(
         points,
         struts,
         material,
-        state_index_offset: 0,
         triangles,
         aabb,
+        ..Default::default()
     }
 }
 
