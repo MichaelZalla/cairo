@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, fmt};
 
 use rigid_body_simulation_state::RigidBodySimulationState;
 
@@ -27,6 +27,19 @@ pub enum RigidBodyKind {
 impl Default for RigidBodyKind {
     fn default() -> Self {
         Self::Sphere(0.5)
+    }
+}
+
+impl fmt::Display for RigidBodyKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                RigidBodyKind::Circle(radius) => format!("Circle({})", radius),
+                RigidBodyKind::Sphere(radius) => format!("Sphere({})", radius),
+            }
+        )
     }
 }
 
