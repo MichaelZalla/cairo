@@ -15,6 +15,7 @@ use cairo::{
                 resolve_rigid_body_collision, resolve_rigid_body_plane_collision,
             },
             force::gravity::GRAVITY_RIGID_BODY_FORCE,
+            physical_constants::EARTH_GRAVITY_ACCELERATION,
             rigid_body::{
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
                 RigidBody, RigidBodyKind, RigidBodyStaticContact, RigidBodyStaticContactKind,
@@ -58,11 +59,21 @@ impl Simulation {
             state.0[i] = sphere.into();
         }
 
-        let derivative = system_dynamics_function(&state, &self.forces, uptime_seconds);
+        let mut derivative = system_dynamics_function(&state, &self.forces, uptime_seconds);
 
         // Performs basic forward Euler integration over position and velocity.
 
         let mut new_state = state.clone() + derivative.clone() * h;
+
+        for (s, d) in new_state.0.iter_mut().zip(derivative.0.iter_mut()) {
+            if let Some(contact) = &s.static_contact {
+                let gravity_projected_onto_contact_normal =
+                    contact.normal * EARTH_GRAVITY_ACCELERATION.dot(contact.normal);
+
+                d.linear_momentum += gravity_projected_onto_contact_normal;
+                s.linear_momentum += gravity_projected_onto_contact_normal * h;
+            }
+        }
 
         for sphere in self.rigid_bodies.iter_mut() {
             sphere.collision_response.take();

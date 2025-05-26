@@ -121,11 +121,18 @@ impl RigidBodySimulationState {
         let position = self.position;
 
         for force in forces {
-            let (newtons, contact_point) = force(self, 0, current_time);
+            let (mut newtons, contact_point) = force(self, 0, current_time);
 
             // Accumulate linear momentum.
 
             let f = if newtons == EARTH_GRAVITY_ACCELERATION {
+                if let Some(contact) = &self.static_contact {
+                    let gravity_projected_onto_contact_normal =
+                        contact.normal * newtons.dot(contact.normal);
+
+                    newtons -= gravity_projected_onto_contact_normal;
+                }
+
                 newtons
             } else {
                 newtons * self.inverse_mass
