@@ -540,9 +540,6 @@ impl UIBox {
         #[cfg(debug_assertions)]
         let draw_drag_handles = GLOBAL_UI_CONTEXT.with(|ctx| ctx.debug.borrow().draw_drag_handles);
 
-        #[cfg(not(debug_assertions))]
-        let draw_drag_handles = false;
-
         #[cfg(debug_assertions)]
         if draw_drag_handles {
             self.draw_debug_drag_handles(target);
