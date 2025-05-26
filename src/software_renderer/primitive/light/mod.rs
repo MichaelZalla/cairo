@@ -78,9 +78,7 @@ impl SoftwareRenderer {
 
         // Derive the light's orientation matrix using its direction vector.
 
-        let forward = light.get_direction().to_vec3();
-        let right = vec3::UP.cross(forward).as_normal();
-        let up = forward.cross(right).as_normal();
+        let (forward, right, up) = light.get_direction().to_vec3().basis();
 
         let scale = Mat4::scale_uniform(2.0);
 

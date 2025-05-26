@@ -242,9 +242,7 @@ impl DirectionalLight {
     }
 
     pub fn update_shadow_map_cameras(&mut self, view_camera: &Camera) {
-        let forward = self.direction.as_normal().to_vec3();
-        let right = vec3::UP.cross(forward).as_normal();
-        let up = forward.cross(right).as_normal();
+        let (forward, right, up) = self.direction.to_vec3().basis();
 
         let alpha_step = 1.0 / SHADOW_MAP_CAMERA_COUNT as f32;
 

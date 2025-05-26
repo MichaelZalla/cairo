@@ -93,14 +93,12 @@ impl LookVector {
     }
 
     fn recompute_basis(&mut self) {
-        self.forward = (self.target - self.position).as_normal();
+        let position_to_target = self.target - self.position;
 
-        self.right = vec3::UP.cross(self.forward).as_normal();
+        let (forward, right, up) = position_to_target.basis();
 
-        if self.right.x.is_nan() {
-            self.right = vec3::RIGHT.cross(self.forward).as_normal();
-        }
-
-        self.up = self.forward.cross(self.right).as_normal();
+        self.forward = forward;
+        self.right = right;
+        self.up = up;
     }
 }

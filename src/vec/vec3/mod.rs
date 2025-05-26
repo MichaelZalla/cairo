@@ -328,6 +328,29 @@ impl Vec3 {
         }
     }
 
+    pub fn basis(&self) -> (Self, Self, Self) {
+        // Produces a set of orthonormal basis vectors, treating `self` as the
+        // forward direction.
+
+        // See: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+
+        let forward = self.as_normal();
+
+        let right = {
+            let mut tangent = UP.cross(forward).as_normal();
+
+            if tangent.x.is_nan() {
+                tangent = RIGHT.cross(forward).as_normal();
+            }
+
+            tangent
+        };
+
+        let up = forward.cross(right);
+
+        (forward, right, up)
+    }
+
     pub fn angle_radians(a: &Self, b: &Self, c: &Self) -> f32 {
         // See: https://math.stackexchange.com/a/3427603/155265
         // See: https://gamedev.stackexchange.com/a/203308

@@ -57,27 +57,11 @@ pub fn generate(radius: f32, height: f32, divisions: u32) -> Mesh {
 
         // Normal
 
-        let normal = {
-            let mut normal = (center_top - ring_vertex).as_normal();
+        let vertex_to_top = center_top - ring_vertex;
 
-            let tangent = {
-                let mut tangent = vec3::UP.cross(normal).as_normal();
+        let (_, _, up) = vertex_to_top.basis();
 
-                if tangent.x.is_nan() {
-                    tangent = vec3::RIGHT.cross(normal).as_normal();
-                }
-
-                tangent
-            };
-
-            let mut bitangent = normal.cross(tangent);
-
-            mem::swap(&mut normal, &mut bitangent);
-
-            normal
-        };
-
-        normals.push(normal);
+        normals.push(up);
 
         vertices.push(ring_vertex);
 

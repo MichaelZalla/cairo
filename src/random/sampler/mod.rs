@@ -6,10 +6,7 @@ use rand_distr::{Distribution, Normal, NormalError, Uniform};
 
 use distribution::GeneratedDistribution;
 
-use crate::{
-    matrix::Mat4,
-    vec::vec3::{self, Vec3},
-};
+use crate::{matrix::Mat4, vec::vec3::Vec3};
 
 pub mod distribution;
 
@@ -77,19 +74,7 @@ impl<const N: usize> RandomSampler<N> {
     fn sample_displacement(&mut self, v: &Vec3, max_deflection_angle_radians: f32, f: f32) -> Vec3 {
         // See: https://math.stackexchange.com/a/4343075
 
-        let normal = v.as_normal();
-
-        let tangent = {
-            let mut tangent = vec3::UP.cross(normal).as_normal();
-
-            if tangent.x.is_nan() {
-                tangent = vec3::RIGHT.cross(normal).as_normal();
-            }
-
-            tangent
-        };
-
-        let bitangent = normal.cross(tangent);
+        let (normal, tangent, bitangent) = v.basis();
 
         let basis = Mat4::tbn(tangent, bitangent, normal);
 

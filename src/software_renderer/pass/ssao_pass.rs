@@ -170,17 +170,7 @@ fn get_tbn_for_kernel_sample(
     normal: Vec3,
     tangent_space_rotations: &[Quaternion; 16],
 ) -> Mat4 {
-    let tangent = {
-        let mut tangent = vec3::UP.cross(normal).as_normal();
-
-        if tangent.x.is_nan() {
-            tangent = vec3::RIGHT.cross(normal).as_normal();
-        }
-
-        tangent
-    };
-
-    let bitangent = normal.cross(tangent);
+    let (normal, tangent, bitangent) = normal.basis();
 
     let rotation = {
         let index = {
@@ -193,8 +183,10 @@ fn get_tbn_for_kernel_sample(
         tangent_space_rotations[index]
     };
 
+    // Renormalizes after rotation.
     let tangent_rotated = (tangent * *rotation.mat()).as_normal();
 
+    // Renormalizes after rotation.
     let bitangent_rotated = (bitangent * *rotation.mat()).as_normal();
 
     Mat4::tbn(tangent_rotated, bitangent_rotated, normal)
