@@ -1,5 +1,7 @@
 use std::{f32::consts::PI, fmt};
 
+use bitmask::bitmask;
+
 use rigid_body_simulation_state::RigidBodySimulationState;
 
 use crate::{
@@ -85,6 +87,28 @@ pub struct RigidBodyCollisionResponse {
     pub friction_impulse: Option<Vec3>,
 }
 
+bitmask! {
+    #[derive(Debug)]
+    pub mask RigidBodyDebugFlags: u32 where flags RigidBodyDebugFlag {
+        Null = 0,
+        DrawVolume = 1,
+        DrawAABB = (1 << 1),
+        DrawLinearVelocity = (1 << 2),
+        DrawAngularVelocity = (1 << 3),
+        DrawCollisionContactPoint = (1 << 4),
+        DrawCollisionContactPointVelocity = (1 << 5),
+        DrawCollisionNormalImpulse = (1 << 6),
+        DrawCollisionTangent = (1 << 7),
+        DrawCollisionFrictionImpulse = (1 << 8),
+    }
+}
+
+impl Default for RigidBodyDebugFlags {
+    fn default() -> Self {
+        RigidBodyDebugFlag::Null | RigidBodyDebugFlag::DrawVolume
+    }
+}
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBody {
     pub kind: RigidBodyKind,
@@ -97,6 +121,7 @@ pub struct RigidBody {
     pub aabb: Option<AABB>,
     // Debug state
     pub collision_response: Option<RigidBodyCollisionResponse>,
+    pub debug_flags: RigidBodyDebugFlags,
     // Derived state
     inverse_mass: f32,
     inverse_moment_of_inertia: Mat4,
@@ -194,93 +219,135 @@ impl RigidBody {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        // Visualize rigid body AABB.
+        if self.debug_flags.contains(RigidBodyDebugFlag::DrawAABB) {
+            // Visualize the rigid body's AABB.
 
-        if let Some(aabb) = &self.aabb {
-            renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
+            if let Some(aabb) = &self.aabb {
+                renderer.render_aabb(aabb, Default::default(), color::DARK_GRAY);
+            }
         }
 
         let transform = &self.transform;
 
-        // Visualizes rigid body volume (sphere, circle, etc).
+        let center = *transform.translation();
 
-        match self.kind {
-            RigidBodyKind::Sphere(radius) => {
-                let display_kind = EmptyDisplayKind::Sphere(12);
+        if self.debug_flags.contains(RigidBodyDebugFlag::DrawVolume) {
+            // Visualizes rigid body's geometric volume (sphere, circle, etc).
 
-                let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
+            match self.kind {
+                RigidBodyKind::Sphere(radius) => {
+                    let display_kind = EmptyDisplayKind::Sphere(12);
 
-                renderer.render_empty(&transform_with_radius, display_kind, true, Some(self.color));
-            }
-            RigidBodyKind::Circle(_radius) => {
-                panic!();
-            }
-        };
+                    let transform_with_radius = Mat4::scale_uniform(radius) * *transform.mat();
 
-        let center = *self.transform.translation();
+                    renderer.render_empty(
+                        &transform_with_radius,
+                        display_kind,
+                        true,
+                        Some(self.color),
+                    );
+                }
+                RigidBodyKind::Circle(_radius) => {
+                    panic!();
+                }
+            };
+        }
 
-        // Visualizes rigid body's linear velocity.
+        if self
+            .debug_flags
+            .contains(RigidBodyDebugFlag::DrawLinearVelocity)
+        {
+            // Visualizes the  rigid body's linear velocity.
 
-        let linear_velocity = self.velocity();
+            let linear_velocity = self.velocity();
 
-        renderer.render_line(center, center + linear_velocity, color::LIGHT_GRAY);
+            renderer.render_line(center, center + linear_velocity, color::LIGHT_GRAY);
+        }
 
-        // Visualizes rigid body's angular velocity.
+        if self
+            .debug_flags
+            .contains(RigidBodyDebugFlag::DrawAngularVelocity)
+        {
+            // Visualizes the rigid body's angular velocity.
 
-        let angular_velocity = self.angular_velocity();
+            let angular_velocity = self.angular_velocity();
 
-        renderer.render_line(center, center + angular_velocity, color::LIGHT_GRAY);
-
-        // Visualizes collision impulses.
+            renderer.render_line(center, center + angular_velocity, color::LIGHT_GRAY);
+        }
 
         if let Some(response) = &self.collision_response {
-            // Visualizes contact point.
+            if self
+                .debug_flags
+                .contains(RigidBodyDebugFlag::DrawCollisionContactPoint)
+            {
+                // Visualizes the contact point.
 
-            let scale = Mat4::scale_uniform(0.1);
-            let translation = Mat4::translation(response.contact_point);
-            let transform = scale * translation;
+                let scale = Mat4::scale_uniform(0.1);
+                let translation = Mat4::translation(response.contact_point);
+                let transform = scale * translation;
 
-            renderer.render_empty(
-                &transform,
-                EmptyDisplayKind::Sphere(12),
-                false,
-                Some(color::LIGHT_GRAY),
-            );
-
-            // Visualizes contact point velocity.
-
-            renderer.render_line(
-                response.contact_point,
-                response.contact_point + response.contact_point_velocity.as_normal(),
-                color::LIGHT_GRAY,
-            );
-
-            // Visualizes normal impulse.
-
-            renderer.render_line(
-                response.contact_point,
-                response.contact_point + response.normal_impulse,
-                color::BLUE,
-            );
-
-            // Visualizes the tangent vector chosen for friction response.
-
-            if let Some(tangent) = &response.tangent {
-                renderer.render_line(
-                    response.contact_point,
-                    response.contact_point + tangent,
-                    color::GREEN,
+                renderer.render_empty(
+                    &transform,
+                    EmptyDisplayKind::Sphere(12),
+                    false,
+                    Some(color::LIGHT_GRAY),
                 );
             }
 
-            // Visualizes friction impulse.
+            if self
+                .debug_flags
+                .contains(RigidBodyDebugFlag::DrawCollisionContactPointVelocity)
+            {
+                // Visualizes the contact point's velocity.
 
-            if let Some(friction_impulse) = &response.friction_impulse {
                 renderer.render_line(
                     response.contact_point,
-                    response.contact_point + friction_impulse,
-                    color::RED,
+                    response.contact_point + response.contact_point_velocity.as_normal(),
+                    color::LIGHT_GRAY,
                 );
+            }
+
+            if self
+                .debug_flags
+                .contains(RigidBodyDebugFlag::DrawCollisionNormalImpulse)
+            {
+                // Visualizes the collision response's normal impulse.
+
+                renderer.render_line(
+                    response.contact_point,
+                    response.contact_point + response.normal_impulse,
+                    color::BLUE,
+                );
+            }
+
+            if self
+                .debug_flags
+                .contains(RigidBodyDebugFlag::DrawCollisionTangent)
+            {
+                // Visualizes the tangent vector chosen for the friction response.
+
+                if let Some(tangent) = &response.tangent {
+                    renderer.render_line(
+                        response.contact_point,
+                        response.contact_point + tangent,
+                        color::GREEN,
+                    );
+                }
+            }
+
+            if self
+                .debug_flags
+                .contains(RigidBodyDebugFlag::DrawCollisionFrictionImpulse)
+            {
+                // Visualizes the collision response's friction impulse.
+
+                if let Some(friction_impulse) = &response.friction_impulse {
+                    renderer.render_line(
+                        response.contact_point,
+                        response.contact_point + friction_impulse,
+                        color::RED,
+                    );
+                }
             }
         }
     }
