@@ -92,6 +92,7 @@ pub struct RigidBody {
 impl From<&RigidBody> for RigidBodySimulationState {
     fn from(body: &RigidBody) -> Self {
         RigidBodySimulationState {
+            kind: body.kind,
             inverse_mass: body.inverse_mass,
             inverse_moment_of_inertia: body.inverse_moment_of_inertia,
             position: *body.transform.translation(),

@@ -10,11 +10,14 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
+use super::{RigidBodyKind};
+
 pub type RigidBodyForce = Force<RigidBodySimulationState>;
 pub type DynRigidBodyForce = DynForce<RigidBodySimulationState>;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodySimulationState {
+    pub kind: RigidBodyKind,
     pub inverse_mass: f32,
     pub inverse_moment_of_inertia: Mat4,
     pub position: Vec3,
