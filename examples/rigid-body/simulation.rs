@@ -79,7 +79,7 @@ impl Simulation {
 
         self.rebuild_hash_grid(&new_state);
 
-        self.check_rigid_body_collisions(&state, &mut new_state);
+        self.check_rigid_bodies_collisions(&state, &mut new_state);
 
         // Copies new state back to rigid bodies.
 
@@ -201,7 +201,7 @@ impl Simulation {
         }
     }
 
-    fn check_rigid_body_collisions(
+    fn check_rigid_bodies_collisions(
         &mut self,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
@@ -222,7 +222,7 @@ impl Simulation {
 
                             for sphere_index in cell {
                                 if *sphere_index != current_sphere_index
-                                    && Simulation::did_resolve_collision(
+                                    && Simulation::did_resolve_rigid_bodies_collision(
                                         current_state,
                                         new_state,
                                         current_sphere_index,
@@ -245,7 +245,7 @@ impl Simulation {
 
                             if let Some(cell) = self.hash_grid.map.get(&neighbor_coord) {
                                 for sphere_index in cell {
-                                    if Simulation::did_resolve_collision(
+                                    if Simulation::did_resolve_rigid_bodies_collision(
                                         current_state,
                                         new_state,
                                         current_sphere_index,
@@ -262,7 +262,7 @@ impl Simulation {
         }
     }
 
-    fn did_resolve_collision(
+    fn did_resolve_rigid_bodies_collision(
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
         a: usize,
