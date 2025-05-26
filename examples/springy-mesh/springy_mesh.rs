@@ -28,14 +28,16 @@ bitmask! {
     pub mask SpringyMeshDebugFlags: u32 where flags SpringyMeshDebugFlag {
         Null = 0,
         DrawAABB = 1,
-        DrawPoints = (1 << 1),
-        DrawPointCollisions = (1 << 2),
-        DrawStruts = (1 << 3),
-        DrawStrutEdgeCollisions = (1 << 4),
-        DrawStrutSpringAccelerations = (1 << 5),
-        DrawTorsionalStrutFaceNormals = (1 << 6),
-        DrawTorsionalStrutRotationalForces = (1 << 7),
-        DrawFaceCollisions = (1 << 8),
+        DrawAABBBoundingSphere = (1 << 1),
+        DrawPoints = (1 << 2),
+        DrawPointVelocities = (1 << 3),
+        DrawPointCollisions = (1 << 4),
+        DrawStruts = (1 << 5),
+        DrawStrutEdgeCollisions = (1 << 6),
+        DrawStrutSpringAccelerations = (1 << 7),
+        DrawTorsionalStrutFaceNormals = (1 << 8),
+        DrawTorsionalStrutRotationalForces = (1 << 9),
+        DrawFaceCollisions = (1 << 10),
     }
 }
 
@@ -112,7 +114,30 @@ impl SpringyMesh {
             renderer.render_aabb(&self.aabb, Default::default(), color::DARK_GRAY);
         }
 
-        if self.debug_flags.contains(SpringyMeshDebugFlag::DrawPoints) {
+        if self
+            .debug_flags
+            .contains(SpringyMeshDebugFlag::DrawAABBBoundingSphere)
+        {
+            // Visualizes the mesh's AABB bounding sphere.
+
+            let transform = {
+                let scale = Mat4::scale_uniform(self.aabb.bounding_sphere_radius);
+                let translate = Mat4::translation(self.aabb.center());
+
+                scale * translate
+            };
+
+            renderer.render_empty(
+                &transform,
+                EmptyDisplayKind::Sphere(16),
+                false,
+                Some(color::LIGHT_GRAY),
+            );
+        }
+
+        if self.debug_flags.intersects(
+            SpringyMeshDebugFlag::DrawPoints | SpringyMeshDebugFlag::DrawPointVelocities,
+        ) {
             for point in &self.points {
                 if self.debug_flags.contains(SpringyMeshDebugFlag::DrawPoints) {
                     // Visualizes the point.
@@ -135,6 +160,19 @@ impl SpringyMesh {
                         EmptyDisplayKind::Sphere(12),
                         false,
                         Some(color),
+                    );
+                }
+
+                if self
+                    .debug_flags
+                    .contains(SpringyMeshDebugFlag::DrawPointVelocities)
+                {
+                    // Visualizes the point's velocity.
+
+                    renderer.render_line(
+                        point.position,
+                        point.position + point.velocity,
+                        color::YELLOW,
                     );
                 }
             }
