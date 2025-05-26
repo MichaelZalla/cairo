@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use cairo::{
     color::{self, Color},
     geometry::{
+        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
         intersect::{intersect_capsule_plane, intersect_moving_spheres},
         primitives::sphere::Sphere,
     },
@@ -28,10 +29,7 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-use crate::{
-    hash_grid::{GridSpaceCoordinate, HashGrid},
-    integration::system_dynamics_function,
-};
+use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
