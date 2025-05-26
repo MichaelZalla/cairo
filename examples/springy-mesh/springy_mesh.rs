@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use bitmask::bitmask;
+
 use cairo::{
     animation::lerp,
     color,
@@ -21,6 +23,30 @@ use cairo::{
 
 use crate::strut::{Edge, Strut, PARTICLE_MASS};
 
+bitmask! {
+    #[derive(Debug)]
+    pub mask SpringyMeshDebugFlags: u32 where flags SpringyMeshDebugFlag {
+        Null = 0,
+        DrawAABB = 1,
+        DrawPoints = (1 << 1),
+        DrawPointCollisions = (1 << 2),
+        DrawStruts = (1 << 3),
+        DrawStrutEdgeCollisions = (1 << 4),
+        DrawStrutSpringAccelerations = (1 << 5),
+        DrawTorsionalStrutFaceNormals = (1 << 6),
+        DrawTorsionalStrutRotationalForces = (1 << 7),
+        DrawFaceCollisions = (1 << 8),
+    }
+}
+
+impl Default for SpringyMeshDebugFlags {
+    fn default() -> Self {
+        SpringyMeshDebugFlag::Null
+            | SpringyMeshDebugFlag::DrawPoints
+            | SpringyMeshDebugFlag::DrawStruts
+    }
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct SpringyMesh {
     pub material: PhysicsMaterial,
@@ -29,6 +55,7 @@ pub struct SpringyMesh {
     pub state_index_offset: usize,
     pub triangles: Vec<Triangle>,
     pub aabb: AABB,
+    pub debug_flags: SpringyMeshDebugFlags,
 }
 
 impl FromStateVector for SpringyMesh {
@@ -79,102 +106,164 @@ impl SpringyMesh {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        // Visualizes the mesh AABB.
+        if self.debug_flags.contains(SpringyMeshDebugFlag::DrawAABB) {
+            // Visualizes the mesh's AABB.
 
-        renderer.render_aabb(&self.aabb, Default::default(), color::DARK_GRAY);
-
-        // Visualizes the mesh's points and point collisions.
-
-        for point in &self.points {
-            let transform = Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
-
-            let color = if point.did_collide {
-                color::RED
-            } else {
-                color::ORANGE
-            };
-
-            renderer.render_empty(&transform, EmptyDisplayKind::Sphere(12), false, Some(color));
+            renderer.render_aabb(&self.aabb, Default::default(), color::DARK_GRAY);
         }
 
-        // Visualizes the mesh's struts.
+        if self.debug_flags.contains(SpringyMeshDebugFlag::DrawPoints) {
+            for point in &self.points {
+                if self.debug_flags.contains(SpringyMeshDebugFlag::DrawPoints) {
+                    // Visualizes the point.
 
-        for strut in &self.struts {
-            // Visualizes the strut's edge.
+                    let transform =
+                        Mat4::scale(vec3::ONES * 0.1) * Mat4::translation(point.position);
 
-            let start = self.points[strut.edge.points.0].position;
-            let end = self.points[strut.edge.points.1].position;
+                    let color = if point.did_collide
+                        && self
+                            .debug_flags
+                            .contains(SpringyMeshDebugFlag::DrawPointCollisions)
+                    {
+                        color::RED
+                    } else {
+                        color::ORANGE
+                    };
 
-            let color = if strut.edge.did_collide {
-                color::RED
-            } else {
-                strut.edge.color
-            };
+                    renderer.render_empty(
+                        &transform,
+                        EmptyDisplayKind::Sphere(12),
+                        false,
+                        Some(color),
+                    );
+                }
+            }
+        }
 
-            renderer.render_line(start, end, color);
-
-            // Visualizes the strut's spring accelerations.
-
-            renderer.render_line(start, start + strut.spring_acceleration / 10.0, color::BLUE);
-            renderer.render_line(end, end - strut.spring_acceleration / 10.0, color::RED);
-
-            // Visualizes the strut's torsional spring forces.
-
-            if let Some(connected_points) = &strut.edge.connected_points {
+        if self.debug_flags.intersects(
+            SpringyMeshDebugFlag::DrawStruts
+                | SpringyMeshDebugFlag::DrawStrutEdgeCollisions
+                | SpringyMeshDebugFlag::DrawStrutSpringAccelerations
+                | SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
+                | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces
+                | SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
+                | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces,
+        ) {
+            for strut in &self.struts {
                 let start = self.points[strut.edge.points.0].position;
                 let end = self.points[strut.edge.points.1].position;
 
-                let h = (end - start).as_normal();
+                if self.debug_flags.contains(SpringyMeshDebugFlag::DrawStruts) {
+                    // Visualizes the strut.
 
-                let left = self.points[connected_points.0].position;
-                let right = self.points[connected_points.1].position;
+                    let color = if strut.edge.did_collide
+                        && self
+                            .debug_flags
+                            .contains(SpringyMeshDebugFlag::DrawStrutEdgeCollisions)
+                    {
+                        color::RED
+                    } else {
+                        strut.edge.color
+                    };
 
-                let normals =
-                    Strut::get_surface_normals_edge_points(&strut.edge, &self.points).unwrap();
-
-                for i in 0..=1 {
-                    let c = if i == 0 { &left } else { &right };
-
-                    let start_c = *c - start;
-
-                    let r_c = start_c - h * start_c.dot(h);
-
-                    let midpoint_c = lerp(*c, *c - r_c, 0.5);
-
-                    let normal_c = if i == 0 { normals.0 } else { normals.1 };
-
-                    // Visualize normals of the faces formed by start, end, and the connected point.
-
-                    renderer.render_line(midpoint_c, midpoint_c + normal_c, color::GREEN);
+                    renderer.render_line(start, end, color);
                 }
 
-                // Visualize the rotational forces applied to start, end, left, and right.
+                if self
+                    .debug_flags
+                    .contains(SpringyMeshDebugFlag::DrawStrutSpringAccelerations)
+                {
+                    // Visualizes the strut's spring accelerations.
 
-                for (i, p) in [&start, &end, &left, &right].iter().enumerate() {
-                    renderer.render_line(**p, **p + (strut.rotational_forces[i]), color::ORANGE);
+                    renderer.render_line(
+                        start,
+                        start + strut.spring_acceleration / 10.0,
+                        color::BLUE,
+                    );
+                    renderer.render_line(end, end - strut.spring_acceleration / 10.0, color::RED);
+                }
+
+                // Visualizes the strut's torsional spring forces.
+
+                if let (Some(connected_points), true) = (
+                    &strut.edge.connected_points,
+                    self.debug_flags.intersects(
+                        SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
+                            | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces,
+                    ),
+                ) {
+                    let h = (end - start).as_normal();
+
+                    let left = self.points[connected_points.0].position;
+                    let right = self.points[connected_points.1].position;
+
+                    if self
+                        .debug_flags
+                        .contains(SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals)
+                    {
+                        let normals =
+                            Strut::get_surface_normals_edge_points(&strut.edge, &self.points)
+                                .unwrap();
+
+                        for i in 0..=1 {
+                            let c = if i == 0 { &left } else { &right };
+
+                            let start_c = *c - start;
+
+                            let r_c = start_c - h * start_c.dot(h);
+
+                            let midpoint_c = lerp(*c, *c - r_c, 0.5);
+
+                            let normal_c = if i == 0 { normals.0 } else { normals.1 };
+
+                            // Visualize normals of the faces formed by start, end, and the connected point.
+
+                            renderer.render_line(midpoint_c, midpoint_c + normal_c, color::GREEN);
+                        }
+                    }
+
+                    if self
+                        .debug_flags
+                        .contains(SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces)
+                    {
+                        // Visualize the rotational forces applied to start, end, left, and right.
+
+                        for (i, p) in [&start, &end, &left, &right].iter().enumerate() {
+                            renderer.render_line(
+                                **p,
+                                **p + (strut.rotational_forces[i]),
+                                color::ORANGE,
+                            );
+                        }
+                    }
                 }
             }
         }
 
         // Visualize face collisions.
 
-        for tri in &self.triangles {
-            if let Some(barycentric) = &tri.collision_point {
-                let vertex_indices = (tri.vertices[0], tri.vertices[1], tri.vertices[2]);
+        if self
+            .debug_flags
+            .contains(SpringyMeshDebugFlag::DrawFaceCollisions)
+        {
+            for tri in &self.triangles {
+                if let Some(barycentric) = &tri.collision_point {
+                    let vertex_indices = (tri.vertices[0], tri.vertices[1], tri.vertices[2]);
 
-                let vertices = (
-                    &self.points[vertex_indices.0].position,
-                    &self.points[vertex_indices.1].position,
-                    &self.points[vertex_indices.2].position,
-                );
+                    let vertices = (
+                        &self.points[vertex_indices.0].position,
+                        &self.points[vertex_indices.1].position,
+                        &self.points[vertex_indices.2].position,
+                    );
 
-                let collision_point = *vertices.0 * barycentric.x
-                    + *vertices.1 * barycentric.y
-                    + *vertices.2 * barycentric.z;
+                    let collision_point = *vertices.0 * barycentric.x
+                        + *vertices.1 * barycentric.y
+                        + *vertices.2 * barycentric.z;
 
-                renderer.render_line(*vertices.0, collision_point, color::RED);
-                renderer.render_line(*vertices.1, collision_point, color::RED);
-                renderer.render_line(*vertices.2, collision_point, color::RED);
+                    renderer.render_line(*vertices.0, collision_point, color::RED);
+                    renderer.render_line(*vertices.1, collision_point, color::RED);
+                    renderer.render_line(*vertices.2, collision_point, color::RED);
+                }
             }
         }
     }
