@@ -79,6 +79,35 @@ impl RigidBodyKind {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
+pub enum RigidBodyStaticContactKind {
+    #[default]
+    Resting,
+    Sliding,
+}
+
+impl fmt::Display for RigidBodyStaticContactKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Resting => "Resting",
+                Self::Sliding => "Sliding",
+            }
+        )
+    }
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub struct RigidBodyStaticContact {
+    pub kind: RigidBodyStaticContactKind,
+    pub point: Vec3,
+    pub normal: Vec3,
+    pub tangent: Vec3,
+    pub bitangent: Vec3,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
 pub struct RigidBodyCollisionResponse {
     pub contact_point: Vec3,
     pub contact_point_velocity: Vec3,
@@ -119,6 +148,7 @@ pub struct RigidBody {
     pub angular_momentum: Vec3,
     pub color: Color,
     pub aabb: Option<AABB>,
+    pub static_contact: Option<RigidBodyStaticContact>,
     // Debug state
     pub collision_response: Option<RigidBodyCollisionResponse>,
     pub debug_flags: RigidBodyDebugFlags,
@@ -137,6 +167,7 @@ impl From<&RigidBody> for RigidBodySimulationState {
             orientation: *body.transform.rotation(),
             linear_momentum: body.linear_momentum,
             angular_momentum: body.angular_momentum,
+            static_contact: body.static_contact,
         }
     }
 }
@@ -210,6 +241,8 @@ impl RigidBody {
 
         self.angular_momentum = state.angular_momentum;
 
+        self.static_contact = state.static_contact;
+        
         if let RigidBodyKind::Sphere(radius) = self.kind {
             if let Some(aabb) = &mut self.aabb {
                 aabb.min = state.position - vec3::ONES * radius;

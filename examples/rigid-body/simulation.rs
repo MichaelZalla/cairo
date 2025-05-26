@@ -5,7 +5,7 @@ use cairo::{
     geometry::{
         accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
         intersect::{intersect_capsule_plane, intersect_moving_spheres},
-        primitives::sphere::Sphere,
+        primitives::{plane::Plane, sphere::Sphere},
     },
     matrix::Mat4,
     physics::{
@@ -17,7 +17,7 @@ use cairo::{
             force::gravity::GRAVITY_RIGID_BODY_FORCE,
             rigid_body::{
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
-                RigidBody, RigidBodyKind,
+                RigidBody, RigidBodyKind, RigidBodyStaticContact, RigidBodyStaticContactKind,
             },
         },
     },
@@ -103,6 +103,10 @@ impl Simulation {
             let current_body_state = &current_state.0[i];
             let new_body_state = &mut new_state.0[i];
 
+            // Resets resting or sliding contact for this tick.
+
+            new_body_state.static_contact.take();
+
             let start_position = current_body_state.position;
             let start_velocity = current_body_state.velocity();
 
@@ -126,6 +130,18 @@ impl Simulation {
                 {
                     if t > 1.0 {
                         // Ignores potential (future) intersection.
+
+                        // Checks for any static contact.
+
+                        if let Some(contact) = Self::get_static_contact(
+                            &collider.plane,
+                            &new_body_state.position,
+                            &new_body_state.velocity(),
+                            radius,
+                        ) {
+                            new_body_state.static_contact.replace(contact);
+                        }
+
                         continue;
                     }
 
@@ -144,6 +160,17 @@ impl Simulation {
                         if signed_distance_from_rigid_body_to_plane <= radius {
                             new_body_state.position +=
                                 normal * (radius - signed_distance_from_rigid_body_to_plane + 0.01);
+                        }
+
+                        // Checks for any static contact.
+
+                        if let Some(contact) = Self::get_static_contact(
+                            &collider.plane,
+                            &new_body_state.position,
+                            &new_body_state.velocity(),
+                            radius,
+                        ) {
+                            new_body_state.static_contact.replace(contact);
                         }
 
                         continue;
@@ -194,8 +221,58 @@ impl Simulation {
 
                     sphere.collision_response.replace(collision_response);
                 }
+
+                // Checks for any static contact.
+
+                if let Some(contact) = Self::get_static_contact(
+                    &collider.plane,
+                    &new_body_state.position,
+                    &new_body_state.velocity(),
+                    radius,
+                ) {
+                    new_body_state.static_contact.replace(contact);
+                }
             }
         }
+    }
+
+    fn get_static_contact(
+        plane: &Plane,
+        position: &Vec3,
+        velocity: &Vec3,
+        radius: f32,
+    ) -> Option<RigidBodyStaticContact> {
+        let signed_distance_to_plane = plane.get_signed_distance(position);
+
+        if signed_distance_to_plane < radius + 0.001 {
+            let point = position - plane.normal * radius;
+
+            let velocity_along_plane_normal = plane.normal * velocity.dot(plane.normal);
+            let velocity_along_plane_normal_mag = velocity_along_plane_normal.mag();
+
+            if velocity_along_plane_normal_mag < 0.5 {
+                let (normal, tangent, bitangent) = plane.normal.basis();
+
+                let velocity_along_plane_tangent = velocity - velocity_along_plane_normal;
+                let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
+
+                let kind = if velocity_along_plane_tangent_mag < 0.5 {
+                    RigidBodyStaticContactKind::Resting
+                } else {
+                    RigidBodyStaticContactKind::Sliding
+                };
+
+                return Some(RigidBodyStaticContact {
+                    kind,
+                    point,
+                    normal,
+                    tangent,
+                    bitangent,
+                });
+            }
+        }
+
+        None
     }
 
     fn check_rigid_bodies_collisions(
