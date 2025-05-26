@@ -4,13 +4,13 @@
 			"type": "lldb",
 			"request": "attach",
 			"name": "Attach",
-			"program": "${workspaceFolder}/target/debug/examples/scenegraph"
+			"program": "${workspaceFolder}/target/debug/examples/rigid-body"
 		},
 		{
 			"type": "lldb",
 			"request": "launch",
 			"name": "Launch",
-			"program": "${workspaceFolder}/target/debug/examples/scenegraph",
+			"program": "${workspaceFolder}/target/debug/examples/rigid-body",
 			"args": [],
 			"cwd": "${workspaceFolder}",
 			"sourceMap": {},
@@ -20,6 +20,17 @@
 			"env": {
 				"RUST_BACKTRACE": "1"
 			}
-		}
+		},
+		{
+			"name": "(Windows) Launch",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/target/debug/examples/rigid-body",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"externalConsole": true
+		},
 	]
 }
