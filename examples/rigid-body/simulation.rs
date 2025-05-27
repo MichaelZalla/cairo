@@ -104,12 +104,7 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
         for i in 0..self.rigid_bodies.len() {
-            let sphere = &mut self.rigid_bodies[i];
-
-            let radius = match sphere.kind {
-                RigidBodyKind::Sphere(radius) => radius,
-                _ => panic!(),
-            };
+            let body = &mut self.rigid_bodies[i];
 
             let current_body_state = &current_state.0[i];
             let new_body_state = &mut new_state.0[i];
@@ -126,6 +121,11 @@ impl Simulation {
             let end_linear_velocity = new_body_state.velocity();
             let end_angular_velocity = new_body_state.angular_velocity();
 
+            let minimum_distance_to_plane = match body.kind {
+                RigidBodyKind::Sphere(radius) => radius,
+                _ => panic!(),
+            };
+
             for collider in &self.static_plane_colliders {
                 let normal = collider.plane.normal;
 
@@ -136,9 +136,17 @@ impl Simulation {
                     continue;
                 }
 
-                if let Some((t, contact_point)) =
-                    intersect_capsule_plane(start_position, end_position, radius, &collider.plane)
-                {
+                let intersection = match body.kind {
+                    RigidBodyKind::Sphere(radius) => intersect_capsule_plane(
+                        start_position,
+                        end_position,
+                        radius,
+                        &collider.plane,
+                    ),
+                    _ => panic!("Unsupported rigid body kind!"),
+                };
+
+                if let Some((t, contact_point)) = intersection {
                     if t > 1.0 {
                         // Ignores potential (future) intersection.
 
@@ -148,7 +156,7 @@ impl Simulation {
                             &collider.plane,
                             &new_body_state.position,
                             &new_body_state.velocity(),
-                            radius,
+                            minimum_distance_to_plane,
                         ) {
                             new_body_state.linear_momentum -= collider.plane.normal
                                 * new_body_state.linear_momentum.dot(collider.plane.normal);
@@ -171,9 +179,10 @@ impl Simulation {
                         let signed_distance_from_rigid_body_to_plane =
                             collider.plane.get_signed_distance(&end_position);
 
-                        if signed_distance_from_rigid_body_to_plane <= radius {
-                            new_body_state.position +=
-                                normal * (radius - signed_distance_from_rigid_body_to_plane + 0.01);
+                        if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
+                            new_body_state.position += normal
+                                * (minimum_distance_to_plane
+                                    - signed_distance_from_rigid_body_to_plane);
                         }
 
                         // Checks for any static contact.
@@ -182,7 +191,7 @@ impl Simulation {
                             &collider.plane,
                             &new_body_state.position,
                             &new_body_state.velocity(),
-                            radius,
+                            minimum_distance_to_plane,
                         ) {
                             new_body_state.linear_momentum -= collider.plane.normal
                                 * new_body_state.linear_momentum.dot(collider.plane.normal);
@@ -222,21 +231,21 @@ impl Simulation {
                     let position_at_collision =
                         start_position + start_velocity * time_before_collision;
 
-                    let position_after_collision = position_at_collision
-                        + new_body_state.velocity() * time_after_collision
-                        + normal * 0.01;
+                    let position_after_collision =
+                        position_at_collision + new_body_state.velocity() * time_after_collision;
 
                     new_body_state.position = position_after_collision;
 
                     let signed_distance_from_rigid_body_to_plane =
                         collider.plane.get_signed_distance(&new_body_state.position);
 
-                    if signed_distance_from_rigid_body_to_plane <= radius {
-                        new_body_state.position +=
-                            normal * (radius - signed_distance_from_rigid_body_to_plane + 0.01);
+                    if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
+                        new_body_state.position += normal
+                            * (minimum_distance_to_plane
+                                - signed_distance_from_rigid_body_to_plane);
                     }
 
-                    sphere.collision_response.replace(collision_response);
+                    body.collision_response.replace(collision_response);
                 }
 
                 // Checks for any static contact.
@@ -245,7 +254,7 @@ impl Simulation {
                     &collider.plane,
                     &new_body_state.position,
                     &new_body_state.velocity(),
-                    radius,
+                    minimum_distance_to_plane,
                 ) {
                     new_body_state.linear_momentum -= collider.plane.normal
                         * new_body_state.linear_momentum.dot(collider.plane.normal);
@@ -260,15 +269,15 @@ impl Simulation {
         plane: &Plane,
         position: &Vec3,
         velocity: &Vec3,
-        radius: f32,
+        minimum_distance_to_plane: f32,
     ) -> Option<RigidBodyStaticContact> {
         static CONTACT_DISTANCE_THRESHOLD: f32 = 0.001;
         static RESTING_VELOCITY_THRESHOLD: f32 = 0.5;
 
         let signed_distance_to_plane = plane.get_signed_distance(position);
 
-        if signed_distance_to_plane <= radius + CONTACT_DISTANCE_THRESHOLD {
-            let point = position - plane.normal * radius;
+        if signed_distance_to_plane <= minimum_distance_to_plane + CONTACT_DISTANCE_THRESHOLD {
+            let point = position - plane.normal * minimum_distance_to_plane;
 
             let velocity_along_plane_normal = plane.normal * velocity.dot(plane.normal);
             let velocity_along_plane_normal_mag = velocity_along_plane_normal.mag();
