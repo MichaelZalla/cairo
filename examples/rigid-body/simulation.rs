@@ -569,7 +569,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
             let mut sphere = RigidBody::new(RigidBodyKind::Sphere(radius), mass, center);
 
             let velocity = {
-                let speed = sampler.sample_range_uniform(0.0, 10.0);
+                let speed = sampler.sample_range_uniform(0.0, 4.0);
                 let direction = sampler.sample_direction_uniform();
 
                 direction * speed
@@ -578,6 +578,12 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
             sphere.color = Color::from(&mut *sampler);
 
             sphere.linear_momentum = velocity * sphere.mass;
+
+            let rotation_axis = sampler.sample_direction_uniform();
+
+            let rotation_speed = sampler.sample_range_uniform(-30.0, 30.0);
+
+            sphere.angular_momentum = rotation_axis * rotation_speed;
 
             spheres.push(sphere);
         }
