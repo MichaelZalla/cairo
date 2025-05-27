@@ -262,21 +262,24 @@ impl Simulation {
         velocity: &Vec3,
         radius: f32,
     ) -> Option<RigidBodyStaticContact> {
+        static CONTACT_DISTANCE_THRESHOLD: f32 = 0.001;
+        static RESTING_VELOCITY_THRESHOLD: f32 = 0.5;
+
         let signed_distance_to_plane = plane.get_signed_distance(position);
 
-        if signed_distance_to_plane < radius + 0.001 {
+        if signed_distance_to_plane <= radius + CONTACT_DISTANCE_THRESHOLD {
             let point = position - plane.normal * radius;
 
             let velocity_along_plane_normal = plane.normal * velocity.dot(plane.normal);
             let velocity_along_plane_normal_mag = velocity_along_plane_normal.mag();
 
-            if velocity_along_plane_normal_mag < 0.5 {
+            if velocity_along_plane_normal_mag <= RESTING_VELOCITY_THRESHOLD {
                 let (normal, tangent, bitangent) = plane.normal.basis();
 
                 let velocity_along_plane_tangent = velocity - velocity_along_plane_normal;
                 let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
 
-                let kind = if velocity_along_plane_tangent_mag < 0.5 {
+                let kind = if velocity_along_plane_tangent_mag <= RESTING_VELOCITY_THRESHOLD {
                     RigidBodyStaticContactKind::Resting
                 } else {
                     RigidBodyStaticContactKind::Sliding
