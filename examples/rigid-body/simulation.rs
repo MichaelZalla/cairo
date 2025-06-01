@@ -329,40 +329,64 @@ impl Simulation {
         for current_body_index in 0..self.rigid_bodies.len() {
             let body = &new_state.0[current_body_index];
 
-            let body_coordinate =
-                GridSpaceCoordinate::from((body, self.hash_grid.strategy, self.hash_grid.scale));
+            let (strategy, scale) = (self.hash_grid.strategy, self.hash_grid.scale);
 
-            for x_offset in -1..=1 {
-                for y_offset in -1..=1 {
-                    for z_offset in -1..=1 {
-                        // Checks current cell and neighborings cells.
+            let body_coordinate = GridSpaceCoordinate::from((body, strategy, scale));
 
-                        let offset = GridSpaceCoordinate {
-                            x: x_offset,
-                            y: y_offset,
-                            z: z_offset,
-                        };
+            static NEIGHBORS_UP_FORWARD_RIGHT: [(isize, isize, isize); 14] = [
+                // Center
+                (0, 0, 0),
+                // Top far row
+                (-1, 1, -1),
+                (0, 1, -1),
+                (1, 1, -1),
+                // Top middle row
+                (-1, 1, 0),
+                (0, 1, 0),
+                (1, 1, 0),
+                // Top near row
+                (-1, 1, 1),
+                (0, 1, 1),
+                (1, 1, 1),
+                // Middle far right
+                (1, 0, -1),
+                // Middle right
+                (1, 0, 0),
+                // Middle near right
+                (1, 0, 1),
+                // Middle near
+                (0, 0, 1),
+            ];
 
-                        let offset_coordinate = body_coordinate + offset;
+            let neighbors = &NEIGHBORS_UP_FORWARD_RIGHT;
 
-                        if let Some(cell) = self.hash_grid.map.get(&offset_coordinate) {
-                            for neighbor_body_index in cell {
-                                if *neighbor_body_index == current_body_index {
-                                    // Avoids a test for self-collision.
+            for (x_offset, y_offset, z_offset) in neighbors.iter() {
+                // Checks current cell and neighborings cells.
 
-                                    continue;
-                                }
+                let offset = GridSpaceCoordinate {
+                    x: *x_offset,
+                    y: *y_offset,
+                    z: *z_offset,
+                };
 
-                                if Simulation::did_resolve_rigid_bodies_collision(
-                                    current_state,
-                                    new_state,
-                                    current_body_index,
-                                    *neighbor_body_index,
-                                    material,
-                                ) {
-                                    // sphere.collision_response.replace(...);
-                                }
-                            }
+                let offset_coordinate = body_coordinate + offset;
+
+                if let Some(cell) = self.hash_grid.map.get(&offset_coordinate) {
+                    for neighbor_body_index in cell {
+                        if *neighbor_body_index == current_body_index {
+                            // Avoids a test for self-collision.
+
+                            continue;
+                        }
+
+                        if Simulation::did_resolve_rigid_bodies_collision(
+                            current_state,
+                            new_state,
+                            current_body_index,
+                            *neighbor_body_index,
+                            material,
+                        ) {
+                            // sphere.collision_response.replace(...);
                         }
                     }
                 }
