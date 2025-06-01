@@ -224,7 +224,7 @@ impl Simulation {
                         let mass = 1.0 / new_body_state.inverse_mass;
 
                         let accumulated_linear_velocity =
-                            linear_acceleration * 2.0 * time_after_collision;
+                            linear_acceleration * time_after_collision;
 
                         new_body_state.linear_momentum -= accumulated_linear_velocity * mass;
                     }

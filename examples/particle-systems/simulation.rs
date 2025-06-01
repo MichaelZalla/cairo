@@ -136,7 +136,7 @@ impl<const N: usize> Simulation<N> {
                     let time_before_collision = h * segment.t;
                     let time_after_collision = h - time_before_collision;
 
-                    let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+                    let accumulated_velocity = acceleration * time_after_collision;
 
                     end_velocity -= accumulated_velocity;
 

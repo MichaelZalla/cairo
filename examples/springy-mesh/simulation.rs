@@ -212,7 +212,7 @@ impl Simulation {
                             let time_before_collision = h * f;
                             let time_after_collision = h - time_before_collision;
 
-                            let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+                            let accumulated_velocity = acceleration * time_after_collision;
 
                             end_velocity -= accumulated_velocity;
                         }
@@ -471,7 +471,7 @@ impl Simulation {
                 {
                     let acceleration = derivative.data[a_point_index + n];
 
-                    let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+                    let accumulated_velocity = acceleration * time_after_collision;
 
                     new_state.data[a_point_index + n] -= accumulated_velocity;
                 }
@@ -481,7 +481,7 @@ impl Simulation {
                 for i in [i0, i1, i2] {
                     let acceleration = derivative.data[b_points_start_index + i + n];
 
-                    let accumulated_velocity = acceleration * 2.0 * time_after_collision;
+                    let accumulated_velocity = acceleration * time_after_collision;
 
                     new_state.data[b_points_start_index + i + n] -= accumulated_velocity;
                 }
