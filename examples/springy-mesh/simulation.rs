@@ -6,7 +6,7 @@ use std::{
 use cairo::{
     animation::lerp,
     geometry::{
-        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
+        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid, HashGridInsertionStrategy},
         intersect::{intersect_line_segment_plane, intersect_line_segment_triangle},
         primitives::{
             aabb::AABB,
@@ -236,7 +236,8 @@ impl Simulation {
     }
 
     fn make_hash_grid(&mut self, new_state: &StateVector) -> HashGrid {
-        let mut hash_grid = HashGrid::new(self.hash_grid.scale);
+        let mut hash_grid =
+            HashGrid::new(HashGridInsertionStrategy::default(), self.hash_grid.scale);
 
         hash_grid.map.clear();
 
@@ -905,7 +906,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         meshes,
         forces,
         static_plane_colliders,
-        hash_grid: HashGrid::new(SIDE_LENGTH),
+        hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), SIDE_LENGTH),
         ..Default::default()
     }
 }

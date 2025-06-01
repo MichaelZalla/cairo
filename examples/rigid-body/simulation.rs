@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use cairo::{
     color::{self, Color},
     geometry::{
-        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
+        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid, HashGridInsertionStrategy},
         intersect::{intersect_capsule_plane, intersect_moving_spheres},
         primitives::{plane::Plane, sphere::Sphere},
     },
@@ -329,8 +329,11 @@ impl Simulation {
         for current_sphere_index in 0..self.rigid_bodies.len() {
             let sphere_state = &new_state.0[current_sphere_index];
 
-            let current_grid_coord =
-                GridSpaceCoordinate::from((sphere_state, self.hash_grid.scale));
+            let current_grid_coord = GridSpaceCoordinate::from((
+                sphere_state,
+                self.hash_grid.strategy,
+                self.hash_grid.scale,
+            ));
 
             for x_offset in -1..=1 {
                 for y_offset in -1..=1 {
@@ -454,7 +457,9 @@ impl Simulation {
         self.hash_grid.map.clear();
 
         for (i, sphere_state) in new_state.0.iter().enumerate() {
-            let coord = GridSpaceCoordinate::from((sphere_state, self.hash_grid.scale));
+            let (strategy, scale) = (self.hash_grid.strategy, self.hash_grid.scale);
+
+            let coord = GridSpaceCoordinate::from((sphere_state, strategy, scale));
 
             match self.hash_grid.map.get_mut(&coord) {
                 Some(list) => {
@@ -652,6 +657,9 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        hash_grid: HashGrid::new(MAX_SPHERE_RADIUS * 2.0),
+        hash_grid: HashGrid::new(
+            HashGridInsertionStrategy::default(),
+            MAX_SPHERE_RADIUS * 2.0,
+        ),
     }
 }

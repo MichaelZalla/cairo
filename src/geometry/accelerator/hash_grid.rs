@@ -1,9 +1,6 @@
 use std::{collections::HashMap, ops};
 
-use crate::{
-    physics::simulation::rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
-    vec::vec3::Vec3,
-};
+use crate::{geometry::primitives::aabb::Bounded, vec::vec3::Vec3};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct GridSpaceCoordinate {
@@ -36,23 +33,49 @@ impl From<(Vec3, f32)> for GridSpaceCoordinate {
     }
 }
 
-impl From<(&RigidBodySimulationState, f32)> for GridSpaceCoordinate {
-    fn from(state_and_scale: (&RigidBodySimulationState, f32)) -> Self {
-        let (state, scale) = state_and_scale;
+impl From<(GridSpaceCoordinate, f32)> for Vec3 {
+    fn from(val: (GridSpaceCoordinate, f32)) -> Self {
+        let (coord, scale) = &val;
 
-        Self::from((state.position, scale))
+        Vec3 {
+            x: coord.x as f32 * scale,
+            y: coord.y as f32 * scale,
+            z: coord.z as f32 * scale,
+        }
     }
+}
+
+impl<T: Bounded> From<(&T, HashGridInsertionStrategy, f32)> for GridSpaceCoordinate {
+    fn from(data: (&T, HashGridInsertionStrategy, f32)) -> Self {
+        let (bounded, strategy, scale) = data;
+
+        let aabb = bounded.aabb();
+
+        let point_of_interest = match strategy {
+            HashGridInsertionStrategy::AABBCenter => aabb.center(),
+        };
+
+        Self::from((point_of_interest, scale))
+    }
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub enum HashGridInsertionStrategy {
+    #[default]
+    AABBCenter,
 }
 
 #[derive(Debug, Clone)]
 pub struct HashGrid {
     pub scale: f32,
     pub map: HashMap<GridSpaceCoordinate, Vec<usize>>,
+    pub strategy: HashGridInsertionStrategy,
 }
 
 impl Default for HashGrid {
     fn default() -> Self {
         Self {
+            strategy: Default::default(),
             scale: 1.0,
             map: Default::default(),
         }
@@ -60,8 +83,9 @@ impl Default for HashGrid {
 }
 
 impl HashGrid {
-    pub fn new(scale: f32) -> Self {
+    pub fn new(strategy: HashGridInsertionStrategy, scale: f32) -> Self {
         Self {
+            strategy,
             scale,
             ..Default::default()
         }

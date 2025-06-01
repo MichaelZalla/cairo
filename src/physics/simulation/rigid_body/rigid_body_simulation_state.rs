@@ -1,13 +1,17 @@
 use std::ops;
 
 use crate::{
+    geometry::primitives::aabb::{Bounded, AABB},
     matrix::Mat4,
     physics::simulation::{
         force::{DynForce, Force},
         physical_constants::EARTH_GRAVITY_ACCELERATION,
     },
     transform::quaternion::Quaternion,
-    vec::{vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 use super::{RigidBodyKind, RigidBodyStaticContact};
@@ -77,6 +81,19 @@ impl ops::Mul<f32> for RigidBodySimulationState {
         result.angular_momentum *= scalar;
 
         result
+    }
+}
+
+impl Bounded for RigidBodySimulationState {
+    fn aabb(&self) -> AABB {
+        match self.kind {
+            RigidBodyKind::Circle(_) => panic!("Cannot produce an AABB from a 2D circle!"),
+            RigidBodyKind::Sphere(radius) => {
+                let offset = vec3::ONES * radius;
+
+                AABB::from((self.position - offset, self.position + offset))
+            }
+        }
     }
 }
 

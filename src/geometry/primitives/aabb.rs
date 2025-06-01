@@ -220,6 +220,10 @@ impl AABB {
     }
 }
 
+pub trait Bounded {
+    fn aabb(&self) -> AABB;
+}
+
 fn get_min_max_for_vertices(vertices: &[Vec3]) -> (Vec3, Vec3) {
     let mut min = vec3::MAX;
     let mut max = vec3::MIN;
