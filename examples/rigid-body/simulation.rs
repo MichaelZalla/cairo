@@ -326,14 +326,11 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
         material: &PhysicsMaterial,
     ) {
-        for current_sphere_index in 0..self.rigid_bodies.len() {
-            let sphere_state = &new_state.0[current_sphere_index];
+        for current_body_index in 0..self.rigid_bodies.len() {
+            let body = &new_state.0[current_body_index];
 
-            let current_grid_coord = GridSpaceCoordinate::from((
-                sphere_state,
-                self.hash_grid.strategy,
-                self.hash_grid.scale,
-            ));
+            let body_coordinate =
+                GridSpaceCoordinate::from((body, self.hash_grid.strategy, self.hash_grid.scale));
 
             for x_offset in -1..=1 {
                 for y_offset in -1..=1 {
@@ -346,11 +343,11 @@ impl Simulation {
                             z: z_offset,
                         };
 
-                        let current_cell_coord = current_grid_coord + offset;
+                        let offset_coordinate = body_coordinate + offset;
 
-                        if let Some(current_cell) = self.hash_grid.map.get(&current_cell_coord) {
-                            for sphere_index in current_cell {
-                                if *sphere_index == current_sphere_index {
+                        if let Some(cell) = self.hash_grid.map.get(&offset_coordinate) {
+                            for neighbor_body_index in cell {
+                                if *neighbor_body_index == current_body_index {
                                     // Avoids a test for self-collision.
 
                                     continue;
@@ -359,8 +356,8 @@ impl Simulation {
                                 if Simulation::did_resolve_rigid_bodies_collision(
                                     current_state,
                                     new_state,
-                                    current_sphere_index,
-                                    *sphere_index,
+                                    current_body_index,
+                                    *neighbor_body_index,
                                     material,
                                 ) {
                                     // sphere.collision_response.replace(...);
