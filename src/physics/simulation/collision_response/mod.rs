@@ -298,10 +298,8 @@ pub fn resolve_rigid_body_plane_collision(
         panic!()
     }
 
-    let inverse_moment_of_inertia_world_space = state.inverse_moment_of_inertia_world_space();
-
     let change_in_angular_velocity_normalized = /* j * */
-        r.cross(plane_normal) * inverse_moment_of_inertia_world_space;
+        r.cross(plane_normal) * state.inverse_moment_of_inertia_world_space();
 
     let change_in_angular_velocity_at_contact_point_normalized = /* j * */
         change_in_angular_velocity_normalized.cross(r);
