@@ -34,7 +34,13 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
-static PHYSICS_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
+    static_friction: PI / 4.0,
+    dynamic_friction: 0.6,
+    restitution: 0.4,
+};
+
+static RIGID_BODY_RIGID_BODY_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
     dynamic_friction: 0.6,
     restitution: 0.4,
@@ -81,13 +87,19 @@ impl Simulation {
 
         // Detects and resolves collisions with static colliders.
 
-        self.check_static_collisions(h, &derivative, &state, &mut new_state);
+        self.check_static_collisions(
+            h,
+            &derivative,
+            &state,
+            &mut new_state,
+            &RIGID_BODY_STATIC_PLANE_MATERIAL,
+        );
 
         // Detects and resolves collisions with other (nearby) rigid bodies.
 
         self.rebuild_hash_grid(&new_state);
 
-        self.check_rigid_bodies_collisions(&state, &mut new_state);
+        self.check_rigid_bodies_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
 
         // Copies new state back to rigid bodies.
 
@@ -102,6 +114,7 @@ impl Simulation {
         derivative: &StateVector<RigidBodySimulationState>,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
+        material: &PhysicsMaterial,
     ) {
         for i in 0..self.rigid_bodies.len() {
             let body = &mut self.rigid_bodies[i];
@@ -225,7 +238,7 @@ impl Simulation {
                         contact_point,
                         contact_point_velocity,
                         r,
-                        &PHYSICS_MATERIAL,
+                        material,
                     );
 
                     let position_at_collision =
@@ -311,6 +324,7 @@ impl Simulation {
         &mut self,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
+        material: &PhysicsMaterial,
     ) {
         for current_sphere_index in 0..self.rigid_bodies.len() {
             let sphere_state = &new_state.0[current_sphere_index];
@@ -344,6 +358,7 @@ impl Simulation {
                                     new_state,
                                     current_sphere_index,
                                     *sphere_index,
+                                    material,
                                 ) {
                                     // sphere.collision_response.replace(...);
                                 }
@@ -360,6 +375,7 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
         a: usize,
         b: usize,
+        material: &PhysicsMaterial,
     ) -> bool {
         // Describes the movement of body A from body B's frame of reference.
 
@@ -419,7 +435,7 @@ impl Simulation {
                     &mut s1_state_cloned,
                     &mut s2_state_cloned,
                     contact_point,
-                    &PHYSICS_MATERIAL,
+                    material,
                 );
 
                 new_state.0[a].linear_momentum = s1_state_cloned.linear_momentum;
