@@ -265,8 +265,6 @@ pub fn resolve_rigid_body_plane_collision(
     r: Vec3,
     material: &PhysicsMaterial,
 ) -> RigidBodyCollisionResponse {
-    let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(plane_normal);
-
     // v_outgoing = -v_incoming * restitution
     //
     // J = j * plane_normal
@@ -284,7 +282,7 @@ pub fn resolve_rigid_body_plane_collision(
     //               + (r_cross_n * I^-1).cross(r)
     //
 
-    let numerator = -(1.0 + material.restitution) * incoming_contact_point_speed_normal_to_plane;
+    let numerator = -(1.0 + material.restitution) * contact_point_velocity.dot(plane_normal);
 
     let r_normal = r.as_normal();
 
@@ -325,7 +323,37 @@ pub fn resolve_rigid_body_plane_collision(
         friction_impulse: None,
     };
 
+    if let Some((tangent, tangent_impulse_magnitude)) = get_rigid_body_plane_friction_impulse(
+        derivative,
+        state,
+        plane_normal,
+        contact_point_velocity,
+        normal_impulse_magnitude,
+        material,
+    ) {
+        let friction_impulse = tangent * tangent_impulse_magnitude;
+
+        state.linear_momentum -= friction_impulse;
+        state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
+
+        response.tangent.replace(tangent);
+        response.friction_impulse.replace(friction_impulse);
+    }
+
+    response
+}
+
+pub fn get_rigid_body_plane_friction_impulse(
+    derivative: &RigidBodySimulationState,
+    state: &mut RigidBodySimulationState,
+    plane_normal: Vec3,
+    contact_point_velocity: Vec3,
+    normal_impulse_magnitude: f32,
+    material: &PhysicsMaterial,
+) -> Option<(Vec3, f32)> {
     // Static or dynamic friction
+
+    let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(plane_normal);
 
     // Chooses a tangent vector for the collision, using either the velocity of
     // the contact point, or the velocity of the rigid body; if neither can
@@ -353,7 +381,7 @@ pub fn resolve_rigid_body_plane_collision(
             // The velocity of the contact point projected onto the tangent is
             // negligible. No friction response for this collision.
 
-            return response;
+            return None;
         }
 
         tangential_component
@@ -371,7 +399,7 @@ pub fn resolve_rigid_body_plane_collision(
                 // The velocity of the rigid body projected onto the tangent is
                 // negligible. No friction response for this collision.
 
-                return response;
+                return None;
             }
 
             tangential_component
@@ -379,7 +407,7 @@ pub fn resolve_rigid_body_plane_collision(
             // The rigid body is moving away from the plane. No friction
             // response for this collision.
 
-            return response;
+            return None;
         }
     };
 
@@ -423,15 +451,7 @@ pub fn resolve_rigid_body_plane_collision(
         -j_d
     };
 
-    let friction_impulse = tangent * tangent_impulse_magnitude;
-
-    state.linear_momentum -= friction_impulse;
-    state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
-
-    response.tangent.replace(tangent);
-    response.friction_impulse.replace(friction_impulse);
-
-    response
+    Some((tangent, tangent_impulse_magnitude))
 }
 
 #[allow(unused_variables)]
