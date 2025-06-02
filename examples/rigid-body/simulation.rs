@@ -14,11 +14,12 @@ use cairo::{
             collision_response::{
                 resolve_rigid_body_collision, resolve_rigid_body_plane_collision,
             },
+            contact::{StaticContact, StaticContactKind},
             force::gravity::GRAVITY_RIGID_BODY_FORCE,
             physical_constants::EARTH_GRAVITY_ACCELERATION,
             rigid_body::{
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
-                RigidBody, RigidBodyKind, RigidBodyStaticContact, RigidBodyStaticContactKind,
+                RigidBody, RigidBodyKind,
             },
         },
     },
@@ -283,7 +284,7 @@ impl Simulation {
         position: &Vec3,
         velocity: &Vec3,
         minimum_distance_to_plane: f32,
-    ) -> Option<RigidBodyStaticContact> {
+    ) -> Option<StaticContact> {
         static CONTACT_DISTANCE_THRESHOLD: f32 = 0.001;
         static RESTING_VELOCITY_THRESHOLD: f32 = 0.5;
 
@@ -302,12 +303,12 @@ impl Simulation {
                 let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
 
                 let kind = if velocity_along_plane_tangent_mag <= RESTING_VELOCITY_THRESHOLD {
-                    RigidBodyStaticContactKind::Resting
+                    StaticContactKind::Resting
                 } else {
-                    RigidBodyStaticContactKind::Sliding
+                    StaticContactKind::Sliding
                 };
 
-                return Some(RigidBodyStaticContact {
+                return Some(StaticContact {
                     kind,
                     point,
                     normal,

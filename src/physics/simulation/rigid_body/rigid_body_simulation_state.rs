@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-use super::{RigidBodyKind, RigidBodyStaticContact};
+use super::{RigidBodyKind, StaticContact};
 
 pub type RigidBodyForce = Force<RigidBodySimulationState>;
 pub type DynRigidBodyForce = DynForce<RigidBodySimulationState>;
@@ -28,7 +28,7 @@ pub struct RigidBodySimulationState {
     pub orientation: Quaternion,
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
-    pub static_contact: Option<RigidBodyStaticContact>,
+    pub static_contact: Option<StaticContact>,
 }
 
 impl ops::AddAssign for RigidBodySimulationState {

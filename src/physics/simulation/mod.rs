@@ -1,4 +1,5 @@
 pub mod collision_response;
+pub mod contact;
 pub mod force;
 pub mod integration;
 pub mod operator;
