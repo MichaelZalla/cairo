@@ -4,6 +4,7 @@ use crate::{
     geometry::primitives::aabb::{Bounded, AABB},
     matrix::Mat4,
     physics::simulation::{
+        contact::StaticContactList,
         force::{DynForce, Force},
         physical_constants::EARTH_GRAVITY_ACCELERATION,
     },
@@ -14,7 +15,7 @@ use crate::{
     },
 };
 
-use super::{RigidBodyKind, StaticContact};
+use super::RigidBodyKind;
 
 pub type RigidBodyForce = Force<RigidBodySimulationState>;
 pub type DynRigidBodyForce = DynForce<RigidBodySimulationState>;
@@ -28,7 +29,7 @@ pub struct RigidBodySimulationState {
     pub orientation: Quaternion,
     pub linear_momentum: Vec3,
     pub angular_momentum: Vec3,
-    pub static_contact: Option<StaticContact>,
+    pub static_contacts: StaticContactList<6>,
 }
 
 impl ops::AddAssign for RigidBodySimulationState {
@@ -143,7 +144,7 @@ impl RigidBodySimulationState {
             // Accumulate linear momentum.
 
             let f = if newtons == EARTH_GRAVITY_ACCELERATION {
-                if let Some(contact) = &self.static_contact {
+                for contact in &self.static_contacts {
                     let gravity_projected_onto_contact_normal =
                         contact.normal * newtons.dot(contact.normal);
 

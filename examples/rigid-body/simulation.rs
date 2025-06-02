@@ -73,7 +73,7 @@ impl Simulation {
         let mut new_state = state.clone() + derivative.clone() * h;
 
         for (s, d) in new_state.0.iter_mut().zip(derivative.0.iter_mut()) {
-            if let Some(contact) = &s.static_contact {
+            for contact in &s.static_contacts {
                 let gravity_projected_onto_contact_normal =
                     contact.normal * EARTH_GRAVITY_ACCELERATION.dot(contact.normal);
 
@@ -125,7 +125,7 @@ impl Simulation {
 
             // Resets resting or sliding contact for this tick.
 
-            new_body_state.static_contact.take();
+            new_body_state.static_contacts.clear();
 
             let start_position = current_body_state.position;
             let start_velocity = current_body_state.velocity();
@@ -175,7 +175,7 @@ impl Simulation {
                             new_body_state.linear_momentum -= collider.plane.normal
                                 * new_body_state.linear_momentum.dot(collider.plane.normal);
 
-                            new_body_state.static_contact.replace(contact);
+                            new_body_state.static_contacts.push(contact).unwrap();
                         }
 
                         continue;
@@ -210,7 +210,7 @@ impl Simulation {
                             new_body_state.linear_momentum -= collider.plane.normal
                                 * new_body_state.linear_momentum.dot(collider.plane.normal);
 
-                            new_body_state.static_contact.replace(contact);
+                            new_body_state.static_contacts.push(contact).unwrap();
                         }
 
                         continue;
@@ -273,7 +273,7 @@ impl Simulation {
                     new_body_state.linear_momentum -= collider.plane.normal
                         * new_body_state.linear_momentum.dot(collider.plane.normal);
 
-                    new_body_state.static_contact.replace(contact);
+                    new_body_state.static_contacts.push(contact).unwrap();
                 }
             }
         }

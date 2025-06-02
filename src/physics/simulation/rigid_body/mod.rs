@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-use super::contact::{StaticContact, StaticContactKind};
+use super::contact::{StaticContactKind, StaticContactList};
 
 pub mod rigid_body_simulation_state;
 
@@ -122,7 +122,7 @@ pub struct RigidBody {
     pub angular_momentum: Vec3,
     pub color: Color,
     pub aabb: Option<AABB>,
-    pub static_contact: Option<StaticContact>,
+    pub static_contacts: StaticContactList<6>,
     // Debug state
     pub collision_response: Option<RigidBodyCollisionResponse>,
     pub debug_flags: RigidBodyDebugFlags,
@@ -141,7 +141,7 @@ impl From<&RigidBody> for RigidBodySimulationState {
             orientation: *body.transform.rotation(),
             linear_momentum: body.linear_momentum,
             angular_momentum: body.angular_momentum,
-            static_contact: body.static_contact,
+            static_contacts: body.static_contacts,
         }
     }
 }
@@ -215,7 +215,7 @@ impl RigidBody {
 
         self.angular_momentum = state.angular_momentum;
 
-        self.static_contact = state.static_contact;
+        self.static_contacts = state.static_contacts;
 
         match self.kind {
             RigidBodyKind::Circle(_radius) => panic!(),
@@ -361,28 +361,29 @@ impl RigidBody {
             }
         }
 
-        // Visualizes the rigid body's contact (if any).
+        // Visualizes the rigid body's static contacts (if any).
 
-        if let (Some(contact), true) = (
-            &self.static_contact,
-            self.debug_flags
-                .contains(RigidBodyDebugFlag::DrawStaticContact),
-        ) {
-            let color = match contact.kind {
-                StaticContactKind::Resting => color::WHITE,
-                StaticContactKind::Sliding => color::SKY_BOX,
-            };
+        if self
+            .debug_flags
+            .contains(RigidBodyDebugFlag::DrawStaticContact)
+        {
+            for contact in &self.static_contacts {
+                let color = match contact.kind {
+                    StaticContactKind::Resting => color::WHITE,
+                    StaticContactKind::Sliding => color::SKY_BOX,
+                };
 
-            let start = contact.point;
+                let start = contact.point;
 
-            // Normal
-            renderer.render_line(start, start + contact.normal, color);
+                // Normal
+                renderer.render_line(start, start + contact.normal, color);
 
-            // Tangent
-            renderer.render_line(start - contact.tangent, start + contact.tangent, color);
+                // Tangent
+                renderer.render_line(start - contact.tangent, start + contact.tangent, color);
 
-            // Bitangent
-            renderer.render_line(start - contact.bitangent, start + contact.bitangent, color);
+                // Bitangent
+                renderer.render_line(start - contact.bitangent, start + contact.bitangent, color);
+            }
         }
     }
 }
