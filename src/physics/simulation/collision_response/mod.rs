@@ -265,6 +265,57 @@ pub fn resolve_rigid_body_plane_collision(
     r: Vec3,
     material: &PhysicsMaterial,
 ) -> RigidBodyCollisionResponse {
+    let normal_impulse_magnitude = get_rigid_body_plane_normal_impulse_magnitude(
+        state,
+        plane_normal,
+        contact_point_velocity,
+        r,
+        material,
+    );
+
+    let normal_impulse = plane_normal * normal_impulse_magnitude;
+
+    state.linear_momentum += normal_impulse;
+
+    let rotation_axis = r.cross(plane_normal);
+
+    state.angular_momentum += rotation_axis * normal_impulse_magnitude;
+
+    let mut response = RigidBodyCollisionResponse {
+        contact_point,
+        contact_point_velocity,
+        normal_impulse,
+        tangent: None,
+        friction_impulse: None,
+    };
+
+    if let Some((tangent, tangent_impulse_magnitude)) = get_rigid_body_plane_friction_impulse(
+        derivative,
+        state,
+        plane_normal,
+        contact_point_velocity,
+        normal_impulse_magnitude,
+        material,
+    ) {
+        let friction_impulse = tangent * tangent_impulse_magnitude;
+
+        state.linear_momentum -= friction_impulse;
+        state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
+
+        response.tangent.replace(tangent);
+        response.friction_impulse.replace(friction_impulse);
+    }
+
+    response
+}
+
+pub fn get_rigid_body_plane_normal_impulse_magnitude(
+    state: &RigidBodySimulationState,
+    plane_normal: Vec3,
+    contact_point_velocity: Vec3,
+    r: Vec3,
+    material: &PhysicsMaterial,
+) -> f32 {
     // v_outgoing = -v_incoming * restitution
     //
     // J = j * plane_normal
@@ -305,42 +356,7 @@ pub fn resolve_rigid_body_plane_collision(
     let denominator = state.inverse_mass
         + plane_normal.dot(change_in_angular_velocity_at_contact_point_normalized);
 
-    let normal_impulse_magnitude = numerator / denominator;
-
-    let normal_impulse = plane_normal * normal_impulse_magnitude;
-
-    state.linear_momentum += normal_impulse;
-
-    let rotation_axis = r.cross(plane_normal);
-
-    state.angular_momentum += rotation_axis * normal_impulse_magnitude;
-
-    let mut response = RigidBodyCollisionResponse {
-        contact_point,
-        contact_point_velocity,
-        normal_impulse,
-        tangent: None,
-        friction_impulse: None,
-    };
-
-    if let Some((tangent, tangent_impulse_magnitude)) = get_rigid_body_plane_friction_impulse(
-        derivative,
-        state,
-        plane_normal,
-        contact_point_velocity,
-        normal_impulse_magnitude,
-        material,
-    ) {
-        let friction_impulse = tangent * tangent_impulse_magnitude;
-
-        state.linear_momentum -= friction_impulse;
-        state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
-
-        response.tangent.replace(tangent);
-        response.friction_impulse.replace(friction_impulse);
-    }
-
-    response
+    numerator / denominator
 }
 
 pub fn get_rigid_body_plane_friction_impulse(
