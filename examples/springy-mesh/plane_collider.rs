@@ -1,6 +1,6 @@
 use cairo::{
-    color,
     geometry::primitives::plane::Plane,
+    matrix::Mat4,
     render::Renderer,
     software_renderer::SoftwareRenderer,
     vec::vec3::{self, Vec3},
@@ -20,25 +20,20 @@ impl PlaneCollider {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        let normal = self.plane.normal;
+        let up = self.plane.normal;
 
-        let mut right = normal.cross(vec3::UP);
+        let mut forward = up.cross(vec3::UP);
 
-        if right.mag() < f32::EPSILON {
-            right = normal.cross(vec3::FORWARD);
+        if forward.mag() < f32::EPSILON {
+            forward = up.cross(vec3::FORWARD);
         }
 
-        right = right.as_normal();
+        forward = forward.as_normal();
 
-        let up = normal.cross(-right);
+        let right = up.cross(forward);
 
-        // Normal
-        renderer.render_line(self.point, self.point + normal, color::BLUE);
+        let tbn = Mat4::translation(self.point) * Mat4::tbn(right, up, forward);
 
-        // Tangent
-        renderer.render_line(self.point, self.point + right, color::RED);
-
-        // Bitangent
-        renderer.render_line(self.point, self.point + up, color::GREEN);
+        renderer.render_ground_plane(30, Some(&tbn));
     }
 }

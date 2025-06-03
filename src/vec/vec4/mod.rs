@@ -22,6 +22,16 @@ impl fmt::Display for Vec4 {
     }
 }
 
+impl From<Vec4> for Vec3 {
+    fn from(v: Vec4) -> Self {
+        Self {
+            x: v.x,
+            y: v.y,
+            z: v.z,
+        }
+    }
+}
+
 impl Vec4 {
     pub const fn new(v: Vec3, w: f32) -> Self {
         Vec4 {

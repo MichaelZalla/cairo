@@ -202,7 +202,7 @@ fn main() -> Result<(), String> {
 
             renderer.begin_frame();
 
-            renderer.render_ground_plane(16);
+            renderer.render_ground_plane(16, None);
         }
 
         // Render scene.

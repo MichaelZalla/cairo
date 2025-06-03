@@ -88,10 +88,22 @@ impl SoftwareRenderer {
         }
     }
 
-    pub(in crate::software_renderer) fn _render_ground_plane(&mut self, parallels: usize) {
+    pub(in crate::software_renderer) fn _render_ground_plane(
+        &mut self,
+        parallels: usize,
+        transform: Option<&Mat4>,
+    ) {
         let parallels_color = color::DARK_GRAY;
 
         let parallels_f32 = parallels as f32;
+
+        let xform = match transform {
+            Some(m) => *m,
+            None => Default::default(),
+        };
+
+        let mut start: Vec4;
+        let mut end: Vec4;
 
         for i in -(parallels as i32)..(parallels + 1) as i32 {
             if i == 0 {
@@ -100,64 +112,64 @@ impl SoftwareRenderer {
 
             // X-axis parallels
 
-            self.render_line(
-                Vec3 {
-                    x: -parallels_f32,
-                    z: (i as f32),
-                    ..Default::default()
-                },
-                Vec3 {
-                    x: parallels_f32,
-                    z: (i as f32),
-                    ..Default::default()
-                },
-                parallels_color,
-            );
+            start = Vec4::position(Vec3 {
+                x: -parallels_f32,
+                z: (i as f32),
+                ..Default::default()
+            }) * xform;
+
+            end = Vec4::position(Vec3 {
+                x: parallels_f32,
+                z: (i as f32),
+                ..Default::default()
+            }) * xform;
+
+            self.render_line(start.into(), end.into(), parallels_color);
 
             // Z-axis parallels
 
-            self.render_line(
-                Vec3 {
-                    x: (i as f32),
-                    z: -parallels_f32,
-                    ..Default::default()
-                },
-                Vec3 {
-                    x: (i as f32),
-                    z: parallels_f32,
-                    ..Default::default()
-                },
-                parallels_color,
-            );
+            start = Vec4::position(Vec3 {
+                x: (i as f32),
+                z: -parallels_f32,
+                ..Default::default()
+            }) * xform;
+
+            end = Vec4::position(Vec3 {
+                x: (i as f32),
+                z: parallels_f32,
+                ..Default::default()
+            }) * xform;
+
+            self.render_line(start.into(), end.into(), parallels_color);
         }
 
         // X-axis
 
-        self.render_line(
-            Vec3 {
-                x: -parallels_f32,
-                ..Default::default()
-            },
-            Vec3 {
-                x: parallels_f32,
-                ..Default::default()
-            },
-            color::RED,
-        );
+        start = Vec4::position(Vec3 {
+            x: -parallels_f32,
+            ..Default::default()
+        }) * xform;
+
+        end = Vec4::position(Vec3 {
+            x: parallels_f32,
+            ..Default::default()
+        }) * xform;
+
+        self.render_line(start.into(), end.into(), color::RED);
 
         // Z-axis
 
-        self.render_line(
-            Vec3 {
-                z: -parallels_f32,
-                ..Default::default()
-            },
-            Vec3 {
-                z: parallels_f32,
-                ..Default::default()
-            },
-            color::GREEN,
-        );
+        start = Vec4::position(Vec3 {
+            z: -parallels_f32,
+            ..Default::default()
+        }) * xform;
+
+        end = Vec4::position(Vec3 {
+            z: parallels_f32,
+            ..Default::default()
+        }) * xform;
+
+        self.render_line(start.into(), end.into(), color::GREEN);
     }
 
     fn render_line_from_ndc_space_vecs(&mut self, start: &Vec3, end: &Vec3, color: Color) {

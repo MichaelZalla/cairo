@@ -303,8 +303,8 @@ impl Renderer for SoftwareRenderer {
         self._render_axes(transform)
     }
 
-    fn render_ground_plane(&mut self, parallels: usize) {
-        self._render_ground_plane(parallels)
+    fn render_ground_plane(&mut self, parallels: usize, transform: Option<&Mat4>) {
+        self._render_ground_plane(parallels, transform)
     }
 
     fn render_empty(

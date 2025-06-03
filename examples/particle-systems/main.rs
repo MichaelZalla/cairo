@@ -298,7 +298,7 @@ fn main() -> Result<(), String> {
 
             renderer.begin_frame();
 
-            renderer.render_ground_plane(30);
+            renderer.render_ground_plane(30, None);
 
             if let Ok(entry) = mesh_arena.get(&particle_mesh_handle) {
                 let particle_mesh = &entry.item;

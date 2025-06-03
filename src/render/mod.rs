@@ -49,7 +49,7 @@ pub trait Renderer {
 
     fn render_axes(&mut self, transform: Option<&Mat4>);
 
-    fn render_ground_plane(&mut self, parallels: usize);
+    fn render_ground_plane(&mut self, parallels: usize, transform: Option<&Mat4>);
 
     fn render_empty(
         &mut self,

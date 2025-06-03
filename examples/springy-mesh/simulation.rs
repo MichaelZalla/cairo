@@ -172,15 +172,14 @@ impl Simulation {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        // Render springy meshes.
-
-        for mesh in &self.meshes {
-            mesh.render(renderer);
-        }
-
         // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
             collider.render(renderer);
+        }
+
+        // Render springy meshes.
+        for mesh in &self.meshes {
+            mesh.render(renderer);
         }
     }
 
@@ -900,7 +899,9 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
 
     // Ground collider plane.
 
-    let static_plane_colliders = vec![PlaneCollider::new(Default::default(), vec3::UP)];
+    let ground_plane = PlaneCollider::new(vec3::UP * 4.0, vec3::UP + vec3::RIGHT / 3.0);
+
+    let static_plane_colliders = vec![ground_plane];
 
     Simulation {
         meshes,
