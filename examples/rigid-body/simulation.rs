@@ -35,6 +35,10 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
+static CONTACT_DISTANCE_THRESHOLD: f32 = 0.001;
+
+static RESTING_SPEED_THRESHOLD: f32 = 0.5;
+
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
     dynamic_friction: 0.6,
@@ -285,24 +289,22 @@ impl Simulation {
         velocity: &Vec3,
         minimum_distance_to_plane: f32,
     ) -> Option<StaticContact> {
-        static CONTACT_DISTANCE_THRESHOLD: f32 = 0.001;
-        static RESTING_VELOCITY_THRESHOLD: f32 = 0.5;
-
         let signed_distance_to_plane = plane.get_signed_distance(position);
 
         if signed_distance_to_plane <= minimum_distance_to_plane + CONTACT_DISTANCE_THRESHOLD {
             let point = position - plane.normal * minimum_distance_to_plane;
 
             let velocity_along_plane_normal = plane.normal * velocity.dot(plane.normal);
-            let velocity_along_plane_normal_mag = velocity_along_plane_normal.mag();
 
-            if velocity_along_plane_normal_mag <= RESTING_VELOCITY_THRESHOLD {
+            let speed_along_normal = velocity_along_plane_normal.mag();
+
+            if speed_along_normal <= RESTING_SPEED_THRESHOLD {
                 let (normal, tangent, bitangent) = plane.normal.basis();
 
                 let velocity_along_plane_tangent = velocity - velocity_along_plane_normal;
                 let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
 
-                let kind = if velocity_along_plane_tangent_mag <= RESTING_VELOCITY_THRESHOLD {
+                let kind = if velocity_along_plane_tangent_mag <= RESTING_SPEED_THRESHOLD {
                     StaticContactKind::Resting
                 } else {
                     StaticContactKind::Sliding
