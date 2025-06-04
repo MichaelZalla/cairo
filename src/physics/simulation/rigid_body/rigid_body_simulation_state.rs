@@ -158,7 +158,7 @@ impl RigidBodySimulationState {
             if let Some(point) = contact_point {
                 let r = point - position;
 
-                total_torque = -r.cross(acceleration);
+                total_torque += r.cross(acceleration);
             }
         }
 
