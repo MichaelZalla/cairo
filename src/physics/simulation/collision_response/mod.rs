@@ -2,6 +2,21 @@ use crate::{animation::lerp, physics::material::PhysicsMaterial, vec::vec3::Vec3
 
 use super::rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, CollisionImpulse};
 
+#[derive(Default, Debug, Copy, Clone)]
+pub struct NormalImpulseData {
+    pub contact_point: Vec3,
+    pub contact_point_velocity: Vec3,
+    pub r: Vec3,
+    pub normal: Vec3,
+    pub magnitude: f32,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub struct TangentImpulseData {
+    pub tangent: Vec3,
+    pub magnitude: f32,
+}
+
 fn get_point_plane_outgoing_velocity(
     plane_normal: Vec3,
     material: &PhysicsMaterial,
@@ -263,21 +278,22 @@ pub fn resolve_rigid_body_plane_collision(
     r: Vec3,
     material: &PhysicsMaterial,
 ) -> CollisionImpulse {
-    let normal_impulse_magnitude = get_rigid_body_plane_normal_impulse_magnitude(
+    let normal_impulse_data = get_rigid_body_plane_normal_impulse(
         state,
         normal,
+        contact_point,
         contact_point_velocity,
         r,
         material,
     );
 
-    let normal_impulse = normal * normal_impulse_magnitude;
+    let normal_impulse = normal * normal_impulse_data.magnitude;
 
     state.linear_momentum += normal_impulse;
 
     let rotation_axis = r.cross(normal);
 
-    state.angular_momentum += rotation_axis * normal_impulse_magnitude;
+    state.angular_momentum += rotation_axis * normal_impulse_data.magnitude;
 
     let mut response = CollisionImpulse {
         contact_point,
@@ -288,36 +304,40 @@ pub fn resolve_rigid_body_plane_collision(
         tangent_impulse: None,
     };
 
-    if let Some((tangent, tangent_impulse_magnitude)) = get_rigid_body_plane_friction_impulse(
+    if let Some(tangent_impulse_data) = get_rigid_body_plane_friction_impulse(
         derivative,
         state,
         normal,
         contact_point_velocity,
-        normal_impulse_magnitude,
+        normal_impulse_data.magnitude,
         material,
     ) {
-        let friction_impulse = tangent * tangent_impulse_magnitude;
+        let tangent = tangent_impulse_data.tangent;
+        let magnitude = tangent_impulse_data.magnitude;
 
-        state.linear_momentum -= friction_impulse;
-        state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
+        let tangent_impulse = tangent * magnitude;
+
+        state.linear_momentum -= tangent_impulse;
+        state.angular_momentum += r.cross(tangent) * magnitude;
 
         response.tangent.replace(tangent);
-        response.tangent_impulse.replace(friction_impulse);
+        response.tangent_impulse.replace(tangent_impulse);
     }
 
     response
 }
 
-pub fn get_rigid_body_plane_normal_impulse_magnitude(
+pub fn get_rigid_body_plane_normal_impulse(
     state: &RigidBodySimulationState,
-    plane_normal: Vec3,
+    normal: Vec3,
+    contact_point: Vec3,
     contact_point_velocity: Vec3,
     r: Vec3,
     material: &PhysicsMaterial,
-) -> f32 {
+) -> NormalImpulseData {
     // v_outgoing = -v_incoming * restitution
     //
-    // J = j * plane_normal
+    // J = j * normal
     //
     // Change in linear momentum P = J
     //
@@ -328,11 +348,11 @@ pub fn get_rigid_body_plane_normal_impulse_magnitude(
     //            = ln_incoming + av_incoming.cross(r) + lv_delta + av_delta.cross(r)
     //            = (incoming rate-of-change of contact point position) + lv_delta + av_delta.cross(r)
     //            = (incoming rate-of-change of contact point position)
-    //               + (1/mass) * j * plane_normal
+    //               + (1/mass) * j * normal
     //               + (r_cross_n * I^-1).cross(r)
     //
 
-    let numerator = -(1.0 + material.restitution) * contact_point_velocity.dot(plane_normal);
+    let numerator = -(1.0 + material.restitution) * contact_point_velocity.dot(normal);
 
     let r_normal = r.as_normal();
 
@@ -340,44 +360,52 @@ pub fn get_rigid_body_plane_normal_impulse_magnitude(
     // value of 1 indicates a body moving directly away from the plane; a value
     // of 0 means the body moves parallel to the plane.
 
-    let r_dot_normal = r_normal.dot(plane_normal);
+    let r_dot_normal = r_normal.dot(normal);
 
     if r_dot_normal.is_nan() {
         panic!()
     }
 
     let change_in_angular_velocity_normalized = /* j * */
-        r.cross(plane_normal) * state.inverse_moment_of_inertia_world_space();
+        r.cross(normal) * state.inverse_moment_of_inertia_world_space();
 
     let change_in_angular_velocity_at_contact_point_normalized = /* j * */
         change_in_angular_velocity_normalized.cross(r);
 
-    let denominator = state.inverse_mass
-        + plane_normal.dot(change_in_angular_velocity_at_contact_point_normalized);
+    let denominator =
+        state.inverse_mass + normal.dot(change_in_angular_velocity_at_contact_point_normalized);
 
-    numerator / denominator
+    let magnitude = numerator / denominator;
+
+    NormalImpulseData {
+        contact_point,
+        contact_point_velocity,
+        r,
+        normal,
+        magnitude,
+    }
 }
 
 pub fn get_rigid_body_plane_friction_impulse(
     derivative: &RigidBodySimulationState,
     state: &mut RigidBodySimulationState,
-    plane_normal: Vec3,
+    normal: Vec3,
     contact_point_velocity: Vec3,
     normal_impulse_magnitude: f32,
     material: &PhysicsMaterial,
-) -> Option<(Vec3, f32)> {
+) -> Option<TangentImpulseData> {
     // Static or dynamic friction
 
-    let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(plane_normal);
+    let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(normal);
 
     // Chooses a tangent vector for the collision, using either the velocity of
     // the contact point, or the velocity of the rigid body; if neither can
     // produce a tangent, then no friction response is applied.
 
     // t = {
-    //       norm(v_r - (v_r.dot(n)) * n),  v_r.dot(n) != 0
+    //       norm(v_r - v_r.dot(n) * n),  v_r.dot(n) != 0
     //
-    //       norm(f_e - (f_e.dot(n)) * n),  v_r.dot(n) == 0 && f_e.dot(n) != 0
+    //       norm(f_e - f_e.dot(n) * n),  v_r.dot(n) == 0 && f_e.dot(n) != 0
     //
     //       0                              Otherwise
     //     }
@@ -388,9 +416,9 @@ pub fn get_rigid_body_plane_friction_impulse(
     let tangential_component = if is_contact_point_moving_towards_plane {
         // Uses the linear velocity of the contact point.
 
-        // norm(v_r - (v_r.dot(n)) * n)
+        // v_r - v_r.dot(n) * n
         let tangential_component =
-            contact_point_velocity - plane_normal * incoming_contact_point_speed_normal_to_plane;
+            contact_point_velocity - normal * incoming_contact_point_speed_normal_to_plane;
 
         if tangential_component.mag_squared() < f32::EPSILON {
             // The velocity of the contact point projected onto the tangent is
@@ -404,11 +432,11 @@ pub fn get_rigid_body_plane_friction_impulse(
         // Uses the linear velocity of the rigid body.
 
         let f_e = derivative.linear_momentum;
-        let f_e_dot_n = f_e.dot(plane_normal);
+        let f_e_dot_n = f_e.dot(normal);
 
         if f_e_dot_n.abs() > f32::EPSILON {
-            // norm(f_e - (f_e.dot(n)) * n)
-            let tangential_component = f_e - plane_normal * (f_e.dot(plane_normal));
+            // f_e - f_e.dot(n) * n
+            let tangential_component = f_e - normal * (f_e.dot(normal));
 
             if tangential_component.mag_squared() < f32::EPSILON {
                 // The velocity of the rigid body projected onto the tangent is
@@ -445,7 +473,7 @@ pub fn get_rigid_body_plane_friction_impulse(
 
     let j_s = normal_impulse_magnitude * material.static_friction;
 
-    let tangent_impulse_magnitude = if contact_point_speed_along_tangent.abs() < f32::EPSILON
+    let magnitude = if contact_point_speed_along_tangent.abs() < f32::EPSILON
         || contact_point_linear_momentum_magnitude_along_tangent <= j_s
     {
         // Our contact point has a negligible tangential velocity, or its
@@ -466,7 +494,7 @@ pub fn get_rigid_body_plane_friction_impulse(
         -j_d
     };
 
-    Some((tangent, tangent_impulse_magnitude))
+    Some(TangentImpulseData { tangent, magnitude })
 }
 
 #[allow(unused_variables)]
