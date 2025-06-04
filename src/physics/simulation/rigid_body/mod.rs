@@ -84,6 +84,7 @@ impl RigidBodyKind {
 pub struct CollisionImpulse {
     pub contact_point: Vec3,
     pub contact_point_velocity: Vec3,
+    pub normal: Vec3,
     pub normal_impulse: Vec3,
     pub tangent: Option<Vec3>,
     pub tangent_impulse: Option<Vec3>,

@@ -30,14 +30,14 @@ fn get_point_plane_outgoing_velocity(
 }
 
 pub fn resolve_point_plane_collision_approximate(
-    plane_normal: Vec3,
+    normal: Vec3,
     material: &PhysicsMaterial,
     end_position: &mut Vec3,
     end_velocity: &mut Vec3,
     penetration_depth: f32,
 ) {
     let (v_out_normal, v_out_tangent) =
-        get_point_plane_outgoing_velocity(plane_normal, material, end_velocity);
+        get_point_plane_outgoing_velocity(normal, material, end_velocity);
 
     *end_velocity = v_out_normal + v_out_tangent;
 
@@ -50,7 +50,7 @@ pub fn resolve_point_plane_collision_approximate(
 
         // Comptues a minimum displacement vector (accounting for restitution).
 
-        plane_normal * ((penetration_depth * (1.0 + material.restitution)) + bias)
+        normal * ((penetration_depth * (1.0 + material.restitution)) + bias)
     };
 }
 
@@ -257,7 +257,7 @@ pub fn resolve_edge_edge_collision(
 pub fn resolve_rigid_body_plane_collision(
     derivative: &RigidBodySimulationState,
     state: &mut RigidBodySimulationState,
-    plane_normal: Vec3,
+    normal: Vec3,
     contact_point: Vec3,
     contact_point_velocity: Vec3,
     r: Vec3,
@@ -265,23 +265,24 @@ pub fn resolve_rigid_body_plane_collision(
 ) -> CollisionImpulse {
     let normal_impulse_magnitude = get_rigid_body_plane_normal_impulse_magnitude(
         state,
-        plane_normal,
+        normal,
         contact_point_velocity,
         r,
         material,
     );
 
-    let normal_impulse = plane_normal * normal_impulse_magnitude;
+    let normal_impulse = normal * normal_impulse_magnitude;
 
     state.linear_momentum += normal_impulse;
 
-    let rotation_axis = r.cross(plane_normal);
+    let rotation_axis = r.cross(normal);
 
     state.angular_momentum += rotation_axis * normal_impulse_magnitude;
 
     let mut response = CollisionImpulse {
         contact_point,
         contact_point_velocity,
+        normal,
         normal_impulse,
         tangent: None,
         tangent_impulse: None,
@@ -290,7 +291,7 @@ pub fn resolve_rigid_body_plane_collision(
     if let Some((tangent, tangent_impulse_magnitude)) = get_rigid_body_plane_friction_impulse(
         derivative,
         state,
-        plane_normal,
+        normal,
         contact_point_velocity,
         normal_impulse_magnitude,
         material,
