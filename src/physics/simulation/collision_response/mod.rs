@@ -306,7 +306,7 @@ pub fn resolve_rigid_body_plane_collision(
 
     if let Some(tangent_impulse_data) = get_rigid_body_plane_friction_impulse(
         derivative,
-        state,
+        1.0 / state.inverse_mass,
         normal,
         contact_point_velocity,
         normal_impulse_data.magnitude,
@@ -388,7 +388,7 @@ pub fn get_rigid_body_plane_normal_impulse(
 
 pub fn get_rigid_body_plane_friction_impulse(
     derivative: &RigidBodySimulationState,
-    state: &mut RigidBodySimulationState,
+    mass: f32,
     normal: Vec3,
     contact_point_velocity: Vec3,
     normal_impulse_magnitude: f32,
@@ -459,8 +459,6 @@ pub fn get_rigid_body_plane_friction_impulse(
     // Computes how quickly our contact point is moving along the tangent.
 
     let contact_point_speed_along_tangent = contact_point_velocity.dot(tangent);
-
-    let mass = 1.0 / state.inverse_mass;
 
     let contact_point_linear_momentum = contact_point_velocity * mass;
 
