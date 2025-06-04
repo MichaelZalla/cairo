@@ -369,21 +369,40 @@ impl RigidBody {
             .contains(RigidBodyDebugFlag::DrawStaticContact)
         {
             for contact in &self.static_contacts {
-                let color = match contact.kind {
-                    StaticContactKind::Resting => color::WHITE,
-                    StaticContactKind::Sliding => color::SKY_BOX,
-                };
-
                 let start = contact.point;
 
                 // Normal
-                renderer.render_line(start, start + contact.normal, color);
+                renderer.render_line(
+                    start,
+                    start + contact.normal,
+                    if let StaticContactKind::Resting = contact.kind {
+                        color::WHITE
+                    } else {
+                        color::BLUE
+                    },
+                );
 
                 // Tangent
-                renderer.render_line(start - contact.tangent, start + contact.tangent, color);
+                renderer.render_line(
+                    start,
+                    start + contact.tangent,
+                    if let StaticContactKind::Resting = contact.kind {
+                        color::WHITE
+                    } else {
+                        color::RED
+                    },
+                );
 
                 // Bitangent
-                renderer.render_line(start - contact.bitangent, start + contact.bitangent, color);
+                renderer.render_line(
+                    start,
+                    start + contact.bitangent,
+                    if let StaticContactKind::Resting = contact.kind {
+                        color::WHITE
+                    } else {
+                        color::GREEN
+                    },
+                );
             }
         }
     }
