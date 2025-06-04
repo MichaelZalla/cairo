@@ -1,9 +1,23 @@
-use cairo::{geometry::primitives::plane::Plane, vec::vec3::Vec3};
+use cairo::{
+    geometry::primitives::plane::Plane,
+    vec::vec3::{self, Vec3},
+};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct PlaneCollider {
     pub point: Vec3,
     pub plane: Plane,
+}
+
+impl Default for PlaneCollider {
+    fn default() -> Self {
+        let point = Vec3::default();
+
+        Self {
+            point,
+            plane: Plane::new(point, vec3::UP),
+        }
+    }
 }
 
 impl PlaneCollider {
