@@ -429,7 +429,7 @@ pub fn get_rigid_body_plane_friction_impulse(
 
         tangential_component
     } else {
-        // Uses the linear velocity of the rigid body.
+        // Uses the sum of external forces acting on the rigid body.
 
         let f_e = derivative.linear_momentum;
         let f_e_dot_n = f_e.dot(normal);
