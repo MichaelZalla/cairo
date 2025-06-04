@@ -411,7 +411,7 @@ pub fn get_rigid_body_plane_friction_impulse(
     //     }
 
     let is_contact_point_moving_towards_plane =
-        incoming_contact_point_speed_normal_to_plane.abs() > f32::EPSILON;
+        incoming_contact_point_speed_normal_to_plane < f32::EPSILON;
 
     let tangential_component = if is_contact_point_moving_towards_plane {
         // Uses the linear velocity of the contact point.
@@ -434,7 +434,7 @@ pub fn get_rigid_body_plane_friction_impulse(
         let f_e = derivative.linear_momentum;
         let f_e_dot_n = f_e.dot(normal);
 
-        if f_e_dot_n.abs() > f32::EPSILON {
+        if f_e_dot_n < f32::EPSILON {
             // f_e - f_e.dot(n) * n
             let tangential_component = f_e - normal * (f_e.dot(normal));
 
