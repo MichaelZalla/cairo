@@ -137,34 +137,41 @@ impl RigidBodySimulationState {
     ) {
         let position = self.position;
 
+        let mut total_acceleration = Vec3::default();
+        let mut total_torque = Vec3::default();
+
         for force in forces {
-            let (mut newtons, contact_point, is_gravity) = force(self, 0, current_time);
+            let (newtons, contact_point, is_gravity) = force(self, 0, current_time);
 
             // Accumulate linear momentum.
 
             let acceleration = if is_gravity {
-                for contact in &self.static_contacts {
-                    let gravity_projected_onto_contact_normal =
-                        contact.normal * newtons.dot(contact.normal);
-
-                    newtons -= gravity_projected_onto_contact_normal;
-                }
-
                 newtons
             } else {
                 newtons * self.inverse_mass
             };
 
-            derivative.linear_momentum += acceleration;
+            total_acceleration += acceleration;
 
             // Accumulate angular momentum.
 
             if let Some(point) = contact_point {
                 let r = point - position;
-                let torque = -r.cross(acceleration);
 
-                derivative.angular_momentum += torque;
+                total_torque = -r.cross(acceleration);
             }
         }
+
+        for contact in &self.static_contacts {
+            let external_force_magnitude_along_normal = contact.normal.dot(total_acceleration);
+
+            let external_force_along_normal =
+                contact.normal * external_force_magnitude_along_normal;
+
+            total_acceleration -= external_force_along_normal;
+        }
+
+        derivative.linear_momentum += total_acceleration;
+        derivative.angular_momentum += total_torque;
     }
 }
