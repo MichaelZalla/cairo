@@ -1,14 +1,11 @@
-use cairo::{
-    physics::simulation::{
-        force::ContactPoint,
-        physical_constants::EARTH_GRAVITY,
-        rigid_body::{
-            rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
-            RigidBody, RigidBodyKind,
-        },
-        units::Newtons,
+use cairo::physics::simulation::{
+    force::ContactPoint,
+    physical_constants::EARTH_GRAVITY_ACCELERATION,
+    rigid_body::{
+        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
+        RigidBody, RigidBodyKind,
     },
-    vec::vec3::Vec3,
+    units::Newtons,
 };
 
 use crate::simulation::Simulation;
@@ -20,13 +17,7 @@ pub fn make_simulation() -> Simulation {
          _i: usize,
          _current_time: f32|
          -> (Newtons, Option<ContactPoint>) {
-            static ACCELERATION: Vec3 = Vec3 {
-                x: 0.0,
-                y: -EARTH_GRAVITY,
-                z: 0.0,
-            };
-
-            (ACCELERATION / state.inverse_mass, None)
+            (EARTH_GRAVITY_ACCELERATION / state.inverse_mass, None)
         },
     );
 
