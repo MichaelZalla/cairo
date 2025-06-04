@@ -54,17 +54,17 @@ fn compute_accelerations(
     // Compute environmental accelerations acting on each particle.
 
     for i in 0..n {
-        let mut net_force_acceleration: Vec3 = Default::default();
+        let mut total_acceleration: Vec3 = Default::default();
 
         for force in forces {
             let (newtons, _contact_point) = force(current_state, i, current_time);
 
-            net_force_acceleration += newtons;
+            total_acceleration += newtons;
         }
 
         // Write the final environmental acceleration into derivative.
 
-        derivative.data[i + n] = net_force_acceleration;
+        derivative.data[i + n] = total_acceleration;
     }
 
     derivative

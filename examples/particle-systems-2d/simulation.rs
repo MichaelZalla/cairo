@@ -61,24 +61,24 @@ fn compute_accelerations(
 
     // Compute environmental accelerations acting on each particle.
     for i in 0..n {
-        let mut net_force_acceleration: Vec3 = Default::default();
+        let mut total_acceleration: Vec3 = Default::default();
 
         for force in forces {
             let (newtons, _contact_point) = force(current_state, i, current_time);
 
-            net_force_acceleration += newtons;
+            total_acceleration += newtons;
         }
 
-        let mut net_force_acceleration_with_operators = net_force_acceleration;
+        let mut total_acceleration_with_operators = total_acceleration;
 
         // Contribute any additive acceleration operators, in order.
         for operator in operators.additive_acceleration.iter_mut() {
-            net_force_acceleration_with_operators +=
-                operator(current_state, i, &net_force_acceleration_with_operators, h);
+            total_acceleration_with_operators +=
+                operator(current_state, i, &total_acceleration_with_operators, h);
         }
 
         // Write the final environmental acceleration into derivative.
-        derivative.data[i + n] = net_force_acceleration_with_operators;
+        derivative.data[i + n] = total_acceleration_with_operators;
     }
 
     if let Some(ptr) = quadtree.root {

@@ -143,7 +143,7 @@ impl RigidBodySimulationState {
 
             // Accumulate linear momentum.
 
-            let f = if newtons == EARTH_GRAVITY_ACCELERATION {
+            let acceleration = if newtons == EARTH_GRAVITY_ACCELERATION {
                 for contact in &self.static_contacts {
                     let gravity_projected_onto_contact_normal =
                         contact.normal * newtons.dot(contact.normal);
@@ -156,13 +156,13 @@ impl RigidBodySimulationState {
                 newtons * self.inverse_mass
             };
 
-            derivative.linear_momentum += f;
+            derivative.linear_momentum += acceleration;
 
             // Accumulate angular momentum.
 
             if let Some(point) = contact_point {
                 let r = point - position;
-                let torque = -r.cross(f);
+                let torque = -r.cross(acceleration);
 
                 derivative.angular_momentum += torque;
             }

@@ -129,16 +129,16 @@ impl Simulation<'_> {
 
         // For each point, compute net environmental force acting on it.
         for i in 0..n {
-            let mut net_force_acceleration: Vec3 = Default::default();
+            let mut total_acceleration: Vec3 = Default::default();
 
             for force in &self.forces {
                 let (newtons, _contact_point) = force(current_state, i, current_time);
 
-                net_force_acceleration += newtons;
+                total_acceleration += newtons;
             }
 
             // Write the final net environmental acceleration.
-            derivative.data[i + n] = net_force_acceleration;
+            derivative.data[i + n] = total_acceleration;
         }
 
         for mesh in self.meshes.iter_mut() {
