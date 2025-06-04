@@ -219,7 +219,7 @@ impl RigidBody {
         self.static_contacts = state.static_contacts;
 
         match self.kind {
-            RigidBodyKind::Circle(_radius) => panic!(),
+            RigidBodyKind::Circle(_radius) => (),
             RigidBodyKind::Sphere(radius) => {
                 if let Some(aabb) = &mut self.aabb {
                     aabb.min = state.position - vec3::ONES * radius;

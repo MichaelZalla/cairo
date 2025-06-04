@@ -21,7 +21,10 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{quadtree::Quadtree, static_line_segment_collider::StaticLineSegmentCollider};
+use crate::{
+    make_simulation::PARTICLE_MASS, quadtree::Quadtree,
+    static_line_segment_collider::StaticLineSegmentCollider,
+};
 
 static COMPONENTS_PER_PARTICLE: usize = 2;
 
@@ -64,9 +67,15 @@ fn compute_accelerations(
         let mut total_acceleration: Vec3 = Default::default();
 
         for force in forces {
-            let (newtons, _contact_point) = force(current_state, i, current_time);
+            let (newtons, _contact_point, is_gravity) = force(current_state, i, current_time);
 
-            total_acceleration += newtons;
+            let acceleration = if is_gravity {
+                newtons
+            } else {
+                newtons / PARTICLE_MASS
+            };
+
+            total_acceleration += acceleration;
         }
 
         let mut total_acceleration_with_operators = total_acceleration;

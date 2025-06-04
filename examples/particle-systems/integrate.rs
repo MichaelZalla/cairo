@@ -3,7 +3,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::simulation::COMPONENTS_PER_PARTICLE;
+use crate::{make_simulation::PARTICLE_MASS, simulation::COMPONENTS_PER_PARTICLE};
 
 pub fn integrate_euler(
     current_state: &StateVector,
@@ -57,9 +57,15 @@ fn compute_accelerations(
         let mut total_acceleration: Vec3 = Default::default();
 
         for force in forces {
-            let (newtons, _contact_point) = force(current_state, i, current_time);
+            let (newtons, _contact_point, is_gravity) = force(current_state, i, current_time);
 
-            total_acceleration += newtons;
+            let acceleration = if is_gravity {
+                newtons
+            } else {
+                newtons / PARTICLE_MASS
+            };
+
+            total_acceleration += acceleration;
         }
 
         // Write the final environmental acceleration into derivative.

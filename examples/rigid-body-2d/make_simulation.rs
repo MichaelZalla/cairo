@@ -16,13 +16,13 @@ pub fn make_simulation() -> Simulation {
         |state: &RigidBodySimulationState,
          _i: usize,
          _current_time: f32|
-         -> (Newtons, Option<ContactPoint>) {
-            (EARTH_GRAVITY_ACCELERATION / state.inverse_mass, None)
+         -> (Newtons, Option<ContactPoint>, bool) {
+            (EARTH_GRAVITY_ACCELERATION, None, true)
         },
     );
 
     let forces = vec![
-        // gravity_body_force,
+        // gravity_body_force
     ];
 
     let rigid_bodies = vec![RigidBody::new(

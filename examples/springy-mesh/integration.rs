@@ -3,7 +3,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{simulation::COMPONENTS_PER_PARTICLE, springy_mesh::SpringyMesh};
+use crate::{simulation::COMPONENTS_PER_PARTICLE, springy_mesh::SpringyMesh, strut::PARTICLE_MASS};
 
 pub fn system_dynamics_function(
     current_state: &StateVector,
@@ -40,9 +40,15 @@ fn compute_accelerations(
         let mut total_acceleration: Vec3 = Default::default();
 
         for force in forces {
-            let (newtons, _contact_point) = force(current_state, i, current_time);
+            let (newtons, _contact_point, is_gravity) = force(current_state, i, current_time);
 
-            total_acceleration += newtons;
+            let acceleration = if is_gravity {
+                newtons
+            } else {
+                newtons * 1.0 / PARTICLE_MASS
+            };
+
+            total_acceleration += acceleration;
         }
 
         // Write the final environmental acceleration into derivative.
@@ -51,7 +57,7 @@ fn compute_accelerations(
     }
 
     for mesh in meshes {
-        // Compute forces acting on the mesh (spring, damper, drag, and lift).
+        // Compute forces acting on the mesh (spring and damper forces).
 
         for strut in &mut mesh.struts {
             strut.compute_accelerations(current_state, &mut derivative, mesh.state_index_offset, n);

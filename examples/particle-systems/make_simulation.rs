@@ -14,17 +14,17 @@ use cairo::{
 
 use crate::simulation::Simulation;
 
+pub static PARTICLE_MASS: f32 = 50.0;
+
 pub(crate) const SEED_SIZE: usize = 2048;
 
 pub static PARTICLE_MAX_AGE_SECONDS: f32 = 10.0;
 
 pub fn make_simulation(sampler: RefCell<RandomSampler<SEED_SIZE>>) -> Simulation<SEED_SIZE> {
-    let mass = 50.0;
-
     // Define some particle generators.
 
-    let prototype = Particle {
-        mass,
+    let prototype: Particle = Particle {
+        mass: PARTICLE_MASS,
         max_age: PARTICLE_MAX_AGE_SECONDS,
         ..Default::default()
     };
@@ -34,7 +34,7 @@ pub fn make_simulation(sampler: RefCell<RandomSampler<SEED_SIZE>>) -> Simulation
         prototype,
         100.0,
         None,
-        mass,
+        PARTICLE_MASS,
         5.0,
         2.0,
     );

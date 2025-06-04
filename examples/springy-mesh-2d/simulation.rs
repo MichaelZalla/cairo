@@ -10,7 +10,10 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{springy_mesh::SpringyMesh, static_line_segment_collider::StaticLineSegmentCollider};
+use crate::{
+    make_simulation::PARTICLE_MASS, springy_mesh::SpringyMesh,
+    static_line_segment_collider::StaticLineSegmentCollider,
+};
 
 pub type PointForce = Force<StateVector>;
 
@@ -89,7 +92,7 @@ impl Simulation<'_> {
             mesh.state_index_offset = point_index;
 
             for point in mesh.points.iter_mut() {
-                if point.mass < f32::INFINITY {
+                if point_index != 0 {
                     point.write_from(&new_state, n, point_index);
                 }
 
@@ -132,9 +135,18 @@ impl Simulation<'_> {
             let mut total_acceleration: Vec3 = Default::default();
 
             for force in &self.forces {
-                let (newtons, _contact_point) = force(current_state, i, current_time);
+                let (newtons, _contact_point, is_gravity) = force(current_state, i, current_time);
 
-                total_acceleration += newtons;
+                let acceleration = if i == 0 {
+                    // First particle has infinite mass.
+                    Default::default()
+                } else if is_gravity {
+                    newtons
+                } else {
+                    newtons / PARTICLE_MASS
+                };
+
+                total_acceleration += acceleration;
             }
 
             // Write the final net environmental acceleration.

@@ -19,14 +19,14 @@ use crate::simulation::Simulation;
 
 pub(crate) const SEED_SIZE: usize = 2048;
 
-static PARTICLE_MASS: f32 = 5_000_000_000.0;
+pub static PARTICLE_MASS: f32 = 5_000_000_000.0;
 
 pub static PARTICLE_MAX_AGE_SECONDS: f32 = 8.0;
 
 pub static MAX_PARTICLE_SIZE_PIXELS: u32 = 8;
 
 static AIR_RESISTANCE: PointForce =
-    |state: &StateVector, i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
+    |state: &StateVector, i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>, bool) {
         static D: f32 = 0.0;
 
         static WIND: Vec3 = Vec3 {
@@ -37,7 +37,7 @@ static AIR_RESISTANCE: PointForce =
 
         let newtons = (WIND - state.data[i + state.len()]) * D;
 
-        (newtons, None)
+        (newtons, None, false)
     };
 
 pub(crate) fn make_simulation<'a>(

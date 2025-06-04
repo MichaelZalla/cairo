@@ -7,12 +7,13 @@ use crate::physics::simulation::{
 use super::{ContactPoint, Force, PointForce};
 
 pub static GRAVITY_POINT_FORCE: PointForce =
-    |_state: &StateVector, _i: usize, _current_time: f32| -> (Newtons, Option<ContactPoint>) {
-        (EARTH_GRAVITY_ACCELERATION, None)
-    };
+    |_state: &StateVector,
+     _i: usize,
+     _current_time: f32|
+     -> (Newtons, Option<ContactPoint>, bool) { (EARTH_GRAVITY_ACCELERATION, None, true) };
 
 pub static GRAVITY_RIGID_BODY_FORCE: Force<RigidBodySimulationState> =
     |_state: &RigidBodySimulationState,
      _i: usize,
      _current_time: f32|
-     -> (Newtons, Option<ContactPoint>) { (EARTH_GRAVITY_ACCELERATION, None) };
+     -> (Newtons, Option<ContactPoint>, bool) { (EARTH_GRAVITY_ACCELERATION, None, true) };

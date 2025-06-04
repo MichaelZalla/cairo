@@ -208,8 +208,8 @@ fn main() -> Result<(), String> {
                             move |_state: &RigidBodySimulationState,
                                   _i: usize,
                                   _current_time: f32|
-                                  -> (Newtons, Option<ContactPoint>) {
-                                (f, Some(from))
+                                  -> (Newtons, Option<ContactPoint>, bool) {
+                                (f, Some(from), false)
                             },
                         );
 
@@ -226,7 +226,7 @@ fn main() -> Result<(), String> {
 
         simulation.tick(uptime_seconds, h, *cursor_world_space);
 
-        simulation.forces = vec![];
+        simulation.forces.clear();
 
         Ok(())
     };

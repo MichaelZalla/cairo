@@ -8,6 +8,8 @@ use crate::{
     static_line_segment_collider::StaticLineSegmentCollider,
 };
 
+pub static PARTICLE_MASS: f32 = 2.5;
+
 pub fn make_simulation<'a>() -> Simulation<'a> {
     let forces = vec![&GRAVITY_POINT_FORCE];
 
@@ -28,7 +30,7 @@ pub fn make_simulation<'a>() -> Simulation<'a> {
             };
 
             points.push(Particle {
-                mass: if i == 0 { f32::INFINITY } else { 2.5 },
+                mass: if i == 0 { f32::INFINITY } else { PARTICLE_MASS },
                 position: Vec3 { x, y, z: 0.0 },
                 ..Default::default()
             })

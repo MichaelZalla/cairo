@@ -6,7 +6,6 @@ use crate::{
     physics::simulation::{
         contact::StaticContactList,
         force::{DynForce, Force},
-        physical_constants::EARTH_GRAVITY_ACCELERATION,
     },
     transform::quaternion::Quaternion,
     vec::{
@@ -139,11 +138,11 @@ impl RigidBodySimulationState {
         let position = self.position;
 
         for force in forces {
-            let (mut newtons, contact_point) = force(self, 0, current_time);
+            let (mut newtons, contact_point, is_gravity) = force(self, 0, current_time);
 
             // Accumulate linear momentum.
 
-            let acceleration = if newtons == EARTH_GRAVITY_ACCELERATION {
+            let acceleration = if is_gravity {
                 for contact in &self.static_contacts {
                     let gravity_projected_onto_contact_normal =
                         contact.normal * newtons.dot(contact.normal);
