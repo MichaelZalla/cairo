@@ -1,8 +1,6 @@
 use crate::{animation::lerp, physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
-use super::rigid_body::{
-    rigid_body_simulation_state::RigidBodySimulationState, RigidBodyCollisionResponse,
-};
+use super::rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, CollisionImpulse};
 
 fn get_point_plane_outgoing_velocity(
     plane_normal: Vec3,
@@ -264,7 +262,7 @@ pub fn resolve_rigid_body_plane_collision(
     contact_point_velocity: Vec3,
     r: Vec3,
     material: &PhysicsMaterial,
-) -> RigidBodyCollisionResponse {
+) -> CollisionImpulse {
     let normal_impulse_magnitude = get_rigid_body_plane_normal_impulse_magnitude(
         state,
         plane_normal,
@@ -281,12 +279,12 @@ pub fn resolve_rigid_body_plane_collision(
 
     state.angular_momentum += rotation_axis * normal_impulse_magnitude;
 
-    let mut response = RigidBodyCollisionResponse {
+    let mut response = CollisionImpulse {
         contact_point,
         contact_point_velocity,
         normal_impulse,
         tangent: None,
-        friction_impulse: None,
+        tangent_impulse: None,
     };
 
     if let Some((tangent, tangent_impulse_magnitude)) = get_rigid_body_plane_friction_impulse(
@@ -303,7 +301,7 @@ pub fn resolve_rigid_body_plane_collision(
         state.angular_momentum += r.cross(tangent) * tangent_impulse_magnitude;
 
         response.tangent.replace(tangent);
-        response.friction_impulse.replace(friction_impulse);
+        response.tangent_impulse.replace(friction_impulse);
     }
 
     response

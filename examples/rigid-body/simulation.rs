@@ -87,7 +87,7 @@ impl Simulation {
         }
 
         for sphere in self.rigid_bodies.iter_mut() {
-            sphere.collision_response.take();
+            sphere.collision_impulse.take();
         }
 
         // Detects and resolves collisions with static colliders.
@@ -236,7 +236,7 @@ impl Simulation {
 
                     let derivative = &derivative.0[i];
 
-                    let collision_response = resolve_rigid_body_plane_collision(
+                    let collision_impulse = resolve_rigid_body_plane_collision(
                         derivative,
                         new_body_state,
                         normal,
@@ -263,7 +263,7 @@ impl Simulation {
                                 - signed_distance_from_rigid_body_to_plane);
                     }
 
-                    body.collision_response.replace(collision_response);
+                    body.collision_impulse.replace(collision_impulse);
                 }
 
                 // Checks for any static contact.
@@ -389,7 +389,7 @@ impl Simulation {
                             *neighbor_body_index,
                             material,
                         ) {
-                            // sphere.collision_response.replace(...);
+                            // sphere.collision_impulse.replace(...);
                         }
                     }
                 }

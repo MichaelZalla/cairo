@@ -81,12 +81,12 @@ impl RigidBodyKind {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
-pub struct RigidBodyCollisionResponse {
+pub struct CollisionImpulse {
     pub contact_point: Vec3,
     pub contact_point_velocity: Vec3,
     pub normal_impulse: Vec3,
     pub tangent: Option<Vec3>,
-    pub friction_impulse: Option<Vec3>,
+    pub tangent_impulse: Option<Vec3>,
 }
 
 bitmask! {
@@ -124,7 +124,7 @@ pub struct RigidBody {
     pub aabb: Option<AABB>,
     pub static_contacts: StaticContactList<6>,
     // Debug state
-    pub collision_response: Option<RigidBodyCollisionResponse>,
+    pub collision_impulse: Option<CollisionImpulse>,
     pub debug_flags: RigidBodyDebugFlags,
     // Derived state
     inverse_mass: f32,
@@ -285,7 +285,7 @@ impl RigidBody {
             renderer.render_line(center, center + angular_velocity, color::LIGHT_GRAY);
         }
 
-        if let Some(response) = &self.collision_response {
+        if let Some(response) = &self.collision_impulse {
             if self
                 .debug_flags
                 .contains(RigidBodyDebugFlag::DrawCollisionContactPoint)
@@ -351,7 +351,7 @@ impl RigidBody {
             {
                 // Visualizes the collision response's friction impulse.
 
-                if let Some(friction_impulse) = &response.friction_impulse {
+                if let Some(friction_impulse) = &response.tangent_impulse {
                     renderer.render_line(
                         response.contact_point,
                         response.contact_point + friction_impulse,
