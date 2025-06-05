@@ -184,7 +184,8 @@ impl Simulation {
 
         if let Some((t, contact_point)) = intersection {
             if t > 1.0 {
-                // Ignores potential (future) intersection.
+                // A t-value greater than 1 indicates a future collision, which
+                // we'll ignore for this tick.
 
                 // Checks for any static contact.
 
@@ -203,14 +204,29 @@ impl Simulation {
                 return;
             }
 
+            // Computes the moment arm from the rigid body's center-of-mass to
+            // the colliding contact point.
+
             let r = end_position - contact_point;
+
+            // Computes the linear velocity of the contact point in our absolute
+            // (world-space) frame of reference.
 
             let contact_point_velocity =
                 end_linear_velocity + new_body_state.angular_velocity().cross(r);
 
+            // Calculates the amount that this velocity projects onto
+            // the collider's normal; note that a positive quantity
+            // indicates a velocity that moves out and away from the plane.
+
             let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(normal);
 
+            // Tests that the resulting velocity projects into the
+            // plane, i.e., the point is moving into the plane.
+
             if incoming_contact_point_speed_normal_to_plane > f32::EPSILON {
+                // The body is moving away from the collider.
+
                 let signed_distance_from_body_to_plane =
                     collider.plane.get_signed_distance(&end_position);
 
@@ -236,6 +252,13 @@ impl Simulation {
                 return;
             }
 
+            // At this point, we know that the rigid body intersects the
+            // collider, and that its point-of-contact is moving deeper into the
+            // collider. These are sufficient conditions for applying a normal
+            // impulse (i.e., a collision response).
+
+            // Removes any linear momentum gained while colliding.
+
             let time_before_collision = h * t;
             let time_after_collision = h - time_before_collision;
 
@@ -249,6 +272,10 @@ impl Simulation {
                 new_body_state.linear_momentum -= accumulated_linear_velocity * mass;
             }
 
+            // Calculates the magnitude of the normal impulse for this
+            // collision, based on the contact point's velocity, the plane
+            // normal, and the physics material.
+
             let collision_impulse = resolve_rigid_body_plane_collision(
                 body_derivative,
                 new_body_state,
@@ -259,6 +286,8 @@ impl Simulation {
                 material,
             );
 
+            // Determines the body's new position, using both velocities.
+
             let position_at_collision =
                 start_position + start_linear_velocity * time_before_collision;
 
@@ -266,6 +295,9 @@ impl Simulation {
                 position_at_collision + new_body_state.velocity() * time_after_collision;
 
             new_body_state.position = position_after_collision;
+
+            // If necessary, fixes up the body's position to maintain its
+            // minimum distance from the collider.
 
             let signed_distance_from_body_to_plane =
                 collider.plane.get_signed_distance(&new_body_state.position);
@@ -286,8 +318,12 @@ impl Simulation {
             &new_body_state.velocity(),
             minimum_distance_to_plane,
         ) {
+            // Removes the component of linear momentum pointing into the collider.
+
             new_body_state.linear_momentum -=
                 collider.plane.normal * new_body_state.linear_momentum.dot(collider.plane.normal);
+
+            // Records the contact.
 
             new_body_state.static_contacts.push(contact).unwrap();
         }
