@@ -148,9 +148,7 @@ impl Simulation {
         let start_linear_velocity = current_body_state.velocity();
 
         let end_position = new_body_state.position;
-
         let end_linear_velocity = new_body_state.velocity();
-        let end_angular_velocity = new_body_state.angular_velocity();
 
         // Determines a minimum distance that this body must maintain.
 
@@ -207,7 +205,8 @@ impl Simulation {
 
             let r = end_position - contact_point;
 
-            let contact_point_velocity = end_linear_velocity + end_angular_velocity.cross(r);
+            let contact_point_velocity =
+                end_linear_velocity + new_body_state.angular_velocity().cross(r);
 
             let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(normal);
 
