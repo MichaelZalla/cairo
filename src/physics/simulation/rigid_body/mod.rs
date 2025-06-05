@@ -286,7 +286,7 @@ impl RigidBody {
             renderer.render_line(center, center + angular_velocity, color::LIGHT_GRAY);
         }
 
-        if let Some(response) = &self.collision_impulse {
+        if let Some(impulse) = &self.collision_impulse {
             if self
                 .debug_flags
                 .contains(RigidBodyDebugFlag::DrawCollisionContactPoint)
@@ -294,7 +294,7 @@ impl RigidBody {
                 // Visualizes the contact point.
 
                 let scale = Mat4::scale_uniform(0.1);
-                let translation = Mat4::translation(response.contact_point);
+                let translation = Mat4::translation(impulse.contact_point);
                 let transform = scale * translation;
 
                 renderer.render_empty(
@@ -312,8 +312,8 @@ impl RigidBody {
                 // Visualizes the contact point's velocity.
 
                 renderer.render_line(
-                    response.contact_point,
-                    response.contact_point + response.contact_point_velocity.as_normal(),
+                    impulse.contact_point,
+                    impulse.contact_point + impulse.contact_point_velocity.as_normal(),
                     color::LIGHT_GRAY,
                 );
             }
@@ -325,8 +325,8 @@ impl RigidBody {
                 // Visualizes the collision response's normal impulse.
 
                 renderer.render_line(
-                    response.contact_point,
-                    response.contact_point + response.normal_impulse,
+                    impulse.contact_point,
+                    impulse.contact_point + impulse.normal_impulse,
                     color::BLUE,
                 );
             }
@@ -337,10 +337,10 @@ impl RigidBody {
             {
                 // Visualizes the tangent vector chosen for the friction response.
 
-                if let Some(tangent) = &response.tangent {
+                if let Some(tangent) = &impulse.tangent {
                     renderer.render_line(
-                        response.contact_point,
-                        response.contact_point + tangent,
+                        impulse.contact_point,
+                        impulse.contact_point + tangent,
                         color::GREEN,
                     );
                 }
@@ -352,10 +352,10 @@ impl RigidBody {
             {
                 // Visualizes the collision response's friction impulse.
 
-                if let Some(friction_impulse) = &response.tangent_impulse {
+                if let Some(friction_impulse) = &impulse.tangent_impulse {
                     renderer.render_line(
-                        response.contact_point,
-                        response.contact_point + friction_impulse,
+                        impulse.contact_point,
+                        impulse.contact_point + friction_impulse,
                         color::RED,
                     );
                 }
