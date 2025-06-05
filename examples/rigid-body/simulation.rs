@@ -145,7 +145,7 @@ impl Simulation {
         material: &PhysicsMaterial,
     ) {
         let start_position = current_body_state.position;
-        let start_velocity = current_body_state.velocity();
+        let start_linear_velocity = current_body_state.velocity();
 
         let end_position = new_body_state.position;
 
@@ -212,12 +212,12 @@ impl Simulation {
             let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(normal);
 
             if incoming_contact_point_speed_normal_to_plane > f32::EPSILON {
-                let signed_distance_from_rigid_body_to_plane =
+                let signed_distance_from_body_to_plane =
                     collider.plane.get_signed_distance(&end_position);
 
-                if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
-                    new_body_state.position += normal
-                        * (minimum_distance_to_plane - signed_distance_from_rigid_body_to_plane);
+                if signed_distance_from_body_to_plane < minimum_distance_to_plane {
+                    new_body_state.position +=
+                        normal * (minimum_distance_to_plane - signed_distance_from_body_to_plane);
                 }
 
                 // Checks for any static contact.
@@ -260,19 +260,20 @@ impl Simulation {
                 material,
             );
 
-            let position_at_collision = start_position + start_velocity * time_before_collision;
+            let position_at_collision =
+                start_position + start_linear_velocity * time_before_collision;
 
             let position_after_collision =
                 position_at_collision + new_body_state.velocity() * time_after_collision;
 
             new_body_state.position = position_after_collision;
 
-            let signed_distance_from_rigid_body_to_plane =
+            let signed_distance_from_body_to_plane =
                 collider.plane.get_signed_distance(&new_body_state.position);
 
-            if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
+            if signed_distance_from_body_to_plane < minimum_distance_to_plane {
                 new_body_state.position +=
-                    normal * (minimum_distance_to_plane - signed_distance_from_rigid_body_to_plane);
+                    normal * (minimum_distance_to_plane - signed_distance_from_body_to_plane);
             }
 
             body.collision_impulse.replace(collision_impulse);
