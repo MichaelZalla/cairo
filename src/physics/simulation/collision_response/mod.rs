@@ -489,7 +489,7 @@ pub fn get_rigid_body_plane_friction_impulse(
 
         let j_d = normal_impulse_magnitude * material.dynamic_friction;
 
-        -j_d
+        -(j_d.min(contact_point_linear_momentum_magnitude_along_tangent))
     };
 
     Some(TangentImpulseData { tangent, magnitude })
