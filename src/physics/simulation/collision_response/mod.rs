@@ -305,8 +305,8 @@ pub fn resolve_rigid_body_plane_collision(
     };
 
     if let Some(tangent_impulse_data) = get_rigid_body_plane_friction_impulse(
-        derivative,
         1.0 / state.inverse_mass,
+        derivative,
         normal,
         contact_point_velocity,
         normal_impulse_data.magnitude,
@@ -387,8 +387,8 @@ pub fn get_rigid_body_plane_normal_impulse(
 }
 
 pub fn get_rigid_body_plane_friction_impulse(
-    derivative: &RigidBodySimulationState,
     mass: f32,
+    derivative: &RigidBodySimulationState,
     normal: Vec3,
     contact_point_velocity: Vec3,
     normal_impulse_magnitude: f32,
