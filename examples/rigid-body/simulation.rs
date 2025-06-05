@@ -81,7 +81,7 @@ impl Simulation {
 
         // Detects and resolves collisions with static colliders.
 
-        self.check_static_collisions(
+        self.handle_static_collisions(
             h,
             &derivative,
             &state,
@@ -102,7 +102,7 @@ impl Simulation {
         }
     }
 
-    fn check_static_collisions(
+    fn handle_static_collisions(
         &mut self,
         h: f32,
         derivative: &StateVector<RigidBodySimulationState>,
@@ -110,149 +110,106 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
         material: &PhysicsMaterial,
     ) {
-        for i in 0..self.rigid_bodies.len() {
-            let body = &mut self.rigid_bodies[i];
+        for (collider_index, collider) in self.static_plane_colliders.iter().enumerate() {
+            for body_index in 0..self.rigid_bodies.len() {
+                let body = &mut self.rigid_bodies[body_index];
 
-            let current_body_state = &current_state.0[i];
-            let new_body_state = &mut new_state.0[i];
+                let body_derivative = &derivative.0[0];
+                let current_body_state = &current_state.0[body_index];
+                let new_body_state = &mut new_state.0[body_index];
 
-            // Resets resting or sliding contact for this tick.
+                if collider_index == 0 {
+                    // Clears any resting or sliding contacts from the last simulation tick.
 
-            new_body_state.static_contacts.clear();
-
-            let start_position = current_body_state.position;
-            let start_velocity = current_body_state.velocity();
-
-            let end_position = new_body_state.position;
-
-            let end_linear_velocity = new_body_state.velocity();
-            let end_angular_velocity = new_body_state.angular_velocity();
-
-            let minimum_distance_to_plane = match body.kind {
-                RigidBodyKind::Sphere(radius) => radius,
-                _ => panic!(),
-            };
-
-            for collider in &self.static_plane_colliders {
-                let normal = collider.plane.normal;
-
-                let body_speed_along_normal = end_linear_velocity.dot(normal);
-
-                if body_speed_along_normal > f32::EPSILON {
-                    // The sphere is moving away from the plane, so no collision could occur.
-                    continue;
+                    new_body_state.static_contacts.clear();
                 }
 
-                let intersection = match body.kind {
-                    RigidBodyKind::Sphere(radius) => intersect_capsule_plane(
-                        start_position,
-                        end_position,
-                        radius,
-                        &collider.plane,
-                    ),
-                    _ => panic!("Unsupported rigid body kind!"),
-                };
+                Self::handle_static_collision(
+                    h,
+                    body,
+                    body_derivative,
+                    current_body_state,
+                    new_body_state,
+                    collider,
+                    material,
+                );
+            }
+        }
+    }
 
-                if let Some((t, contact_point)) = intersection {
-                    if t > 1.0 {
-                        // Ignores potential (future) intersection.
+    #[allow(clippy::too_many_arguments)]
+    fn handle_static_collision(
+        h: f32,
+        body: &mut RigidBody,
+        body_derivative: &RigidBodySimulationState,
+        current_body_state: &RigidBodySimulationState,
+        new_body_state: &mut RigidBodySimulationState,
+        collider: &PlaneCollider,
+        material: &PhysicsMaterial,
+    ) {
+        let start_position = current_body_state.position;
+        let start_velocity = current_body_state.velocity();
 
-                        // Checks for any static contact.
+        let end_position = new_body_state.position;
 
-                        if let Some(contact) = Self::get_static_contact(
-                            &collider.plane,
-                            &new_body_state.position,
-                            &new_body_state.velocity(),
-                            minimum_distance_to_plane,
-                        ) {
-                            new_body_state.linear_momentum -= collider.plane.normal
-                                * new_body_state.linear_momentum.dot(collider.plane.normal);
+        let end_linear_velocity = new_body_state.velocity();
+        let end_angular_velocity = new_body_state.angular_velocity();
 
-                            new_body_state.static_contacts.push(contact).unwrap();
-                        }
+        let minimum_distance_to_plane = match body.kind {
+            RigidBodyKind::Sphere(radius) => radius,
+            _ => panic!(),
+        };
 
-                        continue;
-                    }
+        let normal = collider.plane.normal;
 
-                    let r = end_position - contact_point;
+        let body_speed_along_normal = end_linear_velocity.dot(normal);
 
-                    let contact_point_velocity =
-                        end_linear_velocity + end_angular_velocity.cross(r);
+        if body_speed_along_normal > f32::EPSILON {
+            // The sphere is moving away from the plane, so no collision could occur.
+            return;
+        }
 
-                    let incoming_contact_point_speed_normal_to_plane =
-                        contact_point_velocity.dot(normal);
+        let intersection = match body.kind {
+            RigidBodyKind::Sphere(radius) => {
+                intersect_capsule_plane(start_position, end_position, radius, &collider.plane)
+            }
+            _ => panic!("Unsupported rigid body kind!"),
+        };
 
-                    if incoming_contact_point_speed_normal_to_plane > f32::EPSILON {
-                        let signed_distance_from_rigid_body_to_plane =
-                            collider.plane.get_signed_distance(&end_position);
+        if let Some((t, contact_point)) = intersection {
+            if t > 1.0 {
+                // Ignores potential (future) intersection.
 
-                        if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
-                            new_body_state.position += normal
-                                * (minimum_distance_to_plane
-                                    - signed_distance_from_rigid_body_to_plane);
-                        }
+                // Checks for any static contact.
 
-                        // Checks for any static contact.
+                if let Some(contact) = Self::get_static_contact(
+                    &collider.plane,
+                    &new_body_state.position,
+                    &new_body_state.velocity(),
+                    minimum_distance_to_plane,
+                ) {
+                    new_body_state.linear_momentum -= collider.plane.normal
+                        * new_body_state.linear_momentum.dot(collider.plane.normal);
 
-                        if let Some(contact) = Self::get_static_contact(
-                            &collider.plane,
-                            &new_body_state.position,
-                            &new_body_state.velocity(),
-                            minimum_distance_to_plane,
-                        ) {
-                            new_body_state.linear_momentum -= collider.plane.normal
-                                * new_body_state.linear_momentum.dot(collider.plane.normal);
+                    new_body_state.static_contacts.push(contact).unwrap();
+                }
 
-                            new_body_state.static_contacts.push(contact).unwrap();
-                        }
+                return;
+            }
 
-                        continue;
-                    }
+            let r = end_position - contact_point;
 
-                    let time_before_collision = h * t;
-                    let time_after_collision = h - time_before_collision;
+            let contact_point_velocity = end_linear_velocity + end_angular_velocity.cross(r);
 
-                    {
-                        let linear_acceleration = derivative.0[i].linear_momentum;
+            let incoming_contact_point_speed_normal_to_plane = contact_point_velocity.dot(normal);
 
-                        let mass = 1.0 / new_body_state.inverse_mass;
+            if incoming_contact_point_speed_normal_to_plane > f32::EPSILON {
+                let signed_distance_from_rigid_body_to_plane =
+                    collider.plane.get_signed_distance(&end_position);
 
-                        let accumulated_linear_velocity =
-                            linear_acceleration * time_after_collision;
-
-                        new_body_state.linear_momentum -= accumulated_linear_velocity * mass;
-                    }
-
-                    let derivative = &derivative.0[i];
-
-                    let collision_impulse = resolve_rigid_body_plane_collision(
-                        derivative,
-                        new_body_state,
-                        normal,
-                        contact_point,
-                        contact_point_velocity,
-                        r,
-                        material,
-                    );
-
-                    let position_at_collision =
-                        start_position + start_velocity * time_before_collision;
-
-                    let position_after_collision =
-                        position_at_collision + new_body_state.velocity() * time_after_collision;
-
-                    new_body_state.position = position_after_collision;
-
-                    let signed_distance_from_rigid_body_to_plane =
-                        collider.plane.get_signed_distance(&new_body_state.position);
-
-                    if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
-                        new_body_state.position += normal
-                            * (minimum_distance_to_plane
-                                - signed_distance_from_rigid_body_to_plane);
-                    }
-
-                    body.collision_impulse.replace(collision_impulse);
+                if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
+                    new_body_state.position += normal
+                        * (minimum_distance_to_plane - signed_distance_from_rigid_body_to_plane);
                 }
 
                 // Checks for any static contact.
@@ -268,7 +225,63 @@ impl Simulation {
 
                     new_body_state.static_contacts.push(contact).unwrap();
                 }
+
+                return;
             }
+
+            let time_before_collision = h * t;
+            let time_after_collision = h - time_before_collision;
+
+            {
+                let linear_acceleration = body_derivative.linear_momentum;
+
+                let mass = 1.0 / new_body_state.inverse_mass;
+
+                let accumulated_linear_velocity = linear_acceleration * time_after_collision;
+
+                new_body_state.linear_momentum -= accumulated_linear_velocity * mass;
+            }
+
+            let collision_impulse = resolve_rigid_body_plane_collision(
+                body_derivative,
+                new_body_state,
+                normal,
+                contact_point,
+                contact_point_velocity,
+                r,
+                material,
+            );
+
+            let position_at_collision = start_position + start_velocity * time_before_collision;
+
+            let position_after_collision =
+                position_at_collision + new_body_state.velocity() * time_after_collision;
+
+            new_body_state.position = position_after_collision;
+
+            let signed_distance_from_rigid_body_to_plane =
+                collider.plane.get_signed_distance(&new_body_state.position);
+
+            if signed_distance_from_rigid_body_to_plane < minimum_distance_to_plane {
+                new_body_state.position +=
+                    normal * (minimum_distance_to_plane - signed_distance_from_rigid_body_to_plane);
+            }
+
+            body.collision_impulse.replace(collision_impulse);
+        }
+
+        // Checks for any static contact.
+
+        if let Some(contact) = Self::get_static_contact(
+            &collider.plane,
+            &new_body_state.position,
+            &new_body_state.velocity(),
+            minimum_distance_to_plane,
+        ) {
+            new_body_state.linear_momentum -=
+                collider.plane.normal * new_body_state.linear_momentum.dot(collider.plane.normal);
+
+            new_body_state.static_contacts.push(contact).unwrap();
         }
     }
 
