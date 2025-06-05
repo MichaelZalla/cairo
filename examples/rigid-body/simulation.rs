@@ -212,7 +212,7 @@ impl Simulation {
                     // Tests that the resulting velocity projects into the
                     // plane, i.e., the point is moving into the plane.
 
-                    if incoming_contact_point_speed_normal_to_plane < -f32::EPSILON {
+                    if incoming_contact_point_speed_normal_to_plane < -RESTING_SPEED_THRESHOLD {
                         // At this point, we know that the rigid body intersects
                         // the collider, and that its point-of-contact is moving
                         // deeper into the collider. These are sufficient conditions
