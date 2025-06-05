@@ -17,9 +17,10 @@ use cairo::{
     software_renderer::SoftwareRenderer,
 };
 
-use simulation::make_simulation;
+use make_simulation::make_simulation;
 
 pub mod integration;
+pub mod make_simulation;
 pub mod plane_collider;
 pub mod simulation;
 pub mod state_vector;
