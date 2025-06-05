@@ -150,13 +150,6 @@ impl Simulation {
         let end_position = new_body_state.position;
         let end_linear_velocity = new_body_state.velocity();
 
-        // Determines a minimum distance that this body must maintain.
-
-        let minimum_distance_to_plane = match body.kind {
-            RigidBodyKind::Sphere(radius) => radius,
-            _ => panic!(),
-        };
-
         // Tests whether any elastic or sliding collision may have occurred.
 
         let normal = collider.plane.normal;
@@ -171,6 +164,13 @@ impl Simulation {
 
             return;
         }
+
+        // Determines a minimum distance that this body must maintain.
+
+        let minimum_distance_to_plane = match body.kind {
+            RigidBodyKind::Sphere(radius) => radius,
+            _ => panic!(),
+        };
 
         // Tests for a body-collider intersection, according to the kind of
         // rigid body.
