@@ -152,19 +152,30 @@ impl Simulation {
         let end_linear_velocity = new_body_state.velocity();
         let end_angular_velocity = new_body_state.angular_velocity();
 
+        // Determines a minimum distance that this body must maintain.
+
         let minimum_distance_to_plane = match body.kind {
             RigidBodyKind::Sphere(radius) => radius,
             _ => panic!(),
         };
 
+        // Tests whether any elastic or sliding collision may have occurred.
+
         let normal = collider.plane.normal;
 
         let body_speed_along_normal = end_linear_velocity.dot(normal);
 
-        if body_speed_along_normal > f32::EPSILON {
-            // The sphere is moving away from the plane, so no collision could occur.
+        if body_speed_along_normal > RESTING_SPEED_THRESHOLD {
+            // The rigid body is moving away from the plane, allow it to
+            // continue on that trajectory.
+
+            // @NOTE This may only hold true for spheres!
+
             return;
         }
+
+        // Tests for a body-collider intersection, according to the kind of
+        // rigid body.
 
         let intersection = match body.kind {
             RigidBodyKind::Sphere(radius) => {
