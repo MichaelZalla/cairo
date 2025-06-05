@@ -2,6 +2,8 @@ extern crate sdl2;
 
 use std::{cell::RefCell, rc::Rc};
 
+use sdl2::keyboard::Keycode;
+
 use cairo::{
     app::{
         resolution::{self, Resolution},
@@ -176,9 +178,33 @@ fn main() -> Result<(), String> {
             None,
         )?;
 
-        let mut renderer = renderer_rc.borrow_mut();
+        // Plays around with the simulation world.
 
-        renderer.update(keyboard_state);
+        for keycode in keyboard_state.newly_pressed_keycodes.iter() {
+            #[allow(clippy::single_match)]
+            match *keycode {
+                Keycode::U => {
+                    let mut simulation = simulation_rc.borrow_mut();
+
+                    // Pushes bodies in contact away from their collider.
+
+                    for body in simulation.rigid_bodies.iter_mut() {
+                        for contact in &body.static_contacts {
+                            body.linear_momentum += contact.normal * 10.0;
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+
+        {
+            // Updates renderer options.
+
+            let mut renderer = renderer_rc.borrow_mut();
+
+            renderer.update(keyboard_state);
+        }
 
         if h > 0.0 {
             let mut simulation = simulation_rc.borrow_mut();
