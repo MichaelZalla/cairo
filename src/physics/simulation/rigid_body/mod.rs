@@ -371,7 +371,7 @@ impl RigidBody {
             for contact in &self.static_contacts {
                 let start = contact.point;
 
-                // Normal
+                // Contact normal
                 renderer.render_line(
                     start,
                     start + contact.normal,
@@ -382,7 +382,7 @@ impl RigidBody {
                     },
                 );
 
-                // Tangent
+                // Contact point velocity (tangent)
                 renderer.render_line(
                     start,
                     start + contact.tangent,
@@ -393,7 +393,7 @@ impl RigidBody {
                     },
                 );
 
-                // Bitangent
+                // Contact point velocity (bitangent)
                 renderer.render_line(
                     start,
                     start + contact.bitangent,

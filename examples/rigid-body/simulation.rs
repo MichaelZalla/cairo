@@ -32,9 +32,9 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
-static CONTACT_DISTANCE_THRESHOLD: f32 = 0.001;
+static CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
 
-static RESTING_SPEED_THRESHOLD: f32 = 0.5;
+static RESTING_SPEED_THRESHOLD: f32 = 0.05;
 
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
@@ -368,9 +368,16 @@ impl Simulation {
 
         let body_velocity = new_body_state.velocity();
 
-        let body_speed_along_normal = body_velocity.dot(normal);
+        let contact_point = new_body_state.position - normal * minimum_distance_to_plane;
 
-        if body_speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
+        let contact_point_velocity = body_velocity
+            - new_body_state
+                .angular_velocity()
+                .cross(contact_point - new_body_state.position);
+
+        let contact_point_speed_along_normal = contact_point_velocity.dot(normal);
+
+        if contact_point_speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
             return None;
         }
 
@@ -386,17 +393,17 @@ impl Simulation {
         // At this point, we can be certain that the object is resting, or
         // sliding along the plane.
 
-        let body_motion_tangent = {
-            let v = collider.point + body_velocity;
+        let contact_point_motion_tangent = {
+            let v = collider.point + contact_point_velocity;
 
             let d = collider.plane.get_signed_distance(&v);
 
-            let body_velocity_projected_onto_plane = v - collider.plane.normal * d;
+            let contact_point_velocity_projected_onto_plane = v - collider.plane.normal * d;
 
-            if body_velocity_projected_onto_plane.is_zero() {
+            if contact_point_velocity_projected_onto_plane.is_zero() {
                 None
             } else {
-                Some(body_velocity_projected_onto_plane.as_normal())
+                Some(contact_point_velocity_projected_onto_plane.as_normal())
             }
         };
 
@@ -404,22 +411,21 @@ impl Simulation {
             // Determines whether or not the external forces in the tangential
             // direction are large enough to overcome static friction.
 
-            let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
-                body_velocity.dot(tangent)
-            } else {
-                0.0
-            };
+            let contact_point_speed_along_tangent =
+                if let Some(tangent) = contact_point_motion_tangent {
+                    contact_point_velocity.dot(tangent)
+                } else {
+                    0.0
+                };
 
-            if body_speed_along_tangent < RESTING_SPEED_THRESHOLD {
+            if contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD {
                 StaticContactKind::Resting
             } else {
                 StaticContactKind::Sliding
             }
         };
 
-        let point = new_body_state.position - normal * minimum_distance_to_plane;
-
-        let (tangent, bitangent) = match body_motion_tangent {
+        let (tangent, bitangent) = match contact_point_motion_tangent {
             Some(tangent) => (tangent, tangent.cross(normal)),
             None => {
                 let (_, tangent, bitangent) = normal.basis();
@@ -430,7 +436,7 @@ impl Simulation {
 
         Some(StaticContact {
             kind,
-            point,
+            point: contact_point,
             normal,
             tangent,
             bitangent,
