@@ -390,8 +390,22 @@ impl Simulation {
             return None;
         }
 
-        // At this point, we can be certain that the object is resting, or
-        // sliding along the plane.
+        // At this point, we can be certain that the object is resting, rolling
+        // along the plane, or sliding along the plane.
+
+        let body_motion_tangent = {
+            let v = collider.point + body_velocity;
+
+            let d = collider.plane.get_signed_distance(&v);
+
+            let body_velocity_projected_onto_plane = v - collider.plane.normal * d;
+
+            if body_velocity_projected_onto_plane.is_zero() {
+                None
+            } else {
+                Some(body_velocity_projected_onto_plane.as_normal())
+            }
+        };
 
         let contact_point_motion_tangent = {
             let v = collider.point + contact_point_velocity;
@@ -411,6 +425,12 @@ impl Simulation {
             // Determines whether or not the external forces in the tangential
             // direction are large enough to overcome static friction.
 
+            let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
+                body_velocity.dot(tangent)
+            } else {
+                0.0
+            };
+
             let contact_point_speed_along_tangent =
                 if let Some(tangent) = contact_point_motion_tangent {
                     contact_point_velocity.dot(tangent)
@@ -418,8 +438,12 @@ impl Simulation {
                     0.0
                 };
 
-            if contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD {
+            if body_speed_along_tangent < RESTING_SPEED_THRESHOLD
+                && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD
+            {
                 StaticContactKind::Resting
+            } else if contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD {
+                StaticContactKind::Rolling(0.5)
             } else {
                 StaticContactKind::Sliding
             }

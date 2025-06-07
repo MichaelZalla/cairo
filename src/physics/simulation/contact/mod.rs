@@ -7,6 +7,7 @@ pub enum StaticContactKind {
     #[default]
     Resting,
     Sliding,
+    Rolling(f32),
 }
 
 impl fmt::Display for StaticContactKind {
@@ -15,8 +16,9 @@ impl fmt::Display for StaticContactKind {
             f,
             "{}",
             match self {
-                Self::Resting => "Resting",
-                Self::Sliding => "Sliding",
+                Self::Resting => "Resting".to_string(),
+                Self::Sliding => "Sliding".to_string(),
+                Self::Rolling(rolling_resistance) => format!("Rolling({})", rolling_resistance),
             }
         )
     }
