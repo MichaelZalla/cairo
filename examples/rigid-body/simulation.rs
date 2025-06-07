@@ -67,9 +67,9 @@ impl Simulation {
             state.0[i] = sphere.into();
         }
 
-        let derivative = system_dynamics_function(&state, &self.forces, uptime_seconds);
+        let derivative = system_dynamics_function(&state, &self.forces, h, uptime_seconds);
 
-        // Performs basic forward Euler integration over position and velocity.
+        // Performs basic first-order forward Euler integration (over position and velocity).
 
         let mut new_state = state.clone() + derivative.clone() * h;
 
@@ -334,6 +334,7 @@ impl Simulation {
             body_derivative,
             new_body_state,
             minimum_distance_to_plane,
+            material,
         ) {
             // Removes the component of linear momentum pointing into the collider.
 
@@ -351,6 +352,7 @@ impl Simulation {
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
         minimum_distance_to_plane: f32,
+        material: &PhysicsMaterial,
     ) -> Option<StaticContact> {
         let normal = collider.plane.normal;
 
@@ -464,6 +466,7 @@ impl Simulation {
             normal,
             tangent,
             bitangent,
+            material: *material,
         })
     }
 

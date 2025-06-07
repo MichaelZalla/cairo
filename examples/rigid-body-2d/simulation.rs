@@ -24,7 +24,7 @@ impl Simulation {
         }
 
         let new_state = {
-            let derivative = system_dynamics_function(&state, &self.forces, current_time);
+            let derivative = system_dynamics_function(&state, &self.forces, h, current_time);
 
             // Performs basic Euler integration over position and velocity.
 
@@ -43,6 +43,7 @@ impl Simulation {
 fn system_dynamics_function(
     state: &StateVector<RigidBodySimulationState>,
     forces: &[Box<DynRigidBodyForce>],
+    h: f32,
     current_time: f32,
 ) -> StateVector<RigidBodySimulationState> {
     let n = state.0.len();
@@ -65,7 +66,7 @@ fn system_dynamics_function(
 
         // 3. Rate-of-change of linear and angular momenta.
 
-        body_state.accumulate_accelerations(forces, current_time, body_derivative);
+        body_state.accumulate_accelerations(forces, body_derivative, h, current_time);
     }
 
     derivative

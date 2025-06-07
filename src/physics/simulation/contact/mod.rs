@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::vec::vec3::Vec3;
+use crate::{physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub enum StaticContactKind {
@@ -31,6 +31,7 @@ pub struct StaticContact {
     pub normal: Vec3,
     pub tangent: Vec3,
     pub bitangent: Vec3,
+    pub material: PhysicsMaterial,
 }
 
 #[derive(Debug, Copy, Clone)]

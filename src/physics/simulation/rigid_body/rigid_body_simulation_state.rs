@@ -4,7 +4,7 @@ use crate::{
     geometry::primitives::aabb::{Bounded, AABB},
     matrix::Mat4,
     physics::simulation::{
-        contact::StaticContactList,
+        contact::{StaticContactKind, StaticContactList},
         force::{DynForce, Force},
     },
     transform::quaternion::Quaternion,
@@ -132,8 +132,9 @@ impl RigidBodySimulationState {
     pub fn accumulate_accelerations(
         &self,
         forces: &[Box<DynRigidBodyForce>],
-        current_time: f32,
         derivative: &mut Self,
+        h: f32,
+        current_time: f32,
     ) {
         let position = self.position;
 
@@ -167,6 +168,38 @@ impl RigidBodySimulationState {
         for contact in &self.static_contacts {
             let external_force_magnitude_along_normal =
                 contact.normal.dot(remaining_total_acceleration);
+
+            if external_force_magnitude_along_normal < -0.001 {
+                if let StaticContactKind::Resting = &contact.kind {
+                    let external_force_magnitude_along_tangent =
+                        contact.tangent.dot(remaining_total_acceleration);
+
+                    let external_force_magnitude_along_tangent_required_to_slide =
+                        (-external_force_magnitude_along_normal * contact.material.static_friction)
+                            .min(0.001);
+
+                    if external_force_magnitude_along_tangent
+                        < external_force_magnitude_along_tangent_required_to_slide
+                    {
+                        // Applies static friction force, halting movement.
+
+                        let body_linear_velocity = self.velocity();
+                        let body_angular_velocity = self.angular_velocity();
+
+                        let scale = 1.0 / h.max(0.00001);
+
+                        let acceleration_needed_to_zero_linear_velocity =
+                            -body_linear_velocity * scale;
+
+                        remaining_total_acceleration = acceleration_needed_to_zero_linear_velocity;
+
+                        let torque_needed_to_zero_angular_velocity =
+                            -body_angular_velocity * scale * 0.999;
+
+                        total_torque = torque_needed_to_zero_angular_velocity;
+                    }
+                }
+            }
 
             let external_force_along_normal =
                 contact.normal * external_force_magnitude_along_normal;
