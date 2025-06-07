@@ -329,9 +329,12 @@ impl Simulation {
         // Determines if the resulting body state constitutes a resting or
         // a sliding contact.
 
-        if let Some(contact) =
-            Self::get_static_contact(collider, new_body_state, minimum_distance_to_plane)
-        {
+        if let Some(contact) = Self::get_static_contact(
+            collider,
+            body_derivative,
+            new_body_state,
+            minimum_distance_to_plane,
+        ) {
             // Removes the component of linear momentum pointing into the collider.
 
             new_body_state.linear_momentum -=
@@ -345,6 +348,7 @@ impl Simulation {
 
     fn get_static_contact(
         collider: &PlaneCollider,
+        derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
         minimum_distance_to_plane: f32,
     ) -> Option<StaticContact> {
@@ -352,41 +356,77 @@ impl Simulation {
 
         let signed_distance_to_plane = collider.plane.get_signed_distance(&new_body_state.position);
 
-        // Requires that the body be very close to the collider (within some
-        // threshold).
+        // 1. Requires that the body be very close to the collider
+        //    (within some threshold).
 
         if signed_distance_to_plane > minimum_distance_to_plane + CONTACT_DISTANCE_THRESHOLD {
             return None;
         }
 
-        // Requires that the body's speed along the normal be very small (within
-        // some threshold).
+        // 2. Requires that the contact point's speed along the normal be very small
+        //    (within some threshold).
 
         let body_velocity = new_body_state.velocity();
 
-        let speed_along_normal = body_velocity.dot(normal);
+        let body_speed_along_normal = body_velocity.dot(normal);
 
-        if speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
+        if body_speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
             return None;
         }
 
-        let body_velocity_along_normal = normal * speed_along_normal;
+        // 3. Requires that the forces acting on the body aren't pulling the
+        //    body away from the collider.
+
+        let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(normal);
+
+        if magnitude_of_acceleration_along_normal > f32::EPSILON {
+            return None;
+        }
 
         // At this point, we can be certain that the object is resting, or
         // sliding along the plane.
 
-        let (normal, tangent, bitangent) = normal.basis();
+        let body_motion_tangent = {
+            let v = collider.point + body_velocity;
 
-        let velocity_along_plane_tangent = body_velocity - body_velocity_along_normal;
-        let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
+            let d = collider.plane.get_signed_distance(&v);
 
-        let kind = if velocity_along_plane_tangent_mag <= RESTING_SPEED_THRESHOLD {
-            StaticContactKind::Resting
-        } else {
-            StaticContactKind::Sliding
+            let body_velocity_projected_onto_plane = v - collider.plane.normal * d;
+
+            if body_velocity_projected_onto_plane.is_zero() {
+                None
+            } else {
+                Some(body_velocity_projected_onto_plane.as_normal())
+            }
+        };
+
+        let kind = {
+            // Determines whether or not the external forces in the tangential
+            // direction are large enough to overcome static friction.
+
+            let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
+                body_velocity.dot(tangent)
+            } else {
+                0.0
+            };
+
+            if body_speed_along_tangent < RESTING_SPEED_THRESHOLD {
+                StaticContactKind::Resting
+            } else {
+                StaticContactKind::Sliding
+            }
         };
 
         let point = new_body_state.position - normal * minimum_distance_to_plane;
+
+        let (tangent, bitangent) = match body_motion_tangent {
+            Some(tangent) => (tangent, tangent.cross(normal)),
+            None => {
+                let (_, tangent, bitangent) = normal.basis();
+
+                (tangent, bitangent)
+            }
+        };
 
         Some(StaticContact {
             kind,
