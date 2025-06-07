@@ -162,16 +162,19 @@ impl RigidBodySimulationState {
             }
         }
 
+        let mut remaining_total_acceleration = total_acceleration;
+
         for contact in &self.static_contacts {
-            let external_force_magnitude_along_normal = contact.normal.dot(total_acceleration);
+            let external_force_magnitude_along_normal =
+                contact.normal.dot(remaining_total_acceleration);
 
             let external_force_along_normal =
                 contact.normal * external_force_magnitude_along_normal;
 
-            total_acceleration -= external_force_along_normal;
+            remaining_total_acceleration -= external_force_along_normal;
         }
 
-        derivative.linear_momentum += total_acceleration;
+        derivative.linear_momentum += remaining_total_acceleration;
         derivative.angular_momentum += total_torque;
     }
 }
