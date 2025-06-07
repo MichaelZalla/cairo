@@ -5,7 +5,7 @@ use cairo::{
     geometry::{
         accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
         intersect::{intersect_capsule_plane, intersect_moving_spheres},
-        primitives::{plane::Plane, sphere::Sphere},
+        primitives::sphere::Sphere,
     },
     matrix::Mat4,
     physics::{
@@ -326,14 +326,12 @@ impl Simulation {
                 normal * (minimum_distance_to_plane - signed_distance_from_body_to_plane);
         }
 
-        // Checks for any static contact.
+        // Determines if the resulting body state constitutes a resting or
+        // a sliding contact.
 
-        if let Some(contact) = Self::get_static_contact(
-            &collider.plane,
-            &new_body_state.position,
-            &new_body_state.velocity(),
-            minimum_distance_to_plane,
-        ) {
+        if let Some(contact) =
+            Self::get_static_contact(collider, new_body_state, minimum_distance_to_plane)
+        {
             // Removes the component of linear momentum pointing into the collider.
 
             new_body_state.linear_momentum -=
@@ -346,43 +344,57 @@ impl Simulation {
     }
 
     fn get_static_contact(
-        plane: &Plane,
-        position: &Vec3,
-        velocity: &Vec3,
+        collider: &PlaneCollider,
+        new_body_state: &RigidBodySimulationState,
         minimum_distance_to_plane: f32,
     ) -> Option<StaticContact> {
-        let signed_distance_to_plane = plane.get_signed_distance(position);
+        let normal = collider.plane.normal;
 
-        if signed_distance_to_plane <= minimum_distance_to_plane + CONTACT_DISTANCE_THRESHOLD {
-            let point = position - plane.normal * minimum_distance_to_plane;
+        let signed_distance_to_plane = collider.plane.get_signed_distance(&new_body_state.position);
 
-            let velocity_along_plane_normal = plane.normal * velocity.dot(plane.normal);
+        // Requires that the body be very close to the collider (within some
+        // threshold).
 
-            let speed_along_normal = velocity_along_plane_normal.mag();
-
-            if speed_along_normal <= RESTING_SPEED_THRESHOLD {
-                let (normal, tangent, bitangent) = plane.normal.basis();
-
-                let velocity_along_plane_tangent = velocity - velocity_along_plane_normal;
-                let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
-
-                let kind = if velocity_along_plane_tangent_mag <= RESTING_SPEED_THRESHOLD {
-                    StaticContactKind::Resting
-                } else {
-                    StaticContactKind::Sliding
-                };
-
-                return Some(StaticContact {
-                    kind,
-                    point,
-                    normal,
-                    tangent,
-                    bitangent,
-                });
-            }
+        if signed_distance_to_plane > minimum_distance_to_plane + CONTACT_DISTANCE_THRESHOLD {
+            return None;
         }
 
-        None
+        // Requires that the body's speed along the normal be very small (within
+        // some threshold).
+
+        let body_velocity = new_body_state.velocity();
+
+        let speed_along_normal = body_velocity.dot(normal);
+
+        if speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
+            return None;
+        }
+
+        let body_velocity_along_normal = normal * speed_along_normal;
+
+        // At this point, we can be certain that the object is resting, or
+        // sliding along the plane.
+
+        let (normal, tangent, bitangent) = normal.basis();
+
+        let velocity_along_plane_tangent = body_velocity - body_velocity_along_normal;
+        let velocity_along_plane_tangent_mag = velocity_along_plane_tangent.mag();
+
+        let kind = if velocity_along_plane_tangent_mag <= RESTING_SPEED_THRESHOLD {
+            StaticContactKind::Resting
+        } else {
+            StaticContactKind::Sliding
+        };
+
+        let point = new_body_state.position - normal * minimum_distance_to_plane;
+
+        Some(StaticContact {
+            kind,
+            point,
+            normal,
+            tangent,
+            bitangent,
+        })
     }
 
     fn check_rigid_bodies_collisions(
