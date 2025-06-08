@@ -170,34 +170,55 @@ impl RigidBodySimulationState {
                 contact.normal.dot(remaining_total_acceleration);
 
             if external_force_magnitude_along_normal < -0.001 {
-                if let StaticContactKind::Resting = &contact.kind {
-                    let external_force_magnitude_along_tangent =
-                        contact.tangent.dot(remaining_total_acceleration);
+                let external_force_magnitude_along_tangent =
+                    contact.tangent.dot(remaining_total_acceleration);
 
-                    let external_force_magnitude_along_tangent_required_to_slide =
-                        (-external_force_magnitude_along_normal * contact.material.static_friction)
-                            .min(0.001);
+                match &contact.kind {
+                    StaticContactKind::Resting => {
+                        let external_force_magnitude_along_tangent_required_to_slide =
+                            (-external_force_magnitude_along_normal
+                                * contact.material.static_friction)
+                                .min(0.001);
 
-                    if external_force_magnitude_along_tangent
-                        < external_force_magnitude_along_tangent_required_to_slide
-                    {
-                        // Applies static friction force, halting movement.
+                        if external_force_magnitude_along_tangent
+                            < external_force_magnitude_along_tangent_required_to_slide
+                        {
+                            // Applies static friction force, halting movement.
 
-                        let body_linear_velocity = self.velocity();
-                        let body_angular_velocity = self.angular_velocity();
+                            let body_linear_velocity = self.velocity();
+                            let body_angular_velocity = self.angular_velocity();
 
-                        let scale = 1.0 / h.max(0.00001);
+                            let scale = 1.0 / h.max(0.00001);
 
-                        let acceleration_needed_to_zero_linear_velocity =
-                            -body_linear_velocity * scale;
+                            let acceleration_needed_to_zero_linear_velocity =
+                                -body_linear_velocity * scale;
 
-                        remaining_total_acceleration = acceleration_needed_to_zero_linear_velocity;
+                            remaining_total_acceleration =
+                                acceleration_needed_to_zero_linear_velocity;
 
-                        let torque_needed_to_zero_angular_velocity =
-                            -body_angular_velocity * scale * 0.999;
+                            let torque_needed_to_zero_angular_velocity =
+                                -body_angular_velocity * scale * 0.999;
 
-                        total_torque = torque_needed_to_zero_angular_velocity;
+                            total_torque = torque_needed_to_zero_angular_velocity;
+                        }
                     }
+                    StaticContactKind::Sliding => {
+                        // Applies force of dynamic friction, acting on the moving
+                        // point of contact.
+
+                        let magnitude = (external_force_magnitude_along_normal
+                            * contact.material.dynamic_friction)
+                            .min(external_force_magnitude_along_tangent);
+
+                        let force_at_contact_point = -contact.tangent * magnitude;
+
+                        remaining_total_acceleration += force_at_contact_point;
+
+                        let r = contact.point - self.position;
+
+                        total_torque += r.cross(force_at_contact_point);
+                    }
+                    _ => (),
                 }
             }
 
