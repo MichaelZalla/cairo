@@ -317,7 +317,7 @@ pub fn resolve_rigid_body_plane_collision(
 
         let tangent_impulse = tangent * magnitude;
 
-        state.linear_momentum -= tangent_impulse;
+        state.linear_momentum += tangent_impulse;
         state.angular_momentum += r.cross(tangent) * magnitude;
 
         response.tangent.replace(tangent);
