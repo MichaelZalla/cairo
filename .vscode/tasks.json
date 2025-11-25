@@ -456,6 +456,7 @@
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
         "point-shadows"
       ]
@@ -557,6 +558,7 @@
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
         "rigid-body",
       ]
@@ -589,6 +591,7 @@
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
         "scenegraph"
       ]
@@ -653,6 +656,7 @@
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
         "sponza"
       ]
@@ -669,6 +673,7 @@
       "command": "cargo",
       "args": [
         "run",
+        "--release",
         "--example",
         "springy-mesh"
       ]
