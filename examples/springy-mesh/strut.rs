@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use cairo::{
     color::Color,
     physics::simulation::{particle::Particle, state_vector::StateVector, units::Newtons},
@@ -7,6 +9,33 @@ use cairo::{
 pub static PARTICLE_MASS: f32 = 2.0;
 
 pub static UNDAMPED_PERIOD: f32 = 0.25;
+
+//
+// No damping
+//
+//   No steady state.
+//   0.0
+//
+// Overdamped (zeta > 1)
+//
+//   Returns to a steady state without oscillating.
+//
+//   3.0
+//
+// Critically damped (zeta = 1)
+//
+//   Returns to a steady state without oscillating as quickly as
+//   possible.
+//
+//   1.0
+//
+// Underdamped (zeta < 1)
+//
+//   Returns to a steady state with oscillation amplitude
+//   gradually decreasing to zero.
+//
+//   0.15
+//
 
 pub static DAMPING_RATIO: f32 = 0.3;
 
@@ -256,6 +285,32 @@ impl Strut {
         let angle = Strut::get_angle(h, left_normal, right_normal);
 
         self.delta_angle = angle - self.rest_angle;
+
+        // Dynamically adjust torsional spring parameters.
+        // (Prevents instability as the mesh deforms)
+
+        // Average perpendicular distance from the hinge edge to the connected vertices.
+        // (Current lever arm distance)
+        let r = (right_r_mag + left_r_mag) / 2.0;
+
+        // Angular stiffness of the torsional spring
+        // (Given the desired UNDAMPED_PERIOD, calculate what torsional spring
+        // constant is needed to achieve that period with the current lever-arm
+        // distance r).
+        let k_a = (4.0 * PI * PI * PARTICLE_MASS * r * r) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
+
+        // Updating the torsional spring's damping coefficient (c):
+
+        // z = c / 2 sqrt(m r^2 k)
+        // c = z 2 r sqrt(mk)
+        // c^2 = z^2 2^2 r^2 mk
+        // c^2 = z^2 2^2 r^2 mk
+        // c = z 2 r sqrt(mk)
+
+        let c_a = DAMPING_RATIO * 2.0 * r * (PARTICLE_MASS * k_a).sqrt();
+
+        self.torsional_strength = k_a;
+        self.torsional_damper = c_a;
 
         let torsional_spring_force_magnitude = -self.torsional_strength * self.delta_angle;
 
