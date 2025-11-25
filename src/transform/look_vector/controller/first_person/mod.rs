@@ -50,7 +50,12 @@ impl LookVectorController for FirstPersonLookVectorController {
             self.apply_mouse_input(look_vector, mouse_state);
         }
 
-        let camera_movement_step = movement_speed * timing_info.seconds_since_last_update;
+        let camera_movement_step = movement_speed
+            * if timing_info.seconds_since_last_update == 0.0 {
+                0.01
+            } else {
+                timing_info.seconds_since_last_update
+            };
 
         // Apply camera movement based on keyboard input.
 
