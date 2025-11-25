@@ -701,8 +701,14 @@ impl Simulation {
             renderer.render_empty(
                 &transform,
                 EmptyDisplayKind::Square,
-                true,
+                false,
                 Some(color::ORANGE),
+            );
+
+            renderer.render_line(
+                collider.point,
+                collider.point + collider.plane.normal * 5.0,
+                color::GREEN,
             );
         }
     }
