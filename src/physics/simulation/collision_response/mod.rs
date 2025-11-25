@@ -2,6 +2,17 @@ use crate::{animation::lerp, physics::material::PhysicsMaterial, vec::vec3::Vec3
 
 use super::rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, CollisionImpulse};
 
+/// Minimum tangential velocity (m/s) for a moving contact point,
+/// below which dynamic (kinetic) friction calculation is skipped.
+static MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION: f32 = 0.01;
+static MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION_SQUARED: f32 = 0.0001; // 0.01^2 (for vector magnitudes)
+
+/// Minimum tangential force/acceleration (N or m/s²) acting on a resting
+/// contact point below which static friction calculation is skipped.
+///
+/// 0.01 N squared (avoids square root for performance)
+static MIN_TANGENTIAL_FORCE_FOR_STATIC_FRICTION_SQUARED: f32 = 0.0001; // 0.01^2
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct NormalImpulseData {
     pub contact_point: Vec3,
@@ -420,7 +431,8 @@ pub fn get_rigid_body_plane_friction_impulse(
         let tangential_component =
             contact_point_velocity - normal * incoming_contact_point_speed_normal_to_plane;
 
-        if tangential_component.mag_squared() < f32::EPSILON {
+        if tangential_component.mag_squared() < MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION_SQUARED
+        {
             // The velocity of the contact point projected onto the tangent is
             // negligible. No friction response for this collision.
 
@@ -438,9 +450,10 @@ pub fn get_rigid_body_plane_friction_impulse(
             // f_e - f_e.dot(n) * n
             let tangential_component = f_e - normal * (f_e.dot(normal));
 
-            if tangential_component.mag_squared() < f32::EPSILON {
-                // The velocity of the rigid body projected onto the tangent is
-                // negligible. No friction response for this collision.
+            if tangential_component.mag_squared() < MIN_TANGENTIAL_FORCE_FOR_STATIC_FRICTION_SQUARED
+            {
+                // The tangential force acting on the rigid body is negligible.
+                // No friction response for this collision.
 
                 return None;
             }
@@ -471,7 +484,8 @@ pub fn get_rigid_body_plane_friction_impulse(
 
     let j_s = normal_impulse_magnitude * material.static_friction;
 
-    let magnitude = if contact_point_speed_along_tangent.abs() < f32::EPSILON
+    let magnitude = if contact_point_speed_along_tangent.abs()
+        < MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION
         || contact_point_linear_momentum_magnitude_along_tangent <= j_s
     {
         // Our contact point has a negligible tangential velocity, or its
