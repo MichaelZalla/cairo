@@ -18,17 +18,7 @@ pub fn system_dynamics_function(
         let body_state = &state.0[i];
         let body_derivative = &mut derivative.0[i];
 
-        // 1. Rate-of-change of position (velocity).
-
-        // Derive velocity from the body's current linear momentum.
-
-        body_derivative.position = body_state.velocity();
-
-        // 2. Derive angular velocity from current orientation and angular momentum.
-
-        body_derivative.orientation = body_state.angular_velocity_quaternion();
-
-        // 3. Rate-of-change of linear and angular momenta.
+        // Compute rate-of-change of linear and angular momenta.
 
         body_state.accumulate_accelerations(forces, body_derivative, h, current_time);
     }

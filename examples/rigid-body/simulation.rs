@@ -25,7 +25,8 @@ use cairo::{
     render::Renderer,
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
-    vec::vec3::{self, Vec3},
+    transform::quaternion::Quaternion,
+    vec::{vec3, vec3::Vec3, vec4::Vec4},
 };
 
 use crate::integration::system_dynamics_function;
@@ -70,9 +71,40 @@ impl Simulation {
 
         let derivative = system_dynamics_function(&state, &self.forces, h, uptime_seconds);
 
-        // Performs basic first-order forward Euler integration (over position and velocity).
+        // Semi-implicit Euler integration: update momenta from forces,
+        // then update position and orientation from the new momenta.
 
-        let mut new_state = state.clone() + derivative.clone() * h;
+        let mut new_state = state.clone();
+
+        for (body, derivative) in new_state.0.iter_mut().zip(derivative.0.iter()) {
+            // Update linear momentum from forces.
+            body.linear_momentum += derivative.linear_momentum * h;
+
+            // Update angular momentum from torques.
+            body.angular_momentum += derivative.angular_momentum * h;
+
+            // Update position from new linear momentum (semi-implicit step).
+            body.position += body.linear_momentum * body.inverse_mass * h;
+
+            // Compute angular velocity from new angular momentum.
+            let new_angular_spin = {
+                let angular_momentum = Vec4::vector(body.angular_momentum);
+
+                let inverse_moment_of_inertia_world_space =
+                    body.inverse_moment_of_inertia_world_space();
+
+                let angular_velocity =
+                    (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3();
+
+                Quaternion::from_raw(0.0, angular_velocity)
+            };
+
+            // Compute orientation derivative from angular velocity.
+            let orientation_derivative = body.orientation * 0.5 * new_angular_spin;
+
+            // Update orientation.
+            body.orientation += orientation_derivative * h;
+        }
 
         for sphere in self.rigid_bodies.iter_mut() {
             sphere.collision_impulse.take();
