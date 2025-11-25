@@ -199,7 +199,13 @@ fn main() -> Result<(), String> {
 
             // Advance our particle simulation by delta time.
 
-            simulation.tick(h, uptime);
+            static TICKS_PER_UPDATE: usize = 4;
+
+            let sub_h = h / TICKS_PER_UPDATE as f32;
+
+            for _ in 0..TICKS_PER_UPDATE {
+                simulation.tick(sub_h, uptime);
+            }
         }
 
         Ok(())
