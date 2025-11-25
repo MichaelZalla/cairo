@@ -466,6 +466,7 @@ impl Simulation {
             normal,
             tangent,
             bitangent,
+            contact_point_velocity,
             material: *material,
         })
     }

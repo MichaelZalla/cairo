@@ -31,6 +31,7 @@ pub struct StaticContact {
     pub normal: Vec3,
     pub tangent: Vec3,
     pub bitangent: Vec3,
+    pub contact_point_velocity: Vec3,
     pub material: PhysicsMaterial,
 }
 

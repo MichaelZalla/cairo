@@ -313,7 +313,7 @@ impl RigidBody {
 
                 renderer.render_line(
                     impulse.contact_point,
-                    impulse.contact_point + impulse.contact_point_velocity.as_normal(),
+                    impulse.contact_point + impulse.contact_point_velocity,
                     color::LIGHT_GRAY,
                 );
             }
@@ -381,6 +381,9 @@ impl RigidBody {
                         color::BLUE
                     },
                 );
+
+                // Contact point velocity
+                renderer.render_line(start, start + contact.contact_point_velocity, color::ORANGE);
 
                 // Contact point velocity (tangent)
                 renderer.render_line(
