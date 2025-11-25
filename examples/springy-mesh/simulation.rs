@@ -739,27 +739,21 @@ impl Simulation {
 
                     // Updates edge vertex positions.
 
-                    let bias = normal * 0.01;
-
                     new_state.data[p1] = state.data[p1]
                         + derivative.data[p1] * time_before_collision
-                        + p1_velocity * time_after_collision
-                        + bias;
+                        + p1_velocity * time_after_collision;
 
                     new_state.data[p2] = state.data[p2]
                         + derivative.data[p2] * time_before_collision
-                        + p2_velocity * time_after_collision
-                        + bias;
+                        + p2_velocity * time_after_collision;
 
                     new_state.data[q1] = state.data[q1]
                         + derivative.data[q1] * time_before_collision
-                        + q1_velocity * time_after_collision
-                        - bias;
+                        + q1_velocity * time_after_collision;
 
                     new_state.data[q2] = state.data[q2]
                         + derivative.data[q2] * time_before_collision
-                        + q2_velocity * time_after_collision
-                        - bias;
+                        + q2_velocity * time_after_collision;
 
                     self.edge_collisions.push(collision);
 
