@@ -53,6 +53,7 @@ pub struct Simulation {
     pub rigid_bodies: Vec<RigidBody>,
     pub static_plane_colliders: Vec<PlaneCollider>,
     pub hash_grid: HashGrid,
+    pub visualize_hash_grid: bool,
 }
 
 impl Simulation {
@@ -657,26 +658,28 @@ impl Simulation {
 
         // Visualize hash grid entries.
 
-        for grid_coord in self.hash_grid.map.keys() {
-            let transform = {
-                let scale = Mat4::scale_uniform(0.5 * self.hash_grid.scale);
+        if self.visualize_hash_grid {
+            for grid_coord in self.hash_grid.map.keys() {
+                let transform = {
+                    let scale = Mat4::scale_uniform(0.5 * self.hash_grid.scale);
 
-                let offset = Mat4::translation(vec3::ONES * 0.5);
+                    let offset = Mat4::translation(vec3::ONES * 0.5);
 
-                let translate = Mat4::translation(Vec3 {
-                    x: (grid_coord.x as f32 * self.hash_grid.scale),
-                    y: (grid_coord.y as f32 * self.hash_grid.scale),
-                    z: (grid_coord.z as f32 * self.hash_grid.scale),
-                });
+                    let translate = Mat4::translation(Vec3 {
+                        x: (grid_coord.x as f32 * self.hash_grid.scale),
+                        y: (grid_coord.y as f32 * self.hash_grid.scale),
+                        z: (grid_coord.z as f32 * self.hash_grid.scale),
+                    });
 
-                scale * offset * translate
-            };
+                    scale * offset * translate
+                };
 
-            let display_kind = EmptyDisplayKind::Cube;
+                let display_kind = EmptyDisplayKind::Cube;
 
-            let color = Some(color::LIGHT_GRAY);
+                let color = Some(color::LIGHT_GRAY);
 
-            renderer.render_empty(&transform, display_kind, false, color);
+                renderer.render_empty(&transform, display_kind, false, color);
+            }
         }
 
         for collider in &self.static_plane_colliders {

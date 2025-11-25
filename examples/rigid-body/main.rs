@@ -184,6 +184,13 @@ fn main() -> Result<(), String> {
         for keycode in keyboard_state.newly_pressed_keycodes.iter() {
             #[allow(clippy::single_match)]
             match *keycode {
+                Keycode::G => {
+                    let mut simulation = simulation_rc.borrow_mut();
+
+                    // Toggles hash grid visualization.
+
+                    simulation.visualize_hash_grid = !simulation.visualize_hash_grid;
+                }
                 Keycode::U => {
                     let mut simulation = simulation_rc.borrow_mut();
 

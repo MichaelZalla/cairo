@@ -139,5 +139,6 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
             HashGridInsertionStrategy::default(),
             MAX_SPHERE_RADIUS * 2.0,
         ),
+        visualize_hash_grid: false,
     }
 }
