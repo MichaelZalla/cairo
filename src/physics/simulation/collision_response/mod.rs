@@ -377,6 +377,19 @@ pub fn get_rigid_body_plane_normal_impulse(
         panic!()
     }
 
+    // Note: It might be possible to optimize this using case analysis:
+    //
+    //   1. The rigid body's velocity, contact point velocity, and moment arm
+    //      are such that no change in angular momentum is possible.
+    //      (when r is perfectly parallel to the plane normal, the cross-product of
+    //       r and the normal yields the zero vector).
+    //
+    //   2. Otherwise, (common case) some change in angular momentum will be
+    //     introduced.
+    //
+    // The difficulty lies in identifying which case the collision falls into,
+    // in a way that actually saves us cycles on the whole.
+
     let change_in_angular_velocity_normalized = /* j * */
         r.cross(normal) * state.inverse_moment_of_inertia_world_space();
 
