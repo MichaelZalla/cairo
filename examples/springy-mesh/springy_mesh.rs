@@ -23,6 +23,12 @@ use cairo::{
 
 use crate::strut::{Edge, Strut, PARTICLE_MASS};
 
+pub enum SpringyMeshType {
+    Spring { with_connected_points: bool },
+    Tetrahedron,
+    Cube,
+}
+
 bitmask! {
     #[derive(Debug)]
     pub mask SpringyMeshDebugFlags: u32 where flags SpringyMeshDebugFlag {

@@ -17,6 +17,8 @@ use cairo::{
 
 use simulation::make_simulation;
 
+use crate::springy_mesh::SpringyMeshType;
+
 mod integration;
 mod plane_collider;
 mod simulation;
@@ -102,7 +104,7 @@ fn main() -> Result<(), String> {
         sampler
     };
 
-    let simulation = make_simulation(&mut sampler);
+    let simulation = make_simulation(&mut sampler, SpringyMeshType::Cube, 1.5);
 
     let simulation_rc = RefCell::new(simulation);
 

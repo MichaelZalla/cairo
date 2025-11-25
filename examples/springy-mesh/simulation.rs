@@ -34,7 +34,7 @@ use cairo::{
 use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
-    springy_mesh::{self, SpringyMesh},
+    springy_mesh::{self, SpringyMesh, SpringyMeshType},
     strut::{DAMPING_RATIO, PARTICLE_MASS, UNDAMPED_PERIOD},
 };
 
@@ -788,7 +788,11 @@ impl Simulation {
     }
 }
 
-pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
+pub fn make_simulation(
+    sampler: &mut RandomSampler<1024>,
+    mesh_type: SpringyMeshType,
+    scale: f32,
+) -> Simulation {
     // Forces.
 
     let forces: Vec<PointForce> = vec![
@@ -805,9 +809,13 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
     let mut meshes = Vec::with_capacity(NUM_MESHES);
 
     for _ in 0..meshes.capacity() {
-        // let (points, struts) = springy_mesh::make_spring(SIDE_LENGTH, true);
-        let (points, struts) = springy_mesh::make_tetrahedron(SIDE_LENGTH);
-        // let (points, struts) = springy_mesh::make_cube(SIDE_LENGTH);
+        let (points, struts) = match mesh_type {
+            SpringyMeshType::Spring { with_connected_points } => {
+                springy_mesh::make_spring(SIDE_LENGTH, with_connected_points)
+            }
+            SpringyMeshType::Tetrahedron => springy_mesh::make_tetrahedron(SIDE_LENGTH),
+            SpringyMeshType::Cube => springy_mesh::make_cube(SIDE_LENGTH),
+        };
 
         let mut mesh = springy_mesh::make_springy_mesh(points, struts, sampler);
 
@@ -835,7 +843,7 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
                 z: sampler.sample_range_normal(0.0, BOUNDS),
             });
 
-            let scale = Mat4::scale_uniform(1.2);
+            let scale = Mat4::scale_uniform(scale);
 
             scale * *rotation.mat() * translation
         };
