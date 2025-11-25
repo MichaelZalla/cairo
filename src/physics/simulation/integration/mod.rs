@@ -30,5 +30,5 @@ where
     let k3 = sdf(state + k2 * (h * 0.5));
     let k4 = sdf(state + k3 * h);
 
-    state + (k1 + k2 * 2.0 + k3 * 2.0 + k4) * (h * 0.166_666_67)
+    state + (k1 + k2 * 2.0 + k3 * 2.0 + k4) * h * (1.0 / 6.0)
 }
