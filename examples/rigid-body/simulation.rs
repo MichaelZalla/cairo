@@ -421,6 +421,10 @@ impl Simulation {
 
         let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(normal);
 
+        // @NOTE For a rigid body shape that is more complex than a sphere, the
+        // body may be moving away from the plane, while the point of contact is
+        // moving into it!
+
         if magnitude_of_acceleration_along_normal > f32::EPSILON {
             return None;
         }
