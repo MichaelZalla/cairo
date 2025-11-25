@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    f32::consts::{PI, TAU},
-};
+use std::collections::{HashMap, HashSet};
 
 use cairo::{
     animation::lerp,
@@ -13,7 +10,6 @@ use cairo::{
             line_segment::{get_closest_points_between_segments, LineSegment},
         },
     },
-    matrix::Mat4,
     physics::simulation::{
         collision_response::{
             resolve_edge_edge_collision, resolve_point_plane_collision_approximate,
@@ -22,20 +18,15 @@ use cairo::{
         force::{gravity::GRAVITY_POINT_FORCE, PointForce},
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
-    random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
+    random::sampler::RandomSampler,
     software_renderer::SoftwareRenderer,
-    transform::quaternion::Quaternion,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::vec3::{self, Vec3},
 };
 
 use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
-    springy_mesh::{self, SpringyMesh, SpringyMeshType},
-    strut::{DAMPING_RATIO, PARTICLE_MASS, UNDAMPED_PERIOD},
+    springy_mesh::{make_springy_meshes, SpringyMesh, SpringyMeshType},
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2; // { position, velocity }
@@ -803,107 +794,9 @@ pub fn make_simulation(
     // Springy meshes.
 
     static NUM_MESHES: usize = 25;
-
     static SIDE_LENGTH: f32 = 3.0;
 
-    let mut meshes = Vec::with_capacity(NUM_MESHES);
-
-    for _ in 0..meshes.capacity() {
-        let (points, struts) = match mesh_type {
-            SpringyMeshType::Spring { with_connected_points } => {
-                springy_mesh::make_spring(SIDE_LENGTH, with_connected_points)
-            }
-            SpringyMeshType::Tetrahedron => springy_mesh::make_tetrahedron(SIDE_LENGTH),
-            SpringyMeshType::Cube => springy_mesh::make_cube(SIDE_LENGTH),
-        };
-
-        let mut mesh = springy_mesh::make_springy_mesh(points, struts, sampler);
-
-        let speed = sampler.sample_range_normal(5.0, 5.0);
-
-        let velocity = sampler.sample_direction_uniform() * speed;
-
-        // Mesh transform.
-
-        let transform = {
-            let rotation = {
-                let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
-                let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
-                let rotate_z =
-                    Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, TAU));
-
-                rotate_x * rotate_y * rotate_z
-            };
-
-            static BOUNDS: f32 = 15.0;
-
-            let translation = Mat4::translation(Vec3 {
-                x: sampler.sample_range_normal(0.0, BOUNDS),
-                y: sampler.sample_range_normal(35.0, 15.0),
-                z: sampler.sample_range_normal(0.0, BOUNDS),
-            });
-
-            let scale = Mat4::scale_uniform(scale);
-
-            scale * *rotation.mat() * translation
-        };
-
-        for point in &mut mesh.points {
-            point.position = (Vec4::position(point.position) * transform).to_vec3();
-            point.velocity = velocity;
-        }
-
-        for strut in &mut mesh.struts {
-            // P_n = 2 Pi sqrt(m / k)
-            // P_n^2 = 4 Pi^2 (m/k)
-            // k P_n^2 = 4 Pi^2 m
-            // k = (4 Pi^2 m) / P_n^2
-
-            let k = (4.0 * PI * PI * PARTICLE_MASS) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
-
-            // z = c / 2 sqrt(m * k)
-            // c = z * 2 * sqrt(mk)
-            // c^2 = z^2 * 2^2 * mk
-            // c^2 = z^2 * 2^2 * mk
-            // c = z 2 sqrt(mk)
-
-            let c = DAMPING_RATIO * 2.0 * (PARTICLE_MASS * k).sqrt();
-
-            strut.spring_strength = k / strut.rest_length;
-            strut.spring_damper = c / strut.rest_length;
-
-            if strut.edge.connected_points.is_some() {
-                // P_n = 2 Pi sqrt(m r^2 / k)
-                // P_n = 2 Pi r sqrt(m / k)
-                // P_n^2 = 4 Pi^2 r^2 (m/k)
-                // k P_n^2 = 4 Pi^2 m r^2
-                // k = (4 Pi^2 m r^2) / P_n^2
-
-                let factor = SIDE_LENGTH / 2.0;
-
-                let r = (factor * factor + factor * factor).sqrt();
-
-                let k_a =
-                    (4.0 * PI * PI * PARTICLE_MASS * r * r) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
-
-                // z = c / 2 sqrt(m r^2 k)
-                // c = z 2 r sqrt(mk)
-                // c^2 = z^2 2^2 r^2 mk
-                // c^2 = z^2 2^2 r^2 mk
-                // c = z 2 r sqrt(mk)
-
-                let c_a = DAMPING_RATIO * 2.0 * r * (PARTICLE_MASS * k_a).sqrt();
-
-                strut.torsional_strength = k_a;
-                strut.torsional_damper = c_a;
-            }
-        }
-
-        mesh.update_aabb();
-        mesh.update_triangles();
-
-        meshes.push(mesh);
-    }
+    let meshes = make_springy_meshes(NUM_MESHES, mesh_type, SIDE_LENGTH, scale, sampler);
 
     // Ground collider plane.
 

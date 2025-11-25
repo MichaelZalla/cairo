@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, f32::consts::{PI, TAU}};
 
 use bitmask::bitmask;
 
@@ -14,14 +14,18 @@ use cairo::{
             state_vector::{FromStateVector, StateVector},
         },
     },
-    random::sampler::{RandomSampler, RangeSampler},
+    random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
     render::Renderer,
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
-    vec::vec3::{self, Vec3},
+    transform::quaternion::Quaternion,
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
-use crate::strut::{Edge, Strut, PARTICLE_MASS};
+use crate::strut::{DAMPING_RATIO, Edge, Strut, PARTICLE_MASS, UNDAMPED_PERIOD};
 
 pub enum SpringyMeshType {
     Spring { with_connected_points: bool },
@@ -587,6 +591,115 @@ pub fn make_springy_mesh(
         aabb,
         ..Default::default()
     }
+}
+
+pub fn make_springy_meshes(
+    count: usize,
+    mesh_type: SpringyMeshType,
+    side_length: f32,
+    scale: f32,
+    sampler: &mut RandomSampler<1024>,
+) -> Vec<SpringyMesh> {
+    let mut meshes = Vec::with_capacity(count);
+
+    for _ in 0..count {
+        let (points, struts) = match mesh_type {
+            SpringyMeshType::Spring { with_connected_points } => {
+                make_spring(side_length, with_connected_points)
+            }
+            SpringyMeshType::Tetrahedron => make_tetrahedron(side_length),
+            SpringyMeshType::Cube => make_cube(side_length),
+        };
+
+        let mut mesh = make_springy_mesh(points, struts, sampler);
+
+        let speed = sampler.sample_range_normal(5.0, 5.0);
+
+        let velocity = sampler.sample_direction_uniform() * speed;
+
+        // Mesh transform.
+
+        let transform = {
+            let rotation = {
+                let rotate_x = Quaternion::new(vec3::RIGHT, sampler.sample_range_uniform(0.0, TAU));
+                let rotate_y = Quaternion::new(vec3::UP, sampler.sample_range_uniform(0.0, TAU));
+                let rotate_z =
+                    Quaternion::new(vec3::FORWARD, sampler.sample_range_uniform(0.0, TAU));
+
+                rotate_x * rotate_y * rotate_z
+            };
+
+            static BOUNDS: f32 = 15.0;
+
+            let translation = Mat4::translation(Vec3 {
+                x: sampler.sample_range_normal(0.0, BOUNDS),
+                y: sampler.sample_range_normal(35.0, 15.0),
+                z: sampler.sample_range_normal(0.0, BOUNDS),
+            });
+
+            let scale_transform = Mat4::scale_uniform(scale);
+
+            scale_transform * *rotation.mat() * translation
+        };
+
+        for point in &mut mesh.points {
+            point.position = (Vec4::position(point.position) * transform).to_vec3();
+            point.velocity = velocity;
+        }
+
+        for strut in &mut mesh.struts {
+            // P_n = 2 Pi sqrt(m / k)
+            // P_n^2 = 4 Pi^2 (m/k)
+            // k P_n^2 = 4 Pi^2 m
+            // k = (4 Pi^2 m) / P_n^2
+
+            let k = (4.0 * PI * PI * PARTICLE_MASS) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
+
+            // z = c / 2 sqrt(m * k)
+            // c = z * 2 * sqrt(mk)
+            // c^2 = z^2 * 2^2 * mk
+            // c^2 = z^2 * 2^2 * mk
+            // c = z 2 sqrt(mk)
+
+            let c = DAMPING_RATIO * 2.0 * (PARTICLE_MASS * k).sqrt();
+
+            strut.spring_strength = k / strut.rest_length;
+            strut.spring_damper = c / strut.rest_length;
+
+            if strut.edge.connected_points.is_some() {
+                // P_n = 2 Pi sqrt(m r^2 / k)
+                // P_n = 2 Pi r sqrt(m / k)
+                // P_n^2 = 4 Pi^2 r^2 (m/k)
+                // k P_n^2 = 4 Pi^2 m r^2
+                // k = (4 Pi^2 m r^2) / P_n^2
+
+                let factor = side_length / 2.0;
+
+                let r = (factor * factor + factor * factor).sqrt();
+
+                let k_a =
+                    (4.0 * PI * PI * PARTICLE_MASS * r * r) / (UNDAMPED_PERIOD * UNDAMPED_PERIOD);
+
+                // z = c / 2 sqrt(m r^2 k)
+                // c = z 2 r sqrt(mk)
+                // c^2 = z^2 2^2 r^2 mk
+                // c^2 = z^2 2^2 r^2 mk
+                // c = z 2 r sqrt(mk)
+
+                let c_a = DAMPING_RATIO * 2.0 * r * (PARTICLE_MASS * k_a).sqrt();
+
+                strut.torsional_strength = k_a;
+                strut.torsional_damper = c_a;
+            }
+        }
+
+        mesh.update_aabb();
+        mesh.update_triangles();
+
+        meshes.push(mesh);
+    }
+
+    meshes
 }
 
 fn get_triangles(points: &[Particle], struts: &[Strut]) -> Vec<Triangle> {
