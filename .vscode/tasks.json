@@ -252,12 +252,15 @@
       },
       "label": "Rust: cargo run --example empties",
       "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--example",
-        "empties"
-      ]
+      "windows": {
+        "args": [
+          "run",
+          "--release",
+          "--example",
+          "empties",
+          "C:/Windows/Fonts/vgasys.fon"
+        ]
+      }
     },
     {
       "type": "shell",
