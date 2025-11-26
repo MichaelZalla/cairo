@@ -1,4 +1,12 @@
-use crate::vec::vec3::Vec3;
+use crate::{
+    geometry::{
+        intersect::intersect_line_segment_triangle,
+        primitives::aabb::{AABB, Bounded},
+    },
+    vec::vec3::Vec3,
+};
+
+use super::{MedialPrimitive, triangle::Triangle};
 
 #[derive(Debug, Copy, Clone)]
 pub struct LineSegment {
@@ -24,6 +32,34 @@ impl LineSegment {
 
     pub fn lerped(&self) -> Vec3 {
         self.start + (self.end - self.start) * self.t
+    }
+}
+
+impl Bounded for LineSegment {
+    fn aabb(&self) -> AABB {
+        let mut aabb = AABB::default();
+
+        // Grow by segment endpoints
+        aabb.grow(&self.start);
+        aabb.grow(&self.end);
+
+        aabb.recompute_derived_state();
+
+        aabb
+    }
+}
+
+impl MedialPrimitive for LineSegment {
+    fn medial_segment(&self) -> &LineSegment {
+        self
+    }
+
+    fn medial_segment_mut(&mut self) -> &mut LineSegment {
+        self
+    }
+
+    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<Vec3> {
+        intersect_line_segment_triangle(self, triangle)
     }
 }
 

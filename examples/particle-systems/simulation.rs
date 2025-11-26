@@ -23,7 +23,7 @@ use cairo::{
 
 use crate::{
     integrate::{integrate_euler, system_dynamics_function},
-    intersect::intersect_line_segment_tlas,
+    intersect::intersect_medial_primitive_tlas,
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2;
@@ -113,7 +113,7 @@ impl<const N: usize> Simulation<N> {
 
             let mut segment = LineSegment::new(start_position, end_position);
 
-            intersect_line_segment_tlas(&mut segment, tlas);
+            intersect_medial_primitive_tlas(&mut segment, tlas);
 
             if let (Some(bvh_instance_index), Some(tri_index)) =
                 (segment.colliding_bvh_index, segment.colliding_primitive)
