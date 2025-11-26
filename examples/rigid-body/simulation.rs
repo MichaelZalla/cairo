@@ -59,49 +59,19 @@ pub struct Simulation {
 
 impl Simulation {
     pub fn tick(&mut self, h: f32, uptime_seconds: f32) {
+        // 1. Generate state vector from current rigid bodies
         let state = self.copy_to_state_vector();
 
+        // 2. Compute derivatives using forces + last frame's contacts
         let derivative = system_dynamics_function(&state, &self.forces, h, uptime_seconds);
 
-        // Semi-implicit Euler integration: update momenta from forces,
-        // then update position and orientation from the new momenta.
+        // 3. Integrate to advance state forward
+        let mut new_state = self.integrate(&state, &derivative, h);
 
-        let mut new_state = state.clone();
-
-        for (body, derivative) in new_state.0.iter_mut().zip(derivative.0.iter()) {
-            // Update linear momentum from forces.
-            body.linear_momentum += derivative.linear_momentum * h;
-
-            // Update angular momentum from torques.
-            body.angular_momentum += derivative.angular_momentum * h;
-
-            // Update position from new linear momentum (semi-implicit step).
-            body.position += body.linear_momentum * body.inverse_mass * h;
-
-            // Compute angular velocity from new angular momentum.
-            let new_angular_spin = {
-                let angular_momentum = Vec4::vector(body.angular_momentum);
-
-                let inverse_moment_of_inertia_world_space =
-                    body.inverse_moment_of_inertia_world_space();
-
-                let angular_velocity =
-                    (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3();
-
-                Quaternion::from_raw(0.0, angular_velocity)
-            };
-
-            // Compute orientation derivative from angular velocity.
-            let orientation_derivative = body.orientation * 0.5 * new_angular_spin;
-
-            // Update orientation.
-            body.orientation += orientation_derivative * h;
-        }
-
+        // 4. Clear collision debug markers
         self.clear_collision_debug_info();
 
-        // Detects and resolves collisions with static colliders.
-
+        // 5. Detect and resolve static collisions
         self.handle_static_collisions(
             h,
             &derivative,
@@ -110,12 +80,13 @@ impl Simulation {
             &RIGID_BODY_STATIC_PLANE_MATERIAL,
         );
 
-        // Detects and resolves collisions with other (nearby) rigid bodies.
-
+        // 6. Rebuild spatial acceleration structure
         self.rebuild_hash_grid(&new_state);
 
+        // 7. Detect and resolve rigid body collisions
         self.check_rigid_bodies_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
 
+        // 8. Copy final state back to simulation
         self.apply_state_vector(&new_state);
     }
 
@@ -752,5 +723,49 @@ impl Simulation {
         for sphere in self.rigid_bodies.iter_mut() {
             sphere.collision_impulse.take();
         }
+    }
+
+    fn integrate(
+        &self,
+        state: &StateVector<RigidBodySimulationState>,
+        derivative: &StateVector<RigidBodySimulationState>,
+        h: f32,
+    ) -> StateVector<RigidBodySimulationState> {
+        // Semi-implicit Euler integration: update momenta from forces,
+        // then update position and orientation from the new momenta.
+
+        let mut new_state = state.clone();
+
+        for (body, derivative) in new_state.0.iter_mut().zip(derivative.0.iter()) {
+            // Update linear momentum from forces.
+            body.linear_momentum += derivative.linear_momentum * h;
+
+            // Update angular momentum from torques.
+            body.angular_momentum += derivative.angular_momentum * h;
+
+            // Update position from new linear momentum (semi-implicit step).
+            body.position += body.linear_momentum * body.inverse_mass * h;
+
+            // Compute angular velocity from new angular momentum.
+            let new_angular_spin = {
+                let angular_momentum = Vec4::vector(body.angular_momentum);
+
+                let inverse_moment_of_inertia_world_space =
+                    body.inverse_moment_of_inertia_world_space();
+
+                let angular_velocity =
+                    (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3();
+
+                Quaternion::from_raw(0.0, angular_velocity)
+            };
+
+            // Compute orientation derivative from angular velocity.
+            let orientation_derivative = body.orientation * 0.5 * new_angular_spin;
+
+            // Update orientation.
+            body.orientation += orientation_derivative * h;
+        }
+
+        new_state
     }
 }
