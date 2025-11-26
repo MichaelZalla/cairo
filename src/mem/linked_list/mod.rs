@@ -93,7 +93,7 @@ impl<T> LinkedList<T> {
         unsafe { self.front.map(|node| &(*node.as_ptr()).elem) }
     }
 
-    pub fn front_mut(&self) -> Option<&mut T> {
+    pub fn front_mut(&mut self) -> Option<&mut T> {
         unsafe { self.front.map(|node| &mut (*node.as_ptr()).elem) }
     }
 
@@ -101,7 +101,7 @@ impl<T> LinkedList<T> {
         unsafe { self.back.map(|node| &(*node.as_ptr()).elem) }
     }
 
-    pub fn back_mut(&self) -> Option<&mut T> {
+    pub fn back_mut(&mut self) -> Option<&mut T> {
         unsafe { self.back.map(|node| &mut (*node.as_ptr()).elem) }
     }
 
