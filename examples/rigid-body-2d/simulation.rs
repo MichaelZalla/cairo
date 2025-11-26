@@ -1,7 +1,10 @@
 use cairo::{
-    physics::simulation::rigid_body::{
-        RigidBody,
-        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
+    physics::simulation::{
+        contact::StaticContactList,
+        rigid_body::{
+            RigidBody,
+            rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
+        },
     },
     transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},
@@ -96,7 +99,15 @@ fn system_dynamics_function(
 
         // 3. Rate-of-change of linear and angular momenta.
 
-        body_state.accumulate_accelerations(forces, body_derivative, h, current_time);
+        let predicted_contacts = StaticContactList::<6>::default();
+
+        body_state.accumulate_accelerations(
+            forces,
+            &predicted_contacts,
+            body_derivative,
+            h,
+            current_time,
+        );
     }
 
     derivative

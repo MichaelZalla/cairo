@@ -15,7 +15,7 @@ use cairo::{
                 get_rigid_body_plane_friction_impulse, get_rigid_body_plane_normal_impulse,
                 resolve_rigid_body_collision,
             },
-            contact::{StaticContact, StaticContactKind},
+            contact::{StaticContact, StaticContactKind, StaticContactList},
             rigid_body::{
                 RigidBody, RigidBodyKind,
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
@@ -62,16 +62,20 @@ impl Simulation {
         // 1. Generate state vector from current rigid bodies
         let state = self.copy_to_state_vector();
 
-        // 2. Compute derivatives using forces + last frame's contacts
-        let derivative = system_dynamics_function(&state, &self.forces, h, uptime_seconds);
+        // 2. Predict contacts that will occur during this time step
+        let predicted_contacts = self.predict_contacts(&state, h);
 
-        // 3. Integrate to advance state forward
+        // 3. Compute derivatives using forces + predicted contacts
+        let derivative =
+            system_dynamics_function(&state, &self.forces, &predicted_contacts, h, uptime_seconds);
+
+        // 4. Integrate to advance state forward
         let mut new_state = self.integrate(&state, &derivative, h);
 
-        // 4. Clear collision debug markers
+        // 5. Clear collision debug markers
         self.clear_collision_debug_info();
 
-        // 5. Detect and resolve static collisions
+        // 6. Detect and resolve static collisions
         self.handle_static_collisions(
             h,
             &derivative,
@@ -80,13 +84,13 @@ impl Simulation {
             &RIGID_BODY_STATIC_PLANE_MATERIAL,
         );
 
-        // 6. Rebuild spatial acceleration structure
+        // 7. Rebuild spatial acceleration structure
         self.rebuild_hash_grid(&new_state);
 
-        // 7. Detect and resolve rigid body collisions
+        // 8. Detect and resolve rigid body collisions
         self.check_rigid_bodies_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
 
-        // 8. Copy final state back to simulation
+        // 9. Copy final state back to simulation
         self.apply_state_vector(&new_state);
     }
 
@@ -325,6 +329,7 @@ impl Simulation {
             new_body_state,
             minimum_distance_to_plane,
             material,
+            true, // check_forces: true for post-integration detection
         ) {
             // Removes the component of linear momentum pointing into the collider.
 
@@ -411,6 +416,7 @@ impl Simulation {
         new_body_state: &RigidBodySimulationState,
         minimum_distance_to_plane: f32,
         material: &PhysicsMaterial,
+        check_forces: bool,
     ) -> Option<StaticContact> {
         let normal = collider.plane.normal;
 
@@ -443,17 +449,19 @@ impl Simulation {
             return None;
         }
 
-        // 3. Requires that the forces acting on the body aren't pulling the
-        //    body away from the collider.
+        // 3. (Optional) Requires that the forces acting on the body aren't
+        //    pulling the body away from the collider.
 
-        let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(normal);
+        if check_forces {
+            let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(normal);
 
-        // @NOTE For a rigid body shape that is more complex than a sphere, the
-        // body may be moving away from the plane, while the point of contact is
-        // moving into it!
+            // @NOTE For a rigid body shape that is more complex than a sphere, the
+            // body may be moving away from the plane, while the point of contact is
+            // moving into it!
 
-        if magnitude_of_acceleration_along_normal > f32::EPSILON {
-            return None;
+            if magnitude_of_acceleration_along_normal > f32::EPSILON {
+                return None;
+            }
         }
 
         // At this point, we can be certain that the object is resting, rolling
@@ -744,6 +752,47 @@ impl Simulation {
         for sphere in self.rigid_bodies.iter_mut() {
             sphere.collision_impulse.take();
         }
+    }
+
+    fn predict_contacts(
+        &self,
+        state: &StateVector<RigidBodySimulationState>,
+        h: f32,
+    ) -> Vec<StaticContactList<6>> {
+        let mut predicted_contacts = vec![StaticContactList::default(); self.rigid_bodies.len()];
+
+        for (body_index, body_state) in state.0.iter().enumerate() {
+            let body = &self.rigid_bodies[body_index];
+
+            // Extrapolate position forward by timestep h
+            let predicted_position = body_state.position + body_state.velocity() * h;
+
+            // Create a predicted body state with the extrapolated position
+            let mut predicted_body_state = *body_state;
+
+            predicted_body_state.position = predicted_position;
+
+            // Test against each static plane collider
+            for collider in &self.static_plane_colliders {
+                let minimum_distance_to_plane = match body.kind {
+                    RigidBodyKind::Sphere(radius) => radius,
+                    _ => continue, // Skip unsupported body types
+                };
+
+                if let Some(contact) = Self::get_static_contact(
+                    collider,
+                    body_state, // Use current state for derivative (unused when check_forces=false)
+                    &predicted_body_state,
+                    minimum_distance_to_plane,
+                    &RIGID_BODY_STATIC_PLANE_MATERIAL,
+                    false, // check_forces: false for prediction
+                ) {
+                    predicted_contacts[body_index].push(contact).ok();
+                }
+            }
+        }
+
+        predicted_contacts
     }
 
     fn integrate(
