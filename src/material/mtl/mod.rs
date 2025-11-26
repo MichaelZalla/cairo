@@ -706,13 +706,11 @@ fn next_rgb(line_tokens: &mut SplitWhitespace<'_>) -> Vec3 {
 fn next_filepath(line_tokens: &mut SplitWhitespace<'_>, mtl_file_path: &Path) -> String {
     let filepath = line_tokens.next().unwrap().to_string();
 
-    let mtl_relative_filepath = mtl_file_path
+    mtl_file_path
         .parent()
         .unwrap()
         .join(filepath)
         .into_os_string()
         .into_string()
-        .unwrap();
-
-    mtl_relative_filepath
+        .unwrap()
 }
