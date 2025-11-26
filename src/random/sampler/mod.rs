@@ -40,10 +40,7 @@ impl<const N: usize> RandomSampler<N> {
     pub fn seed(&mut self) -> Result<(), NormalError> {
         let uniform_sampler = Uniform::new_inclusive(0.0, 1.0).unwrap();
 
-        let normal_sampler = match Normal::new(0.0, 1.0) {
-            Ok(distribution) => distribution,
-            Err(err) => return Err(err),
-        };
+        let normal_sampler = Normal::new(0.0, 1.0)?;
 
         for i in 0..N {
             self.uniform_seed.values[i] = uniform_sampler.sample(&mut self.rng);
