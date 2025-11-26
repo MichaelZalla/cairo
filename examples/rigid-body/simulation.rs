@@ -76,7 +76,7 @@ impl Simulation {
         self.clear_collision_debug_info();
 
         // 6. Detect and resolve static collisions
-        self.handle_static_collisions(
+        self.resolve_static_collisions(
             h,
             &derivative,
             &state,
@@ -88,13 +88,13 @@ impl Simulation {
         self.rebuild_hash_grid(&new_state);
 
         // 8. Detect and resolve rigid body collisions
-        self.check_rigid_bodies_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
+        self.resolve_rigid_body_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
 
         // 9. Copy final state back to simulation
         self.apply_state_vector(&new_state);
     }
 
-    fn handle_static_collisions(
+    fn resolve_static_collisions(
         &mut self,
         h: f32,
         derivative: &StateVector<RigidBodySimulationState>,
@@ -494,7 +494,7 @@ impl Simulation {
         })
     }
 
-    fn check_rigid_bodies_collisions(
+    fn resolve_rigid_body_collisions(
         &mut self,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
