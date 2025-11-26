@@ -77,6 +77,7 @@ impl RigidBodySimulationState {
     pub fn accumulate_accelerations(
         &self,
         forces: &[Box<DynRigidBodyForce>],
+        predicted_contacts: &StaticContactList<6>,
         derivative: &mut Self,
         h: f32,
         current_time: f32,
@@ -110,7 +111,7 @@ impl RigidBodySimulationState {
 
         let mut remaining_total_acceleration = total_acceleration;
 
-        for contact in &self.static_contacts {
+        for contact in predicted_contacts {
             let external_force_magnitude_along_normal =
                 contact.normal.dot(remaining_total_acceleration);
 
