@@ -62,12 +62,12 @@ pub fn make_scene(
         &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
             match node.get_type() {
                 SceneNodeType::AmbientLight => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = ambient_light_arena.get_mut(handle) {
-                            let ambient_light = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = ambient_light_arena.get_mut(handle)
+                    {
+                        let ambient_light = &mut entry.item;
 
-                            ambient_light.intensities = vec3::ONES * 0.1;
-                        }
+                        ambient_light.intensities = vec3::ONES * 0.1;
                     }
 
                     Ok(())
@@ -81,28 +81,28 @@ pub fn make_scene(
                         z: 0.0,
                     });
 
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = directional_light_arena.get_mut(handle) {
-                            let directional_light = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = directional_light_arena.get_mut(handle)
+                    {
+                        let directional_light = &mut entry.item;
 
-                            directional_light.intensities = vec3::ONES * 0.5;
+                        directional_light.intensities = vec3::ONES * 0.5;
 
-                            let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
-                            let rotate_y = Quaternion::new(vec3::UP, PI);
+                        let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
+                        let rotate_y = Quaternion::new(vec3::UP, PI);
 
-                            directional_light.set_direction(rotate_x * rotate_y);
-                        }
+                        directional_light.set_direction(rotate_x * rotate_y);
                     }
 
                     Ok(())
                 }
                 SceneNodeType::Camera => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = camera_arena.get_mut(handle) {
-                            let camera = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = camera_arena.get_mut(handle)
+                    {
+                        let camera = &mut entry.item;
 
-                            camera.movement_speed = 10.0;
-                        }
+                        camera.movement_speed = 10.0;
                     }
 
                     Ok(())

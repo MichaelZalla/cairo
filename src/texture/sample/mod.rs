@@ -101,10 +101,10 @@ pub fn sample_nearest_u8(uv: Vec2, map: &TextureMap, level_index: Option<usize>)
 
     // Perform any out-of-bounds handling.
 
-    if let TextureMapWrapping::ClampToBorder(border_color) = map.sampling_options.wrapping {
-        if safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0 {
-            return border_color;
-        }
+    if let TextureMapWrapping::ClampToBorder(border_color) = map.sampling_options.wrapping
+        && (safe_uv.x < 0.0 || safe_uv.x > 1.0 || safe_uv.y < 0.0 || safe_uv.y > 1.0)
+    {
+        return border_color;
     }
 
     // Maps the wrapped UV coordinate to the nearest whole texel coordinate.

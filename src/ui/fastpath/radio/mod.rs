@@ -36,10 +36,9 @@ pub fn radio_group(
                 |index: usize, option: &RadioOption, tree: &mut UIBoxTree| -> Result<(), String> {
                     if let Some(new_selected_index) =
                         radio(&id, index, option, index == selected_index, tree)?
+                        && new_selected_index != selected_index
                     {
-                        if new_selected_index != selected_index {
-                            result.replace(new_selected_index);
-                        }
+                        result.replace(new_selected_index);
                     }
 
                     Ok(())

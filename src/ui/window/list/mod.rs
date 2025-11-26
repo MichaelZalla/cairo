@@ -31,15 +31,13 @@ impl WindowList<'_> {
                         && window
                             .extent
                             .contains(mouse.position.0 as u32, mouse.position.1 as u32)
+                        && let Some(event) = mouse.button_event
+                        && matches!(
+                            (event.button, event.kind),
+                            (MouseButton::Left, MouseEventKind::Down)
+                        )
                     {
-                        if let Some(event) = mouse.button_event {
-                            if matches!(
-                                (event.button, event.kind),
-                                (MouseButton::Left, MouseEventKind::Down)
-                            ) {
-                                did_focus = true;
-                            }
-                        }
+                        did_focus = true;
                     }
                 });
 

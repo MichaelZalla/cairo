@@ -327,18 +327,17 @@ pub fn make_scene(
         .root
         .find(|node| *node.get_type() == SceneNodeType::Camera)
         .unwrap()
+        && let Ok(entry) = camera_arena.get_mut(&camera_handle)
     {
-        if let Ok(entry) = camera_arena.get_mut(&camera_handle) {
-            let camera = &mut entry.item;
+        let camera = &mut entry.item;
 
-            camera.look_vector.set_position(Vec3 {
-                x: 0.0,
-                y: 24.0,
-                z: -32.0,
-            });
+        camera.look_vector.set_position(Vec3 {
+            x: 0.0,
+            y: 24.0,
+            z: -32.0,
+        });
 
-            camera.look_vector.set_target(Default::default());
-        }
+        camera.look_vector.set_target(Default::default());
     }
 
     Ok((scene, shader_context))

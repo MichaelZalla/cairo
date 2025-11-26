@@ -206,42 +206,38 @@ impl Renderer for SoftwareRenderer {
 
             // Blit HDR samples to the forward (LDR) buffer.
 
-            if do_deferred_lighting {
-                if let (
-                    Some(stencil_buffer_rc),
-                    Some(deferred_buffer_rc),
-                    Some(forward_buffer_rc),
-                ) = (
+            if do_deferred_lighting
+                && let (Some(stencil_buffer_rc), Some(deferred_buffer_rc), Some(forward_buffer_rc)) = (
                     &framebuffer.attachments.stencil,
                     &framebuffer.attachments.deferred_hdr,
                     &framebuffer.attachments.forward_ldr,
-                ) {
-                    let stencil_buffer = stencil_buffer_rc.borrow();
-                    let deferred_buffer = deferred_buffer_rc.borrow();
+                )
+            {
+                let stencil_buffer = stencil_buffer_rc.borrow();
+                let deferred_buffer = deferred_buffer_rc.borrow();
 
-                    let mut forward_buffer = forward_buffer_rc.borrow_mut();
+                let mut forward_buffer = forward_buffer_rc.borrow_mut();
 
-                    for ((stencil, color_hdr), color_ldr) in
-                        std::iter::zip(stencil_buffer.0.iter(), deferred_buffer.data.iter())
-                            .zip(forward_buffer.data.iter_mut())
-                    {
-                        if Color::from_u32(*color_ldr).a > 0.0 {
-                            continue;
-                        }
+                for ((stencil, color_hdr), color_ldr) in
+                    std::iter::zip(stencil_buffer.0.iter(), deferred_buffer.data.iter())
+                        .zip(forward_buffer.data.iter_mut())
+                {
+                    if Color::from_u32(*color_ldr).a > 0.0 {
+                        continue;
+                    }
 
-                        if *stencil != 0 {
-                            let mut tone_mapped_color = if do_tone_mapping {
-                                self.options.tone_mapping.map(*color_hdr)
-                            } else {
-                                color_hdr.clamp(0.0, 1.0)
-                            };
+                    if *stencil != 0 {
+                        let mut tone_mapped_color = if do_tone_mapping {
+                            self.options.tone_mapping.map(*color_hdr)
+                        } else {
+                            color_hdr.clamp(0.0, 1.0)
+                        };
 
-                            // Gamma correct: Transforms linear space to sRGB space.
+                        // Gamma correct: Transforms linear space to sRGB space.
 
-                            tone_mapped_color.linear_to_srgb();
+                        tone_mapped_color.linear_to_srgb();
 
-                            *color_ldr = Color::from_vec3(tone_mapped_color * 255.0).to_u32();
-                        }
+                        *color_ldr = Color::from_vec3(tone_mapped_color * 255.0).to_u32();
                     }
                 }
             }

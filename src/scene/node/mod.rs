@@ -153,15 +153,14 @@ impl SceneNode {
                 }
 
                 // Only one Environment node may exist per scene at a time.
-                if let Some(children) = self.children() {
-                    if children
+                if let Some(children) = self.children()
+                    && children
                         .iter()
                         .any(|child| child.is_type(SceneNodeType::Environment))
-                    {
-                        return Err(
-                            "Cannot add multiple Environment nodes to a Scene node!".to_string()
-                        );
-                    }
+                {
+                    return Err(
+                        "Cannot add multiple Environment nodes to a Scene node!".to_string()
+                    );
                 }
             }
             SceneNodeType::AmbientLight
@@ -176,14 +175,13 @@ impl SceneNode {
                 if let Some(children) = {
                     let this = &self;
                     &this.children
-                } {
-                    if children.iter().any(|child| child.is_type(node.node_type)) {
-                        return Err(format!(
-                            "Cannot add multiple {} nodes to an Environment node!",
-                            node.node_type
-                        )
-                        .to_string());
-                    }
+                } && children.iter().any(|child| child.is_type(node.node_type))
+                {
+                    return Err(format!(
+                        "Cannot add multiple {} nodes to an Environment node!",
+                        node.node_type
+                    )
+                    .to_string());
                 }
             }
             SceneNodeType::Empty => (),

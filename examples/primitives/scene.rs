@@ -69,12 +69,12 @@ pub(crate) fn make_scene(
         &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
             match node.get_type() {
                 SceneNodeType::AmbientLight => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = ambient_light_arena.get_mut(handle) {
-                            let ambient_light = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = ambient_light_arena.get_mut(handle)
+                    {
+                        let ambient_light = &mut entry.item;
 
-                            ambient_light.intensities = vec3::ONES * 0.05;
-                        }
+                        ambient_light.intensities = vec3::ONES * 0.05;
                     }
 
                     Ok(())
@@ -88,42 +88,42 @@ pub(crate) fn make_scene(
                         z: 10.0,
                     });
 
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = directional_light_arena.get_mut(handle) {
-                            let directional_light = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = directional_light_arena.get_mut(handle)
+                    {
+                        let directional_light = &mut entry.item;
 
-                            directional_light.intensities = color::BLUE.to_vec3() / 255.0 * 0.5;
+                        directional_light.intensities = color::BLUE.to_vec3() / 255.0 * 0.5;
 
-                            let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
-                            let rotate_y = Quaternion::new(vec3::UP, PI);
+                        let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
+                        let rotate_y = Quaternion::new(vec3::UP, PI);
 
-                            directional_light.set_direction(rotate_x * rotate_y);
+                        directional_light.set_direction(rotate_x * rotate_y);
 
-                            directional_light.enable_shadow_maps(512, 100.0, resources.clone());
-                        }
+                        directional_light.enable_shadow_maps(512, 100.0, resources.clone());
                     }
 
                     Ok(())
                 }
                 SceneNodeType::Camera => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = camera_arena.get_mut(handle) {
-                            let camera = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = camera_arena.get_mut(handle)
+                    {
+                        let camera = &mut entry.item;
 
-                            camera.look_vector.set_position(Vec3 {
-                                x: 0.0,
-                                y: 16.0,
-                                z: -50.0,
-                            });
+                        camera.look_vector.set_position(Vec3 {
+                            x: 0.0,
+                            y: 16.0,
+                            z: -50.0,
+                        });
 
-                            camera.look_vector.set_target(Vec3 {
-                                x: 0.0,
-                                y: 0.0,
-                                z: 0.0,
-                            });
+                        camera.look_vector.set_target(Vec3 {
+                            x: 0.0,
+                            y: 0.0,
+                            z: 0.0,
+                        });
 
-                            camera.set_projection_z_far(150.0);
-                        }
+                        camera.set_projection_z_far(150.0);
                     }
 
                     Ok(())

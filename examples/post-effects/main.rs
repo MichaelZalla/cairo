@@ -166,10 +166,10 @@ fn main() -> Result<(), String> {
                             if let Ok(entry) = mesh_arena.get(&entity.mesh) {
                                 let mesh = &entry.item;
 
-                                if let Some(object_name) = &mesh.object_name {
-                                    if object_name == "plane" {
-                                        return Ok(false);
-                                    }
+                                if let Some(object_name) = &mesh.object_name
+                                    && object_name == "plane"
+                                {
+                                    return Ok(false);
                                 }
                             }
 

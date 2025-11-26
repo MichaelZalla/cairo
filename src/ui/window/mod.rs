@@ -284,10 +284,10 @@ impl<'a> Window<'a> {
                 self.dragging = false;
             }
 
-            if self.dragging {
-                if let Some(delta) = result.position_delta {
-                    self.apply_position_delta(delta, main_window_bounds);
-                }
+            if self.dragging
+                && let Some(delta) = result.position_delta
+            {
+                self.apply_position_delta(delta, main_window_bounds);
             }
 
             if result.should_close {

@@ -270,10 +270,10 @@ fn main() -> Result<(), String> {
                                     {
                                         let mesh = &entry.item;
 
-                                        if let Some(object_name) = &mesh.object_name {
-                                            if object_name == "plane" {
-                                                return Ok(false);
-                                            }
+                                        if let Some(object_name) = &mesh.object_name
+                                            && object_name == "plane"
+                                        {
+                                            return Ok(false);
                                         }
                                     }
 
@@ -369,16 +369,15 @@ fn main() -> Result<(), String> {
                     if let Some(handle) = scene
                         .root
                         .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
+                        && let Ok(entry) = directional_light_arena.get(&handle)
                     {
-                        if let Ok(entry) = directional_light_arena.get(&handle) {
-                            let directional_light = &entry.item;
+                        let directional_light = &entry.item;
 
-                            blit_directional_shadow_maps(
-                                directional_light,
-                                &texture_f32_arena,
-                                &mut color_buffer,
-                            );
-                        }
+                        blit_directional_shadow_maps(
+                            directional_light,
+                            &texture_f32_arena,
+                            &mut color_buffer,
+                        );
                     }
                 }
 

@@ -189,16 +189,16 @@ impl UIBox {
                 fill_color = Some(color);
             }
 
-            if features.contains(UIBoxFeatureFlags::DRAW_BORDER) {
-                if let Some(&color) = styles.border_color.peek() {
-                    border_color = Some(color);
-                }
+            if features.contains(UIBoxFeatureFlags::DRAW_BORDER)
+                && let Some(&color) = styles.border_color.peek()
+            {
+                border_color = Some(color);
             }
 
-            if features.contains(UIBoxFeatureFlags::DRAW_TEXT) {
-                if let Some(&color) = styles.text_color.peek() {
-                    text_color = Some(color);
-                }
+            if features.contains(UIBoxFeatureFlags::DRAW_TEXT)
+                && let Some(&color) = styles.text_color.peek()
+            {
+                text_color = Some(color);
             }
         });
 

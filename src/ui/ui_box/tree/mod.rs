@@ -926,10 +926,12 @@ impl<'a> UIBoxTree<'a> {
 
                 ui_box.render_preorder(target)?;
 
-                if ui_box.features.contains(UIBoxFeatureFlags::DRAW_CUSTOM_RENDER) {
-                    if let Some((render, instance_handle)) = &ui_box.custom_render_callback {
-                        return render(instance_handle, &ui_box.global_bounds, target);
-                    }
+                if ui_box
+                    .features
+                    .contains(UIBoxFeatureFlags::DRAW_CUSTOM_RENDER)
+                    && let Some((render, instance_handle)) = &ui_box.custom_render_callback
+                {
+                    return render(instance_handle, &ui_box.global_bounds, target);
                 }
 
                 Ok(())

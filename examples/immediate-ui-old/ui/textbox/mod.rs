@@ -111,47 +111,47 @@ pub fn do_textbox(
 
     let mut did_edit = false;
 
-    if let Some(target_id) = ctx.get_focus_target() {
-        if target_id == id {
-            for keycode in &keyboard_state.newly_pressed_keycodes {
-                match *keycode {
-                    Keycode::Backspace | Keycode::Delete => {
-                        // Remove one character from the model value, if possible.
+    if let Some(target_id) = ctx.get_focus_target()
+        && target_id == id
+    {
+        for keycode in &keyboard_state.newly_pressed_keycodes {
+            match *keycode {
+                Keycode::Backspace | Keycode::Delete => {
+                    // Remove one character from the model value, if possible.
 
-                        match &mut model_entry {
-                            Entry::Occupied(o) => {
-                                (*o.get_mut()).pop();
+                    match &mut model_entry {
+                        Entry::Occupied(o) => {
+                            (*o.get_mut()).pop();
 
-                                did_edit = true;
-                            }
-                            Entry::Vacant(_v) => {
-                                // Ignore this keypress.
-                            }
+                            did_edit = true;
+                        }
+                        Entry::Vacant(_v) => {
+                            // Ignore this keypress.
                         }
                     }
-                    _ => {
-                        match to_ascii_char(keycode, &keyboard_state.newly_pressed_keycodes) {
-                            Some(char) => {
-                                // Add this character to the model value (string).
+                }
+                _ => {
+                    match to_ascii_char(keycode, &keyboard_state.newly_pressed_keycodes) {
+                        Some(char) => {
+                            // Add this character to the model value (string).
 
-                                match &mut model_entry {
-                                    Entry::Occupied(o) => {
-                                        let s = o.get_mut();
+                            match &mut model_entry {
+                                Entry::Occupied(o) => {
+                                    let s = o.get_mut();
 
-                                        *s += char.to_string().as_str();
+                                    *s += char.to_string().as_str();
 
-                                        did_edit = true;
-                                    }
-                                    Entry::Vacant(_v) => {
-                                        // No model value exists at this entry.
+                                    did_edit = true;
+                                }
+                                Entry::Vacant(_v) => {
+                                    // No model value exists at this entry.
 
-                                        // Ignore this keypress.
-                                    }
+                                    // Ignore this keypress.
                                 }
                             }
-                            None => {
-                                // Ignore this keypress.
-                            }
+                        }
+                        None => {
+                            // Ignore this keypress.
                         }
                     }
                 }

@@ -467,16 +467,16 @@ impl SceneGraph {
                     if let Some(name) = &node.name {
                         // Skips label rendering for the active camera.
 
-                        if node_type == &SceneNodeType::Camera {
-                            if let Some(handle) = node_handle {
-                                let camera_arena = resources.camera.borrow();
+                        if node_type == &SceneNodeType::Camera
+                            && let Some(handle) = node_handle
+                        {
+                            let camera_arena = resources.camera.borrow();
 
-                                if let Ok(entry) = camera_arena.get(handle) {
-                                    let camera = &entry.item;
+                            if let Ok(entry) = camera_arena.get(handle) {
+                                let camera = &entry.item;
 
-                                    if camera.is_active {
-                                        return Ok(());
-                                    }
+                                if camera.is_active {
+                                    return Ok(());
                                 }
                             }
                         }
@@ -875,43 +875,37 @@ impl SceneGraph {
                 active_camera_handle.as_ref(),
                 active_skybox_handle.as_ref(),
                 active_skybox_transform.as_ref(),
+            ) && let (Ok(camera_entry), Ok(skybox_entry)) = (
+                resources.camera.borrow().get(camera_handle),
+                resources.skybox.borrow().get(skybox_handle),
             ) {
-                if let (Ok(camera_entry), Ok(skybox_entry)) = (
-                    resources.camera.borrow().get(camera_handle),
-                    resources.skybox.borrow().get(skybox_handle),
-                ) {
-                    let camera = &camera_entry.item;
-                    let skybox = &skybox_entry.item;
+                let camera = &camera_entry.item;
+                let skybox = &skybox_entry.item;
 
-                    if let Some(cubemap_handle) = skybox.radiance {
-                        let mut renderer = renderer_rc.borrow_mut();
+                if let Some(cubemap_handle) = skybox.radiance {
+                    let mut renderer = renderer_rc.borrow_mut();
 
-                        if skybox.is_hdr {
-                            match resources.cubemap_vec3.borrow().get(&cubemap_handle) {
-                                Ok(entry) => {
-                                    let cubemap = &entry.item;
+                    if skybox.is_hdr {
+                        match resources.cubemap_vec3.borrow().get(&cubemap_handle) {
+                            Ok(entry) => {
+                                let cubemap = &entry.item;
 
-                                    renderer.render_skybox_hdr(
-                                        cubemap,
-                                        camera,
-                                        Some(*skybox_transform),
-                                    );
-                                }
-                                Err(e) => panic!("{}", e),
+                                renderer.render_skybox_hdr(
+                                    cubemap,
+                                    camera,
+                                    Some(*skybox_transform),
+                                );
                             }
-                        } else {
-                            match resources.cubemap_u8.borrow().get(&cubemap_handle) {
-                                Ok(entry) => {
-                                    let cubemap = &entry.item;
+                            Err(e) => panic!("{}", e),
+                        }
+                    } else {
+                        match resources.cubemap_u8.borrow().get(&cubemap_handle) {
+                            Ok(entry) => {
+                                let cubemap = &entry.item;
 
-                                    renderer.render_skybox(
-                                        cubemap,
-                                        camera,
-                                        Some(*skybox_transform),
-                                    );
-                                }
-                                Err(e) => panic!("{}", e),
+                                renderer.render_skybox(cubemap, camera, Some(*skybox_transform));
                             }
+                            Err(e) => panic!("{}", e),
                         }
                     }
                 }

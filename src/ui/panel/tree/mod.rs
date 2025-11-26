@@ -82,10 +82,11 @@ impl<'a> PanelTree<'a> {
 
                 let mut panel_box = panel.make_panel_box(window)?;
 
-                if let Some(parent) = parent_data {
-                    if parent.resizable && sibling_index != 0 {
-                        panel_box.features |= UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS;
-                    }
+                if let Some(parent) = parent_data
+                    && parent.resizable
+                    && sibling_index != 0
+                {
+                    panel_box.features |= UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS;
                 }
 
                 if is_leaf_panel {

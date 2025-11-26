@@ -271,30 +271,30 @@ fn draw_slider(
 
     // Draw the slider fill (alpha).
 
-    if let Some(min) = options.min {
-        if let Some(max) = options.max {
-            match model {
-                Entry::Occupied(o) => {
-                    let text = o.get();
+    if let Some(min) = options.min
+        && let Some(max) = options.max
+    {
+        match model {
+            Entry::Occupied(o) => {
+                let text = o.get();
 
-                    if !text.is_empty() {
-                        let value = text.parse::<f32>().unwrap();
-                        let alpha = (value - min) / (max - min);
-                        let width = ((NUMBER_SLIDER_WIDTH - 2) as f32 * alpha) as u32;
+                if !text.is_empty() {
+                    let value = text.parse::<f32>().unwrap();
+                    let alpha = (value - min) / (max - min);
+                    let width = ((NUMBER_SLIDER_WIDTH - 2) as f32 * alpha) as u32;
 
-                        Graphics::rectangle(
-                            parent_buffer,
-                            slider_top_left.0 + 1,
-                            slider_top_left.1 + 1,
-                            width,
-                            slider_height - 2,
-                            Some(theme.input_background_slider_alpha.to_u32()),
-                            None,
-                        );
-                    }
+                    Graphics::rectangle(
+                        parent_buffer,
+                        slider_top_left.0 + 1,
+                        slider_top_left.1 + 1,
+                        width,
+                        slider_height - 2,
+                        Some(theme.input_background_slider_alpha.to_u32()),
+                        None,
+                    );
                 }
-                Entry::Vacant(_) => (),
             }
+            Entry::Vacant(_) => (),
         }
     }
 

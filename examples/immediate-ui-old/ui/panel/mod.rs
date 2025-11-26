@@ -81,24 +81,23 @@ where
         item: ctx.next_id(),
     };
 
-    if options.resizable {
-        if let Some(event) = mouse_state.button_event {
-            if let MouseButton::Left = event.button {
-                match event.kind {
-                    MouseEventKind::Down => {
-                        let mouse_x = mouse_state.position.0;
+    if options.resizable
+        && let Some(event) = mouse_state.button_event
+        && let MouseButton::Left = event.button
+    {
+        match event.kind {
+            MouseEventKind::Down => {
+                let mouse_x = mouse_state.position.0;
 
-                        if mouse_x > layout.extent.right as i32 - 4
-                            && mouse_x < layout.extent.right as i32 + 4
-                        {
-                            ctx.set_focus_target(Some(panel_id));
-                        }
-                    }
-                    MouseEventKind::Up => {
-                        if ctx.is_focused(&panel_id) {
-                            ctx.set_focus_target(None)
-                        }
-                    }
+                if mouse_x > layout.extent.right as i32 - 4
+                    && mouse_x < layout.extent.right as i32 + 4
+                {
+                    ctx.set_focus_target(Some(panel_id));
+                }
+            }
+            MouseEventKind::Up => {
+                if ctx.is_focused(&panel_id) {
+                    ctx.set_focus_target(None)
                 }
             }
         }

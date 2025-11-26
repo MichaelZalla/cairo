@@ -50,12 +50,11 @@ pub(crate) fn make_scene(
         .find(|node| *node.get_type() == SceneNodeType::AmbientLight)
         .as_ref()
         .unwrap()
+        && let Ok(entry) = ambient_light_arena.get_mut(ambient_light_handle)
     {
-        if let Ok(entry) = ambient_light_arena.get_mut(ambient_light_handle) {
-            let ambient_light = &mut entry.item;
+        let ambient_light = &mut entry.item;
 
-            ambient_light.intensities = vec3::ONES * 0.005;
-        }
+        ambient_light.intensities = vec3::ONES * 0.005;
     }
 
     // Brighten our directional light.
@@ -65,14 +64,13 @@ pub(crate) fn make_scene(
         .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)
         .as_ref()
         .unwrap()
+        && let Ok(entry) = directional_light_arena.get_mut(directional_light_handle)
     {
-        if let Ok(entry) = directional_light_arena.get_mut(directional_light_handle) {
-            let directional_light = &mut entry.item;
+        let directional_light = &mut entry.item;
 
-            directional_light.intensities = vec3::ONES * 0.6;
+        directional_light.intensities = vec3::ONES * 0.6;
 
-            directional_light.enable_shadow_maps(1024, 48.0, resources.clone());
-        }
+        directional_light.enable_shadow_maps(1024, 48.0, resources.clone());
     }
 
     // Move our default camera.
@@ -81,24 +79,23 @@ pub(crate) fn make_scene(
         .root
         .find(|node| *node.get_type() == SceneNodeType::Camera)
         .unwrap()
+        && let Ok(entry) = camera_arena.get_mut(&handle)
     {
-        if let Ok(entry) = camera_arena.get_mut(&handle) {
-            let camera = &mut entry.item;
+        let camera = &mut entry.item;
 
-            camera.look_vector.set_position(Vec3 {
-                x: 0.0,
-                y: 12.0,
-                z: -36.0,
-            });
+        camera.look_vector.set_position(Vec3 {
+            x: 0.0,
+            y: 12.0,
+            z: -36.0,
+        });
 
-            camera.look_vector.set_target(Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            });
+        camera.look_vector.set_target(Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        });
 
-            camera.set_projection_z_far(150.0);
-        }
+        camera.set_projection_z_far(150.0);
     }
 
     // Add a ground plane to our scene.

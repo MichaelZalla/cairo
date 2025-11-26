@@ -449,16 +449,15 @@ impl SpotLight {
         if let (Some(projector_map), Some(projection)) = (
             &self.projector_map,
             &self.world_to_shadow_map_camera_projection,
-        ) {
-            if let Some(uv) = self.get_shadow_map_uv(projection, sample) {
-                let (r, g, b) = sample_nearest_u8(uv, projector_map, None);
+        ) && let Some(uv) = self.get_shadow_map_uv(projection, sample)
+        {
+            let (r, g, b) = sample_nearest_u8(uv, projector_map, None);
 
-                let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
+            let mut color = Color::rgb(r, g, b).to_vec3() / 255.0;
 
-                color.srgb_to_linear();
+            color.srgb_to_linear();
 
-                contribution *= color;
-            }
+            contribution *= color;
         }
 
         let attenuation =

@@ -136,47 +136,44 @@ pub fn do_dropdown(
 
             // Check if we've selected an option from the open menu.
 
-            if is_open {
-                if let Some(event) = mouse_state.button_event {
-                    match event.kind {
-                        MouseEventKind::Down => {
-                            let cursor = layout.get_cursor();
+            if is_open && let Some(event) = mouse_state.button_event {
+                match event.kind {
+                    MouseEventKind::Down => {
+                        let cursor = layout.get_cursor();
 
-                            let (mouse_x, mouse_y) = (
-                                mouse_state.position.0 - cursor.x as i32,
-                                mouse_state.position.1 - cursor.y as i32,
-                            );
+                        let (mouse_x, mouse_y) = (
+                            mouse_state.position.0 - cursor.x as i32,
+                            mouse_state.position.1 - cursor.y as i32,
+                        );
 
-                            if mouse_x >= layout_offset_x as i32
-                                && mouse_x < (layout_offset_x + DROPDOWN_WIDTH) as i32
-                                && mouse_y > layout_offset_y as i32
-                                && mouse_y < (layout_offset_y + item_height) as i32
-                            {
-                                let relative_mouse_y = mouse_state.position.1 as u32 - cursor.y;
+                        if mouse_x >= layout_offset_x as i32
+                            && mouse_x < (layout_offset_x + DROPDOWN_WIDTH) as i32
+                            && mouse_y > layout_offset_y as i32
+                            && mouse_y < (layout_offset_y + item_height) as i32
+                        {
+                            let relative_mouse_y = mouse_state.position.1 as u32 - cursor.y;
 
-                                let mut target_item_index: i32 = -1;
+                            let mut target_item_index: i32 = -1;
 
-                                let mut current_y = layout_offset_y;
+                            let mut current_y = layout_offset_y;
 
-                                while current_y < relative_mouse_y {
-                                    target_item_index += 1;
+                            while current_y < relative_mouse_y {
+                                target_item_index += 1;
 
-                                    current_y +=
-                                        label_texture_height + DROPDOWN_ITEM_VERTICAL_PADDING;
-                                }
+                                current_y += label_texture_height + DROPDOWN_ITEM_VERTICAL_PADDING;
+                            }
 
-                                let target_item = &options.items[target_item_index as usize];
+                            let target_item = &options.items[target_item_index as usize];
 
-                                if *target_item != current_item {
-                                    did_edit = true;
+                            if *target_item != current_item {
+                                did_edit = true;
 
-                                    o.get_mut().clone_from(target_item);
-                                }
+                                o.get_mut().clone_from(target_item);
                             }
                         }
-                        MouseEventKind::Up => {
-                            // Do nothing
-                        }
+                    }
+                    MouseEventKind::Up => {
+                        // Do nothing
                     }
                 }
             }

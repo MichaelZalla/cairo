@@ -74,35 +74,35 @@ pub fn get_mouse_result(
         (None, false) => (),
     }
 
-    if let Some(event) = mouse_state.button_event {
-        if let MouseButton::Left = event.button {
-            match (event.kind, mouse_in_bounds) {
-                (MouseEventKind::Up, true) => {
-                    // Check whether LMB was just released inside of this
-                    // button.
+    if let Some(event) = mouse_state.button_event
+        && let MouseButton::Left = event.button
+    {
+        match (event.kind, mouse_in_bounds) {
+            (MouseEventKind::Up, true) => {
+                // Check whether LMB was just released inside of this
+                // button.
 
-                    was_released = true;
-                }
-                (MouseEventKind::Down, true) => {
-                    // Check whether LMB was just pressed inside of this
-                    // button.
+                was_released = true;
+            }
+            (MouseEventKind::Down, true) => {
+                // Check whether LMB was just pressed inside of this
+                // button.
 
-                    match ctx.get_focus_target() {
-                        Some(target_id) => {
-                            if target_id != *id {
-                                ctx.set_focus_target(Some(*id))
-                            }
-                        }
-                        None => ctx.set_focus_target(Some(*id)),
-                    }
-                }
-                (MouseEventKind::Up, false) => {}
-                (MouseEventKind::Down, false) => {
-                    if let Some(target_id) = ctx.get_focus_target() {
-                        if target_id == *id {
-                            ctx.set_focus_target(None)
+                match ctx.get_focus_target() {
+                    Some(target_id) => {
+                        if target_id != *id {
+                            ctx.set_focus_target(Some(*id))
                         }
                     }
+                    None => ctx.set_focus_target(Some(*id)),
+                }
+            }
+            (MouseEventKind::Up, false) => {}
+            (MouseEventKind::Down, false) => {
+                if let Some(target_id) = ctx.get_focus_target()
+                    && target_id == *id
+                {
+                    ctx.set_focus_target(None)
                 }
             }
         }

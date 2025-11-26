@@ -139,14 +139,13 @@ impl SoftwareRenderer {
                 .options
                 .render_pass_flags
                 .contains(RenderPassFlags::SSAO_BLUR)
+                && let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut()
             {
-                if let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut() {
-                    ssao_blur(
-                        &stencil_buffer,
-                        occlusion_buffer,
-                        &mut ssao_blur_buffer.levels[0].0,
-                    );
-                }
+                ssao_blur(
+                    &stencil_buffer,
+                    occlusion_buffer,
+                    &mut ssao_blur_buffer.levels[0].0,
+                );
             }
 
             // 3. Write the final occlusion factors back to the geometry buffer.

@@ -164,10 +164,10 @@ fn main() -> Result<(), String> {
                                 if let Ok(entry) = mesh_arena.get(&entity.mesh) {
                                     let mesh = &entry.item;
 
-                                    if let Some(object_name) = mesh.object_name.as_ref() {
-                                        if object_name == "ground_plane" {
-                                            return Ok(false);
-                                        }
+                                    if let Some(object_name) = mesh.object_name.as_ref()
+                                        && object_name == "ground_plane"
+                                    {
+                                        return Ok(false);
                                     }
 
                                     let transform = node.get_transform_mut();

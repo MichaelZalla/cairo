@@ -44,13 +44,10 @@ impl LookVectorController for EditorLookVectorController {
             let is_shift_pressed = keyboard_state.pressed_keycodes.contains(&Keycode::LShift)
                 || keyboard_state.pressed_keycodes.contains(&Keycode::RShift);
 
-            if !is_shift_pressed {
-                if let Some(wheel_event) = mouse_state.wheel_event.as_ref() {
-                    let delta = wheel_event.delta as f32;
+            if !is_shift_pressed && let Some(wheel_event) = mouse_state.wheel_event.as_ref() {
+                let delta = wheel_event.delta as f32;
 
-                    look_vector
-                        .set_position(look_vector.position + look_vector.get_forward() * delta);
-                }
+                look_vector.set_position(look_vector.position + look_vector.get_forward() * delta);
             }
 
             if let Some(drag_event) = mouse_state.drag_events.get(&MouseButton::Middle) {

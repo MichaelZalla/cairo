@@ -166,16 +166,16 @@ pub fn make_cube_scene(
         &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
             match node.get_type() {
                 SceneNodeType::Camera => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = camera_arena.get_mut(handle) {
-                            let camera = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = camera_arena.get_mut(handle)
+                    {
+                        let camera = &mut entry.item;
 
-                            camera.look_vector.set_position(Vec3 {
-                                x: 0.0,
-                                y: 0.0,
-                                z: -4.0,
-                            });
-                        }
+                        camera.look_vector.set_position(Vec3 {
+                            x: 0.0,
+                            y: 0.0,
+                            z: -4.0,
+                        });
                     }
 
                     Ok(())

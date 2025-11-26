@@ -53,16 +53,16 @@ pub fn make_ssao_scene(
         &mut |_current_depth: usize, _current_world_transform: Mat4, node: &mut SceneNode| {
             match node.get_type() {
                 SceneNodeType::AmbientLight => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = ambient_light_arena.get_mut(handle) {
-                            let ambient_light = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = ambient_light_arena.get_mut(handle)
+                    {
+                        let ambient_light = &mut entry.item;
 
-                            ambient_light.intensities = Vec3 {
-                                x: 1.0,
-                                y: 1.0,
-                                z: 1.0,
-                            } * 0.3;
-                        }
+                        ambient_light.intensities = Vec3 {
+                            x: 1.0,
+                            y: 1.0,
+                            z: 1.0,
+                        } * 0.3;
                     }
 
                     Ok(())
@@ -76,39 +76,39 @@ pub fn make_ssao_scene(
                         z: 0.0,
                     });
 
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = directional_light_arena.get_mut(handle) {
-                            let directional_light = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = directional_light_arena.get_mut(handle)
+                    {
+                        let directional_light = &mut entry.item;
 
-                            let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
+                        let rotate_x = Quaternion::new(vec3::RIGHT, -PI / 4.0);
 
-                            let rotate_y = Quaternion::new(vec3::UP, PI / 2.0);
+                        let rotate_y = Quaternion::new(vec3::UP, PI / 2.0);
 
-                            directional_light.set_direction(rotate_x * rotate_y);
+                        directional_light.set_direction(rotate_x * rotate_y);
 
-                            directional_light.intensities = vec3::ONES * 0.5;
+                        directional_light.intensities = vec3::ONES * 0.5;
 
-                            directional_light.enable_shadow_maps(384, 40.0, resources.clone());
-                        }
+                        directional_light.enable_shadow_maps(384, 40.0, resources.clone());
                     }
 
                     Ok(())
                 }
                 SceneNodeType::Camera => {
-                    if let Some(handle) = node.get_handle() {
-                        if let Ok(entry) = camera_arena.get_mut(handle) {
-                            let camera = &mut entry.item;
+                    if let Some(handle) = node.get_handle()
+                        && let Ok(entry) = camera_arena.get_mut(handle)
+                    {
+                        let camera = &mut entry.item;
 
-                            camera.movement_speed = 2.0;
+                        camera.movement_speed = 2.0;
 
-                            camera.look_vector.set_position(Vec3 {
-                                x: 4.5,
-                                y: 3.5,
-                                z: -4.5,
-                            });
+                        camera.look_vector.set_position(Vec3 {
+                            x: 4.5,
+                            y: 3.5,
+                            z: -4.5,
+                        });
 
-                            camera.set_projection_z_far(20.0);
-                        }
+                        camera.set_projection_z_far(20.0);
                     }
 
                     Ok(())

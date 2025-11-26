@@ -80,14 +80,14 @@ pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<PartialFace, Strin
     let v2_uv_index = v2_iter.next();
     let v3_uv_index = v3_iter.next();
 
-    if let Some(index) = v1_uv_index {
-        if !index.is_empty() {
-            let v1_uv = v1_uv_index.unwrap().parse::<usize>().unwrap() - 1;
-            let v2_uv = v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
-            let v3_uv = v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+    if let Some(index) = v1_uv_index
+        && !index.is_empty()
+    {
+        let v1_uv = v1_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+        let v2_uv = v2_uv_index.unwrap().parse::<usize>().unwrap() - 1;
+        let v3_uv = v3_uv_index.unwrap().parse::<usize>().unwrap() - 1;
 
-            partial_face.uvs = Some([v1_uv, v2_uv, v3_uv]);
-        }
+        partial_face.uvs = Some([v1_uv, v2_uv, v3_uv]);
     }
 
     let v1_normal_index = v1_iter.next();

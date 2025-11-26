@@ -265,16 +265,15 @@ fn main() -> Result<(), String> {
                 if let Some(handle) = scene
                     .root
                     .find(|node| *node.get_type() == SceneNodeType::DirectionalLight)?
+                    && let Ok(entry) = directional_light_arena.get(&handle)
                 {
-                    if let Ok(entry) = directional_light_arena.get(&handle) {
-                        let directional_light = &entry.item;
+                    let directional_light = &entry.item;
 
-                        blit_directional_shadow_maps(
-                            directional_light,
-                            &texture_f32_arena,
-                            &mut color_buffer,
-                        );
-                    }
+                    blit_directional_shadow_maps(
+                        directional_light,
+                        &texture_f32_arena,
+                        &mut color_buffer,
+                    );
                 }
 
                 color_buffer.copy_to(canvas);
