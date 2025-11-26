@@ -27,7 +27,6 @@ use cairo::{
     },
     software_renderer::SoftwareRenderer,
     transform::Transform3D,
-    vec::vec3,
 };
 
 use make_simulation::make_simulation;
@@ -43,7 +42,7 @@ pub mod simulation;
 pub const SAMPLER_SEED_SIZE: usize = 2048;
 
 static PARTICLE_MESH_SCALE: f32 = 0.25;
-static PARTICLE_MESH_SCALE_OVER_2: f32 = PARTICLE_MESH_SCALE / 2.0;
+static PARTICLE_MESH_RADIUS: f32 = PARTICLE_MESH_SCALE / 2.0;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -421,7 +420,7 @@ fn draw_simulation(
 
             let mut transform = Transform3D::default();
 
-            transform.set_translation(particle.position + vec3::UP * PARTICLE_MESH_SCALE_OVER_2);
+            transform.set_translation(particle.position);
 
             renderer.render_point(
                 transform.mat(),

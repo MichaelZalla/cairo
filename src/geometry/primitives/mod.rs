@@ -1,4 +1,5 @@
 pub mod aabb;
+pub mod capsule;
 pub mod line_segment;
 pub mod plane;
 pub mod ray;

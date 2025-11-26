@@ -11,8 +11,8 @@ use crate::{
 use super::{
     accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
     primitives::{
-        aabb::AABB, line_segment::LineSegment, plane::Plane, ray::Ray, sphere::Sphere,
-        triangle::Triangle,
+        aabb::AABB, capsule::Capsule, line_segment::LineSegment, plane::Plane, ray::Ray,
+        sphere::Sphere, triangle::Triangle,
     },
 };
 
@@ -127,6 +127,53 @@ pub fn intersect_line_segment_triangle(
         segment.t = t;
 
         Some(Vec3 { x: u, y: v, z: w })
+    } else {
+        None
+    }
+}
+
+pub fn intersect_capsule_triangle(
+    capsule: &mut Capsule,
+    triangle: &Triangle,
+) -> Option<Vec3> {
+    // Use capsule-plane intersection to find where the capsule hits the triangle's plane
+    if let Some((t, contact_point)) = intersect_capsule_plane(
+        capsule.segment.start,
+        capsule.segment.end,
+        capsule.radius,
+        &triangle.plane,
+    ) {
+        // Check if the contact point is inside the triangle using barycentric coordinates
+
+        // Compute the barycentric coordinate U; exit if outside the [0..1] range.
+        let u = contact_point.dot(triangle.edge_plane_bc.normal) - triangle.edge_plane_bc.d;
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        // Compute the barycentric coordinate V; exit if negative.
+        let v = contact_point.dot(triangle.edge_plane_ca.normal) - triangle.edge_plane_ca.d;
+
+        if v < 0.0 {
+            return None;
+        }
+
+        // Compute the barycentric coordinate W; exit if negative.
+        let w = 1.0 - u - v;
+
+        if w < 0.0 {
+            return None;
+        }
+
+        // Capsule intersects triangle - update collision info if this is closer
+        if t < capsule.segment.t {
+            capsule.segment.t = t;
+
+            Some(Vec3 { x: u, y: v, z: w })
+        } else {
+            None
+        }
     } else {
         None
     }

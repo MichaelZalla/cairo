@@ -2,8 +2,7 @@ use std::cell::RefCell;
 
 use cairo::{
     geometry::{
-        accelerator::static_triangle_tlas::StaticTriangleTLAS,
-        primitives::line_segment::LineSegment,
+        accelerator::static_triangle_tlas::StaticTriangleTLAS, primitives::capsule::Capsule,
     },
     physics::{
         material::PhysicsMaterial,
@@ -22,6 +21,7 @@ use cairo::{
 };
 
 use crate::{
+    PARTICLE_MESH_RADIUS,
     integrate::{integrate_euler, system_dynamics_function},
     intersect::intersect_medial_primitive_tlas,
 };
@@ -111,13 +111,14 @@ impl<const N: usize> Simulation<N> {
 
             let mut end_position = new_state.data[i];
 
-            let mut segment = LineSegment::new(start_position, end_position);
+            let mut capsule = Capsule::new(start_position, end_position, PARTICLE_MESH_RADIUS);
 
-            intersect_medial_primitive_tlas(&mut segment, tlas);
+            intersect_medial_primitive_tlas(&mut capsule, tlas);
 
-            if let (Some(bvh_instance_index), Some(tri_index)) =
-                (segment.colliding_bvh_index, segment.colliding_primitive)
-            {
+            if let (Some(bvh_instance_index), Some(tri_index)) = (
+                capsule.segment.colliding_bvh_index,
+                capsule.segment.colliding_primitive,
+            ) {
                 let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
 
                 let triangle = &bvh_instance.bvh.tris[tri_index];
@@ -129,20 +130,21 @@ impl<const N: usize> Simulation<N> {
 
                 let mut end_velocity = new_state.data[num_active_particles + i];
 
-                if segment.transformed_length < 0.02 {
+                if capsule.segment.transformed_length < 0.02 {
                     new_state.data[i] = state.data[i];
                     new_state.data[i + n] = state.data[i + n];
                 } else {
-                    let time_before_collision = h * segment.t;
+                    let time_before_collision = h * capsule.segment.t;
                     let time_after_collision = h - time_before_collision;
 
                     let accumulated_velocity = acceleration * time_after_collision;
 
                     end_velocity -= accumulated_velocity;
 
-                    debug_assert!(segment.t >= 0.0 && segment.t <= 1.0);
+                    debug_assert!(capsule.segment.t >= 0.0 && capsule.segment.t <= 1.0);
 
-                    let penetration_depth = segment.transformed_length * (1.0 - segment.t);
+                    let penetration_depth =
+                        capsule.segment.transformed_length * (1.0 - capsule.segment.t);
 
                     resolve_point_plane_collision_approximate(
                         instance_triangle_normal,
