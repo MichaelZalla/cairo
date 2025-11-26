@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, mem};
+use std::marker::PhantomData;
 
 use super::{Link, LinkedList};
 
@@ -268,7 +268,7 @@ impl<'a, T> CursorMut<'a, T> {
             // Our cursor is pointing at `self.list`'s ghost node.
             // Our result should consume the entire entire existing list.
 
-            mem::replace(self.list, LinkedList::new())
+            std::mem::take(self.list)
         }
     }
 
@@ -311,7 +311,7 @@ impl<'a, T> CursorMut<'a, T> {
             // Our cursor is pointing at `self.list`'s ghost node.
             // Our result should consume the entire entire existing list.
 
-            mem::replace(self.list, LinkedList::new())
+            std::mem::take(self.list)
         }
     }
 
