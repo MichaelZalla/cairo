@@ -62,36 +62,32 @@ impl Simulation {
         // 1. Generate state vector from current rigid bodies
         let state = self.copy_to_state_vector();
 
-        // 2. Predict contacts that will occur during this time step
+        // 2. Predict contacts that will occur during this time step (Phase 1)
         let predicted_contacts = self.predict_contacts(&state, h);
 
-        // 3. Compute derivatives using forces + predicted contacts
+        // 3. Compute derivatives using forces + predicted contacts (Phase 2)
         let derivative =
             system_dynamics_function(&state, &self.forces, &predicted_contacts, h, uptime_seconds);
 
-        // 4. Integrate to advance state forward
-        let mut new_state = self.integrate(&state, &derivative, h);
+        // 4. Integrate velocities (Phase 3)
+        let state_with_new_velocities = self.integrate_velocities(&state, &derivative, h);
 
         // 5. Clear collision debug markers
         self.clear_collision_debug_info();
 
-        // 6. Detect and resolve static collisions
-        self.resolve_static_collisions(
-            h,
-            &derivative,
-            &state,
-            &mut new_state,
-            &RIGID_BODY_STATIC_PLANE_MATERIAL,
-        );
+        // 6. TODO: Apply predictive impulses to prevent collisions (Phase 4)
 
-        // 7. Rebuild spatial acceleration structure
-        self.rebuild_hash_grid(&new_state);
+        // 7. Integrate positions with corrected velocities (Phase 5)
+        let mut final_state = self.integrate_positions(&state_with_new_velocities, h);
 
-        // 8. Detect and resolve rigid body collisions
-        self.resolve_rigid_body_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
+        // 8. Rebuild spatial acceleration structure
+        self.rebuild_hash_grid(&final_state);
 
-        // 9. Copy final state back to simulation
-        self.apply_state_vector(&new_state);
+        // 9. (Safety net) Apply corrective impulses for any remaining collisions
+        self.apply_corrective_impulses(h, &derivative, &state, &mut final_state);
+
+        // 10. Copy final state back to simulation
+        self.apply_state_vector(&final_state);
     }
 
     fn resolve_static_collisions(
@@ -754,6 +750,30 @@ impl Simulation {
         }
     }
 
+    fn apply_corrective_impulses(
+        &mut self,
+        h: f32,
+        derivative: &StateVector<RigidBodySimulationState>,
+        current_state: &StateVector<RigidBodySimulationState>,
+        new_state: &mut StateVector<RigidBodySimulationState>,
+    ) {
+        // Applies impulses based on actual collisions at final positions.
+
+        self.resolve_static_collisions(
+            h,
+            derivative,
+            current_state,
+            new_state,
+            &RIGID_BODY_STATIC_PLANE_MATERIAL,
+        );
+
+        self.resolve_rigid_body_collisions(
+            current_state,
+            new_state,
+            &RIGID_BODY_RIGID_BODY_MATERIAL,
+        );
+    }
+
     fn predict_contacts(
         &self,
         state: &StateVector<RigidBodySimulationState>,
@@ -793,21 +813,6 @@ impl Simulation {
         }
 
         predicted_contacts
-    }
-
-    fn integrate(
-        &self,
-        state: &StateVector<RigidBodySimulationState>,
-        derivative: &StateVector<RigidBodySimulationState>,
-        h: f32,
-    ) -> StateVector<RigidBodySimulationState> {
-        // Semi-implicit Euler integration: update momenta from forces,
-        // then update position and orientation from the new momenta.
-
-        let state_with_new_velocities = self.integrate_velocities(state, derivative, h);
-        let final_state = self.integrate_positions(&state_with_new_velocities, h);
-
-        final_state
     }
 
     fn integrate_velocities(
