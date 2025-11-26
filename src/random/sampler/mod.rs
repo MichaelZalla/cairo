@@ -38,7 +38,7 @@ pub struct RandomSampler<const N: usize> {
 
 impl<const N: usize> RandomSampler<N> {
     pub fn seed(&mut self) -> Result<(), NormalError> {
-        let uniform_sampler = Uniform::new_inclusive(0.0, 1.0);
+        let uniform_sampler = Uniform::new_inclusive(0.0, 1.0).unwrap();
 
         let normal_sampler = match Normal::new(0.0, 1.0) {
             Ok(distribution) => distribution,
@@ -57,7 +57,7 @@ impl<const N: usize> RandomSampler<N> {
 
     // Returns a uniformly distributed random scalar in the range [min...max].
     fn _sample_range_uniform(&mut self, min: f32, max: f32) -> f32 {
-        let sampler = Uniform::new_inclusive(min, max);
+        let sampler = Uniform::new_inclusive(min, max).unwrap();
 
         sampler.sample(&mut self.rng)
     }

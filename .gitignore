@@ -14,9 +14,6 @@ data
 # builds
 target
 
-# Cargo lock
-Cargo.lock
-
 # assets (ignore by default)
 *.jpeg
 *.jpg

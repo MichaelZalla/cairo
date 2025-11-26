@@ -118,9 +118,9 @@ pub(crate) fn make_scene(
         mesh_arena.insert(cube_mesh)
     };
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
-    let uniform = Uniform::<f32>::new(0.0, 1.0);
+    let uniform = Uniform::<f32>::new(0.0, 1.0).unwrap();
 
     for i in 0..32 {
         let cube_entity_node = make_semi_transparent_cube(

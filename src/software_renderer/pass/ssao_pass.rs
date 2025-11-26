@@ -18,9 +18,9 @@ use crate::{
 pub(in crate::software_renderer) const KERNEL_SIZE: usize = 16;
 
 pub(in crate::software_renderer) fn make_hemisphere_kernel() -> [Vec3; KERNEL_SIZE] {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
-    let uniform = Uniform::<f32>::new(0.0, 1.0);
+    let uniform = Uniform::<f32>::new(0.0, 1.0).unwrap();
 
     let mut hemisphere_kernel: [Vec3; KERNEL_SIZE] = [Default::default(); KERNEL_SIZE];
 
@@ -44,9 +44,9 @@ pub(in crate::software_renderer) fn make_hemisphere_kernel() -> [Vec3; KERNEL_SI
 }
 
 pub(in crate::software_renderer) fn make_4x4_tangent_space_rotations() -> [Quaternion; 16] {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
-    let uniform = Uniform::<f32>::new(0.0, 1.0);
+    let uniform = Uniform::<f32>::new(0.0, 1.0).unwrap();
 
     let mut rotational_noise_samples = [Default::default(); 16];
 
