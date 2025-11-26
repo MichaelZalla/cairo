@@ -144,8 +144,14 @@ impl<const N: usize> Simulation<N> {
 
                     // Only process valid collisions (t must be in [0, 1] range)
                     if capsule.segment.t >= 0.0 && capsule.segment.t <= 1.0 {
+                        // Compute collision point and penetration in world space
+                        let collision_point = capsule.segment.start
+                            + (capsule.segment.end - capsule.segment.start) * capsule.segment.t;
+
+                        let penetration_vector = end_position - collision_point;
+
                         let penetration_depth =
-                            capsule.segment.transformed_length * (1.0 - capsule.segment.t);
+                            penetration_vector.dot(instance_triangle_normal).abs();
 
                         resolve_point_plane_collision_approximate(
                             instance_triangle_normal,
