@@ -130,6 +130,7 @@ impl<const N: usize> Simulation<N> {
 
                 let mut end_velocity = new_state.data[num_active_particles + i];
 
+                // Freeze particles with very low velocity to prevent instability
                 if capsule.segment.transformed_length < 0.02 {
                     new_state.data[i] = state.data[i];
                     new_state.data[i + n] = state.data[i + n];
@@ -141,18 +142,19 @@ impl<const N: usize> Simulation<N> {
 
                     end_velocity -= accumulated_velocity;
 
-                    debug_assert!(capsule.segment.t >= 0.0 && capsule.segment.t <= 1.0);
+                    // Only process valid collisions (t must be in [0, 1] range)
+                    if capsule.segment.t >= 0.0 && capsule.segment.t <= 1.0 {
+                        let penetration_depth =
+                            capsule.segment.transformed_length * (1.0 - capsule.segment.t);
 
-                    let penetration_depth =
-                        capsule.segment.transformed_length * (1.0 - capsule.segment.t);
-
-                    resolve_point_plane_collision_approximate(
-                        instance_triangle_normal,
-                        &PHYSICS_MATERIAL,
-                        &mut end_position,
-                        &mut end_velocity,
-                        penetration_depth,
-                    );
+                        resolve_point_plane_collision_approximate(
+                            instance_triangle_normal,
+                            &PHYSICS_MATERIAL,
+                            &mut end_position,
+                            &mut end_velocity,
+                            penetration_depth,
+                        );
+                    }
 
                     new_state.data[i] = end_position;
                     new_state.data[i + n] = end_velocity;
