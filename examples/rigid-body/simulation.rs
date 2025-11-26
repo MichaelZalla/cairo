@@ -70,12 +70,13 @@ impl Simulation {
             system_dynamics_function(&state, &self.forces, &predicted_contacts, h, uptime_seconds);
 
         // 4. Integrate velocities (Phase 3)
-        let state_with_new_velocities = self.integrate_velocities(&state, &derivative, h);
+        let mut state_with_new_velocities = self.integrate_velocities(&state, &derivative, h);
 
         // 5. Clear collision debug markers
         self.clear_collision_debug_info();
 
-        // 6. TODO: Apply predictive impulses to prevent collisions (Phase 4)
+        // 6. Apply predictive impulses to prevent collisions (Phase 4)
+        self.apply_predictive_impulses(&mut state_with_new_velocities, h, &derivative, &state);
 
         // 7. Integrate positions with corrected velocities (Phase 5)
         let mut final_state = self.integrate_positions(&state_with_new_velocities, h);
@@ -772,6 +773,29 @@ impl Simulation {
             new_state,
             &RIGID_BODY_RIGID_BODY_MATERIAL,
         );
+    }
+
+    fn apply_predictive_impulses(
+        &mut self,
+        state_with_new_velocities: &mut StateVector<RigidBodySimulationState>,
+        h: f32,
+        derivative: &StateVector<RigidBodySimulationState>,
+        original_state: &StateVector<RigidBodySimulationState>,
+    ) {
+        // Phase 4: Apply impulses based on predicted collisions BEFORE position integration
+
+        // 1. Create a predicted state by integrating positions from new velocities
+        let mut predicted_state = self.integrate_positions(state_with_new_velocities, h);
+
+        // 2. Detect and resolve collisions at those predicted positions
+        //    (This modifies predicted_state's velocities with impulses)
+        self.apply_corrective_impulses(h, derivative, original_state, &mut predicted_state);
+
+        // 3. Copy the velocity corrections back (but NOT position changes)
+        for (i, body) in state_with_new_velocities.0.iter_mut().enumerate() {
+            body.linear_momentum = predicted_state.0[i].linear_momentum;
+            body.angular_momentum = predicted_state.0[i].angular_momentum;
+        }
     }
 
     fn predict_contacts(
