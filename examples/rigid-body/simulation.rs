@@ -98,9 +98,7 @@ impl Simulation {
             body.orientation += orientation_derivative * h;
         }
 
-        for sphere in self.rigid_bodies.iter_mut() {
-            sphere.collision_impulse.take();
-        }
+        self.clear_collision_debug_info();
 
         // Detects and resolves collisions with static colliders.
 
@@ -118,11 +116,7 @@ impl Simulation {
 
         self.check_rigid_bodies_collisions(&state, &mut new_state, &RIGID_BODY_RIGID_BODY_MATERIAL);
 
-        // Copies new state back to rigid bodies.
-
-        for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
-            sphere.apply_simulation_state(&new_state.0[i]);
-        }
+        self.apply_state_vector(&new_state);
     }
 
     fn handle_static_collisions(
@@ -746,5 +740,17 @@ impl Simulation {
 
     fn copy_to_state_vector(&self) -> StateVector<RigidBodySimulationState> {
         self.rigid_bodies.as_slice().into()
+    }
+
+    fn apply_state_vector(&mut self, state: &StateVector<RigidBodySimulationState>) {
+        for (i, sphere) in self.rigid_bodies.iter_mut().enumerate() {
+            sphere.apply_simulation_state(&state.0[i]);
+        }
+    }
+
+    fn clear_collision_debug_info(&mut self) {
+        for sphere in self.rigid_bodies.iter_mut() {
+            sphere.collision_impulse.take();
+        }
     }
 }
