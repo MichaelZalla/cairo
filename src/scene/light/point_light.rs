@@ -6,11 +6,11 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    render::{culling::FaceCullingReject, Renderer},
+    render::{Renderer, culling::FaceCullingReject},
     resource::handle::Handle,
     scene::{
         camera::Camera,
-        graph::{options::SceneGraphRenderOptions, SceneGraph},
+        graph::{SceneGraph, options::SceneGraphRenderOptions},
         resources::SceneResources,
     },
     serde::PostDeserialize,
@@ -19,7 +19,7 @@ use crate::{
         PerspectiveShadowMapFragmentShader, PerspectiveShadowMapGeometryShader,
         PerspectiveShadowMapVertexShader,
     },
-    texture::cubemap::{CubeMap, CUBE_MAP_SIDES},
+    texture::cubemap::{CUBE_MAP_SIDES, CubeMap},
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -27,9 +27,9 @@ use crate::{
 };
 
 use super::{
-    attenuation::{LightAttenuation, LIGHT_ATTENUATION_RANGE_13_UNITS},
+    attenuation::{LIGHT_ATTENUATION_RANGE_13_UNITS, LightAttenuation},
     contribute_pbr_tangent_space,
-    shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
+    shadow::{SHADOW_MAP_CAMERA_NEAR, ShadowMapRenderingContext},
 };
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]

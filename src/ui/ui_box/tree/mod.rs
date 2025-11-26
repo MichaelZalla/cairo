@@ -4,21 +4,21 @@ use std::{cell::RefCell, fmt, rc::Rc};
 use crate::{
     buffer::Buffer2D,
     collections::tree::{
-        node::{Node, NodeLocalTraversalMethod},
         Tree,
+        node::{Node, NodeLocalTraversalMethod},
     },
     color,
     device::mouse::cursor::MouseCursorKind,
-    graphics::{text::cache::cache_text, Graphics},
+    graphics::{Graphics, text::cache::cache_text},
     ui::{
+        UI2DAxis, UISize,
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
         ui_box::{UIBoxFeatureFlags, UILayoutDirection},
-        UI2DAxis, UISize,
     },
 };
 
-use super::{key::UIKey, UIBox, UIBoxInteraction};
+use super::{UIBox, UIBoxInteraction, key::UIKey};
 
 #[cfg(feature = "print_ui_layout_info")]
 macro_rules! ui_debug_print {

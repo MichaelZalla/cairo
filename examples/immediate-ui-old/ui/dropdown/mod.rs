@@ -5,11 +5,11 @@ use cairo::{
     color,
     device::mouse::{MouseEventKind, MouseState},
     graphics::{
-        text::{
-            cache::{cache_text, TextCacheKey},
-            TextOperation,
-        },
         Graphics,
+        text::{
+            TextOperation,
+            cache::{TextCacheKey, cache_text},
+        },
     },
     vec::vec2::Vec2,
 };
@@ -17,7 +17,7 @@ use cairo::{
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::{item::ItemLayoutOptions, UILayoutContext},
+    layout::{UILayoutContext, item::ItemLayoutOptions},
 };
 
 static DROPDOWN_WIDTH: u32 = 200;

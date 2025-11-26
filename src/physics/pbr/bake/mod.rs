@@ -14,7 +14,7 @@ use crate::{
     render::culling::FaceCullingReject,
     resource::handle::Handle,
     scene::{
-        context::{utils::make_cube_scene, SceneContext},
+        context::{SceneContext, utils::make_cube_scene},
         node::SceneNodeType,
     },
     shader::context::ShaderContext,

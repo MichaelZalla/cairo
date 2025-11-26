@@ -4,21 +4,21 @@ use std::{cell::RefCell, rc::Rc};
 use profile::SoftwareRendererCycleCounter;
 
 use crate::{
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::{Buffer2D, framebuffer::Framebuffer},
     color::Color,
     device::keyboard::KeyboardState,
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     geometry::primitives::{aabb::AABB, ray::Ray},
     graphics::text::cache::TextCache,
     matrix::Mat4,
     render::{
-        options::{shader::RenderShaderOptions, RenderOptions, RenderPassFlags},
-        viewport::RenderViewport,
         Renderer,
+        options::{RenderOptions, RenderPassFlags, shader::RenderShaderOptions},
+        viewport::RenderViewport,
     },
     resource::handle::Handle,
     scene::{
-        camera::{frustum::Frustum, Camera},
+        camera::{Camera, frustum::Frustum},
         empty::EmptyDisplayKind,
         light::{
             ambient_light::AmbientLight, directional_light::DirectionalLight,
@@ -30,7 +30,7 @@ use crate::{
         alpha::AlphaShaderFn,
         context::ShaderContext,
         fragment::FragmentShaderFn,
-        geometry::{sample::GeometrySample, GeometryShaderFn},
+        geometry::{GeometryShaderFn, sample::GeometrySample},
         vertex::VertexShaderFn,
     },
     shaders::{
@@ -48,7 +48,7 @@ use self::gbuffer::GBuffer;
 
 use super::{mesh::Mesh, vec::vec3::Vec3};
 
-use pass::ssao_pass::{make_4x4_tangent_space_rotations, make_hemisphere_kernel, KERNEL_SIZE};
+use pass::ssao_pass::{KERNEL_SIZE, make_4x4_tangent_space_rotations, make_hemisphere_kernel};
 
 mod gbuffer;
 mod pass;
@@ -479,7 +479,10 @@ impl SoftwareRenderer {
                         }
                     }
                     Err(err) => {
-                        panic!("Called Renderer::bind_framebuffer() with an invalid Framebuffer! (Err: {})", err);
+                        panic!(
+                            "Called Renderer::bind_framebuffer() with an invalid Framebuffer! (Err: {})",
+                            err
+                        );
                     }
                 }
             }

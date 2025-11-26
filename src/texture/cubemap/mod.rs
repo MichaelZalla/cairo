@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     app::context::ApplicationRenderingContext,
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::{Buffer2D, framebuffer::Framebuffer},
     color::{self, Color},
     render::Renderer,
     scene::{camera::Camera, context::SceneContext},
@@ -135,15 +135,15 @@ pub struct CubeMap<T: Default + Debug + Copy + PartialEq + Add<Output = T> + Sub
 }
 
 impl<
-        T: Default
-            + Debug
-            + Copy
-            + PartialEq
-            + Add<Output = T>
-            + Sub<Output = T>
-            + Mul<Output = T>
-            + Div<Output = T>,
-    > From<[TextureMap<T>; 6]> for CubeMap<T>
+    T: Default
+        + Debug
+        + Copy
+        + PartialEq
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
+> From<[TextureMap<T>; 6]> for CubeMap<T>
 {
     fn from(sides: [TextureMap<T>; 6]) -> Self {
         Self {
@@ -154,16 +154,16 @@ impl<
 }
 
 impl<
-        T: Default
-            + PartialEq
-            + Copy
-            + Clone
-            + Debug
-            + Add<Output = T>
-            + Sub<Output = T>
-            + Mul<Output = T>
-            + Div<Output = T>,
-    > From<&Framebuffer> for CubeMap<T>
+    T: Default
+        + PartialEq
+        + Copy
+        + Clone
+        + Debug
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
+> From<&Framebuffer> for CubeMap<T>
 {
     fn from(framebuffer: &Framebuffer) -> Self {
         let cubemap_size = {
@@ -185,15 +185,15 @@ impl<
 }
 
 impl<
-        T: Default
-            + Debug
-            + Copy
-            + PartialEq
-            + Add<Output = T>
-            + Sub<Output = T>
-            + Mul<Output = T>
-            + Div<Output = T>,
-    > PostDeserialize for CubeMap<T>
+    T: Default
+        + Debug
+        + Copy
+        + PartialEq
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
+> PostDeserialize for CubeMap<T>
 {
     fn post_deserialize(&mut self) {
         for side in self.sides.iter_mut() {
@@ -203,15 +203,15 @@ impl<
 }
 
 impl<
-        T: Default
-            + Debug
-            + Copy
-            + PartialEq
-            + Add<Output = T>
-            + Sub<Output = T>
-            + Mul<Output = T>
-            + Div<Output = T>,
-    > CubeMap<T>
+    T: Default
+        + Debug
+        + Copy
+        + PartialEq
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Div<Output = T>,
+> CubeMap<T>
 {
     pub fn new(texture_paths: [&str; 6], storage_format: TextureMapStorageFormat) -> Self {
         Self {

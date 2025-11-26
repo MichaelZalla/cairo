@@ -4,8 +4,8 @@ use cairo::{
     entity::Entity,
     material::Material,
     mesh::{
-        primitive::{cube, plane},
         Mesh,
+        primitive::{cube, plane},
     },
     resource::{arena::Arena, handle::Handle},
     scene::{

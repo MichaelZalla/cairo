@@ -5,11 +5,11 @@ use crate::{
     buffer::Buffer2D,
     color::{self, Color},
     debug::message::DebugMessageBuffer,
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     texture::map::TextureBuffer,
 };
 
-use self::cache::{cache_text, TextCache, TextCacheKey, TextMask};
+use self::cache::{TextCache, TextCacheKey, TextMask, cache_text};
 
 use super::Graphics;
 

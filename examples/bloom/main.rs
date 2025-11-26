@@ -3,16 +3,14 @@ extern crate sdl2;
 use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::framebuffer::Framebuffer,
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
     render::{
-        options::{
-            tone_mapping::ToneMappingOperator, RenderOptions, RenderPassFlags,
-        },
         Renderer,
+        options::{RenderOptions, RenderPassFlags, tone_mapping::ToneMappingOperator},
     },
     scene::{
         context::SceneContext,

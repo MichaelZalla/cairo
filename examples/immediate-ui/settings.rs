@@ -1,6 +1,6 @@
 use cairo::{
     app::window::AppWindowingMode,
-    render::options::{shader::RenderShaderOptions, RenderOptions},
+    render::options::{RenderOptions, shader::RenderShaderOptions},
     software_renderer::zbuffer::DepthTestMethod,
 };
 

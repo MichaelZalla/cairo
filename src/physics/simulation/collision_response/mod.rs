@@ -1,6 +1,6 @@
 use crate::{animation::lerp, physics::material::PhysicsMaterial, vec::vec3::Vec3};
 
-use super::rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, CollisionImpulse};
+use super::rigid_body::{CollisionImpulse, rigid_body_simulation_state::RigidBodySimulationState};
 
 /// Minimum tangential velocity (m/s) for a moving contact point,
 /// below which dynamic (kinetic) friction calculation is skipped.

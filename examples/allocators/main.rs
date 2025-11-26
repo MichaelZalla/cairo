@@ -1,4 +1,4 @@
-use cairo::mem::arena::{stack::FixedStackArena, Arena};
+use cairo::mem::arena::{Arena, stack::FixedStackArena};
 
 fn main() -> Result<(), String> {
     println!("Hello, arena!");

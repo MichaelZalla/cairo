@@ -6,7 +6,7 @@ use cairo::{
     color,
     entity::Entity,
     material::Material,
-    mesh::{primitive::cube, Mesh},
+    mesh::{Mesh, primitive::cube},
     resource::arena::Arena,
     scene::{
         camera::Camera,

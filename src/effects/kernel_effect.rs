@@ -1,5 +1,5 @@
 use crate::{
-    buffer::{get_3x3_coordinates, Buffer2D},
+    buffer::{Buffer2D, get_3x3_coordinates},
     color::Color,
     effect::Effect,
     vec::vec3::Vec3,

@@ -12,7 +12,7 @@ use crate::{
 };
 
 use rasterizer::RasterizerOptions;
-use tone_mapping::{ToneMappingOperator, TONE_MAPPING_OPERATORS};
+use tone_mapping::{TONE_MAPPING_OPERATORS, ToneMappingOperator};
 
 pub mod rasterizer;
 pub mod shader;

@@ -6,16 +6,16 @@ use crate::{
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
-        mouse::{cursor::MouseCursorKind, MouseState},
+        mouse::{MouseState, cursor::MouseCursorKind},
     },
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     graphics::text::cache::TextCache,
     resource::arena::Arena,
     texture::map::TextureMap,
     time::TimingInfo,
 };
 
-use super::ui_box::{key::UIKey, styles::UIBoxStylesMap, UIBox};
+use super::ui_box::{UIBox, key::UIKey, styles::UIBoxStylesMap};
 
 use theme::UITheme;
 

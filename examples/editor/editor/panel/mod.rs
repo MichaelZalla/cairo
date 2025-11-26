@@ -9,8 +9,8 @@ use cairo::{
     software_renderer::SoftwareRenderer,
     ui::{
         extent::ScreenExtent,
-        panel::{tree::PanelTree, Panel, PanelInstanceData, PanelRenderCallback},
-        ui_box::{tree::UIBoxTree, UIBoxCustomRenderCallback, UILayoutDirection},
+        panel::{Panel, PanelInstanceData, PanelRenderCallback, tree::PanelTree},
+        ui_box::{UIBoxCustomRenderCallback, UILayoutDirection, tree::UIBoxTree},
     },
     vec::vec3::{self, Vec3},
 };

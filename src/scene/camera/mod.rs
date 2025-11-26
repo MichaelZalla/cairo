@@ -9,8 +9,8 @@ use crate::{
     shader::context::ShaderContext,
     time::TimingInfo,
     transform::look_vector::{
-        controller::{first_person::FirstPersonLookVectorController, LookVectorController},
         LookVector,
+        controller::{LookVectorController, first_person::FirstPersonLookVectorController},
     },
     vec::{
         vec3::{self, Vec3},
@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-use self::frustum::{Frustum, FAR_PLANE_POINTS_CLIP_SPACE, NEAR_PLANE_POINTS_CLIP_SPACE};
+use self::frustum::{FAR_PLANE_POINTS_CLIP_SPACE, Frustum, NEAR_PLANE_POINTS_CLIP_SPACE};
 
 pub mod frustum;
 

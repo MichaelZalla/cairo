@@ -6,16 +6,16 @@ use sdl2::{keyboard::Keycode, mouse::Cursor};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTIONS_16X9, RESOLUTION_1600_BY_900},
-        window::AppWindowingMode,
         App, AppWindowInfo,
+        resolution::{RESOLUTION_1600_BY_900, RESOLUTIONS_16X9, Resolution},
+        window::AppWindowingMode,
     },
     buffer::framebuffer::Framebuffer,
     color,
     device::{
         game_controller::GameControllerState,
         keyboard::KeyboardState,
-        mouse::{self, cursor::MouseCursorKind, MouseState},
+        mouse::{self, MouseState, cursor::MouseCursorKind},
     },
     effect::Effect,
     effects::{
@@ -23,7 +23,7 @@ use cairo::{
         invert_effect::InvertEffect, kernel_effect::KernelEffect,
     },
     matrix::Mat4,
-    render::{options::RenderPassFlags, Renderer},
+    render::{Renderer, options::RenderPassFlags},
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -48,7 +48,7 @@ use cairo::{
     vec::vec3,
 };
 
-use command::{process_commands, CommandBuffer};
+use command::{CommandBuffer, process_commands};
 use panels::{PanelArenas, PanelInstance, PanelRenderCallbacks};
 use scene::make_scene;
 use settings::Settings;

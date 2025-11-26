@@ -3,8 +3,8 @@ use cairo::{
     entity::Entity,
     material::Material,
     mesh::{
-        obj::load::{load_obj, LoadObjResult},
         Mesh,
+        obj::load::{LoadObjResult, load_obj},
     },
     resource::arena::Arena,
     scene::{

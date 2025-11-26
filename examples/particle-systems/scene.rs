@@ -8,8 +8,8 @@ use cairo::{
     geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     material::Material,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
+        obj::load::{LoadObjResult, ProcessGeometryFlags, load_obj},
     },
     random::sampler::{RandomSampler, RangeSampler},
     resource::arena::Arena,
@@ -25,7 +25,7 @@ use cairo::{
         resources::SceneResources,
     },
     shader::context::ShaderContext,
-    transform::{quaternion::Quaternion, Transform3D},
+    transform::{Transform3D, quaternion::Quaternion},
     vec::vec3::{self, Vec3},
 };
 

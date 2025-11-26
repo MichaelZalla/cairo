@@ -232,7 +232,10 @@ impl SoftwareRenderer {
                     "Capsule division must be divisible by 4"
                 );
 
-                assert!(divisions >= 8, "Called `SoftwareRenderer::render_empty()` on capsule with fewer than 8 divisions!");
+                assert!(
+                    divisions >= 8,
+                    "Called `SoftwareRenderer::render_empty()` on capsule with fewer than 8 divisions!"
+                );
 
                 // Renders unit circles on parallel planes.
 

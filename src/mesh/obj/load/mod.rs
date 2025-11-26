@@ -6,13 +6,13 @@ use bitflags::bitflags;
 
 use crate::{
     fs::read_lines,
-    material::{mtl::load_mtl, Material},
+    material::{Material, mtl::load_mtl},
     mesh::{
+        Mesh, PartialFace,
         mesh_geometry::MeshGeometry,
         obj::parse::{
             parse_face, parse_mtllib, parse_vertex, parse_vertex_normal, parse_vertex_uv,
         },
-        Mesh, PartialFace,
     },
     resource::arena::Arena,
     texture::map::TextureMap,
@@ -34,7 +34,17 @@ struct LoadObjStats {
 
 impl fmt::Display for LoadObjStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Counted {} objects, {} groups, {} material groups, {} vertices, {} UVs, {} normals, and {} faces.", self.object, self.group, self.material_group, self.vertex, self.uv, self.normal, self.face)
+        write!(
+            f,
+            "Counted {} objects, {} groups, {} material groups, {} vertices, {} UVs, {} normals, and {} faces.",
+            self.object,
+            self.group,
+            self.material_group,
+            self.vertex,
+            self.uv,
+            self.normal,
+            self.face
+        )
     }
 }
 

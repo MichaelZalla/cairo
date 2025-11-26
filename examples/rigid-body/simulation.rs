@@ -17,8 +17,8 @@ use cairo::{
             },
             contact::{StaticContact, StaticContactKind},
             rigid_body::{
-                rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
                 RigidBody, RigidBodyKind,
+                rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
             },
         },
     },

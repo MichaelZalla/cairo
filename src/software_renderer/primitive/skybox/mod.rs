@@ -2,7 +2,7 @@ use crate::{
     color::Color,
     matrix::Mat4,
     scene::camera::Camera,
-    software_renderer::{zbuffer, SoftwareRenderer},
+    software_renderer::{SoftwareRenderer, zbuffer},
     texture::cubemap::CubeMap,
     vec::vec3::Vec3,
 };

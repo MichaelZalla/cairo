@@ -198,8 +198,10 @@ impl SoftwareRenderer {
                             (end.y * self.viewport.height as f32) as i32,
                             color_u32,
                         );
-                    },
-                    None => panic!("Called SoftwareRenderer::render_line_from_ndc_space_vecs() with no forward (LDR) framebuffer attachment!"),
+                    }
+                    None => panic!(
+                        "Called SoftwareRenderer::render_line_from_ndc_space_vecs() with no forward (LDR) framebuffer attachment!"
+                    ),
                 }
             }
             None => panic!(

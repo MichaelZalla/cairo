@@ -4,18 +4,18 @@ use cairo::{
     buffer::Buffer2D,
     device::mouse::MouseState,
     graphics::{
-        text::{
-            cache::{cache_text, TextCacheKey},
-            TextOperation,
-        },
         Graphics,
+        text::{
+            TextOperation,
+            cache::{TextCacheKey, cache_text},
+        },
     },
 };
 
 use super::{
     context::{UIContext, UIID},
     get_mouse_result,
-    layout::{item::ItemLayoutOptions, UILayoutContext},
+    layout::{UILayoutContext, item::ItemLayoutOptions},
 };
 
 static BORDERED_BUTTON_LABEL_PADDING_VERTICAL: u32 = 4;

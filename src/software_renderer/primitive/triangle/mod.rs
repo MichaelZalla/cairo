@@ -3,9 +3,9 @@ use crate::{
     color::{self, Color},
     mesh::face::Face,
     render::{
+        Renderer,
         culling::{FaceCullingReject, FaceCullingWindingOrder},
         options::RenderPassFlags,
-        Renderer,
     },
     software_renderer::SoftwareRenderer,
     vec::vec4::Vec4,

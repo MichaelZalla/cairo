@@ -32,7 +32,9 @@ pub(in crate::mesh) fn get_processed_faces(
         let normals = match partial_face.normals {
             Some(face_normal_indices) => face_normal_indices,
             None => {
-                todo!("Compute flat normals for this face, insert into Geometry.normals, and return indices.");
+                todo!(
+                    "Compute flat normals for this face, insert into Geometry.normals, and return indices."
+                );
             }
         };
 

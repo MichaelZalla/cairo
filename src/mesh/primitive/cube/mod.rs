@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    mesh::{mesh_geometry::MeshGeometry, Mesh, PartialFace},
+    mesh::{Mesh, PartialFace, mesh_geometry::MeshGeometry},
     texture,
     vec::{
         vec2::Vec2,

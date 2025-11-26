@@ -1,5 +1,5 @@
 use crate::{
-    color::{hsv_to_rgb, Color},
+    color::{Color, hsv_to_rgb},
     geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, primitives::aabb::AABB},
     matrix::Mat4,
     render::Renderer,

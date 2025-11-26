@@ -8,8 +8,8 @@ use std::{
 use crate::{
     animation::lerp,
     color::{
-        blend::{self, blend, BlendMode},
         Color,
+        blend::{self, BlendMode, blend},
     },
     vec::{vec2::Vec2, vec3::Vec3},
 };

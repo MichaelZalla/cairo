@@ -1,6 +1,6 @@
 use crate::ui::{
-    ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection, UI_BOX_SPACER_ID},
     UISize, UISizeWithStrictness,
+    ui_box::{UI_BOX_SPACER_ID, UIBox, UIBoxFeatureFlags, UILayoutDirection},
 };
 
 pub fn spacer(size: u32) -> UIBox {

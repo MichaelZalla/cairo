@@ -33,9 +33,7 @@ pub struct PanelArenas {
 }
 
 macro_rules! leak_arena {
-    ($T: ident) => {{
-        Box::leak(Box::new(RefCell::new(Arena::<$T>::new())))
-    }};
+    ($T: ident) => {{ Box::leak(Box::new(RefCell::new(Arena::<$T>::new()))) }};
 }
 
 impl Default for PanelArenas {

@@ -5,7 +5,7 @@ use cairo::{
     geometry::accelerator::hash_grid::{HashGrid, HashGridInsertionStrategy},
     physics::simulation::{
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
-        rigid_body::{rigid_body_simulation_state::DynRigidBodyForce, RigidBody, RigidBodyKind},
+        rigid_body::{RigidBody, RigidBodyKind, rigid_body_simulation_state::DynRigidBodyForce},
     },
     random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
     transform::quaternion::Quaternion,

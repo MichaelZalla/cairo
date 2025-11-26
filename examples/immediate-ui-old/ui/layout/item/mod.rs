@@ -42,7 +42,12 @@ impl ItemLayoutOptions {
                     {
                         remaining_layout_width - item_width - self.x_offset
                     } else {
-                        panic!("Invalid cursor position for layout.extent.left={}, layout.width()={}, layout.cursor.x={}", layout.extent.left, layout.width(), layout.cursor.x);
+                        panic!(
+                            "Invalid cursor position for layout.extent.left={}, layout.width()={}, layout.cursor.x={}",
+                            layout.extent.left,
+                            layout.width(),
+                            layout.cursor.x
+                        );
                     }
                 }
             },

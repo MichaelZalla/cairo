@@ -7,8 +7,8 @@ use cairo::{
     serde::PostDeserialize,
     ui::{
         fastpath::{
-            radio::{radio_group, RadioOption},
-            slider::{slider, SliderOptions},
+            radio::{RadioOption, radio_group},
+            slider::{SliderOptions, slider},
             spacer::spacer,
             text::text,
         },
@@ -16,7 +16,7 @@ use cairo::{
     },
 };
 
-use crate::{command::PendingCommand, COMMAND_BUFFER, SCENE_CONTEXT};
+use crate::{COMMAND_BUFFER, SCENE_CONTEXT, command::PendingCommand};
 
 use super::PanelInstance;
 

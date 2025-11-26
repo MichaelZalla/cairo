@@ -1,6 +1,6 @@
 use crate::{
     buffer::Buffer2D,
-    graphics::{text::TextOperation, Graphics},
+    graphics::{Graphics, text::TextOperation},
     ui::{
         context::UIContext,
         ui_box::{UIBox, UIBoxFeatureFlags},

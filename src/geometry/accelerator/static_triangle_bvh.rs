@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{
     geometry::primitives::{aabb::AABB, triangle::Triangle},
     matrix::Mat4,
-    mesh::{mesh_geometry::MeshGeometry, Mesh},
+    mesh::{Mesh, mesh_geometry::MeshGeometry},
     transform::Transform3D,
     vec::{
         vec3::{self, Vec3A},

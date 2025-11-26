@@ -8,10 +8,10 @@ use std::{
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_320_BY_180},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_320_BY_180, Resolution},
     },
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::{Buffer2D, framebuffer::Framebuffer},
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,

@@ -11,16 +11,16 @@ use crate::{
 };
 
 use super::{
-    context::{UIContext, GLOBAL_UI_CONTEXT},
+    UISize, UISizeWithStrictness,
+    context::{GLOBAL_UI_CONTEXT, UIContext},
     extent::ScreenExtent,
     fastpath::{button::button, container::container, spacer::greedy_spacer, text::text},
     panel::tree::PanelTree,
     ui_box::{
+        UIBox, UIBoxDragHandle, UIBoxFeatureFlags, UILayoutDirection,
         interaction::UIBoxInteraction,
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        UIBox, UIBoxDragHandle, UIBoxFeatureFlags, UILayoutDirection,
     },
-    UISize, UISizeWithStrictness,
 };
 
 pub mod list;

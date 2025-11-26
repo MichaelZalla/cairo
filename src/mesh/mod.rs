@@ -9,7 +9,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-use face::{get_processed_faces, Face, PartialFace};
+use face::{Face, PartialFace, get_processed_faces};
 use mesh_geometry::MeshGeometry;
 
 pub mod face;

@@ -4,8 +4,7 @@ use crate::{
     vec::{vec3::Vec3, vec4::Vec4},
 };
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ShaderContext {
     pub world_transform: Mat4,
     pub view_position: Vec4,
@@ -30,7 +29,6 @@ pub struct ShaderContext {
     pub point_lights: Vec<Handle>,
     pub spot_lights: Vec<Handle>,
 }
-
 
 impl ShaderContext {
     pub fn get_world_transform(&mut self) -> Mat4 {

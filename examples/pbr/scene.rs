@@ -2,7 +2,7 @@ use cairo::{
     color,
     entity::Entity,
     material::Material,
-    mesh::{obj::load::load_obj, Mesh},
+    mesh::{Mesh, obj::load::load_obj},
     resource::arena::Arena,
     scene::{
         camera::Camera,

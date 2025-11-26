@@ -4,18 +4,17 @@ use cairo::{
     resource::handle::Handle,
     scene::context::SceneContext,
     ui::{
-        panel::{tree::PanelTree, Panel, PanelInstanceData},
+        panel::{Panel, PanelInstanceData, tree::PanelTree},
         ui_box::UILayoutDirection,
-        window::{list::WindowList, Window, WindowOptions},
+        window::{Window, WindowOptions, list::WindowList},
     },
 };
 
 use crate::panels::{
-    camera_attributes_panel::CameraAttributesPanel,
+    PanelArenas, PanelRenderCallbacks, camera_attributes_panel::CameraAttributesPanel,
     rasterization_options_panel::RasterizationOptionsPanel,
     render_options_panel::RenderOptionsPanel, scene_graph_panel::SceneGraphPanel,
-    settings_panel::SettingsPanel, shader_options_panel::ShaderOptionsPanel, PanelArenas,
-    PanelRenderCallbacks,
+    settings_panel::SettingsPanel, shader_options_panel::ShaderOptionsPanel,
 };
 
 pub(crate) fn make_window_list<'a>(

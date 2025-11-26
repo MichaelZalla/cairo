@@ -1,7 +1,7 @@
 use std::{cell::RefCell, f32::consts::TAU};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::Buffer2D,
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},

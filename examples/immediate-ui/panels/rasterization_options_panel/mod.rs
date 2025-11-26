@@ -6,7 +6,7 @@ use cairo::{
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
     ui::{
         fastpath::{
-            radio::{radio_group, RadioOption},
+            radio::{RadioOption, radio_group},
             spacer::spacer,
             text::text,
         },

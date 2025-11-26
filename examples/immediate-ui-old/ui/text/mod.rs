@@ -4,18 +4,18 @@ use cairo::{
     buffer::Buffer2D,
     color::Color,
     graphics::{
-        text::{
-            cache::{cache_text, TextCacheKey},
-            TextOperation,
-        },
         Graphics,
+        text::{
+            TextOperation,
+            cache::{TextCacheKey, cache_text},
+        },
     },
     texture::map::TextureBuffer,
 };
 
 use super::{
     context::UIContext,
-    layout::{item::ItemLayoutOptions, UILayoutContext},
+    layout::{UILayoutContext, item::ItemLayoutOptions},
 };
 
 #[derive(Default, Debug)]

@@ -3,7 +3,7 @@ use std::fmt::{self};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mesh::{mesh_geometry::MeshGeometry, Mesh},
+    mesh::{Mesh, mesh_geometry::MeshGeometry},
     vec::vec3::{self, Vec3},
 };
 

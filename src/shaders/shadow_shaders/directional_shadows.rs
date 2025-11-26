@@ -6,7 +6,7 @@ use crate::{
     shader::{
         context::ShaderContext,
         fragment::FragmentShaderFn,
-        geometry::{sample::GeometrySample, GeometryShaderFn},
+        geometry::{GeometryShaderFn, sample::GeometrySample},
         vertex::VertexShaderFn,
     },
     vec::{

@@ -14,11 +14,11 @@ use cairo::{
 };
 
 use super::{
-    button::{do_button, ButtonOptions},
+    button::{ButtonOptions, do_button},
     context::{UIContext, UIID},
     layout::UILayoutOptions,
-    layout::{item::ItemLayoutOptions, UILayoutContext, UILayoutDirection, UILayoutExtent},
-    text::{do_text, TextOptions},
+    layout::{UILayoutContext, UILayoutDirection, UILayoutExtent, item::ItemLayoutOptions},
+    text::{TextOptions, do_text},
 };
 
 #[derive(Debug)]

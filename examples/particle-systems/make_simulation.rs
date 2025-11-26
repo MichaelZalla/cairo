@@ -4,8 +4,8 @@ use cairo::{
     physics::simulation::{
         force::gravity::GRAVITY_POINT_FORCE,
         particle::{
-            generator::{ParticleGenerator, ParticleGeneratorKind},
             Particle,
+            generator::{ParticleGenerator, ParticleGeneratorKind},
         },
     },
     random::sampler::RandomSampler,

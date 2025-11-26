@@ -9,8 +9,7 @@ use crate::{
 };
 
 use super::{
-    UIBox, UIBoxDragHandle, UIBoxFeatureFlags, UILayoutDirection,
-    UI_DIVIDER_CURSOR_SNAP_EPSILON,
+    UI_DIVIDER_CURSOR_SNAP_EPSILON, UIBox, UIBoxDragHandle, UIBoxFeatureFlags, UILayoutDirection,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -237,12 +236,14 @@ impl UIBoxInteraction {
                     && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
                 {
                     Some(drag_handle_max_primary)
-                } else if features.contains(UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_SECONDARY_AXIS)
+                } else if features
+                    .contains(UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_SECONDARY_AXIS)
                     && within_epsilon(mouse_secondary, min_secondary)
                     && (min_primary..max_primary + 1).contains(&mouse_primary)
                 {
                     Some(drag_handle_min_secondary)
-                } else if features.contains(UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_SECONDARY_AXIS)
+                } else if features
+                    .contains(UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_SECONDARY_AXIS)
                     && within_epsilon(mouse_secondary, max_secondary)
                     && (min_primary..max_primary + 1).contains(&mouse_primary)
                 {

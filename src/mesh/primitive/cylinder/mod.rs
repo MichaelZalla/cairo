@@ -1,7 +1,7 @@
 use std::{f32::consts::TAU, mem, rc::Rc};
 
 use crate::{
-    mesh::{mesh_geometry::MeshGeometry, Mesh, PartialFace},
+    mesh::{Mesh, PartialFace, mesh_geometry::MeshGeometry},
     texture::uv,
     transform::quaternion::Quaternion,
     vec::{

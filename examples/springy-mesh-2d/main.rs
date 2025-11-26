@@ -3,7 +3,7 @@ extern crate sdl2;
 use std::cell::RefCell;
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::Buffer2D,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     vec::vec3::Vec3,
@@ -17,9 +17,9 @@ use renderable::Renderable;
 
 mod coordinates;
 mod draw_collider;
+mod draw_particle;
 mod draw_wind_velocity;
 mod make_simulation;
-mod draw_particle;
 mod renderable;
 mod simulation;
 mod springy_mesh;

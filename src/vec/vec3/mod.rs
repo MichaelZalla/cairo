@@ -5,8 +5,8 @@ use rand::rngs::ThreadRng;
 use rand_distr::{Distribution, Uniform};
 
 use serde::{
-    ser::{Serialize, SerializeStruct, Serializer},
     Deserialize, Deserializer,
+    ser::{Serialize, SerializeStruct, Serializer},
 };
 
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};

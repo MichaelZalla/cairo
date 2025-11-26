@@ -10,11 +10,11 @@ use crate::{
     buffer::Buffer2D,
     color::Color,
     matrix::Mat4,
-    render::{culling::FaceCullingReject, Renderer},
+    render::{Renderer, culling::FaceCullingReject},
     resource::handle::Handle,
     scene::{
         camera::Camera,
-        graph::{options::SceneGraphRenderOptions, SceneGraph},
+        graph::{SceneGraph, options::SceneGraphRenderOptions},
         resources::SceneResources,
     },
     serde::PostDeserialize,
@@ -36,9 +36,9 @@ use crate::{
 };
 
 use super::{
-    attenuation::{LightAttenuation, LIGHT_ATTENUATION_RANGE_50_UNITS},
+    attenuation::{LIGHT_ATTENUATION_RANGE_50_UNITS, LightAttenuation},
     contribute_pbr_world_space,
-    shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
+    shadow::{SHADOW_MAP_CAMERA_NEAR, ShadowMapRenderingContext},
 };
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]

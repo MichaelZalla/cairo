@@ -8,8 +8,8 @@ use sdl2::mouse::Cursor;
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1920_BY_1080},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_1920_BY_1080, Resolution},
     },
     buffer::Buffer2D,
     device::{
@@ -20,7 +20,7 @@ use cairo::{
     font::cache::FontCache,
     resource::handle::Handle,
     scene::{
-        context::{utils::make_cube_scene, SceneContext},
+        context::{SceneContext, utils::make_cube_scene},
         graph::SceneGraph,
     },
     shader::context::ShaderContext,
@@ -30,13 +30,13 @@ use cairo::{
         extent::ScreenExtent,
         panel::PanelInstanceData,
         ui_box::tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        window::{list::WindowList, Window, WindowOptions},
+        window::{Window, WindowOptions, list::WindowList},
     },
 };
 
 use editor::panel::{
-    build_floating_window_panel_tree, EditorPanelRenderCallbacks, PanelInstance,
-    EDITOR_PANEL_ARENAS,
+    EDITOR_PANEL_ARENAS, EditorPanelRenderCallbacks, PanelInstance,
+    build_floating_window_panel_tree,
 };
 
 pub mod editor;

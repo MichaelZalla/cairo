@@ -2,8 +2,8 @@ use cairo::physics::simulation::{
     force::ContactPoint,
     physical_constants::EARTH_GRAVITY_ACCELERATION,
     rigid_body::{
-        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
         RigidBody, RigidBodyKind,
+        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
     },
     units::Newtons,
 };

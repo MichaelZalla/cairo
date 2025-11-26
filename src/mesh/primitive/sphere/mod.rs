@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    mesh::{mesh_geometry::MeshGeometry, primitive::plane, Mesh, PartialFace},
+    mesh::{Mesh, PartialFace, mesh_geometry::MeshGeometry, primitive::plane},
     transform::quaternion::Quaternion,
     vec::vec3::{self, Vec3},
 };

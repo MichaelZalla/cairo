@@ -1,12 +1,12 @@
 use crate::{
     device::mouse::cursor::MouseCursorKind,
     ui::{
+        UISize, UISizeWithStrictness,
         context::GLOBAL_UI_CONTEXT,
         ui_box::{
-            interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlags,
-            UILayoutDirection,
+            UIBox, UIBoxFeatureFlags, UILayoutDirection, interaction::UIBoxInteraction, key::UIKey,
+            tree::UIBoxTree,
         },
-        UISize, UISizeWithStrictness,
     },
 };
 

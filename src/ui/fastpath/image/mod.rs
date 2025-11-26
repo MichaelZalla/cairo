@@ -3,10 +3,10 @@ use crate::{
     resource::handle::Handle,
     texture::{map::TextureMap, sample::TextureSamplingMethod},
     ui::{
+        UISize, UISizeWithStrictness,
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
         ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection},
-        UISize, UISizeWithStrictness,
     },
 };
 

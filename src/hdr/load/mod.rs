@@ -6,9 +6,9 @@ use std::{
     path::Path,
 };
 
-use crate::hdr::{HdrRadianceFormat, HdrSource, HDR_FILE_PRELUDE};
+use crate::hdr::{HDR_FILE_PRELUDE, HdrRadianceFormat, HdrSource};
 
-use super::{rgbe::Rgbe, Hdr, HDR_CHANNELS_PER_SAMPLE};
+use super::{HDR_CHANNELS_PER_SAMPLE, Hdr, rgbe::Rgbe};
 
 // Reference source:
 // https://docs.rs/libhdr/1.0.0/src/libhdr/lib.rs.html
@@ -20,7 +20,7 @@ pub fn load_hdr(filepath: &Path) -> Result<Hdr, io::Error> {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
                 format!("Unable to locate file '{}': {}", filepath.display(), e),
-            ))
+            ));
         }
     };
 

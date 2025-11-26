@@ -1,7 +1,7 @@
 use cairo::{
     physics::simulation::rigid_body::{
-        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
         RigidBody,
+        rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
     },
     transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},

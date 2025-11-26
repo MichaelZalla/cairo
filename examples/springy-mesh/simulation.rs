@@ -7,7 +7,7 @@ use cairo::{
         intersect::{intersect_line_segment_plane, intersect_line_segment_triangle},
         primitives::{
             aabb::AABB,
-            line_segment::{get_closest_points_between_segments, LineSegment},
+            line_segment::{LineSegment, get_closest_points_between_segments},
         },
     },
     physics::simulation::{
@@ -15,7 +15,7 @@ use cairo::{
             resolve_edge_edge_collision, resolve_point_plane_collision_approximate,
             resolve_vertex_face_collision,
         },
-        force::{gravity::GRAVITY_POINT_FORCE, PointForce},
+        force::{PointForce, gravity::GRAVITY_POINT_FORCE},
         state_vector::{FromStateVector, StateVector, ToStateVector},
     },
     random::sampler::RandomSampler,
@@ -26,7 +26,7 @@ use cairo::{
 use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
     plane_collider::PlaneCollider,
-    springy_mesh::{make_springy_meshes, SpringyMesh, SpringyMeshType},
+    springy_mesh::{SpringyMesh, SpringyMeshType, make_springy_meshes},
 };
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2; // { position, velocity }

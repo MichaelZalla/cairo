@@ -4,8 +4,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_640_BY_480},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_640_BY_480, Resolution},
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},

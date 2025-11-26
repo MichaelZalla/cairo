@@ -1,7 +1,7 @@
-use std::collections::{hash_map::Entry, HashMap};
+use std::collections::{HashMap, hash_map::Entry};
 
 use crate::{
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     graphics::Graphics,
     texture::map::TextureBuffer,
 };

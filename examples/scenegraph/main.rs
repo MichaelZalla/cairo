@@ -7,7 +7,7 @@ use std::{
 };
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,

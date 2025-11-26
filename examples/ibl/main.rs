@@ -3,7 +3,7 @@ use std::{cell::RefCell, f32::consts::TAU, path::Path, rc::Rc};
 use sdl2::keyboard::Keycode;
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,

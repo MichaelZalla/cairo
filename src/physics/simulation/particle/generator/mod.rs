@@ -3,7 +3,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-use super::{particlelist::ParticleList, Particle};
+use super::{Particle, particlelist::ParticleList};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ParticleGeneratorKind {

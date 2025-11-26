@@ -6,8 +6,8 @@ use cairo::{
     geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     material::Material,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
+        obj::load::{LoadObjResult, ProcessGeometryFlags, load_obj},
     },
     resource::arena::Arena,
     scene::{

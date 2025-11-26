@@ -1,8 +1,8 @@
 use crate::{
     color::Color,
     graphics::{
-        text::{cache::cache_text, TextOperation},
         Graphics,
+        text::{TextOperation, cache::cache_text},
     },
     matrix::Mat4,
     software_renderer::SoftwareRenderer,
@@ -55,7 +55,7 @@ impl SoftwareRenderer {
                             font_info,
                             text,
                         );
-                        
+
                         let op = TextOperation {
                             text: &text.to_string(),
                             x: (center_viewport_space.x - width as f32 / 2.0) as u32,

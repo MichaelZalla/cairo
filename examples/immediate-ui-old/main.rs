@@ -13,12 +13,12 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTIONS_16X9},
         App, AppWindowInfo,
+        resolution::{RESOLUTIONS_16X9, Resolution},
     },
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::{Buffer2D, framebuffer::Framebuffer},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     texture::map::{TextureMap, TextureMapStorageFormat},
 };
 
@@ -27,7 +27,7 @@ mod ui;
 use ui::{
     context::{UIContext, UIID},
     layout::{UILayoutContext, UILayoutDirection, UILayoutExtent},
-    panel::{do_panel, PanelOptions, PanelTitlebarOptions},
+    panel::{PanelOptions, PanelTitlebarOptions, do_panel},
 };
 
 mod draw_sample_panel_contents;

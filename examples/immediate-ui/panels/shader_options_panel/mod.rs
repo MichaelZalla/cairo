@@ -5,9 +5,9 @@ use cairo::{
     serde::PostDeserialize,
     ui::{
         fastpath::{
-            checkbox::{checkbox_group, Checkbox},
+            checkbox::{Checkbox, checkbox_group},
             container::collapsible_container,
-            radio::{radio_group, RadioOption},
+            radio::{RadioOption, radio_group},
             spacer::spacer,
             text::text,
         },

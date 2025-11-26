@@ -6,8 +6,8 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_1280_BY_720, Resolution},
     },
     buffer::framebuffer::Framebuffer,
     color::Color,
@@ -19,8 +19,8 @@ use cairo::{
     },
     matrix::Mat4,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
+        obj::load::{LoadObjResult, ProcessGeometryFlags, load_obj},
     },
     render::Renderer,
     resource::handle::Handle,

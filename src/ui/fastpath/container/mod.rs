@@ -1,10 +1,10 @@
 use crate::ui::{
+    UISize, UISizeWithStrictness,
     context::GLOBAL_UI_CONTEXT,
     ui_box::{
-        interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlags,
-        UILayoutDirection,
+        UIBox, UIBoxFeatureFlags, UILayoutDirection, interaction::UIBoxInteraction, key::UIKey,
+        tree::UIBoxTree,
     },
-    UISize, UISizeWithStrictness,
 };
 
 use super::{button::button, spacer::greedy_spacer};
@@ -28,7 +28,13 @@ pub fn container(
         ],
     };
 
-    UIBox::new(id, UIBoxFeatureFlags::empty(), layout_direction, sizes, None)
+    UIBox::new(
+        id,
+        UIBoxFeatureFlags::empty(),
+        layout_direction,
+        sizes,
+        None,
+    )
 }
 
 pub fn greedy_container(id: String, layout_direction: UILayoutDirection) -> UIBox {

@@ -4,12 +4,12 @@ use std::{cell::RefCell, env, f32::consts::TAU, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1600_BY_900},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_1600_BY_900, Resolution},
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     graphics::text::cache::TextCache,
     matrix::Mat4,
     render::Renderer,

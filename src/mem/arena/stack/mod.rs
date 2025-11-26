@@ -1,12 +1,12 @@
 use std::{
-    alloc::{alloc, dealloc, handle_alloc_error, Layout},
+    alloc::{Layout, alloc, dealloc, handle_alloc_error},
     ptr::NonNull,
 };
 
 #[cfg(target_arch = "x86_64")]
 use std::mem::size_of;
 
-use super::{error::AllocatorError, unique::UniquePtr, Arena};
+use super::{Arena, error::AllocatorError, unique::UniquePtr};
 
 pub struct FixedStackArena {
     capacity: usize,

@@ -6,8 +6,8 @@ use sdl2::{keyboard::Keycode, mouse::MouseButton};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_1280_BY_720, Resolution},
     },
     buffer::Buffer2D,
     device::{
@@ -23,7 +23,7 @@ use coordinates::{screen_to_world_space, world_to_screen_space};
 use draw_collider::draw_collider;
 use draw_particle::draw_particle;
 use draw_quadtree::draw_quadtree;
-use make_simulation::{make_simulation, MAX_PARTICLE_SIZE_PIXELS, SEED_SIZE};
+use make_simulation::{MAX_PARTICLE_SIZE_PIXELS, SEED_SIZE, make_simulation};
 use static_line_segment_collider::StaticLineSegmentCollider;
 
 mod coordinates;

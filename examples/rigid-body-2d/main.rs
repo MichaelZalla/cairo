@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use sdl2::mouse::MouseButton;
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::Buffer2D,
     color,
     device::{
@@ -14,13 +14,13 @@ use cairo::{
     graphics::Graphics,
     physics::simulation::{
         force::ContactPoint,
-        rigid_body::{rigid_body_simulation_state::RigidBodySimulationState, RigidBodyKind},
+        rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         units::Newtons,
     },
     vec::vec3::{self, Vec3},
 };
 
-use coordinates::{screen_to_world_space, world_to_screen_space, PIXELS_PER_METER};
+use coordinates::{PIXELS_PER_METER, screen_to_world_space, world_to_screen_space};
 use make_simulation::make_simulation;
 
 mod coordinates;

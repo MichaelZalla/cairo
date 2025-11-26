@@ -4,7 +4,7 @@ use crate::{
     scene::resources::SceneResources,
     shader::{
         context::ShaderContext,
-        geometry::{sample::GeometrySample, GeometryShaderFn},
+        geometry::{GeometryShaderFn, sample::GeometrySample},
     },
     texture::sample::{sample_bilinear_u8, sample_nearest_u8},
     vec::{

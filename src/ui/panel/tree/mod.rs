@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sdl2::mouse::MouseButton;
 
 use crate::{
-    collections::tree::{node::NodeLocalTraversalMethod, Tree},
+    collections::tree::{Tree, node::NodeLocalTraversalMethod},
     ui::{
         context::GLOBAL_UI_CONTEXT,
         ui_box::{UIBoxDragHandle, UIBoxFeatureFlags},

@@ -3,10 +3,10 @@ use crate::{
     graphics::Graphics,
     resource::handle::Handle,
     ui::{
+        UISize, UISizeWithStrictness,
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
-        UISize, UISizeWithStrictness,
+        ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection, tree::UIBoxTree},
     },
 };
 

@@ -11,19 +11,19 @@ use cairo::{
 };
 
 use super::ui::{
-    button::{do_button, ButtonOptions},
-    checkbox::{do_checkbox, CheckboxOptions},
+    button::{ButtonOptions, do_button},
+    checkbox::{CheckboxOptions, do_checkbox},
     context::{UIContext, UIID},
-    dropdown::{do_dropdown, DropdownOptions},
-    image::{do_image, ImageOptions},
+    dropdown::{DropdownOptions, do_dropdown},
+    image::{ImageOptions, do_image},
     layout::{
-        item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
         UILayoutContext,
+        item::{ItemLayoutHorizontalAlignment, ItemLayoutOptions, ItemTextAlignment},
     },
-    separator::{do_separator, SeparatorOptions},
-    slider::{do_slider, NumberSliderOptions},
-    text::{do_text, TextOptions},
-    textbox::{do_textbox, TextboxOptions},
+    separator::{SeparatorOptions, do_separator},
+    slider::{NumberSliderOptions, do_slider},
+    text::{TextOptions, do_text},
+    textbox::{TextboxOptions, do_textbox},
 };
 
 #[allow(clippy::too_many_arguments)]

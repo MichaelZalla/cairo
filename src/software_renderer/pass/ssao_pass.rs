@@ -4,10 +4,10 @@ use rand_distr::{Distribution, Uniform};
 
 use crate::{
     animation::{lerp, smooth_step},
-    buffer::{framebuffer::StencilBuffer, Buffer2D},
+    buffer::{Buffer2D, framebuffer::StencilBuffer},
     matrix::Mat4,
     render::options::RenderPassFlags,
-    software_renderer::{gbuffer::GBuffer, SoftwareRenderer},
+    software_renderer::{SoftwareRenderer, gbuffer::GBuffer},
     transform::quaternion::Quaternion,
     vec::{
         vec3::{self, Vec3},

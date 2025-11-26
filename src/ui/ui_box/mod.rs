@@ -15,7 +15,7 @@ use crate::{
     animation::{exponential, lerp},
     buffer::Buffer2D,
     collections::tree::node::Node,
-    device::mouse::{cursor::MouseCursorKind, MouseEventKind, MouseState},
+    device::mouse::{MouseEventKind, MouseState, cursor::MouseCursorKind},
     resource::handle::Handle,
     ui::context::GLOBAL_UI_CONTEXT,
 };
@@ -25,7 +25,7 @@ use key::UIKey;
 use styles::UIBoxStyles;
 use tree::FocusedTransitionInfo;
 
-use super::{extent::ScreenExtent, UISizeWithStrictness, UI_2D_AXIS_COUNT};
+use super::{UI_2D_AXIS_COUNT, UISizeWithStrictness, extent::ScreenExtent};
 
 pub mod feature;
 pub mod interaction;

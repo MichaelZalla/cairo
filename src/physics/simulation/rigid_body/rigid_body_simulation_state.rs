@@ -1,5 +1,5 @@
 use crate::{
-    geometry::primitives::aabb::{Bounded, AABB},
+    geometry::primitives::aabb::{AABB, Bounded},
     matrix::Mat4,
     physics::simulation::{
         contact::{StaticContactKind, StaticContactList},

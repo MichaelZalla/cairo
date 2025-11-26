@@ -2,7 +2,7 @@ use cairo::{
     buffer::Buffer2D,
     color::Color,
     physics::simulation::integration::{
-        forward_euler, rk2, rk4, IntegrationMethod, SystemDynamicsFunction,
+        IntegrationMethod, SystemDynamicsFunction, forward_euler, rk2, rk4,
     },
 };
 

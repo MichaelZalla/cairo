@@ -4,14 +4,14 @@ use std::{cell::RefCell, f32, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_480_BY_270},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_480_BY_270, Resolution},
     },
-    buffer::{framebuffer::Framebuffer, Buffer2D},
+    buffer::{Buffer2D, framebuffer::Framebuffer},
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::{options::RenderPassFlags, Renderer},
+    render::{Renderer, options::RenderPassFlags},
     resource::handle::Handle,
     scene::{
         context::SceneContext,

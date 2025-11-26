@@ -10,12 +10,12 @@ use cairo::{
             container::{collapsible_container, container},
             text::text,
         },
-        ui_box::{tree::UIBoxTree, UIBoxFeatureFlags, UILayoutDirection},
+        ui_box::{UIBoxFeatureFlags, UILayoutDirection, tree::UIBoxTree},
     },
 };
 use uuid::Uuid;
 
-use crate::{command::PendingCommand, COMMAND_BUFFER, SCENE_CONTEXT};
+use crate::{COMMAND_BUFFER, SCENE_CONTEXT, command::PendingCommand};
 
 use super::PanelInstance;
 

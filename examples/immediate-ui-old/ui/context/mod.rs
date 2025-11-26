@@ -4,11 +4,11 @@ use std::{
 };
 
 use cairo::{
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     graphics::text::cache::TextCache,
 };
 
-use super::theme::{UITheme, DEFAULT_UI_THEME};
+use super::theme::{DEFAULT_UI_THEME, UITheme};
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]

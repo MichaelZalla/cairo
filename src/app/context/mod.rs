@@ -1,15 +1,15 @@
 use std::{cell::RefCell, rc::Rc};
 
 use sdl2::{
+    EventSubsystem, Sdl,
     image::InitFlag,
     render::{BlendMode, Canvas, Texture, TextureCreator},
     ttf::Sdl2TtfContext,
     video::{Window, WindowContext},
-    EventSubsystem, Sdl,
 };
 
 use crate::{
-    app::window::AppWindowingMode, app::AppWindowInfo, device::game_controller::GameController,
+    app::AppWindowInfo, app::window::AppWindowingMode, device::game_controller::GameController,
 };
 
 use super::resolution::Resolution;
@@ -61,7 +61,7 @@ pub fn make_application_context(window_info: &AppWindowInfo) -> Result<Applicati
             return Err(format!(
                 "Failed to initialize SDL2_ttf library from DLL: {}",
                 e
-            ))
+            ));
         }
     };
 

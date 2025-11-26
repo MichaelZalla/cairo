@@ -2,7 +2,7 @@ use cairo::{
     buffer::Buffer2D,
     color::Color,
     texture::{
-        cubemap::{CubeMap, CUBEMAP_SIDE_COLORS, CUBE_MAP_SIDES},
+        cubemap::{CUBE_MAP_SIDES, CUBEMAP_SIDE_COLORS, CubeMap},
         map::TextureMap,
         sample::sample_nearest_f32,
     },

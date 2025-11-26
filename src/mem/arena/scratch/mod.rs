@@ -1,7 +1,7 @@
 use core::slice;
 use std::ptr::NonNull;
 
-use super::{error::AllocatorError, unique::UniquePtr, Arena};
+use super::{Arena, error::AllocatorError, unique::UniquePtr};
 
 pub struct ScratchArena<'a, T: Arena> {
     arena: &'a mut T,

@@ -2,11 +2,11 @@ use std::{cell::RefCell, f32::consts::PI};
 
 use cairo::{
     physics::simulation::{
-        force::{gravity::GRAVITY_POINT_FORCE, ContactPoint, PointForce},
+        force::{ContactPoint, PointForce, gravity::GRAVITY_POINT_FORCE},
         operator::Operators,
         particle::{
-            generator::{ParticleGenerator, ParticleGeneratorKind},
             Particle,
+            generator::{ParticleGenerator, ParticleGeneratorKind},
         },
         state_vector::StateVector,
         units::Newtons,

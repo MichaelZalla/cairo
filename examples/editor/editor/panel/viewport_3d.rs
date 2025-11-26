@@ -3,7 +3,7 @@ use std::{cell::RefCell, fmt::Debug, rc::Rc};
 use serde::{Deserialize, Serialize};
 
 use cairo::{
-    buffer::framebuffer::Framebuffer, buffer::Buffer2D, resource::handle::Handle,
+    buffer::Buffer2D, buffer::framebuffer::Framebuffer, resource::handle::Handle,
     scene::graph::options::SceneGraphRenderOptions, serde::PostDeserialize,
     software_renderer::SoftwareRenderer, ui::extent::ScreenExtent, ui::ui_box::tree::UIBoxTree,
 };

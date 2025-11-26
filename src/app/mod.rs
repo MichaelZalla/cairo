@@ -21,7 +21,7 @@ use crate::{
     time::TimingInfo,
 };
 
-use context::{make_application_context, make_canvas_texture, ApplicationContext};
+use context::{ApplicationContext, make_application_context, make_canvas_texture};
 use profile::AppCycleCounter;
 use resolution::Resolution;
 use window::AppWindowingMode;

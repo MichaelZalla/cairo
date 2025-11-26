@@ -1,12 +1,12 @@
 use cairo::ui::{
+    UISize, UISizeWithStrictness,
     context::UIContext,
     fastpath::{
         button::button,
         container::{container, greedy_container},
         spacer::spacer,
     },
-    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
-    UISize, UISizeWithStrictness,
+    ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection, tree::UIBoxTree},
 };
 
 static MENU_BAR_ITEMS: [&str; 8] = [
@@ -101,7 +101,8 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
             None,
         );
 
-        button_box.features ^= UIBoxFeatureFlags::DRAW_BORDER | UIBoxFeatureFlags::EMBOSS_AND_DEBOSS;
+        button_box.features ^=
+            UIBoxFeatureFlags::DRAW_BORDER | UIBoxFeatureFlags::EMBOSS_AND_DEBOSS;
 
         tree.push(button_box)?;
 

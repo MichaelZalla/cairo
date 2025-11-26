@@ -1,4 +1,7 @@
-use std::{collections::HashMap, f32::consts::{PI, TAU}};
+use std::{
+    collections::HashMap,
+    f32::consts::{PI, TAU},
+};
 
 use bitflags::bitflags;
 
@@ -25,7 +28,7 @@ use cairo::{
     },
 };
 
-use crate::strut::{DAMPING_RATIO, Edge, Strut, PARTICLE_MASS, UNDAMPED_PERIOD};
+use crate::strut::{DAMPING_RATIO, Edge, PARTICLE_MASS, Strut, UNDAMPED_PERIOD};
 
 #[allow(dead_code)]
 pub enum SpringyMeshType {
@@ -54,8 +57,7 @@ bitflags! {
 
 impl Default for SpringyMeshDebugFlags {
     fn default() -> Self {
-        SpringyMeshDebugFlags::DRAW_POINTS
-            | SpringyMeshDebugFlags::DRAW_STRUTS
+        SpringyMeshDebugFlags::DRAW_POINTS | SpringyMeshDebugFlags::DRAW_STRUTS
     }
 }
 
@@ -149,7 +151,10 @@ impl SpringyMesh {
             SpringyMeshDebugFlags::DRAW_POINTS | SpringyMeshDebugFlags::DRAW_POINT_VELOCITIES,
         ) {
             for point in &self.points {
-                if self.debug_flags.contains(SpringyMeshDebugFlags::DRAW_POINTS) {
+                if self
+                    .debug_flags
+                    .contains(SpringyMeshDebugFlags::DRAW_POINTS)
+                {
                     // Visualizes the point.
 
                     let transform =
@@ -202,7 +207,10 @@ impl SpringyMesh {
                 let start = self.points[strut.edge.points.0].position;
                 let end = self.points[strut.edge.points.1].position;
 
-                if self.debug_flags.contains(SpringyMeshDebugFlags::DRAW_STRUTS) {
+                if self
+                    .debug_flags
+                    .contains(SpringyMeshDebugFlags::DRAW_STRUTS)
+                {
                     // Visualizes the strut.
 
                     let color = if strut.edge.did_collide
@@ -603,9 +611,9 @@ pub fn make_springy_meshes(
 
     for _ in 0..count {
         let (points, struts) = match mesh_type {
-            SpringyMeshType::Spring { with_connected_points } => {
-                make_spring(side_length, with_connected_points)
-            }
+            SpringyMeshType::Spring {
+                with_connected_points,
+            } => make_spring(side_length, with_connected_points),
             SpringyMeshType::Tetrahedron => make_tetrahedron(side_length),
             SpringyMeshType::Cube => make_cube(side_length),
         };

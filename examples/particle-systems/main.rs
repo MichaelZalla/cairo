@@ -4,8 +4,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use cairo::{
     app::{
-        resolution::{self, Resolution},
         App, AppWindowInfo,
+        resolution::{self, Resolution},
     },
     buffer::framebuffer::Framebuffer,
     color,
@@ -15,7 +15,7 @@ use cairo::{
     },
     material::Material,
     matrix::Mat4,
-    mesh::{primitive::cube, Mesh},
+    mesh::{Mesh, primitive::cube},
     physics::simulation::particle::generator::ParticleGeneratorKind,
     random::sampler::RandomSampler,
     render::Renderer,

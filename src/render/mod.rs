@@ -7,7 +7,7 @@ use crate::{
     mesh::Mesh,
     resource::handle::Handle,
     scene::{
-        camera::{frustum::Frustum, Camera},
+        camera::{Camera, frustum::Frustum},
         empty::EmptyDisplayKind,
         light::{
             ambient_light::AmbientLight, directional_light::DirectionalLight,

@@ -6,14 +6,14 @@ use sdl2::keyboard::Keycode;
 
 use cairo::{
     app::{
-        resolution::{self, Resolution},
         App, AppWindowInfo,
+        resolution::{self, Resolution},
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     random::sampler::RandomSampler,
     render::Renderer,
-    scene::context::{utils::make_empty_scene, SceneContext},
+    scene::context::{SceneContext, utils::make_empty_scene},
     software_renderer::SoftwareRenderer,
 };
 

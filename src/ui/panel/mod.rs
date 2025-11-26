@@ -9,13 +9,13 @@ use crate::resource::handle::Handle;
 use crate::color::Color;
 
 use super::{
+    UISize, UISizeWithStrictness,
     fastpath::text::text,
     ui_box::{
-        interaction::UIBoxInteraction, tree::UIBoxTree, UIBox, UIBoxCustomRenderCallback,
-        UIBoxFeatureFlags, UILayoutDirection,
+        UIBox, UIBoxCustomRenderCallback, UIBoxFeatureFlags, UILayoutDirection,
+        interaction::UIBoxInteraction, tree::UIBoxTree,
     },
     window::Window,
-    UISize, UISizeWithStrictness,
 };
 
 #[cfg(debug_assertions)]

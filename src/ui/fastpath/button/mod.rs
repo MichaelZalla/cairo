@@ -1,6 +1,6 @@
 use crate::ui::{
-    ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection},
     UISize, UISizeWithStrictness,
+    ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection},
 };
 
 pub fn button(

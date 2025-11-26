@@ -14,7 +14,7 @@ use crate::{
 
 use super::{
     get_half_scaled_u8, get_half_scaled_vec3,
-    sample::{sample_bilinear_u8, sample_nearest_u8, sample_trilinear_u8, TextureSamplingMethod},
+    sample::{TextureSamplingMethod, sample_bilinear_u8, sample_nearest_u8, sample_trilinear_u8},
 };
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -162,7 +162,9 @@ impl<T: Default + Debug + Copy + PartialEq> TextureMap<T> {
         let levels = (self.width as f32).log2() + 1.0;
 
         if self.width != self.height || levels.fract() != 0.0 {
-            return Err(String::from("Called TextureMap::validate_for_mipmapping() on a texture whose dimensions do not support mipmapping."));
+            return Err(String::from(
+                "Called TextureMap::validate_for_mipmapping() on a texture whose dimensions do not support mipmapping.",
+            ));
         }
 
         Ok(())

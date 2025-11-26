@@ -11,7 +11,7 @@ use crate::{
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::{culling::FaceCullingReject, options::RenderPassFlags, Renderer},
+    render::{Renderer, culling::FaceCullingReject, options::RenderPassFlags},
     resource::handle::Handle,
     serde::PostDeserialize,
     shader::context::ShaderContext,
@@ -248,7 +248,10 @@ impl SceneGraph {
                                 Ok(entry) => {
                                     let directional_light = &mut entry.item;
 
-                                    renderer.render_directional_light(&current_world_transform, directional_light);
+                                    renderer.render_directional_light(
+                                        &current_world_transform,
+                                        directional_light,
+                                    );
                                 }
                                 Err(err) => panic!(
                                     "Failed to get DirectionalLight from Arena with Handle {:?}: {}",
@@ -360,13 +363,14 @@ impl SceneGraph {
                                     Ok(entry) => {
                                         let directional_light = &mut entry.item;
 
-                                        if let Some(shadow_map_cameras) = directional_light.shadow_map_cameras.as_ref() {
-                                            for (index, (_far_z, camera)) in shadow_map_cameras.iter().enumerate() {
-                                                let frustum_color = [
-                                                    color::RED,
-                                                    color::GREEN,
-                                                    color::BLUE,
-                                                ][index];
+                                        if let Some(shadow_map_cameras) =
+                                            directional_light.shadow_map_cameras.as_ref()
+                                        {
+                                            for (index, (_far_z, camera)) in
+                                                shadow_map_cameras.iter().enumerate()
+                                            {
+                                                let frustum_color =
+                                                    [color::RED, color::GREEN, color::BLUE][index];
 
                                                 renderer.render_camera(camera, Some(frustum_color));
                                             }
@@ -524,8 +528,8 @@ impl SceneGraph {
                                     if let (Some(_), Some(_), true) = (
                                         directional_light.shadow_maps.as_ref(),
                                         directional_light.shadow_map_rendering_context.as_ref(),
-                                        render_pass_flags.contains(RenderPassFlags::LIGHTING))
-                                    {
+                                        render_pass_flags.contains(RenderPassFlags::LIGHTING),
+                                    ) {
                                         directional_light.update_shadow_maps(resources, self)?;
                                     }
                                 }

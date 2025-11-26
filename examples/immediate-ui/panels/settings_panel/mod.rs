@@ -5,17 +5,17 @@ use cairo::{
     resource::handle::Handle,
     serde::PostDeserialize,
     ui::{
+        UISize, UISizeWithStrictness,
         fastpath::{
-            checkbox::{checkbox_group, Checkbox},
+            checkbox::{Checkbox, checkbox_group},
             image::image,
-            radio::{radio_group, RadioOption},
-            slider::{slider, SliderOptions},
+            radio::{RadioOption, radio_group},
+            slider::{SliderOptions, slider},
             spacer::spacer,
             text::text,
             text_input::text_input,
         },
         ui_box::tree::UIBoxTree,
-        UISize, UISizeWithStrictness,
     },
 };
 

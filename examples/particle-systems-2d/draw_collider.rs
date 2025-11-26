@@ -1,7 +1,7 @@
 use cairo::{buffer::Buffer2D, color, graphics::Graphics, vec::vec3::Vec3};
 
 use crate::{
-    coordinates::{world_to_screen_space, PIXELS_PER_METER},
+    coordinates::{PIXELS_PER_METER, world_to_screen_space},
     static_line_segment_collider::StaticLineSegmentCollider,
 };
 

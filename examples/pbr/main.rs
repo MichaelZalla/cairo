@@ -4,8 +4,8 @@ use scene::make_sphere_grid_scene;
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTION_1280_BY_720},
         App, AppWindowInfo,
+        resolution::{RESOLUTION_1280_BY_720, Resolution},
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},

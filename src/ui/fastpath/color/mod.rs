@@ -1,11 +1,11 @@
 use crate::{
-    ui::ui_box::{tree::UIBoxTree, UILayoutDirection},
+    ui::ui_box::{UILayoutDirection, tree::UIBoxTree},
     vec::vec3::Vec3,
 };
 
 use super::{
     container::container,
-    slider::{slider, SliderOptions},
+    slider::{SliderOptions, slider},
 };
 
 pub fn color_picker(

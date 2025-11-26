@@ -4,16 +4,16 @@ use uuid::Uuid;
 
 use cairo::{
     app::{
-        resolution::{Resolution, RESOLUTIONS_16X9},
-        window::{AppWindowingMode, APP_WINDOWING_MODES},
+        resolution::{RESOLUTIONS_16X9, Resolution},
+        window::{APP_WINDOWING_MODES, AppWindowingMode},
     },
     mem::linked_list::LinkedList,
     render::{
         culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
-        options::{tone_mapping::TONE_MAPPING_OPERATORS, RenderPassFlags},
+        options::{RenderPassFlags, tone_mapping::TONE_MAPPING_OPERATORS},
     },
     resource::handle::Handle,
-    scene::camera::{CameraProjectionKind, CAMERA_PROJECTION_KINDS},
+    scene::camera::{CAMERA_PROJECTION_KINDS, CameraProjectionKind},
     software_renderer::zbuffer::DEPTH_TEST_METHODS,
     vec::vec3::Vec3,
 };

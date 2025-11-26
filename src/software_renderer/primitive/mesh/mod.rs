@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{
     geometry::{accelerator::static_triangle_bvh::StaticTriangleBVH, intersect::test_aabb_aabb},
     matrix::Mat4,
-    mesh::{face::Face, mesh_geometry::MeshGeometry, Mesh},
+    mesh::{Mesh, face::Face, mesh_geometry::MeshGeometry},
     software_renderer::SoftwareRenderer,
     vec::vec3::Vec3,
     vertex::{default_vertex_in::DefaultVertexIn, default_vertex_out::DefaultVertexOut},

@@ -7,11 +7,11 @@ use cairo::{
     serde::PostDeserialize,
     ui::{
         fastpath::{
-            checkbox::{checkbox, checkbox_group, Checkbox},
+            checkbox::{Checkbox, checkbox, checkbox_group},
             color::color_picker,
             container::collapsible_container,
-            radio::{radio_group, RadioOption},
-            slider::{slider, SliderOptions},
+            radio::{RadioOption, radio_group},
+            slider::{SliderOptions, slider},
             spacer::spacer,
             text::text,
         },
@@ -19,7 +19,7 @@ use cairo::{
     },
 };
 
-use crate::{command::PendingCommand, COMMAND_BUFFER, SETTINGS};
+use crate::{COMMAND_BUFFER, SETTINGS, command::PendingCommand};
 
 use super::PanelInstance;
 

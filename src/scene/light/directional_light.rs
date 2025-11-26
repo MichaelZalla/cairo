@@ -10,11 +10,11 @@ use crate::{
     animation::lerp,
     buffer::Buffer2D,
     matrix::Mat4,
-    render::{culling::FaceCullingReject, Renderer},
+    render::{Renderer, culling::FaceCullingReject},
     resource::{arena::Arena, handle::Handle},
     scene::{
-        camera::{frustum::Frustum, Camera, CameraOrthographicExtent},
-        graph::{options::SceneGraphRenderOptions, SceneGraph},
+        camera::{Camera, CameraOrthographicExtent, frustum::Frustum},
+        graph::{SceneGraph, options::SceneGraphRenderOptions},
         resources::SceneResources,
     },
     serde::PostDeserialize,
@@ -38,7 +38,7 @@ use crate::{
 
 use super::{
     contribute_pbr_world_space,
-    shadow::{ShadowMapRenderingContext, SHADOW_MAP_CAMERA_NEAR},
+    shadow::{SHADOW_MAP_CAMERA_NEAR, ShadowMapRenderingContext},
 };
 
 pub const SHADOW_MAP_CAMERA_COUNT: usize = 2;

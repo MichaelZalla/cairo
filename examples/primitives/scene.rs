@@ -7,8 +7,8 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh::{
-        primitive::{cone, cube, cylinder, sphere},
         Mesh,
+        primitive::{cone, cube, cylinder, sphere},
     },
     resource::arena::Arena,
     scene::{
@@ -29,7 +29,7 @@ use cairo::{
         cubemap::CubeMap,
         map::{TextureMap, TextureMapStorageFormat},
     },
-    transform::{quaternion::Quaternion, Transform3D},
+    transform::{Transform3D, quaternion::Quaternion},
     vec::{
         vec2::Vec2,
         vec3::{self, Vec3},

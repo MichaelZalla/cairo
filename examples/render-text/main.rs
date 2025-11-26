@@ -3,14 +3,14 @@ extern crate sdl2;
 use std::{cell::RefCell, env};
 
 use cairo::{
-    app::{resolution::Resolution, App, AppWindowInfo},
+    app::{App, AppWindowInfo, resolution::Resolution},
     buffer::Buffer2D,
     color::{self, Color},
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    font::{cache::FontCache, FontInfo},
+    font::{FontInfo, cache::FontCache},
     graphics::{
-        text::{cache::TextCache, TextOperation},
         Graphics,
+        text::{TextOperation, cache::TextCache},
     },
 };
 

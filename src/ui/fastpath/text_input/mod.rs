@@ -3,9 +3,9 @@ use sdl2::keyboard::Keycode;
 use crate::{
     device::keyboard::keycode,
     ui::{
-        context::GLOBAL_UI_CONTEXT,
-        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
         UISize, UISizeWithStrictness,
+        context::GLOBAL_UI_CONTEXT,
+        ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection, tree::UIBoxTree},
     },
 };
 

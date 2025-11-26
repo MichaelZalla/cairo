@@ -2,7 +2,7 @@ use crate::{
     color::Color,
     matrix::Mat4,
     mesh::Mesh,
-    render::{options::RenderPassFlags, Renderer},
+    render::{Renderer, options::RenderPassFlags},
     resource::handle::Handle,
     software_renderer::SoftwareRenderer,
     vec::vec4::Vec4,
