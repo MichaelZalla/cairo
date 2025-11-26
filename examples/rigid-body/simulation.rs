@@ -59,15 +59,7 @@ pub struct Simulation {
 
 impl Simulation {
     pub fn tick(&mut self, h: f32, uptime_seconds: f32) {
-        let n = self.rigid_bodies.len();
-
-        let mut state = StateVector::<RigidBodySimulationState>::new(n);
-
-        // Copies current rigid body state into `state`.
-
-        for (i, sphere) in self.rigid_bodies.iter().enumerate() {
-            state.0[i] = sphere.into();
-        }
+        let state = self.copy_to_state_vector();
 
         let derivative = system_dynamics_function(&state, &self.forces, h, uptime_seconds);
 
@@ -750,5 +742,9 @@ impl Simulation {
                 color::GREEN,
             );
         }
+    }
+
+    fn copy_to_state_vector(&self) -> StateVector<RigidBodySimulationState> {
+        self.rigid_bodies.as_slice().into()
     }
 }

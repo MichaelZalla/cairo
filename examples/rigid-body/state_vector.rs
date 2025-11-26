@@ -1,5 +1,9 @@
 use std::{iter::zip, ops};
 
+use cairo::physics::simulation::rigid_body::{
+    rigid_body_simulation_state::RigidBodySimulationState, RigidBody,
+};
+
 #[derive(Default, Debug, Clone)]
 pub struct StateVector<T = f32>(pub Vec<T>);
 
@@ -70,5 +74,18 @@ impl<T: Copy + ops::Mul<f32, Output = T>> ops::Mul<f32> for &StateVector<T> {
         }
 
         result
+    }
+}
+
+impl From<&[RigidBody]> for StateVector<RigidBodySimulationState> {
+    fn from(rigid_bodies: &[RigidBody]) -> Self {
+        let n = rigid_bodies.len();
+        let mut state = StateVector::<RigidBodySimulationState>::new(n);
+
+        for (i, body) in rigid_bodies.iter().enumerate() {
+            state.0[i] = body.into();
+        }
+
+        state
     }
 }
