@@ -755,6 +755,18 @@ impl Simulation {
         // Semi-implicit Euler integration: update momenta from forces,
         // then update position and orientation from the new momenta.
 
+        let state_with_new_velocities = self.integrate_velocities(state, derivative, h);
+        let final_state = self.integrate_positions(&state_with_new_velocities, h);
+
+        final_state
+    }
+
+    fn integrate_velocities(
+        &self,
+        state: &StateVector<RigidBodySimulationState>,
+        derivative: &StateVector<RigidBodySimulationState>,
+        h: f32,
+    ) -> StateVector<RigidBodySimulationState> {
         let mut new_state = state.clone();
 
         for (body, derivative) in new_state.0.iter_mut().zip(derivative.0.iter()) {
@@ -763,11 +775,23 @@ impl Simulation {
 
             // Update angular momentum from torques.
             body.angular_momentum += derivative.angular_momentum * h;
+        }
 
-            // Update position from new linear momentum (semi-implicit step).
+        new_state
+    }
+
+    fn integrate_positions(
+        &self,
+        state: &StateVector<RigidBodySimulationState>,
+        h: f32,
+    ) -> StateVector<RigidBodySimulationState> {
+        let mut new_state = state.clone();
+
+        for body in new_state.0.iter_mut() {
+            // Update position from linear momentum.
             body.position += body.linear_momentum * body.inverse_mass * h;
 
-            // Compute angular velocity from new angular momentum.
+            // Compute angular velocity from angular momentum.
             let new_angular_spin = {
                 let angular_momentum = Vec4::vector(body.angular_momentum);
 
