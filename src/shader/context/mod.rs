@@ -5,6 +5,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct ShaderContext {
     pub world_transform: Mat4,
     pub view_position: Vec4,
@@ -30,34 +31,6 @@ pub struct ShaderContext {
     pub spot_lights: Vec<Handle>,
 }
 
-impl Default for ShaderContext {
-    fn default() -> Self {
-        Self {
-            world_transform: Mat4::identity(),
-            view_position: Default::default(),
-            view_inverse_transform: Mat4::identity(),
-            world_view_transform: Mat4::identity(),
-            projection_z_near: None,
-            projection_z_far: None,
-            projection_transform: Mat4::identity(),
-            world_view_projection_transform: Default::default(),
-            active_material: None,
-            active_uv_test_texture_map: None,
-            active_hdr_map: None,
-            ambient_radiance_map: None,
-            ambient_diffuse_irradiance_map: None,
-            ambient_specular_prefiltered_environment_map: None,
-            ambient_specular_brdf_integration_map: None,
-            skybox_transform: None,
-            ambient_light: None,
-            directional_light: None,
-            directional_light_view_projections: None,
-            directional_light_view_projection_index: None,
-            point_lights: vec![],
-            spot_lights: vec![],
-        }
-    }
-}
 
 impl ShaderContext {
     pub fn get_world_transform(&mut self) -> Mat4 {
