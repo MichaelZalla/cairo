@@ -246,7 +246,7 @@ pub fn draw_sample_panel_contents(
 
     let slider_options = NumberSliderOptions {
         label: format!("Slider {}", panel_id.item).to_string(),
-        min: Some(-1.0 * panel_id.item as f32),
+        min: Some(-(panel_id.item as f32)),
         max: Some(1.0 * panel_id.item as f32),
         ..Default::default()
     };
