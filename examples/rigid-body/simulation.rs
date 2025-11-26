@@ -337,6 +337,74 @@ impl Simulation {
         }
     }
 
+    fn compute_contact_point_velocity(
+        body_velocity: Vec3,
+        angular_velocity: Vec3,
+        contact_point: Vec3,
+        body_position: Vec3,
+    ) -> Vec3 {
+        body_velocity - angular_velocity.cross(contact_point - body_position)
+    }
+
+    fn compute_motion_tangent(
+        point_on_plane: Vec3,
+        velocity: Vec3,
+        plane: &cairo::geometry::primitives::plane::Plane,
+    ) -> Option<Vec3> {
+        let v = point_on_plane + velocity;
+        let d = plane.get_signed_distance(&v);
+        let velocity_projected_onto_plane = v - plane.normal * d;
+
+        if velocity_projected_onto_plane.is_zero() {
+            None
+        } else {
+            Some(velocity_projected_onto_plane.as_normal())
+        }
+    }
+
+    fn classify_contact_kind(
+        body_velocity: Vec3,
+        contact_point_velocity: Vec3,
+        body_motion_tangent: Option<Vec3>,
+        contact_point_motion_tangent: Option<Vec3>,
+    ) -> StaticContactKind {
+        let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
+            body_velocity.dot(tangent)
+        } else {
+            0.0
+        };
+
+        let contact_point_speed_along_tangent = if let Some(tangent) = contact_point_motion_tangent
+        {
+            contact_point_velocity.dot(tangent)
+        } else {
+            0.0
+        };
+
+        if body_speed_along_tangent < RESTING_SPEED_THRESHOLD
+            && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD
+        {
+            StaticContactKind::Resting
+        } else if contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD {
+            StaticContactKind::Rolling(0.5)
+        } else {
+            StaticContactKind::Sliding
+        }
+    }
+
+    fn compute_contact_basis(
+        normal: Vec3,
+        contact_point_motion_tangent: Option<Vec3>,
+    ) -> (Vec3, Vec3) {
+        match contact_point_motion_tangent {
+            Some(tangent) => (tangent, tangent.cross(normal)),
+            None => {
+                let (_, tangent, bitangent) = normal.basis();
+                (tangent, bitangent)
+            }
+        }
+    }
+
     fn get_static_contact(
         collider: &PlaneCollider,
         derivative: &RigidBodySimulationState,
@@ -362,10 +430,12 @@ impl Simulation {
 
         let contact_point = new_body_state.position - normal * minimum_distance_to_plane;
 
-        let contact_point_velocity = body_velocity
-            - new_body_state
-                .angular_velocity()
-                .cross(contact_point - new_body_state.position);
+        let contact_point_velocity = Self::compute_contact_point_velocity(
+            body_velocity,
+            new_body_state.angular_velocity(),
+            contact_point,
+            new_body_state.position,
+        );
 
         let contact_point_speed_along_normal = contact_point_velocity.dot(normal);
 
@@ -389,70 +459,21 @@ impl Simulation {
         // At this point, we can be certain that the object is resting, rolling
         // along the plane, or sliding along the plane.
 
-        let body_motion_tangent = {
-            let v = collider.point + body_velocity;
+        let body_motion_tangent =
+            Self::compute_motion_tangent(collider.point, body_velocity, &collider.plane);
 
-            let d = collider.plane.get_signed_distance(&v);
+        let contact_point_motion_tangent =
+            Self::compute_motion_tangent(collider.point, contact_point_velocity, &collider.plane);
 
-            let body_velocity_projected_onto_plane = v - collider.plane.normal * d;
+        let kind = Self::classify_contact_kind(
+            body_velocity,
+            contact_point_velocity,
+            body_motion_tangent,
+            contact_point_motion_tangent,
+        );
 
-            if body_velocity_projected_onto_plane.is_zero() {
-                None
-            } else {
-                Some(body_velocity_projected_onto_plane.as_normal())
-            }
-        };
-
-        let contact_point_motion_tangent = {
-            let v = collider.point + contact_point_velocity;
-
-            let d = collider.plane.get_signed_distance(&v);
-
-            let contact_point_velocity_projected_onto_plane = v - collider.plane.normal * d;
-
-            if contact_point_velocity_projected_onto_plane.is_zero() {
-                None
-            } else {
-                Some(contact_point_velocity_projected_onto_plane.as_normal())
-            }
-        };
-
-        let kind = {
-            // Determines whether or not the external forces in the tangential
-            // direction are large enough to overcome static friction.
-
-            let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
-                body_velocity.dot(tangent)
-            } else {
-                0.0
-            };
-
-            let contact_point_speed_along_tangent =
-                if let Some(tangent) = contact_point_motion_tangent {
-                    contact_point_velocity.dot(tangent)
-                } else {
-                    0.0
-                };
-
-            if body_speed_along_tangent < RESTING_SPEED_THRESHOLD
-                && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD
-            {
-                StaticContactKind::Resting
-            } else if contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD {
-                StaticContactKind::Rolling(0.5)
-            } else {
-                StaticContactKind::Sliding
-            }
-        };
-
-        let (tangent, bitangent) = match contact_point_motion_tangent {
-            Some(tangent) => (tangent, tangent.cross(normal)),
-            None => {
-                let (_, tangent, bitangent) = normal.basis();
-
-                (tangent, bitangent)
-            }
-        };
+        let (tangent, bitangent) =
+            Self::compute_contact_basis(normal, contact_point_motion_tangent);
 
         Some(StaticContact {
             kind,
