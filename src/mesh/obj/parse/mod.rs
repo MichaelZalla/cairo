@@ -92,11 +92,11 @@ pub fn parse_face(tokens: &mut SplitWhitespace<'_>) -> Result<PartialFace, Strin
 
     let v1_normal_index = v1_iter.next();
 
-    if v1_normal_index.is_some() {
+    if let Some(v1_normal_index) = v1_normal_index {
         let v2_normal_index = v2_iter.next();
         let v3_normal_index = v3_iter.next();
 
-        let v1_n_raw = v1_normal_index.unwrap().parse::<usize>().unwrap();
+        let v1_n_raw = v1_normal_index.parse::<usize>().unwrap();
         let v2_n_raw = v2_normal_index.unwrap().parse::<usize>().unwrap();
         let v3_n_raw = v3_normal_index.unwrap().parse::<usize>().unwrap();
 

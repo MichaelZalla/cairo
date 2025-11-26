@@ -311,9 +311,7 @@ impl App {
 
             let controller = self.context.game_controllers[0].as_ref();
 
-            if controller.is_some() {
-                let unwrapped = controller.unwrap();
-
+            if let Some(unwrapped) = controller {
                 game_controller.id = unwrapped.id;
 
                 game_controller.name.clone_from(&unwrapped.name);
