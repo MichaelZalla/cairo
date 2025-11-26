@@ -27,6 +27,27 @@ impl StaticTriangleTLAS {
     pub fn new(bvh_instances: Vec<StaticTriangleBVHInstance>) -> Self {
         let num_bvh_instances = bvh_instances.len() as u32;
 
+        // Handle the edge case of 0 or 1 BVH instances
+        if num_bvh_instances == 0 {
+            return Self::default();
+        }
+
+        if num_bvh_instances == 1 {
+            // Create a minimal TLAS with a single root node that is also a leaf
+            let root = StaticTriangleTLASNode {
+                aabb: bvh_instances[0].world_aabb,
+                bvh_instance_index: 0,
+                left_child_index: 0,
+                right_child_index: 0,
+            };
+
+            return Self {
+                nodes: vec![root],
+                nodes_used: 1,
+                bvh_instances,
+            };
+        }
+
         let max_node_count = num_bvh_instances * 2 - 1 + 1;
 
         let mut nodes = vec![StaticTriangleTLASNode::default(); max_node_count as usize];
