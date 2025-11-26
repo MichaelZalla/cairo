@@ -60,7 +60,7 @@ impl<T> LinkedList<T> {
         while self.pop_front().is_some() {}
     }
 
-    pub fn iter(&self) -> Iter<T> {
+    pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             front: self.front,
             back: self.back,
@@ -69,7 +69,7 @@ impl<T> LinkedList<T> {
         }
     }
 
-    pub fn iter_mut(&self) -> IterMut<T> {
+    pub fn iter_mut(&self) -> IterMut<'_, T> {
         IterMut {
             front: self.front,
             back: self.back,
@@ -83,7 +83,7 @@ impl<T> LinkedList<T> {
         IntoIter { list: self }
     }
 
-    pub fn cursor_mut(&mut self) -> CursorMut<T> {
+    pub fn cursor_mut(&mut self) -> CursorMut<'_, T> {
         // When index is None, cursor points to the list's 'ghost' node.
 
         CursorMut::new(self)

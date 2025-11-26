@@ -39,7 +39,7 @@ impl FontCache {
         }
     }
 
-    pub fn load(&mut self, info: &FontInfo) -> Result<FontHashMapValue, String> {
+    pub fn load(&mut self, info: &FontInfo) -> Result<FontHashMapValue<'_>, String> {
         match self.cache.get(info) {
             Some(font) => Ok(font.clone()),
             None => {
@@ -62,7 +62,7 @@ impl FontCache {
         }
     }
 
-    pub fn iter(&self) -> Iter<'_, FontHashMapKey, FontHashMapValue> {
+    pub fn iter(&self) -> Iter<'_, FontHashMapKey, FontHashMapValue<'_>> {
         self.cache.iter()
     }
 }
