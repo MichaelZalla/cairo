@@ -12,7 +12,7 @@ use crate::{
     graphics::text::cache::TextCache,
     matrix::Mat4,
     render::{
-        options::{shader::RenderShaderOptions, RenderOptions, RenderPassFlag},
+        options::{shader::RenderShaderOptions, RenderOptions, RenderPassFlags},
         viewport::RenderViewport,
         Renderer,
     },
@@ -126,7 +126,7 @@ impl Renderer for SoftwareRenderer {
         if self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
+            .contains(RenderPassFlags::RASTERIZATION | RenderPassFlags::DEFERRED_LIGHTING)
         {
             // Clear the accumulation buffer.
 
@@ -158,14 +158,14 @@ impl Renderer for SoftwareRenderer {
         if self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::Rasterization | RenderPassFlag::DeferredLighting)
+            .contains(RenderPassFlags::RASTERIZATION | RenderPassFlags::DEFERRED_LIGHTING)
         {
             // Approximate screen-space ambient occlusion pass.
 
             if self
                 .options
                 .render_pass_flags
-                .contains(RenderPassFlag::Ssao)
+                .contains(RenderPassFlags::SSAO)
             {
                 self.do_ssao_pass();
             }
@@ -183,7 +183,7 @@ impl Renderer for SoftwareRenderer {
             if self
                 .options
                 .render_pass_flags
-                .contains(RenderPassFlag::Bloom)
+                .contains(RenderPassFlags::BLOOM)
             {
                 self.do_bloom_pass();
             }
@@ -194,12 +194,12 @@ impl Renderer for SoftwareRenderer {
         let do_deferred_lighting = self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::DeferredLighting);
+            .contains(RenderPassFlags::DEFERRED_LIGHTING);
 
         let do_tone_mapping = self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::ToneMapping);
+            .contains(RenderPassFlags::TONE_MAPPING);
 
         if let Some(framebuffer_rc) = &self.framebuffer {
             let framebuffer = framebuffer_rc.borrow();
@@ -575,7 +575,7 @@ impl SoftwareRenderer {
                     if self
                         .options
                         .render_pass_flags
-                        .contains(RenderPassFlag::DeferredLighting)
+                        .contains(RenderPassFlags::DEFERRED_LIGHTING)
                     {
                         if let Some(g_buffer) = self.g_buffer.as_mut() {
                             g_buffer.set(x, y, sample);
@@ -653,7 +653,7 @@ impl SoftwareRenderer {
         if self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::ToneMapping)
+            .contains(RenderPassFlags::TONE_MAPPING)
         {
             self.get_tone_mapped_color_from_hdr(hdr_color)
         } else {
@@ -669,9 +669,9 @@ impl SoftwareRenderer {
     ) -> Vec3 {
         let render_pass_flags = self.get_options().render_pass_flags;
 
-        if render_pass_flags.contains(RenderPassFlag::Lighting) {
+        if render_pass_flags.contains(RenderPassFlags::LIGHTING) {
             (self.fragment_shader)(shader_context, scene_resources, sample)
-        } else if render_pass_flags.contains(RenderPassFlag::Ssao) {
+        } else if render_pass_flags.contains(RenderPassFlags::SSAO) {
             sample.albedo * sample.ambient_factor
         } else {
             sample.albedo

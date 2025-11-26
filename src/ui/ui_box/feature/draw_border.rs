@@ -2,7 +2,7 @@ use crate::{
     buffer::Buffer2D,
     color,
     graphics::Graphics,
-    ui::ui_box::{UIBox, UIBoxFeatureFlag},
+    ui::ui_box::{UIBox, UIBoxFeatureFlags},
 };
 
 impl UIBox {
@@ -25,7 +25,7 @@ impl UIBox {
 
         let border_color = if draw_box_boundaries {
             Some(color::BLUE)
-        } else if self.features.contains(UIBoxFeatureFlag::DrawBorder)
+        } else if self.features.contains(UIBoxFeatureFlags::DRAW_BORDER)
             && self.styles.border_color.is_some()
         {
             self.styles.border_color
@@ -35,7 +35,7 @@ impl UIBox {
 
         let border_color_u32 = border_color.map(|c| c.to_u32());
 
-        if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
+        if self.features.contains(UIBoxFeatureFlags::MASK_CIRCLE) {
             let center = (x + width / 2, y + height / 2);
 
             let radius = width.min(height) as f32 / 2.0;

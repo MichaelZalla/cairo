@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, fmt};
 
-use bitmask::bitmask;
+use bitflags::bitflags;
 
 use rigid_body_simulation_state::RigidBodySimulationState;
 
@@ -90,26 +90,25 @@ pub struct CollisionImpulse {
     pub tangent_impulse: Option<Vec3>,
 }
 
-bitmask! {
-    #[derive(Debug)]
-    pub mask RigidBodyDebugFlags: u32 where flags RigidBodyDebugFlag {
-        Null = 0,
-        DrawVolume = 1,
-        DrawAABB = (1 << 1),
-        DrawLinearVelocity = (1 << 2),
-        DrawAngularVelocity = (1 << 3),
-        DrawCollisionContactPoint = (1 << 4),
-        DrawCollisionContactPointVelocity = (1 << 5),
-        DrawCollisionNormalImpulse = (1 << 6),
-        DrawCollisionTangent = (1 << 7),
-        DrawCollisionFrictionImpulse = (1 << 8),
-        DrawStaticContact = (1 << 9),
+bitflags! {
+    #[derive(Debug, Copy, Clone)]
+    pub struct RigidBodyDebugFlags: u32 {
+        const DRAW_VOLUME = 1;
+        const DRAW_AABB = 1 << 1;
+        const DRAW_LINEAR_VELOCITY = 1 << 2;
+        const DRAW_ANGULAR_VELOCITY = 1 << 3;
+        const DRAW_COLLISION_CONTACT_POINT = 1 << 4;
+        const DRAW_COLLISION_CONTACT_POINT_VELOCITY = 1 << 5;
+        const DRAW_COLLISION_NORMAL_IMPULSE = 1 << 6;
+        const DRAW_COLLISION_TANGENT = 1 << 7;
+        const DRAW_COLLISION_FRICTION_IMPULSE = 1 << 8;
+        const DRAW_STATIC_CONTACT = 1 << 9;
     }
 }
 
 impl Default for RigidBodyDebugFlags {
     fn default() -> Self {
-        RigidBodyDebugFlag::Null | RigidBodyDebugFlag::DrawVolume
+        RigidBodyDebugFlags::DRAW_VOLUME
     }
 }
 
@@ -234,7 +233,7 @@ impl RigidBody {
 
         let center = *transform.translation();
 
-        if self.debug_flags.contains(RigidBodyDebugFlag::DrawVolume) {
+        if self.debug_flags.contains(RigidBodyDebugFlags::DRAW_VOLUME) {
             // Visualizes rigid body's geometric volume (sphere, circle, etc).
 
             match self.kind {
@@ -256,7 +255,7 @@ impl RigidBody {
             };
         }
 
-        if self.debug_flags.contains(RigidBodyDebugFlag::DrawAABB) {
+        if self.debug_flags.contains(RigidBodyDebugFlags::DRAW_AABB) {
             // Visualize the rigid body's AABB.
 
             if let Some(aabb) = &self.aabb {
@@ -266,7 +265,7 @@ impl RigidBody {
 
         if self
             .debug_flags
-            .contains(RigidBodyDebugFlag::DrawLinearVelocity)
+            .contains(RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY)
         {
             // Visualizes the  rigid body's linear velocity.
 
@@ -277,7 +276,7 @@ impl RigidBody {
 
         if self
             .debug_flags
-            .contains(RigidBodyDebugFlag::DrawAngularVelocity)
+            .contains(RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY)
         {
             // Visualizes the rigid body's angular velocity.
 
@@ -289,7 +288,7 @@ impl RigidBody {
         if let Some(impulse) = &self.collision_impulse {
             if self
                 .debug_flags
-                .contains(RigidBodyDebugFlag::DrawCollisionContactPoint)
+                .contains(RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT)
             {
                 // Visualizes the contact point.
 
@@ -307,7 +306,7 @@ impl RigidBody {
 
             if self
                 .debug_flags
-                .contains(RigidBodyDebugFlag::DrawCollisionContactPointVelocity)
+                .contains(RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT_VELOCITY)
             {
                 // Visualizes the contact point's velocity.
 
@@ -320,7 +319,7 @@ impl RigidBody {
 
             if self
                 .debug_flags
-                .contains(RigidBodyDebugFlag::DrawCollisionNormalImpulse)
+                .contains(RigidBodyDebugFlags::DRAW_COLLISION_NORMAL_IMPULSE)
             {
                 // Visualizes the collision response's normal impulse.
 
@@ -333,7 +332,7 @@ impl RigidBody {
 
             if self
                 .debug_flags
-                .contains(RigidBodyDebugFlag::DrawCollisionTangent)
+                .contains(RigidBodyDebugFlags::DRAW_COLLISION_TANGENT)
             {
                 // Visualizes the tangent vector chosen for the friction response.
 
@@ -348,7 +347,7 @@ impl RigidBody {
 
             if self
                 .debug_flags
-                .contains(RigidBodyDebugFlag::DrawCollisionFrictionImpulse)
+                .contains(RigidBodyDebugFlags::DRAW_COLLISION_FRICTION_IMPULSE)
             {
                 // Visualizes the collision response's friction impulse.
 
@@ -366,7 +365,7 @@ impl RigidBody {
 
         if self
             .debug_flags
-            .contains(RigidBodyDebugFlag::DrawStaticContact)
+            .contains(RigidBodyDebugFlags::DRAW_STATIC_CONTACT)
         {
             for contact in &self.static_contacts {
                 let start = contact.point;

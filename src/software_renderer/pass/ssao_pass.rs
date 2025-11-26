@@ -6,7 +6,7 @@ use crate::{
     animation::{lerp, smooth_step},
     buffer::{framebuffer::StencilBuffer, Buffer2D},
     matrix::Mat4,
-    render::options::RenderPassFlag,
+    render::options::RenderPassFlags,
     software_renderer::{gbuffer::GBuffer, SoftwareRenderer},
     transform::quaternion::Quaternion,
     vec::{
@@ -138,7 +138,7 @@ impl SoftwareRenderer {
             if self
                 .options
                 .render_pass_flags
-                .contains(RenderPassFlag::SsaoBlur)
+                .contains(RenderPassFlags::SSAO_BLUR)
             {
                 if let Some(ssao_blur_buffer) = self.ssao_blur_buffer.as_mut() {
                     ssao_blur(

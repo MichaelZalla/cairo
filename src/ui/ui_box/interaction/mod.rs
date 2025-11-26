@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+    UIBox, UIBoxDragHandle, UIBoxFeatureFlags, UILayoutDirection,
     UI_DIVIDER_CURSOR_SNAP_EPSILON,
 };
 
@@ -53,7 +53,7 @@ pub struct UIBoxInteraction {
 
 impl UIBoxInteraction {
     pub fn from_user_inputs(
-        features: &UIBoxFeatureMask,
+        features: &UIBoxFeatureFlags,
         ui_box_previous_frame: Option<&UIBox>,
         input_events: &UIInputEvents,
     ) -> Self {
@@ -171,10 +171,10 @@ impl UIBoxInteraction {
         mouse_interaction_in_bounds.hot_drag_handle = match (
             ui_box_previous_frame,
             features.intersects(
-                UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
-                    | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
-                    | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
-                    | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis,
+                UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS
+                    | UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_PRIMARY_AXIS
+                    | UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_SECONDARY_AXIS
+                    | UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_SECONDARY_AXIS,
             ),
         ) {
             (None, _) | (Some(_), false) => None,
@@ -227,22 +227,22 @@ impl UIBoxInteraction {
                     ),
                 };
 
-                if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis)
+                if features.contains(UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS)
                     && within_epsilon(mouse_primary, min_primary)
                     && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
                 {
                     Some(drag_handle_min_primary)
-                } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis)
+                } else if features.contains(UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_PRIMARY_AXIS)
                     && within_epsilon(mouse_primary, max_primary)
                     && (min_secondary..max_secondary + 1).contains(&mouse_secondary)
                 {
                     Some(drag_handle_max_primary)
-                } else if features.contains(UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis)
+                } else if features.contains(UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_SECONDARY_AXIS)
                     && within_epsilon(mouse_secondary, min_secondary)
                     && (min_primary..max_primary + 1).contains(&mouse_primary)
                 {
                     Some(drag_handle_min_secondary)
-                } else if features.contains(UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis)
+                } else if features.contains(UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_SECONDARY_AXIS)
                     && within_epsilon(mouse_secondary, max_secondary)
                     && (min_primary..max_primary + 1).contains(&mouse_primary)
                 {

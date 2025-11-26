@@ -11,7 +11,7 @@ use cairo::{
     color::Color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::{options::RenderPassFlag, Renderer},
+    render::{options::RenderPassFlags, Renderer},
     resource::handle::Handle,
     scene::{
         context::SceneContext,
@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
         SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
     renderer.options.render_pass_flags |=
-        RenderPassFlag::DeferredLighting | RenderPassFlag::Ssao | RenderPassFlag::SsaoBlur;
+        RenderPassFlags::DEFERRED_LIGHTING | RenderPassFlags::SSAO | RenderPassFlags::SSAO_BLUR;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 

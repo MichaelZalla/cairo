@@ -5,7 +5,7 @@ use crate::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };
@@ -99,7 +99,7 @@ pub fn radio(
             None,
         );
 
-        ui_box.features |= UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable;
+        ui_box.features |= UIBoxFeatureFlags::HOVERABLE | UIBoxFeatureFlags::CLICKABLE;
 
         ui_box
     };
@@ -126,7 +126,7 @@ pub fn radio(
                         ctx.border_color(border_color, || -> Result<UIBox, String> {
                             Ok(UIBox::new(
                                 format!("{}.radio_option_{}_selected", id, index).to_string(),
-                                UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::MaskCircle,
+                                UIBoxFeatureFlags::DRAW_BORDER | UIBoxFeatureFlags::MASK_CIRCLE,
                                 UILayoutDirection::LeftToRight,
                                 [RADIO_UI_SIZE, RADIO_UI_SIZE],
                                 if is_selected {

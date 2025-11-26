@@ -6,7 +6,7 @@ use cairo::{
     geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     material::Material,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
+        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
     },
     resource::arena::Arena,
@@ -66,7 +66,7 @@ pub fn make_scene(
         "./data/obj/LowPoly/low_poly_game_level.obj",
         material_arena,
         texture_u8_arena,
-        Some(ProcessGeometryFlag::Null | ProcessGeometryFlag::Center),
+        Some(ProcessGeometryFlags::empty() | ProcessGeometryFlags::CENTER),
     );
 
     for entry in material_arena.entries.iter_mut().flatten() {

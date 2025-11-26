@@ -4,7 +4,7 @@ use crate::{
     mesh::face::Face,
     render::{
         culling::{FaceCullingReject, FaceCullingWindingOrder},
-        options::RenderPassFlag,
+        options::RenderPassFlags,
         Renderer,
     },
     software_renderer::SoftwareRenderer,
@@ -151,7 +151,7 @@ impl SoftwareRenderer {
         if self
             .options
             .render_pass_flags
-            .contains(RenderPassFlag::Rasterization)
+            .contains(RenderPassFlags::RASTERIZATION)
         {
             self.triangle_fill(
                 viewport_space_vertices[0],

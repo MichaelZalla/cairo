@@ -11,7 +11,7 @@ use crate::{
     color,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     matrix::Mat4,
-    render::{culling::FaceCullingReject, options::RenderPassFlag, Renderer},
+    render::{culling::FaceCullingReject, options::RenderPassFlags, Renderer},
     resource::handle::Handle,
     serde::PostDeserialize,
     shader::context::ShaderContext,
@@ -524,7 +524,7 @@ impl SceneGraph {
                                     if let (Some(_), Some(_), true) = (
                                         directional_light.shadow_maps.as_ref(),
                                         directional_light.shadow_map_rendering_context.as_ref(),
-                                        render_pass_flags.contains(RenderPassFlag::Lighting))
+                                        render_pass_flags.contains(RenderPassFlags::LIGHTING))
                                     {
                                         directional_light.update_shadow_maps(resources, self)?;
                                     }
@@ -558,7 +558,7 @@ impl SceneGraph {
                                     if let (Some(_), Some(_), true) = (
                                         point_light.shadow_map.as_ref(),
                                         point_light.shadow_map_rendering_context.as_ref(),
-                                        render_pass_flags.contains(RenderPassFlag::Lighting),
+                                        render_pass_flags.contains(RenderPassFlags::LIGHTING),
                                     ) {
                                         point_light.update_shadow_map(resources, self)?;
                                     }
@@ -592,7 +592,7 @@ impl SceneGraph {
                                     if let (Some(_), Some(_), true) = (
                                         spot_light.shadow_map.as_ref(),
                                         spot_light.shadow_map_rendering_context.as_ref(),
-                                        render_pass_flags.contains(RenderPassFlag::Lighting),
+                                        render_pass_flags.contains(RenderPassFlags::LIGHTING),
                                     ) {
                                         spot_light.update_shadow_map(resources, self)?;
                                     }

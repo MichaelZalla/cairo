@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use bitmask::bitmask;
+use bitflags::bitflags;
 
 use sdl2::mouse::MouseButton;
 
@@ -33,24 +33,23 @@ pub mod key;
 pub mod styles;
 pub mod tree;
 
-bitmask! {
-    #[derive(Default, Debug, Serialize, Deserialize)]
-    pub mask UIBoxFeatureMask: u32 where flags UIBoxFeatureFlag {
-        Null = 0,
-        DrawFill = 1,
-        DrawBorder = (1 << 1),
-        EmbossAndDeboss = (1 << 2),
-        DrawText = (1 << 3),
-        SkipTextCaching = (1 << 4),
-        Hoverable = (1 << 5),
-        Clickable = (1 << 6),
-        ResizableMinExtentOnPrimaryAxis = (1 << 7),
-        ResizableMaxExtentOnPrimaryAxis = (1 << 8),
-        ResizableMinExtentOnSecondaryAxis = (1 << 9),
-        ResizableMaxExtentOnSecondaryAxis = (1 << 10),
-        DrawChildDividers = (1 << 11),
-        DrawCustomRender = (1 << 12),
-        MaskCircle = (1 << 13),
+bitflags! {
+    #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+    pub struct UIBoxFeatureFlags: u32 {
+        const DRAW_FILL = 1;
+        const DRAW_BORDER = 1 << 1;
+        const EMBOSS_AND_DEBOSS = 1 << 2;
+        const DRAW_TEXT = 1 << 3;
+        const SKIP_TEXT_CACHING = 1 << 4;
+        const HOVERABLE = 1 << 5;
+        const CLICKABLE = 1 << 6;
+        const RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS = 1 << 7;
+        const RESIZABLE_MAX_EXTENT_ON_PRIMARY_AXIS = 1 << 8;
+        const RESIZABLE_MIN_EXTENT_ON_SECONDARY_AXIS = 1 << 9;
+        const RESIZABLE_MAX_EXTENT_ON_SECONDARY_AXIS = 1 << 10;
+        const DRAW_CHILD_DIVIDERS = 1 << 11;
+        const DRAW_CUSTOM_RENDER = 1 << 12;
+        const MASK_CIRCLE = 1 << 13;
     }
 }
 
@@ -103,7 +102,7 @@ pub type UIBoxCustomRenderCallbackWithContextHandle = (UIBoxCustomRenderCallback
 pub struct UIBox {
     pub id: String,
     pub key: UIKey,
-    pub features: UIBoxFeatureMask,
+    pub features: UIBoxFeatureFlags,
     pub text_content: Option<String>,
     pub layout_direction: UILayoutDirection,
     pub parent_layout_direction: UILayoutDirection,
@@ -172,7 +171,7 @@ impl Debug for UIBox {
 impl UIBox {
     pub fn new(
         id: String,
-        mut features: UIBoxFeatureMask,
+        mut features: UIBoxFeatureFlags,
         layout_direction: UILayoutDirection,
         semantic_sizes: [UISizeWithStrictness; UI_2D_AXIS_COUNT],
         custom_render_callback: Option<UIBoxCustomRenderCallbackWithContextHandle>,
@@ -190,13 +189,13 @@ impl UIBox {
                 fill_color = Some(color);
             }
 
-            if features.contains(UIBoxFeatureFlag::DrawBorder) {
+            if features.contains(UIBoxFeatureFlags::DRAW_BORDER) {
                 if let Some(&color) = styles.border_color.peek() {
                     border_color = Some(color);
                 }
             }
 
-            if features.contains(UIBoxFeatureFlag::DrawText) {
+            if features.contains(UIBoxFeatureFlags::DRAW_TEXT) {
                 if let Some(&color) = styles.text_color.peek() {
                     text_color = Some(color);
                 }
@@ -210,7 +209,7 @@ impl UIBox {
         };
 
         if custom_render_callback.is_some() {
-            features |= UIBoxFeatureFlag::DrawCustomRender;
+            features |= UIBoxFeatureFlags::DRAW_CUSTOM_RENDER;
         }
 
         Self {
@@ -248,7 +247,7 @@ impl UIBox {
         seconds_since_last_update: f32,
         interaction_result: &UIBoxInteraction,
     ) {
-        self.hot = if self.features.contains(UIBoxFeatureFlag::Hoverable) && !self.key.is_null() {
+        self.hot = if self.features.contains(UIBoxFeatureFlags::HOVERABLE) && !self.key.is_null() {
             GLOBAL_UI_CONTEXT.with(|ctx| {
                 let cache = ctx.cache.borrow();
 
@@ -292,7 +291,7 @@ impl UIBox {
     ) -> bool {
         let mut did_transition_to_active = false;
 
-        self.active = if self.features.contains(UIBoxFeatureFlag::Clickable) && !self.key.is_null()
+        self.active = if self.features.contains(UIBoxFeatureFlags::CLICKABLE) && !self.key.is_null()
         {
             GLOBAL_UI_CONTEXT.with(|ctx| {
                 let cache = ctx.cache.borrow();
@@ -463,7 +462,7 @@ impl UIBox {
         let draw_active_hover_indicators = false;
 
         let should_draw_fill = {
-            let has_fill_feature = self.features.contains(UIBoxFeatureFlag::DrawFill);
+            let has_fill_feature = self.features.contains(UIBoxFeatureFlags::DRAW_FILL);
 
             if draw_active_hover_indicators {
                 has_fill_feature || is_active_transitioning || is_hot_transitioning
@@ -485,7 +484,7 @@ impl UIBox {
 
         // DrawText path.
 
-        if self.features.contains(UIBoxFeatureFlag::DrawText) {
+        if self.features.contains(UIBoxFeatureFlags::DRAW_TEXT) {
             GLOBAL_UI_CONTEXT.with(|ctx| -> Result<(), String> { self.draw_text(ctx, target) })?;
         }
 
@@ -512,7 +511,11 @@ impl UIBox {
     ) -> Result<(), String> {
         // DrawChildDividers path.
 
-        if self.features.contains(UIBoxFeatureFlag::DrawChildDividers) && children.len() > 1 {
+        if self
+            .features
+            .contains(UIBoxFeatureFlags::DRAW_CHILD_DIVIDERS)
+            && children.len() > 1
+        {
             self.draw_child_dividers(children, target);
         }
 
@@ -525,13 +528,13 @@ impl UIBox {
         #[cfg(not(debug_assertions))]
         let draw_box_boundaries = false;
 
-        if self.features.contains(UIBoxFeatureFlag::DrawBorder) || draw_box_boundaries {
+        if self.features.contains(UIBoxFeatureFlags::DRAW_BORDER) || draw_box_boundaries {
             self.draw_border(draw_box_boundaries, target);
         }
 
         // EmbossAndDeboss path.
 
-        if self.features.contains(UIBoxFeatureFlag::EmbossAndDeboss) {
+        if self.features.contains(UIBoxFeatureFlags::EMBOSS_AND_DEBOSS) {
             self.emboss_and_deboss(target);
         }
 

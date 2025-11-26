@@ -1,12 +1,12 @@
 use crate::ui::{
-    ui_box::{UIBox, UIBoxFeatureFlag, UILayoutDirection},
+    ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 
 pub fn text(id: String, label: String) -> UIBox {
     let mut text_box = UIBox::new(
         id,
-        UIBoxFeatureFlag::Null | UIBoxFeatureFlag::DrawText,
+        UIBoxFeatureFlags::empty() | UIBoxFeatureFlags::DRAW_TEXT,
         UILayoutDirection::LeftToRight,
         [
             UISizeWithStrictness {

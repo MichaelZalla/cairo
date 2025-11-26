@@ -4,7 +4,7 @@ use crate::{
     device::keyboard::keycode,
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };
@@ -23,11 +23,11 @@ pub fn text_input(
             ctx.border_color(theme.panel_border, || -> Result<UIBox, String> {
                 Ok(UIBox::new(
                     id,
-                    UIBoxFeatureFlag::Hoverable
-                        | UIBoxFeatureFlag::Clickable
-                        | UIBoxFeatureFlag::DrawFill
-                        | UIBoxFeatureFlag::DrawBorder
-                        | UIBoxFeatureFlag::DrawText,
+                    UIBoxFeatureFlags::HOVERABLE
+                        | UIBoxFeatureFlags::CLICKABLE
+                        | UIBoxFeatureFlags::DRAW_FILL
+                        | UIBoxFeatureFlags::DRAW_BORDER
+                        | UIBoxFeatureFlags::DRAW_TEXT,
                     UILayoutDirection::LeftToRight,
                     [
                         UISizeWithStrictness {

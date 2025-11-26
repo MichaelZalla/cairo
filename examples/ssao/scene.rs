@@ -6,7 +6,7 @@ use cairo::{
     material::Material,
     matrix::Mat4,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
+        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
     },
     resource::arena::Arena,
@@ -124,7 +124,7 @@ pub fn make_ssao_scene(
         "./data/obj/suzanne.obj",
         material_arena,
         texture_u8_arena,
-        Some(ProcessGeometryFlag::Null | ProcessGeometryFlag::Center),
+        Some(ProcessGeometryFlags::empty() | ProcessGeometryFlags::CENTER),
     );
 
     for entry in material_arena.entries.iter_mut().flatten() {

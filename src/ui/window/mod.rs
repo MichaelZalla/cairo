@@ -18,7 +18,7 @@ use super::{
     ui_box::{
         interaction::UIBoxInteraction,
         tree::{UIBoxTree, UIBoxTreeRenderCallback},
-        UIBox, UIBoxDragHandle, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection,
+        UIBox, UIBoxDragHandle, UIBoxFeatureFlags, UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
@@ -181,16 +181,16 @@ impl<'a> Window<'a> {
             ctx.border_color(theme.panel_border, || {
                 root_ui_box = UIBox::new(
                     format!("{}_Root__{}_root", self.id, self.id),
-                    UIBoxFeatureMask::none()
-                        | UIBoxFeatureFlag::DrawFill
-                        | UIBoxFeatureFlag::DrawChildDividers
+                    UIBoxFeatureFlags::empty()
+                        | UIBoxFeatureFlags::DRAW_FILL
+                        | UIBoxFeatureFlags::DRAW_CHILD_DIVIDERS
                         | if self.docked {
-                            UIBoxFeatureMask::none()
+                            UIBoxFeatureFlags::empty()
                         } else {
-                            UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis
-                                | UIBoxFeatureFlag::ResizableMaxExtentOnPrimaryAxis
-                                | UIBoxFeatureFlag::ResizableMinExtentOnSecondaryAxis
-                                | UIBoxFeatureFlag::ResizableMaxExtentOnSecondaryAxis
+                            UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS
+                                | UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_PRIMARY_AXIS
+                                | UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_SECONDARY_AXIS
+                                | UIBoxFeatureFlags::RESIZABLE_MAX_EXTENT_ON_SECONDARY_AXIS
                         },
                     UILayoutDirection::TopToBottom,
                     [
@@ -528,7 +528,8 @@ fn render_titlebar(
                 None,
             );
 
-            close_button.features ^= UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::EmbossAndDeboss;
+            close_button.features ^=
+                UIBoxFeatureFlags::DRAW_FILL | UIBoxFeatureFlags::EMBOSS_AND_DEBOSS;
 
             let close_button_interaction = tree.push(close_button)?;
 

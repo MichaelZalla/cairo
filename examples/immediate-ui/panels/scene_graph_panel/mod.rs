@@ -10,7 +10,7 @@ use cairo::{
             container::{collapsible_container, container},
             text::text,
         },
-        ui_box::{tree::UIBoxTree, UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::{tree::UIBoxTree, UIBoxFeatureFlags, UILayoutDirection},
     },
 };
 use uuid::Uuid;
@@ -80,7 +80,7 @@ fn render_subtree(
                 node.get_type().to_string(),
             );
 
-            label_box.features |= UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable;
+            label_box.features |= UIBoxFeatureFlags::HOVERABLE | UIBoxFeatureFlags::CLICKABLE;
 
             if text_color.is_some() {
                 ctx.styles.borrow_mut().text_color.pop();

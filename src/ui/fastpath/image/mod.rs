@@ -5,7 +5,7 @@ use crate::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        ui_box::{UIBox, UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
 };
@@ -93,7 +93,7 @@ pub fn image(
 
     UIBox::new(
         id,
-        UIBoxFeatureFlag::Null | UIBoxFeatureFlag::DrawBorder,
+        UIBoxFeatureFlags::empty() | UIBoxFeatureFlags::DRAW_BORDER,
         UILayoutDirection::LeftToRight,
         sizes,
         Some((image_render_callback, Some(handle))),

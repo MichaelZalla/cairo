@@ -10,7 +10,7 @@ use cairo::{
     mem::linked_list::LinkedList,
     render::{
         culling::{FACE_CULLING_REJECT, FACE_CULLING_WINDING_ORDER},
-        options::{tone_mapping::TONE_MAPPING_OPERATORS, RenderPassFlag},
+        options::{tone_mapping::TONE_MAPPING_OPERATORS, RenderPassFlags},
     },
     resource::handle::Handle,
     scene::camera::{CameraProjectionKind, CAMERA_PROJECTION_KINDS},
@@ -150,7 +150,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         let was_enabled = current_settings
                             .render_options
                             .render_pass_flags
-                            .contains(RenderPassFlag::Rasterization);
+                            .contains(RenderPassFlags::RASTERIZATION);
 
                         prev_value_str.replace(was_enabled.to_string());
 
@@ -158,10 +158,10 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         if is_enabled {
                             current_settings.render_options.render_pass_flags ^=
-                                RenderPassFlag::Rasterization;
+                                RenderPassFlags::RASTERIZATION;
                         } else {
                             current_settings.render_options.render_pass_flags |=
-                                RenderPassFlag::Rasterization;
+                                RenderPassFlags::RASTERIZATION;
                         }
 
                         Ok(())
@@ -210,7 +210,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         let was_enabled = current_settings
                             .render_options
                             .render_pass_flags
-                            .contains(RenderPassFlag::Lighting);
+                            .contains(RenderPassFlags::LIGHTING);
 
                         prev_value_str.replace(was_enabled.to_string());
 
@@ -218,10 +218,10 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         if is_enabled {
                             current_settings.render_options.render_pass_flags ^=
-                                RenderPassFlag::Lighting;
+                                RenderPassFlags::LIGHTING;
                         } else {
                             current_settings.render_options.render_pass_flags |=
-                                RenderPassFlag::Lighting;
+                                RenderPassFlags::LIGHTING;
                         }
 
                         Ok(())
@@ -230,7 +230,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         let was_enabled = current_settings
                             .render_options
                             .render_pass_flags
-                            .contains(RenderPassFlag::DeferredLighting);
+                            .contains(RenderPassFlags::DEFERRED_LIGHTING);
 
                         prev_value_str.replace(was_enabled.to_string());
 
@@ -238,10 +238,10 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         if is_enabled {
                             current_settings.render_options.render_pass_flags ^=
-                                RenderPassFlag::DeferredLighting;
+                                RenderPassFlags::DEFERRED_LIGHTING;
                         } else {
                             current_settings.render_options.render_pass_flags |=
-                                RenderPassFlag::DeferredLighting;
+                                RenderPassFlags::DEFERRED_LIGHTING;
                         }
 
                         Ok(())
@@ -250,7 +250,7 @@ fn process_command(command: Command) -> ProcessCommandResult {
                         let was_enabled = current_settings
                             .render_options
                             .render_pass_flags
-                            .contains(RenderPassFlag::Bloom);
+                            .contains(RenderPassFlags::BLOOM);
 
                         prev_value_str.replace(was_enabled.to_string());
 
@@ -258,10 +258,10 @@ fn process_command(command: Command) -> ProcessCommandResult {
 
                         if is_enabled {
                             current_settings.render_options.render_pass_flags ^=
-                                RenderPassFlag::Bloom;
+                                RenderPassFlags::BLOOM;
                         } else {
                             current_settings.render_options.render_pass_flags |=
-                                RenderPassFlag::Bloom;
+                                RenderPassFlags::BLOOM;
                         }
 
                         Ok(())

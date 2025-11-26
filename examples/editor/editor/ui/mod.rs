@@ -5,7 +5,7 @@ use cairo::ui::{
         container::{container, greedy_container},
         spacer::spacer,
     },
-    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UIBoxFeatureMask, UILayoutDirection},
+    ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 
@@ -35,7 +35,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
 
     tree.push(UIBox::new(
         "MainMenuBarLogo".to_string(),
-        UIBoxFeatureMask::none() | UIBoxFeatureFlag::DrawFill,
+        UIBoxFeatureFlags::empty() | UIBoxFeatureFlags::DRAW_FILL,
         UILayoutDirection::LeftToRight,
         [
             UISizeWithStrictness {
@@ -101,7 +101,7 @@ pub fn build_main_menu_bar_ui(_ctx: &UIContext, tree: &mut UIBoxTree) -> Result<
             None,
         );
 
-        button_box.features ^= UIBoxFeatureFlag::DrawBorder | UIBoxFeatureFlag::EmbossAndDeboss;
+        button_box.features ^= UIBoxFeatureFlags::DRAW_BORDER | UIBoxFeatureFlags::EMBOSS_AND_DEBOSS;
 
         tree.push(button_box)?;
 

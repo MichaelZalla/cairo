@@ -2,7 +2,7 @@ use crate::{
     color::Color,
     matrix::Mat4,
     mesh::Mesh,
-    render::{options::RenderPassFlag, Renderer},
+    render::{options::RenderPassFlags, Renderer},
     resource::handle::Handle,
     software_renderer::SoftwareRenderer,
     vec::vec4::Vec4,
@@ -58,8 +58,8 @@ impl SoftwareRenderer {
 
         let original_flags = self.options.render_pass_flags;
 
-        self.options.render_pass_flags ^= RenderPassFlag::Lighting;
-        self.options.render_pass_flags ^= RenderPassFlag::DeferredLighting;
+        self.options.render_pass_flags ^= RenderPassFlags::LIGHTING;
+        self.options.render_pass_flags ^= RenderPassFlags::DEFERRED_LIGHTING;
 
         let mut color_vec3 = color.to_vec3() / 255.0;
 

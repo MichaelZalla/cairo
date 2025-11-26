@@ -3,7 +3,7 @@ use crate::{
     graphics::{text::TextOperation, Graphics},
     ui::{
         context::UIContext,
-        ui_box::{UIBox, UIBoxFeatureFlag},
+        ui_box::{UIBox, UIBoxFeatureFlags},
     },
 };
 
@@ -14,7 +14,7 @@ impl UIBox {
         target: &mut Buffer2D,
     ) -> Result<(), String> {
         let text_content = self.text_content.as_ref().expect(
-            "Called UIBox::render() with `UIBoxFeatureFlag::DrawText` when `text_content` is `None`!",
+            "Called UIBox::render() with `UIBoxFeatureFlags::DRAW_TEXT` when `text_content` is `None`!",
         );
 
         if text_content.is_empty() {
@@ -23,7 +23,7 @@ impl UIBox {
 
         let text_color = self.styles.text_color.unwrap_or_default();
 
-        let should_cache = !self.features.contains(UIBoxFeatureFlag::SkipTextCaching);
+        let should_cache = !self.features.contains(UIBoxFeatureFlags::SKIP_TEXT_CACHING);
 
         let mut text_cache = ctx.text_cache.borrow_mut();
         let font_info = ctx.font_info.borrow();

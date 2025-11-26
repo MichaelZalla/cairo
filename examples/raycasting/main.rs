@@ -19,7 +19,7 @@ use cairo::{
     },
     matrix::Mat4,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
+        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
     },
     render::Renderer,
@@ -78,7 +78,7 @@ fn main() -> Result<(), String> {
             "./data/blender/collision-level/collision-level_004.obj",
             &mut material_arena,
             &mut texture_u8_arena,
-            Some(ProcessGeometryFlag::Null | ProcessGeometryFlag::Center),
+            Some(ProcessGeometryFlags::empty() | ProcessGeometryFlags::CENTER),
         );
 
         level_meshes

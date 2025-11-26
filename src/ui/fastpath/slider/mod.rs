@@ -3,7 +3,7 @@ use crate::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         ui_box::{
-            interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag,
+            interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlags,
             UILayoutDirection,
         },
         UISize, UISizeWithStrictness,
@@ -62,10 +62,10 @@ pub fn slider(
                 ctx.border_color(theme.panel_border, || -> Result<UIBox, String> {
                     Ok(UIBox::new(
                         container_id,
-                        UIBoxFeatureFlag::DrawFill
-                            | UIBoxFeatureFlag::DrawBorder
-                            | UIBoxFeatureFlag::Hoverable
-                            | UIBoxFeatureFlag::Clickable,
+                        UIBoxFeatureFlags::DRAW_FILL
+                            | UIBoxFeatureFlags::DRAW_BORDER
+                            | UIBoxFeatureFlags::HOVERABLE
+                            | UIBoxFeatureFlags::CLICKABLE,
                         UILayoutDirection::LeftToRight,
                         [
                             UISizeWithStrictness {

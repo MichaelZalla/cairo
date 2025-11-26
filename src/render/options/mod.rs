@@ -1,4 +1,4 @@
-use bitmask::bitmask;
+use bitflags::bitflags;
 
 use serde::{Deserialize, Serialize};
 
@@ -18,32 +18,31 @@ pub mod rasterizer;
 pub mod shader;
 pub mod tone_mapping;
 
-bitmask! {
-    #[derive(Debug, Serialize, Deserialize)]
-    pub mask RenderPassMask: u32 where flags RenderPassFlag {
-        Null = 0,
-        Rasterization = 1,
-        Lighting = (1 << 1),
-        DeferredLighting = (1 << 2),
-        Bloom = (1 << 3),
-        Ssao = (1 << 4),
-        SsaoBlur = (1 << 5),
-        ToneMapping = (1 << 6),
+bitflags! {
+    #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+    pub struct RenderPassFlags: u32 {
+        const RASTERIZATION = 1;
+        const LIGHTING = 1 << 1;
+        const DEFERRED_LIGHTING = 1 << 2;
+        const BLOOM = 1 << 3;
+        const SSAO = 1 << 4;
+        const SSAO_BLUR = 1 << 5;
+        const TONE_MAPPING = 1 << 6;
     }
 }
 
-impl Default for RenderPassMask {
+impl Default for RenderPassFlags {
     fn default() -> Self {
-        RenderPassFlag::Rasterization
-            | RenderPassFlag::Lighting
-            | RenderPassFlag::DeferredLighting
-            | RenderPassFlag::ToneMapping
+        RenderPassFlags::RASTERIZATION
+            | RenderPassFlags::LIGHTING
+            | RenderPassFlags::DEFERRED_LIGHTING
+            | RenderPassFlags::TONE_MAPPING
     }
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct RenderOptions {
-    pub render_pass_flags: RenderPassMask,
+    pub render_pass_flags: RenderPassFlags,
     pub bloom_dirt_mask_handle: Option<Handle>,
     pub rasterizer_options: RasterizerOptions,
     pub tone_mapping: ToneMappingOperator,
@@ -76,13 +75,13 @@ impl RenderOptions {
         for keycode in keyboard_state.newly_pressed_keycodes.iter() {
             match *keycode {
                 Keycode::Num1 => {
-                    self.render_pass_flags ^= RenderPassFlag::Rasterization;
+                    self.render_pass_flags ^= RenderPassFlags::RASTERIZATION;
 
                     println!(
                         "Rasterization pass: {}",
                         if self
                             .render_pass_flags
-                            .contains(RenderPassFlag::Rasterization)
+                            .contains(RenderPassFlags::RASTERIZATION)
                         {
                             "On"
                         } else {
@@ -91,11 +90,11 @@ impl RenderOptions {
                     );
                 }
                 Keycode::Num2 => {
-                    self.render_pass_flags ^= RenderPassFlag::Lighting;
+                    self.render_pass_flags ^= RenderPassFlags::LIGHTING;
 
                     println!(
                         "Lighting pass: {}",
-                        if self.render_pass_flags.contains(RenderPassFlag::Lighting) {
+                        if self.render_pass_flags.contains(RenderPassFlags::LIGHTING) {
                             "On"
                         } else {
                             "Off"
@@ -103,13 +102,13 @@ impl RenderOptions {
                     );
                 }
                 Keycode::Num3 => {
-                    self.render_pass_flags ^= RenderPassFlag::DeferredLighting;
+                    self.render_pass_flags ^= RenderPassFlags::DEFERRED_LIGHTING;
 
                     println!(
                         "Deferred lighting pass: {}",
                         if self
                             .render_pass_flags
-                            .contains(RenderPassFlag::DeferredLighting)
+                            .contains(RenderPassFlags::DEFERRED_LIGHTING)
                         {
                             "On"
                         } else {
@@ -118,17 +117,17 @@ impl RenderOptions {
                     );
                 }
                 Keycode::Num4 => {
-                    self.render_pass_flags ^= RenderPassFlag::Ssao;
+                    self.render_pass_flags ^= RenderPassFlags::SSAO;
 
-                    if self.render_pass_flags.contains(RenderPassFlag::Ssao) {
-                        self.render_pass_flags.set(RenderPassFlag::SsaoBlur);
+                    if self.render_pass_flags.contains(RenderPassFlags::SSAO) {
+                        self.render_pass_flags.insert(RenderPassFlags::SSAO_BLUR);
                     } else {
-                        self.render_pass_flags.unset(RenderPassFlag::SsaoBlur);
+                        self.render_pass_flags.remove(RenderPassFlags::SSAO_BLUR);
                     }
 
                     println!(
                         "SSAO pass: {}",
-                        if self.render_pass_flags.contains(RenderPassFlag::Ssao) {
+                        if self.render_pass_flags.contains(RenderPassFlags::SSAO) {
                             "On (with blur)"
                         } else {
                             "Off"

@@ -10,7 +10,7 @@ use cairo::{
     matrix::Mat4,
     render::{
         options::{
-            tone_mapping::ToneMappingOperator, RenderOptions, RenderPassFlag, RenderPassMask,
+            tone_mapping::ToneMappingOperator, RenderOptions, RenderPassFlags,
         },
         Renderer,
     },
@@ -103,7 +103,7 @@ fn main() -> Result<(), String> {
         SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
     renderer.options = {
-        let flags: RenderPassMask = Default::default();
+        let flags: RenderPassFlags = Default::default();
 
         let bloom_dirt_mask_handle = {
             let mut texture_u8_arena = scene_context.resources.texture_u8.borrow_mut();
@@ -119,7 +119,7 @@ fn main() -> Result<(), String> {
         };
 
         RenderOptions {
-            render_pass_flags: flags | RenderPassFlag::Bloom,
+            render_pass_flags: flags | RenderPassFlags::BLOOM,
             bloom_dirt_mask_handle: Some(bloom_dirt_mask_handle),
             ..Default::default()
         }

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, f32::consts::{PI, TAU}};
 
-use bitmask::bitmask;
+use bitflags::bitflags;
 
 use cairo::{
     animation::lerp,
@@ -33,30 +33,28 @@ pub enum SpringyMeshType {
     Cube,
 }
 
-bitmask! {
-    #[derive(Debug)]
-    pub mask SpringyMeshDebugFlags: u32 where flags SpringyMeshDebugFlag {
-        Null = 0,
-        DrawAABB = 1,
-        DrawAABBBoundingSphere = (1 << 1),
-        DrawPoints = (1 << 2),
-        DrawPointVelocities = (1 << 3),
-        DrawPointCollisions = (1 << 4),
-        DrawStruts = (1 << 5),
-        DrawStrutEdgeCollisions = (1 << 6),
-        DrawStrutSpringAccelerations = (1 << 7),
-        DrawTorsionalStrutFaceNormals = (1 << 8),
-        DrawTorsionalStrutRVectors = (1 << 9),
-        DrawTorsionalStrutRotationalForces = (1 << 10),
-        DrawFaceCollisions = (1 << 11),
+bitflags! {
+    #[derive(Debug, Copy, Clone)]
+    pub struct SpringyMeshDebugFlags: u32 {
+        const DRAW_AABB = 1;
+        const DRAW_AABB_BOUNDING_SPHERE = 1 << 1;
+        const DRAW_POINTS = 1 << 2;
+        const DRAW_POINT_VELOCITIES = 1 << 3;
+        const DRAW_POINT_COLLISIONS = 1 << 4;
+        const DRAW_STRUTS = 1 << 5;
+        const DRAW_STRUT_EDGE_COLLISIONS = 1 << 6;
+        const DRAW_STRUT_SPRING_ACCELERATIONS = 1 << 7;
+        const DRAW_TORSIONAL_STRUT_FACE_NORMALS = 1 << 8;
+        const DRAW_TORSIONAL_STRUT_R_VECTORS = 1 << 9;
+        const DRAW_TORSIONAL_STRUT_ROTATIONAL_FORCES = 1 << 10;
+        const DRAW_FACE_COLLISIONS = 1 << 11;
     }
 }
 
 impl Default for SpringyMeshDebugFlags {
     fn default() -> Self {
-        SpringyMeshDebugFlag::Null
-            | SpringyMeshDebugFlag::DrawPoints
-            | SpringyMeshDebugFlag::DrawStruts
+        SpringyMeshDebugFlags::DRAW_POINTS
+            | SpringyMeshDebugFlags::DRAW_STRUTS
     }
 }
 
@@ -119,7 +117,7 @@ impl SpringyMesh {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        if self.debug_flags.contains(SpringyMeshDebugFlag::DrawAABB) {
+        if self.debug_flags.contains(SpringyMeshDebugFlags::DRAW_AABB) {
             // Visualizes the mesh's AABB.
 
             renderer.render_aabb(&self.aabb, Default::default(), color::DARK_GRAY);
@@ -127,7 +125,7 @@ impl SpringyMesh {
 
         if self
             .debug_flags
-            .contains(SpringyMeshDebugFlag::DrawAABBBoundingSphere)
+            .contains(SpringyMeshDebugFlags::DRAW_AABB_BOUNDING_SPHERE)
         {
             // Visualizes the mesh's AABB bounding sphere.
 
@@ -147,10 +145,10 @@ impl SpringyMesh {
         }
 
         if self.debug_flags.intersects(
-            SpringyMeshDebugFlag::DrawPoints | SpringyMeshDebugFlag::DrawPointVelocities,
+            SpringyMeshDebugFlags::DRAW_POINTS | SpringyMeshDebugFlags::DRAW_POINT_VELOCITIES,
         ) {
             for point in &self.points {
-                if self.debug_flags.contains(SpringyMeshDebugFlag::DrawPoints) {
+                if self.debug_flags.contains(SpringyMeshDebugFlags::DRAW_POINTS) {
                     // Visualizes the point.
 
                     let transform =
@@ -159,7 +157,7 @@ impl SpringyMesh {
                     let color = if point.did_collide
                         && self
                             .debug_flags
-                            .contains(SpringyMeshDebugFlag::DrawPointCollisions)
+                            .contains(SpringyMeshDebugFlags::DRAW_POINT_COLLISIONS)
                     {
                         color::RED
                     } else {
@@ -176,7 +174,7 @@ impl SpringyMesh {
 
                 if self
                     .debug_flags
-                    .contains(SpringyMeshDebugFlag::DrawPointVelocities)
+                    .contains(SpringyMeshDebugFlags::DRAW_POINT_VELOCITIES)
                 {
                     // Visualizes the point's velocity.
 
@@ -190,26 +188,26 @@ impl SpringyMesh {
         }
 
         if self.debug_flags.intersects(
-            SpringyMeshDebugFlag::DrawStruts
-                | SpringyMeshDebugFlag::DrawStrutEdgeCollisions
-                | SpringyMeshDebugFlag::DrawStrutSpringAccelerations
-                | SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
-                | SpringyMeshDebugFlag::DrawTorsionalStrutRVectors
-                | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces
-                | SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
-                | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces,
+            SpringyMeshDebugFlags::DRAW_STRUTS
+                | SpringyMeshDebugFlags::DRAW_STRUT_EDGE_COLLISIONS
+                | SpringyMeshDebugFlags::DRAW_STRUT_SPRING_ACCELERATIONS
+                | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_FACE_NORMALS
+                | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_R_VECTORS
+                | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_ROTATIONAL_FORCES
+                | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_FACE_NORMALS
+                | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_ROTATIONAL_FORCES,
         ) {
             for strut in &self.struts {
                 let start = self.points[strut.edge.points.0].position;
                 let end = self.points[strut.edge.points.1].position;
 
-                if self.debug_flags.contains(SpringyMeshDebugFlag::DrawStruts) {
+                if self.debug_flags.contains(SpringyMeshDebugFlags::DRAW_STRUTS) {
                     // Visualizes the strut.
 
                     let color = if strut.edge.did_collide
                         && self
                             .debug_flags
-                            .contains(SpringyMeshDebugFlag::DrawStrutEdgeCollisions)
+                            .contains(SpringyMeshDebugFlags::DRAW_STRUT_EDGE_COLLISIONS)
                     {
                         color::RED
                     } else {
@@ -221,7 +219,7 @@ impl SpringyMesh {
 
                 if self
                     .debug_flags
-                    .contains(SpringyMeshDebugFlag::DrawStrutSpringAccelerations)
+                    .contains(SpringyMeshDebugFlags::DRAW_STRUT_SPRING_ACCELERATIONS)
                 {
                     // Visualizes the strut's spring accelerations.
 
@@ -238,9 +236,9 @@ impl SpringyMesh {
                 if let (Some(connected_points), true) = (
                     &strut.edge.connected_points,
                     self.debug_flags.intersects(
-                        SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
-                            | SpringyMeshDebugFlag::DrawTorsionalStrutRVectors
-                            | SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces,
+                        SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_FACE_NORMALS
+                            | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_R_VECTORS
+                            | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_ROTATIONAL_FORCES,
                     ),
                 ) {
                     let h = (end - start).as_normal();
@@ -249,8 +247,8 @@ impl SpringyMesh {
                     let right = self.points[connected_points.1].position;
 
                     if self.debug_flags.intersects(
-                        SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals
-                            | SpringyMeshDebugFlag::DrawTorsionalStrutRVectors,
+                        SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_FACE_NORMALS
+                            | SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_R_VECTORS,
                     ) {
                         let normals =
                             Strut::get_surface_normals_edge_points(&strut.edge, &self.points)
@@ -265,7 +263,7 @@ impl SpringyMesh {
 
                             if self
                                 .debug_flags
-                                .contains(SpringyMeshDebugFlag::DrawTorsionalStrutRVectors)
+                                .contains(SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_R_VECTORS)
                             {
                                 // Visualizes r-vector (from h to left point or right point).
 
@@ -275,7 +273,7 @@ impl SpringyMesh {
 
                             if self
                                 .debug_flags
-                                .contains(SpringyMeshDebugFlag::DrawTorsionalStrutFaceNormals)
+                                .contains(SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_FACE_NORMALS)
                             {
                                 // Visualize normals of the faces formed by
                                 // start, end, and the connected point.
@@ -295,7 +293,7 @@ impl SpringyMesh {
 
                     if self
                         .debug_flags
-                        .contains(SpringyMeshDebugFlag::DrawTorsionalStrutRotationalForces)
+                        .contains(SpringyMeshDebugFlags::DRAW_TORSIONAL_STRUT_ROTATIONAL_FORCES)
                     {
                         // Visualize the rotational forces applied to start, end, left, and right.
 
@@ -315,7 +313,7 @@ impl SpringyMesh {
 
         if self
             .debug_flags
-            .contains(SpringyMeshDebugFlag::DrawFaceCollisions)
+            .contains(SpringyMeshDebugFlags::DRAW_FACE_COLLISIONS)
         {
             for tri in &self.triangles {
                 if let Some(barycentric) = &tri.collision_point {

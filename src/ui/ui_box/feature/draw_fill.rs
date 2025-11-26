@@ -2,7 +2,7 @@ use crate::{
     buffer::Buffer2D,
     color::{self, Color},
     graphics::Graphics,
-    ui::ui_box::{UIBox, UIBoxFeatureFlag},
+    ui::ui_box::{UIBox, UIBoxFeatureFlags},
 };
 
 static UI_BOX_HOT_COLOR: Color = color::RED;
@@ -38,7 +38,7 @@ impl UIBox {
 
         let fill_color_u32 = fill_color.map(|c| c.to_u32());
 
-        if self.features.contains(UIBoxFeatureFlag::MaskCircle) {
+        if self.features.contains(UIBoxFeatureFlags::MASK_CIRCLE) {
             let radius = (width.min(height) as f32 / 2.0).floor();
 
             let center = (x + width / 2, y + height / 2);

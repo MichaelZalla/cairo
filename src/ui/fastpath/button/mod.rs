@@ -1,5 +1,5 @@
 use crate::ui::{
-    ui_box::{UIBox, UIBoxFeatureFlag, UILayoutDirection},
+    ui_box::{UIBox, UIBoxFeatureFlags, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 
@@ -24,12 +24,12 @@ pub fn button(
 
     let mut button_box = UIBox::new(
         id,
-        UIBoxFeatureFlag::DrawFill
-            | UIBoxFeatureFlag::DrawBorder
-            | UIBoxFeatureFlag::EmbossAndDeboss
-            | UIBoxFeatureFlag::DrawText
-            | UIBoxFeatureFlag::Hoverable
-            | UIBoxFeatureFlag::Clickable,
+        UIBoxFeatureFlags::DRAW_FILL
+            | UIBoxFeatureFlags::DRAW_BORDER
+            | UIBoxFeatureFlags::EMBOSS_AND_DEBOSS
+            | UIBoxFeatureFlags::DRAW_TEXT
+            | UIBoxFeatureFlags::HOVERABLE
+            | UIBoxFeatureFlags::CLICKABLE,
         UILayoutDirection::LeftToRight,
         sizes,
         None,

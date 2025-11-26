@@ -8,7 +8,7 @@ use crate::{
     collections::tree::{node::NodeLocalTraversalMethod, Tree},
     ui::{
         context::GLOBAL_UI_CONTEXT,
-        ui_box::{UIBoxDragHandle, UIBoxFeatureFlag},
+        ui_box::{UIBoxDragHandle, UIBoxFeatureFlags},
         window::Window,
     },
 };
@@ -84,7 +84,7 @@ impl<'a> PanelTree<'a> {
 
                 if let Some(parent) = parent_data {
                     if parent.resizable && sibling_index != 0 {
-                        panel_box.features |= UIBoxFeatureFlag::ResizableMinExtentOnPrimaryAxis;
+                        panel_box.features |= UIBoxFeatureFlags::RESIZABLE_MIN_EXTENT_ON_PRIMARY_AXIS;
                     }
                 }
 
@@ -109,7 +109,7 @@ impl<'a> PanelTree<'a> {
 
                     if !ui_box_node.children.is_empty() {
                         // Enable child dividers.
-                        ui_box_node.data.features |= UIBoxFeatureFlag::DrawChildDividers;
+                        ui_box_node.data.features |= UIBoxFeatureFlags::DRAW_CHILD_DIVIDERS;
 
                         // Check each child for an active drag handle.
                         let mut resized_child: Option<(usize, UIBoxDragHandle)> = None;

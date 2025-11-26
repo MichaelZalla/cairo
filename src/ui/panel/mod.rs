@@ -12,7 +12,7 @@ use super::{
     fastpath::text::text,
     ui_box::{
         interaction::UIBoxInteraction, tree::UIBoxTree, UIBox, UIBoxCustomRenderCallback,
-        UIBoxFeatureFlag, UILayoutDirection,
+        UIBoxFeatureFlags, UILayoutDirection,
     },
     window::Window,
     UISize, UISizeWithStrictness,
@@ -118,20 +118,20 @@ impl Panel {
 
         let draw_border = !window.docked;
 
-        let ui_box_feature_flags = UIBoxFeatureFlag::Null
+        let ui_box_feature_flags = UIBoxFeatureFlags::empty()
             | if draw_border {
-                UIBoxFeatureFlag::DrawBorder
+                UIBoxFeatureFlags::DRAW_BORDER
             } else {
-                UIBoxFeatureFlag::Null
+                UIBoxFeatureFlags::empty()
             }
             | if let Some(data) = &self.instance_data {
                 if data.custom_render_callback.is_some() {
-                    UIBoxFeatureFlag::DrawCustomRender
+                    UIBoxFeatureFlags::DRAW_CUSTOM_RENDER
                 } else {
-                    UIBoxFeatureFlag::Null
+                    UIBoxFeatureFlags::empty()
                 }
             } else {
-                UIBoxFeatureFlag::Null
+                UIBoxFeatureFlags::empty()
             };
 
         let custom_render_callback = if let Some(data) = &self.instance_data {

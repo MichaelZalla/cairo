@@ -1,8 +1,8 @@
 use crate::ui::{
     context::GLOBAL_UI_CONTEXT,
     ui_box::{
-        interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag,
-        UIBoxFeatureMask, UILayoutDirection,
+        interaction::UIBoxInteraction, key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlags,
+        UILayoutDirection,
     },
     UISize, UISizeWithStrictness,
 };
@@ -28,13 +28,13 @@ pub fn container(
         ],
     };
 
-    UIBox::new(id, UIBoxFeatureMask::none(), layout_direction, sizes, None)
+    UIBox::new(id, UIBoxFeatureFlags::empty(), layout_direction, sizes, None)
 }
 
 pub fn greedy_container(id: String, layout_direction: UILayoutDirection) -> UIBox {
     UIBox::new(
         id,
-        UIBoxFeatureMask::none(),
+        UIBoxFeatureFlags::empty(),
         layout_direction,
         [
             UISizeWithStrictness {
@@ -119,7 +119,7 @@ where
                 ]),
             );
 
-            toggle_button.features ^= UIBoxFeatureFlag::EmbossAndDeboss;
+            toggle_button.features ^= UIBoxFeatureFlags::EMBOSS_AND_DEBOSS;
 
             tree.push(greedy_spacer())?;
 

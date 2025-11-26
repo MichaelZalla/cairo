@@ -2,7 +2,7 @@ use std::{fmt, io::Error, mem, path::Path, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
-use bitmask::bitmask;
+use bitflags::bitflags;
 
 use crate::{
     fs::read_lines,
@@ -46,12 +46,11 @@ struct PartialMesh {
     material_name: Option<String>,
 }
 
-bitmask! {
-    #[derive(Default, Debug, Serialize, Deserialize)]
-    pub mask ProcessGeometryFlagMask: u32 where flags ProcessGeometryFlag {
-        Null = 0,
-        Center = 1,
-        FlipZ = (1 << 1),
+bitflags! {
+    #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]
+    pub struct ProcessGeometryFlags: u32 {
+        const CENTER = 1;
+        const FLIP_Z = 1 << 1;
     }
 }
 
@@ -59,7 +58,7 @@ pub fn load_obj(
     filepath: &str,
     material_arena: &mut Arena<Material>,
     texture_arena: &mut Arena<TextureMap>,
-    process_geometry_flags: Option<ProcessGeometryFlagMask>,
+    process_geometry_flags: Option<ProcessGeometryFlags>,
 ) -> LoadObjResult {
     let path = Path::new(&filepath);
 
@@ -231,11 +230,11 @@ pub fn load_obj(
     };
 
     if let Some(mask) = process_geometry_flags {
-        if mask.contains(ProcessGeometryFlag::Center) {
+        if mask.contains(ProcessGeometryFlags::CENTER) {
             geometry.center();
         }
 
-        if mask.contains(ProcessGeometryFlag::FlipZ) {
+        if mask.contains(ProcessGeometryFlags::FLIP_Z) {
             for v in geometry.vertices.iter_mut() {
                 v.z *= -1.0;
             }

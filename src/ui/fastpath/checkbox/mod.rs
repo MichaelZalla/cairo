@@ -7,7 +7,7 @@ use crate::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
         fastpath::{container::container, spacer::spacer, stack::stack, text::text},
-        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::{tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
         UISize, UISizeWithStrictness,
     },
     vec::vec2::Vec2,
@@ -128,7 +128,7 @@ pub fn checkbox(
             None,
         );
 
-        ui_box.features |= UIBoxFeatureFlag::Hoverable | UIBoxFeatureFlag::Clickable;
+        ui_box.features |= UIBoxFeatureFlags::HOVERABLE | UIBoxFeatureFlags::CLICKABLE;
 
         ui_box
     };
@@ -148,7 +148,7 @@ pub fn checkbox(
                     ctx.fill_color(fill_color, || -> Result<UIBox, String> {
                         Ok(UIBox::new(
                             format!("{}.checkbox_{}_checked", id, index).to_string(),
-                            UIBoxFeatureFlag::DrawFill | UIBoxFeatureFlag::DrawBorder,
+                            UIBoxFeatureFlags::DRAW_FILL | UIBoxFeatureFlags::DRAW_BORDER,
                             UILayoutDirection::LeftToRight,
                             [CHECKBOX_UI_SIZE, CHECKBOX_UI_SIZE],
                             if item.is_checked {

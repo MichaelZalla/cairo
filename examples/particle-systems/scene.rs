@@ -8,7 +8,7 @@ use cairo::{
     geometry::accelerator::static_triangle_bvh::StaticTriangleBVH,
     material::Material,
     mesh::{
-        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlag},
+        obj::load::{load_obj, LoadObjResult, ProcessGeometryFlags},
         Mesh,
     },
     random::sampler::{RandomSampler, RangeSampler},
@@ -103,7 +103,7 @@ pub fn make_particles_scene(
             "./data/blender/collision-level/collision-level_005.obj",
             material_arena,
             &mut texture_u8_arena,
-            Some(ProcessGeometryFlag::Null | ProcessGeometryFlag::Center),
+            Some(ProcessGeometryFlags::empty() | ProcessGeometryFlags::CENTER),
         );
 
         level_meshes.last().unwrap().to_owned()

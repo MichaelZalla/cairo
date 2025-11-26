@@ -13,7 +13,7 @@ use crate::{
     ui::{
         context::GLOBAL_UI_CONTEXT,
         extent::ScreenExtent,
-        ui_box::{UIBoxFeatureFlag, UILayoutDirection},
+        ui_box::{UIBoxFeatureFlags, UILayoutDirection},
         UI2DAxis, UISize,
     },
 };
@@ -115,7 +115,7 @@ impl<'a> UIBoxTree<'a> {
                 None => UIBoxInteraction::from_user_inputs(&ui_box.features, None, &input_events),
             };
 
-            if ui_box.features.contains(UIBoxFeatureFlag::Hoverable)
+            if ui_box.features.contains(UIBoxFeatureFlags::HOVERABLE)
                 && interaction_result.mouse_interaction_in_bounds.is_hovering
             {
                 *ctx.cursor_kind.borrow_mut() = MouseCursorKind::Hand;
@@ -132,7 +132,7 @@ impl<'a> UIBoxTree<'a> {
             // Updates hot state for this node, based on the node's previous
             // layout (from the prior frame).
 
-            if ui_box.features.contains(UIBoxFeatureFlag::Hoverable) {
+            if ui_box.features.contains(UIBoxFeatureFlags::HOVERABLE) {
                 ui_box.update_hot_state(seconds_since_last_update, &interaction_result);
             }
 
@@ -190,7 +190,7 @@ impl<'a> UIBoxTree<'a> {
                     &mut |_depth, _sibling_index, _parent_data, node| {
                         let ui_box: &mut UIBox = &mut node.data;
 
-                        if !ui_box.features.contains(UIBoxFeatureFlag::Clickable) {
+                        if !ui_box.features.contains(UIBoxFeatureFlags::CLICKABLE) {
                             return Ok(());
                         }
 
@@ -218,7 +218,7 @@ impl<'a> UIBoxTree<'a> {
                     &mut |_depth, _sibling_index, _parent, node| {
                         let ui_box = &mut node.data;
 
-                        if !ui_box.features.contains(UIBoxFeatureFlag::Clickable) {
+                        if !ui_box.features.contains(UIBoxFeatureFlags::CLICKABLE) {
                             return Ok(());
                         }
 
@@ -926,7 +926,7 @@ impl<'a> UIBoxTree<'a> {
 
                 ui_box.render_preorder(target)?;
 
-                if ui_box.features.contains(UIBoxFeatureFlag::DrawCustomRender) {
+                if ui_box.features.contains(UIBoxFeatureFlags::DRAW_CUSTOM_RENDER) {
                     if let Some((render, instance_handle)) = &ui_box.custom_render_callback {
                         return render(instance_handle, &ui_box.global_bounds, target);
                     }

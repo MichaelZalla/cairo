@@ -1,6 +1,6 @@
 use crate::ui::{
     context::GLOBAL_UI_CONTEXT,
-    ui_box::{key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlag, UILayoutDirection},
+    ui_box::{key::UIKey, tree::UIBoxTree, UIBox, UIBoxFeatureFlags, UILayoutDirection},
     UISize, UISizeWithStrictness,
 };
 
@@ -55,7 +55,7 @@ pub fn tab_selector(id: String, tabs: Vec<&str>, tree: &mut UIBoxTree) -> Result
                 );
 
                 tab_button.features ^=
-                    UIBoxFeatureFlag::DrawText | UIBoxFeatureFlag::EmbossAndDeboss;
+                    UIBoxFeatureFlags::DRAW_TEXT | UIBoxFeatureFlags::EMBOSS_AND_DEBOSS;
 
                 if fill_color.is_some() {
                     ctx.styles.borrow_mut().fill_color.pop();
