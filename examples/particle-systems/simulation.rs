@@ -153,13 +153,16 @@ impl<const N: usize> Simulation<N> {
                         let penetration_depth =
                             penetration_vector.dot(instance_triangle_normal).abs();
 
-                        resolve_point_plane_collision_approximate(
-                            instance_triangle_normal,
-                            &PHYSICS_MATERIAL,
-                            &mut end_position,
-                            &mut end_velocity,
-                            penetration_depth,
-                        );
+                        // Skip negligible penetrations to prevent bias-induced energy gain
+                        if penetration_depth > 0.01 {
+                            resolve_point_plane_collision_approximate(
+                                instance_triangle_normal,
+                                &PHYSICS_MATERIAL,
+                                &mut end_position,
+                                &mut end_velocity,
+                                penetration_depth,
+                            );
+                        }
                     }
 
                     new_state.data[i] = end_position;
