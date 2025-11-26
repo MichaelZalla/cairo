@@ -27,6 +27,7 @@ use cairo::{
 
 use crate::strut::{DAMPING_RATIO, Edge, Strut, PARTICLE_MASS, UNDAMPED_PERIOD};
 
+#[allow(dead_code)]
 pub enum SpringyMeshType {
     Spring { with_connected_points: bool },
     Tetrahedron,
