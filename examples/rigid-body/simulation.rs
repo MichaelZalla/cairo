@@ -150,6 +150,23 @@ impl Simulation {
         body_state.linear_momentum -= accumulated_linear_velocity * mass;
     }
 
+    /// Corrects penetration by pushing the body out to maintain minimum distance.
+    fn correct_penetration(
+        body_state: &mut RigidBodySimulationState,
+        collider: &PlaneCollider,
+        minimum_distance_to_plane: f32,
+    ) {
+        let signed_distance_from_body_to_plane =
+            collider.plane.get_signed_distance(&body_state.position);
+
+        if signed_distance_from_body_to_plane < minimum_distance_to_plane {
+            let normal = collider.plane.normal;
+
+            body_state.position +=
+                normal * (minimum_distance_to_plane - signed_distance_from_body_to_plane);
+        }
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn handle_static_collision(
         h: f32,
@@ -348,14 +365,7 @@ impl Simulation {
 
         // If necessary, fixes up the body's position to maintain its minimum
         // distance from the collider.
-
-        let signed_distance_from_body_to_plane =
-            collider.plane.get_signed_distance(&new_body_state.position);
-
-        if signed_distance_from_body_to_plane < minimum_distance_to_plane {
-            new_body_state.position +=
-                normal * (minimum_distance_to_plane - signed_distance_from_body_to_plane);
-        }
+        Self::correct_penetration(new_body_state, collider, minimum_distance_to_plane);
 
         // Determines if the resulting body state constitutes a resting or
         // a sliding contact.
