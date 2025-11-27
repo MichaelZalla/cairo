@@ -200,7 +200,7 @@ impl RigidBody {
 
         let inverse_moment_of_inertia_world_space = self.inverse_moment_of_intertia_world_space();
 
-        (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3()
+        -((angular_momentum * inverse_moment_of_inertia_world_space).to_vec3())
     }
 
     pub fn apply_simulation_state(&mut self, state: &RigidBodySimulationState) {
@@ -281,11 +281,18 @@ impl RigidBody {
             .debug_flags
             .contains(RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY)
         {
-            // Visualizes the rigid body's angular velocity.
+            // Visualizes the angular velocity direction.
 
-            let angular_velocity = self.angular_velocity();
+            // We negate the result of angular_velocity() to undo its internal
+            // negation for display purposes.
 
-            renderer.render_line(center, center + angular_velocity, color::LIGHT_GRAY);
+            let angular_velocity_for_display = -self.angular_velocity();
+
+            renderer.render_line(
+                center,
+                center + angular_velocity_for_display,
+                color::LIGHT_GRAY,
+            );
         }
 
         if let Some(impulse) = &self.collision_impulse {

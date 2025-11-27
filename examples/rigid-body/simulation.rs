@@ -199,13 +199,17 @@ impl Simulation {
                         _ => capsule_intersection.contact_point,
                     };
 
-                    let r = end_position - contact_point_corrected;
+                    // For torque calculation, moment arm points FROM contact TO center
+                    let r_torque = end_position - contact_point_corrected;
+
+                    // For contact velocity, offset points FROM center TO contact
+                    let r_velocity = contact_point_corrected - end_position;
 
                     // Computes the linear velocity of the contact point in our
                     // absolute (world-space) frame of reference.
 
                     let contact_point_velocity =
-                        end_linear_velocity + new_body_state.angular_velocity().cross(r);
+                        end_linear_velocity + new_body_state.angular_velocity().cross(r_velocity);
 
                     // Calculates the amount that this velocity projects onto
                     // the collider's normal; note that a positive quantity
@@ -250,7 +254,8 @@ impl Simulation {
                                 normal,
                                 capsule_intersection.contact_point,
                                 contact_point_velocity,
-                                r,
+                                r_velocity,
+                                r_torque,
                                 material,
                             ),
                             capsule_intersection.t,
@@ -387,7 +392,9 @@ impl Simulation {
         contact_point: Vec3,
         body_position: Vec3,
     ) -> Vec3 {
-        body_velocity - angular_velocity.cross(contact_point - body_position)
+        let r = contact_point - body_position;
+
+        body_velocity + angular_velocity.cross(r)
     }
 
     fn compute_motion_tangent(

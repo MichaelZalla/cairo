@@ -294,7 +294,8 @@ pub fn resolve_rigid_body_plane_collision(
         normal,
         contact_point,
         contact_point_velocity,
-        r,
+        r, // r_velocity
+        r, // r_torque (same for rigid-body collisions)
         material,
     );
 
@@ -344,7 +345,8 @@ pub fn get_rigid_body_plane_normal_impulse(
     normal: Vec3,
     contact_point: Vec3,
     contact_point_velocity: Vec3,
-    r: Vec3,
+    r_velocity: Vec3,
+    r_torque: Vec3,
     material: &PhysicsMaterial,
 ) -> NormalImpulseData {
     // v_outgoing = -v_incoming * restitution
@@ -366,7 +368,7 @@ pub fn get_rigid_body_plane_normal_impulse(
 
     let numerator = -(1.0 + material.restitution) * contact_point_velocity.dot(normal);
 
-    let r_normal = r.as_normal();
+    let r_normal = r_velocity.as_normal();
 
     // A value of -1 indicates a rigid body moving directly into the plane; a
     // value of 1 indicates a body moving directly away from the plane; a value
@@ -391,11 +393,13 @@ pub fn get_rigid_body_plane_normal_impulse(
     // The difficulty lies in identifying which case the collision falls into,
     // in a way that actually saves us cycles on the whole.
 
+    // Use r_torque for torque calculations (FROM contact TO center)
     let change_in_angular_velocity_normalized = /* j * */
-        r.cross(normal) * state.inverse_moment_of_inertia_world_space();
+        r_torque.cross(normal) * state.inverse_moment_of_inertia_world_space();
 
+    // Use r_velocity for contact velocity calculations (FROM center TO contact)
     let change_in_angular_velocity_at_contact_point_normalized = /* j * */
-        change_in_angular_velocity_normalized.cross(r);
+        change_in_angular_velocity_normalized.cross(r_velocity);
 
     let denominator =
         state.inverse_mass + normal.dot(change_in_angular_velocity_at_contact_point_normalized);
@@ -405,7 +409,7 @@ pub fn get_rigid_body_plane_normal_impulse(
     NormalImpulseData {
         contact_point,
         contact_point_velocity,
-        r,
+        r: r_torque, // Store r_torque for use in applying torque later
         normal,
         magnitude,
     }

@@ -58,12 +58,13 @@ impl RigidBodySimulationState {
 
         let inverse_moment_of_inertia_world_space = self.inverse_moment_of_inertia_world_space();
 
-        (angular_momentum * inverse_moment_of_inertia_world_space).to_vec3()
+        -((angular_momentum * inverse_moment_of_inertia_world_space).to_vec3())
     }
 
     pub fn angular_velocity_quaternion(&self) -> Quaternion {
         let angular_velocity = self.angular_velocity();
 
+        // angular_velocity is already negated to match coordinate convention
         let spin = Quaternion::from_raw(0.0, angular_velocity);
 
         // First-order integration (assumes that velocity is constant over the timestep).
