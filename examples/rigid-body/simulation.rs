@@ -839,11 +839,14 @@ impl Simulation {
         // 1. Create a predicted state by integrating positions from new velocities
         let mut predicted_state = self.integrate_positions(state_with_new_velocities, h);
 
-        // 2. Detect and resolve collisions at those predicted positions
+        // 2. Rebuild hash grid with predicted positions for accurate collision detection
+        self.rebuild_hash_grid(&predicted_state);
+
+        // 3. Detect and resolve collisions at those predicted positions
         //    (This modifies predicted_state's velocities with impulses)
         self.apply_corrective_impulses(h, derivative, original_state, &mut predicted_state);
 
-        // 3. Copy the velocity corrections back (but NOT position changes)
+        // 4. Copy the velocity corrections back (but NOT position changes)
         for (i, body) in state_with_new_velocities.0.iter_mut().enumerate() {
             body.linear_momentum = predicted_state.0[i].linear_momentum;
             body.angular_momentum = predicted_state.0[i].angular_momentum;
