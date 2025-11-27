@@ -142,6 +142,53 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         spheres.push(sphere);
     }
 
+    // Test 4: Dropping from height
+    {
+        let center = Vec3 {
+            x: 1.0 * SPACING,
+            y: 10.0,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::CYAN;
+
+        spheres.push(sphere);
+    }
+
+    // Test 5: Dropping with X-velocity
+    {
+        let center = Vec3 {
+            x: 2.0 * SPACING,
+            y: 10.0,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::WHITE;
+        sphere.linear_momentum = vec3::RIGHT * MASS * 5.0;
+
+        spheres.push(sphere);
+    }
+
+    // Test 6: Dropping with Z-velocity
+    {
+        let center = Vec3 {
+            x: 3.0 * SPACING,
+            y: 10.0,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::DARK_GRAY;
+        sphere.linear_momentum = vec3::FORWARD * MASS * 5.0;
+
+        spheres.push(sphere);
+    }
+
     for sphere in spheres.iter_mut() {
         sphere.debug_flags |=
             RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
