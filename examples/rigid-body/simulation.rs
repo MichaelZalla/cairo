@@ -39,21 +39,12 @@ use cairo::{
     },
 };
 
-use crate::integration::system_dynamics_function;
-
-use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
-
-/// Represents a collision surface with all necessary information for collision response.
-struct CollisionSurface {
-    /// Surface normal (pointing away from the surface)
-    normal: Vec3,
-    /// Contact point in world space
-    contact_point: Vec3,
-    /// Normalized time of collision [0, 1] within the timestep
-    collision_t: f32,
-    /// Minimum distance from body center to surface (e.g., sphere radius)
-    minimum_distance: f32,
-}
+use crate::{
+    integration::system_dynamics_function,
+    plane_collider::PlaneCollider,
+    state_vector::StateVector,
+    static_collider::{CollisionSurface, StaticCollider},
+};
 
 const CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
 

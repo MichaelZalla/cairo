@@ -24,6 +24,7 @@ pub mod make_simulation;
 pub mod plane_collider;
 pub mod simulation;
 pub mod state_vector;
+pub mod static_collider;
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
