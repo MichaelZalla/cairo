@@ -167,6 +167,52 @@ impl Simulation {
         }
     }
 
+    /// Handles static contact detection and momentum adjustment after
+    /// collision.
+    fn handle_static_contact_after_collision(
+        body_derivative: &RigidBodySimulationState,
+        body_state: &mut RigidBodySimulationState,
+        collider: &PlaneCollider,
+        minimum_distance_to_plane: f32,
+        material: &PhysicsMaterial,
+    ) {
+        if let Some(contact) = Self::get_static_contact(
+            collider,
+            body_derivative,
+            body_state,
+            minimum_distance_to_plane,
+            material,
+            true, // Post-integration contact detection
+        ) {
+            // Removes the component of linear momentum pointing into the
+            // collider.
+            body_state.linear_momentum -=
+                collider.plane.normal * body_state.linear_momentum.dot(collider.plane.normal);
+
+            // Allows spinning around the surface normal, but dampens angular
+            // momentum that causes the contact point to slide.
+            if matches!(contact.kind, StaticContactKind::Resting) {
+                let normal = contact.normal;
+
+                // Decomposes angular momentum into components parallel and
+                // perpendicular to normal.
+                let angular_momentum_along_normal =
+                    normal * body_state.angular_momentum.dot(normal);
+
+                let angular_momentum_perpendicular_to_normal =
+                    body_state.angular_momentum - angular_momentum_along_normal;
+
+                // Allows spinning around normal (like a top), but damp
+                // tangential rotation.
+                body_state.angular_momentum =
+                    angular_momentum_along_normal + angular_momentum_perpendicular_to_normal * 0.95;
+            }
+
+            // Records the contact.
+            body_state.static_contacts.push(contact).unwrap();
+        }
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn handle_static_collision(
         h: f32,
@@ -369,41 +415,13 @@ impl Simulation {
 
         // Determines if the resulting body state constitutes a resting or
         // a sliding contact.
-
-        if let Some(contact) = Self::get_static_contact(
-            collider,
+        Self::handle_static_contact_after_collision(
             body_derivative,
             new_body_state,
+            collider,
             minimum_distance_to_plane,
             material,
-            true, // check_forces: true for post-integration detection
-        ) {
-            // Removes the component of linear momentum pointing into the collider.
-
-            new_body_state.linear_momentum -=
-                collider.plane.normal * new_body_state.linear_momentum.dot(collider.plane.normal);
-
-            // Allows spinning around the surface normal, but dampens angular momentum that
-            // causes the contact point to slide.
-            if matches!(contact.kind, StaticContactKind::Resting) {
-                let normal = contact.normal;
-
-                // Decomposes angular momentum into components parallel and perpendicular to normal.
-                let angular_momentum_along_normal =
-                    normal * new_body_state.angular_momentum.dot(normal);
-
-                let angular_momentum_perpendicular_to_normal =
-                    new_body_state.angular_momentum - angular_momentum_along_normal;
-
-                // Allows spinning around normal (like a top), but damp tangential rotation.
-                new_body_state.angular_momentum =
-                    angular_momentum_along_normal + angular_momentum_perpendicular_to_normal * 0.95;
-            }
-
-            // Records the contact.
-
-            new_body_state.static_contacts.push(contact).unwrap();
-        }
+        );
     }
 
     fn compute_contact_point_velocity(
