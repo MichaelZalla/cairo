@@ -45,6 +45,22 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         spheres.push(sphere);
     }
 
+    // Test 2: Spinning on Y-axis (should spin in place)
+    {
+        let center = Vec3 {
+            x: -3.5 * SPACING,
+            y: RADIUS,
+            z: 0.0, // Back in collision path with Red
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::MAGENTA;
+        sphere.angular_momentum = vec3::UP * 1.5;
+
+        spheres.push(sphere);
+    }
+
     for sphere in spheres.iter_mut() {
         sphere.debug_flags |=
             RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY

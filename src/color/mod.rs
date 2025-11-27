@@ -29,6 +29,7 @@ pub static YELLOW: Color = Color::rgb(255, 255, 0);
 pub static ORANGE: Color = Color::rgb(255, 128, 0);
 pub static GREEN: Color = Color::rgb(0, 255, 0);
 pub static BLUE: Color = Color::rgb(0, 0, 255);
+pub static MAGENTA: Color = Color::rgb(255, 0, 255);
 pub static SKY_BOX: Color = Color::rgb(102, 153, 255);
 
 impl fmt::Display for Color {
