@@ -225,7 +225,7 @@ impl Simulation {
         minimum_distance_to_plane: f32,
         material: &PhysicsMaterial,
     ) {
-        if let Some(contact) = Self::get_static_contact(
+        if let Some(contact) = Self::get_static_contact_for_plane_collider(
             collider,
             body_derivative,
             body_state,
@@ -670,22 +670,23 @@ impl Simulation {
         }
     }
 
+    /// Generic static contact detection for any surface (plane or triangle mesh).
+    #[allow(clippy::too_many_arguments)]
     fn get_static_contact(
-        collider: &PlaneCollider,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
-        minimum_distance_to_plane: f32,
+        surface_normal: Vec3,
+        signed_distance: f32,
+        minimum_distance: f32,
+        body_motion_tangent: Option<Vec3>,
+        contact_point_motion_tangent: Option<Vec3>,
         material: &PhysicsMaterial,
         check_forces: bool,
     ) -> Option<StaticContact> {
-        let normal = collider.plane.normal;
-
-        let signed_distance_to_plane = collider.plane.get_signed_distance(&new_body_state.position);
-
         // 1. Requires that the body be very close to the collider
         //    (within some threshold).
 
-        if signed_distance_to_plane > minimum_distance_to_plane + CONTACT_DISTANCE_THRESHOLD {
+        if signed_distance > minimum_distance + CONTACT_DISTANCE_THRESHOLD {
             return None;
         }
 
@@ -694,7 +695,7 @@ impl Simulation {
 
         let body_velocity = new_body_state.velocity();
 
-        let contact_point = new_body_state.position - normal * minimum_distance_to_plane;
+        let contact_point = new_body_state.position - surface_normal * minimum_distance;
 
         let contact_point_velocity = Self::compute_contact_point_velocity(
             body_velocity,
@@ -703,7 +704,7 @@ impl Simulation {
             new_body_state.position,
         );
 
-        let contact_point_speed_along_normal = contact_point_velocity.dot(normal);
+        let contact_point_speed_along_normal = contact_point_velocity.dot(surface_normal);
 
         if contact_point_speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
             return None;
@@ -713,7 +714,8 @@ impl Simulation {
         //    pulling the body away from the collider.
 
         if check_forces {
-            let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(normal);
+            let magnitude_of_acceleration_along_normal =
+                derivative.linear_momentum.dot(surface_normal);
 
             // @NOTE For a rigid body shape that is more complex than a sphere, the
             // body may be moving away from the plane, while the point of contact is
@@ -727,12 +729,6 @@ impl Simulation {
         // At this point, we can be certain that the object is resting, rolling
         // along the plane, or sliding along the plane.
 
-        let body_motion_tangent =
-            Self::compute_motion_tangent(collider.point, body_velocity, &collider.plane);
-
-        let contact_point_motion_tangent =
-            Self::compute_motion_tangent(collider.point, contact_point_velocity, &collider.plane);
-
         let angular_velocity = new_body_state.angular_velocity();
 
         let kind = Self::classify_contact_kind(
@@ -741,21 +737,64 @@ impl Simulation {
             body_motion_tangent,
             contact_point_motion_tangent,
             angular_velocity,
-            normal,
+            surface_normal,
         );
 
         let (tangent, bitangent) =
-            Self::compute_contact_basis(normal, contact_point_motion_tangent);
+            Self::compute_contact_basis(surface_normal, contact_point_motion_tangent);
 
         Some(StaticContact {
             kind,
             point: contact_point,
-            normal,
+            normal: surface_normal,
             tangent,
             bitangent,
             contact_point_velocity,
             material: *material,
         })
+    }
+
+    /// Plane-specific static contact detection.
+    fn get_static_contact_for_plane_collider(
+        collider: &PlaneCollider,
+        derivative: &RigidBodySimulationState,
+        new_body_state: &RigidBodySimulationState,
+        radius: f32,
+        material: &PhysicsMaterial,
+        check_forces: bool,
+    ) -> Option<StaticContact> {
+        let normal = collider.plane.normal;
+
+        let signed_distance_to_plane = collider.plane.get_signed_distance(&new_body_state.position);
+
+        let body_velocity = new_body_state.velocity();
+
+        let contact_point = new_body_state.position - normal * radius;
+
+        let contact_point_velocity = Self::compute_contact_point_velocity(
+            body_velocity,
+            new_body_state.angular_velocity(),
+            contact_point,
+            new_body_state.position,
+        );
+
+        let body_motion_tangent =
+            Self::compute_motion_tangent(collider.point, body_velocity, &collider.plane);
+
+        let contact_point_motion_tangent =
+            Self::compute_motion_tangent(collider.point, contact_point_velocity, &collider.plane);
+
+        Self::get_static_contact(
+            derivative,
+            new_body_state,
+            normal,
+            signed_distance_to_plane,
+            radius,
+            body_motion_tangent,
+            contact_point_motion_tangent,
+            material,
+            check_forces,
+        )
     }
 
     fn resolve_rigid_body_collisions(
@@ -1102,7 +1141,7 @@ impl Simulation {
 
             // Test against each static plane collider
             for collider in &self.static_plane_colliders {
-                if let Some(contact) = Self::get_static_contact(
+                if let Some(contact) = Self::get_static_contact_for_plane_collider(
                     collider,
                     body_state, // Use current state for derivative (unused when check_forces=false)
                     &predicted_body_state,
