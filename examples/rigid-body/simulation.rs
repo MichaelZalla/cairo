@@ -33,14 +33,15 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
-static CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
+const CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
 
 // Threshold for resting contact (both linear and contact point nearly zero)
-static RESTING_SPEED_THRESHOLD: f32 = 0.05;
+const RESTING_SPEED_THRESHOLD: f32 = 0.05;
 
 // Rolling detection: contact velocity should be small relative to body velocity
-static ROLLING_VELOCITY_RATIO_THRESHOLD: f32 = 0.1; // Contact velocity < 10% of body velocity
-static ROLLING_MIN_ABSOLUTE_THRESHOLD: f32 = 0.2; // Absolute minimum threshold at low speeds
+const ROLLING_VELOCITY_RATIO_THRESHOLD: f32 = 0.1; // Contact velocity < 10% of body velocity
+const BODY_VELOCITY_ROLLING_THRESHOLD: f32 = 0.01; // Minimum body velocity for ratio-based rolling check
+const CONTACT_POINT_VELOCITY_ROLLING_THRESHOLD: f32 = 0.2; // Absolute contact point velocity threshold at low body speeds
 
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
@@ -421,6 +422,17 @@ impl Simulation {
         angular_velocity: Vec3,
         normal: Vec3,
     ) -> StaticContactKind {
+        // Constants for motion/spin significance thresholds
+        const MIN_VELOCITY_FOR_AXIS_CHECK: f32 = 0.01;
+
+        const MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK: f32 = 0.01;
+
+        const MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 =
+            MIN_VELOCITY_FOR_AXIS_CHECK * MIN_VELOCITY_FOR_AXIS_CHECK;
+
+        const MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 =
+            MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK * MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK;
+
         let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
             body_velocity.dot(tangent)
         } else {
@@ -442,11 +454,11 @@ impl Simulation {
             && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
 
         // Check if contact velocity is small relative to body velocity (rolling)
-        let velocity_ratio = if body_speed_along_tangent > 0.01 {
+        let velocity_ratio = if body_speed_along_tangent > BODY_VELOCITY_ROLLING_THRESHOLD {
             contact_point_speed_along_tangent / body_speed_along_tangent
         } else {
-            // At very low speeds, just use absolute threshold
-            if contact_point_speed_along_tangent < ROLLING_MIN_ABSOLUTE_THRESHOLD {
+            // At very low speeds, avoid division by near-zero; use absolute threshold instead
+            if contact_point_speed_along_tangent < CONTACT_POINT_VELOCITY_ROLLING_THRESHOLD {
                 0.0 // Treat as rolling
             } else {
                 1.0 // Treat as sliding
@@ -459,9 +471,6 @@ impl Simulation {
         // both (1) the surface normal, and (2) the direction of motion.
 
         let has_correct_spin_axis = {
-            static MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 = 0.01 * 0.01;
-            static MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 = 0.01 * 0.01;
-
             let has_significant_motion =
                 body_velocity.mag_squared() > MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED;
 
