@@ -1086,6 +1086,12 @@ impl Simulation {
         for (body_index, body_state) in state.0.iter().enumerate() {
             let body = &self.rigid_bodies[body_index];
 
+            // Get radius (minimum distance to surface)
+            let radius = match body.kind {
+                RigidBodyKind::Sphere(r) => r,
+                _ => continue, // Skip unsupported body types
+            };
+
             // Extrapolate position forward by timestep h
             let predicted_position = body_state.position + body_state.velocity() * h;
 
@@ -1096,16 +1102,11 @@ impl Simulation {
 
             // Test against each static plane collider
             for collider in &self.static_plane_colliders {
-                let minimum_distance_to_plane = match body.kind {
-                    RigidBodyKind::Sphere(radius) => radius,
-                    _ => continue, // Skip unsupported body types
-                };
-
                 if let Some(contact) = Self::get_static_contact(
                     collider,
                     body_state, // Use current state for derivative (unused when check_forces=false)
                     &predicted_body_state,
-                    minimum_distance_to_plane,
+                    radius,
                     &RIGID_BODY_STATIC_PLANE_MATERIAL,
                     false, // check_forces: false for prediction
                 ) {
