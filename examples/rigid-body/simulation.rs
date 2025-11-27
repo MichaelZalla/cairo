@@ -749,6 +749,8 @@ impl Simulation {
     }
 
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
+        renderer.render_axes(None);
+
         // Render dynamic rigid bodies (spheres).
 
         for sphere in &self.rigid_bodies {
