@@ -158,17 +158,17 @@ impl RigidBodySimulationState {
                         // Applies force of dynamic friction, acting on the moving
                         // point of contact.
 
-                        let magnitude = (external_force_magnitude_along_normal
+                        let normal_force_magnitude = (external_force_magnitude_along_normal
                             * contact.material.dynamic_friction)
                             .min(external_force_magnitude_along_tangent);
 
-                        let force_at_contact_point = -contact.tangent * magnitude;
+                        let friction_force = -contact.tangent * normal_force_magnitude;
 
-                        remaining_total_acceleration += force_at_contact_point;
+                        remaining_total_acceleration += friction_force;
 
                         let r = contact.point - self.position;
 
-                        total_torque += r.cross(force_at_contact_point);
+                        total_torque += r.cross(friction_force);
                     }
                     StaticContactKind::Rolling(_coefficient_of_rolling_resistance) => {
                         // DISABLED: Rolling resistance
