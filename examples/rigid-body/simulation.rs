@@ -12,8 +12,8 @@ use cairo::{
         material::PhysicsMaterial,
         simulation::{
             collision_response::{
-                get_rigid_body_plane_friction_impulse, get_rigid_body_plane_normal_impulse,
-                resolve_rigid_body_collision,
+                NormalImpulseData, get_rigid_body_plane_friction_impulse,
+                get_rigid_body_plane_normal_impulse, resolve_rigid_body_collision,
             },
             contact::{StaticContact, StaticContactKind, StaticContactList},
             rigid_body::{
@@ -26,7 +26,10 @@ use cairo::{
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::{vec3, vec3::Vec3, vec4::Vec4},
+    vec::{
+        vec3::{self, Vec3},
+        vec4::Vec4,
+    },
 };
 
 use crate::integration::system_dynamics_function;
@@ -213,46 +216,29 @@ impl Simulation {
         }
     }
 
+    /// Calculates collision response data if a collision is detected.
+    ///
+    /// Returns `Some((normal_impulse_data, collision_t))` if a collision occurred,
+    /// where `collision_t` is the normalized time of collision within the timestep.
+    /// Returns `None` if no collision occurred or if the contact point is not
+    /// moving into the plane.
     #[allow(clippy::too_many_arguments)]
-    fn handle_static_collision(
+    fn calculate_collision_response(
         h: f32,
         body_derivative: &RigidBodySimulationState,
         current_body_state: &RigidBodySimulationState,
         new_body_state: &mut RigidBodySimulationState,
         collider: &PlaneCollider,
+        minimum_distance_to_plane: f32,
         material: &PhysicsMaterial,
-    ) {
+    ) -> Option<(NormalImpulseData, f32)> {
         let start_position = current_body_state.position;
-        let start_linear_velocity = current_body_state.velocity();
-
         let end_position = new_body_state.position;
         let end_linear_velocity = new_body_state.velocity();
-
-        // Tests whether any elastic or sliding collision may have occurred.
-
         let normal = collider.plane.normal;
-
-        let body_speed_along_normal = end_linear_velocity.dot(normal);
-
-        if body_speed_along_normal > RESTING_SPEED_THRESHOLD {
-            // The rigid body is moving away from the plane, allow it to
-            // continue on that trajectory.
-
-            // @NOTE This may only hold true for spheres!
-
-            return;
-        }
-
-        // Determines a minimum distance that this body must maintain.
-
-        let minimum_distance_to_plane = match new_body_state.kind {
-            RigidBodyKind::Sphere(radius) => radius,
-            _ => panic!(),
-        };
 
         // Tests for a body-collider intersection, according to the kind of
         // rigid body.
-
         let intersection = match new_body_state.kind {
             RigidBodyKind::Sphere(radius) => {
                 intersect_capsule_plane(start_position, end_position, radius, &collider.plane)
@@ -260,12 +246,11 @@ impl Simulation {
             _ => panic!("Unsupported rigid body kind!"),
         };
 
-        let normal_impulse_data_with_t = match intersection {
+        match intersection {
             Some(capsule_intersection) => {
                 if capsule_intersection.t > 1.0 {
                     // A t-value greater than 1 indicates a future collision, which
                     // we'll ignore for this tick.
-
                     None
                 } else {
                     // Computes the moment arm from the rigid body's
@@ -289,20 +274,17 @@ impl Simulation {
 
                     // Computes the linear velocity of the contact point in our
                     // absolute (world-space) frame of reference.
-
                     let contact_point_velocity =
                         end_linear_velocity + new_body_state.angular_velocity().cross(r_velocity);
 
                     // Calculates the amount that this velocity projects onto
                     // the collider's normal; note that a positive quantity
                     // indicates a velocity that moves out and away from the plane.
-
                     let incoming_contact_point_speed_normal_to_plane =
                         contact_point_velocity.dot(normal);
 
                     // Tests that the resulting velocity projects into the
                     // plane, i.e., the point is moving into the plane.
-
                     if incoming_contact_point_speed_normal_to_plane < -RESTING_SPEED_THRESHOLD {
                         // At this point, we know that the rigid body intersects
                         // the collider, and that its point-of-contact is moving
@@ -320,7 +302,6 @@ impl Simulation {
                         // Calculates the magnitude of the normal impulse for
                         // this collision, based on the contact point's
                         // velocity, the plane normal, and the physics material.
-
                         Some((
                             get_rigid_body_plane_normal_impulse(
                                 new_body_state,
@@ -339,7 +320,54 @@ impl Simulation {
                 }
             }
             None => None,
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn handle_static_collision(
+        h: f32,
+        body_derivative: &RigidBodySimulationState,
+        current_body_state: &RigidBodySimulationState,
+        new_body_state: &mut RigidBodySimulationState,
+        collider: &PlaneCollider,
+        material: &PhysicsMaterial,
+    ) {
+        let start_position = current_body_state.position;
+        let start_linear_velocity = current_body_state.velocity();
+
+        let end_linear_velocity = new_body_state.velocity();
+
+        // Tests whether any elastic or sliding collision may have occurred.
+
+        let normal = collider.plane.normal;
+
+        let body_speed_along_normal = end_linear_velocity.dot(normal);
+
+        if body_speed_along_normal > RESTING_SPEED_THRESHOLD {
+            // The rigid body is moving away from the plane, allow it to
+            // continue on that trajectory.
+
+            // @NOTE This may only hold true for spheres!
+
+            return;
+        }
+
+        // Determines a minimum distance that this body must maintain.
+        let minimum_distance_to_plane = match new_body_state.kind {
+            RigidBodyKind::Sphere(radius) => radius,
+            _ => panic!(),
         };
+
+        // Calculate collision response data (if a collision occurred).
+        let normal_impulse_data_with_t = Self::calculate_collision_response(
+            h,
+            body_derivative,
+            current_body_state,
+            new_body_state,
+            collider,
+            minimum_distance_to_plane,
+            material,
+        );
 
         // Applies normal impulse to new state.
 
