@@ -187,8 +187,18 @@ impl Simulation {
                 } else {
                     // Computes the moment arm from the rigid body's
                     // center-of-mass to the colliding contact point.
+                    //
+                    // For sphere-plane contacts, recalculate contact point from end position
+                    // to avoid spurious offset from capsule intersection test
+                    let contact_point_corrected = match new_body_state.kind {
+                        RigidBodyKind::Sphere(_radius) => {
+                            // Contact point is directly below sphere center along normal
+                            end_position - normal * minimum_distance_to_plane
+                        }
+                        _ => contact_point,
+                    };
 
-                    let r = end_position - contact_point;
+                    let r = end_position - contact_point_corrected;
 
                     // Computes the linear velocity of the contact point in our
                     // absolute (world-space) frame of reference.

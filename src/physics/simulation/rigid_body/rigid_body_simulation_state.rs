@@ -171,7 +171,17 @@ impl RigidBodySimulationState {
 
                         remaining_total_acceleration += friction_force;
 
-                        let r = contact.point - self.position;
+                        // Recalculates the contact point using the current
+                        // position, to avoid spurious offset from using
+                        // predicted contact point.
+                        let contact_point_corrected = self.position
+                            - contact.normal
+                                * match self.kind {
+                                    RigidBodyKind::Sphere(radius) => radius,
+                                    _ => panic!("Unsupported body kind"),
+                                };
+
+                        let r = contact_point_corrected - self.position;
 
                         // Torque from friction
                         let torque_from_friction = r.cross(friction_force);
