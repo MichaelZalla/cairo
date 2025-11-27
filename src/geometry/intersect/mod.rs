@@ -16,6 +16,38 @@ use super::{
     },
 };
 
+#[derive(Debug, Copy, Clone)]
+pub struct RaySphereIntersection {
+    /// Distance along the ray direction where intersection occurs.
+    /// This is the parametric t value: intersection_point = ray.origin + ray.direction * distance
+    pub distance: f32,
+
+    /// The point in world space where the intersection occurs.
+    pub intersection_point: Vec3,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct ContinuousCollision {
+    /// Distance along the velocity direction vector where collision occurs.
+    /// This is NOT a normalized [0,1] parameter - it's in the same units as the velocity vector.
+    /// To convert to a time parameter, divide by velocity magnitude: t_seconds = distance / velocity_magnitude
+    /// To convert to a timestep fraction, divide by velocity magnitude AND timestep: t_fraction = distance / (velocity_magnitude * timestep)
+    pub distance: f32,
+
+    /// The point in world space where the collision occurs.
+    pub contact_point: Vec3,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct CapsulePlaneIntersection {
+    /// Parametric t value [0,1] along the capsule's movement from start to end position.
+    /// 0.0 = collision at start position, 1.0 = collision at end position
+    pub t: f32,
+
+    /// The point on the capsule's surface where it contacts the plane.
+    pub contact_point: Vec3,
+}
+
 pub fn test_aabb_aabb(a: &AABB, b: &AABB) -> bool {
     let a_min = Vec3A { v: a.min };
     let a_max = Vec3A { v: a.max };
@@ -134,12 +166,14 @@ pub fn intersect_line_segment_triangle(
 
 pub fn intersect_capsule_triangle(capsule: &mut Capsule, triangle: &Triangle) -> Option<Vec3> {
     // Use capsule-plane intersection to find where the capsule hits the triangle's plane
-    if let Some((t, contact_point)) = intersect_capsule_plane(
+    if let Some(intersection) = intersect_capsule_plane(
         capsule.segment.start,
         capsule.segment.end,
         capsule.radius,
         &triangle.plane,
     ) {
+        let t = intersection.t;
+        let contact_point = intersection.contact_point;
         // Check if the contact point is inside the triangle using barycentric coordinates
 
         // Compute the barycentric coordinate U; exit if outside the [0..1] range.
@@ -188,22 +222,27 @@ pub fn test_moving_spheres(a: Sphere, b: Sphere, velocity: Vec3, velocity_magnit
     intersect_moving_spheres(a, b, velocity, velocity_magnitude).is_some()
 }
 
+/// Tests for collision between two spheres where sphere A is moving with the given velocity.
 pub fn intersect_moving_spheres(
     a: Sphere,
     mut b: Sphere,
     velocity: Vec3,
     velocity_magnitude: f32,
-) -> Option<(f32, Vec3)> {
+) -> Option<ContinuousCollision> {
     // Expands the radius of sphere B by that of sphere A.
-
+    // This allows us to treat sphere A as a point (ray casting optimization).
     b.radius += a.radius;
 
     let ray = Ray::new(a.center, velocity.as_normal());
 
     match intersect_ray_sphere(&ray, &b) {
-        Some((t, contact_point)) => {
-            if t <= velocity_magnitude {
-                Some((t, contact_point))
+        Some(intersection) => {
+            // Only return collision if it occurs within the movement distance
+            if intersection.distance <= velocity_magnitude {
+                Some(ContinuousCollision {
+                    distance: intersection.distance,
+                    contact_point: intersection.intersection_point,
+                })
             } else {
                 None
             }
@@ -212,12 +251,15 @@ pub fn intersect_moving_spheres(
     }
 }
 
+/// Tests for intersection between a moving capsule and a plane.
+///
+/// A capsule is a sphere swept along a line segment from `start` to `end`.
 pub fn intersect_capsule_plane(
     start: Vec3,
     end: Vec3,
     radius: f32,
     plane: &Plane,
-) -> Option<(f32, Vec3)> {
+) -> Option<CapsulePlaneIntersection> {
     let n = plane.normal;
 
     let signed_distance = n.dot(start) - plane.d;
@@ -245,28 +287,28 @@ pub fn intersect_capsule_plane(
     //   t = (+/-r - distance)/(n•v)
 
     if signed_distance.abs() <= radius {
-        // The sphere is already overlapping the plane; set the
-        // time-of-intersection to zero, and the point-of-intersection to the
-        // deepest point on the sphere.
+        // The capsule is already overlapping the plane at start position;
+        // set t to zero and contact point to the deepest penetration point.
 
-        Some((t, start - plane.normal * radius))
+        Some(CapsulePlaneIntersection {
+            t,
+            contact_point: start - plane.normal * radius,
+        })
     } else {
-        // Checks if a collision occurred between start and end positions.
+        // Checks if a collision occurs between start and end positions.
 
         let v = end - start;
 
         let n_dot_v = n.dot(v);
 
         if n_dot_v * signed_distance >= 0.0 {
-            // Sphere is moving parallel or away from the plane, so no
-            // collision.
-
+            // Capsule is moving parallel or away from the plane, so no collision.
             None
         } else {
-            // Sphere is moving towards the plane.
+            // Capsule is moving towards the plane.
 
-            // Chooses a plane offset, based on which side of the plane the
-            // sphere is initially positioned at.
+            // Chooses a plane offset based on which side of the plane the
+            // capsule is initially positioned at.
             let r = if signed_distance > 0.0 {
                 radius
             } else {
@@ -275,14 +317,14 @@ pub fn intersect_capsule_plane(
 
             t = (r - signed_distance) / n_dot_v;
 
-            // Computes the point on the line segment (CD) at which the
-            // collision occurs.
-
+            // Computes the point on the line segment where collision occurs.
             let segment_point = start + v * t;
 
-            // Offsets the segment intersection point, towards the plane, by `radius` units.
+            // Offsets the segment intersection point towards the plane by radius units
+            // to get the actual contact point on the capsule's surface.
+            let contact_point = segment_point - n * r;
 
-            Some((t, segment_point - n * r))
+            Some(CapsulePlaneIntersection { t, contact_point })
         }
     }
 }
@@ -343,7 +385,8 @@ pub fn intersect_ray_triangle(
     }
 }
 
-pub fn intersect_ray_sphere(ray: &Ray, sphere: &Sphere) -> Option<(f32, Vec3)> {
+/// Tests for intersection between a ray and a sphere.
+pub fn intersect_ray_sphere(ray: &Ray, sphere: &Sphere) -> Option<RaySphereIntersection> {
     let sphere_to_ray = ray.origin - sphere.center;
 
     // Ray originates outside of sphere when c > 0.
@@ -372,7 +415,12 @@ pub fn intersect_ray_sphere(ray: &Ray, sphere: &Sphere) -> Option<(f32, Vec3)> {
     // Clamp to 0 to return the exit point.
     distance = distance.max(0.0);
 
-    Some((distance, ray.origin + ray.direction * distance))
+    let intersection_point = ray.origin + ray.direction * distance;
+
+    Some(RaySphereIntersection {
+        distance,
+        intersection_point,
+    })
 }
 
 pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> f32 {

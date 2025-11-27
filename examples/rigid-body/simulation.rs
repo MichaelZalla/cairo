@@ -178,8 +178,8 @@ impl Simulation {
         };
 
         let normal_impulse_data_with_t = match intersection {
-            Some((t, contact_point)) => {
-                if t > 1.0 {
+            Some(capsule_intersection) => {
+                if capsule_intersection.t > 1.0 {
                     // A t-value greater than 1 indicates a future collision, which
                     // we'll ignore for this tick.
 
@@ -195,7 +195,7 @@ impl Simulation {
                             // Contact point is directly below sphere center along normal
                             end_position - normal * minimum_distance_to_plane
                         }
-                        _ => contact_point,
+                        _ => capsule_intersection.contact_point,
                     };
 
                     let r = end_position - contact_point_corrected;
@@ -225,7 +225,7 @@ impl Simulation {
                         // Removes any linear momentum gained while colliding.
 
                         {
-                            let time_before_collision = h * t;
+                            let time_before_collision = h * capsule_intersection.t;
 
                             let time_after_collision = h - time_before_collision;
 
@@ -247,12 +247,12 @@ impl Simulation {
                             get_rigid_body_plane_normal_impulse(
                                 new_body_state,
                                 normal,
-                                contact_point,
+                                capsule_intersection.contact_point,
                                 contact_point_velocity,
                                 r,
                                 material,
                             ),
-                            t,
+                            capsule_intersection.t,
                         ))
                     } else {
                         None
@@ -650,7 +650,7 @@ impl Simulation {
         };
 
         match intersection {
-            Some((_t, contact_point)) => {
+            Some(collision) => {
                 // Compute and apply the collision response.
 
                 let mut s1_state_cloned = new_state.0[a];
@@ -659,7 +659,7 @@ impl Simulation {
                 resolve_rigid_body_collision(
                     &mut s1_state_cloned,
                     &mut s2_state_cloned,
-                    contact_point,
+                    collision.contact_point,
                     material,
                 );
 
