@@ -61,6 +61,87 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         spheres.push(sphere);
     }
 
+    // Test 3a: Rolling toward viewer (Z-)
+    {
+        let center = Vec3 {
+            x: -1.5 * SPACING,
+            y: RADIUS,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::BLUE;
+        sphere.angular_momentum = vec3::RIGHT * 1.5;
+
+        // Rolling toward viewer: angular momentum +X → linear velocity -Z
+        // ω = -3.75 (after negation), v = (0, 0, -3.75)
+        sphere.linear_momentum = vec3::FORWARD * MASS * -3.75;
+
+        spheres.push(sphere);
+    }
+
+    // Test 3b: Rolling away from viewer (Z+)
+    {
+        let center = Vec3 {
+            x: -0.5 * SPACING,
+            y: RADIUS,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::GREEN;
+        sphere.angular_momentum = -vec3::RIGHT * 1.5;
+
+        // Rolling away from viewer: angular momentum -X → linear velocity +Z
+        // ω = +3.75 (after negation of -1.5), v = (0, 0, +3.75)
+        sphere.linear_momentum = vec3::FORWARD * MASS * 3.75;
+
+        spheres.push(sphere);
+    }
+
+    // Test 3c: Rolling to the right (X+)
+    // Rotate Blue's setup: X→Z, Z→X, then negate both to get +X motion
+    {
+        let center = Vec3 {
+            x: 0.5 * SPACING,
+            y: RADIUS,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::RED;
+        // Rotate Blue 90° CCW: X→Z, Z→-X
+        // Blue: L = +X, v = -Z
+        // Red:  L = +Z, v = +X
+        sphere.angular_momentum = vec3::FORWARD * 1.5;
+        sphere.linear_momentum = vec3::RIGHT * MASS * 3.75;
+
+        spheres.push(sphere);
+    }
+
+    // Test 3d: Rolling to the left (X-)
+    // Rotate Green 90° CCW: X→Z, Z→-X
+    {
+        let center = Vec3 {
+            x: 1.5 * SPACING,
+            y: RADIUS,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = color::YELLOW;
+        // Green: L = -X, v = +Z
+        // Yellow: L = -Z, v = -X
+        sphere.angular_momentum = -vec3::FORWARD * 1.5;
+        sphere.linear_momentum = -vec3::RIGHT * MASS * 3.75;
+
+        spheres.push(sphere);
+    }
+
     for sphere in spheres.iter_mut() {
         sphere.debug_flags |=
             RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
