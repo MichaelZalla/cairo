@@ -556,11 +556,13 @@ impl Simulation {
         material: &PhysicsMaterial,
     ) {
         for current_body_index in 0..self.rigid_bodies.len() {
-            let body = &new_state.0[current_body_index];
-
             let (strategy, scale) = (self.hash_grid.strategy, self.hash_grid.scale);
 
-            let body_coordinate = GridSpaceCoordinate::from((body, strategy, scale));
+            let body_coordinate = {
+                let body = &new_state.0[current_body_index];
+
+                GridSpaceCoordinate::from((body, strategy, scale))
+            };
 
             static NEIGHBORS_UP_FORWARD_RIGHT: [(isize, isize, isize); 14] = [
                 // Center
