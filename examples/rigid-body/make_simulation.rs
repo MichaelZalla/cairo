@@ -1,6 +1,14 @@
+use std::rc::Rc;
+
 use cairo::{
     color::{self, Color},
-    geometry::accelerator::hash_grid::{HashGrid, HashGridInsertionStrategy},
+    geometry::accelerator::{
+        hash_grid::{HashGrid, HashGridInsertionStrategy},
+        static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
+        static_triangle_tlas::StaticTriangleTLAS,
+    },
+    matrix::Mat4,
+    mesh::primitive::plane,
     physics::simulation::{
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
         rigid_body::{
@@ -296,10 +304,29 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         PlaneCollider::new(Vec3::default(), vec3::UP), // Flat ground at origin, facing up
     ];
 
+    // Create a triangle mesh ground with BVH
+    // Step 1: Create a flat mesh
+    let mut ground_mesh = plane::generate(100.0, 100.0, 10, 10);
+
+    // Step 2: Build and store the BVH on the mesh itself
+    let ground_bvh = Rc::new(StaticTriangleBVH::new(&ground_mesh));
+
+    ground_mesh.collider = Some(ground_bvh.clone());
+
+    // Step 3: Use the StaticTriangleBVH to instantiate a StaticTriangleBVHInstance
+    let identity = Mat4::identity();
+
+    let ground_bvh_instance = StaticTriangleBVHInstance::new(&ground_bvh, identity, identity);
+
+    // Create TLAS with the ground mesh BVH instance
+    let ground_tlas = StaticTriangleTLAS::new(vec![ground_bvh_instance]);
+
     Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
+        ground_mesh,
+        ground_tlas,
         hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), RADIUS * 2.0),
         visualize_hash_grid: false,
         tick_count: 0,

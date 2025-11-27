@@ -3,11 +3,15 @@ use std::f32::consts::PI;
 use cairo::{
     color,
     geometry::{
-        accelerator::hash_grid::{GridSpaceCoordinate, HashGrid},
+        accelerator::{
+            hash_grid::{GridSpaceCoordinate, HashGrid},
+            static_triangle_tlas::StaticTriangleTLAS,
+        },
         intersect::{intersect_capsule_plane, intersect_moving_spheres},
         primitives::sphere::Sphere,
     },
     matrix::Mat4,
+    mesh::Mesh,
     physics::{
         material::PhysicsMaterial,
         simulation::{
@@ -90,6 +94,8 @@ pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
     pub static_plane_colliders: Vec<PlaneCollider>,
+    pub ground_mesh: Mesh,
+    pub ground_tlas: StaticTriangleTLAS,
     pub hash_grid: HashGrid,
     pub visualize_hash_grid: bool,
     pub tick_count: u32,
@@ -970,6 +976,14 @@ impl Simulation {
         // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
             Self::render_static_plane_collider(collider, renderer);
+        }
+
+        // Render the ground mesh
+        renderer.render_entity(&Mat4::identity(), &self.ground_mesh, &None);
+
+        // Visualize the ground mesh BVH.
+        if let Some(collider) = self.ground_mesh.collider.as_ref() {
+            renderer.render_bvh(collider, 2);
         }
     }
 
