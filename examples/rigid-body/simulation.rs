@@ -109,8 +109,6 @@ impl Simulation {
     ) {
         for (collider_index, collider) in self.static_plane_colliders.iter().enumerate() {
             for body_index in 0..self.rigid_bodies.len() {
-                let body = &mut self.rigid_bodies[body_index];
-
                 let body_derivative = &derivative.0[0];
                 let current_body_state = &current_state.0[body_index];
                 let new_body_state = &mut new_state.0[body_index];
@@ -123,7 +121,6 @@ impl Simulation {
 
                 Self::handle_static_collision(
                     h,
-                    body,
                     body_derivative,
                     current_body_state,
                     new_body_state,
@@ -137,7 +134,6 @@ impl Simulation {
     #[allow(clippy::too_many_arguments)]
     fn handle_static_collision(
         h: f32,
-        body: &mut RigidBody,
         body_derivative: &RigidBodySimulationState,
         current_body_state: &RigidBodySimulationState,
         new_body_state: &mut RigidBodySimulationState,
@@ -167,7 +163,7 @@ impl Simulation {
 
         // Determines a minimum distance that this body must maintain.
 
-        let minimum_distance_to_plane = match body.kind {
+        let minimum_distance_to_plane = match new_body_state.kind {
             RigidBodyKind::Sphere(radius) => radius,
             _ => panic!(),
         };
@@ -175,7 +171,7 @@ impl Simulation {
         // Tests for a body-collider intersection, according to the kind of
         // rigid body.
 
-        let intersection = match body.kind {
+        let intersection = match new_body_state.kind {
             RigidBodyKind::Sphere(radius) => {
                 intersect_capsule_plane(start_position, end_position, radius, &collider.plane)
             }
