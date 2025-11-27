@@ -193,6 +193,7 @@ fn quaternion_to_mat4(s: f32, x: f32, y: f32, z: f32) -> Mat4 {
     let z_z = z * z;
     let (s_x, s_y, s_z) = (s * x, s * y, s * z);
 
+    // Right-handed quaternion to rotation matrix (row-major ordering)
     Mat4::new_from_elements([
         [
             1.0 - 2.0 * y_y - 2.0 * z_z,
