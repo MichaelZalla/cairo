@@ -200,7 +200,7 @@ impl Simulation {
     }
 
     /// Corrects penetration by pushing the body out to maintain minimum distance.
-    fn correct_penetration(
+    fn correct_static_plane_penetration(
         body_state: &mut RigidBodySimulationState,
         collider: &PlaneCollider,
         minimum_distance_to_plane: f32,
@@ -517,7 +517,7 @@ impl Simulation {
 
         // If necessary, fixes up the body's position to maintain its minimum
         // distance from the collider.
-        Self::correct_penetration(new_body_state, collider, minimum_distance_to_plane);
+        Self::correct_static_plane_penetration(new_body_state, collider, minimum_distance_to_plane);
 
         // Determines if the resulting body state constitutes a resting or
         // a sliding contact.
