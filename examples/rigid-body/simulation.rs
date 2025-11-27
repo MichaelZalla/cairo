@@ -218,7 +218,7 @@ impl Simulation {
 
     /// Handles static contact detection and momentum adjustment after
     /// collision.
-    fn handle_static_contact_after_collision(
+    fn handle_static_contact_after_plane_collision(
         body_derivative: &RigidBodySimulationState,
         body_state: &mut RigidBodySimulationState,
         collider: &PlaneCollider,
@@ -521,7 +521,7 @@ impl Simulation {
 
         // Determines if the resulting body state constitutes a resting or
         // a sliding contact.
-        Self::handle_static_contact_after_collision(
+        Self::handle_static_contact_after_plane_collision(
             body_derivative,
             new_body_state,
             collider,
