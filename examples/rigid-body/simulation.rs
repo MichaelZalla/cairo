@@ -137,7 +137,7 @@ impl Simulation {
         self.apply_state_vector(&final_state);
     }
 
-    fn resolve_static_collisions(
+    fn resolve_static_plane_collisions(
         &mut self,
         h: f32,
         derivative: &StateVector<RigidBodySimulationState>,
@@ -157,7 +157,7 @@ impl Simulation {
                     new_body_state.static_contacts.clear();
                 }
 
-                Self::handle_static_collision(
+                Self::handle_static_plane_collision(
                     h,
                     body_derivative,
                     current_body_state,
@@ -434,7 +434,7 @@ impl Simulation {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn handle_static_collision(
+    fn handle_static_plane_collision(
         h: f32,
         body_derivative: &RigidBodySimulationState,
         current_body_state: &RigidBodySimulationState,
@@ -1012,7 +1012,7 @@ impl Simulation {
     ) {
         // Applies impulses based on actual collisions at final positions.
 
-        self.resolve_static_collisions(
+        self.resolve_static_plane_collisions(
             h,
             derivative,
             current_state,
