@@ -380,16 +380,16 @@ impl RigidBody {
             for contact in &self.static_contacts {
                 let start = contact.point;
 
-                // Contact normal
-                renderer.render_line(
-                    start,
-                    start + contact.normal,
-                    if let StaticContactKind::Resting = contact.kind {
-                        color::WHITE
-                    } else {
-                        color::BLUE
-                    },
-                );
+                // // Contact normal
+                // renderer.render_line(
+                //     start,
+                //     start + contact.normal,
+                //     if let StaticContactKind::Resting = contact.kind {
+                //         color::WHITE
+                //     } else {
+                //         color::BLUE
+                //     },
+                // );
 
                 // Contact point velocity
                 renderer.render_line(start, start + contact.contact_point_velocity, color::ORANGE);
@@ -405,16 +405,30 @@ impl RigidBody {
                     },
                 );
 
-                // Contact point velocity (bitangent)
-                renderer.render_line(
-                    start,
-                    start + contact.bitangent,
-                    if let StaticContactKind::Resting = contact.kind {
-                        color::WHITE
-                    } else {
-                        color::GREEN
-                    },
-                );
+                // // Contact point velocity (bitangent)
+                // renderer.render_line(
+                //     start,
+                //     start + contact.bitangent,
+                //     if let StaticContactKind::Resting = contact.kind {
+                //         color::WHITE
+                //     } else {
+                //         color::GREEN
+                //     },
+                // );
+
+                let mut transform = Transform3D::default();
+
+                transform.set_translation(contact.point);
+                transform.set_scale(vec3::ONES * 0.25);
+                transform.set_rotation(Quaternion::new(vec3::RIGHT, PI / 2.0));
+
+                let (empty_kind, empty_color) = match contact.kind {
+                    StaticContactKind::Resting => (EmptyDisplayKind::Circle(8), color::RED),
+                    StaticContactKind::Sliding => (EmptyDisplayKind::Circle(8), color::GREEN),
+                    StaticContactKind::Rolling(_) => (EmptyDisplayKind::Circle(8), color::BLUE),
+                };
+
+                renderer.render_empty(transform.mat(), empty_kind, false, Some(empty_color));
             }
         }
     }

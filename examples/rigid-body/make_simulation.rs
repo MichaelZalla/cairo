@@ -1,5 +1,5 @@
 use cairo::{
-    color,
+    color::{self, Color},
     geometry::accelerator::hash_grid::{HashGrid, HashGridInsertionStrategy},
     physics::simulation::{
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
@@ -189,15 +189,89 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         spheres.push(sphere);
     }
 
+    // Test 7: Diagonal rolling (X+/Z+, northeast direction)
+    {
+        let center = Vec3 {
+            x: 2.5 * SPACING,
+            y: RADIUS,
+            z: -2.0 * SPACING,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = Color::rgb(255, 165, 0); // Orange-ish (distinct from ORANGE)
+
+        // For diagonal rolling at 45°: combine angular momentum components
+        // Angular momentum should be perpendicular to motion direction
+        // Motion: +X +Z, so angular momentum: -X +Z (rotated 90° CCW in XZ plane)
+        let diagonal_angular = (vec3::FORWARD - vec3::RIGHT) * 1.5;
+        sphere.angular_momentum = diagonal_angular;
+
+        // Linear velocity matches rolling constraint: v = ω × r
+        let diagonal_velocity = (vec3::RIGHT + vec3::FORWARD).as_normal() * 3.75;
+        sphere.linear_momentum = diagonal_velocity * MASS;
+
+        spheres.push(sphere);
+    }
+
+    // Test 8: Dropping with diagonal velocity (X+/Z+)
+    {
+        let center = Vec3 {
+            x: -2.0 * SPACING,
+            y: 15.0,
+            z: -2.0 * SPACING,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = Color::rgb(255, 192, 203); // Pink
+
+        // Diagonal horizontal velocity
+        let diagonal_velocity = (vec3::RIGHT + vec3::FORWARD).as_normal() * 5.0;
+        sphere.linear_momentum = diagonal_velocity * MASS;
+
+        spheres.push(sphere);
+    }
+
+    // Test 9: High drop test
+    {
+        let center = Vec3 {
+            x: -3.0 * SPACING,
+            y: 30.0,
+            z: -2.0 * SPACING,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = Color::rgb(128, 0, 128); // Purple
+
+        spheres.push(sphere);
+    }
+
+    // Test 10: Very high drop test
+    {
+        let center = Vec3 {
+            x: -4.0 * SPACING,
+            y: 50.0,
+            z: -2.0 * SPACING,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = Color::rgb(165, 42, 42); // Brown
+
+        spheres.push(sphere);
+    }
+
     for sphere in spheres.iter_mut() {
-        sphere.debug_flags |=
-            RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
+        sphere.debug_flags |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
+        | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
         // | RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT
-        // | RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT_VELOCITY
+        // RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT_VELOCITY
         // | RigidBodyDebugFlags::DRAW_COLLISION_FRICTION_IMPULSE
         // | RigidBodyDebugFlags::DRAW_COLLISION_NORMAL_IMPULSE
         // | RigidBodyDebugFlags::DRAW_COLLISION_TANGENT
-        // | RigidBodyDebugFlags::DRAW_STATIC_CONTACT
+        | RigidBodyDebugFlags::DRAW_STATIC_CONTACT
     }
 
     // Ground (collider) plane - single flat plane at y=0.
