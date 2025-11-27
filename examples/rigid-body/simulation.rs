@@ -7,8 +7,11 @@ use cairo::{
             hash_grid::{GridSpaceCoordinate, HashGrid},
             static_triangle_tlas::StaticTriangleTLAS,
         },
-        intersect::{intersect_capsule_plane, intersect_moving_spheres},
-        primitives::sphere::Sphere,
+        intersect::{
+            intersect_capsule_plane, intersect_moving_spheres,
+            medial_primitive::intersect_medial_primitive_tlas,
+        },
+        primitives::{capsule::Capsule, sphere::Sphere},
     },
     matrix::Mat4,
     mesh::Mesh,
@@ -173,6 +176,206 @@ impl Simulation {
                     material,
                 );
             }
+        }
+    }
+
+    fn resolve_mesh_collisions(
+        mesh_collider: &StaticTriangleTLAS,
+        body_count: usize,
+        h: f32,
+        derivative: &StateVector<RigidBodySimulationState>,
+        current_state: &StateVector<RigidBodySimulationState>,
+        new_state: &mut StateVector<RigidBodySimulationState>,
+        material: &PhysicsMaterial,
+    ) {
+        for body_index in 0..body_count {
+            let body_derivative = &derivative.0[0];
+            let current_body_state = &current_state.0[body_index];
+            let new_body_state = &mut new_state.0[body_index];
+
+            Self::handle_mesh_collision(
+                h,
+                body_derivative,
+                current_body_state,
+                new_body_state,
+                mesh_collider,
+                material,
+            );
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn handle_mesh_collision(
+        h: f32,
+        body_derivative: &RigidBodySimulationState,
+        current_body_state: &RigidBodySimulationState,
+        new_body_state: &mut RigidBodySimulationState,
+        tlas: &StaticTriangleTLAS,
+        material: &PhysicsMaterial,
+    ) {
+        // Get sphere radius
+        let radius = match new_body_state.kind {
+            RigidBodyKind::Sphere(r) => r,
+            _ => return,
+        };
+
+        let start_position = current_body_state.position;
+        let start_linear_velocity = current_body_state.velocity();
+
+        // Calculate collision response data (if a collision occurred).
+        let normal_impulse_data_with_t = Self::calculate_mesh_collision_response(
+            h,
+            body_derivative,
+            current_body_state,
+            new_body_state,
+            tlas,
+            radius,
+            material,
+        );
+
+        // Applies collision impulses (normal and friction) to new state.
+        if let Some((normal_impulse_data, t)) = &normal_impulse_data_with_t {
+            Self::apply_collision_impulses(
+                h,
+                body_derivative,
+                new_body_state,
+                start_position,
+                start_linear_velocity,
+                normal_impulse_data,
+                *t,
+                material,
+            );
+        }
+
+        // If necessary, fixes up the body's position to maintain its minimum
+        // distance from the collider.
+        Self::correct_mesh_penetration(new_body_state, tlas, radius);
+
+        // Determines if the resulting body state constitutes a resting or
+        // a sliding contact.
+        Self::handle_static_contact_after_mesh_collision(
+            body_derivative,
+            new_body_state,
+            tlas,
+            radius,
+            material,
+        );
+    }
+
+    /// Calculates collision response data for mesh collision.
+    #[allow(clippy::too_many_arguments)]
+    fn calculate_mesh_collision_response(
+        h: f32,
+        body_derivative: &RigidBodySimulationState,
+        current_body_state: &RigidBodySimulationState,
+        new_body_state: &mut RigidBodySimulationState,
+        tlas: &StaticTriangleTLAS,
+        radius: f32,
+        material: &PhysicsMaterial,
+    ) -> Option<(NormalImpulseData, f32)> {
+        let start_position = current_body_state.position;
+        let end_position = new_body_state.position;
+
+        // Create capsule from start to end position
+        let mut capsule = Capsule::new(start_position, end_position, radius);
+
+        // Intersect capsule with mesh TLAS
+        intersect_medial_primitive_tlas(&mut capsule, tlas);
+
+        // Check if we hit a triangle
+        if let (Some(bvh_instance_index), Some(tri_index)) = (
+            capsule.segment.colliding_bvh_index,
+            capsule.segment.colliding_primitive,
+        ) {
+            let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+            let triangle = &bvh_instance.bvh.tris[tri_index];
+
+            // Get triangle normal in world space
+            let triangle_normal = triangle.plane.normal;
+            let normal = (triangle_normal * bvh_instance.transform).as_normal();
+
+            // Calculate collision point
+            let collision_point =
+                start_position + (end_position - start_position) * capsule.segment.t;
+
+            let surface = CollisionSurface {
+                normal,
+                contact_point: collision_point,
+                collision_t: capsule.segment.t,
+                minimum_distance: radius,
+            };
+
+            Self::calculate_collision_response(
+                h,
+                body_derivative,
+                new_body_state,
+                &surface,
+                material,
+            )
+        } else {
+            None
+        }
+    }
+
+    /// Corrects penetration for mesh collision.
+    fn correct_mesh_penetration(
+        body_state: &mut RigidBodySimulationState,
+        tlas: &StaticTriangleTLAS,
+        radius: f32,
+    ) {
+        let position = body_state.position;
+
+        // Create a zero-length capsule at the position
+        let mut capsule = Capsule::new(position, position, radius);
+
+        // Intersect with mesh TLAS
+        intersect_medial_primitive_tlas(&mut capsule, tlas);
+
+        // Check if we hit a triangle
+        if let (Some(bvh_instance_index), Some(tri_index)) = (
+            capsule.segment.colliding_bvh_index,
+            capsule.segment.colliding_primitive,
+        ) {
+            let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+            let triangle = &bvh_instance.bvh.tris[tri_index];
+
+            // Get triangle normal in world space
+            let triangle_normal = triangle.plane.normal;
+            let normal = (triangle_normal * bvh_instance.transform).as_normal();
+
+            // Calculate signed distance from body to triangle plane
+            let signed_distance_from_body_to_plane =
+                triangle.plane.get_signed_distance(&body_state.position);
+
+            // If penetrating, push the body out
+            if signed_distance_from_body_to_plane < radius {
+                body_state.position += normal * (radius - signed_distance_from_body_to_plane);
+            }
+        }
+    }
+
+    /// Handles static contact detection and momentum adjustment after mesh collision.
+    fn handle_static_contact_after_mesh_collision(
+        body_derivative: &RigidBodySimulationState,
+        body_state: &mut RigidBodySimulationState,
+        tlas: &StaticTriangleTLAS,
+        radius: f32,
+        material: &PhysicsMaterial,
+    ) {
+        if let Some(contact) = Self::get_static_contact_for_mesh_collider(
+            tlas,
+            body_derivative,
+            body_state,
+            radius,
+            material,
+            true, // Post-integration contact detection
+        ) {
+            // Store the contact for later friction/torque application
+            body_state.static_contacts.push(contact).ok();
+
+            // Remove the component of linear momentum pointing into the surface
+            let normal = contact.normal;
+            body_state.linear_momentum -= normal * body_state.linear_momentum.dot(normal);
         }
     }
 
@@ -792,6 +995,83 @@ impl Simulation {
         )
     }
 
+    /// Mesh-specific static contact detection.
+    fn get_static_contact_for_mesh_collider(
+        tlas: &StaticTriangleTLAS,
+        derivative: &RigidBodySimulationState,
+        new_body_state: &RigidBodySimulationState,
+        radius: f32,
+        material: &PhysicsMaterial,
+        check_forces: bool,
+    ) -> Option<StaticContact> {
+        let position = new_body_state.position;
+
+        // Create a zero-length capsule at the position (sphere as degenerate capsule)
+        let mut capsule = Capsule::new(position, position, radius);
+
+        // Intersect with mesh TLAS
+        intersect_medial_primitive_tlas(&mut capsule, tlas);
+
+        // Check if we hit a triangle
+        if let (Some(bvh_instance_index), Some(tri_index)) = (
+            capsule.segment.colliding_bvh_index,
+            capsule.segment.colliding_primitive,
+        ) {
+            let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+            let triangle = &bvh_instance.bvh.tris[tri_index];
+
+            // Get triangle normal in world space
+            let triangle_normal = triangle.plane.normal;
+            let normal = (triangle_normal * bvh_instance.transform).as_normal();
+
+            // Calculate signed distance to triangle plane
+            let signed_distance = triangle.plane.get_signed_distance(&position);
+
+            // Calculate motion tangents
+            let body_velocity = new_body_state.velocity();
+            let contact_point = position - normal * radius;
+            let contact_point_velocity = Self::compute_contact_point_velocity(
+                body_velocity,
+                new_body_state.angular_velocity(),
+                contact_point,
+                position,
+            );
+
+            let body_motion_tangent = {
+                let velocity_in_plane = body_velocity - normal * body_velocity.dot(normal);
+                if velocity_in_plane.mag_squared() > f32::EPSILON {
+                    Some(velocity_in_plane.as_normal())
+                } else {
+                    None
+                }
+            };
+
+            let contact_point_motion_tangent = {
+                let velocity_in_plane =
+                    contact_point_velocity - normal * contact_point_velocity.dot(normal);
+                if velocity_in_plane.mag_squared() > f32::EPSILON {
+                    Some(velocity_in_plane.as_normal())
+                } else {
+                    None
+                }
+            };
+
+            Self::get_static_contact(
+                derivative,
+                new_body_state,
+                normal,
+                signed_distance,
+                radius,
+                body_motion_tangent,
+                contact_point_motion_tangent,
+                material,
+                check_forces,
+            )
+        } else {
+            None
+        }
+    }
+
     fn resolve_rigid_body_collisions(
         &mut self,
         h: f32,
@@ -1083,6 +1363,16 @@ impl Simulation {
             &RIGID_BODY_STATIC_PLANE_MATERIAL,
         );
 
+        Self::resolve_mesh_collisions(
+            &self.ground_tlas,
+            self.rigid_bodies.len(),
+            h,
+            derivative,
+            current_state,
+            new_state,
+            &RIGID_BODY_STATIC_PLANE_MATERIAL,
+        );
+
         self.resolve_rigid_body_collisions(
             h,
             current_state,
@@ -1153,6 +1443,18 @@ impl Simulation {
                 ) {
                     predicted_contacts[body_index].push(contact).ok();
                 }
+            }
+
+            // Test against triangle mesh collider
+            if let Some(contact) = Self::get_static_contact_for_mesh_collider(
+                &self.ground_tlas,
+                body_state, // Use current state for derivative (unused when check_forces=false)
+                &predicted_body_state,
+                radius,
+                &RIGID_BODY_STATIC_PLANE_MATERIAL,
+                false, // check_forces: false for prediction
+            ) {
+                predicted_contacts[body_index].push(contact).ok();
             }
         }
 

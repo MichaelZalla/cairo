@@ -298,10 +298,17 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         | RigidBodyDebugFlags::DRAW_STATIC_CONTACT
     }
 
-    // Ground (collider) plane - single flat plane at y=0.
+    // Safety plane collider - positioned well below the mesh ground at y=-10.
 
     let static_plane_colliders = vec![
-        PlaneCollider::new(Vec3::default(), vec3::UP), // Flat ground at origin, facing up
+        PlaneCollider::new(
+            Vec3 {
+                x: 0.0,
+                y: -10.0,
+                z: 0.0,
+            },
+            vec3::UP,
+        ), // Safety net below mesh ground
     ];
 
     // Create a triangle mesh ground with BVH
