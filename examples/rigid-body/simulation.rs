@@ -55,10 +55,13 @@ pub struct Simulation {
     pub static_plane_colliders: Vec<PlaneCollider>,
     pub hash_grid: HashGrid,
     pub visualize_hash_grid: bool,
+    pub tick_count: u32,
 }
 
 impl Simulation {
     pub fn tick(&mut self, h: f32, uptime_seconds: f32) {
+        self.tick_count += 1;
+
         // 1. Generate state vector from current rigid bodies
         let state = self.copy_to_state_vector();
 

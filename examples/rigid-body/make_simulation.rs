@@ -140,5 +140,6 @@ pub fn make_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
             MAX_SPHERE_RADIUS * 2.0,
         ),
         visualize_hash_grid: false,
+        tick_count: 0,
     }
 }
