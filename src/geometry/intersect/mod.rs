@@ -1,3 +1,5 @@
+pub mod medial_primitive;
+
 use std::mem;
 
 use crate::{

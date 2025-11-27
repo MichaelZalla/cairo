@@ -1,17 +1,24 @@
-use cairo::{
+//! Generic intersection routines for primitives with medial axes.
+//!
+//! This module provides efficient BVH and TLAS traversal for any primitive
+//! that implements the `MedialPrimitive` trait (e.g., capsules, cylinders).
+
+use crate::{
     geometry::{
         accelerator::{
             static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
             static_triangle_tlas::StaticTriangleTLAS,
         },
         intersect::test_aabb_aabb,
-        primitives::{MedialPrimitive, aabb::AABB},
+        primitives::{aabb::AABB, MedialPrimitive},
     },
     vec::vec4::Vec4,
 };
 
-// Generic BVH traversal for any primitive with a medial axis
-
+/// Intersects a medial primitive against a TLAS (top-level acceleration structure).
+///
+/// This function tests the primitive against all triangle meshes in the scene,
+/// using the TLAS hierarchy for efficient broad-phase culling.
 pub fn intersect_medial_primitive_tlas<P: MedialPrimitive>(
     primitive: &mut P,
     tlas: &StaticTriangleTLAS,
@@ -21,6 +28,7 @@ pub fn intersect_medial_primitive_tlas<P: MedialPrimitive>(
     intersect_medial_primitive_tlas_node(primitive, &primitive_aabb, tlas, 0)
 }
 
+/// Recursively traverses a TLAS node, testing the primitive against child nodes.
 pub fn intersect_medial_primitive_tlas_node<P: MedialPrimitive>(
     primitive: &mut P,
     primitive_aabb: &AABB,
@@ -62,6 +70,10 @@ pub fn intersect_medial_primitive_tlas_node<P: MedialPrimitive>(
     }
 }
 
+/// Intersects a medial primitive against a BVH instance.
+///
+/// This function transforms the primitive into the BVH's local space,
+/// performs the intersection test, and transforms the results back.
 pub fn intersect_medial_primitive_bvh<P: MedialPrimitive>(
     primitive: &mut P,
     bvh_instance_index: usize,
@@ -111,6 +123,7 @@ pub fn intersect_medial_primitive_bvh<P: MedialPrimitive>(
     }
 }
 
+/// Recursively traverses a BVH node, testing the primitive against triangles.
 fn intersect_medial_primitive_bvh_node<P: MedialPrimitive>(
     primitive: &mut P,
     primitive_aabb: &AABB,

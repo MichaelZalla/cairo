@@ -34,7 +34,6 @@ use scene::make_particles_scene;
 use simulation::Simulation;
 
 pub mod integrate;
-pub mod intersect;
 pub mod make_simulation;
 pub mod scene;
 pub mod simulation;
