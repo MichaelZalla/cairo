@@ -446,12 +446,14 @@ impl Simulation {
             0.0
         };
 
-        // Check if both velocities are very small (resting); note that a body
-        // with very low tangential velocity but high Y-spin will be classified
-        // as "resting" here.
-
-        let is_resting = body_speed_along_tangent < RESTING_SPEED_THRESHOLD
-            && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
+        // Early return for resting: if both velocities are very small, body is at rest.
+        // Note that a body with very low tangential velocity but high Y-spin will be
+        // classified as "resting" here (spinning in place).
+        if body_speed_along_tangent < RESTING_SPEED_THRESHOLD
+            && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD
+        {
+            return StaticContactKind::Resting;
+        }
 
         // Check if contact velocity is small relative to body velocity (rolling)
         let velocity_ratio = if body_speed_along_tangent > BODY_VELOCITY_ROLLING_THRESHOLD {
@@ -505,9 +507,7 @@ impl Simulation {
             }
         };
 
-        if is_resting {
-            StaticContactKind::Resting
-        } else if is_rolling && has_correct_spin_axis {
+        if is_rolling && has_correct_spin_axis {
             StaticContactKind::Rolling(0.5)
         } else {
             StaticContactKind::Sliding
