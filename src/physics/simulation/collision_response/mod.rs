@@ -521,7 +521,9 @@ pub fn get_rigid_body_plane_friction_impulse(
 
         let j_d = normal_impulse_magnitude * material.dynamic_friction;
 
-        -(j_d.min(contact_point_linear_momentum_magnitude_along_tangent))
+        // Limit friction magnitude to available momentum to prevent reversing direction
+        // This applies for both bounce collisions and continuous contact
+        -j_d.min(contact_point_linear_momentum_magnitude_along_tangent.abs())
     };
 
     Some(TangentImpulseData { tangent, magnitude })
