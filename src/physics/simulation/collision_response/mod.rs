@@ -322,6 +322,7 @@ pub fn resolve_rigid_body_plane_collision(
         contact_point_velocity,
         normal_impulse_data.magnitude,
         material,
+        false, // Allow static friction for rigid-body collisions
     ) {
         let tangent = tangent_impulse_data.tangent;
         let magnitude = tangent_impulse_data.magnitude;
@@ -417,6 +418,7 @@ pub fn get_rigid_body_plane_friction_impulse(
     contact_point_velocity: Vec3,
     normal_impulse_magnitude: f32,
     material: &PhysicsMaterial,
+    is_bounce_collision: bool, // For bounce collisions, use only dynamic friction
 ) -> Option<TangentImpulseData> {
     // Static or dynamic friction
 
@@ -480,6 +482,7 @@ pub fn get_rigid_body_plane_friction_impulse(
         }
     };
 
+    // Tangent direction (aligned with tangential velocity component)
     let tangent = tangential_component.as_normal();
 
     // Computes how quickly our contact point is moving along the tangent.
@@ -497,13 +500,14 @@ pub fn get_rigid_body_plane_friction_impulse(
 
     let j_s = normal_impulse_magnitude * material.static_friction;
 
-    let magnitude = if contact_point_speed_along_tangent.abs()
-        < MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION
-        || contact_point_linear_momentum_magnitude_along_tangent <= j_s
+    // Friction impulse opposes motion, so negate the magnitude
+    let magnitude = if !is_bounce_collision
+        && (contact_point_speed_along_tangent.abs() < MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION
+            || contact_point_linear_momentum_magnitude_along_tangent <= j_s)
     {
         // Our contact point has a negligible tangential velocity, or its
         // tangential momentum is not great enough to overcome the material's
-        // static friction
+        // static friction (and this is not a bounce collision)
 
         // Use a friction impulse that negates the tangential component of the
         // total external force acting on the contact point.
@@ -511,8 +515,9 @@ pub fn get_rigid_body_plane_friction_impulse(
         -contact_point_linear_momentum_magnitude_along_tangent
     } else {
         // Our contact point has enough momentum along the tangent to overcome
-        // static friction; compute a dynamic friction response based on the
-        // normal impulse magnitude and the material.
+        // static friction, OR this is a bounce collision;
+        // compute a dynamic friction response based on the normal impulse
+        // magnitude and the material.
 
         let j_d = normal_impulse_magnitude * material.dynamic_friction;
 

@@ -303,6 +303,7 @@ impl Simulation {
                 normal_impulse_data.contact_point_velocity,
                 normal_impulse_magnitude,
                 material,
+                true, // is_bounce_collision: use only dynamic friction
             ) {
                 let tangent = tangent_impulse_data.tangent;
                 let magnitude = tangent_impulse_data.magnitude;
