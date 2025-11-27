@@ -58,6 +58,34 @@ static RIGID_BODY_RIGID_BODY_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     restitution: 0.4,
 };
 
+// Hash grid neighbor offsets for collision detection.
+// These offsets check the current cell plus 13 neighboring cells in the "upper forward right"
+// half-space. This avoids duplicate checks since each collision pair will be checked exactly once.
+const HASH_GRID_NEIGHBORS: [(isize, isize, isize); 14] = [
+    // Center
+    (0, 0, 0),
+    // Top far row
+    (-1, 1, -1),
+    (0, 1, -1),
+    (1, 1, -1),
+    // Top middle row
+    (-1, 1, 0),
+    (0, 1, 0),
+    (1, 1, 0),
+    // Top near row
+    (-1, 1, 1),
+    (0, 1, 1),
+    (1, 1, 1),
+    // Middle far right
+    (1, 0, -1),
+    // Middle right
+    (1, 0, 0),
+    // Middle near right
+    (1, 0, 1),
+    // Middle near
+    (0, 0, 1),
+];
+
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
@@ -718,34 +746,7 @@ impl Simulation {
                 GridSpaceCoordinate::from((body, strategy, scale))
             };
 
-            static NEIGHBORS_UP_FORWARD_RIGHT: [(isize, isize, isize); 14] = [
-                // Center
-                (0, 0, 0),
-                // Top far row
-                (-1, 1, -1),
-                (0, 1, -1),
-                (1, 1, -1),
-                // Top middle row
-                (-1, 1, 0),
-                (0, 1, 0),
-                (1, 1, 0),
-                // Top near row
-                (-1, 1, 1),
-                (0, 1, 1),
-                (1, 1, 1),
-                // Middle far right
-                (1, 0, -1),
-                // Middle right
-                (1, 0, 0),
-                // Middle near right
-                (1, 0, 1),
-                // Middle near
-                (0, 0, 1),
-            ];
-
-            let neighbors = &NEIGHBORS_UP_FORWARD_RIGHT;
-
-            for (x_offset, y_offset, z_offset) in neighbors.iter() {
+            for (x_offset, y_offset, z_offset) in HASH_GRID_NEIGHBORS.iter() {
                 // Checks current cell and neighborings cells.
 
                 let offset = GridSpaceCoordinate {
