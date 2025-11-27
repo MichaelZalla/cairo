@@ -894,72 +894,81 @@ impl Simulation {
         }
     }
 
+    /// Renders the hash grid visualization as semi-transparent cubes.
+    fn render_hash_grid(&self, renderer: &mut SoftwareRenderer) {
+        if !self.visualize_hash_grid {
+            return;
+        }
+
+        for grid_coord in self.hash_grid.map.keys() {
+            let transform = {
+                let scale = Mat4::scale_uniform(0.5 * self.hash_grid.scale);
+                let offset = Mat4::translation(vec3::ONES * 0.5);
+                let translate = Mat4::translation(Vec3 {
+                    x: (grid_coord.x as f32 * self.hash_grid.scale),
+                    y: (grid_coord.y as f32 * self.hash_grid.scale),
+                    z: (grid_coord.z as f32 * self.hash_grid.scale),
+                });
+
+                scale * offset * translate
+            };
+
+            let display_kind = EmptyDisplayKind::Cube;
+            let color = Some(color::LIGHT_GRAY);
+
+            renderer.render_empty(&transform, display_kind, false, color);
+        }
+    }
+
+    /// Renders a static plane collider as a square with a normal vector.
+    fn render_static_plane_collider(collider: &PlaneCollider, renderer: &mut SoftwareRenderer) {
+        // Calculate the coordinate frame for the plane
+        let mut right = collider.plane.normal.cross(vec3::UP);
+
+        if right.mag() < f32::EPSILON {
+            right = collider.plane.normal.cross(vec3::FORWARD);
+        }
+
+        right = right.as_normal();
+
+        let up = collider.plane.normal.cross(-right);
+
+        // Render the plane as an orange square
+        let scale = Mat4::scale_uniform(20.0);
+        let translate = Mat4::translation(collider.point);
+        let rotate = Mat4::tbn(right, up, collider.plane.normal);
+
+        let transform = scale * rotate * translate;
+
+        renderer.render_empty(
+            &transform,
+            EmptyDisplayKind::Square,
+            false,
+            Some(color::ORANGE),
+        );
+
+        // Render the normal vector as a green line
+        renderer.render_line(
+            collider.point,
+            collider.point + collider.plane.normal * 5.0,
+            color::GREEN,
+        );
+    }
+
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
         renderer.render_axes(None);
 
         // Render dynamic rigid bodies (spheres).
-
         for sphere in &self.rigid_bodies {
             sphere.render(renderer);
         }
 
         // Visualize hash grid entries.
+        self.render_hash_grid(renderer);
 
-        if self.visualize_hash_grid {
-            for grid_coord in self.hash_grid.map.keys() {
-                let transform = {
-                    let scale = Mat4::scale_uniform(0.5 * self.hash_grid.scale);
-
-                    let offset = Mat4::translation(vec3::ONES * 0.5);
-
-                    let translate = Mat4::translation(Vec3 {
-                        x: (grid_coord.x as f32 * self.hash_grid.scale),
-                        y: (grid_coord.y as f32 * self.hash_grid.scale),
-                        z: (grid_coord.z as f32 * self.hash_grid.scale),
-                    });
-
-                    scale * offset * translate
-                };
-
-                let display_kind = EmptyDisplayKind::Cube;
-
-                let color = Some(color::LIGHT_GRAY);
-
-                renderer.render_empty(&transform, display_kind, false, color);
-            }
-        }
-
+        // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
-            // Visualize static plane colliders.
-
-            let mut right = collider.plane.normal.cross(vec3::UP);
-
-            if right.mag() < f32::EPSILON {
-                right = collider.plane.normal.cross(vec3::FORWARD);
-            }
-
-            right = right.as_normal();
-
-            let up = collider.plane.normal.cross(-right);
-
-            let scale = Mat4::scale_uniform(20.0);
-            let translate = Mat4::translation(collider.point);
-            let rotate = Mat4::tbn(right, up, collider.plane.normal);
-
-            let transform = scale * rotate * translate;
-
-            renderer.render_empty(
-                &transform,
-                EmptyDisplayKind::Square,
-                false,
-                Some(color::ORANGE),
-            );
-
-            renderer.render_line(
-                collider.point,
-                collider.point + collider.plane.normal * 5.0,
-                color::GREEN,
-            );
+            Self::render_static_plane_collider(collider, renderer);
         }
     }
 
