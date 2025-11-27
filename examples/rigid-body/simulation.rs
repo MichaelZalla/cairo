@@ -917,6 +917,9 @@ impl Simulation {
 
             // Update orientation.
             body.orientation += orientation_derivative * h;
+
+            // Renormalize to maintain unit quaternion constraint
+            body.orientation.renormalize();
         }
 
         new_state
