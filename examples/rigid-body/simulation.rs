@@ -333,6 +333,23 @@ impl Simulation {
             new_body_state.linear_momentum -=
                 collider.plane.normal * new_body_state.linear_momentum.dot(collider.plane.normal);
 
+            // Allows spinning around the surface normal, but dampens angular momentum that
+            // causes the contact point to slide.
+            if matches!(contact.kind, StaticContactKind::Resting) {
+                let normal = contact.normal;
+
+                // Decomposes angular momentum into components parallel and perpendicular to normal.
+                let angular_momentum_along_normal =
+                    normal * new_body_state.angular_momentum.dot(normal);
+
+                let angular_momentum_perpendicular_to_normal =
+                    new_body_state.angular_momentum - angular_momentum_along_normal;
+
+                // Allows spinning around normal (like a top), but damp tangential rotation.
+                new_body_state.angular_momentum =
+                    angular_momentum_along_normal + angular_momentum_perpendicular_to_normal * 0.95;
+            }
+
             // Records the contact.
 
             new_body_state.static_contacts.push(contact).unwrap();

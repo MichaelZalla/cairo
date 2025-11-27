@@ -132,7 +132,6 @@ impl RigidBodySimulationState {
                             // Applies static friction force, halting movement.
 
                             let body_linear_velocity = self.velocity();
-                            let body_angular_velocity = self.angular_velocity();
 
                             let scale = 1.0 / h.max(0.00001);
 
@@ -142,10 +141,17 @@ impl RigidBodySimulationState {
                             remaining_total_acceleration =
                                 acceleration_needed_to_zero_linear_velocity;
 
-                            let torque_needed_to_zero_angular_velocity =
-                                -body_angular_velocity * scale * 0.999;
+                            // For angular momentum: Don't apply torque here
+                            // (which would get integrated). Instead, we'll zero
+                            // it directly in the post-integration step. Setting
+                            // total_torque to zero prevents any rotational
+                            // acceleration.
+                            total_torque = Vec3::default();
 
-                            total_torque = torque_needed_to_zero_angular_velocity;
+                            // IMPORTANT: Skips the normal-force subtraction
+                            // below, since we've already set the acceleration
+                            // to zero the velocity
+                            continue;
                         }
                     }
                     StaticContactKind::Sliding => {
