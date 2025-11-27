@@ -116,7 +116,12 @@ impl RigidBodySimulationState {
             let external_force_magnitude_along_normal =
                 contact.normal.dot(remaining_total_acceleration);
 
-            if external_force_magnitude_along_normal < -0.001 {
+            // For sliding contacts, we need to apply friction even when there's no
+            // external force pushing into the surface. The friction is based on the
+            // contact normal force (from gravity), not just external accelerations.
+            let is_sliding_contact = matches!(contact.kind, StaticContactKind::Sliding);
+
+            if external_force_magnitude_along_normal < -0.001 || is_sliding_contact {
                 let external_force_magnitude_along_tangent =
                     contact.tangent.dot(remaining_total_acceleration);
 
@@ -161,7 +166,16 @@ impl RigidBodySimulationState {
 
                         // Dynamic friction force = μ_k × N, opposes sliding
                         // direction.
-                        let normal_force_magnitude = -external_force_magnitude_along_normal;
+
+                        // Calculate normal force: if there's external force pushing in,
+                        // use that; otherwise use the total acceleration (from gravity)
+                        let normal_force_magnitude =
+                            if external_force_magnitude_along_normal < -0.001 {
+                                -external_force_magnitude_along_normal
+                            } else {
+                                // Use total acceleration along normal (typically gravity)
+                                -contact.normal.dot(total_acceleration).max(0.0)
+                            };
 
                         let friction_force_magnitude =
                             normal_force_magnitude * contact.material.dynamic_friction;
