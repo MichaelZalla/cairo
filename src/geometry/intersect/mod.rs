@@ -187,25 +187,25 @@ pub fn test_sphere_sphere(a: Sphere, b: Sphere) -> bool {
     ab.mag_squared() <= r1_r2 * r1_r2
 }
 
-pub fn test_moving_spheres(a: Sphere, b: Sphere, v: Vec3, v_distance: f32) -> bool {
-    intersect_moving_spheres(a, b, v, v_distance).is_some()
+pub fn test_moving_spheres(a: Sphere, b: Sphere, velocity: Vec3, velocity_magnitude: f32) -> bool {
+    intersect_moving_spheres(a, b, velocity, velocity_magnitude).is_some()
 }
 
 pub fn intersect_moving_spheres(
     a: Sphere,
     mut b: Sphere,
-    v: Vec3,
-    v_distance: f32,
+    velocity: Vec3,
+    velocity_magnitude: f32,
 ) -> Option<(f32, Vec3)> {
     // Expands the radius of sphere B by that of sphere A.
 
     b.radius += a.radius;
 
-    let ray = Ray::new(a.center, v.as_normal());
+    let ray = Ray::new(a.center, velocity.as_normal());
 
     match intersect_ray_sphere(&ray, &b) {
         Some((t, contact_point)) => {
-            if t <= v_distance {
+            if t <= velocity_magnitude {
                 Some((t, contact_point))
             } else {
                 None
@@ -216,14 +216,14 @@ pub fn intersect_moving_spheres(
 }
 
 pub fn intersect_capsule_plane(
-    c: Vec3,
-    d: Vec3,
+    start: Vec3,
+    end: Vec3,
     radius: f32,
     plane: &Plane,
 ) -> Option<(f32, Vec3)> {
     let n = plane.normal;
 
-    let signed_distance = n.dot(c) - plane.d;
+    let signed_distance = n.dot(start) - plane.d;
 
     let mut t = 0.0;
 
@@ -252,11 +252,11 @@ pub fn intersect_capsule_plane(
         // time-of-intersection to zero, and the point-of-intersection to the
         // deepest point on the sphere.
 
-        Some((t, c - plane.normal * radius))
+        Some((t, start - plane.normal * radius))
     } else {
         // Checks if a collision occurred between start and end positions.
 
-        let v = d - c;
+        let v = end - start;
 
         let n_dot_v = n.dot(v);
 
@@ -281,7 +281,7 @@ pub fn intersect_capsule_plane(
             // Computes the point on the line segment (CD) at which the
             // collision occurs.
 
-            let segment_point = c + v * t;
+            let segment_point = start + v * t;
 
             // Offsets the segment intersection point, towards the plane, by `radius` units.
 
@@ -374,14 +374,13 @@ pub fn intersect_ray_sphere(ray: &Ray, sphere: &Sphere) -> Option<(f32, Vec3)> {
     }
 
     // Ray must intersect sphere; find the smallest t-value for the ray.
-
-    let mut t = -b - discriminant.sqrt();
+    let mut distance = -b - discriminant.sqrt();
 
     // A negative t-value indicates that the intersecting ray starts inside of the sphere.
+    // Clamp to 0 to return the exit point.
+    distance = distance.max(0.0);
 
-    t = t.max(0.0);
-
-    Some((t, ray.origin + ray.direction * t))
+    Some((distance, ray.origin + ray.direction * distance))
 }
 
 pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> f32 {
