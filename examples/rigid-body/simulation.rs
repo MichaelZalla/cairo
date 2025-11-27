@@ -158,17 +158,11 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
         material: &PhysicsMaterial,
     ) {
-        for (collider_index, collider) in plane_colliders.iter().enumerate() {
+        for collider in plane_colliders.iter() {
             for body_index in 0..body_count {
                 let body_derivative = &derivative.0[0];
                 let current_body_state = &current_state.0[body_index];
                 let new_body_state = &mut new_state.0[body_index];
-
-                if collider_index == 0 {
-                    // Clears any resting or sliding contacts from the last simulation tick.
-
-                    new_body_state.static_contacts.clear();
-                }
 
                 Self::handle_static_plane_collision(
                     h,
@@ -1073,6 +1067,11 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
         // Applies impulses based on actual collisions at final positions.
+
+        // Clear static contacts from the last simulation tick.
+        for body_state in new_state.0.iter_mut() {
+            body_state.static_contacts.clear();
+        }
 
         Self::resolve_static_plane_collisions(
             &self.static_plane_colliders,
