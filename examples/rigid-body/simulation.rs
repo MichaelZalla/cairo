@@ -132,6 +132,24 @@ impl Simulation {
         }
     }
 
+    /// Removes linear momentum accumulated after the collision point.
+    fn remove_post_collision_momentum(
+        h: f32,
+        collision_t: f32,
+        body_derivative: &RigidBodySimulationState,
+        body_state: &mut RigidBodySimulationState,
+    ) {
+        let time_before_collision = h * collision_t;
+        let time_after_collision = h - time_before_collision;
+
+        let linear_acceleration = body_derivative.linear_momentum;
+        let mass = 1.0 / body_state.inverse_mass;
+
+        let accumulated_linear_velocity = linear_acceleration * time_after_collision;
+
+        body_state.linear_momentum -= accumulated_linear_velocity * mass;
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn handle_static_collision(
         h: f32,
@@ -229,21 +247,12 @@ impl Simulation {
                         // for applying a normal impulse (i.e., a collision response).
 
                         // Removes any linear momentum gained while colliding.
-
-                        {
-                            let time_before_collision = h * capsule_intersection.t;
-
-                            let time_after_collision = h - time_before_collision;
-
-                            let linear_acceleration = body_derivative.linear_momentum;
-
-                            let mass = 1.0 / new_body_state.inverse_mass;
-
-                            let accumulated_linear_velocity =
-                                linear_acceleration * time_after_collision;
-
-                            new_body_state.linear_momentum -= accumulated_linear_velocity * mass;
-                        }
+                        Self::remove_post_collision_momentum(
+                            h,
+                            capsule_intersection.t,
+                            body_derivative,
+                            new_body_state,
+                        );
 
                         // Calculates the magnitude of the normal impulse for
                         // this collision, based on the contact point's
