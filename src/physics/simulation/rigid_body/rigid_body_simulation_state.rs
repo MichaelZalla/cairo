@@ -173,7 +173,10 @@ impl RigidBodySimulationState {
 
                         let r = contact.point - self.position;
 
-                        total_torque += r.cross(friction_force);
+                        // Torque from friction
+                        let torque_from_friction = r.cross(friction_force);
+
+                        total_torque += torque_from_friction;
                     }
                     StaticContactKind::Rolling(_coefficient_of_rolling_resistance) => {
                         // DISABLED: Rolling resistance
