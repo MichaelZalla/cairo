@@ -3,8 +3,7 @@ use std::cell::RefCell;
 use cairo::{
     geometry::{
         accelerator::static_triangle_tlas::StaticTriangleTLAS,
-        intersect::medial_primitive::intersect_medial_primitive_tlas,
-        primitives::capsule::Capsule,
+        intersect::medial_primitive::intersect_medial_primitive_tlas, primitives::capsule::Capsule,
     },
     physics::{
         material::PhysicsMaterial,
@@ -22,7 +21,10 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{integrate::{integrate_euler, system_dynamics_function}, PARTICLE_MESH_RADIUS};
+use crate::{
+    PARTICLE_MESH_RADIUS,
+    integrate::{integrate_euler, system_dynamics_function},
+};
 
 pub const COMPONENTS_PER_PARTICLE: usize = 2;
 

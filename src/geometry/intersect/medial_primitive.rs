@@ -10,7 +10,7 @@ use crate::{
             static_triangle_tlas::StaticTriangleTLAS,
         },
         intersect::test_aabb_aabb,
-        primitives::{aabb::AABB, MedialPrimitive},
+        primitives::{MedialPrimitive, aabb::AABB},
     },
     vec::vec4::Vec4,
 };

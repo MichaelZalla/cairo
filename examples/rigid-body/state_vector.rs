@@ -1,7 +1,7 @@
 use std::{iter::zip, ops};
 
 use cairo::physics::simulation::rigid_body::{
-    rigid_body_simulation_state::RigidBodySimulationState, RigidBody,
+    RigidBody, rigid_body_simulation_state::RigidBodySimulationState,
 };
 
 #[derive(Default, Debug, Clone)]
