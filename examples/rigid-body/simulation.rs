@@ -551,6 +551,7 @@ impl Simulation {
 
     fn resolve_rigid_body_collisions(
         &mut self,
+        h: f32,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
         material: &PhysicsMaterial,
@@ -611,6 +612,7 @@ impl Simulation {
                         }
 
                         if Simulation::did_resolve_rigid_bodies_collision(
+                            h,
                             current_state,
                             new_state,
                             current_body_index,
@@ -626,6 +628,7 @@ impl Simulation {
     }
 
     fn did_resolve_rigid_bodies_collision(
+        h: f32,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
         a: usize,
@@ -681,6 +684,16 @@ impl Simulation {
 
         match intersection {
             Some(collision) => {
+                // Normalizes distance from distance units to [0,1] (timestep fraction).
+                // Distance traveled this frame = a_velocity_relative_to_b_mag * h
+                // Fraction of frame = collision.distance / (a_velocity_relative_to_b_mag * h)
+                let t_normalized = collision.distance / (a_velocity_relative_to_b_mag * h);
+
+                // Only handle collisions that occur within this timestep (t_normalized <= 1.0)
+                if t_normalized > 1.0 {
+                    return false;
+                }
+
                 // Compute and apply the collision response.
 
                 let mut s1_state_cloned = new_state.0[a];
@@ -829,6 +842,7 @@ impl Simulation {
         );
 
         self.resolve_rigid_body_collisions(
+            h,
             current_state,
             new_state,
             &RIGID_BODY_RIGID_BODY_MATERIAL,
