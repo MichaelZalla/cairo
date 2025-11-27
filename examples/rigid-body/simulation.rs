@@ -40,6 +40,18 @@ use crate::integration::system_dynamics_function;
 
 use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
+/// Represents a collision surface with all necessary information for collision response.
+struct CollisionSurface {
+    /// Surface normal (pointing away from the surface)
+    normal: Vec3,
+    /// Contact point in world space
+    contact_point: Vec3,
+    /// Normalized time of collision [0, 1] within the timestep
+    collision_t: f32,
+    /// Minimum distance from body center to surface (e.g., sphere radius)
+    minimum_distance: f32,
+}
+
 const CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
 
 // Threshold for resting contact (both linear and contact point nearly zero)
@@ -332,8 +344,75 @@ impl Simulation {
     /// where `collision_t` is the normalized time of collision within the timestep.
     /// Returns `None` if no collision occurred or if the contact point is not
     /// moving into the plane.
-    #[allow(clippy::too_many_arguments)]
     fn calculate_collision_response(
+        h: f32,
+        body_derivative: &RigidBodySimulationState,
+        new_body_state: &mut RigidBodySimulationState,
+        surface: &CollisionSurface,
+        material: &PhysicsMaterial,
+    ) -> Option<(NormalImpulseData, f32)> {
+        let end_position = new_body_state.position;
+        let end_linear_velocity = new_body_state.velocity();
+
+        if surface.collision_t > 1.0 {
+            // Future collision, ignore for this tick
+            return None;
+        }
+
+        // For sphere contacts, recalculate contact point from end position
+        // to avoid spurious offset from capsule intersection test
+        let contact_point_corrected = match new_body_state.kind {
+            RigidBodyKind::Sphere(_radius) => {
+                // Contact point is directly below sphere center along normal
+                end_position - surface.normal * surface.minimum_distance
+            }
+            _ => surface.contact_point,
+        };
+
+        // For torque calculation, moment arm points FROM contact TO center
+        let r_torque = end_position - contact_point_corrected;
+
+        // For contact velocity, offset points FROM center TO contact
+        let r_velocity = contact_point_corrected - end_position;
+
+        // Compute linear velocity of the contact point in world space
+        let contact_point_velocity =
+            end_linear_velocity + new_body_state.angular_velocity().cross(r_velocity);
+
+        // Check if contact point is moving into the surface
+        let incoming_speed = contact_point_velocity.dot(surface.normal);
+
+        if incoming_speed < -RESTING_SPEED_THRESHOLD {
+            // Remove momentum accumulated after collision
+            Self::remove_post_collision_momentum(
+                h,
+                surface.collision_t,
+                body_derivative,
+                new_body_state,
+            );
+
+            // Calculate normal impulse
+            Some((
+                get_rigid_body_plane_normal_impulse(
+                    new_body_state,
+                    surface.normal,
+                    surface.contact_point,
+                    contact_point_velocity,
+                    r_velocity,
+                    r_torque,
+                    material,
+                ),
+                surface.collision_t,
+            ))
+        } else {
+            None
+        }
+    }
+
+    /// Returns `None` if no collision occurred or if the contact point is not
+    /// moving into the plane.
+    #[allow(clippy::too_many_arguments)]
+    fn calculate_static_plane_collision_response(
         h: f32,
         body_derivative: &RigidBodySimulationState,
         current_body_state: &RigidBodySimulationState,
@@ -344,7 +423,6 @@ impl Simulation {
     ) -> Option<(NormalImpulseData, f32)> {
         let start_position = current_body_state.position;
         let end_position = new_body_state.position;
-        let end_linear_velocity = new_body_state.velocity();
         let normal = collider.plane.normal;
 
         // Tests for a body-collider intersection, according to the kind of
@@ -358,76 +436,20 @@ impl Simulation {
 
         match intersection {
             Some(capsule_intersection) => {
-                if capsule_intersection.t > 1.0 {
-                    // A t-value greater than 1 indicates a future collision, which
-                    // we'll ignore for this tick.
-                    None
-                } else {
-                    // Computes the moment arm from the rigid body's
-                    // center-of-mass to the colliding contact point.
-                    //
-                    // For sphere-plane contacts, recalculate contact point from end position
-                    // to avoid spurious offset from capsule intersection test
-                    let contact_point_corrected = match new_body_state.kind {
-                        RigidBodyKind::Sphere(_radius) => {
-                            // Contact point is directly below sphere center along normal
-                            end_position - normal * minimum_distance_to_plane
-                        }
-                        _ => capsule_intersection.contact_point,
-                    };
+                let surface = CollisionSurface {
+                    normal,
+                    contact_point: capsule_intersection.contact_point,
+                    collision_t: capsule_intersection.t,
+                    minimum_distance: minimum_distance_to_plane,
+                };
 
-                    // For torque calculation, moment arm points FROM contact TO center
-                    let r_torque = end_position - contact_point_corrected;
-
-                    // For contact velocity, offset points FROM center TO contact
-                    let r_velocity = contact_point_corrected - end_position;
-
-                    // Computes the linear velocity of the contact point in our
-                    // absolute (world-space) frame of reference.
-                    let contact_point_velocity =
-                        end_linear_velocity + new_body_state.angular_velocity().cross(r_velocity);
-
-                    // Calculates the amount that this velocity projects onto
-                    // the collider's normal; note that a positive quantity
-                    // indicates a velocity that moves out and away from the plane.
-                    let incoming_contact_point_speed_normal_to_plane =
-                        contact_point_velocity.dot(normal);
-
-                    // Tests that the resulting velocity projects into the
-                    // plane, i.e., the point is moving into the plane.
-                    if incoming_contact_point_speed_normal_to_plane < -RESTING_SPEED_THRESHOLD {
-                        // At this point, we know that the rigid body intersects
-                        // the collider, and that its point-of-contact is moving
-                        // deeper into the collider. These are sufficient conditions
-                        // for applying a normal impulse (i.e., a collision response).
-
-                        // Removes any linear momentum gained while colliding.
-                        Self::remove_post_collision_momentum(
-                            h,
-                            capsule_intersection.t,
-                            body_derivative,
-                            new_body_state,
-                        );
-
-                        // Calculates the magnitude of the normal impulse for
-                        // this collision, based on the contact point's
-                        // velocity, the plane normal, and the physics material.
-                        Some((
-                            get_rigid_body_plane_normal_impulse(
-                                new_body_state,
-                                normal,
-                                capsule_intersection.contact_point,
-                                contact_point_velocity,
-                                r_velocity,
-                                r_torque,
-                                material,
-                            ),
-                            capsule_intersection.t,
-                        ))
-                    } else {
-                        None
-                    }
-                }
+                Self::calculate_collision_response(
+                    h,
+                    body_derivative,
+                    new_body_state,
+                    &surface,
+                    material,
+                )
             }
             None => None,
         }
@@ -469,7 +491,7 @@ impl Simulation {
         };
 
         // Calculate collision response data (if a collision occurred).
-        let normal_impulse_data_with_t = Self::calculate_collision_response(
+        let normal_impulse_data_with_t = Self::calculate_static_plane_collision_response(
             h,
             body_derivative,
             current_body_state,
