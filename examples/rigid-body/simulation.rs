@@ -35,7 +35,12 @@ use crate::{plane_collider::PlaneCollider, state_vector::StateVector};
 
 static CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
 
+// Threshold for resting contact (both linear and contact point nearly zero)
 static RESTING_SPEED_THRESHOLD: f32 = 0.05;
+
+// Rolling detection: contact velocity should be small relative to body velocity
+static ROLLING_VELOCITY_RATIO_THRESHOLD: f32 = 0.1; // Contact velocity < 10% of body velocity
+static ROLLING_MIN_ABSOLUTE_THRESHOLD: f32 = 0.2; // Absolute minimum threshold at low speeds
 
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
@@ -414,10 +419,23 @@ impl Simulation {
             0.0
         };
 
+        // Check if both velocities are very small (resting)
         let is_resting = body_speed_along_tangent < RESTING_SPEED_THRESHOLD
             && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
 
-        let is_rolling = contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
+        // Check if contact velocity is small relative to body velocity (rolling)
+        let velocity_ratio = if body_speed_along_tangent > 0.01 {
+            contact_point_speed_along_tangent / body_speed_along_tangent
+        } else {
+            // At very low speeds, just use absolute threshold
+            if contact_point_speed_along_tangent < ROLLING_MIN_ABSOLUTE_THRESHOLD {
+                0.0 // Treat as rolling
+            } else {
+                1.0 // Treat as sliding
+            }
+        };
+
+        let is_rolling = velocity_ratio < ROLLING_VELOCITY_RATIO_THRESHOLD;
 
         if is_resting {
             StaticContactKind::Resting
