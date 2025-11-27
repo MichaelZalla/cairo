@@ -81,7 +81,7 @@ impl FirstPersonLookVectorController {
         // Update the look vector's target position, based on the new pitch and yaw.
 
         let rotation =
-            Quaternion::new(vec3::RIGHT, -self.pitch) * Quaternion::new(vec3::UP, -self.yaw);
+            Quaternion::new(vec3::RIGHT, self.pitch) * Quaternion::new(vec3::UP, self.yaw);
 
         let target = vec3::FORWARD * *rotation.mat();
 
@@ -91,9 +91,9 @@ impl FirstPersonLookVectorController {
     fn apply_mouse_input(&mut self, look_vector: &mut LookVector, mouse_state: &MouseState) {
         // Apply camera movement based on mouse input.
 
-        let yaw_delta = mouse_state.relative_motion.0 as f32 * self.mouse_look_sensitivity;
+        let yaw_delta = -(mouse_state.relative_motion.0 as f32 * self.mouse_look_sensitivity);
 
-        let pitch_delta = mouse_state.relative_motion.1 as f32 * self.mouse_look_sensitivity;
+        let pitch_delta = -(mouse_state.relative_motion.1 as f32 * self.mouse_look_sensitivity);
 
         self.apply_pitch_and_yaw_deltas(look_vector, pitch_delta, yaw_delta);
     }
