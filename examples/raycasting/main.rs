@@ -152,7 +152,7 @@ fn main() -> Result<(), String> {
     let bvh_maximum_visible_node_depth = 0_u8;
     let bvh_maximum_visible_node_depth_rc = RefCell::new(bvh_maximum_visible_node_depth);
 
-    let draw_ray_grid_rc = RefCell::new(false);
+    let draw_ray_grid_rc = RefCell::new(true);
 
     let mut update = |app: &mut App,
                       keyboard_state: &mut KeyboardState,
