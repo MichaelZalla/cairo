@@ -269,7 +269,7 @@ impl Simulation {
             let normal = normal_impulse_data.normal;
             let normal_impulse_magnitude = normal_impulse_data.magnitude;
 
-            let r = normal_impulse_data.r;
+            let r_torque = normal_impulse_data.r;
 
             let normal_impulse = normal * normal_impulse_magnitude;
 
@@ -280,7 +280,7 @@ impl Simulation {
             // Applies normal impulse to angular momentum.
             // Torque = r × impulse (must apply to the full impulse vector)
 
-            new_body_state.angular_momentum += r.cross(normal_impulse);
+            new_body_state.angular_momentum += r_torque.cross(normal_impulse);
 
             // Determines the body's new position, using both velocities.
 
@@ -319,7 +319,7 @@ impl Simulation {
                 let tangent_impulse = tangent * magnitude;
 
                 // Torque = r × impulse (must apply to the full impulse vector, not separately)
-                let torque_from_friction = r.cross(tangent_impulse);
+                let torque_from_friction = r_torque.cross(tangent_impulse);
 
                 // Applies tangent impulse to linear momentum.
 
