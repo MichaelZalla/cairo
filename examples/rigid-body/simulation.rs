@@ -414,11 +414,14 @@ impl Simulation {
             0.0
         };
 
-        if body_speed_along_tangent < RESTING_SPEED_THRESHOLD
-            && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD
-        {
+        let is_resting = body_speed_along_tangent < RESTING_SPEED_THRESHOLD
+            && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
+
+        let is_rolling = contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
+
+        if is_resting {
             StaticContactKind::Resting
-        } else if contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD {
+        } else if is_rolling {
             StaticContactKind::Rolling(0.5)
         } else {
             StaticContactKind::Sliding
