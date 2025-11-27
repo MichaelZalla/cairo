@@ -150,15 +150,16 @@ impl Simulation {
     }
 
     fn resolve_static_plane_collisions(
-        &mut self,
+        plane_colliders: &[PlaneCollider],
+        body_count: usize,
         h: f32,
         derivative: &StateVector<RigidBodySimulationState>,
         current_state: &StateVector<RigidBodySimulationState>,
         new_state: &mut StateVector<RigidBodySimulationState>,
         material: &PhysicsMaterial,
     ) {
-        for (collider_index, collider) in self.static_plane_colliders.iter().enumerate() {
-            for body_index in 0..self.rigid_bodies.len() {
+        for (collider_index, collider) in plane_colliders.iter().enumerate() {
+            for body_index in 0..body_count {
                 let body_derivative = &derivative.0[0];
                 let current_body_state = &current_state.0[body_index];
                 let new_body_state = &mut new_state.0[body_index];
@@ -1073,7 +1074,9 @@ impl Simulation {
     ) {
         // Applies impulses based on actual collisions at final positions.
 
-        self.resolve_static_plane_collisions(
+        Self::resolve_static_plane_collisions(
+            &self.static_plane_colliders,
+            self.rigid_bodies.len(),
             h,
             derivative,
             current_state,
