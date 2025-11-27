@@ -132,10 +132,7 @@ pub fn intersect_line_segment_triangle(
     }
 }
 
-pub fn intersect_capsule_triangle(
-    capsule: &mut Capsule,
-    triangle: &Triangle,
-) -> Option<Vec3> {
+pub fn intersect_capsule_triangle(capsule: &mut Capsule, triangle: &Triangle) -> Option<Vec3> {
     // Use capsule-plane intersection to find where the capsule hits the triangle's plane
     if let Some((t, contact_point)) = intersect_capsule_plane(
         capsule.segment.start,
@@ -350,25 +347,20 @@ pub fn intersect_ray_sphere(ray: &Ray, sphere: &Sphere) -> Option<(f32, Vec3)> {
     let sphere_to_ray = ray.origin - sphere.center;
 
     // Ray originates outside of sphere when c > 0.
-
     let c = sphere_to_ray.mag_squared() - sphere.radius * sphere.radius;
 
     // Ray points away from sphere's center when b > 0.
-
     let b = sphere_to_ray.dot(ray.direction);
 
     // Exit if ray origin is outside of sphere and ray points away from sphere.
-
     if c > 0.0 && b > 0.0 {
         return None;
     }
 
     // Quadratic discriminant.
-
     let discriminant = b * b - c;
 
     // When discriminant is negative, the ray misses the sphere.
-
     if discriminant < 0.0 {
         return None;
     }
