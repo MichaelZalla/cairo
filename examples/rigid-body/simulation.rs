@@ -271,9 +271,11 @@ impl Simulation {
 
             let r = normal_impulse_data.r;
 
+            let normal_impulse = normal * normal_impulse_magnitude;
+
             // Applies normal impulse to linear momentum.
 
-            new_body_state.linear_momentum += normal * normal_impulse_magnitude;
+            new_body_state.linear_momentum += normal_impulse;
 
             // Applies normal impulse to angular momentum.
 
