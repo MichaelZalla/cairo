@@ -299,11 +299,17 @@ impl Simulation {
 
             // Applies tangent impulse (if any) to new state.
 
+            // Use contact point velocity BEFORE normal impulse (stored in
+            // normal_impulse_data) because the friction logic expects the
+            // contact to still be moving toward the plane
+            let contact_point_velocity_before_normal_impulse =
+                normal_impulse_data.contact_point_velocity;
+
             if let Some(tangent_impulse_data) = get_rigid_body_plane_friction_impulse(
                 1.0 / new_body_state.inverse_mass,
                 body_derivative,
                 normal,
-                normal_impulse_data.contact_point_velocity,
+                contact_point_velocity_before_normal_impulse,
                 normal_impulse_magnitude,
                 material,
                 true, // is_bounce_collision: use only dynamic friction
