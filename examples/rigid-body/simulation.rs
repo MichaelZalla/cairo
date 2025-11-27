@@ -44,7 +44,7 @@ static ROLLING_MIN_ABSOLUTE_THRESHOLD: f32 = 0.2; // Absolute minimum threshold 
 
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
-    dynamic_friction: 0.6,
+    dynamic_friction: 0.1, // Low friction to preserve horizontal motion during bounces
     restitution: 0.4,
 };
 
