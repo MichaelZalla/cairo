@@ -216,6 +216,82 @@ impl Simulation {
         }
     }
 
+    /// Applies collision impulses (normal and friction) to the body state.
+    ///
+    /// This function:
+    /// 1. Applies the normal impulse to linear and angular momentum
+    /// 2. Updates the body's position based on pre/post-collision velocities
+    /// 3. Calculates and applies friction impulse (if any)
+    #[allow(clippy::too_many_arguments)]
+    fn apply_collision_impulses(
+        h: f32,
+        body_derivative: &RigidBodySimulationState,
+        body_state: &mut RigidBodySimulationState,
+        start_position: Vec3,
+        start_linear_velocity: Vec3,
+        normal_impulse_data: &NormalImpulseData,
+        collision_t: f32,
+        material: &PhysicsMaterial,
+    ) {
+        let normal = normal_impulse_data.normal;
+        let normal_impulse_magnitude = normal_impulse_data.magnitude;
+        let r_torque = normal_impulse_data.r;
+
+        let normal_impulse = normal * normal_impulse_magnitude;
+
+        // Applies normal impulse to linear momentum.
+        body_state.linear_momentum += normal_impulse;
+
+        // Applies normal impulse to angular momentum.
+        // Torque = r × impulse (must apply to the full impulse vector)
+        body_state.angular_momentum += r_torque.cross(normal_impulse);
+
+        // Determines the body's new position, using both velocities.
+        {
+            let time_before_collision = h * collision_t;
+            let time_after_collision = h - time_before_collision;
+
+            body_state.position = {
+                let position_at_collision =
+                    start_position + start_linear_velocity * time_before_collision;
+
+                position_at_collision + body_state.velocity() * time_after_collision
+            };
+        }
+
+        // Applies tangent impulse (if any) to new state.
+
+        // Use contact point velocity BEFORE normal impulse (stored in
+        // normal_impulse_data) because the friction logic expects the
+        // contact to still be moving toward the plane
+        let contact_point_velocity_before_normal_impulse =
+            normal_impulse_data.contact_point_velocity;
+
+        if let Some(tangent_impulse_data) = get_rigid_body_plane_friction_impulse(
+            1.0 / body_state.inverse_mass,
+            body_derivative,
+            normal,
+            contact_point_velocity_before_normal_impulse,
+            normal_impulse_magnitude,
+            material,
+            true, // is_bounce_collision: use only dynamic friction
+        ) {
+            let tangent = tangent_impulse_data.tangent;
+            let magnitude = tangent_impulse_data.magnitude;
+
+            let tangent_impulse = tangent * magnitude;
+
+            // Torque = r × impulse (must apply to the full impulse vector, not separately)
+            let torque_from_friction = r_torque.cross(tangent_impulse);
+
+            // Applies tangent impulse to linear momentum.
+            body_state.linear_momentum += tangent_impulse;
+
+            // Applies tangent impulse to angular momentum.
+            body_state.angular_momentum += torque_from_friction;
+        }
+    }
+
     /// Calculates collision response data if a collision is detected.
     ///
     /// Returns `Some((normal_impulse_data, collision_t))` if a collision occurred,
@@ -369,72 +445,18 @@ impl Simulation {
             material,
         );
 
-        // Applies normal impulse to new state.
-
+        // Applies collision impulses (normal and friction) to new state.
         if let Some((normal_impulse_data, t)) = &normal_impulse_data_with_t {
-            let normal = normal_impulse_data.normal;
-            let normal_impulse_magnitude = normal_impulse_data.magnitude;
-
-            let r_torque = normal_impulse_data.r;
-
-            let normal_impulse = normal * normal_impulse_magnitude;
-
-            // Applies normal impulse to linear momentum.
-
-            new_body_state.linear_momentum += normal_impulse;
-
-            // Applies normal impulse to angular momentum.
-            // Torque = r × impulse (must apply to the full impulse vector)
-
-            new_body_state.angular_momentum += r_torque.cross(normal_impulse);
-
-            // Determines the body's new position, using both velocities.
-
-            {
-                let time_before_collision = h * t;
-                let time_after_collision = h - time_before_collision;
-
-                new_body_state.position = {
-                    let position_at_collision =
-                        start_position + start_linear_velocity * time_before_collision;
-
-                    position_at_collision + new_body_state.velocity() * time_after_collision
-                };
-            }
-
-            // Applies tangent impulse (if any) to new state.
-
-            // Use contact point velocity BEFORE normal impulse (stored in
-            // normal_impulse_data) because the friction logic expects the
-            // contact to still be moving toward the plane
-            let contact_point_velocity_before_normal_impulse =
-                normal_impulse_data.contact_point_velocity;
-
-            if let Some(tangent_impulse_data) = get_rigid_body_plane_friction_impulse(
-                1.0 / new_body_state.inverse_mass,
+            Self::apply_collision_impulses(
+                h,
                 body_derivative,
-                normal,
-                contact_point_velocity_before_normal_impulse,
-                normal_impulse_magnitude,
+                new_body_state,
+                start_position,
+                start_linear_velocity,
+                normal_impulse_data,
+                *t,
                 material,
-                true, // is_bounce_collision: use only dynamic friction
-            ) {
-                let tangent = tangent_impulse_data.tangent;
-                let magnitude = tangent_impulse_data.magnitude;
-
-                let tangent_impulse = tangent * magnitude;
-
-                // Torque = r × impulse (must apply to the full impulse vector, not separately)
-                let torque_from_friction = r_torque.cross(tangent_impulse);
-
-                // Applies tangent impulse to linear momentum.
-
-                new_body_state.linear_momentum += tangent_impulse;
-
-                // Applies tangent impulse to angular momentum.
-
-                new_body_state.angular_momentum += torque_from_friction;
-            }
+            );
         }
 
         // If necessary, fixes up the body's position to maintain its minimum
