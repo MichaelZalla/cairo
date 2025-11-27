@@ -16,6 +16,7 @@ pub fn system_dynamics_function(
 
     let mut derivative = StateVector::<RigidBodySimulationState>::new(n);
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..n {
         let body_state = &state.0[i];
         let body_derivative = &mut derivative.0[i];
