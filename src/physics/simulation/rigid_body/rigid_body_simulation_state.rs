@@ -158,11 +158,16 @@ impl RigidBodySimulationState {
                         // Applies force of dynamic friction, acting on the moving
                         // point of contact.
 
-                        let normal_force_magnitude = (external_force_magnitude_along_normal
-                            * contact.material.dynamic_friction)
-                            .min(external_force_magnitude_along_tangent);
+                        // Dynamic friction force = μ_k × N, opposes sliding
+                        // direction.
+                        let normal_force_magnitude = -external_force_magnitude_along_normal;
 
-                        let friction_force = -contact.tangent * normal_force_magnitude;
+                        let friction_force_magnitude =
+                            normal_force_magnitude * contact.material.dynamic_friction;
+
+                        // Friction accelerates the rigid body in the direction
+                        // that reduces sliding.
+                        let friction_force = contact.tangent * friction_force_magnitude;
 
                         remaining_total_acceleration += friction_force;
 
