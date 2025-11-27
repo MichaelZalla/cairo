@@ -11,7 +11,7 @@ use crate::{
     render::Renderer,
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
-    transform::Transform3D,
+    transform::{Transform3D, quaternion::Quaternion},
     vec::{
         vec3::{self, Vec3},
         vec4::Vec4,
@@ -116,6 +116,7 @@ impl Default for RigidBodyDebugFlags {
 pub struct RigidBody {
     pub kind: RigidBodyKind,
     pub transform: Transform3D,
+    pub orientation: Quaternion,
     pub mass: f32,
     pub moment_of_inertia: Mat4,
     pub linear_momentum: Vec3,
@@ -138,7 +139,7 @@ impl From<&RigidBody> for RigidBodySimulationState {
             inverse_mass: body.inverse_mass,
             inverse_moment_of_inertia: body.inverse_moment_of_inertia,
             position: *body.transform.translation(),
-            orientation: *body.transform.rotation(),
+            orientation: body.orientation,
             linear_momentum: body.linear_momentum,
             angular_momentum: body.angular_momentum,
             static_contacts: body.static_contacts,
@@ -208,6 +209,8 @@ impl RigidBody {
         self.transform.set_translation(translation);
 
         orientation.renormalize();
+
+        self.orientation = orientation;
 
         self.transform.set_rotation(orientation);
 
