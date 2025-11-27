@@ -164,16 +164,13 @@ impl RigidBodySimulationState {
 
                         total_torque += r.cross(force_at_contact_point);
                     }
-                    StaticContactKind::Rolling(coefficient_of_rolling_resistance) => {
-                        // Applies rolling resistance force.
-
-                        let force = self.velocity() * -coefficient_of_rolling_resistance;
-
-                        remaining_total_acceleration += force;
-
-                        let torque = self.angular_velocity() * -coefficient_of_rolling_resistance;
-
-                        total_torque += torque;
+                    StaticContactKind::Rolling(_coefficient_of_rolling_resistance) => {
+                        // DISABLED: Rolling resistance
+                        //
+                        // Rolling resistance cannot maintain the rolling constraint (v = ω × r)
+                        // without a constraint solver. For stable rolling without a constraint
+                        // solver, we simply don't apply any resistance, allowing objects to
+                        // roll indefinitely.
                     }
                 }
             }
