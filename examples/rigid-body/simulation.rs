@@ -418,6 +418,8 @@ impl Simulation {
         contact_point_velocity: Vec3,
         body_motion_tangent: Option<Vec3>,
         contact_point_motion_tangent: Option<Vec3>,
+        angular_velocity: Vec3,
+        normal: Vec3,
     ) -> StaticContactKind {
         let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
             body_velocity.dot(tangent)
@@ -432,7 +434,10 @@ impl Simulation {
             0.0
         };
 
-        // Check if both velocities are very small (resting)
+        // Check if both velocities are very small (resting); note that a body
+        // with very low tangential velocity but high Y-spin will be classified
+        // as "resting" here.
+
         let is_resting = body_speed_along_tangent < RESTING_SPEED_THRESHOLD
             && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD;
 
@@ -450,9 +455,50 @@ impl Simulation {
 
         let is_rolling = velocity_ratio < ROLLING_VELOCITY_RATIO_THRESHOLD;
 
+        // Additional check for rolling: the spin axis must be orthogonal to
+        // both (1) the surface normal, and (2) the direction of motion.
+
+        let has_correct_spin_axis = {
+            static MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 = 0.01 * 0.01;
+            static MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 = 0.01 * 0.01;
+
+            let has_significant_motion =
+                body_velocity.mag_squared() > MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED;
+
+            let has_significant_spin =
+                angular_velocity.mag_squared() > MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK_SQUARED;
+
+            if has_significant_motion && has_significant_spin {
+                let spin_axis = angular_velocity.as_normal();
+                let motion_direction = body_velocity.as_normal();
+
+                // Spin must be perpendicular to normal.
+                let dot_with_normal = normal.dot(spin_axis).abs();
+                let perpendicular_to_normal = dot_with_normal < 0.1;
+
+                // Spin must be perpendicular to motion.
+                let dot_with_motion = motion_direction.dot(spin_axis);
+                let perpendicular_to_motion = dot_with_motion.abs() < 0.1;
+
+                perpendicular_to_motion && perpendicular_to_normal
+            } else if has_significant_spin {
+                // High spin but low tangential velocity: check if spin is parallel
+                // to surface normal (i.e., Y-spin); if so, this is definitely NOT
+                // rolling.
+                let spin_axis = angular_velocity.as_normal();
+                let dot_with_normal = normal.dot(spin_axis).abs();
+                let parallel_to_normal = dot_with_normal > 0.9;
+
+                !parallel_to_normal
+            } else {
+                // Low velocity AND low spin - can't determine axis, allow resting/rolling
+                true
+            }
+        };
+
         if is_resting {
             StaticContactKind::Resting
-        } else if is_rolling {
+        } else if is_rolling && has_correct_spin_axis {
             StaticContactKind::Rolling(0.5)
         } else {
             StaticContactKind::Sliding
@@ -535,11 +581,15 @@ impl Simulation {
         let contact_point_motion_tangent =
             Self::compute_motion_tangent(collider.point, contact_point_velocity, &collider.plane);
 
+        let angular_velocity = new_body_state.angular_velocity();
+
         let kind = Self::classify_contact_kind(
             body_velocity,
             contact_point_velocity,
             body_motion_tangent,
             contact_point_motion_tangent,
+            angular_velocity,
+            normal,
         );
 
         let (tangent, bitangent) =
