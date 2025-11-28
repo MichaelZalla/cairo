@@ -159,7 +159,7 @@ pub fn make_simulation_from_mesh(
 
         sphere.debug_flags |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
             | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
-            | RigidBodyDebugFlags::DRAW_STATIC_CONTACT;
+            | RigidBodyDebugFlags::DRAW_STATIC_CONTACTS;
 
         spheres.push(sphere);
     }

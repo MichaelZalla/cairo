@@ -300,7 +300,7 @@ pub fn make_test_simulation(
         // | RigidBodyDebugFlags::DRAW_COLLISION_FRICTION_IMPULSE
         // | RigidBodyDebugFlags::DRAW_COLLISION_NORMAL_IMPULSE
         // | RigidBodyDebugFlags::DRAW_COLLISION_TANGENT
-        | RigidBodyDebugFlags::DRAW_STATIC_CONTACT
+        | RigidBodyDebugFlags::DRAW_STATIC_CONTACTS
     }
 
     // Safety plane collider - positioned well below the mesh ground at y=-10.

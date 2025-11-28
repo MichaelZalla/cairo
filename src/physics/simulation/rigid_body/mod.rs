@@ -102,7 +102,7 @@ bitflags! {
         const DRAW_COLLISION_NORMAL_IMPULSE = 1 << 6;
         const DRAW_COLLISION_TANGENT = 1 << 7;
         const DRAW_COLLISION_FRICTION_IMPULSE = 1 << 8;
-        const DRAW_STATIC_CONTACT = 1 << 9;
+        const DRAW_STATIC_CONTACTS = 1 << 9;
     }
 }
 
@@ -375,7 +375,7 @@ impl RigidBody {
 
         if self
             .debug_flags
-            .contains(RigidBodyDebugFlags::DRAW_STATIC_CONTACT)
+            .contains(RigidBodyDebugFlags::DRAW_STATIC_CONTACTS)
         {
             for contact in &self.static_contacts {
                 let start = contact.point;
