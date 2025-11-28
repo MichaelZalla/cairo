@@ -253,8 +253,8 @@ fn correct_mesh_penetration(
     // Intersect with mesh TLAS
     intersect_medial_primitive_tlas(&mut capsule, tlas);
 
-    // Check if we hit a triangle
-    if let Some(collision) = capsule.segment.closest_collision() {
+    // Process all detected collisions to correct penetration
+    for collision in capsule.segment.collisions.iter() {
         let (triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
 
         // Calculate signed distance from body to triangle plane
