@@ -210,24 +210,33 @@ fn main() -> Result<(), String> {
         // Borrow demo state once for the entire update
         let mut state = demo_state.borrow_mut();
 
-        // Plays around with the simulation world.
+        // Updates the simulation parameters using keyboard.
 
         for keycode in keyboard_state.newly_pressed_keycodes.iter() {
             #[allow(clippy::single_match)]
             match *keycode {
                 Keycode::G => {
                     // Toggles hash grid visualization.
-
                     state.simulation.visualize_hash_grid = !state.simulation.visualize_hash_grid;
                 }
                 Keycode::U => {
                     // Pushes bodies in contact away from their collider.
-
                     for body in state.simulation.rigid_bodies.iter_mut() {
                         for contact in &body.static_contacts {
                             body.linear_momentum += contact.normal * 10.0;
                         }
                     }
+                }
+                Keycode::R => {
+                    // Reset simulation to its initial state (preserved debug flags).
+                    let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
+
+                    state.simulation = make_simulation(&mut sampler);
+
+                    state.simulation.visualize_hash_grid = current_visualize_hash_grid;
+
+                    // Reset time accumulator
+                    state.time_accumulator = 0.0;
                 }
                 Keycode::T => {
                     // Toggle rasterization mode
