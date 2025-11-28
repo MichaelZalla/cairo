@@ -127,10 +127,10 @@ impl Strut {
     ) -> Option<(Vec3, Vec3)> {
         edge.connected_points.as_ref().map(|connected_points| {
             Self::get_surface_normals(
-                state.data[state_index_offset + edge.points.0],
-                state.data[state_index_offset + edge.points.1],
-                state.data[state_index_offset + connected_points.0],
-                state.data[state_index_offset + connected_points.1],
+                state.0[state_index_offset + edge.points.0],
+                state.0[state_index_offset + edge.points.1],
+                state.0[state_index_offset + connected_points.0],
+                state.0[state_index_offset + connected_points.1],
             )
         })
     }
@@ -163,8 +163,8 @@ impl Strut {
 
         // { mesh_start + mesh_point_index + acceleration_component_index }
 
-        derivative.data[state_index_offset + start_index + n] += spring_acceleration;
-        derivative.data[state_index_offset + end_index + n] -= spring_acceleration;
+        derivative.0[state_index_offset + start_index + n] += spring_acceleration;
+        derivative.0[state_index_offset + end_index + n] -= spring_acceleration;
 
         if let Some(connected_points) = &self.edge.connected_points {
             let left_index = connected_points.0;
@@ -179,10 +179,10 @@ impl Strut {
 
             self.rotational_forces = [f0, f1, f2, f3];
 
-            derivative.data[state_index_offset + start_index + n] += f0;
-            derivative.data[state_index_offset + end_index + n] += f1;
-            derivative.data[state_index_offset + left_index + n] += f2;
-            derivative.data[state_index_offset + right_index + n] += f3;
+            derivative.0[state_index_offset + start_index + n] += f0;
+            derivative.0[state_index_offset + end_index + n] += f1;
+            derivative.0[state_index_offset + left_index + n] += f2;
+            derivative.0[state_index_offset + right_index + n] += f3;
         }
     }
 
@@ -197,11 +197,11 @@ impl Strut {
 
         // Reads current point positions.
 
-        let position_i = current_state.data[state_index_offset + i];
-        let velocity_i = current_state.data[state_index_offset + i + n];
+        let position_i = current_state.0[state_index_offset + i];
+        let velocity_i = current_state.0[state_index_offset + i + n];
 
-        let position_j = current_state.data[state_index_offset + j];
-        let velocity_j = current_state.data[state_index_offset + j + n];
+        let position_j = current_state.0[state_index_offset + j];
+        let velocity_j = current_state.0[state_index_offset + j + n];
 
         // Computes the strut vector and its distance.
 
@@ -253,11 +253,11 @@ impl Strut {
         let left_index = vertex_indices.2;
         let right_index = vertex_indices.3;
 
-        let start = current_state.data[state_index_offset + start_index];
-        let end = current_state.data[state_index_offset + end_index];
+        let start = current_state.0[state_index_offset + start_index];
+        let end = current_state.0[state_index_offset + end_index];
 
-        let left = current_state.data[state_index_offset + left_index];
-        let right = current_state.data[state_index_offset + right_index];
+        let left = current_state.0[state_index_offset + left_index];
+        let right = current_state.0[state_index_offset + right_index];
 
         // Angular spring accelerations.
 
@@ -319,8 +319,8 @@ impl Strut {
         // The connected point's speed along the surface normal.
 
         let torsional_damper_force_magnitude = {
-            let left_velocity = current_state.data[state_index_offset + left_index + n];
-            let right_velocity = current_state.data[state_index_offset + right_index + n];
+            let left_velocity = current_state.0[state_index_offset + left_index + n];
+            let right_velocity = current_state.0[state_index_offset + right_index + n];
 
             let left_s = left_velocity.dot(left_normal);
             let right_s = right_velocity.dot(right_normal);

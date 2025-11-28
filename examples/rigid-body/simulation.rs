@@ -24,6 +24,7 @@ use cairo::{
                 RigidBody, RigidBodyKind,
                 rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
             },
+            state_vector::StateVector,
         },
     },
     render::Renderer,
@@ -32,9 +33,7 @@ use cairo::{
     vec::vec4::Vec4,
 };
 
-use crate::{
-    integration::system_dynamics_function, plane_collider::Renderable, state_vector::StateVector,
-};
+use crate::{integration::system_dynamics_function, plane_collider::Renderable};
 
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
@@ -312,7 +311,7 @@ impl Simulation {
     }
 
     fn copy_to_state_vector(&self) -> StateVector<RigidBodySimulationState> {
-        self.rigid_bodies.as_slice().into()
+        StateVector(self.rigid_bodies.iter().map(|rb| rb.into()).collect())
     }
 
     fn apply_state_vector(&mut self, state: &StateVector<RigidBodySimulationState>) {

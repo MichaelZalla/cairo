@@ -37,15 +37,15 @@ impl Default for Particle {
 
 impl ToStateVector for Particle {
     fn write_to(&self, state: &mut StateVector, n: usize, i: usize) {
-        state.data[i] = self.position;
-        state.data[i + n] = self.velocity;
+        state.0[i] = self.position;
+        state.0[i + n] = self.velocity;
     }
 }
 
 impl FromStateVector for Particle {
     fn write_from(&mut self, state: &StateVector, n: usize, i: usize) {
-        self.position = state.data[i];
-        self.velocity = state.data[i + n];
+        self.position = state.0[i];
+        self.velocity = state.0[i + n];
     }
 }
 

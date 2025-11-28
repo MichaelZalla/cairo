@@ -1,9 +1,8 @@
 use cairo::physics::simulation::{
     contact::StaticContactList,
     rigid_body::rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
+    state_vector::StateVector,
 };
-
-use crate::state_vector::StateVector;
 
 pub fn system_dynamics_function(
     state: &StateVector<RigidBodySimulationState>,

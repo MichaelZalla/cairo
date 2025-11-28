@@ -35,7 +35,7 @@ static AIR_RESISTANCE: PointForce =
             z: 0.0,
         };
 
-        let newtons = (WIND - state.data[i + state.len()]) * D;
+        let newtons = (WIND - state.0[i + state.len()]) * D;
 
         (newtons, None, false)
     };
@@ -130,8 +130,8 @@ pub(crate) fn make_simulation<'a>(
 
             //         let n = current_state.len();
 
-            //         let current_position = current_state.data[i];
-            //         let current_velocity = current_state.data[i + n];
+            //         let current_position = current_state.0[i];
+            //         let current_velocity = current_state.0[i + n];
 
             //         if current_velocity.mag() == 0.0 {
             //             return Acceleration::default();
@@ -213,7 +213,7 @@ pub(crate) fn make_simulation<'a>(
 
             //         let n = current_state.len();
 
-            //         let current_velocity = current_state.data[i + n];
+            //         let current_velocity = current_state.0[i + n];
 
             //         let current_speed = current_velocity.mag();
             //         let new_speed = new_velocity.mag();
@@ -264,7 +264,7 @@ pub(crate) fn make_simulation<'a>(
 
             //         static VORTEX_TIGHTNESS: f32 = 1.5;
 
-            //         let current_position = current_state.data[i];
+            //         let current_position = current_state.0[i];
 
             //         let particle_distance_to_vortex_center =
             //             (current_position - VORTEX_CENTER).mag();

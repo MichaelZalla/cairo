@@ -28,7 +28,7 @@ impl Simulation<'_> {
     pub fn tick(&mut self, current_time: f32, h: f32) {
         let n = self.meshes.iter().map(|m| m.points.len()).sum();
 
-        let mut state = StateVector::new(2, n);
+        let mut state = StateVector::new(2 * n);
 
         let mut point_index = 0;
 
@@ -55,10 +55,10 @@ impl Simulation<'_> {
         };
 
         for i in 0..n {
-            let position = state.data[i];
+            let position = state.0[i];
 
-            let mut end_position = new_state.data[i];
-            let mut end_velocity = new_state.data[i + n];
+            let mut end_position = new_state.0[i];
+            let mut end_velocity = new_state.0[i + n];
 
             // We'll break early on the first collision (if any).
 
@@ -78,8 +78,8 @@ impl Simulation<'_> {
                         penetration_depth,
                     );
 
-                    new_state.data[i + n] = end_velocity;
-                    new_state.data[i] = end_position;
+                    new_state.0[i + n] = end_velocity;
+                    new_state.0[i] = end_position;
 
                     break;
                 }
@@ -114,7 +114,7 @@ impl Simulation<'_> {
 
         for i in 0..n {
             // Copy velocities from previous (current?) state.
-            derivative.data[i] = current_state.data[i + n];
+            derivative.0[i] = current_state.0[i + n];
         }
 
         derivative
@@ -128,7 +128,7 @@ impl Simulation<'_> {
     ) -> StateVector {
         let n = current_state.len();
 
-        let mut derivative = StateVector::new(2, n);
+        let mut derivative = StateVector::new(2 * n);
 
         // For each point, compute net environmental force acting on it.
         for i in 0..n {
@@ -150,7 +150,7 @@ impl Simulation<'_> {
             }
 
             // Write the final net environmental acceleration.
-            derivative.data[i + n] = total_acceleration;
+            derivative.0[i + n] = total_acceleration;
         }
 
         for mesh in self.meshes.iter_mut() {

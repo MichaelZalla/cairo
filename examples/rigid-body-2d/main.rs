@@ -26,7 +26,6 @@ use make_simulation::make_simulation;
 mod coordinates;
 mod make_simulation;
 mod simulation;
-mod state_vector;
 
 #[derive(Default, Debug, Copy, Clone)]
 struct ForceCreationState {

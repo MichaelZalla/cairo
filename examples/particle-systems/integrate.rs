@@ -10,15 +10,15 @@ pub fn integrate_euler(
     derivative: &StateVector,
     h: f32,
 ) -> StateVector {
-    let n = current_state.len();
+    let n = current_state.num_entities(COMPONENTS_PER_PARTICLE);
 
     // Performs basic Euler integration over position and velocity.
     let mut result = current_state.clone() + derivative * h;
 
     for i in 0..n {
-        let midpoint_velocity = (current_state.data[i + n] + result.data[i + n]) / 2.0;
+        let midpoint_velocity = (current_state.0[i + n] + result.0[i + n]) / 2.0;
 
-        result.data[i] = current_state.data[i] + midpoint_velocity * h;
+        result.0[i] = current_state.0[i] + midpoint_velocity * h;
     }
 
     result
@@ -29,14 +29,14 @@ pub fn system_dynamics_function(
     forces: &[PointForce],
     current_time: f32,
 ) -> StateVector {
-    let n = current_state.len();
+    let n = current_state.num_entities(COMPONENTS_PER_PARTICLE);
 
     // Compute new accelerations for derivative.
     let mut derivative = compute_accelerations(current_state, forces, current_time);
 
     for i in 0..n {
         // Copy velocities from previous (current?) state.
-        derivative.data[i] = current_state.data[i + n];
+        derivative.0[i] = current_state.0[i + n];
     }
 
     derivative
@@ -47,9 +47,9 @@ fn compute_accelerations(
     forces: &[PointForce],
     current_time: f32,
 ) -> StateVector {
-    let n = current_state.len();
+    let n = current_state.num_entities(COMPONENTS_PER_PARTICLE);
 
-    let mut derivative = StateVector::new(COMPONENTS_PER_PARTICLE, n);
+    let mut derivative = StateVector::new(COMPONENTS_PER_PARTICLE * n);
 
     // Compute environmental accelerations acting on each particle.
 
@@ -70,7 +70,7 @@ fn compute_accelerations(
 
         // Write the final environmental acceleration into derivative.
 
-        derivative.data[i + n] = total_acceleration;
+        derivative.0[i + n] = total_acceleration;
     }
 
     derivative

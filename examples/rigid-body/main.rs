@@ -27,7 +27,6 @@ pub mod make_terrain_simulation;
 pub mod make_test_simulation;
 pub mod plane_collider;
 pub mod simulation;
-pub mod state_vector;
 
 // Fixed timestep accumulator for stable physics
 const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics

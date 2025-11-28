@@ -167,8 +167,8 @@ impl SpringyMesh {
             };
 
             let damper = {
-                let p1_velocity = derivative.data[self.state_index_offset + p1_index];
-                let p2_velocity = derivative.data[self.state_index_offset + p2_index];
+                let p1_velocity = derivative.0[self.state_index_offset + p1_index];
+                let p2_velocity = derivative.0[self.state_index_offset + p2_index];
 
                 let normal_component_of_p1_velocity = p1_velocity.dot(p0_p1_normal);
                 let normal_component_of_p2_velocity = p2_velocity.dot(p0_p2_normal);
@@ -189,9 +189,9 @@ impl SpringyMesh {
             let p2_acceleration = p2_force / p2.mass;
             let p0_acceleration = p0_force / p0.mass;
 
-            derivative.data[self.state_index_offset + p0_index + n] += p0_acceleration;
-            derivative.data[self.state_index_offset + p1_index + n] += p1_acceleration;
-            derivative.data[self.state_index_offset + p2_index + n] += p2_acceleration;
+            derivative.0[self.state_index_offset + p0_index + n] += p0_acceleration;
+            derivative.0[self.state_index_offset + p1_index + n] += p1_acceleration;
+            derivative.0[self.state_index_offset + p2_index + n] += p2_acceleration;
         }
     }
 }

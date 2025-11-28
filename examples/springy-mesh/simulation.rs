@@ -73,9 +73,9 @@ impl Simulation {
     pub fn tick(&mut self, h: f32, uptime_seconds: f32) {
         let num_points: usize = self.meshes.iter().map(|mesh| mesh.points.len()).sum();
 
-        let mut state = StateVector::new(COMPONENTS_PER_PARTICLE, num_points);
+        let mut state = StateVector::new(COMPONENTS_PER_PARTICLE * num_points);
 
-        let n = state.len();
+        let n = state.num_entities(COMPONENTS_PER_PARTICLE);
 
         // Copies current positions and velocities into the current state.
 
@@ -184,11 +184,11 @@ impl Simulation {
     ) {
         for mesh in &self.meshes {
             for i in 0..mesh.points.len() {
-                let acceleration = derivative.data[mesh.state_index_offset + i + n];
+                let acceleration = derivative.0[mesh.state_index_offset + i + n];
 
-                let start_position = state.data[mesh.state_index_offset + i];
-                let mut end_position = new_state.data[mesh.state_index_offset + i];
-                let mut end_velocity = new_state.data[mesh.state_index_offset + i + n];
+                let start_position = state.0[mesh.state_index_offset + i];
+                let mut end_position = new_state.0[mesh.state_index_offset + i];
+                let mut end_velocity = new_state.0[mesh.state_index_offset + i + n];
 
                 // We'll break early on the first collision (if any).
 
@@ -217,8 +217,8 @@ impl Simulation {
                             penetration_depth,
                         );
 
-                        new_state.data[mesh.state_index_offset + i + n] = end_velocity;
-                        new_state.data[mesh.state_index_offset + i] = end_position;
+                        new_state.0[mesh.state_index_offset + i + n] = end_velocity;
+                        new_state.0[mesh.state_index_offset + i] = end_position;
                     }
                 }
             }
@@ -234,8 +234,8 @@ impl Simulation {
         for (i, mesh) in self.meshes.iter_mut().enumerate() {
             let (mut min, mut max) = (Vec3::ones() * f32::MAX, Vec3::ones() * f32::MIN);
 
-            for point in &new_state.data
-                [mesh.state_index_offset..mesh.state_index_offset + mesh.points.len()]
+            for point in
+                &new_state.0[mesh.state_index_offset..mesh.state_index_offset + mesh.points.len()]
             {
                 min = min.min(point);
                 max = max.max(point);
@@ -427,8 +427,8 @@ impl Simulation {
 
         let b_points_start_index = self.meshes[b].state_index_offset;
 
-        let start_position = state.data[a_point_index];
-        let end_position = new_state.data[a_point_index];
+        let start_position = state.0[a_point_index];
+        let end_position = new_state.0[a_point_index];
 
         let mut segment = LineSegment::new(start_position, end_position);
 
@@ -441,9 +441,9 @@ impl Simulation {
 
         let [i0, i1, i2] = triangle.vertices;
 
-        let v0_position = &new_state.data[b_points_start_index + i0];
-        let v1_position = &new_state.data[b_points_start_index + i1];
-        let v2_position = &new_state.data[b_points_start_index + i2];
+        let v0_position = &new_state.0[b_points_start_index + i0];
+        let v1_position = &new_state.0[b_points_start_index + i1];
+        let v2_position = &new_state.0[b_points_start_index + i2];
 
         triangle.update_vertex_positions(v0_position, v1_position, v2_position);
 
@@ -459,21 +459,21 @@ impl Simulation {
                 // Subtracts any velocity accumulated by the vertex while colliding.
 
                 {
-                    let acceleration = derivative.data[a_point_index + n];
+                    let acceleration = derivative.0[a_point_index + n];
 
                     let accumulated_velocity = acceleration * time_after_collision;
 
-                    new_state.data[a_point_index + n] -= accumulated_velocity;
+                    new_state.0[a_point_index + n] -= accumulated_velocity;
                 }
 
                 // Subtracts any velocity accumulated by the triangle vertices while colliding.
 
                 for i in [i0, i1, i2] {
-                    let acceleration = derivative.data[b_points_start_index + i + n];
+                    let acceleration = derivative.0[b_points_start_index + i + n];
 
                     let accumulated_velocity = acceleration * time_after_collision;
 
-                    new_state.data[b_points_start_index + i + n] -= accumulated_velocity;
+                    new_state.0[b_points_start_index + i + n] -= accumulated_velocity;
                 }
 
                 // Records the point-face collision.
@@ -499,8 +499,8 @@ impl Simulation {
 
                 let point_mass = self.meshes[a].points[p_i].mass;
 
-                let start_velocity = &state.data[a_point_index + n];
-                let end_velocity = &new_state.data[a_point_index + n];
+                let start_velocity = &state.0[a_point_index + n];
+                let end_velocity = &new_state.0[a_point_index + n];
 
                 let mut point_velocity = lerp(*start_velocity, *end_velocity, segment.t);
 
@@ -514,9 +514,9 @@ impl Simulation {
                     )
                 };
 
-                let mut v0_velocity = new_state.data[b_points_start_index + i0 + n];
-                let mut v1_velocity = new_state.data[b_points_start_index + i1 + n];
-                let mut v2_velocity = new_state.data[b_points_start_index + i2 + n];
+                let mut v0_velocity = new_state.0[b_points_start_index + i0 + n];
+                let mut v1_velocity = new_state.0[b_points_start_index + i1 + n];
+                let mut v2_velocity = new_state.0[b_points_start_index + i2 + n];
 
                 // Computes velocity updates for both bodies.
 
@@ -536,17 +536,17 @@ impl Simulation {
 
                 // Updates point velocity.
 
-                new_state.data[a_point_index + n] = point_velocity;
+                new_state.0[a_point_index + n] = point_velocity;
 
                 // Updates point position.
 
-                new_state.data[a_point_index] = {
-                    let velocity_in = new_state.data[a_point_index + n];
+                new_state.0[a_point_index] = {
+                    let velocity_in = new_state.0[a_point_index + n];
 
                     let position_at_collision =
-                        state.data[a_point_index] + velocity_in * time_before_collision;
+                        state.0[a_point_index] + velocity_in * time_before_collision;
 
-                    let velocity_out = new_state.data[a_point_index + n];
+                    let velocity_out = new_state.0[a_point_index + n];
 
                     let bias = if velocity_in.dot(normal) < 0.05 {
                         0.01
@@ -559,18 +559,18 @@ impl Simulation {
 
                 // Updates face vertex velocities.
 
-                new_state.data[b_points_start_index + i0 + n] = v0_velocity;
-                new_state.data[b_points_start_index + i1 + n] = v1_velocity;
-                new_state.data[b_points_start_index + i2 + n] = v2_velocity;
+                new_state.0[b_points_start_index + i0 + n] = v0_velocity;
+                new_state.0[b_points_start_index + i1 + n] = v1_velocity;
+                new_state.0[b_points_start_index + i2 + n] = v2_velocity;
 
                 // Updates face vertex positions.
 
                 for (i, velocity_out) in &[(i0, v0_velocity), (i1, v1_velocity), (i2, v2_velocity)]
                 {
-                    let velocity_in = new_state.data[b_points_start_index + i + n];
+                    let velocity_in = new_state.0[b_points_start_index + i + n];
 
                     let position_at_collision =
-                        state.data[b_points_start_index + i] + velocity_in * time_before_collision;
+                        state.0[b_points_start_index + i] + velocity_in * time_before_collision;
 
                     let bias = if velocity_in.dot(-normal) < 0.05 {
                         0.01
@@ -578,7 +578,7 @@ impl Simulation {
                         0.0
                     };
 
-                    new_state.data[b_points_start_index + i] =
+                    new_state.0[b_points_start_index + i] =
                         position_at_collision + *velocity_out * time_after_collision + bias;
                 }
 
@@ -604,8 +604,8 @@ impl Simulation {
             let edge_a = &mesh_a.struts[pair.a_edge_index].edge;
 
             (
-                new_state.data[mesh_a.state_index_offset + edge_a.points.0],
-                new_state.data[mesh_a.state_index_offset + edge_a.points.1],
+                new_state.0[mesh_a.state_index_offset + edge_a.points.0],
+                new_state.0[mesh_a.state_index_offset + edge_a.points.1],
             )
         };
 
@@ -614,8 +614,8 @@ impl Simulation {
             let edge_b = &mesh_b.struts[pair.b_edge_index].edge;
 
             (
-                new_state.data[mesh_b.state_index_offset + edge_b.points.0],
-                new_state.data[mesh_b.state_index_offset + edge_b.points.1],
+                new_state.0[mesh_b.state_index_offset + edge_b.points.0],
+                new_state.0[mesh_b.state_index_offset + edge_b.points.1],
             )
         };
 
@@ -666,11 +666,11 @@ impl Simulation {
 
                         // Subtracts any velocity accumulated while colliding.
 
-                        let p1_velocity = new_state.data[p1_index + n]
-                            - derivative.data[p1_index + n] * time_after_collision;
+                        let p1_velocity = new_state.0[p1_index + n]
+                            - derivative.0[p1_index + n] * time_after_collision;
 
-                        let p2_velocity = new_state.data[p2_index + n]
-                            - derivative.data[p2_index + n] * time_after_collision;
+                        let p2_velocity = new_state.0[p2_index + n]
+                            - derivative.0[p2_index + n] * time_after_collision;
 
                         (p1_mass, p1_velocity, p2_mass, p2_velocity)
                     };
@@ -689,11 +689,11 @@ impl Simulation {
 
                         // Subtracts any velocity accumulated while colliding.
 
-                        let q1_velocity = new_state.data[q1_index + n]
-                            - derivative.data[q1_index + n] * time_after_collision;
+                        let q1_velocity = new_state.0[q1_index + n]
+                            - derivative.0[q1_index + n] * time_after_collision;
 
-                        let q2_velocity = new_state.data[q2_index + n]
-                            - derivative.data[q2_index + n] * time_after_collision;
+                        let q2_velocity = new_state.0[q2_index + n]
+                            - derivative.0[q2_index + n] * time_after_collision;
 
                         (q1_mass, q1_velocity, q2_mass, q2_velocity)
                     };
@@ -732,27 +732,27 @@ impl Simulation {
 
                     // Updates edge vertex velocities.
 
-                    new_state.data[p1 + n] = p1_velocity;
-                    new_state.data[p2 + n] = p2_velocity;
-                    new_state.data[q1 + n] = q1_velocity;
-                    new_state.data[q2 + n] = q2_velocity;
+                    new_state.0[p1 + n] = p1_velocity;
+                    new_state.0[p2 + n] = p2_velocity;
+                    new_state.0[q1 + n] = q1_velocity;
+                    new_state.0[q2 + n] = q2_velocity;
 
                     // Updates edge vertex positions.
 
-                    new_state.data[p1] = state.data[p1]
-                        + derivative.data[p1] * time_before_collision
+                    new_state.0[p1] = state.0[p1]
+                        + derivative.0[p1] * time_before_collision
                         + p1_velocity * time_after_collision;
 
-                    new_state.data[p2] = state.data[p2]
-                        + derivative.data[p2] * time_before_collision
+                    new_state.0[p2] = state.0[p2]
+                        + derivative.0[p2] * time_before_collision
                         + p2_velocity * time_after_collision;
 
-                    new_state.data[q1] = state.data[q1]
-                        + derivative.data[q1] * time_before_collision
+                    new_state.0[q1] = state.0[q1]
+                        + derivative.0[q1] * time_before_collision
                         + q1_velocity * time_after_collision;
 
-                    new_state.data[q2] = state.data[q2]
-                        + derivative.data[q2] * time_before_collision
+                    new_state.0[q2] = state.0[q2]
+                        + derivative.0[q2] * time_before_collision
                         + q2_velocity * time_after_collision;
 
                     self.edge_collisions.push(collision);

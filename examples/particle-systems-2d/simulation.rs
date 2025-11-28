@@ -44,7 +44,7 @@ fn system_dynamics_function(
 
     for i in 0..n {
         // Copy velocities from previous (current?) state.
-        derivative.data[i] = current_state.data[i + n];
+        derivative.0[i] = current_state.0[i + n];
     }
 
     derivative
@@ -60,7 +60,7 @@ fn compute_accelerations(
 ) -> StateVector {
     let n = current_state.len();
 
-    let mut derivative = StateVector::new(COMPONENTS_PER_PARTICLE, n);
+    let mut derivative = StateVector::new(COMPONENTS_PER_PARTICLE * n);
 
     // Compute environmental accelerations acting on each particle.
     for i in 0..n {
@@ -87,7 +87,7 @@ fn compute_accelerations(
         }
 
         // Write the final environmental acceleration into derivative.
-        derivative.data[i + n] = total_acceleration_with_operators;
+        derivative.0[i + n] = total_acceleration_with_operators;
     }
 
     if let Some(ptr) = quadtree.root {
@@ -96,9 +96,9 @@ fn compute_accelerations(
         // Compute interparticle acceleration acting on each particle.
 
         for i in 0..n {
-            let position = &current_state.data[i];
+            let position = &current_state.0[i];
 
-            derivative.data[i + n] += root.acceleration(position);
+            derivative.0[i + n] += root.acceleration(position);
         }
     }
 
@@ -137,17 +137,17 @@ fn integrate(
     for i in 0..n {
         // Applies any functional acceleration operators, in order.
         for operator in operators.functional_acceleration.iter_mut() {
-            result.data[i + n] = operator(current_state, i, &result.data[i + n], h);
+            result.0[i + n] = operator(current_state, i, &result.0[i + n], h);
         }
 
         // Applies any velocity operators, in order.
-        let mut midpoint_velocity = (current_state.data[i + n] + result.data[i + n]) / 2.0;
+        let mut midpoint_velocity = (current_state.0[i + n] + result.0[i + n]) / 2.0;
 
         for operator in operators.velocity.iter_mut() {
             midpoint_velocity = operator(current_state, i, &midpoint_velocity, h);
         }
 
-        result.data[i] = current_state.data[i] + midpoint_velocity * h;
+        result.0[i] = current_state.0[i] + midpoint_velocity * h;
     }
 
     result
@@ -200,7 +200,7 @@ impl<const N: usize> Simulation<'_, N> {
         let num_active_particles = pool.active();
 
         // @TODO Allocate vector memory using a longer-lived stack arena.
-        let mut state = StateVector::new(COMPONENTS_PER_PARTICLE, num_active_particles);
+        let mut state = StateVector::new(COMPONENTS_PER_PARTICLE * num_active_particles);
 
         let n = state.len();
 
@@ -222,7 +222,7 @@ impl<const N: usize> Simulation<'_, N> {
             }
         }
 
-        let positions = &state.data[0..n];
+        let positions = &state.0[0..n];
 
         let mut new_quadtree = Quadtree::new(Vec3::extent(positions));
 
@@ -236,7 +236,7 @@ impl<const N: usize> Simulation<'_, N> {
                     match pool.at(*index) {
                         Some(particle) => {
                             let mass = particle.mass;
-                            let position = state.data[i];
+                            let position = state.0[i];
 
                             root.insert(position, mass);
                         }
@@ -271,10 +271,10 @@ impl<const N: usize> Simulation<'_, N> {
         };
 
         for i in 0..n {
-            let position = state.data[i];
+            let position = state.0[i];
 
-            let mut end_position = new_state.data[i];
-            let mut end_velocity = new_state.data[i + n];
+            let mut end_position = new_state.0[i];
+            let mut end_velocity = new_state.0[i + n];
 
             // We'll break early on the first collision (if any).
 
@@ -296,8 +296,8 @@ impl<const N: usize> Simulation<'_, N> {
                         penetration_depth,
                     );
 
-                    new_state.data[i + n] = end_velocity;
-                    new_state.data[i] = end_position;
+                    new_state.0[i + n] = end_velocity;
+                    new_state.0[i] = end_position;
 
                     break;
                 }

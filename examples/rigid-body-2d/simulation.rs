@@ -5,12 +5,11 @@ use cairo::{
             RigidBody,
             rigid_body_simulation_state::{DynRigidBodyForce, RigidBodySimulationState},
         },
+        state_vector::StateVector,
     },
     transform::quaternion::Quaternion,
     vec::{vec3::Vec3, vec4::Vec4},
 };
-
-use crate::state_vector::StateVector;
 
 pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,

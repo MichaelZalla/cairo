@@ -68,9 +68,9 @@ impl<const N: usize> Simulation<N> {
 
         let num_active_particles = pool.active();
 
-        let mut state = StateVector::new(COMPONENTS_PER_PARTICLE, num_active_particles);
+        let mut state = StateVector::new(COMPONENTS_PER_PARTICLE * num_active_particles);
 
-        let n = state.len();
+        let n = state.num_entities(COMPONENTS_PER_PARTICLE);
 
         let alive_indices: Vec<usize> = pool
             .iter()
@@ -105,11 +105,11 @@ impl<const N: usize> Simulation<N> {
         };
 
         for i in 0..num_active_particles {
-            let acceleration = derivative.data[i + n];
+            let acceleration = derivative.0[i + n];
 
-            let start_position = state.data[i];
+            let start_position = state.0[i];
 
-            let mut end_position = new_state.data[i];
+            let mut end_position = new_state.0[i];
 
             let mut capsule = Capsule::new(start_position, end_position, PARTICLE_MESH_RADIUS);
 
@@ -128,12 +128,12 @@ impl<const N: usize> Simulation<N> {
                 let instance_triangle_normal =
                     (triangle_normal * bvh_instance.transform).as_normal();
 
-                let mut end_velocity = new_state.data[num_active_particles + i];
+                let mut end_velocity = new_state.0[num_active_particles + i];
 
                 // Freeze particles with very low velocity to prevent instability
                 if capsule.segment.transformed_length < 0.02 {
-                    new_state.data[i] = state.data[i];
-                    new_state.data[i + n] = state.data[i + n];
+                    new_state.0[i] = state.0[i];
+                    new_state.0[i + n] = state.0[i + n];
                 } else {
                     let time_before_collision = h * capsule.segment.t;
                     let time_after_collision = h - time_before_collision;
@@ -165,8 +165,8 @@ impl<const N: usize> Simulation<N> {
                         }
                     }
 
-                    new_state.data[i] = end_position;
-                    new_state.data[i + n] = end_velocity;
+                    new_state.0[i] = end_position;
+                    new_state.0[i + n] = end_velocity;
                 }
             }
         }
