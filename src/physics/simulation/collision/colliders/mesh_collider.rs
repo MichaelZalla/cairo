@@ -143,7 +143,7 @@ impl StaticCollider for StaticTriangleTLAS {
         }
     }
 
-    fn handle_collision(
+    fn handle_collisions(
         &self,
         h: f32,
         body_derivative: &RigidBodySimulationState,
@@ -160,8 +160,8 @@ impl StaticCollider for StaticTriangleTLAS {
         let start_position = current_body_state.position;
         let start_linear_velocity = current_body_state.velocity();
 
-        // Calculate collision response data (if a collision occurred).
-        let normal_impulse_data_with_t = calculate_mesh_collision_response(
+        // Calculate collision response data for all simultaneous collisions
+        let collision_responses = calculate_mesh_collision_responses(
             h,
             body_derivative,
             current_body_state,
@@ -171,8 +171,8 @@ impl StaticCollider for StaticTriangleTLAS {
             material,
         );
 
-        // Applies collision impulses (normal and friction) to new state.
-        if let Some((normal_impulse_data, t)) = &normal_impulse_data_with_t {
+        // Apply collision impulses for all simultaneous collisions
+        for (normal_impulse_data, t) in &collision_responses {
             collision::apply_collision_impulses(
                 h,
                 body_derivative,
@@ -199,7 +199,7 @@ impl StaticCollider for StaticTriangleTLAS {
     }
 }
 
-fn calculate_mesh_collision_response(
+fn calculate_mesh_collision_responses(
     h: f32,
     body_derivative: &RigidBodySimulationState,
     current_body_state: &RigidBodySimulationState,
@@ -207,7 +207,7 @@ fn calculate_mesh_collision_response(
     tlas: &StaticTriangleTLAS,
     radius: f32,
     material: &PhysicsMaterial,
-) -> Option<(collision::NormalImpulseData, f32)> {
+) -> Vec<(collision::NormalImpulseData, f32)> {
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
@@ -217,31 +217,43 @@ fn calculate_mesh_collision_response(
     // Intersect capsule with mesh TLAS
     intersect_medial_primitive_tlas(&mut capsule, tlas);
 
-    // Check if we hit a triangle
-    if let Some(collision) = capsule.segment.closest_collision() {
-        let (_triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
+    let mut collision_responses = vec![];
 
-        // Calculate collision point
-        let t = collision.t;
-        let collision_point = start_position + (end_position - start_position) * t;
+    // Find the earliest collision time
+    let earliest_t = capsule.segment.closest_collision().map(|c| c.t);
 
-        let surface = CollisionSurface {
-            normal,
-            contact_point: collision_point,
-            collision_t: t,
-            minimum_distance: radius,
-        };
+    if let Some(earliest_t) = earliest_t {
+        // Process all collisions that occur at the earliest time
+        for collision in capsule.segment.collisions.iter() {
+            // Only process collisions at the earliest t (within epsilon for floating point comparison)
+            if (collision.t - earliest_t).abs() < f32::EPSILON {
+                let (_triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
 
-        collision::calculate_collision_response(
-            h,
-            body_derivative,
-            new_body_state,
-            &surface,
-            material,
-        )
-    } else {
-        None
+                // Calculate collision point
+                let collision_point =
+                    start_position + (end_position - start_position) * collision.t;
+
+                let surface = CollisionSurface {
+                    normal,
+                    contact_point: collision_point,
+                    collision_t: collision.t,
+                    minimum_distance: radius,
+                };
+
+                if let Some(response) = collision::calculate_collision_response(
+                    h,
+                    body_derivative,
+                    new_body_state,
+                    &surface,
+                    material,
+                ) {
+                    collision_responses.push(response);
+                }
+            }
+        }
     }
+
+    collision_responses
 }
 
 fn correct_mesh_penetration(

@@ -103,7 +103,7 @@ impl StaticCollider for PlaneCollider {
         })
     }
 
-    fn handle_collision(
+    fn handle_collisions(
         &self,
         h: f32,
         body_derivative: &RigidBodySimulationState,

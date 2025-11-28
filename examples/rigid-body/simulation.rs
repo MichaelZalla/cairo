@@ -525,7 +525,7 @@ fn resolve_plane_collisions(
             let current_body_state = &current_state.0[body_index];
             let new_body_state = &mut new_state.0[body_index];
 
-            collider.handle_collision(
+            collider.handle_collisions(
                 h,
                 body_derivative,
                 current_body_state,
@@ -553,7 +553,7 @@ fn resolve_mesh_collisions(
         let current_body_state = &current_state.0[body_index];
         let new_body_state = &mut new_state.0[body_index];
 
-        mesh_collider.handle_collision(
+        mesh_collider.handle_collisions(
             h,
             body_derivative,
             current_body_state,

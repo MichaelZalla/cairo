@@ -86,12 +86,12 @@ pub trait StaticCollider {
         radius: f32,
     ) -> Option<CollisionSurface>;
 
-    /// Handles a complete collision for a single body, including:
-    /// - Detecting collision and calculating impulse response
+    /// Handles complete collisions for a single body, including:
+    /// - Detecting collisions and calculating impulse responses
     /// - Applying collision impulses
     /// - Correcting penetration
     /// - Detecting and storing static contacts
-    fn handle_collision(
+    fn handle_collisions(
         &self,
         h: f32,
         body_derivative: &RigidBodySimulationState,
