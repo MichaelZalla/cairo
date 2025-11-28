@@ -1,7 +1,10 @@
 use crate::{
     geometry::{
-        accelerator::static_triangle_tlas::StaticTriangleTLAS,
-        intersect::medial_primitive::intersect_medial_primitive_tlas, primitives::capsule::Capsule,
+        accelerator::{
+            static_triangle_bvh::StaticBVHCollision, static_triangle_tlas::StaticTriangleTLAS,
+        },
+        intersect::medial_primitive::intersect_medial_primitive_tlas,
+        primitives::{capsule::Capsule, triangle::Triangle},
     },
     physics::{
         material::PhysicsMaterial,
@@ -13,6 +16,26 @@ use crate::{
     },
     vec::vec3::Vec3,
 };
+
+/// Helper function to extract triangle and world-space normal from a BVH
+/// collision.
+///
+/// Returns (triangle, world_normal) for the colliding triangle.
+fn get_collision_triangle_and_normal<'a>(
+    tlas: &'a StaticTriangleTLAS,
+    collision: &StaticBVHCollision,
+) -> (&'a Triangle, Vec3) {
+    let bvh_instance_index = collision.colliding_bvh_index;
+    let tri_index = collision.colliding_primitive;
+    let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+    let triangle = &bvh_instance.bvh.tris[tri_index];
+
+    // Get triangle normal in world space
+    let triangle_normal = triangle.plane.normal;
+    let normal = (triangle_normal * bvh_instance.transform).as_normal();
+
+    (triangle, normal)
+}
 
 impl StaticCollider for StaticTriangleTLAS {
     fn detect_static_contact(
@@ -33,14 +56,7 @@ impl StaticCollider for StaticTriangleTLAS {
 
         // Check if we hit a triangle
         if let Some(collision) = capsule.segment.closest_collision() {
-            let bvh_instance_index = collision.colliding_bvh_index;
-            let tri_index = collision.colliding_primitive;
-            let bvh_instance = &self.bvh_instances[bvh_instance_index];
-            let triangle = &bvh_instance.bvh.tris[tri_index];
-
-            // Get triangle normal in world space
-            let triangle_normal = triangle.plane.normal;
-            let normal = (triangle_normal * bvh_instance.transform).as_normal();
+            let (triangle, normal) = get_collision_triangle_and_normal(self, collision);
 
             // Calculate signed distance to triangle plane
             let signed_distance = triangle.plane.get_signed_distance(&position);
@@ -106,14 +122,7 @@ impl StaticCollider for StaticTriangleTLAS {
 
         // Check if we hit a triangle
         if let Some(collision) = capsule.segment.closest_collision() {
-            let bvh_instance_index = collision.colliding_bvh_index;
-            let tri_index = collision.colliding_primitive;
-            let bvh_instance = &self.bvh_instances[bvh_instance_index];
-            let triangle = &bvh_instance.bvh.tris[tri_index];
-
-            // Get triangle normal in world space
-            let triangle_normal = triangle.plane.normal;
-            let normal = (triangle_normal * bvh_instance.transform).as_normal();
+            let (_triangle, normal) = get_collision_triangle_and_normal(self, collision);
 
             // Calculate collision point
             let t = collision.t;
@@ -206,14 +215,7 @@ fn calculate_mesh_collision_response(
 
     // Check if we hit a triangle
     if let Some(collision) = capsule.segment.closest_collision() {
-        let bvh_instance_index = collision.colliding_bvh_index;
-        let tri_index = collision.colliding_primitive;
-        let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
-        let triangle = &bvh_instance.bvh.tris[tri_index];
-
-        // Get triangle normal in world space
-        let triangle_normal = triangle.plane.normal;
-        let normal = (triangle_normal * bvh_instance.transform).as_normal();
+        let (_triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
 
         // Calculate collision point
         let t = collision.t;
@@ -253,14 +255,7 @@ fn correct_mesh_penetration(
 
     // Check if we hit a triangle
     if let Some(collision) = capsule.segment.closest_collision() {
-        let bvh_instance_index = collision.colliding_bvh_index;
-        let tri_index = collision.colliding_primitive;
-        let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
-        let triangle = &bvh_instance.bvh.tris[tri_index];
-
-        // Get triangle normal in world space
-        let triangle_normal = triangle.plane.normal;
-        let normal = (triangle_normal * bvh_instance.transform).as_normal();
+        let (triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
 
         // Calculate signed distance from body to triangle plane
         let signed_distance_from_body_to_plane =
