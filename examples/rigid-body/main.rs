@@ -68,7 +68,7 @@ fn main() -> Result<(), String> {
         let mut ambient_light_arena = resources.ambient_light.borrow_mut();
         let mut directional_light_arena = resources.directional_light.borrow_mut();
 
-        let (scene, scene_context) = make_empty_scene(
+        let (scene, shader_context) = make_empty_scene(
             &mut camera_arena,
             camera_aspect_ratio,
             &mut environment_arena,
@@ -87,7 +87,7 @@ fn main() -> Result<(), String> {
 
         camera.set_projection_z_far(1_000.0);
 
-        (scene, scene_context)
+        (scene, shader_context)
     };
 
     {
