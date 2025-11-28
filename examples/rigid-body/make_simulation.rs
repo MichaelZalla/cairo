@@ -263,6 +263,22 @@ pub fn make_simulation(_sampler: &mut RandomSampler<1024>) -> Simulation {
         spheres.push(sphere);
     }
 
+    // Test 11: Fast spinning (high-energy backspin)
+    {
+        let center = Vec3 {
+            x: -4.5 * SPACING,
+            y: RADIUS,
+            z: 0.0,
+        };
+
+        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+
+        sphere.color = Color::rgb(0, 255, 255); // Bright cyan
+        sphere.angular_momentum = vec3::UP * 5.0; // Much faster than Test 2
+
+        spheres.push(sphere);
+    }
+
     for sphere in spheres.iter_mut() {
         sphere.debug_flags |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
         | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
