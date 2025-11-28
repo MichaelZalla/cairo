@@ -319,6 +319,9 @@ impl App {
                 game_controller.state = prev_game_controller_state;
             }
 
+            // Track currently pressed keys from events (workaround for SDL2 0.38.0 bug)
+            let mut current_pressed_keycodes = prev_keyboard_state.pressed_keycodes.clone();
+
             for event in events {
                 match event {
                     Event::Quit { .. } => break 'main,
@@ -432,25 +435,40 @@ impl App {
                         keycode: Some(keycode),
                         keymod: _modifiers,
                         ..
-                    } => match keycode {
-                        Keycode::Escape => break 'main,
-                        Keycode::F8 => self.toggle_updates(),
-                        Keycode::F9 => should_update_step_forward = true,
-                        Keycode::F11 => {
-                            let windowing_mode = self.window_info.borrow().windowing_mode;
+                    } => {
+                        // Track pressed keys for keyboard state
+                        current_pressed_keycodes.insert(keycode);
 
-                            match windowing_mode {
-                                AppWindowingMode::Windowed => {
-                                    self.set_windowing_mode(AppWindowingMode::FullScreenWindowed)?;
-                                }
-                                AppWindowingMode::FullScreen
-                                | AppWindowingMode::FullScreenWindowed => {
-                                    self.set_windowing_mode(AppWindowingMode::Windowed)?;
+                        match keycode {
+                            Keycode::Escape => break 'main,
+                            Keycode::F8 => self.toggle_updates(),
+                            Keycode::F9 => should_update_step_forward = true,
+                            Keycode::F11 => {
+                                let windowing_mode = self.window_info.borrow().windowing_mode;
+
+                                match windowing_mode {
+                                    AppWindowingMode::Windowed => {
+                                        self.set_windowing_mode(
+                                            AppWindowingMode::FullScreenWindowed,
+                                        )?;
+                                    }
+                                    AppWindowingMode::FullScreen
+                                    | AppWindowingMode::FullScreenWindowed => {
+                                        self.set_windowing_mode(AppWindowingMode::Windowed)?;
+                                    }
                                 }
                             }
+                            _ => (),
                         }
-                        _ => (),
-                    },
+                    }
+
+                    Event::KeyUp {
+                        keycode: Some(keycode),
+                        ..
+                    } => {
+                        // Track released keys for keyboard state
+                        current_pressed_keycodes.remove(&keycode);
+                    }
 
                     Event::ControllerDeviceAdded { which, .. } => {
                         println!("Connected controller {}", which);
@@ -487,12 +505,11 @@ impl App {
 
             let modifiers = sdl_keyboard_util.mod_state();
 
-            let sdl_keyboard_state = event_pump.keyboard_state();
-
-            let pressed_keycodes = sdl_keyboard_state
-                .pressed_scancodes()
-                .filter_map(Keycode::from_scancode)
-                .collect();
+            // WORKAROUND: SDL2 0.38.0 has a bug where pressed_scancodes() can panic
+            // on invalid scancode values (like 0x1). Instead of polling keyboard state,
+            // we track it from KeyDown/KeyUp events above.
+            // See: https://github.com/Rust-SDL2/rust-sdl2/issues/1388
+            let pressed_keycodes = current_pressed_keycodes.clone();
 
             let prev_pressed_keycodes = prev_keyboard_state.pressed_keycodes;
 
