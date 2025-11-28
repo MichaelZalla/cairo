@@ -6,7 +6,7 @@ use crate::{
     mesh::{Mesh, mesh_geometry::MeshGeometry},
     transform::Transform3D,
     vec::{
-        vec3::{self, Vec3A},
+        vec3::{self, Vec3, Vec3A},
         vec4::Vec4,
     },
 };
@@ -18,9 +18,14 @@ const BIN_COUNT: usize = 8;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct StaticBVHCollision {
+    /// Parametric distance [0, 1] along the medial segment where collision occurs.
     pub t: f32,
+    /// Index of the BVH instance in the TLAS.
     pub colliding_bvh_index: usize,
+    /// Index of the triangle primitive within the BVH.
     pub colliding_primitive: usize,
+    /// Barycentric coordinates (u, v, w) of the intersection point on the triangle.
+    pub barycentric: Vec3,
 }
 
 #[derive(Debug, Copy, Clone)]
