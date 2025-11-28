@@ -292,6 +292,50 @@ pub fn make_test_simulation(
         spheres.push(sphere);
     }
 
+    // Test 12: Stacked spheres (unstable)
+    {
+        let stack_x = -6.0 * SPACING;
+
+        // Bottom sphere (resting on ground)
+        {
+            let center = Vec3 {
+                x: stack_x,
+                y: RADIUS,
+                z: 0.0,
+            };
+
+            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+            sphere.color = Color::rgb(255, 100, 100); // Light red
+            spheres.push(sphere);
+        }
+
+        // Middle sphere (resting on bottom sphere)
+        {
+            let center = Vec3 {
+                x: stack_x,
+                y: RADIUS + 2.0 * RADIUS,
+                z: 0.0,
+            };
+
+            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+            sphere.color = Color::rgb(100, 255, 100); // Light green
+            spheres.push(sphere);
+        }
+
+        // Top sphere (resting on middle sphere)
+        {
+            let center = Vec3 {
+                x: stack_x,
+                y: RADIUS + 4.0 * RADIUS,
+                z: 0.0,
+            };
+
+            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+            sphere.color = Color::rgb(100, 100, 255); // Light blue
+            spheres.push(sphere);
+        }
+    }
+
     for sphere in spheres.iter_mut() {
         sphere.debug_flags |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
         | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
