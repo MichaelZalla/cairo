@@ -53,6 +53,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-1_static-on-ground_ORANGE".to_string());
         sphere.color = color::ORANGE; // Use orange to distinguish from Red sphere
 
         spheres.push(sphere);
@@ -68,6 +69,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-2_spinning-y-axis_MAGENTA".to_string());
         sphere.color = color::MAGENTA;
         sphere.angular_momentum = vec3::UP * 1.5;
 
@@ -84,6 +86,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-3a_rolling-toward-viewer_BLUE".to_string());
         sphere.color = color::BLUE;
         sphere.angular_momentum = vec3::RIGHT * 1.5;
 
@@ -104,6 +107,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-3b_rolling-away-from-viewer_GREEN".to_string());
         sphere.color = color::GREEN;
         sphere.angular_momentum = -vec3::RIGHT * 1.5;
 
@@ -125,6 +129,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-3c_rolling-to-right_RED".to_string());
         sphere.color = color::RED;
         // Rotate Blue 90° CCW: X→Z, Z→-X
         // Blue: L = +X, v = -Z
@@ -146,6 +151,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-3d_rolling-to-left_YELLOW".to_string());
         sphere.color = color::YELLOW;
         // Green: L = -X, v = +Z
         // Yellow: L = -Z, v = -X
@@ -165,6 +171,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-4_dropping-from-height_CYAN".to_string());
         sphere.color = color::CYAN;
 
         spheres.push(sphere);
@@ -180,6 +187,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-5_dropping-with-x-velocity_WHITE".to_string());
         sphere.color = color::WHITE;
         sphere.linear_momentum = vec3::RIGHT * MASS * 5.0;
 
@@ -196,6 +204,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-6_dropping-with-z-velocity_DARK_GRAY".to_string());
         sphere.color = color::DARK_GRAY;
         sphere.linear_momentum = vec3::FORWARD * MASS * 5.0;
 
@@ -212,6 +221,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-7_diagonal-rolling_ORANGE-ISH".to_string());
         sphere.color = Color::rgb(255, 165, 0); // Orange-ish (distinct from ORANGE)
 
         // For diagonal rolling at 45°: combine angular momentum components
@@ -237,6 +247,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-8_dropping-diagonal-velocity_PINK".to_string());
         sphere.color = Color::rgb(255, 192, 203); // Pink
 
         // Diagonal horizontal velocity
@@ -256,6 +267,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-9_high-drop_PURPLE".to_string());
         sphere.color = Color::rgb(128, 0, 128); // Purple
 
         spheres.push(sphere);
@@ -271,6 +283,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-10_very-high-drop_BROWN".to_string());
         sphere.color = Color::rgb(165, 42, 42); // Brown
 
         spheres.push(sphere);
@@ -286,6 +299,7 @@ pub fn make_test_simulation(
 
         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
+        sphere.name = Some("test-11_fast-spinning_BRIGHT_CYAN".to_string());
         sphere.color = Color::rgb(0, 255, 255); // Bright cyan
         sphere.angular_momentum = vec3::UP * 5.0; // Much faster than Test 2
 
@@ -305,6 +319,7 @@ pub fn make_test_simulation(
             };
 
             let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+            sphere.name = Some("test-12_stack-bottom_LIGHT_RED".to_string());
             sphere.color = Color::rgb(255, 100, 100); // Light red
             spheres.push(sphere);
         }
@@ -318,6 +333,7 @@ pub fn make_test_simulation(
             };
 
             let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+            sphere.name = Some("test-12_stack-middle_LIGHT_GREEN".to_string());
             sphere.color = Color::rgb(100, 255, 100); // Light green
             spheres.push(sphere);
         }
@@ -331,6 +347,7 @@ pub fn make_test_simulation(
             };
 
             let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+            sphere.name = Some("test-12_stack-top_LIGHT_BLUE".to_string());
             sphere.color = Color::rgb(100, 100, 255); // Light blue
             spheres.push(sphere);
         }

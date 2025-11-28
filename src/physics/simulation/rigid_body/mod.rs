@@ -112,7 +112,7 @@ impl Default for RigidBodyDebugFlags {
     }
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct RigidBody {
     pub kind: RigidBodyKind,
     pub transform: Transform3D,
@@ -125,6 +125,7 @@ pub struct RigidBody {
     pub aabb: Option<AABB>,
     pub static_contacts: StaticContactList<6>,
     // Debug state
+    pub name: Option<String>,
     pub collision_impulse: Option<CollisionImpulse>,
     pub debug_flags: RigidBodyDebugFlags,
     // Derived state
