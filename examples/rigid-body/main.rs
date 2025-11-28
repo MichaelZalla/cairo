@@ -12,18 +12,17 @@ use cairo::{
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
     mesh::primitive::sphere,
-    random::sampler::RandomSampler,
     render::{Renderer, options::RenderPassFlags},
     scene::context::{SceneContext, utils::make_empty_scene},
     software_renderer::SoftwareRenderer,
 };
 
-use make_simulation::make_simulation;
+use make_test_simulation::make_test_simulation as make_simulation;
 
 use crate::simulation::Simulation;
 
 pub mod integration;
-pub mod make_simulation;
+pub mod make_test_simulation;
 pub mod plane_collider;
 pub mod simulation;
 pub mod state_vector;
@@ -117,13 +116,7 @@ fn main() -> Result<(), String> {
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     // Simulation
-    let mut sampler: RandomSampler<1024> = {
-        let mut sampler: RandomSampler<1024> = Default::default();
-        sampler.seed().unwrap();
-        sampler
-    };
-
-    let simulation = make_simulation(&mut sampler);
+    let simulation = make_simulation();
 
     // Mutable demo state
     let demo_state = Rc::new(RefCell::new(DemoState {
@@ -231,7 +224,7 @@ fn main() -> Result<(), String> {
                     // Reset simulation to its initial state (preserved debug flags).
                     let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
 
-                    state.simulation = make_simulation(&mut sampler);
+                    state.simulation = make_simulation();
 
                     state.simulation.visualize_hash_grid = current_visualize_hash_grid;
 
