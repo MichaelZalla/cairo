@@ -1,6 +1,14 @@
 use std::{collections::HashMap, ops};
 
-use crate::{geometry::primitives::aabb::Bounded, vec::vec3::Vec3};
+use crate::{
+    color::Color,
+    geometry::primitives::aabb::Bounded,
+    matrix::Mat4,
+    render::Renderer,
+    scene::empty::EmptyDisplayKind,
+    software_renderer::SoftwareRenderer,
+    vec::vec3::{self, Vec3},
+};
 
 #[derive(Default, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct GridSpaceCoordinate {
@@ -88,6 +96,49 @@ impl HashGrid {
             strategy,
             scale,
             ..Default::default()
+        }
+    }
+
+    /// Rebuilds the hash grid by inserting all items from the iterator.
+    pub fn rebuild<'a, T: Bounded + 'a>(&mut self, items: impl Iterator<Item = &'a T>) {
+        self.map.clear();
+
+        for (i, item) in items.enumerate() {
+            let coord = GridSpaceCoordinate::from((item, self.strategy, self.scale));
+
+            match self.map.get_mut(&coord) {
+                Some(list) => {
+                    list.push(i);
+                }
+                None => {
+                    let mut cell = Vec::<usize>::with_capacity(4);
+
+                    cell.insert(0, i);
+
+                    self.map.insert(coord, cell);
+                }
+            }
+        }
+    }
+
+    /// Renders the hash grid visualization as semi-transparent cubes.
+    pub fn render(&self, renderer: &mut SoftwareRenderer, color: Option<Color>) {
+        for grid_coord in self.map.keys() {
+            let transform = {
+                let scale = Mat4::scale_uniform(0.5 * self.scale);
+
+                let offset = Mat4::translation(vec3::ONES * 0.5);
+
+                let translate = Mat4::translation(Vec3 {
+                    x: (grid_coord.x as f32 * self.scale),
+                    y: (grid_coord.y as f32 * self.scale),
+                    z: (grid_coord.z as f32 * self.scale),
+                });
+
+                scale * offset * translate
+            };
+
+            renderer.render_empty(&transform, EmptyDisplayKind::Cube, false, color);
         }
     }
 }

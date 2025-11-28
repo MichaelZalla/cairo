@@ -33,17 +33,12 @@ use cairo::{
     scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::{
-        vec3::{self, Vec3},
-        vec4::Vec4,
-    },
+    vec::{vec3, vec3::Vec3, vec4::Vec4},
 };
 
 use crate::{
-    integration::system_dynamics_function,
-    plane_collider::PlaneCollider,
-    state_vector::StateVector,
-    static_collider::{CollisionSurface, StaticCollider},
+    integration::system_dynamics_function, plane_collider::PlaneCollider,
+    state_vector::StateVector, static_collider::CollisionSurface,
 };
 
 const CONTACT_DISTANCE_THRESHOLD: f32 = 0.005;
@@ -134,7 +129,7 @@ impl Simulation {
         let mut final_state = self.integrate_positions(&state_with_new_velocities, h);
 
         // 8. Rebuild spatial acceleration structure
-        self.rebuild_hash_grid(&final_state);
+        self.hash_grid.rebuild(final_state.0.iter());
 
         // 9. (Safety net) Apply corrective impulses for any remaining collisions
         self.apply_corrective_impulses(h, &derivative, &state, &mut final_state);
@@ -1205,55 +1200,6 @@ impl Simulation {
         }
     }
 
-    fn rebuild_hash_grid(&mut self, new_state: &StateVector<RigidBodySimulationState>) {
-        self.hash_grid.map.clear();
-
-        for (i, sphere_state) in new_state.0.iter().enumerate() {
-            let (strategy, scale) = (self.hash_grid.strategy, self.hash_grid.scale);
-
-            let coord = GridSpaceCoordinate::from((sphere_state, strategy, scale));
-
-            match self.hash_grid.map.get_mut(&coord) {
-                Some(list) => {
-                    list.push(i);
-                }
-                None => {
-                    let mut cell = Vec::<usize>::with_capacity(4);
-
-                    cell.insert(0, i);
-
-                    self.hash_grid.map.insert(coord, cell);
-                }
-            }
-        }
-    }
-
-    /// Renders the hash grid visualization as semi-transparent cubes.
-    fn render_hash_grid(&self, renderer: &mut SoftwareRenderer) {
-        if !self.visualize_hash_grid {
-            return;
-        }
-
-        for grid_coord in self.hash_grid.map.keys() {
-            let transform = {
-                let scale = Mat4::scale_uniform(0.5 * self.hash_grid.scale);
-                let offset = Mat4::translation(vec3::ONES * 0.5);
-                let translate = Mat4::translation(Vec3 {
-                    x: (grid_coord.x as f32 * self.hash_grid.scale),
-                    y: (grid_coord.y as f32 * self.hash_grid.scale),
-                    z: (grid_coord.z as f32 * self.hash_grid.scale),
-                });
-
-                scale * offset * translate
-            };
-
-            let display_kind = EmptyDisplayKind::Cube;
-            let color = Some(color::LIGHT_GRAY);
-
-            renderer.render_empty(&transform, display_kind, false, color);
-        }
-    }
-
     /// Renders a static plane collider as a square with a normal vector.
     fn render_static_plane_collider(collider: &PlaneCollider, renderer: &mut SoftwareRenderer) {
         // Calculate the coordinate frame for the plane
@@ -1298,7 +1244,9 @@ impl Simulation {
         }
 
         // Visualize hash grid entries.
-        self.render_hash_grid(renderer);
+        if self.visualize_hash_grid {
+            self.hash_grid.render(renderer, Some(color::LIGHT_GRAY));
+        }
 
         // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
@@ -1385,7 +1333,7 @@ impl Simulation {
         let mut predicted_state = self.integrate_positions(state_with_new_velocities, h);
 
         // 2. Rebuild hash grid with predicted positions for accurate collision detection
-        self.rebuild_hash_grid(&predicted_state);
+        self.hash_grid.rebuild(predicted_state.0.iter());
 
         // 3. Detect and resolve collisions at those predicted positions
         //    (This modifies predicted_state's velocities with impulses)
