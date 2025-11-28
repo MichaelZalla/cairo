@@ -26,15 +26,18 @@ fn get_collision_triangle_and_normal<'a>(
     collision: &StaticBVHCollision,
 ) -> (&'a Triangle, Vec3) {
     let bvh_instance_index = collision.colliding_bvh_index;
-    let tri_index = collision.colliding_primitive;
     let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
-    let triangle = &bvh_instance.bvh.tris[tri_index];
+
+    let triangle_index = collision.colliding_primitive;
+    let triangle = &bvh_instance.bvh.tris[triangle_index];
 
     // Get triangle normal in world space
-    let triangle_normal = triangle.plane.normal;
-    let normal = (triangle_normal * bvh_instance.transform).as_normal();
+    let collision_normal_local_space = triangle.plane.normal;
 
-    (triangle, normal)
+    let collision_normal_world_space =
+        (collision_normal_local_space * bvh_instance.transform).as_normal();
+
+    (triangle, collision_normal_world_space)
 }
 
 impl StaticCollider for StaticTriangleTLAS {
