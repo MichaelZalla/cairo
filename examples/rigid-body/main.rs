@@ -28,9 +28,13 @@ pub mod simulation;
 pub mod state_vector;
 pub mod static_collider;
 
+// Fixed timestep accumulator for stable physics
+const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics
+
 struct DemoState {
     simulation: Simulation,
     renderer: SoftwareRenderer,
+    time_accumulator: f32,
 }
 
 fn main() -> Result<(), String> {
@@ -121,6 +125,7 @@ fn main() -> Result<(), String> {
     let demo_state = Rc::new(RefCell::new(DemoState {
         simulation,
         renderer,
+        time_accumulator: 0.0,
     }));
 
     let render_to_window_canvas = |_frame_index: Option<u32>,
@@ -133,6 +138,7 @@ fn main() -> Result<(), String> {
         let DemoState {
             simulation,
             renderer,
+            ..
         } = &mut *state;
 
         renderer.begin_frame();
@@ -216,13 +222,18 @@ fn main() -> Result<(), String> {
         }
 
         // Updates renderer options.
-
         state.renderer.update(keyboard_state);
 
+        // Run physics simulation with fixed timestep
         if h > 0.0 {
-            // Advance our particle simulation by delta time.
+            // Accumulate frame time
+            state.time_accumulator += h;
 
-            state.simulation.tick(h, uptime);
+            // Run physics at fixed timestep, subdividing large frame deltas
+            while state.time_accumulator >= PHYSICS_TIMESTEP {
+                state.simulation.tick(PHYSICS_TIMESTEP, uptime);
+                state.time_accumulator -= PHYSICS_TIMESTEP;
+            }
         }
 
         Ok(())
