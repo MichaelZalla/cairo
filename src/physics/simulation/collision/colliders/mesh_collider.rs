@@ -9,7 +9,7 @@ use crate::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision::{self, CollisionSurface, StaticCollider},
+            collision::{self, CollisionResponse, CollisionSurface, StaticCollider},
             contact::{self, StaticContactList},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
@@ -182,15 +182,15 @@ impl StaticCollider for StaticTriangleTLAS {
         );
 
         // Apply collision impulses for all simultaneous collisions
-        for (normal_impulse_data, t) in &collision_responses {
+        for response in &collision_responses {
             collision::apply_collision_impulses(
                 h,
                 body_derivative,
                 new_body_state,
                 start_position,
                 start_linear_velocity,
-                normal_impulse_data,
-                *t,
+                &response.impulse_data,
+                response.collision_time,
                 material,
             );
         }
@@ -217,7 +217,7 @@ fn calculate_mesh_collision_responses(
     tlas: &StaticTriangleTLAS,
     radius: f32,
     material: &PhysicsMaterial,
-) -> Vec<(collision::NormalImpulseData, f32)> {
+) -> Vec<CollisionResponse> {
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
@@ -243,9 +243,9 @@ fn calculate_mesh_collision_responses(
 }
 
 fn combine_coplanar_responses(
-    responses: Vec<(collision::NormalImpulseData, f32)>,
+    responses: Vec<CollisionResponse>,
     surfaces: &[CollisionSurface],
-) -> Vec<(collision::NormalImpulseData, f32)> {
+) -> Vec<CollisionResponse> {
     if responses.is_empty() {
         return responses;
     }
@@ -253,9 +253,8 @@ fn combine_coplanar_responses(
     // An adjustable threshold for considering normals as "coplanar".
     const COPLANAR_THRESHOLD: f32 = 0.999;
 
-    // Creates (index, normal) pairs.
-    let mut indexed: Vec<(usize, (collision::NormalImpulseData, f32))> =
-        responses.into_iter().enumerate().collect();
+    // Creates (index, response) pairs.
+    let mut indexed: Vec<(usize, CollisionResponse)> = responses.into_iter().enumerate().collect();
 
     // Sorts pairs by normal (x, y, z) to group similar normals together.
     indexed.sort_by(|a, b| vec3::lexicographic_cmp(&surfaces[a.0].normal, &surfaces[b.0].normal));
