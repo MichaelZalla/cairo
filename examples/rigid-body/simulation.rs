@@ -249,6 +249,7 @@ impl Simulation {
                     &mut s2_state_cloned,
                     collision.contact_point,
                     material,
+                    h,
                 );
 
                 new_state.0[a].linear_momentum = s1_state_cloned.linear_momentum;

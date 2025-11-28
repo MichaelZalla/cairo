@@ -1,4 +1,8 @@
-use crate::{animation::lerp, physics::material::PhysicsMaterial, vec::vec3::Vec3};
+use crate::{
+    animation::lerp,
+    physics::{material::PhysicsMaterial, simulation::rigid_body::RigidBodyKind},
+    vec::vec3::Vec3,
+};
 
 use super::rigid_body::{CollisionImpulse, rigid_body_simulation_state::RigidBodySimulationState};
 
@@ -12,6 +16,15 @@ static MIN_TANGENTIAL_VELOCITY_FOR_DYNAMIC_FRICTION_SQUARED: f32 = 0.0001; // 0.
 ///
 /// 0.01 N squared (avoids square root for performance)
 static MIN_TANGENTIAL_FORCE_FOR_STATIC_FRICTION_SQUARED: f32 = 0.0001; // 0.01^2
+
+/// Baumgarte stabilization coefficient for position correction.
+/// This controls how aggressively penetration is corrected.
+/// Typical values range from 0.1 to 0.3.
+static BAUMGARTE_BETA: f32 = 0.2;
+
+/// Minimum penetration depth before applying Baumgarte correction.
+/// Prevents energy addition for tiny overlaps from numerical precision.
+static BAUMGARTE_MINIMUM_DEPTH: f32 = 0.05;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct NormalImpulseData {
@@ -539,6 +552,7 @@ pub fn resolve_rigid_body_collision(
     b: &mut RigidBodySimulationState,
     contact_point: Vec3,
     material: &PhysicsMaterial,
+    h: f32,
 ) {
     let r_a = contact_point - a.position;
     let r_b = contact_point - b.position;
@@ -546,7 +560,8 @@ pub fn resolve_rigid_body_collision(
     let incoming_contact_velocity_a = a.velocity() + a.angular_velocity().cross(r_a);
     let incoming_contact_velocity_b = b.velocity() + b.angular_velocity().cross(r_b);
 
-    let normal = (a.position - b.position).as_normal();
+    let distance_between_centers = (a.position - b.position).mag();
+    let normal = (a.position - b.position) / distance_between_centers;
 
     let incoming_speed_relative_to_normal =
         normal.dot(incoming_contact_velocity_a - incoming_contact_velocity_b);
@@ -577,9 +592,26 @@ pub fn resolve_rigid_body_collision(
     let change_in_angular_velocity_at_contact_point_b_normalized = /* j * */
         change_in_angular_velocity_b_normalized.cross(r_b);
 
-    // Calculate the normal impulse.
+    // Calculate penetration depth for position correction (Baumgarte stabilization).
+    // (Only applies a correction if both bodies are spheres).
+    let bias_velocity = match (a.kind, b.kind) {
+        (RigidBodyKind::Sphere(radius_a), RigidBodyKind::Sphere(radius_b)) => {
+            let penetration_depth = (radius_a + radius_b) - distance_between_centers;
 
-    let numerator = -(1.0 + material.restitution) * incoming_speed_relative_to_normal;
+            // Only apply correction if penetration exceeds the slop threshold
+            if penetration_depth > BAUMGARTE_MINIMUM_DEPTH {
+                (BAUMGARTE_BETA / h) * (penetration_depth - BAUMGARTE_MINIMUM_DEPTH)
+            } else {
+                0.0
+            }
+        }
+        _ => 0.0,
+    };
+
+    // Calculate the normal impulse with position correction.
+
+    let numerator =
+        -(1.0 + material.restitution) * incoming_speed_relative_to_normal + bias_velocity;
 
     let denominator = a.inverse_mass
         + b.inverse_mass
