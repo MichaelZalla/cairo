@@ -452,7 +452,10 @@ impl Simulation {
         // Performs a line-segment-triangle intersection test.
 
         match intersect_line_segment_triangle(&mut segment, triangle) {
-            Some((t, barycentric)) => {
+            Some(intersection) => {
+                let t = intersection.t;
+                let barycentric = intersection.barycentric;
+
                 let time_before_collision = h * t;
                 let time_after_collision = h - time_before_collision;
 

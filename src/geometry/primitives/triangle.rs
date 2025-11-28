@@ -2,6 +2,15 @@ use crate::vec::vec3::{Vec3, Vec3A};
 
 use super::plane::Plane;
 
+/// Result of intersecting a primitive with a triangle.
+#[derive(Debug, Copy, Clone)]
+pub struct TriangleIntersection {
+    /// Parametric distance along the medial segment [0, 1].
+    pub t: f32,
+    /// Barycentric coordinates of the intersection point on the triangle.
+    pub barycentric: Vec3,
+}
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Triangle {
     pub vertices: [usize; 3],

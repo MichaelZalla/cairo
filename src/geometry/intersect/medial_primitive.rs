@@ -136,12 +136,12 @@ fn intersect_medial_primitive_bvh_node<P: MedialPrimitive>(
 
             let triangle = &bvh.tris[tri_index];
 
-            if let Some((t, _barycentric)) = primitive.intersect_triangle(triangle) {
+            if let Some(intersection) = primitive.intersect_triangle(triangle) {
                 let segment = primitive.medial_segment_mut();
 
                 // Create a collision with all the information
                 let collision = StaticBVHCollision {
-                    t,
+                    t: intersection.t,
                     colliding_bvh_index: bvh_instance_index,
                     colliding_primitive: tri_index,
                 };

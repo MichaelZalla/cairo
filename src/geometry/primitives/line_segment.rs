@@ -7,7 +7,7 @@ use crate::{
     vec::vec3::Vec3,
 };
 
-use super::{MedialPrimitive, triangle::Triangle};
+use super::{MedialPrimitive, TriangleIntersection, triangle::Triangle};
 
 #[derive(Debug, Copy, Clone)]
 pub struct LineSegment {
@@ -68,7 +68,7 @@ impl MedialPrimitive for LineSegment {
         self
     }
 
-    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<(f32, Vec3)> {
+    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<TriangleIntersection> {
         intersect_line_segment_triangle(self, triangle)
     }
 }
