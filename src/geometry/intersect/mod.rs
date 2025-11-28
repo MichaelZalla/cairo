@@ -101,7 +101,7 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
 pub fn intersect_line_segment_triangle(
     segment: &mut LineSegment,
     triangle: &Triangle,
-) -> Option<Vec3> {
+) -> Option<(f32, Vec3)> {
     let (p, q) = (segment.start, segment.end);
 
     // Compute the distance of P to the triangle's normal-facing plane.
@@ -157,15 +157,14 @@ pub fn intersect_line_segment_triangle(
     }
 
     // Segment PQ intersects triangle.
-
-    if segment.update_collision_t(t) {
-        Some(Vec3 { x: u, y: v, z: w })
-    } else {
-        None
-    }
+    // Return the t parameter and barycentric coordinates
+    Some((t, Vec3 { x: u, y: v, z: w }))
 }
 
-pub fn intersect_capsule_triangle(capsule: &mut Capsule, triangle: &Triangle) -> Option<Vec3> {
+pub fn intersect_capsule_triangle(
+    capsule: &mut Capsule,
+    triangle: &Triangle,
+) -> Option<(f32, Vec3)> {
     // Use capsule-plane intersection to find where the capsule hits the triangle's plane
     if let Some(intersection) = intersect_capsule_plane(
         capsule.segment.start,
@@ -198,12 +197,9 @@ pub fn intersect_capsule_triangle(capsule: &mut Capsule, triangle: &Triangle) ->
             return None;
         }
 
-        // Capsule intersects triangle - update collision info if this is closer
-        if capsule.segment.update_collision_t(t) {
-            Some(Vec3 { x: u, y: v, z: w })
-        } else {
-            None
-        }
+        // Capsule intersects triangle
+        // Return the t parameter and barycentric coordinates
+        Some((t, Vec3 { x: u, y: v, z: w }))
     } else {
         None
     }

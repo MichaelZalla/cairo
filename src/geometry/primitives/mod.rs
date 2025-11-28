@@ -19,7 +19,8 @@ pub trait MedialPrimitive: aabb::Bounded + Copy {
     /// Returns a mutable reference to the medial line segment.
     fn medial_segment_mut(&mut self) -> &mut LineSegment;
 
-    /// Intersects this primitive with a triangle, updating the medial segment's collision info.
-    /// Returns barycentric coordinates if an intersection occurred.
-    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<Vec3>;
+    /// Intersects this primitive with a triangle.
+    /// Returns (t, barycentric_coords) if an intersection occurred, where t is the
+    /// parametric distance along the medial segment [0, 1].
+    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<(f32, Vec3)>;
 }

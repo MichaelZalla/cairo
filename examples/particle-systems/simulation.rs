@@ -115,7 +115,7 @@ impl<const N: usize> Simulation<N> {
 
             intersect_medial_primitive_tlas(&mut capsule, tlas);
 
-            if let Some(collision) = capsule.segment.collision {
+            if let Some(collision) = capsule.segment.closest_collision() {
                 let bvh_instance_index = collision.colliding_bvh_index;
                 let tri_index = collision.colliding_primitive;
                 let bvh_instance = &tlas.bvh_instances[bvh_instance_index];

@@ -349,7 +349,7 @@ impl Simulation {
                 for tri_i in 0..self.meshes[b].triangles.len() {
                     // Checks mesh `a`, point at `p_i` against mesh `b`, face at `tri_i`.
 
-                    if let Some(barycentric) = self.did_handle_point_face_collision(
+                    if let Some((_t, barycentric)) = self.did_handle_point_face_collision(
                         a, p_i, b, tri_i, n, derivative, state, new_state, h,
                     ) {
                         self.meshes[a].points[p_i].did_collide = true;
@@ -420,7 +420,7 @@ impl Simulation {
         state: &StateVector,
         new_state: &mut StateVector,
         h: f32,
-    ) -> Option<Vec3> {
+    ) -> Option<(f32, Vec3)> {
         // Constructs a line segment between the old and new vertex positions.
 
         let a_point_index = self.meshes[a].state_index_offset + p_i;
@@ -452,8 +452,7 @@ impl Simulation {
         // Performs a line-segment-triangle intersection test.
 
         match intersect_line_segment_triangle(&mut segment, triangle) {
-            Some(barycentric) => {
-                let t = segment.collision.map(|c| c.t).unwrap_or(f32::MAX);
+            Some((t, barycentric)) => {
                 let time_before_collision = h * t;
                 let time_after_collision = h - time_before_collision;
 
@@ -503,7 +502,6 @@ impl Simulation {
                 let start_velocity = &state.0[a_point_index + n];
                 let end_velocity = &new_state.0[a_point_index + n];
 
-                let t = segment.collision.map(|c| c.t).unwrap_or(f32::MAX);
                 let mut point_velocity = lerp(*start_velocity, *end_velocity, t);
 
                 // Gathers masses and velocities for collision body B (face).
@@ -584,7 +582,7 @@ impl Simulation {
                         position_at_collision + *velocity_out * time_after_collision + bias;
                 }
 
-                Some(barycentric)
+                Some((t, barycentric))
             }
             None => None,
         }

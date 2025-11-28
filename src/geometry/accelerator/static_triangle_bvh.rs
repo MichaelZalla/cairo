@@ -23,6 +23,116 @@ pub struct StaticBVHCollision {
     pub colliding_primitive: usize,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct StaticBVHCollisionList<const N: usize> {
+    collisions: [Option<StaticBVHCollision>; N],
+    count: usize,
+}
+
+impl<const N: usize> Default for StaticBVHCollisionList<N> {
+    fn default() -> Self {
+        Self {
+            collisions: [None; N],
+            count: 0,
+        }
+    }
+}
+
+impl<const N: usize> StaticBVHCollisionList<N> {
+    /// Attempts to insert a collision into the list, maintaining sorted order by t-value.
+    ///
+    /// If the list is full and the new collision's t-value is greater than or equal to
+    /// the largest t-value in the list, the collision is rejected.
+    ///
+    /// Returns true if the collision was inserted, false otherwise.
+    pub fn try_push_sorted(&mut self, collision: StaticBVHCollision) -> bool {
+        // If list is not full, we can always insert
+        if self.count < N {
+            // Find insertion point to maintain sorted order
+            let mut insert_pos = self.count;
+
+            for i in 0..self.count {
+                if let Some(existing) = self.collisions[i]
+                    && collision.t < existing.t
+                {
+                    insert_pos = i;
+
+                    break;
+                }
+            }
+
+            // Shift elements to the right to make room
+            for i in (insert_pos..self.count).rev() {
+                self.collisions[i + 1] = self.collisions[i];
+            }
+
+            // Insert the new collision
+            self.collisions[insert_pos] = Some(collision);
+            self.count += 1;
+
+            return true;
+        }
+
+        // List is full - only insert if this collision is closer than the farthest one
+        if let Some(farthest) = self.collisions[N - 1] {
+            if collision.t >= farthest.t {
+                return false; // Reject - this collision is farther than our farthest
+            }
+
+            // Find insertion point
+            let mut insert_pos = N - 1;
+
+            for i in 0..N {
+                if let Some(existing) = self.collisions[i]
+                    && collision.t < existing.t
+                {
+                    insert_pos = i;
+
+                    break;
+                }
+            }
+
+            // Shift elements to the right, dropping the last one
+            for i in (insert_pos..(N - 1)).rev() {
+                self.collisions[i + 1] = self.collisions[i];
+            }
+
+            // Insert the new collision
+            self.collisions[insert_pos] = Some(collision);
+
+            return true;
+        }
+
+        false
+    }
+
+    /// Returns a reference to the closest collision (smallest t-value), if any.
+    pub fn closest(&self) -> Option<&StaticBVHCollision> {
+        if self.count > 0 {
+            self.collisions[0].as_ref()
+        } else {
+            None
+        }
+    }
+
+    /// Returns the number of collisions currently stored.
+    pub fn len(&self) -> usize {
+        self.count
+    }
+
+    /// Returns true if no collisions are stored.
+    pub fn is_empty(&self) -> bool {
+        self.count == 0
+    }
+
+    /// Returns an iterator over the stored collisions.
+    pub fn iter(&self) -> impl Iterator<Item = &StaticBVHCollision> {
+        self.collisions[..self.count]
+            .iter()
+            .filter_map(|c| c.as_ref())
+    }
+}
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct StaticTriangleBVHNode {
     pub aabb: AABB,

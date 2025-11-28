@@ -32,7 +32,7 @@ impl StaticCollider for StaticTriangleTLAS {
         intersect_medial_primitive_tlas(&mut capsule, self);
 
         // Check if we hit a triangle
-        if let Some(collision) = capsule.segment.collision {
+        if let Some(collision) = capsule.segment.closest_collision() {
             let bvh_instance_index = collision.colliding_bvh_index;
             let tri_index = collision.colliding_primitive;
             let bvh_instance = &self.bvh_instances[bvh_instance_index];
@@ -105,7 +105,7 @@ impl StaticCollider for StaticTriangleTLAS {
         intersect_medial_primitive_tlas(&mut capsule, self);
 
         // Check if we hit a triangle
-        if let Some(collision) = capsule.segment.collision {
+        if let Some(collision) = capsule.segment.closest_collision() {
             let bvh_instance_index = collision.colliding_bvh_index;
             let tri_index = collision.colliding_primitive;
             let bvh_instance = &self.bvh_instances[bvh_instance_index];
@@ -205,7 +205,7 @@ fn calculate_mesh_collision_response(
     intersect_medial_primitive_tlas(&mut capsule, tlas);
 
     // Check if we hit a triangle
-    if let Some(collision) = capsule.segment.collision {
+    if let Some(collision) = capsule.segment.closest_collision() {
         let bvh_instance_index = collision.colliding_bvh_index;
         let tri_index = collision.colliding_primitive;
         let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
@@ -252,7 +252,7 @@ fn correct_mesh_penetration(
     intersect_medial_primitive_tlas(&mut capsule, tlas);
 
     // Check if we hit a triangle
-    if let Some(collision) = capsule.segment.collision {
+    if let Some(collision) = capsule.segment.closest_collision() {
         let bvh_instance_index = collision.colliding_bvh_index;
         let tri_index = collision.colliding_primitive;
         let bvh_instance = &tlas.bvh_instances[bvh_instance_index];

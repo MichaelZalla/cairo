@@ -6,7 +6,9 @@
 use crate::{
     geometry::{
         accelerator::{
-            static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
+            static_triangle_bvh::{
+                StaticBVHCollision, StaticTriangleBVH, StaticTriangleBVHInstance,
+            },
             static_triangle_tlas::StaticTriangleTLAS,
         },
         intersect::test_aabb_aabb,
@@ -100,16 +102,15 @@ pub fn intersect_medial_primitive_bvh<P: MedialPrimitive>(
     // Copy collision results back to original primitive
     let transformed_segment = transformed_primitive.medial_segment();
 
-    if let Some(collision) = transformed_segment.collision {
-        let original_segment = primitive.medial_segment_mut();
+    // Copy all collisions from the transformed primitive to the original
+    let original_segment = primitive.medial_segment_mut();
 
-        original_segment.transformed_length = ((original_segment.end - original_segment.start)
-            * bvh_instance.transform)
-            .mag()
-            .abs();
+    original_segment.transformed_length = ((original_segment.end - original_segment.start)
+        * bvh_instance.transform)
+        .mag()
+        .abs();
 
-        original_segment.collision = Some(collision);
-    }
+    original_segment.collisions = transformed_segment.collisions;
 }
 
 /// Recursively traverses a BVH node, testing the primitive against triangles.
@@ -135,14 +136,18 @@ fn intersect_medial_primitive_bvh_node<P: MedialPrimitive>(
 
             let triangle = &bvh.tris[tri_index];
 
-            if let Some(_barycentric) = primitive.intersect_triangle(triangle) {
+            if let Some((t, _barycentric)) = primitive.intersect_triangle(triangle) {
                 let segment = primitive.medial_segment_mut();
 
-                // The t value was already set by intersect_triangle
-                if let Some(ref mut collision) = segment.collision {
-                    collision.colliding_bvh_index = bvh_instance_index;
-                    collision.colliding_primitive = tri_index;
-                }
+                // Create a collision with all the information
+                let collision = StaticBVHCollision {
+                    t,
+                    colliding_bvh_index: bvh_instance_index,
+                    colliding_primitive: tri_index,
+                };
+
+                // Try to add it to the collision list
+                segment.try_push_collision(collision);
             }
         }
     } else {

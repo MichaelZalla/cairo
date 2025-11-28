@@ -56,7 +56,7 @@ impl MedialPrimitive for Capsule {
         &mut self.segment
     }
 
-    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<Vec3> {
+    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<(f32, Vec3)> {
         intersect_capsule_triangle(self, triangle)
     }
 }

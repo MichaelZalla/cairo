@@ -1,6 +1,6 @@
 use crate::{
     geometry::{
-        accelerator::static_triangle_bvh::StaticBVHCollision,
+        accelerator::static_triangle_bvh::{StaticBVHCollision, StaticBVHCollisionList},
         intersect::intersect_line_segment_triangle,
         primitives::aabb::{AABB, Bounded},
     },
@@ -14,7 +14,7 @@ pub struct LineSegment {
     pub start: Vec3,
     pub end: Vec3,
     pub transformed_length: f32,
-    pub collision: Option<StaticBVHCollision>,
+    pub collisions: StaticBVHCollisionList<6>,
 }
 
 impl LineSegment {
@@ -23,35 +23,25 @@ impl LineSegment {
             start,
             end,
             transformed_length: (end - start).mag(),
-            collision: None,
+            collisions: StaticBVHCollisionList::default(),
         }
     }
 
     pub fn lerped(&self) -> Vec3 {
-        let t = self.collision.map(|c| c.t).unwrap_or(f32::MAX);
+        let t = self.collisions.closest().map(|c| c.t).unwrap_or(f32::MAX);
 
         self.start + (self.end - self.start) * t
     }
 
-    /// Updates the collision t-value if the new value is closer.
-    /// Returns true if the collision was updated (i.e., t is closer than current).
-    pub fn update_collision_t(&mut self, t: f32) -> bool {
-        let current_t = self.collision.map(|c| c.t).unwrap_or(f32::MAX);
+    /// Attempts to add a collision to the list, maintaining sorted order by t-value.
+    /// Returns true if the collision was inserted, false otherwise.
+    pub fn try_push_collision(&mut self, collision: StaticBVHCollision) -> bool {
+        self.collisions.try_push_sorted(collision)
+    }
 
-        if t < current_t {
-            // Update or create collision with new t value
-            if let Some(ref mut collision) = self.collision {
-                collision.t = t;
-            } else {
-                self.collision = Some(StaticBVHCollision {
-                    t,
-                    ..Default::default()
-                });
-            }
-            true
-        } else {
-            false
-        }
+    /// Returns a reference to the closest collision (smallest t-value), if any.
+    pub fn closest_collision(&self) -> Option<&StaticBVHCollision> {
+        self.collisions.closest()
     }
 }
 
@@ -78,7 +68,7 @@ impl MedialPrimitive for LineSegment {
         self
     }
 
-    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<Vec3> {
+    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<(f32, Vec3)> {
         intersect_line_segment_triangle(self, triangle)
     }
 }
