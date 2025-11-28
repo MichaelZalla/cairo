@@ -22,7 +22,6 @@ use make_terrain_simulation::make_obj_terrain_simulation as make_simulation;
 
 use crate::simulation::Simulation;
 
-pub mod collision_helpers;
 pub mod integration;
 pub mod make_terrain_simulation;
 pub mod make_test_simulation;

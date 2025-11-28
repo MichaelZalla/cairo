@@ -6,7 +6,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision::CollisionSurface,
+            collision::{self, CollisionSurface},
             contact::StaticContact,
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
@@ -14,7 +14,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{collision_helpers, static_collider::StaticCollider, static_contact_helpers};
+use crate::{static_collider::StaticCollider, static_contact_helpers};
 
 impl StaticCollider for StaticTriangleTLAS {
     fn detect_static_contact(
@@ -162,7 +162,7 @@ impl StaticCollider for StaticTriangleTLAS {
 
         // Applies collision impulses (normal and friction) to new state.
         if let Some((normal_impulse_data, t)) = &normal_impulse_data_with_t {
-            collision_helpers::apply_collision_impulses(
+            collision::apply_collision_impulses(
                 h,
                 body_derivative,
                 new_body_state,
@@ -231,7 +231,7 @@ fn calculate_mesh_collision_response(
             minimum_distance: radius,
         };
 
-        collision_helpers::calculate_collision_response(
+        collision::calculate_collision_response(
             h,
             body_derivative,
             new_body_state,
