@@ -6,6 +6,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
+            collision::CollisionSurface,
             contact::StaticContact,
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
@@ -13,11 +14,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{
-    collision_helpers,
-    static_collider::{CollisionSurface, StaticCollider},
-    static_contact_helpers,
-};
+use crate::{collision_helpers, static_collider::StaticCollider, static_contact_helpers};
 
 impl StaticCollider for StaticTriangleTLAS {
     fn detect_static_contact(

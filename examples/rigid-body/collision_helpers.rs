@@ -3,7 +3,7 @@ use cairo::{
         material::PhysicsMaterial,
         simulation::{
             collision::{
-                NormalImpulseData, get_rigid_body_plane_friction_impulse,
+                CollisionSurface, NormalImpulseData, get_rigid_body_plane_friction_impulse,
                 get_rigid_body_plane_normal_impulse,
             },
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
@@ -12,7 +12,7 @@ use cairo::{
     vec::vec3::Vec3,
 };
 
-use crate::{static_collider::CollisionSurface, static_contact_helpers::RESTING_SPEED_THRESHOLD};
+use crate::static_contact_helpers::RESTING_SPEED_THRESHOLD;
 
 /// Removes linear momentum accumulated after the collision point.
 pub fn remove_post_collision_momentum(

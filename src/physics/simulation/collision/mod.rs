@@ -26,6 +26,21 @@ static BAUMGARTE_BETA: f32 = 0.2;
 /// Prevents energy addition for tiny overlaps from numerical precision.
 static BAUMGARTE_MINIMUM_DEPTH: f32 = 0.05;
 
+/// Represents collision data for static collider intersections.
+///
+/// This struct is used when detecting collisions with static geometry
+/// (planes, meshes, etc.) to communicate collision parameters.
+pub struct CollisionSurface {
+    /// Surface normal (pointing away from the surface)
+    pub normal: Vec3,
+    /// Contact point in world space
+    pub contact_point: Vec3,
+    /// Normalized time of collision [0, 1] within the timestep
+    pub collision_t: f32,
+    /// Minimum distance from body center to surface (e.g., sphere radius)
+    pub minimum_distance: f32,
+}
+
 #[derive(Default, Debug, Copy, Clone)]
 pub struct NormalImpulseData {
     pub contact_point: Vec3,

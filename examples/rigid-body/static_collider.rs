@@ -2,24 +2,12 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            contact::StaticContact,
+            collision::CollisionSurface, contact::StaticContact,
             rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
         },
     },
     vec::vec3::Vec3,
 };
-
-/// Collision surface data returned by collision detection.
-pub struct CollisionSurface {
-    /// Surface normal (pointing away from the surface)
-    pub normal: Vec3,
-    /// Contact point in world space
-    pub contact_point: Vec3,
-    /// Normalized time of collision [0, 1] within the timestep
-    pub collision_t: f32,
-    /// Minimum distance from body center to surface (e.g., sphere radius)
-    pub minimum_distance: f32,
-}
 
 /// Trait for static colliders (plane, mesh, etc.) that can detect contacts and collisions.
 pub trait StaticCollider {

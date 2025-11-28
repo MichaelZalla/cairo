@@ -5,6 +5,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
+            collision::CollisionSurface,
             contact::{StaticContact, StaticContactKind},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
@@ -18,7 +19,7 @@ use cairo::{
 use crate::{
     collision_helpers,
     state_vector::StateVector,
-    static_collider::{CollisionSurface, StaticCollider},
+    static_collider::StaticCollider,
     static_contact_helpers::{self, RESTING_SPEED_THRESHOLD},
 };
 
