@@ -7,14 +7,14 @@ use cairo::{
         material::PhysicsMaterial,
         simulation::{
             collision::{self, CollisionSurface},
-            contact::StaticContact,
+            contact::{self, StaticContact},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
     vec::vec3::Vec3,
 };
 
-use crate::{static_collider::StaticCollider, static_contact_helpers};
+use crate::static_collider::StaticCollider;
 
 impl StaticCollider for StaticTriangleTLAS {
     fn detect_static_contact(
@@ -50,8 +50,10 @@ impl StaticCollider for StaticTriangleTLAS {
 
             // Calculate motion tangents
             let body_velocity = new_body_state.velocity();
+
             let contact_point = position - normal * radius;
-            let contact_point_velocity = static_contact_helpers::compute_contact_point_velocity(
+
+            let contact_point_velocity = contact::compute_contact_point_velocity(
                 body_velocity,
                 new_body_state.angular_velocity(),
                 contact_point,
@@ -77,7 +79,7 @@ impl StaticCollider for StaticTriangleTLAS {
                 }
             };
 
-            static_contact_helpers::get_static_contact(
+            contact::get_static_contact(
                 derivative,
                 new_body_state,
                 normal,

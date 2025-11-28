@@ -30,7 +30,6 @@ pub mod plane_collider;
 pub mod simulation;
 pub mod state_vector;
 pub mod static_collider;
-pub mod static_contact_helpers;
 
 // Fixed timestep accumulator for stable physics
 const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics

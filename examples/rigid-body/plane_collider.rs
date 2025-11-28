@@ -5,8 +5,8 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision::{self, CollisionSurface},
-            contact::{StaticContact, StaticContactKind},
+            collision::{self, CollisionSurface, RESTING_SPEED_THRESHOLD},
+            contact::{self, StaticContact, StaticContactKind},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
@@ -16,11 +16,7 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-use crate::{
-    state_vector::StateVector,
-    static_collider::StaticCollider,
-    static_contact_helpers::{self, RESTING_SPEED_THRESHOLD},
-};
+use crate::{state_vector::StateVector, static_collider::StaticCollider};
 
 #[derive(Debug, Clone)]
 pub struct PlaneCollider {
@@ -88,7 +84,7 @@ impl StaticCollider for PlaneCollider {
 
         let body_velocity = new_body_state.velocity();
 
-        let contact_point_velocity = static_contact_helpers::compute_contact_point_velocity(
+        let contact_point_velocity = contact::compute_contact_point_velocity(
             body_velocity,
             new_body_state.angular_velocity(),
             new_body_state.position - normal * radius,
@@ -96,15 +92,15 @@ impl StaticCollider for PlaneCollider {
         );
 
         let body_motion_tangent =
-            static_contact_helpers::compute_motion_tangent(self.point, body_velocity, &self.plane);
+            contact::compute_motion_tangent(self.point, body_velocity, &self.plane);
 
-        let contact_point_motion_tangent = static_contact_helpers::compute_motion_tangent(
+        let contact_point_motion_tangent = contact::compute_motion_tangent(
             self.point,
             contact_point_velocity,
             &self.plane,
         );
 
-        static_contact_helpers::get_static_contact(
+        contact::get_static_contact(
             derivative,
             new_body_state,
             normal,
