@@ -6,7 +6,8 @@ pub mod ray;
 pub mod sphere;
 pub mod triangle;
 
-use crate::vec::vec3::Vec3;
+pub use triangle::TriangleIntersection;
+
 use line_segment::LineSegment;
 use triangle::Triangle;
 
@@ -20,7 +21,5 @@ pub trait MedialPrimitive: aabb::Bounded + Copy {
     fn medial_segment_mut(&mut self) -> &mut LineSegment;
 
     /// Intersects this primitive with a triangle.
-    /// Returns (t, barycentric_coords) if an intersection occurred, where t is the
-    /// parametric distance along the medial segment [0, 1].
-    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<(f32, Vec3)>;
+    fn intersect_triangle(&mut self, triangle: &Triangle) -> Option<TriangleIntersection>;
 }

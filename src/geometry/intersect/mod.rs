@@ -15,7 +15,7 @@ use super::{
     accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
     primitives::{
         aabb::AABB, capsule::Capsule, line_segment::LineSegment, plane::Plane, ray::Ray,
-        sphere::Sphere, triangle::Triangle,
+        sphere::Sphere, triangle::Triangle, TriangleIntersection,
     },
 };
 
@@ -101,7 +101,7 @@ pub fn intersect_line_segment_plane(plane: &Plane, a: Vec3, b: Vec3) -> Option<(
 pub fn intersect_line_segment_triangle(
     segment: &mut LineSegment,
     triangle: &Triangle,
-) -> Option<(f32, Vec3)> {
+) -> Option<TriangleIntersection> {
     let (p, q) = (segment.start, segment.end);
 
     // Compute the distance of P to the triangle's normal-facing plane.
@@ -157,14 +157,16 @@ pub fn intersect_line_segment_triangle(
     }
 
     // Segment PQ intersects triangle.
-    // Return the t parameter and barycentric coordinates
-    Some((t, Vec3 { x: u, y: v, z: w }))
+    Some(TriangleIntersection {
+        t,
+        barycentric: Vec3 { x: u, y: v, z: w },
+    })
 }
 
 pub fn intersect_capsule_triangle(
     capsule: &mut Capsule,
     triangle: &Triangle,
-) -> Option<(f32, Vec3)> {
+) -> Option<TriangleIntersection> {
     // Use capsule-plane intersection to find where the capsule hits the triangle's plane
     if let Some(intersection) = intersect_capsule_plane(
         capsule.segment.start,
@@ -198,8 +200,10 @@ pub fn intersect_capsule_triangle(
         }
 
         // Capsule intersects triangle
-        // Return the t parameter and barycentric coordinates
-        Some((t, Vec3 { x: u, y: v, z: w }))
+        Some(TriangleIntersection {
+            t,
+            barycentric: Vec3 { x: u, y: v, z: w },
+        })
     } else {
         None
     }
