@@ -232,6 +232,8 @@ fn main() -> Result<(), String> {
                     // Reset simulation to its initial state (preserved debug flags).
                     let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
 
+                    sampler.seed().unwrap();
+
                     state.simulation = make_simulation(&mut sampler, &scene_context);
 
                     state.simulation.visualize_hash_grid = current_visualize_hash_grid;
