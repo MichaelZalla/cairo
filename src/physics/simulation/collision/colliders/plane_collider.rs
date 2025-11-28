@@ -4,7 +4,7 @@ use crate::{
         material::PhysicsMaterial,
         simulation::{
             collision::{self, CollisionSurface, RESTING_SPEED_THRESHOLD, StaticCollider},
-            contact::{self, StaticContact, StaticContactKind},
+            contact::{self, StaticContactKind},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
@@ -37,14 +37,14 @@ impl PlaneCollider {
 }
 
 impl StaticCollider for PlaneCollider {
-    fn detect_static_contact(
+    fn detect_static_contacts(
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
         radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
-    ) -> Option<StaticContact> {
+    ) -> contact::StaticContactList<6> {
         let normal = self.plane.normal;
 
         let signed_distance_to_plane = self.plane.get_signed_distance(&new_body_state.position);
@@ -64,7 +64,9 @@ impl StaticCollider for PlaneCollider {
         let contact_point_motion_tangent =
             contact::compute_motion_tangent(self.point, contact_point_velocity, &self.plane);
 
-        contact::get_static_contact(
+        let mut contacts = contact::StaticContactList::default();
+
+        if let Some(contact) = contact::get_static_contact(
             derivative,
             new_body_state,
             normal,
@@ -74,7 +76,11 @@ impl StaticCollider for PlaneCollider {
             contact_point_motion_tangent,
             material,
             check_forces,
-        )
+        ) {
+            contacts.push(contact).ok();
+        }
+
+        contacts
     }
 
     fn detect_collision(
@@ -229,13 +235,15 @@ fn handle_static_contact_after_plane_collision(
     minimum_distance_to_plane: f32,
     material: &PhysicsMaterial,
 ) {
-    if let Some(contact) = plane_collider.detect_static_contact(
+    let contacts = plane_collider.detect_static_contacts(
         body_derivative,
         body_state,
         minimum_distance_to_plane,
         material,
         true, // Post-integration contact detection
-    ) {
+    );
+
+    for contact in contacts.into_iter() {
         // Removes the component of linear momentum pointing into the collider.
         body_state.linear_momentum -= plane_collider.plane.normal
             * body_state.linear_momentum.dot(plane_collider.plane.normal);

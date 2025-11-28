@@ -146,6 +146,46 @@ impl<'a, const N: usize> IntoIterator for &'a StaticContactList<N> {
     }
 }
 
+pub struct IntoIter<const N: usize> {
+    list: StaticContactList<N>,
+    current_index: usize,
+}
+
+impl<const N: usize> Iterator for IntoIter<N> {
+    type Item = StaticContact;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_index == self.list.len {
+            return None;
+        }
+
+        let contact = self.list.static_contacts[self.current_index];
+
+        self.current_index += 1;
+
+        Some(contact)
+    }
+}
+
+impl<const N: usize> ExactSizeIterator for IntoIter<N> {
+    fn len(&self) -> usize {
+        self.list.len - self.current_index
+    }
+}
+
+impl<const N: usize> IntoIterator for StaticContactList<N> {
+    type Item = StaticContact;
+
+    type IntoIter = IntoIter<N>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter {
+            list: self,
+            current_index: 0,
+        }
+    }
+}
+
 /// Computes the linear velocity of a contact point on a rigid body.
 ///
 /// This accounts for both the body's linear velocity and the velocity

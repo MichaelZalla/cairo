@@ -2,7 +2,7 @@ use crate::{
     animation::lerp,
     physics::{
         material::PhysicsMaterial,
-        simulation::{contact::StaticContact, rigid_body::RigidBodyKind},
+        simulation::{contact::StaticContactList, rigid_body::RigidBodyKind},
     },
     vec::vec3::Vec3,
 };
@@ -67,15 +67,16 @@ pub struct TangentImpulseData {
 
 /// Trait for static colliders (plane, mesh, etc.) that can detect contacts and collisions.
 pub trait StaticCollider {
-    /// Detects a static contact (resting, sliding, or rolling) at the current body position.
-    fn detect_static_contact(
+    /// Detects static contacts (resting, sliding, or rolling) at the current body position.
+    /// Returns a list of all detected static contacts (may be empty, up to 6 contacts).
+    fn detect_static_contacts(
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
         radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
-    ) -> Option<StaticContact>;
+    ) -> StaticContactList<6>;
 
     /// Detects a collision between start and end positions, returning collision surface data.
     fn detect_collision(

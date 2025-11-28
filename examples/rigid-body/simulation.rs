@@ -420,25 +420,29 @@ impl Simulation {
 
             // Test against each static plane collider
             for collider in &self.static_plane_colliders {
-                if let Some(contact) = collider.detect_static_contact(
+                let contacts = collider.detect_static_contacts(
                     body_state, // Use current state for derivative (unused when check_forces=false)
                     &predicted_body_state,
                     radius,
                     &RIGID_BODY_STATIC_PLANE_MATERIAL,
                     false, // check_forces: false for prediction
-                ) {
+                );
+
+                for contact in contacts.into_iter() {
                     predicted_contacts[body_index].push(contact).ok();
                 }
             }
 
             // Test against triangle mesh collider
-            if let Some(contact) = self.ground_tlas.detect_static_contact(
+            let contacts = self.ground_tlas.detect_static_contacts(
                 body_state, // Use current state for derivative (unused when check_forces=false)
                 &predicted_body_state,
                 radius,
                 &RIGID_BODY_STATIC_PLANE_MATERIAL,
                 false, // check_forces: false for prediction
-            ) {
+            );
+
+            for contact in contacts.into_iter() {
                 predicted_contacts[body_index].push(contact).ok();
             }
         }

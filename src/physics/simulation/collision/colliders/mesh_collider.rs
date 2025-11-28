@@ -10,7 +10,7 @@ use crate::{
         material::PhysicsMaterial,
         simulation::{
             collision::{self, CollisionSurface, StaticCollider},
-            contact::{self, StaticContact},
+            contact::{self, StaticContactList},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
@@ -38,24 +38,26 @@ fn get_collision_triangle_and_normal<'a>(
 }
 
 impl StaticCollider for StaticTriangleTLAS {
-    fn detect_static_contact(
+    fn detect_static_contacts(
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
         radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
-    ) -> Option<StaticContact> {
+    ) -> StaticContactList<6> {
         let position = new_body_state.position;
 
         // Create a zero-length capsule at the position (sphere as degenerate capsule)
         let mut capsule = Capsule::new(position, position, radius);
 
-        // Intersect with mesh TLAS
+        // Intersect with mesh TLAS to find all collisions
         intersect_medial_primitive_tlas(&mut capsule, self);
 
-        // Check if we hit a triangle
-        if let Some(collision) = capsule.segment.closest_collision() {
+        let mut contacts = contact::StaticContactList::default();
+
+        // Process all detected collisions
+        for collision in capsule.segment.collisions.iter() {
             let (triangle, normal) = get_collision_triangle_and_normal(self, collision);
 
             // Calculate signed distance to triangle plane
@@ -92,7 +94,7 @@ impl StaticCollider for StaticTriangleTLAS {
                 }
             };
 
-            contact::get_static_contact(
+            if let Some(contact) = contact::get_static_contact(
                 derivative,
                 new_body_state,
                 normal,
@@ -102,10 +104,12 @@ impl StaticCollider for StaticTriangleTLAS {
                 contact_point_motion_tangent,
                 material,
                 check_forces,
-            )
-        } else {
-            None
+            ) {
+                contacts.push(contact).ok();
+            }
         }
+
+        contacts
     }
 
     fn detect_collision(
@@ -275,13 +279,17 @@ fn handle_static_contact_after_mesh_collision(
     radius: f32,
     material: &PhysicsMaterial,
 ) {
-    if let Some(contact) = tlas.detect_static_contact(
+    // Detect all static contacts
+    let contacts = tlas.detect_static_contacts(
         body_derivative,
         body_state,
         radius,
         material,
         true, // Post-integration contact detection
-    ) {
+    );
+
+    // Process all detected contacts
+    for contact in contacts.into_iter() {
         // Store the contact for later friction/torque application
         body_state.static_contacts.push(contact).ok();
 
