@@ -19,12 +19,19 @@ use cairo::{
 
 use make_simulation::make_simulation;
 
+use crate::simulation::Simulation;
+
 pub mod integration;
 pub mod make_simulation;
 pub mod plane_collider;
 pub mod simulation;
 pub mod state_vector;
 pub mod static_collider;
+
+struct DemoState {
+    simulation: Simulation,
+    renderer: SoftwareRenderer,
+}
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
@@ -98,8 +105,6 @@ fn main() -> Result<(), String> {
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    let renderer_rc = RefCell::new(renderer);
-
     // Simulation
 
     let mut sampler: RandomSampler<1024> = {
@@ -112,23 +117,29 @@ fn main() -> Result<(), String> {
 
     let simulation = make_simulation(&mut sampler);
 
-    let simulation_rc = RefCell::new(simulation);
+    // Mutable demo state
+    let demo_state = Rc::new(RefCell::new(DemoState {
+        simulation,
+        renderer,
+    }));
 
     let render_to_window_canvas = |_frame_index: Option<u32>,
                                    _new_resolution: Option<Resolution>,
                                    canvas: &mut [u8]|
      -> Result<(), String> {
-        {
-            let simulation = simulation_rc.borrow();
+        let mut state = demo_state.borrow_mut();
 
-            let mut renderer = renderer_rc.borrow_mut();
+        // Split borrow to allow simultaneous access to simulation and renderer
+        let DemoState {
+            simulation,
+            renderer,
+        } = &mut *state;
 
-            renderer.begin_frame();
+        renderer.begin_frame();
 
-            simulation.render(&mut renderer);
+        simulation.render(renderer);
 
-            renderer.end_frame();
-        }
+        renderer.end_frame();
 
         // Write out.
 
@@ -162,8 +173,6 @@ fn main() -> Result<(), String> {
 
         let resources = &scene_context.resources;
 
-        let mut shader_context = (*shader_context_rc).borrow_mut();
-
         let mut scenes = scene_context.scenes.borrow_mut();
 
         let scene = &mut scenes[0];
@@ -172,7 +181,7 @@ fn main() -> Result<(), String> {
 
         scene.update(
             resources,
-            &mut shader_context,
+            &mut shader_context_rc.borrow_mut(),
             app,
             mouse_state,
             keyboard_state,
@@ -180,24 +189,23 @@ fn main() -> Result<(), String> {
             None,
         )?;
 
+        // Borrow demo state once for the entire update
+        let mut state = demo_state.borrow_mut();
+
         // Plays around with the simulation world.
 
         for keycode in keyboard_state.newly_pressed_keycodes.iter() {
             #[allow(clippy::single_match)]
             match *keycode {
                 Keycode::G => {
-                    let mut simulation = simulation_rc.borrow_mut();
-
                     // Toggles hash grid visualization.
 
-                    simulation.visualize_hash_grid = !simulation.visualize_hash_grid;
+                    state.simulation.visualize_hash_grid = !state.simulation.visualize_hash_grid;
                 }
                 Keycode::U => {
-                    let mut simulation = simulation_rc.borrow_mut();
-
                     // Pushes bodies in contact away from their collider.
 
-                    for body in simulation.rigid_bodies.iter_mut() {
+                    for body in state.simulation.rigid_bodies.iter_mut() {
                         for contact in &body.static_contacts {
                             body.linear_momentum += contact.normal * 10.0;
                         }
@@ -207,20 +215,14 @@ fn main() -> Result<(), String> {
             }
         }
 
-        {
-            // Updates renderer options.
+        // Updates renderer options.
 
-            let mut renderer = renderer_rc.borrow_mut();
-
-            renderer.update(keyboard_state);
-        }
+        state.renderer.update(keyboard_state);
 
         if h > 0.0 {
-            let mut simulation = simulation_rc.borrow_mut();
-
             // Advance our particle simulation by delta time.
 
-            simulation.tick(h, uptime);
+            state.simulation.tick(h, uptime);
         }
 
         Ok(())
