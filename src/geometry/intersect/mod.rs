@@ -453,7 +453,7 @@ pub fn test_ray_aabb(ray: &Ray, aabb: &AABB) -> f32 {
     }
 }
 
-pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
+pub fn intersect_ray_aabb(ray: &mut Ray, aabb: &AABB) {
     let mut t_min = 0.0_f32;
     let mut t_max = f32::MAX;
 
@@ -499,8 +499,6 @@ pub fn intersect_ray_aabb(ray: &mut Ray, node_index: usize, aabb: &AABB) {
             }
         }
     }
-
-    ray.colliding_primitive.replace(node_index);
 
     ray.t = ray.t.min(t_min);
 }
