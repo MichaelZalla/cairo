@@ -144,6 +144,7 @@ fn intersect_medial_primitive_bvh_node<P: MedialPrimitive>(
                     t: intersection.t,
                     colliding_bvh_index: bvh_instance_index,
                     colliding_primitive: tri_index,
+                    barycentric: intersection.barycentric,
                 };
 
                 // Try to add it to the collision list

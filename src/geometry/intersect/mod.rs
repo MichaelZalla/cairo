@@ -332,10 +332,13 @@ pub fn intersect_ray_triangle(
 
         ray.t = t;
 
+        let w = 1.0 - u - v;
+
         ray.collision = Some(StaticBVHCollision {
             t,
             colliding_bvh_index: bvh_instance_index,
             colliding_primitive: triangle_index,
+            barycentric: Vec3 { x: u, y: v, z: w },
         });
     }
 }
