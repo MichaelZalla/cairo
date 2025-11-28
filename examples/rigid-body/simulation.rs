@@ -15,7 +15,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::resolve_rigid_body_collision,
+            collision::resolve_rigid_body_collision,
             contact::StaticContactList,
             rigid_body::{
                 RigidBody, RigidBodyKind,

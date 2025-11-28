@@ -2,7 +2,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::{
+            collision::{
                 NormalImpulseData, get_rigid_body_plane_friction_impulse,
                 get_rigid_body_plane_normal_impulse,
             },

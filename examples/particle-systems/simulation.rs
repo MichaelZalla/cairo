@@ -8,7 +8,7 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision_response::resolve_point_plane_collision_approximate,
+            collision::resolve_point_plane_collision_approximate,
             force::PointForce,
             particle::{
                 generator::{ParticleGenerator, ParticleGeneratorKind},

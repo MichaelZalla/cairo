@@ -11,7 +11,7 @@ use cairo::{
         },
     },
     physics::simulation::{
-        collision_response::{
+        collision::{
             resolve_edge_edge_collision, resolve_point_plane_collision_approximate,
             resolve_vertex_face_collision,
         },

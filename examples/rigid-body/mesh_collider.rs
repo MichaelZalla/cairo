@@ -200,7 +200,7 @@ fn calculate_mesh_collision_response(
     radius: f32,
     material: &PhysicsMaterial,
 ) -> Option<(
-    cairo::physics::simulation::collision_response::NormalImpulseData,
+    cairo::physics::simulation::collision::NormalImpulseData,
     f32,
 )> {
     let start_position = current_body_state.position;

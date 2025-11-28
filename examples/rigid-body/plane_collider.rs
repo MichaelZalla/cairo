@@ -212,7 +212,7 @@ impl PlaneCollider {
         minimum_distance_to_plane: f32,
         material: &PhysicsMaterial,
     ) -> Option<(
-        cairo::physics::simulation::collision_response::NormalImpulseData,
+        cairo::physics::simulation::collision::NormalImpulseData,
         f32,
     )> {
         let start_position = current_body_state.position;
