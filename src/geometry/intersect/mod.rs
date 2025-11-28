@@ -4,6 +4,7 @@ use std::mem;
 
 use crate::{
     animation::lerp,
+    geometry::accelerator::static_triangle_bvh::StaticBVHCollision,
     vec::{
         vec3::{self, Vec3, Vec3A},
         vec4::Vec4,
@@ -157,9 +158,7 @@ pub fn intersect_line_segment_triangle(
 
     // Segment PQ intersects triangle.
 
-    if t < segment.t {
-        segment.t = t;
-
+    if segment.update_collision_t(t) {
         Some(Vec3 { x: u, y: v, z: w })
     } else {
         None
@@ -200,9 +199,7 @@ pub fn intersect_capsule_triangle(capsule: &mut Capsule, triangle: &Triangle) ->
         }
 
         // Capsule intersects triangle - update collision info if this is closer
-        if t < capsule.segment.t {
-            capsule.segment.t = t;
-
+        if capsule.segment.update_collision_t(t) {
             Some(Vec3 { x: u, y: v, z: w })
         } else {
             None
@@ -381,9 +378,11 @@ pub fn intersect_ray_triangle(
 
         ray.t = t;
 
-        ray.colliding_bvh_index.replace(bvh_instance_index);
-
-        ray.colliding_primitive.replace(triangle_index);
+        ray.collision = Some(StaticBVHCollision {
+            t,
+            colliding_bvh_index: bvh_instance_index,
+            colliding_primitive: triangle_index,
+        });
     }
 }
 
@@ -527,9 +526,7 @@ pub fn intersect_ray_bvh(
     if transformed_ray.t < original_t {
         ray.t = transformed_ray.t;
 
-        ray.colliding_bvh_index = transformed_ray.colliding_bvh_index;
-
-        ray.colliding_primitive = transformed_ray.colliding_primitive;
+        ray.collision = transformed_ray.collision;
     }
 }
 

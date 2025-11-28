@@ -115,10 +115,9 @@ impl<const N: usize> Simulation<N> {
 
             intersect_medial_primitive_tlas(&mut capsule, tlas);
 
-            if let (Some(bvh_instance_index), Some(tri_index)) = (
-                capsule.segment.colliding_bvh_index,
-                capsule.segment.colliding_primitive,
-            ) {
+            if let Some(collision) = capsule.segment.collision {
+                let bvh_instance_index = collision.colliding_bvh_index;
+                let tri_index = collision.colliding_primitive;
                 let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
 
                 let triangle = &bvh_instance.bvh.tris[tri_index];
@@ -135,7 +134,8 @@ impl<const N: usize> Simulation<N> {
                     new_state.0[i] = state.0[i];
                     new_state.0[i + n] = state.0[i + n];
                 } else {
-                    let time_before_collision = h * capsule.segment.t;
+                    let t = collision.t;
+                    let time_before_collision = h * t;
                     let time_after_collision = h - time_before_collision;
 
                     let accumulated_velocity = acceleration * time_after_collision;
@@ -143,10 +143,10 @@ impl<const N: usize> Simulation<N> {
                     end_velocity -= accumulated_velocity;
 
                     // Only process valid collisions (t must be in [0, 1] range)
-                    if capsule.segment.t >= 0.0 && capsule.segment.t <= 1.0 {
+                    if (0.0..=1.0).contains(&t) {
                         // Compute collision point and penetration in world space
                         let collision_point = capsule.segment.start
-                            + (capsule.segment.end - capsule.segment.start) * capsule.segment.t;
+                            + (capsule.segment.end - capsule.segment.start) * t;
 
                         let penetration_vector = end_position - collision_point;
 

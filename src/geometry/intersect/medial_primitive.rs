@@ -100,26 +100,15 @@ pub fn intersect_medial_primitive_bvh<P: MedialPrimitive>(
     // Copy collision results back to original primitive
     let transformed_segment = transformed_primitive.medial_segment();
 
-    if let (Some(colliding_bvh_index), Some(colliding_primitive)) = (
-        transformed_segment.colliding_bvh_index,
-        transformed_segment.colliding_primitive,
-    ) {
+    if let Some(collision) = transformed_segment.collision {
         let original_segment = primitive.medial_segment_mut();
-
-        original_segment.t = transformed_segment.t;
 
         original_segment.transformed_length = ((original_segment.end - original_segment.start)
             * bvh_instance.transform)
             .mag()
             .abs();
 
-        original_segment
-            .colliding_bvh_index
-            .replace(colliding_bvh_index);
-
-        original_segment
-            .colliding_primitive
-            .replace(colliding_primitive);
+        original_segment.collision = Some(collision);
     }
 }
 
@@ -149,8 +138,11 @@ fn intersect_medial_primitive_bvh_node<P: MedialPrimitive>(
             if let Some(_barycentric) = primitive.intersect_triangle(triangle) {
                 let segment = primitive.medial_segment_mut();
 
-                segment.colliding_bvh_index.replace(bvh_instance_index);
-                segment.colliding_primitive.replace(tri_index);
+                // The t value was already set by intersect_triangle
+                if let Some(ref mut collision) = segment.collision {
+                    collision.colliding_bvh_index = bvh_instance_index;
+                    collision.colliding_primitive = tri_index;
+                }
             }
         }
     } else {

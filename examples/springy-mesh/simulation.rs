@@ -453,7 +453,8 @@ impl Simulation {
 
         match intersect_line_segment_triangle(&mut segment, triangle) {
             Some(barycentric) => {
-                let time_before_collision = h * segment.t;
+                let t = segment.collision.map(|c| c.t).unwrap_or(f32::MAX);
+                let time_before_collision = h * t;
                 let time_after_collision = h - time_before_collision;
 
                 // Subtracts any velocity accumulated by the vertex while colliding.
@@ -502,7 +503,8 @@ impl Simulation {
                 let start_velocity = &state.0[a_point_index + n];
                 let end_velocity = &new_state.0[a_point_index + n];
 
-                let mut point_velocity = lerp(*start_velocity, *end_velocity, segment.t);
+                let t = segment.collision.map(|c| c.t).unwrap_or(f32::MAX);
+                let mut point_velocity = lerp(*start_velocity, *end_velocity, t);
 
                 // Gathers masses and velocities for collision body B (face).
 

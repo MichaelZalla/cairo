@@ -381,8 +381,8 @@ fn render_rotated_ray_grid(
 
         renderer.render_ray(ray, ray_color);
 
-        if let Some(index) = &ray.colliding_primitive {
-            let triangle = &bvh.tris[*index];
+        if let Some(collision) = &ray.collision {
+            let triangle = &bvh.tris[collision.colliding_primitive];
 
             let (v0, v1, v2) = (
                 &level_mesh.geometry.vertices[triangle.vertices[0]],

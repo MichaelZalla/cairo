@@ -32,10 +32,9 @@ impl StaticCollider for StaticTriangleTLAS {
         intersect_medial_primitive_tlas(&mut capsule, self);
 
         // Check if we hit a triangle
-        if let (Some(bvh_instance_index), Some(tri_index)) = (
-            capsule.segment.colliding_bvh_index,
-            capsule.segment.colliding_primitive,
-        ) {
+        if let Some(collision) = capsule.segment.collision {
+            let bvh_instance_index = collision.colliding_bvh_index;
+            let tri_index = collision.colliding_primitive;
             let bvh_instance = &self.bvh_instances[bvh_instance_index];
             let triangle = &bvh_instance.bvh.tris[tri_index];
 
@@ -106,10 +105,9 @@ impl StaticCollider for StaticTriangleTLAS {
         intersect_medial_primitive_tlas(&mut capsule, self);
 
         // Check if we hit a triangle
-        if let (Some(bvh_instance_index), Some(tri_index)) = (
-            capsule.segment.colliding_bvh_index,
-            capsule.segment.colliding_primitive,
-        ) {
+        if let Some(collision) = capsule.segment.collision {
+            let bvh_instance_index = collision.colliding_bvh_index;
+            let tri_index = collision.colliding_primitive;
             let bvh_instance = &self.bvh_instances[bvh_instance_index];
             let triangle = &bvh_instance.bvh.tris[tri_index];
 
@@ -118,13 +116,13 @@ impl StaticCollider for StaticTriangleTLAS {
             let normal = (triangle_normal * bvh_instance.transform).as_normal();
 
             // Calculate collision point
-            let collision_point =
-                start_position + (end_position - start_position) * capsule.segment.t;
+            let t = collision.t;
+            let collision_point = start_position + (end_position - start_position) * t;
 
             Some(CollisionSurface {
                 normal,
                 contact_point: collision_point,
-                collision_t: capsule.segment.t,
+                collision_t: t,
                 minimum_distance: radius,
             })
         } else {
@@ -207,10 +205,9 @@ fn calculate_mesh_collision_response(
     intersect_medial_primitive_tlas(&mut capsule, tlas);
 
     // Check if we hit a triangle
-    if let (Some(bvh_instance_index), Some(tri_index)) = (
-        capsule.segment.colliding_bvh_index,
-        capsule.segment.colliding_primitive,
-    ) {
+    if let Some(collision) = capsule.segment.collision {
+        let bvh_instance_index = collision.colliding_bvh_index;
+        let tri_index = collision.colliding_primitive;
         let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
         let triangle = &bvh_instance.bvh.tris[tri_index];
 
@@ -219,12 +216,13 @@ fn calculate_mesh_collision_response(
         let normal = (triangle_normal * bvh_instance.transform).as_normal();
 
         // Calculate collision point
-        let collision_point = start_position + (end_position - start_position) * capsule.segment.t;
+        let t = collision.t;
+        let collision_point = start_position + (end_position - start_position) * t;
 
         let surface = CollisionSurface {
             normal,
             contact_point: collision_point,
-            collision_t: capsule.segment.t,
+            collision_t: t,
             minimum_distance: radius,
         };
 
@@ -254,10 +252,9 @@ fn correct_mesh_penetration(
     intersect_medial_primitive_tlas(&mut capsule, tlas);
 
     // Check if we hit a triangle
-    if let (Some(bvh_instance_index), Some(tri_index)) = (
-        capsule.segment.colliding_bvh_index,
-        capsule.segment.colliding_primitive,
-    ) {
+    if let Some(collision) = capsule.segment.collision {
+        let bvh_instance_index = collision.colliding_bvh_index;
+        let tri_index = collision.colliding_primitive;
         let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
         let triangle = &bvh_instance.bvh.tris[tri_index];
 

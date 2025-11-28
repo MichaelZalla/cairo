@@ -1,5 +1,6 @@
 use crate::{
     geometry::{
+        accelerator::static_triangle_bvh::StaticBVHCollision,
         intersect::intersect_line_segment_triangle,
         primitives::aabb::{AABB, Bounded},
     },
@@ -13,9 +14,7 @@ pub struct LineSegment {
     pub start: Vec3,
     pub end: Vec3,
     pub transformed_length: f32,
-    pub t: f32,
-    pub colliding_bvh_index: Option<usize>,
-    pub colliding_primitive: Option<usize>,
+    pub collision: Option<StaticBVHCollision>,
 }
 
 impl LineSegment {
@@ -24,14 +23,35 @@ impl LineSegment {
             start,
             end,
             transformed_length: (end - start).mag(),
-            t: f32::MAX,
-            colliding_bvh_index: None,
-            colliding_primitive: None,
+            collision: None,
         }
     }
 
     pub fn lerped(&self) -> Vec3 {
-        self.start + (self.end - self.start) * self.t
+        let t = self.collision.map(|c| c.t).unwrap_or(f32::MAX);
+
+        self.start + (self.end - self.start) * t
+    }
+
+    /// Updates the collision t-value if the new value is closer.
+    /// Returns true if the collision was updated (i.e., t is closer than current).
+    pub fn update_collision_t(&mut self, t: f32) -> bool {
+        let current_t = self.collision.map(|c| c.t).unwrap_or(f32::MAX);
+
+        if t < current_t {
+            // Update or create collision with new t value
+            if let Some(ref mut collision) = self.collision {
+                collision.t = t;
+            } else {
+                self.collision = Some(StaticBVHCollision {
+                    t,
+                    ..Default::default()
+                });
+            }
+            true
+        } else {
+            false
+        }
     }
 }
 

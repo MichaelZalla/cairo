@@ -17,6 +17,13 @@ static DO_BINNING: bool = true;
 const BIN_COUNT: usize = 8;
 
 #[derive(Default, Debug, Copy, Clone)]
+pub struct StaticBVHCollision {
+    pub t: f32,
+    pub colliding_bvh_index: usize,
+    pub colliding_primitive: usize,
+}
+
+#[derive(Default, Debug, Copy, Clone)]
 pub struct StaticTriangleBVHNode {
     pub aabb: AABB,
     pub left_child_index: u32,
