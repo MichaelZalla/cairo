@@ -16,12 +16,17 @@ use cairo::{
             rigid_body_simulation_state::DynRigidBodyForce,
         },
     },
+    random::sampler::RandomSampler,
+    scene::context::SceneContext,
     vec::vec3::{self, Vec3},
 };
 
 use crate::{plane_collider::PlaneCollider, simulation::Simulation};
 
-pub fn make_test_simulation() -> Simulation {
+pub fn make_test_simulation(
+    _sampler: &mut RandomSampler<1024>,
+    _scene_context: &SceneContext,
+) -> Simulation {
     // Forces.
 
     let forces: Vec<Box<DynRigidBodyForce>> = vec![

@@ -18,7 +18,7 @@ use cairo::{
     software_renderer::SoftwareRenderer,
 };
 
-use make_terrain_simulation::make_terrain_simulation as make_simulation;
+use make_terrain_simulation::make_obj_terrain_simulation as make_simulation;
 
 use crate::simulation::Simulation;
 
@@ -126,7 +126,7 @@ fn main() -> Result<(), String> {
         sampler
     };
 
-    let simulation = make_simulation(&mut sampler);
+    let simulation = make_simulation(&mut sampler, &scene_context);
 
     // Mutable demo state
     let demo_state = Rc::new(RefCell::new(DemoState {
@@ -234,7 +234,7 @@ fn main() -> Result<(), String> {
                     // Reset simulation to its initial state (preserved debug flags).
                     let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
 
-                    state.simulation = make_simulation(&mut sampler);
+                    state.simulation = make_simulation(&mut sampler, &scene_context);
 
                     state.simulation.visualize_hash_grid = current_visualize_hash_grid;
 

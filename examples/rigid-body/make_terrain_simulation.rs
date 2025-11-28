@@ -11,7 +11,12 @@ use cairo::{
         primitives::aabb::AABB,
     },
     matrix::Mat4,
-    mesh::{Mesh, mesh_geometry::MeshGeometry, primitive::plane},
+    mesh::{
+        Mesh,
+        mesh_geometry::MeshGeometry,
+        obj::load::{LoadObjResult, ProcessGeometryFlags, load_obj},
+        primitive::plane,
+    },
     physics::simulation::{
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
         rigid_body::{
@@ -20,6 +25,7 @@ use cairo::{
         },
     },
     random::sampler::{DirectionSampler, RandomSampler, RangeSampler},
+    scene::context::SceneContext,
     vec::vec3::{self, Vec3},
 };
 
@@ -190,7 +196,10 @@ pub fn make_simulation_from_mesh(
 }
 
 /// Creates a terrain simulation with sine wave displaced ground mesh.
-pub fn make_terrain_simulation(sampler: &mut RandomSampler<1024>) -> Simulation {
+pub fn make_terrain_simulation(
+    sampler: &mut RandomSampler<1024>,
+    _scene_context: &SceneContext,
+) -> Simulation {
     // Create sine wave terrain mesh
     let ground_mesh = make_sine_wave_terrain(
         100.0, // width
@@ -210,4 +219,33 @@ pub fn make_terrain_simulation(sampler: &mut RandomSampler<1024>) -> Simulation 
         0.4, // initial_velocity_probability (40% get velocity)
         sampler,
     )
+}
+
+/// Creates a terrain simulation from an OBJ file.
+///
+/// Loads a mesh from the specified OBJ file and uses it as collision geometry.
+/// The mesh is centered during loading.
+pub fn make_obj_terrain_simulation(
+    sampler: &mut RandomSampler<1024>,
+    scene_context: &SceneContext,
+) -> Simulation {
+    let resources = &scene_context.resources;
+
+    // Load mesh from OBJ file
+    let level_mesh = {
+        let mut material_arena = resources.material.borrow_mut();
+        let mut texture_u8_arena = resources.texture_u8.borrow_mut();
+
+        let LoadObjResult(_level_geometry, level_meshes) = load_obj(
+            "./data/blender/collision-level/collision-level_005.obj",
+            &mut material_arena,
+            &mut texture_u8_arena,
+            Some(ProcessGeometryFlags::empty() | ProcessGeometryFlags::CENTER),
+        );
+
+        level_meshes.last().unwrap().to_owned()
+    };
+
+    // Create simulation with 100 spheres
+    make_simulation_from_mesh(level_mesh, 100, 1.0, 1.0, 0.4, sampler)
 }
