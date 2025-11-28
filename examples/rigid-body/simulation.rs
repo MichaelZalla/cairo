@@ -1199,12 +1199,28 @@ impl Simulation {
         }
     }
 
-    pub fn render(&self, renderer: &mut SoftwareRenderer) {
+    pub fn render(&self, renderer: &mut SoftwareRenderer, sphere_mesh: Option<&Mesh>) {
         renderer.render_axes(None);
 
         // Render dynamic rigid bodies (spheres).
         for sphere in &self.rigid_bodies {
-            sphere.render(renderer);
+            match sphere_mesh {
+                Some(mesh) => {
+                    // Render rasterized sphere mesh for the rigid body.
+                    let transform_with_radius = match sphere.kind {
+                        RigidBodyKind::Sphere(radius) => {
+                            Mat4::scale_uniform(radius) * *sphere.transform.mat()
+                        }
+                        _ => *sphere.transform.mat(),
+                    };
+
+                    renderer.render_entity(&transform_with_radius, mesh, &None);
+                }
+                None => {
+                    // Renders a wireframe sphere.
+                    sphere.render(renderer);
+                }
+            }
         }
 
         // Visualize hash grid entries.

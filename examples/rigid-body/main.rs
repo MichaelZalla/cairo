@@ -11,8 +11,9 @@ use cairo::{
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
+    mesh::primitive::sphere,
     random::sampler::RandomSampler,
-    render::Renderer,
+    render::{Renderer, options::RenderPassFlags},
     scene::context::{SceneContext, utils::make_empty_scene},
     software_renderer::SoftwareRenderer,
 };
@@ -34,14 +35,15 @@ const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics
 struct DemoState {
     simulation: Simulation,
     renderer: SoftwareRenderer,
+    should_rasterize: bool,
     time_accumulator: f32,
 }
 
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/rigid-body".to_string(),
-        window_resolution: resolution::RESOLUTION_1280_BY_720,
-        canvas_resolution: resolution::RESOLUTION_1280_BY_720,
+        window_resolution: resolution::RESOLUTION_640_BY_480,
+        canvas_resolution: resolution::RESOLUTION_640_BY_480,
         relative_mouse_mode: false,
         ..Default::default()
     };
@@ -100,22 +102,24 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
-    // Renderer
+    // Generate sphere mesh for rasterized rendering
+    let sphere_mesh = sphere::generate(1.0, 16, 16);
 
+    // Renderer
     let mut renderer =
         SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
+
+    renderer.options.draw_wireframe = true;
+    renderer.options.render_pass_flags ^= RenderPassFlags::RASTERIZATION;
 
     let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
 
     renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
     // Simulation
-
     let mut sampler: RandomSampler<1024> = {
         let mut sampler: RandomSampler<1024> = Default::default();
-
         sampler.seed().unwrap();
-
         sampler
     };
 
@@ -125,6 +129,7 @@ fn main() -> Result<(), String> {
     let demo_state = Rc::new(RefCell::new(DemoState {
         simulation,
         renderer,
+        should_rasterize: false,
         time_accumulator: 0.0,
     }));
 
@@ -138,12 +143,19 @@ fn main() -> Result<(), String> {
         let DemoState {
             simulation,
             renderer,
+            should_rasterize,
             ..
         } = &mut *state;
 
         renderer.begin_frame();
 
-        simulation.render(renderer);
+        let sphere_mesh_option = if *should_rasterize {
+            Some(&sphere_mesh)
+        } else {
+            None
+        };
+
+        simulation.render(renderer, sphere_mesh_option);
 
         renderer.end_frame();
 
@@ -217,6 +229,19 @@ fn main() -> Result<(), String> {
                         }
                     }
                 }
+                Keycode::T => {
+                    // Toggle rasterization mode
+                    state.should_rasterize = !state.should_rasterize;
+
+                    state.renderer.options.draw_wireframe = !state.should_rasterize;
+
+                    if state.should_rasterize {
+                        state.renderer.options.render_pass_flags |= RenderPassFlags::RASTERIZATION;
+                    } else {
+                        state.renderer.options.render_pass_flags &= !RenderPassFlags::RASTERIZATION;
+                    }
+                }
+
                 _ => (),
             }
         }
