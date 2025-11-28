@@ -1,39 +1,37 @@
 use cairo::{
-    geometry::primitives::plane::Plane,
-    matrix::Mat4,
-    render::Renderer,
-    software_renderer::SoftwareRenderer,
-    vec::vec3::{self, Vec3},
+    color, matrix::Mat4, physics::simulation::collision::colliders::plane_collider::PlaneCollider,
+    render::Renderer, scene::empty::EmptyDisplayKind, software_renderer::SoftwareRenderer,
 };
 
-#[derive(Default, Debug, Clone)]
-pub struct PlaneCollider {
-    pub point: Vec3,
-    pub plane: Plane,
+// Springy-mesh specific extension trait for PlaneCollider rendering
+pub trait Renderable {
+    fn render(&self, renderer: &mut SoftwareRenderer);
 }
 
-impl PlaneCollider {
-    pub fn new(point: Vec3, direction: Vec3) -> Self {
-        let plane = Plane::new(point, direction);
+impl Renderable for PlaneCollider {
+    fn render(&self, renderer: &mut SoftwareRenderer) {
+        // Calculate the coordinate frame for the plane
+        let (_forward, right, up) = self.plane.normal.basis();
 
-        Self { point, plane }
-    }
+        // Render the plane as an orange square
+        let scale = Mat4::scale_uniform(20.0);
+        let translate = Mat4::translation(self.point);
+        let rotate = Mat4::tbn(right, up, self.plane.normal);
 
-    pub fn render(&self, renderer: &mut SoftwareRenderer) {
-        let up = self.plane.normal;
+        let transform = scale * rotate * translate;
 
-        let mut forward = up.cross(vec3::UP);
+        renderer.render_empty(
+            &transform,
+            EmptyDisplayKind::Square,
+            false,
+            Some(color::ORANGE),
+        );
 
-        if forward.mag() < f32::EPSILON {
-            forward = up.cross(vec3::FORWARD);
-        }
-
-        forward = forward.as_normal();
-
-        let right = up.cross(forward);
-
-        let tbn = Mat4::translation(self.point) * Mat4::tbn(right, up, forward);
-
-        renderer.render_ground_plane(30, Some(&tbn));
+        // Render the normal vector as a green line
+        renderer.render_line(
+            self.point,
+            self.point + self.plane.normal * 5.0,
+            color::GREEN,
+        );
     }
 }

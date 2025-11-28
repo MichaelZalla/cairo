@@ -12,8 +12,8 @@ use cairo::{
     },
     physics::simulation::{
         collision::{
-            resolve_edge_edge_collision, resolve_point_plane_collision_approximate,
-            resolve_vertex_face_collision,
+            colliders::plane_collider::PlaneCollider, resolve_edge_edge_collision,
+            resolve_point_plane_collision_approximate, resolve_vertex_face_collision,
         },
         force::{PointForce, gravity::GRAVITY_POINT_FORCE},
         state_vector::{FromStateVector, StateVector, ToStateVector},
@@ -25,7 +25,7 @@ use cairo::{
 
 use crate::{
     integration::{integrate_midpoint_euler, system_dynamics_function},
-    plane_collider::PlaneCollider,
+    plane_collider::Renderable,
     springy_mesh::{SpringyMesh, SpringyMeshType, make_springy_meshes},
 };
 
