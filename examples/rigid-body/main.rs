@@ -22,13 +22,16 @@ use make_terrain_simulation::make_obj_terrain_simulation as make_simulation;
 
 use crate::simulation::Simulation;
 
+pub mod collision_helpers;
 pub mod integration;
 pub mod make_terrain_simulation;
 pub mod make_test_simulation;
+pub mod mesh_collider;
 pub mod plane_collider;
 pub mod simulation;
 pub mod state_vector;
 pub mod static_collider;
+pub mod static_contact_helpers;
 
 // Fixed timestep accumulator for stable physics
 const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics

@@ -1,0 +1,223 @@
+use cairo::{
+    geometry::primitives::plane::Plane,
+    physics::{
+        material::PhysicsMaterial,
+        simulation::{
+            contact::{StaticContact, StaticContactKind},
+            rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
+        },
+    },
+    vec::vec3::Vec3,
+};
+
+// Constants for contact detection
+pub const CONTACT_DISTANCE_THRESHOLD: f32 = 0.05;
+pub const RESTING_SPEED_THRESHOLD: f32 = 0.1;
+
+const ROLLING_VELOCITY_RATIO_THRESHOLD: f32 = 0.1;
+const BODY_VELOCITY_ROLLING_THRESHOLD: f32 = 0.01;
+const CONTACT_POINT_VELOCITY_ROLLING_THRESHOLD: f32 = 0.2;
+
+pub fn compute_contact_point_velocity(
+    body_velocity: Vec3,
+    angular_velocity: Vec3,
+    contact_point: Vec3,
+    body_position: Vec3,
+) -> Vec3 {
+    let r = contact_point - body_position;
+    body_velocity + angular_velocity.cross(r)
+}
+
+pub fn compute_motion_tangent(point_on_plane: Vec3, velocity: Vec3, plane: &Plane) -> Option<Vec3> {
+    let v = point_on_plane + velocity;
+    let d = plane.get_signed_distance(&v);
+    let velocity_projected_onto_plane = v - plane.normal * d;
+
+    if velocity_projected_onto_plane.is_zero() {
+        None
+    } else {
+        Some(velocity_projected_onto_plane.as_normal())
+    }
+}
+
+pub fn classify_contact_kind(
+    body_velocity: Vec3,
+    contact_point_velocity: Vec3,
+    body_motion_tangent: Option<Vec3>,
+    contact_point_motion_tangent: Option<Vec3>,
+    angular_velocity: Vec3,
+    normal: Vec3,
+) -> StaticContactKind {
+    // Constants for motion/spin significance thresholds
+    const MIN_VELOCITY_FOR_AXIS_CHECK: f32 = 0.01;
+
+    const MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK: f32 = 0.01;
+
+    const MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 =
+        MIN_VELOCITY_FOR_AXIS_CHECK * MIN_VELOCITY_FOR_AXIS_CHECK;
+
+    const MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK_SQUARED: f32 =
+        MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK * MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK;
+
+    let body_speed_along_tangent = if let Some(tangent) = body_motion_tangent {
+        body_velocity.dot(tangent)
+    } else {
+        0.0
+    };
+
+    let contact_point_speed_along_tangent = if let Some(tangent) = contact_point_motion_tangent {
+        contact_point_velocity.dot(tangent)
+    } else {
+        0.0
+    };
+
+    // Early return for resting: if both velocities are very small, body is at rest.
+    if body_speed_along_tangent < RESTING_SPEED_THRESHOLD
+        && contact_point_speed_along_tangent < RESTING_SPEED_THRESHOLD
+    {
+        return StaticContactKind::Resting;
+    }
+
+    // Check if contact velocity is small relative to body velocity (rolling)
+    let velocity_ratio = if body_speed_along_tangent > BODY_VELOCITY_ROLLING_THRESHOLD {
+        contact_point_speed_along_tangent / body_speed_along_tangent
+    } else {
+        // At very low speeds, avoid division by near-zero
+        if contact_point_speed_along_tangent < CONTACT_POINT_VELOCITY_ROLLING_THRESHOLD {
+            0.0 // Treat as rolling
+        } else {
+            1.0 // Treat as sliding
+        }
+    };
+
+    let is_rolling = velocity_ratio < ROLLING_VELOCITY_RATIO_THRESHOLD;
+
+    // Additional check for rolling: the spin axis must be orthogonal to
+    // both (1) the surface normal, and (2) the direction of motion.
+    let has_correct_spin_axis = {
+        let has_significant_motion =
+            body_velocity.mag_squared() > MIN_VELOCITY_FOR_AXIS_CHECK_SQUARED;
+
+        let has_significant_spin =
+            angular_velocity.mag_squared() > MIN_ANGULAR_VELOCITY_FOR_AXIS_CHECK_SQUARED;
+
+        if has_significant_motion && has_significant_spin {
+            let spin_axis = angular_velocity.as_normal();
+            let motion_direction = body_velocity.as_normal();
+
+            // Spin must be perpendicular to normal.
+            let dot_with_normal = normal.dot(spin_axis).abs();
+            let perpendicular_to_normal = dot_with_normal < 0.1;
+
+            // Spin must be perpendicular to motion.
+            let dot_with_motion = motion_direction.dot(spin_axis);
+            let perpendicular_to_motion = dot_with_motion.abs() < 0.1;
+
+            perpendicular_to_motion && perpendicular_to_normal
+        } else if has_significant_spin {
+            // High spin but low tangential velocity: check if spin is parallel
+            // to surface normal (i.e., Y-spin); if so, this is definitely NOT rolling.
+            let spin_axis = angular_velocity.as_normal();
+            let dot_with_normal = normal.dot(spin_axis).abs();
+            let parallel_to_normal = dot_with_normal > 0.9;
+
+            !parallel_to_normal
+        } else {
+            // Low velocity AND low spin - can't determine axis, allow resting/rolling
+            true
+        }
+    };
+
+    if is_rolling && has_correct_spin_axis {
+        StaticContactKind::Rolling(0.5)
+    } else {
+        StaticContactKind::Sliding
+    }
+}
+
+pub fn compute_contact_basis(
+    normal: Vec3,
+    contact_point_motion_tangent: Option<Vec3>,
+) -> (Vec3, Vec3) {
+    let tangent = match contact_point_motion_tangent {
+        Some(t) => t,
+        None => {
+            // No motion tangent, use any perpendicular vector
+            normal.basis().1
+        }
+    };
+
+    let bitangent = normal.cross(tangent);
+
+    (tangent, bitangent)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn get_static_contact(
+    derivative: &RigidBodySimulationState,
+    new_body_state: &RigidBodySimulationState,
+    surface_normal: Vec3,
+    signed_distance: f32,
+    minimum_distance: f32,
+    body_motion_tangent: Option<Vec3>,
+    contact_point_motion_tangent: Option<Vec3>,
+    material: &PhysicsMaterial,
+    check_forces: bool,
+) -> Option<StaticContact> {
+    // 1. Requires that the body be very close to the collider
+    if signed_distance > minimum_distance + CONTACT_DISTANCE_THRESHOLD {
+        return None;
+    }
+
+    // 2. Requires that the contact point's speed along the normal be very small
+    let body_velocity = new_body_state.velocity();
+    let contact_point = new_body_state.position - surface_normal * minimum_distance;
+
+    let contact_point_velocity = compute_contact_point_velocity(
+        body_velocity,
+        new_body_state.angular_velocity(),
+        contact_point,
+        new_body_state.position,
+    );
+
+    let contact_point_speed_along_normal = contact_point_velocity.dot(surface_normal);
+
+    if contact_point_speed_along_normal.abs() > RESTING_SPEED_THRESHOLD {
+        return None;
+    }
+
+    // 3. (Optional) Requires that the forces acting on the body aren't
+    //    pulling the body away from the collider.
+    if check_forces {
+        let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(surface_normal);
+
+        if magnitude_of_acceleration_along_normal > 0.01 {
+            return None;
+        }
+    }
+
+    // At this point, we can be certain that the object is resting, rolling, or sliding
+
+    let angular_velocity = new_body_state.angular_velocity();
+
+    let kind = classify_contact_kind(
+        body_velocity,
+        contact_point_velocity,
+        body_motion_tangent,
+        contact_point_motion_tangent,
+        angular_velocity,
+        surface_normal,
+    );
+
+    let (tangent, bitangent) = compute_contact_basis(surface_normal, contact_point_motion_tangent);
+
+    Some(StaticContact {
+        kind,
+        point: contact_point,
+        normal: surface_normal,
+        tangent,
+        bitangent,
+        contact_point_velocity,
+        material: *material,
+    })
+}
