@@ -1221,7 +1221,9 @@ impl Simulation {
         renderer.render_entity(&Mat4::identity(), &self.ground_mesh, &None);
 
         // Visualize the ground mesh BVH.
-        if let Some(collider) = self.ground_mesh.collider.as_ref() {
+        if self.visualize_hash_grid
+            && let Some(collider) = self.ground_mesh.collider.as_ref()
+        {
             renderer.render_bvh(collider, 2);
         }
     }
