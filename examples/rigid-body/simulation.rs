@@ -15,7 +15,10 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision::resolve_rigid_body_collision,
+            collision::{
+                StaticCollider, colliders::plane_collider::PlaneCollider,
+                resolve_rigid_body_collision,
+            },
             contact::StaticContactList,
             rigid_body::{
                 RigidBody, RigidBodyKind,
@@ -30,8 +33,7 @@ use cairo::{
 };
 
 use crate::{
-    integration::system_dynamics_function, plane_collider::PlaneCollider,
-    state_vector::StateVector, static_collider::StaticCollider,
+    integration::system_dynamics_function, plane_collider::Renderable, state_vector::StateVector,
 };
 
 static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
@@ -339,7 +341,7 @@ impl Simulation {
             body_state.static_contacts.clear();
         }
 
-        crate::plane_collider::resolve_plane_collisions(
+        resolve_plane_collisions(
             &self.static_plane_colliders,
             self.rigid_bodies.len(),
             h,
@@ -349,7 +351,7 @@ impl Simulation {
             &RIGID_BODY_STATIC_PLANE_MATERIAL,
         );
 
-        crate::mesh_collider::resolve_mesh_collisions(
+        resolve_mesh_collisions(
             &self.ground_tlas,
             self.rigid_bodies.len(),
             h,
@@ -499,5 +501,61 @@ impl Simulation {
         }
 
         new_state
+    }
+}
+
+/// Resolves collisions between multiple rigid bodies and plane colliders.
+/// This function iterates over all plane colliders and rigid bodies, calling
+/// the trait method `handle_collision` for each body-collider pair.
+fn resolve_plane_collisions(
+    plane_colliders: &[PlaneCollider],
+    body_count: usize,
+    h: f32,
+    derivative: &StateVector<RigidBodySimulationState>,
+    current_state: &StateVector<RigidBodySimulationState>,
+    new_state: &mut StateVector<RigidBodySimulationState>,
+    material: &PhysicsMaterial,
+) {
+    for collider in plane_colliders.iter() {
+        for body_index in 0..body_count {
+            let body_derivative = &derivative.0[0];
+            let current_body_state = &current_state.0[body_index];
+            let new_body_state = &mut new_state.0[body_index];
+
+            collider.handle_collision(
+                h,
+                body_derivative,
+                current_body_state,
+                new_body_state,
+                material,
+            );
+        }
+    }
+}
+
+/// Resolves collisions between multiple rigid bodies and a mesh collider.
+/// This function iterates over all rigid bodies, calling the trait method
+/// `handle_collision` for each body-collider pair.
+fn resolve_mesh_collisions(
+    mesh_collider: &StaticTriangleTLAS,
+    body_count: usize,
+    h: f32,
+    derivative: &StateVector<RigidBodySimulationState>,
+    current_state: &StateVector<RigidBodySimulationState>,
+    new_state: &mut StateVector<RigidBodySimulationState>,
+    material: &PhysicsMaterial,
+) {
+    for body_index in 0..body_count {
+        let body_derivative = &derivative.0[0];
+        let current_body_state = &current_state.0[body_index];
+        let new_body_state = &mut new_state.0[body_index];
+
+        mesh_collider.handle_collision(
+            h,
+            body_derivative,
+            current_body_state,
+            new_body_state,
+            material,
+        );
     }
 }

@@ -10,6 +10,7 @@ use cairo::{
     matrix::Mat4,
     mesh::primitive::plane,
     physics::simulation::{
+        collision::colliders::plane_collider::PlaneCollider,
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
         rigid_body::{
             RigidBody, RigidBodyDebugFlags, RigidBodyKind,
@@ -21,7 +22,7 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-use crate::{plane_collider::PlaneCollider, simulation::Simulation};
+use crate::simulation::Simulation;
 
 pub fn make_test_simulation(
     _sampler: &mut RandomSampler<1024>,

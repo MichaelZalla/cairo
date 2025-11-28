@@ -18,6 +18,7 @@ use cairo::{
         primitive::plane,
     },
     physics::simulation::{
+        collision::colliders::plane_collider::PlaneCollider,
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
         rigid_body::{
             RigidBody, RigidBodyDebugFlags, RigidBodyKind,
@@ -29,7 +30,7 @@ use cairo::{
     vec::vec3::{self, Vec3},
 };
 
-use crate::{plane_collider::PlaneCollider, simulation::Simulation};
+use crate::simulation::Simulation;
 
 /// Creates a wavy (sine wave) terrain mesh.
 pub fn make_sine_wave_terrain(

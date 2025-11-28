@@ -1,4 +1,4 @@
-use cairo::{
+use crate::{
     geometry::{
         accelerator::static_triangle_tlas::StaticTriangleTLAS,
         intersect::medial_primitive::intersect_medial_primitive_tlas, primitives::capsule::Capsule,
@@ -6,15 +6,13 @@ use cairo::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision::{self, CollisionSurface},
+            collision::{self, CollisionSurface, StaticCollider},
             contact::{self, StaticContact},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
     vec::vec3::Vec3,
 };
-
-use crate::static_collider::StaticCollider;
 
 impl StaticCollider for StaticTriangleTLAS {
     fn detect_static_contact(
@@ -198,10 +196,7 @@ fn calculate_mesh_collision_response(
     tlas: &StaticTriangleTLAS,
     radius: f32,
     material: &PhysicsMaterial,
-) -> Option<(
-    cairo::physics::simulation::collision::NormalImpulseData,
-    f32,
-)> {
+) -> Option<(collision::NormalImpulseData, f32)> {
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
@@ -301,34 +296,5 @@ fn handle_static_contact_after_mesh_collision(
         // Remove the component of linear momentum pointing into the surface
         let normal = contact.normal;
         body_state.linear_momentum -= normal * body_state.linear_momentum.dot(normal);
-    }
-}
-
-use crate::state_vector::StateVector;
-
-/// Resolves collisions between multiple rigid bodies and a mesh collider.
-/// This function iterates over all rigid bodies, calling the trait method
-/// `handle_collision` for each body-collider pair.
-pub fn resolve_mesh_collisions(
-    mesh_collider: &StaticTriangleTLAS,
-    body_count: usize,
-    h: f32,
-    derivative: &StateVector<RigidBodySimulationState>,
-    current_state: &StateVector<RigidBodySimulationState>,
-    new_state: &mut StateVector<RigidBodySimulationState>,
-    material: &PhysicsMaterial,
-) {
-    for body_index in 0..body_count {
-        let body_derivative = &derivative.0[0];
-        let current_body_state = &current_state.0[body_index];
-        let new_body_state = &mut new_state.0[body_index];
-
-        mesh_collider.handle_collision(
-            h,
-            body_derivative,
-            current_body_state,
-            new_body_state,
-            material,
-        );
     }
 }
