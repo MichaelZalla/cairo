@@ -14,7 +14,7 @@ use crate::{
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
-    vec::vec3::Vec3,
+    vec::vec3::{self, Vec3},
 };
 
 /// Helper function to extract triangle and world-space normal from a BVH
@@ -137,7 +137,8 @@ impl StaticCollider for StaticTriangleTLAS {
                     let (_triangle, normal) = get_collision_triangle_and_normal(self, collision);
 
                     // Calculate collision point
-                    let collision_point = start_position + (end_position - start_position) * collision.t;
+                    let collision_point =
+                        start_position + (end_position - start_position) * collision.t;
 
                     surfaces.push(CollisionSurface {
                         normal,
@@ -237,7 +238,55 @@ fn calculate_mesh_collision_responses(
         }
     }
 
-    collision_responses
+    // Combine coplanar collision responses to prevent energy gain
+    combine_coplanar_responses(collision_responses, &surfaces)
+}
+
+fn combine_coplanar_responses(
+    responses: Vec<(collision::NormalImpulseData, f32)>,
+    surfaces: &[CollisionSurface],
+) -> Vec<(collision::NormalImpulseData, f32)> {
+    if responses.is_empty() {
+        return responses;
+    }
+
+    // An adjustable threshold for considering normals as "coplanar".
+    const COPLANAR_THRESHOLD: f32 = 0.999;
+
+    // Creates (index, normal) pairs.
+    let mut indexed: Vec<(usize, (collision::NormalImpulseData, f32))> =
+        responses.into_iter().enumerate().collect();
+
+    // Sorts pairs by normal (x, y, z) to group similar normals together.
+    indexed.sort_by(|a, b| vec3::lexicographic_cmp(&surfaces[a.0].normal, &surfaces[b.0].normal));
+
+    let mut deduplicated_pairs = vec![];
+    let mut finger_index = 0;
+
+    while finger_index < indexed.len() {
+        let (left_pair_index, left_pair_response) = &indexed[finger_index];
+
+        let left_pair_normal = surfaces[*left_pair_index].normal;
+
+        deduplicated_pairs.push(*left_pair_response);
+
+        // Skip all subsequent responses with similar normals (coplanar)
+        finger_index += 1;
+
+        while finger_index < indexed.len() {
+            let (right_pair_index, _right_pair_response) = &indexed[finger_index];
+
+            let right_pair_normal = surfaces[*right_pair_index].normal;
+
+            if left_pair_normal.dot(right_pair_normal) > COPLANAR_THRESHOLD {
+                finger_index += 1; // Coplanar; skip this collision.
+            } else {
+                break; // Found a different normal, start new group.
+            }
+        }
+    }
+
+    deduplicated_pairs
 }
 
 fn correct_mesh_penetration(

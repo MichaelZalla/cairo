@@ -137,6 +137,13 @@ impl cmp::PartialEq for Vec3 {
     }
 }
 
+pub fn lexicographic_cmp(a: &Vec3, b: &Vec3) -> cmp::Ordering {
+    a.x.partial_cmp(&b.x)
+        .unwrap_or(cmp::Ordering::Equal)
+        .then(a.y.partial_cmp(&b.y).unwrap_or(cmp::Ordering::Equal))
+        .then(a.z.partial_cmp(&b.z).unwrap_or(cmp::Ordering::Equal))
+}
+
 impl ops::Neg for Vec3 {
     type Output = Vec3;
 
