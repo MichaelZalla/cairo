@@ -30,10 +30,9 @@ use cairo::{
         },
     },
     render::Renderer,
-    scene::empty::EmptyDisplayKind,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::{vec3, vec3::Vec3, vec4::Vec4},
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 use crate::{
@@ -1200,41 +1199,6 @@ impl Simulation {
         }
     }
 
-    /// Renders a static plane collider as a square with a normal vector.
-    fn render_static_plane_collider(collider: &PlaneCollider, renderer: &mut SoftwareRenderer) {
-        // Calculate the coordinate frame for the plane
-        let mut right = collider.plane.normal.cross(vec3::UP);
-
-        if right.mag() < f32::EPSILON {
-            right = collider.plane.normal.cross(vec3::FORWARD);
-        }
-
-        right = right.as_normal();
-
-        let up = collider.plane.normal.cross(-right);
-
-        // Render the plane as an orange square
-        let scale = Mat4::scale_uniform(20.0);
-        let translate = Mat4::translation(collider.point);
-        let rotate = Mat4::tbn(right, up, collider.plane.normal);
-
-        let transform = scale * rotate * translate;
-
-        renderer.render_empty(
-            &transform,
-            EmptyDisplayKind::Square,
-            false,
-            Some(color::ORANGE),
-        );
-
-        // Render the normal vector as a green line
-        renderer.render_line(
-            collider.point,
-            collider.point + collider.plane.normal * 5.0,
-            color::GREEN,
-        );
-    }
-
     pub fn render(&self, renderer: &mut SoftwareRenderer) {
         renderer.render_axes(None);
 
@@ -1250,7 +1214,7 @@ impl Simulation {
 
         // Visualize static plane colliders.
         for collider in &self.static_plane_colliders {
-            Self::render_static_plane_collider(collider, renderer);
+            collider.render(renderer);
         }
 
         // Render the ground mesh
