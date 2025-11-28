@@ -18,7 +18,9 @@ use cairo::{
     software_renderer::SoftwareRenderer,
 };
 
-use make_terrain_simulation::make_obj_terrain_simulation as make_simulation;
+use make_terrain_simulation::make_obj_terrain_simulation;
+use make_terrain_simulation::make_terrain_simulation;
+use make_test_simulation::make_test_simulation;
 
 use crate::simulation::Simulation;
 
@@ -28,10 +30,19 @@ pub mod make_test_simulation;
 pub mod plane_collider;
 pub mod simulation;
 
+type SimulationMakers = fn(&mut RandomSampler<1024>, &SceneContext) -> Simulation;
+
+const SIMULATION_MAKERS: [SimulationMakers; 3] = [
+    make_test_simulation,
+    make_terrain_simulation,
+    make_obj_terrain_simulation,
+];
+
 // Fixed timestep accumulator for stable physics
 const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics
 
 struct DemoState {
+    current_simulation_maker: usize,
     simulation: Simulation,
     renderer: SoftwareRenderer,
     should_rasterize: bool,
@@ -124,10 +135,11 @@ fn main() -> Result<(), String> {
         sampler
     };
 
-    let simulation = make_simulation(&mut sampler, &scene_context);
+    let simulation = SIMULATION_MAKERS[0](&mut sampler, &scene_context);
 
     // Mutable demo state
     let demo_state = Rc::new(RefCell::new(DemoState {
+        current_simulation_maker: 0,
         simulation,
         renderer,
         should_rasterize: false,
@@ -229,17 +241,7 @@ fn main() -> Result<(), String> {
                     }
                 }
                 Keycode::R => {
-                    // Reset simulation to its initial state (preserved debug flags).
-                    let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
-
-                    sampler.seed().unwrap();
-
-                    state.simulation = make_simulation(&mut sampler, &scene_context);
-
-                    state.simulation.visualize_hash_grid = current_visualize_hash_grid;
-
-                    // Reset time accumulator
-                    state.time_accumulator = 0.0;
+                    reset_simulation(&mut state, &mut sampler, &scene_context);
                 }
                 Keycode::T => {
                     // Toggle rasterization mode
@@ -253,7 +255,13 @@ fn main() -> Result<(), String> {
                         state.renderer.options.render_pass_flags &= !RenderPassFlags::RASTERIZATION;
                     }
                 }
+                Keycode::Y => {
+                    // Cycle current simulation maker (function).
+                    state.current_simulation_maker =
+                        (state.current_simulation_maker + 1) % SIMULATION_MAKERS.len();
 
+                    reset_simulation(&mut state, &mut sampler, &scene_context);
+                }
                 _ => (),
             }
         }
@@ -279,4 +287,22 @@ fn main() -> Result<(), String> {
     app.run(&mut update, &render_to_window_canvas)?;
 
     Ok(())
+}
+
+fn reset_simulation(
+    state: &mut DemoState,
+    sampler: &mut RandomSampler<1024>,
+    scene_context: &SceneContext,
+) {
+    // Reset simulation to its initial state (preserved debug flags).
+    let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
+
+    sampler.seed().unwrap();
+
+    state.simulation = SIMULATION_MAKERS[state.current_simulation_maker](sampler, scene_context);
+
+    state.simulation.visualize_hash_grid = current_visualize_hash_grid;
+
+    // Reset time accumulator
+    state.time_accumulator = 0.0;
 }
