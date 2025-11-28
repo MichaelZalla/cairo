@@ -65,6 +65,15 @@ pub struct TangentImpulseData {
     pub magnitude: f32,
 }
 
+/// Response data for a collision between a rigid body and a surface.
+#[derive(Debug, Copy, Clone)]
+pub struct CollisionResponse {
+    /// Normal impulse data for the collision.
+    pub impulse_data: NormalImpulseData,
+    /// Time parameter [0,1] when the collision occurs during the timestep.
+    pub collision_time: f32,
+}
+
 /// Trait for static colliders (plane, mesh, etc.) that can detect contacts and collisions.
 pub trait StaticCollider {
     /// Detects static contacts (resting, sliding, or rolling) at the current body position.
@@ -716,8 +725,7 @@ pub fn remove_post_collision_momentum(
 
 /// Calculates collision response data if a collision is detected.
 ///
-/// Returns `Some((normal_impulse_data, collision_t))` if a collision occurred,
-/// where `collision_t` is the normalized time of collision within the timestep.
+/// Returns `Some(CollisionResponse)` if a collision occurred.
 /// Returns `None` if no collision occurred or if the contact point is not
 /// moving into the plane.
 pub fn calculate_collision_response(
@@ -726,7 +734,7 @@ pub fn calculate_collision_response(
     new_body_state: &mut RigidBodySimulationState,
     surface: &CollisionSurface,
     material: &PhysicsMaterial,
-) -> Option<(NormalImpulseData, f32)> {
+) -> Option<CollisionResponse> {
     let end_position = new_body_state.position;
     let end_linear_velocity = new_body_state.velocity();
 
@@ -763,8 +771,8 @@ pub fn calculate_collision_response(
         remove_post_collision_momentum(h, surface.collision_t, body_derivative, new_body_state);
 
         // Calculate normal impulse
-        Some((
-            get_rigid_body_plane_normal_impulse(
+        Some(CollisionResponse {
+            impulse_data: get_rigid_body_plane_normal_impulse(
                 new_body_state,
                 surface.normal,
                 surface.contact_point,
@@ -773,8 +781,8 @@ pub fn calculate_collision_response(
                 r_torque,
                 material,
             ),
-            surface.collision_t,
-        ))
+            collision_time: surface.collision_t,
+        })
     } else {
         None
     }

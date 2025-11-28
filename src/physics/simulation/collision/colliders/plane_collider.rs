@@ -3,7 +3,9 @@ use crate::{
     physics::{
         material::PhysicsMaterial,
         simulation::{
-            collision::{self, CollisionSurface, RESTING_SPEED_THRESHOLD, StaticCollider},
+            collision::{
+                self, CollisionResponse, CollisionSurface, RESTING_SPEED_THRESHOLD, StaticCollider,
+            },
             contact::{self, StaticContactKind},
             rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
@@ -135,7 +137,7 @@ impl StaticCollider for PlaneCollider {
         };
 
         // Calculate collision response data (if a collision occurred).
-        let normal_impulse_data_with_t = calculate_plane_collision_response(
+        let collision_response = calculate_plane_collision_response(
             h,
             body_derivative,
             current_body_state,
@@ -145,15 +147,15 @@ impl StaticCollider for PlaneCollider {
         );
 
         // Applies collision impulses (normal and friction) to new state.
-        if let Some((normal_impulse_data, t)) = &normal_impulse_data_with_t {
+        if let Some(response) = &collision_response {
             collision::apply_collision_impulses(
                 h,
                 body_derivative,
                 new_body_state,
                 start_position,
                 start_linear_velocity,
-                normal_impulse_data,
-                *t,
+                &response.impulse_data,
+                response.collision_time,
                 material,
             );
         }
@@ -179,7 +181,7 @@ fn calculate_plane_collision_response(
     new_body_state: &mut RigidBodySimulationState,
     plane_collider: &PlaneCollider,
     material: &PhysicsMaterial,
-) -> Option<(collision::NormalImpulseData, f32)> {
+) -> Option<CollisionResponse> {
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
