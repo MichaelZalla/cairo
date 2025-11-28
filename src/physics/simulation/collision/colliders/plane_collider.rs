@@ -83,24 +83,27 @@ impl StaticCollider for PlaneCollider {
         contacts
     }
 
-    fn detect_collision(
+    fn detect_collisions(
         &self,
         start_position: Vec3,
         end_position: Vec3,
         radius: f32,
-    ) -> Option<CollisionSurface> {
+    ) -> Vec<CollisionSurface> {
         let normal = self.plane.normal;
 
         // Test for capsule-plane intersection
-        let intersection =
-            intersect_capsule_plane(start_position, end_position, radius, &self.plane)?;
-
-        Some(CollisionSurface {
-            normal,
-            contact_point: intersection.contact_point,
-            collision_t: intersection.t,
-            minimum_distance: radius,
-        })
+        if let Some(intersection) =
+            intersect_capsule_plane(start_position, end_position, radius, &self.plane)
+        {
+            vec![CollisionSurface {
+                normal,
+                contact_point: intersection.contact_point,
+                collision_t: intersection.t,
+                minimum_distance: radius,
+            }]
+        } else {
+            vec![]
+        }
     }
 
     fn handle_collisions(
@@ -137,8 +140,7 @@ impl StaticCollider for PlaneCollider {
             body_derivative,
             current_body_state,
             new_body_state,
-            &self.plane,
-            minimum_distance_to_plane,
+            self,
             material,
         );
 
@@ -175,41 +177,31 @@ fn calculate_plane_collision_response(
     body_derivative: &RigidBodySimulationState,
     current_body_state: &RigidBodySimulationState,
     new_body_state: &mut RigidBodySimulationState,
-    plane: &Plane,
-    minimum_distance_to_plane: f32,
+    plane_collider: &PlaneCollider,
     material: &PhysicsMaterial,
 ) -> Option<(collision::NormalImpulseData, f32)> {
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
-    let normal = plane.normal;
-
-    // Tests for a body-collider intersection
-    let intersection = match new_body_state.kind {
-        RigidBodyKind::Sphere(radius) => {
-            intersect_capsule_plane(start_position, end_position, radius, plane)
-        }
+    let radius = match new_body_state.kind {
+        RigidBodyKind::Sphere(radius) => radius,
         _ => panic!("Unsupported rigid body kind!"),
     };
 
-    match intersection {
-        Some(capsule_intersection) => {
-            let surface = CollisionSurface {
-                normal,
-                contact_point: capsule_intersection.contact_point,
-                collision_t: capsule_intersection.t,
-                minimum_distance: minimum_distance_to_plane,
-            };
+    // Detect collisions using the trait method
+    let surfaces = plane_collider.detect_collisions(start_position, end_position, radius);
 
-            collision::calculate_collision_response(
-                h,
-                body_derivative,
-                new_body_state,
-                &surface,
-                material,
-            )
-        }
-        None => None,
+    // For plane, there should be at most one collision
+    if let Some(surface) = surfaces.first() {
+        collision::calculate_collision_response(
+            h,
+            body_derivative,
+            new_body_state,
+            surface,
+            material,
+        )
+    } else {
+        None
     }
 }
 

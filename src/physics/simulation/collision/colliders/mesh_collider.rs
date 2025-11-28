@@ -112,35 +112,44 @@ impl StaticCollider for StaticTriangleTLAS {
         contacts
     }
 
-    fn detect_collision(
+    fn detect_collisions(
         &self,
         start_position: Vec3,
         end_position: Vec3,
         radius: f32,
-    ) -> Option<CollisionSurface> {
+    ) -> Vec<CollisionSurface> {
         // Create capsule from start to end position
         let mut capsule = Capsule::new(start_position, end_position, radius);
 
         // Intersect capsule with mesh TLAS
         intersect_medial_primitive_tlas(&mut capsule, self);
 
-        // Check if we hit a triangle
-        if let Some(collision) = capsule.segment.closest_collision() {
-            let (_triangle, normal) = get_collision_triangle_and_normal(self, collision);
+        let mut surfaces = vec![];
 
-            // Calculate collision point
-            let t = collision.t;
-            let collision_point = start_position + (end_position - start_position) * t;
+        // Find the earliest collision time
+        let earliest_t = capsule.segment.closest_collision().map(|c| c.t);
 
-            Some(CollisionSurface {
-                normal,
-                contact_point: collision_point,
-                collision_t: t,
-                minimum_distance: radius,
-            })
-        } else {
-            None
+        if let Some(earliest_t) = earliest_t {
+            // Process all collisions that occur at the earliest time
+            for collision in capsule.segment.collisions.iter() {
+                // Only process collisions at the earliest t (within epsilon for floating point comparison)
+                if (collision.t - earliest_t).abs() < f32::EPSILON {
+                    let (_triangle, normal) = get_collision_triangle_and_normal(self, collision);
+
+                    // Calculate collision point
+                    let collision_point = start_position + (end_position - start_position) * collision.t;
+
+                    surfaces.push(CollisionSurface {
+                        normal,
+                        contact_point: collision_point,
+                        collision_t: collision.t,
+                        minimum_distance: radius,
+                    });
+                }
+            }
         }
+
+        surfaces
     }
 
     fn handle_collisions(
@@ -211,45 +220,20 @@ fn calculate_mesh_collision_responses(
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
-    // Create capsule from start to end position
-    let mut capsule = Capsule::new(start_position, end_position, radius);
-
-    // Intersect capsule with mesh TLAS
-    intersect_medial_primitive_tlas(&mut capsule, tlas);
+    // Detect all collisions at the earliest time using the trait method
+    let surfaces = tlas.detect_collisions(start_position, end_position, radius);
 
     let mut collision_responses = vec![];
 
-    // Find the earliest collision time
-    let earliest_t = capsule.segment.closest_collision().map(|c| c.t);
-
-    if let Some(earliest_t) = earliest_t {
-        // Process all collisions that occur at the earliest time
-        for collision in capsule.segment.collisions.iter() {
-            // Only process collisions at the earliest t (within epsilon for floating point comparison)
-            if (collision.t - earliest_t).abs() < f32::EPSILON {
-                let (_triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
-
-                // Calculate collision point
-                let collision_point =
-                    start_position + (end_position - start_position) * collision.t;
-
-                let surface = CollisionSurface {
-                    normal,
-                    contact_point: collision_point,
-                    collision_t: collision.t,
-                    minimum_distance: radius,
-                };
-
-                if let Some(response) = collision::calculate_collision_response(
-                    h,
-                    body_derivative,
-                    new_body_state,
-                    &surface,
-                    material,
-                ) {
-                    collision_responses.push(response);
-                }
-            }
+    for surface in &surfaces {
+        if let Some(response) = collision::calculate_collision_response(
+            h,
+            body_derivative,
+            new_body_state,
+            surface,
+            material,
+        ) {
+            collision_responses.push(response);
         }
     }
 

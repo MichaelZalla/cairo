@@ -78,13 +78,14 @@ pub trait StaticCollider {
         check_forces: bool,
     ) -> StaticContactList<6>;
 
-    /// Detects a collision between start and end positions, returning collision surface data.
-    fn detect_collision(
+    /// Detects collisions between start and end positions, returning collision surface data.
+    /// Returns all collisions that occur at the earliest t value.
+    fn detect_collisions(
         &self,
         start_position: Vec3,
         end_position: Vec3,
         radius: f32,
-    ) -> Option<CollisionSurface>;
+    ) -> Vec<CollisionSurface>;
 
     /// Handles complete collisions for a single body, including:
     /// - Detecting collisions and calculating impulse responses
