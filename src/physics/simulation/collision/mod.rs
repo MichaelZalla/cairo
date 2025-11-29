@@ -706,7 +706,7 @@ pub fn resolve_rigid_body_collision(
 /// When a collision occurs partway through a timestep, forces continue
 /// to act on the body after the collision. This function removes the
 /// momentum accumulated during the post-collision period.
-pub fn remove_post_collision_momentum(
+fn remove_post_collision_momentum(
     h: f32,
     collision_t: f32,
     body_derivative: &RigidBodySimulationState,
