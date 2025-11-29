@@ -115,6 +115,7 @@ impl<const N: usize> Simulation<N> {
 
             intersect_medial_primitive_tlas(&mut capsule, tlas);
 
+            // Process closest collision for impulse response
             if let Some(collision) = capsule.segment.closest_collision() {
                 let bvh_instance_index = collision.colliding_bvh_index;
                 let tri_index = collision.colliding_primitive;
@@ -167,6 +168,29 @@ impl<const N: usize> Simulation<N> {
 
                     new_state.0[i] = end_position;
                     new_state.0[i + n] = end_velocity;
+                }
+            }
+
+            // Correct penetration with all detected collisions
+            for collision in capsule.segment.collisions.iter() {
+                let bvh_instance_index = collision.colliding_bvh_index;
+                let tri_index = collision.colliding_primitive;
+                let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+
+                let triangle = &bvh_instance.bvh.tris[tri_index];
+
+                let triangle_normal = triangle.plane.normal;
+
+                let instance_triangle_normal =
+                    (triangle_normal * bvh_instance.transform).as_normal();
+
+                // Check if particle is penetrating this triangle
+                let signed_distance = triangle.plane.get_signed_distance(&new_state.0[i]);
+
+                if signed_distance < PARTICLE_MESH_RADIUS {
+                    // Push particle out of penetration
+                    new_state.0[i] +=
+                        instance_triangle_normal * (PARTICLE_MESH_RADIUS - signed_distance);
                 }
             }
         }

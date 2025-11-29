@@ -1,4 +1,7 @@
-use crate::vec::vec3::{Vec3, Vec3A};
+use crate::{
+    geometry::CollisionKind,
+    vec::vec3::{Vec3, Vec3A},
+};
 
 use super::plane::Plane;
 
@@ -26,28 +29,69 @@ pub struct Triangle {
 /// Returns the barycentric coordinates (u, v, w) if the point projects within the
 /// triangle's boundaries, or None if it projects outside.
 pub fn point_projects_onto_triangle(point: Vec3, triangle: &Triangle) -> Option<Vec3> {
+    // Generous epsilon tolerance for floating point errors near triangle boundaries
+    const EPSILON: f32 = 0.1;
+
     // Compute the barycentric coordinate U; exit if outside the [0..1] range.
     let u = point.dot(triangle.edge_plane_bc.normal) - triangle.edge_plane_bc.d;
 
-    if !(0.0..=1.0).contains(&u) {
+    if !(-EPSILON..=1.0 + EPSILON).contains(&u) {
         return None;
     }
 
     // Compute the barycentric coordinate V; exit if negative.
     let v = point.dot(triangle.edge_plane_ca.normal) - triangle.edge_plane_ca.d;
 
-    if v < 0.0 {
+    if v < -EPSILON {
         return None;
     }
 
     // Compute the barycentric coordinate W; exit if negative.
     let w = 1.0 - u - v;
 
-    if w < 0.0 {
+    if w < -EPSILON {
         return None;
     }
 
     Some(Vec3 { x: u, y: v, z: w })
+}
+
+/// Classifies an intersection point on a triangle based on barycentric coordinates.
+pub fn classify_intersection(barycentric: Vec3) -> CollisionKind {
+    const EPSILON: f32 = 0.001;
+
+    let u = barycentric.x;
+    let v = barycentric.y;
+    let w = barycentric.z;
+
+    // Check if we're at a vertex (one coordinate is ~1.0)
+    if u >= 1.0 - EPSILON {
+        return CollisionKind::Vertex; // Vertex A
+    }
+
+    if v >= 1.0 - EPSILON {
+        return CollisionKind::Vertex; // Vertex B
+    }
+
+    if w >= 1.0 - EPSILON {
+        return CollisionKind::Vertex; // Vertex C
+    }
+
+    // Check if we're on an edge (one coordinate is ~0.0)
+    if u <= EPSILON {
+        return CollisionKind::Edge; // Edge BC (opposite vertex A)
+    }
+
+    if v <= EPSILON {
+        return CollisionKind::Edge; // Edge CA (opposite vertex B)
+    }
+
+    if w <= EPSILON {
+        return CollisionKind::Edge; // Edge AB (opposite vertex C)
+    }
+
+    // Otherwise, we're on the face interior
+    CollisionKind::Face
 }
 
 impl Triangle {

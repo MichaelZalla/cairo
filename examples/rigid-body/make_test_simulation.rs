@@ -8,7 +8,7 @@ use cairo::{
         static_triangle_tlas::StaticTriangleTLAS,
     },
     matrix::Mat4,
-    mesh::primitive::plane,
+    mesh::{Mesh, primitive::plane},
     physics::simulation::{
         collision::colliders::plane_collider::PlaneCollider,
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
@@ -27,7 +27,7 @@ use crate::simulation::Simulation;
 pub fn make_test_simulation(
     _sampler: &mut RandomSampler<1024>,
     _scene_context: &SceneContext,
-) -> Simulation {
+) -> (Simulation, Option<Mesh>) {
     // Forces.
 
     let forces: Vec<Box<DynRigidBodyForce>> = vec![
@@ -43,162 +43,162 @@ pub fn make_test_simulation(
 
     let mut spheres = Vec::new();
 
-    // Test 1: Static on ground
-    {
-        let center = Vec3 {
-            x: 3.0 * SPACING,
-            y: RADIUS,
-            z: -3.0 * SPACING, // Position away from other spheres
-        };
+    // // Test 1: Static on ground
+    // {
+    //     let center = Vec3 {
+    //         x: 3.0 * SPACING,
+    //         y: RADIUS,
+    //         z: -3.0 * SPACING, // Position away from other spheres
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-1_static-on-ground_ORANGE".to_string());
-        sphere.color = color::ORANGE; // Use orange to distinguish from Red sphere
+    //     sphere.name = Some("test-1_static-on-ground_ORANGE".to_string());
+    //     sphere.color = color::ORANGE; // Use orange to distinguish from Red sphere
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 2: Spinning on Y-axis (should spin in place)
-    {
-        let center = Vec3 {
-            x: -3.5 * SPACING,
-            y: RADIUS,
-            z: 0.0, // Back in collision path with Red
-        };
+    // // Test 2: Spinning on Y-axis (should spin in place)
+    // {
+    //     let center = Vec3 {
+    //         x: -3.5 * SPACING,
+    //         y: RADIUS,
+    //         z: 0.0, // Back in collision path with Red
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-2_spinning-y-axis_MAGENTA".to_string());
-        sphere.color = color::MAGENTA;
-        sphere.angular_momentum = vec3::UP * 1.5;
+    //     sphere.name = Some("test-2_spinning-y-axis_MAGENTA".to_string());
+    //     sphere.color = color::MAGENTA;
+    //     sphere.angular_momentum = vec3::UP * 1.5;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 3a: Rolling toward viewer (Z-)
-    {
-        let center = Vec3 {
-            x: -1.5 * SPACING,
-            y: RADIUS,
-            z: 0.0,
-        };
+    // // Test 3a: Rolling toward viewer (Z-)
+    // {
+    //     let center = Vec3 {
+    //         x: -1.5 * SPACING,
+    //         y: RADIUS,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-3a_rolling-toward-viewer_BLUE".to_string());
-        sphere.color = color::BLUE;
-        sphere.angular_momentum = vec3::RIGHT * 1.5;
+    //     sphere.name = Some("test-3a_rolling-toward-viewer_BLUE".to_string());
+    //     sphere.color = color::BLUE;
+    //     sphere.angular_momentum = vec3::RIGHT * 1.5;
 
-        // Rolling toward viewer: angular momentum +X → linear velocity -Z
-        // ω = -3.75 (after negation), v = (0, 0, -3.75)
-        sphere.linear_momentum = vec3::FORWARD * MASS * -3.75;
+    //     // Rolling toward viewer: angular momentum +X → linear velocity -Z
+    //     // ω = -3.75 (after negation), v = (0, 0, -3.75)
+    //     sphere.linear_momentum = vec3::FORWARD * MASS * -3.75;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 3b: Rolling away from viewer (Z+)
-    {
-        let center = Vec3 {
-            x: -0.5 * SPACING,
-            y: RADIUS,
-            z: 0.0,
-        };
+    // // Test 3b: Rolling away from viewer (Z+)
+    // {
+    //     let center = Vec3 {
+    //         x: -0.5 * SPACING,
+    //         y: RADIUS,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-3b_rolling-away-from-viewer_GREEN".to_string());
-        sphere.color = color::GREEN;
-        sphere.angular_momentum = -vec3::RIGHT * 1.5;
+    //     sphere.name = Some("test-3b_rolling-away-from-viewer_GREEN".to_string());
+    //     sphere.color = color::GREEN;
+    //     sphere.angular_momentum = -vec3::RIGHT * 1.5;
 
-        // Rolling away from viewer: angular momentum -X → linear velocity +Z
-        // ω = +3.75 (after negation of -1.5), v = (0, 0, +3.75)
-        sphere.linear_momentum = vec3::FORWARD * MASS * 3.75;
+    //     // Rolling away from viewer: angular momentum -X → linear velocity +Z
+    //     // ω = +3.75 (after negation of -1.5), v = (0, 0, +3.75)
+    //     sphere.linear_momentum = vec3::FORWARD * MASS * 3.75;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 3c: Rolling to the right (X+)
-    // Rotate Blue's setup: X→Z, Z→X, then negate both to get +X motion
-    {
-        let center = Vec3 {
-            x: 0.5 * SPACING,
-            y: RADIUS,
-            z: 0.0,
-        };
+    // // Test 3c: Rolling to the right (X+)
+    // // Rotate Blue's setup: X→Z, Z→X, then negate both to get +X motion
+    // {
+    //     let center = Vec3 {
+    //         x: 0.5 * SPACING,
+    //         y: RADIUS,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-3c_rolling-to-right_RED".to_string());
-        sphere.color = color::RED;
-        // Rotate Blue 90° CCW: X→Z, Z→-X
-        // Blue: L = +X, v = -Z
-        // Red:  L = +Z, v = +X
-        sphere.angular_momentum = vec3::FORWARD * 1.5;
-        sphere.linear_momentum = vec3::RIGHT * MASS * 3.75;
+    //     sphere.name = Some("test-3c_rolling-to-right_RED".to_string());
+    //     sphere.color = color::RED;
+    //     // Rotate Blue 90° CCW: X→Z, Z→-X
+    //     // Blue: L = +X, v = -Z
+    //     // Red:  L = +Z, v = +X
+    //     sphere.angular_momentum = vec3::FORWARD * 1.5;
+    //     sphere.linear_momentum = vec3::RIGHT * MASS * 3.75;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 3d: Rolling to the left (X-)
-    // Rotate Green 90° CCW: X→Z, Z→-X
-    {
-        let center = Vec3 {
-            x: 1.5 * SPACING,
-            y: RADIUS,
-            z: 0.0,
-        };
+    // // Test 3d: Rolling to the left (X-)
+    // // Rotate Green 90° CCW: X→Z, Z→-X
+    // {
+    //     let center = Vec3 {
+    //         x: 1.5 * SPACING,
+    //         y: RADIUS,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-3d_rolling-to-left_YELLOW".to_string());
-        sphere.color = color::YELLOW;
-        // Green: L = -X, v = +Z
-        // Yellow: L = -Z, v = -X
-        sphere.angular_momentum = -vec3::FORWARD * 1.5;
-        sphere.linear_momentum = -vec3::RIGHT * MASS * 3.75;
+    //     sphere.name = Some("test-3d_rolling-to-left_YELLOW".to_string());
+    //     sphere.color = color::YELLOW;
+    //     // Green: L = -X, v = +Z
+    //     // Yellow: L = -Z, v = -X
+    //     sphere.angular_momentum = -vec3::FORWARD * 1.5;
+    //     sphere.linear_momentum = -vec3::RIGHT * MASS * 3.75;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 4: Dropping from height
-    {
-        let center = Vec3 {
-            x: 1.0 * SPACING,
-            y: 10.0,
-            z: 0.0,
-        };
+    // // Test 4: Dropping from height
+    // {
+    //     let center = Vec3 {
+    //         x: 1.0 * SPACING,
+    //         y: 10.0,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-4_dropping-from-height_CYAN".to_string());
-        sphere.color = color::CYAN;
+    //     sphere.name = Some("test-4_dropping-from-height_CYAN".to_string());
+    //     sphere.color = color::CYAN;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 5: Dropping with X-velocity
-    {
-        let center = Vec3 {
-            x: 2.0 * SPACING,
-            y: 10.0,
-            z: 0.0,
-        };
+    // // Test 5: Dropping with X-velocity
+    // {
+    //     let center = Vec3 {
+    //         x: 2.0 * SPACING,
+    //         y: 10.0,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-5_dropping-with-x-velocity_WHITE".to_string());
-        sphere.color = color::WHITE;
-        sphere.linear_momentum = vec3::RIGHT * MASS * 5.0;
+    //     sphere.name = Some("test-5_dropping-with-x-velocity_WHITE".to_string());
+    //     sphere.color = color::WHITE;
+    //     sphere.linear_momentum = vec3::RIGHT * MASS * 5.0;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
     // Test 6: Dropping with Z-velocity
     {
         let center = Vec3 {
-            x: 3.0 * SPACING,
-            y: 10.0,
+            x: 0.0,
+            y: 3.0,
             z: 0.0,
         };
 
@@ -211,166 +211,175 @@ pub fn make_test_simulation(
         spheres.push(sphere);
     }
 
-    // Test 7: Diagonal rolling (X+/Z+, northeast direction)
-    {
-        let center = Vec3 {
-            x: 2.5 * SPACING,
-            y: RADIUS,
-            z: -2.0 * SPACING,
-        };
+    // // Test 7: Diagonal rolling (X+/Z+, northeast direction)
+    // {
+    //     let center = Vec3 {
+    //         x: 2.5 * SPACING,
+    //         y: RADIUS,
+    //         z: -2.0 * SPACING,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-7_diagonal-rolling_ORANGE-ISH".to_string());
-        sphere.color = Color::rgb(255, 165, 0); // Orange-ish (distinct from ORANGE)
+    //     sphere.name = Some("test-7_diagonal-rolling_ORANGE-ISH".to_string());
+    //     sphere.color = Color::rgb(255, 165, 0); // Orange-ish (distinct from ORANGE)
 
-        // For diagonal rolling at 45°: combine angular momentum components
-        // Angular momentum should be perpendicular to motion direction
-        // Motion: +X +Z, so angular momentum: -X +Z (rotated 90° CCW in XZ plane)
-        let diagonal_angular = (vec3::FORWARD - vec3::RIGHT) * 1.5;
-        sphere.angular_momentum = diagonal_angular;
+    //     // For diagonal rolling at 45°: combine angular momentum components
+    //     // Angular momentum should be perpendicular to motion direction
+    //     // Motion: +X +Z, so angular momentum: -X +Z (rotated 90° CCW in XZ plane)
+    //     let diagonal_angular = (vec3::FORWARD - vec3::RIGHT) * 1.5;
+    //     sphere.angular_momentum = diagonal_angular;
 
-        // Linear velocity matches rolling constraint: v = ω × r
-        let diagonal_velocity = (vec3::RIGHT + vec3::FORWARD).as_normal() * 3.75;
-        sphere.linear_momentum = diagonal_velocity * MASS;
+    //     // Linear velocity matches rolling constraint: v = ω × r
+    //     let diagonal_velocity = (vec3::RIGHT + vec3::FORWARD).as_normal() * 3.75;
+    //     sphere.linear_momentum = diagonal_velocity * MASS;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 8: Dropping with diagonal velocity (X+/Z+)
-    {
-        let center = Vec3 {
-            x: -2.0 * SPACING,
-            y: 15.0,
-            z: -2.0 * SPACING,
-        };
+    // // Test 8: Dropping with diagonal velocity (X+/Z+)
+    // {
+    //     let center = Vec3 {
+    //         x: -2.0 * SPACING,
+    //         y: 15.0,
+    //         z: -2.0 * SPACING,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-8_dropping-diagonal-velocity_PINK".to_string());
-        sphere.color = Color::rgb(255, 192, 203); // Pink
+    //     sphere.name = Some("test-8_dropping-diagonal-velocity_PINK".to_string());
+    //     sphere.color = Color::rgb(255, 192, 203); // Pink
 
-        // Diagonal horizontal velocity
-        let diagonal_velocity = (vec3::RIGHT + vec3::FORWARD).as_normal() * 5.0;
-        sphere.linear_momentum = diagonal_velocity * MASS;
+    //     // Diagonal horizontal velocity
+    //     let diagonal_velocity = (vec3::RIGHT + vec3::FORWARD).as_normal() * 5.0;
+    //     sphere.linear_momentum = diagonal_velocity * MASS;
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 9: High drop test
-    {
-        let center = Vec3 {
-            x: -3.0 * SPACING,
-            y: 30.0,
-            z: -2.0 * SPACING,
-        };
+    // // Test 9: High drop test
+    // {
+    //     let center = Vec3 {
+    //         x: -3.0 * SPACING,
+    //         y: 30.0,
+    //         z: -2.0 * SPACING,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-9_high-drop_PURPLE".to_string());
-        sphere.color = Color::rgb(128, 0, 128); // Purple
+    //     sphere.name = Some("test-9_high-drop_PURPLE".to_string());
+    //     sphere.color = Color::rgb(128, 0, 128); // Purple
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 10: Very high drop test
-    {
-        let center = Vec3 {
-            x: -4.0 * SPACING,
-            y: 50.0,
-            z: -2.0 * SPACING,
-        };
+    // // Test 10: Very high drop test
+    // {
+    //     let center = Vec3 {
+    //         x: -4.0 * SPACING,
+    //         y: 50.0,
+    //         z: -2.0 * SPACING,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-10_very-high-drop_BROWN".to_string());
-        sphere.color = Color::rgb(165, 42, 42); // Brown
+    //     sphere.name = Some("test-10_very-high-drop_BROWN".to_string());
+    //     sphere.color = Color::rgb(165, 42, 42); // Brown
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 11: Fast spinning (high-energy backspin)
-    {
-        let center = Vec3 {
-            x: -4.5 * SPACING,
-            y: RADIUS,
-            z: 0.0,
-        };
+    // // Test 11: Fast spinning (high-energy backspin)
+    // {
+    //     let center = Vec3 {
+    //         x: -4.5 * SPACING,
+    //         y: RADIUS,
+    //         z: 0.0,
+    //     };
 
-        let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //     let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
 
-        sphere.name = Some("test-11_fast-spinning_BRIGHT_CYAN".to_string());
-        sphere.color = Color::rgb(0, 255, 255); // Bright cyan
-        sphere.angular_momentum = vec3::UP * 5.0; // Much faster than Test 2
+    //     sphere.name = Some("test-11_fast-spinning_BRIGHT_CYAN".to_string());
+    //     sphere.color = Color::rgb(0, 255, 255); // Bright cyan
+    //     sphere.angular_momentum = vec3::UP * 5.0; // Much faster than Test 2
 
-        spheres.push(sphere);
-    }
+    //     spheres.push(sphere);
+    // }
 
-    // Test 12: Stacked spheres (unstable)
-    {
-        let stack_x = -6.0 * SPACING;
+    // // Test 12: Stacked spheres (unstable)
+    // {
+    //     let stack_x = -6.0 * SPACING;
 
-        // Bottom sphere (resting on ground)
-        {
-            let center = Vec3 {
-                x: stack_x,
-                y: RADIUS,
-                z: 0.0,
-            };
+    //     // Bottom sphere (resting on ground)
+    //     {
+    //         let center = Vec3 {
+    //             x: stack_x,
+    //             y: RADIUS,
+    //             z: 0.0,
+    //         };
 
-            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
-            sphere.name = Some("test-12_stack-bottom_LIGHT_RED".to_string());
-            sphere.color = Color::rgb(255, 100, 100); // Light red
-            spheres.push(sphere);
-        }
+    //         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //         sphere.name = Some("test-12_stack-bottom_LIGHT_RED".to_string());
+    //         sphere.color = Color::rgb(255, 100, 100); // Light red
+    //         spheres.push(sphere);
+    //     }
 
-        // Middle sphere (resting on bottom sphere)
-        {
-            let center = Vec3 {
-                x: stack_x,
-                y: RADIUS + 2.0 * RADIUS,
-                z: 0.0,
-            };
+    //     // Middle sphere (resting on bottom sphere)
+    //     {
+    //         let center = Vec3 {
+    //             x: stack_x,
+    //             y: RADIUS + 2.0 * RADIUS,
+    //             z: 0.0,
+    //         };
 
-            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
-            sphere.name = Some("test-12_stack-middle_LIGHT_GREEN".to_string());
-            sphere.color = Color::rgb(100, 255, 100); // Light green
-            spheres.push(sphere);
-        }
+    //         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //         sphere.name = Some("test-12_stack-middle_LIGHT_GREEN".to_string());
+    //         sphere.color = Color::rgb(100, 255, 100); // Light green
+    //         spheres.push(sphere);
+    //     }
 
-        // Top sphere (resting on middle sphere)
-        {
-            let center = Vec3 {
-                x: stack_x,
-                y: RADIUS + 4.0 * RADIUS,
-                z: 0.0,
-            };
+    //     // Top sphere (resting on middle sphere)
+    //     {
+    //         let center = Vec3 {
+    //             x: stack_x,
+    //             y: RADIUS + 4.0 * RADIUS,
+    //             z: 0.0,
+    //         };
 
-            let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
-            sphere.name = Some("test-12_stack-top_LIGHT_BLUE".to_string());
-            sphere.color = Color::rgb(100, 100, 255); // Light blue
-            spheres.push(sphere);
-        }
-    }
+    //         let mut sphere = RigidBody::new(RigidBodyKind::Sphere(RADIUS), MASS, center);
+    //         sphere.name = Some("test-12_stack-top_LIGHT_BLUE".to_string());
+    //         sphere.color = Color::rgb(100, 100, 255); // Light blue
+    //         spheres.push(sphere);
+    //     }
+    // }
 
     for sphere in spheres.iter_mut() {
-        sphere.debug_flags |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
-        | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
+        // sphere.debug_flags ^= RigidBodyDebugFlags::DRAW_VOLUME;
+
+        sphere.debug_flags
+        // |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
+        // | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
         // | RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT
         // RigidBodyDebugFlags::DRAW_COLLISION_CONTACT_POINT_VELOCITY
         // | RigidBodyDebugFlags::DRAW_COLLISION_FRICTION_IMPULSE
         // | RigidBodyDebugFlags::DRAW_COLLISION_NORMAL_IMPULSE
         // | RigidBodyDebugFlags::DRAW_COLLISION_TANGENT
-        | RigidBodyDebugFlags::DRAW_STATIC_CONTACTS
+        |= RigidBodyDebugFlags::DRAW_STATIC_CONTACTS
     }
 
     // Safety plane collider - positioned well below the mesh ground at y=-10.
+
+    const USE_TRIANGLE_MESH_COLLIDER: bool = true;
 
     let static_plane_colliders = vec![
         PlaneCollider::new(
             Vec3 {
                 x: 0.0,
-                y: -10.0,
+                y: if USE_TRIANGLE_MESH_COLLIDER {
+                    -10.0
+                } else {
+                    0.0
+                },
                 z: 0.0,
             },
             vec3::UP,
@@ -381,10 +390,18 @@ pub fn make_test_simulation(
     // Step 1: Create a flat mesh
     let mut ground_mesh = plane::generate(100.0, 100.0, 10, 10);
 
+    if !USE_TRIANGLE_MESH_COLLIDER {
+        let mut geo = ground_mesh.geometry.as_ref().clone();
+
+        for v in geo.vertices.iter_mut() {
+            v.y -= 20.0;
+        }
+
+        ground_mesh.geometry = Rc::new(geo);
+    }
+
     // Step 2: Build and store the BVH on the mesh itself
     let ground_bvh = Rc::new(StaticTriangleBVH::new(&ground_mesh));
-
-    ground_mesh.collider = Some(ground_bvh.clone());
 
     // Step 3: Use the StaticTriangleBVH to instantiate a StaticTriangleBVHInstance
     let identity = Mat4::identity();
@@ -394,14 +411,15 @@ pub fn make_test_simulation(
     // Create TLAS with the ground mesh BVH instance
     let ground_tlas = StaticTriangleTLAS::new(vec![ground_bvh_instance]);
 
-    Simulation {
+    let simulation = Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        ground_mesh,
         ground_tlas,
         hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), RADIUS * 2.0),
         visualize_hash_grid: false,
         tick_count: 0,
-    }
+    };
+
+    (simulation, Some(ground_mesh))
 }

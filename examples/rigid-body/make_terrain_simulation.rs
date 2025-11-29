@@ -57,14 +57,51 @@ pub fn make_sine_wave_terrain(
         vertex.y += (wave_x + wave_z) * amplitude;
     }
 
-    // Create new geometry with modified vertices
+    // Compute per-vertex normals by averaging face normals
+    let mut vertex_normals: Vec<Vec3> = vec![Vec3::default(); new_vertices.len()];
+    let mut vertex_face_counts: Vec<usize> = vec![0; new_vertices.len()];
+
+    // For each face, compute face normal and accumulate to vertex normals
+    for face in base_mesh.faces.iter() {
+        let v0 = new_vertices[face.vertices[0]];
+        let v1 = new_vertices[face.vertices[1]];
+        let v2 = new_vertices[face.vertices[2]];
+
+        // Compute face normal using cross product
+        let edge1 = v1 - v0;
+        let edge2 = v2 - v0;
+        let face_normal = edge1.cross(edge2).as_normal();
+
+        // Accumulate face normal to each vertex of the triangle
+        for &vertex_index in &face.vertices {
+            vertex_normals[vertex_index] += face_normal;
+            vertex_face_counts[vertex_index] += 1;
+        }
+    }
+
+    // Average the accumulated normals
+    for (i, normal) in vertex_normals.iter_mut().enumerate() {
+        if vertex_face_counts[i] > 0 {
+            *normal = (*normal / vertex_face_counts[i] as f32).as_normal();
+        }
+    }
+
+    // Update face normal indices to point to corresponding vertex normals
+    let mut new_faces = base_mesh.faces.clone();
+    for face in new_faces.iter_mut() {
+        // Each face vertex now uses its own vertex index for normals
+        face.normals = face.vertices;
+    }
+
+    // Create new geometry with modified vertices and normals
     let new_geometry = MeshGeometry {
         vertices: new_vertices.into_boxed_slice(),
-        normals: old_geometry.normals.clone(),
+        // normals: old_geometry.normals.clone(),
+        normals: vertex_normals.into_boxed_slice(),
         uvs: old_geometry.uvs.clone(),
     };
 
-    // Create new mesh with updated geometry
+    // Create new mesh with updated geometry and faces
     let mut new_mesh = Mesh {
         object_source: base_mesh.object_source.clone(),
         object_name: base_mesh.object_name.clone(),
@@ -72,7 +109,8 @@ pub fn make_sine_wave_terrain(
         material_source: base_mesh.material_source.clone(),
         material: base_mesh.material,
         geometry: Rc::new(new_geometry),
-        faces: base_mesh.faces.clone(),
+        // faces: base_mesh.faces.clone(),
+        faces: new_faces,
         aabb: base_mesh.aabb, // Temporary, will be recomputed
         collider: None,       // Will be rebuilt
     };
@@ -88,7 +126,7 @@ pub fn make_sine_wave_terrain(
 /// The function automatically determines spawn bounds based on the mesh's AABB,
 /// placing spheres within the horizontal (X, Z) bounds and above the mesh.
 pub fn make_simulation_from_mesh(
-    mut ground_mesh: Mesh,
+    ground_mesh: &Mesh,
     num_spheres: usize,
     sphere_radius: f32,
     sphere_mass: f32,
@@ -110,16 +148,25 @@ pub fn make_simulation_from_mesh(
     let z_min = mesh_min.z + (mesh_max.z - mesh_min.z) * margin;
     let z_max = mesh_max.z - (mesh_max.z - mesh_min.z) * margin;
 
-    // Spawn height: start well above the highest point of the mesh
-    let y_base = mesh_max.y + 10.0;
-    let y_variation = 5.0;
+    // Spawn height: start slightly above the mesh for faster settling
+    let y_base = mesh_max.y + 2.0;
+    let y_variation = 0.5;
 
     let mut spheres = Vec::new();
 
-    // Create randomly placed spheres
+    // Create spheres (centered if only 1, random if multiple)
     for _ in 0..num_spheres {
-        let x = sampler.sample_range_uniform(x_min, x_max);
-        let z = sampler.sample_range_uniform(z_min, z_max);
+        let (x, z) = if num_spheres == 1 {
+            // Single sphere: spawn at center of terrain
+            ((x_min + x_max) / 2.0, (z_min + z_max) / 2.0)
+        } else {
+            // Multiple spheres: spawn randomly
+            (
+                sampler.sample_range_uniform(x_min, x_max),
+                sampler.sample_range_uniform(z_min, z_max),
+            )
+        };
+
         let y = y_base + sampler.sample_range_uniform(0.0, y_variation);
 
         let center = Vec3 { x, y, z };
@@ -146,26 +193,28 @@ pub fn make_simulation_from_mesh(
             .as_normal();
 
             // Random speed
-            let speed = sampler.sample_range_uniform(1.0, 4.0);
+            let speed = sampler.sample_range_uniform(1.0, 15.0);
 
             sphere.linear_momentum = horizontal_direction * speed * sphere_mass;
 
             // Random spin axis and rate
             let spin_axis = sampler.sample_direction_uniform();
-            let spin_rate = sampler.sample_range_uniform(0.5, 3.0);
+            let spin_rate = sampler.sample_range_uniform(0.5, 5.0);
 
             sphere.angular_momentum = spin_axis * spin_rate;
         }
 
-        sphere.debug_flags |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
-            | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
-            | RigidBodyDebugFlags::DRAW_STATIC_CONTACTS;
+        sphere.debug_flags
+        // |= RigidBodyDebugFlags::DRAW_LINEAR_VELOCITY
+            // | RigidBodyDebugFlags::DRAW_ANGULAR_VELOCITY
+            |= RigidBodyDebugFlags::DRAW_STATIC_CONTACTS;
 
         spheres.push(sphere);
     }
 
     // Static plane colliders - safety net below terrain
     let safety_net_y = mesh_min.y - 20.0;
+
     let static_plane_colliders = vec![PlaneCollider::new(
         Vec3 {
             x: 0.0,
@@ -176,8 +225,7 @@ pub fn make_simulation_from_mesh(
     )];
 
     // Build BVH for the terrain
-    let ground_bvh = Rc::new(StaticTriangleBVH::new(&ground_mesh));
-    ground_mesh.collider = Some(ground_bvh.clone());
+    let ground_bvh = Rc::new(StaticTriangleBVH::new(ground_mesh));
 
     // Create TLAS with the terrain mesh
     let identity = Mat4::identity();
@@ -188,7 +236,6 @@ pub fn make_simulation_from_mesh(
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        ground_mesh,
         ground_tlas,
         hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), sphere_radius * 2.0),
         visualize_hash_grid: false,
@@ -200,7 +247,7 @@ pub fn make_simulation_from_mesh(
 pub fn make_terrain_simulation(
     sampler: &mut RandomSampler<1024>,
     _scene_context: &SceneContext,
-) -> Simulation {
+) -> (Simulation, Option<Mesh>) {
     // Create sine wave terrain mesh
     let ground_mesh = make_sine_wave_terrain(
         100.0, // width
@@ -211,15 +258,17 @@ pub fn make_terrain_simulation(
         0.15,  // frequency
     );
 
-    // Create simulation with 100 spheres
-    make_simulation_from_mesh(
-        ground_mesh,
+    // Create simulation with 1 sphere for debugging
+    let simulation = make_simulation_from_mesh(
+        &ground_mesh,
         100, // num_spheres
         1.0, // sphere_radius
         1.0, // sphere_mass
-        0.4, // initial_velocity_probability (40% get velocity)
+        0.0, // initial_velocity_probability (no initial velocity)
         sampler,
-    )
+    );
+
+    (simulation, Some(ground_mesh))
 }
 
 /// Creates a terrain simulation from an OBJ file.
@@ -229,7 +278,7 @@ pub fn make_terrain_simulation(
 pub fn make_obj_terrain_simulation(
     sampler: &mut RandomSampler<1024>,
     scene_context: &SceneContext,
-) -> Simulation {
+) -> (Simulation, Option<Mesh>) {
     let resources = &scene_context.resources;
 
     // Load mesh from OBJ file
@@ -247,6 +296,8 @@ pub fn make_obj_terrain_simulation(
         level_meshes.last().unwrap().to_owned()
     };
 
-    // Create simulation with 100 spheres
-    make_simulation_from_mesh(level_mesh, 100, 1.0, 1.0, 0.4, sampler)
+    // Create simulation with 2 spheres for debugging
+    let simulation = make_simulation_from_mesh(&level_mesh, 10, 0.5, 1.0, 0.0, sampler);
+
+    (simulation, Some(level_mesh))
 }

@@ -108,7 +108,7 @@ bitflags! {
 
 impl Default for RigidBodyDebugFlags {
     fn default() -> Self {
-        RigidBodyDebugFlags::DRAW_VOLUME
+        Self::empty()
     }
 }
 
@@ -392,19 +392,19 @@ impl RigidBody {
                     },
                 );
 
-                // Contact point velocity
-                renderer.render_line(start, start + contact.contact_point_velocity, color::ORANGE);
+                // // Contact point velocity
+                // renderer.render_line(start, start + contact.contact_point_velocity, color::ORANGE);
 
-                // Contact point velocity (tangent)
-                renderer.render_line(
-                    start,
-                    start + contact.tangent,
-                    if let StaticContactKind::Resting = contact.kind {
-                        color::WHITE
-                    } else {
-                        color::RED
-                    },
-                );
+                // // Contact point velocity (tangent)
+                // renderer.render_line(
+                //     start,
+                //     start + contact.tangent,
+                //     if let StaticContactKind::Resting = contact.kind {
+                //         color::WHITE
+                //     } else {
+                //         color::RED
+                //     },
+                // );
 
                 // // Contact point velocity (bitangent)
                 // renderer.render_line(
@@ -419,6 +419,7 @@ impl RigidBody {
 
                 // Build transform aligned with contact surface (TBN frame)
                 // Normal points outward (Z-axis), circle lies in XY plane
+
                 let transform_matrix = Mat4::scale(vec3::ONES * 0.25)
                     * Mat4::tbn(contact.tangent, contact.bitangent, contact.normal)
                     * Mat4::translation(contact.point);

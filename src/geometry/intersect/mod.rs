@@ -14,8 +14,13 @@ use crate::{
 use super::{
     accelerator::static_triangle_bvh::{StaticTriangleBVH, StaticTriangleBVHInstance},
     primitives::{
-        aabb::AABB, capsule::Capsule, line_segment::LineSegment, plane::Plane, ray::Ray,
-        sphere::Sphere, triangle::{Triangle, TriangleIntersection, point_projects_onto_triangle},
+        aabb::AABB,
+        capsule::Capsule,
+        line_segment::LineSegment,
+        plane::Plane,
+        ray::Ray,
+        sphere::Sphere,
+        triangle::{Triangle, TriangleIntersection, point_projects_onto_triangle},
     },
 };
 

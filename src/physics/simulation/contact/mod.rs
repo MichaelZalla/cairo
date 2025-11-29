@@ -14,7 +14,8 @@ use crate::{
 
 // Distance threshold for detecting static contact.
 // Bodies within this distance of a surface may be considered in contact.
-pub const CONTACT_DISTANCE_THRESHOLD: f32 = 0.05;
+// Increased to 0.2 to ensure contacts are detected after collision response
+pub const CONTACT_DISTANCE_THRESHOLD: f32 = 0.2;
 
 // Ratio threshold for rolling detection. Contact velocity must be less than
 // this ratio of body velocity to be considered rolling.
@@ -57,6 +58,7 @@ pub struct StaticContact {
     pub bitangent: Vec3,
     pub contact_point_velocity: Vec3,
     pub material: PhysicsMaterial,
+    pub penetration_depth: f32, // Positive = penetrating, negative = gap/separation
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -311,8 +313,16 @@ pub fn classify_contact_kind(
     };
 
     if is_rolling && has_correct_spin_axis {
+        // println!("[CONTACT CLASSIFICATION] Rolling detected: body_speed={:.3}, contact_speed={:.3}, ratio={:.3}",
+        //          body_speed_along_tangent, contact_point_speed_along_tangent, velocity_ratio);
         StaticContactKind::Rolling(0.5)
     } else {
+        // if !is_rolling {
+        //     println!("[CONTACT CLASSIFICATION] Not rolling - velocity_ratio check failed: ratio={:.3}, threshold={:.3}",
+        //              velocity_ratio, ROLLING_VELOCITY_RATIO_THRESHOLD);
+        // } else {
+        //     println!("[CONTACT CLASSIFICATION] Not rolling - spin axis check failed");
+        // }
         StaticContactKind::Sliding
     }
 }
@@ -325,15 +335,44 @@ pub fn compute_contact_basis(
     normal: Vec3,
     contact_point_motion_tangent: Option<Vec3>,
 ) -> (Vec3, Vec3) {
+    // // Validate that normal is normalized
+    // assert!(
+    //     (normal.mag() - 1.0).abs() < 1e-4,
+    //     "Normal must be normalized (mag: {})",
+    //     normal.mag()
+    // );
+
+    // // Validate that motion tangent is normalized (if provided)
+    // if let Some(t) = contact_point_motion_tangent {
+    //     assert!(
+    //         (t.mag() - 1.0).abs() < 1e-4,
+    //         "Motion tangent must be normalized (mag: {})",
+    //         t.mag()
+    //     );
+    // }
+
     let tangent = match contact_point_motion_tangent {
-        Some(t) => t,
+        Some(t) => {
+            // Orthogonalize: remove component parallel to normal using Gram-Schmidt
+            let t_perpendicular = t - normal * t.dot(normal);
+
+            // Check if motion tangent is (nearly) parallel to normal
+            if t_perpendicular.mag() < 1e-6 {
+                // Motion tangent is parallel to normal, use arbitrary perpendicular
+                normal.basis().1
+            } else {
+                // Normalize the orthogonalized tangent
+                t_perpendicular.as_normal()
+            }
+        }
         None => {
             // No motion tangent, use any perpendicular vector
             normal.basis().1
         }
     };
 
-    let bitangent = normal.cross(tangent);
+    // Compute bitangent and normalize it
+    let bitangent = normal.cross(tangent).as_normal();
 
     (tangent, bitangent)
 }
@@ -359,6 +398,8 @@ pub fn get_static_contact(
 ) -> Option<StaticContact> {
     // 1. Requires that the body be very close to the collider
     if signed_distance > minimum_distance + CONTACT_DISTANCE_THRESHOLD {
+        // println!("[CONTACT REJECTION] Distance check failed: signed_dist={:.3}, min_dist={:.3}, threshold={:.3}",
+        //          signed_distance, minimum_distance, CONTACT_DISTANCE_THRESHOLD);
         return None;
     }
 
@@ -385,6 +426,8 @@ pub fn get_static_contact(
         let magnitude_of_acceleration_along_normal = derivative.linear_momentum.dot(surface_normal);
 
         if magnitude_of_acceleration_along_normal > 0.01 {
+            // println!("[CONTACT REJECTION] Force check failed: accel_normal={:.3}, threshold=0.01",
+            //          magnitude_of_acceleration_along_normal);
             return None;
         }
     }
@@ -404,6 +447,9 @@ pub fn get_static_contact(
 
     let (tangent, bitangent) = compute_contact_basis(surface_normal, contact_point_motion_tangent);
 
+    // Calculate penetration depth: positive = penetrating, negative = gap
+    let penetration_depth = minimum_distance - signed_distance;
+
     Some(StaticContact {
         kind,
         point: contact_point,
@@ -412,5 +458,6 @@ pub fn get_static_contact(
         bitangent,
         contact_point_velocity,
         material: *material,
+        penetration_depth,
     })
 }

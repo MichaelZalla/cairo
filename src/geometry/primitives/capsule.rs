@@ -3,7 +3,10 @@ use crate::{
     vec::vec3::{self, Vec3},
 };
 
-use super::{MedialPrimitive, TriangleIntersection, aabb::AABB, line_segment::LineSegment, triangle::Triangle};
+use super::{
+    MedialPrimitive, TriangleIntersection, aabb::AABB, line_segment::LineSegment,
+    triangle::Triangle,
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Capsule {

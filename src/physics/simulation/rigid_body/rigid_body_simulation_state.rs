@@ -1,5 +1,12 @@
 use crate::{
-    geometry::primitives::aabb::{AABB, Bounded},
+    geometry::{
+        CollisionKind,
+        accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
+        primitives::{
+            aabb::{AABB, Bounded},
+            triangle::Triangle,
+        },
+    },
     matrix::Mat4,
     physics::simulation::{
         contact::{StaticContactKind, StaticContactList},
@@ -222,5 +229,37 @@ impl RigidBodySimulationState {
 
         derivative.linear_momentum += remaining_total_acceleration;
         derivative.angular_momentum += total_torque;
+    }
+
+    /// Computes the collision normal for this rigid body colliding with a triangle.
+    ///
+    /// The normal depends on both the collision type and the rigid body geometry.
+    pub fn get_triangle_collision_normal(
+        &self,
+        triangle: &Triangle,
+        collision_point_world: Vec3,
+        collision_kind: &CollisionKind,
+        bvh_instance: &StaticTriangleBVHInstance,
+    ) -> Vec3 {
+        match self.kind {
+            RigidBodyKind::Sphere(_radius) => {
+                match collision_kind {
+                    CollisionKind::Face => {
+                        // For face collisions, use the triangle's face normal
+                        let face_normal_local = triangle.plane.normal;
+                        (face_normal_local * bvh_instance.transform).as_normal()
+                    }
+                    CollisionKind::Edge | CollisionKind::Vertex => {
+                        // For edge/vertex collisions, normal points from collision point to sphere center
+                        (self.position - collision_point_world).as_normal()
+                    }
+                }
+            }
+            RigidBodyKind::Circle(_) => {
+                unimplemented!(
+                    "TODO: Implement collision normal logic for 2D circle and 2D triangle."
+                )
+            }
+        }
     }
 }

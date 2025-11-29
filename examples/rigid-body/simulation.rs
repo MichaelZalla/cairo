@@ -10,8 +10,6 @@ use cairo::{
         intersect::intersect_moving_spheres,
         primitives::sphere::Sphere,
     },
-    matrix::Mat4,
-    mesh::Mesh,
     physics::{
         material::PhysicsMaterial,
         simulation::{
@@ -30,7 +28,7 @@ use cairo::{
     render::Renderer,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::vec4::Vec4,
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 use crate::{integration::system_dynamics_function, plane_collider::Renderable};
@@ -39,6 +37,7 @@ static RIGID_BODY_STATIC_PLANE_MATERIAL: PhysicsMaterial = PhysicsMaterial {
     static_friction: PI / 4.0,
     dynamic_friction: 0.1, // Low friction to preserve horizontal motion during bounces
     restitution: 0.4,
+    // restitution: 0.0, // No bounce - allow sphere to settle into resting contact
 };
 
 static RIGID_BODY_RIGID_BODY_MATERIAL: PhysicsMaterial = PhysicsMaterial {
@@ -79,7 +78,6 @@ pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
     pub static_plane_colliders: Vec<PlaneCollider>,
-    pub ground_mesh: Mesh,
     pub ground_tlas: StaticTriangleTLAS,
     pub hash_grid: HashGrid,
     pub visualize_hash_grid: bool,
@@ -91,7 +89,12 @@ impl Simulation {
         self.tick_count += 1;
 
         // 1. Generate state vector from current rigid bodies
-        let state = self.copy_to_state_vector();
+        let mut state = self.copy_to_state_vector();
+
+        // Clear static contacts from the previous simulation tick
+        for body_state in state.0.iter_mut() {
+            body_state.static_contacts.clear();
+        }
 
         // 2. Predict contacts that will occur during this time step (Phase 1)
         let predicted_contacts = self.predict_contacts(&state, h);
@@ -109,14 +112,41 @@ impl Simulation {
         // 6. Apply predictive impulses to prevent collisions (Phase 4)
         self.apply_predictive_impulses(&mut state_with_new_velocities, h, &derivative, &state);
 
+        // Debug: Check velocity after predictive pass
+        if !self.rigid_bodies.is_empty() {
+            let vel = state_with_new_velocities.0[0].velocity();
+            let pos = state_with_new_velocities.0[0].position;
+            println!(
+                "[AFTER_PREDICTIVE] pos=({:.2}, {:.2}, {:.2}), vel=({:.3}, {:.3}, {:.3})",
+                pos.x, pos.y, pos.z, vel.x, vel.y, vel.z
+            );
+        }
+
         // 7. Integrate positions with corrected velocities (Phase 5)
         let mut final_state = self.integrate_positions(&state_with_new_velocities, h);
+
+        // Debug: Check velocity in final_state before Pass 2
+        if !self.rigid_bodies.is_empty() {
+            println!(
+                "[FINAL_STATE_BEFORE_PASS2] vel=({:.3}, {:.3}, {:.3})",
+                final_state.0[0].velocity().x,
+                final_state.0[0].velocity().y,
+                final_state.0[0].velocity().z
+            );
+        }
 
         // 8. Rebuild spatial acceleration structure
         self.hash_grid.rebuild(final_state.0.iter());
 
         // 9. (Safety net) Apply corrective impulses for any remaining collisions
-        self.apply_corrective_impulses(h, &derivative, &state, &mut final_state);
+        // IMPORTANT: Use state_with_new_velocities (not state) so corrective pass uses
+        // the velocities corrected by the predictive pass as its starting point.
+        self.apply_corrective_impulses(
+            h,
+            &derivative,
+            &state_with_new_velocities,
+            &mut final_state,
+        );
 
         // 10. Copy final state back to simulation
         self.apply_state_vector(&final_state);
@@ -265,28 +295,13 @@ impl Simulation {
         }
     }
 
-    pub fn render(&self, renderer: &mut SoftwareRenderer, sphere_mesh: Option<&Mesh>) {
+    pub fn render(&self, renderer: &mut SoftwareRenderer) {
         renderer.render_axes(None);
 
         // Render dynamic rigid bodies (spheres).
-        for sphere in &self.rigid_bodies {
-            match sphere_mesh {
-                Some(mesh) => {
-                    // Render rasterized sphere mesh for the rigid body.
-                    let transform_with_radius = match sphere.kind {
-                        RigidBodyKind::Sphere(radius) => {
-                            Mat4::scale_uniform(radius) * *sphere.transform.mat()
-                        }
-                        _ => *sphere.transform.mat(),
-                    };
-
-                    renderer.render_entity(&transform_with_radius, mesh, &None);
-                }
-                None => {
-                    // Renders a wireframe sphere.
-                    sphere.render(renderer);
-                }
-            }
+        for rigid_body in &self.rigid_bodies {
+            // Renders debug visuals for rigid body.
+            rigid_body.render(renderer);
         }
 
         // Visualize hash grid entries.
@@ -299,15 +314,28 @@ impl Simulation {
             collider.render(renderer);
         }
 
-        // Render the ground mesh
-        renderer.render_entity(&Mat4::identity(), &self.ground_mesh, &None);
+        // Visualize ground mesh triangle normals
+        // for bvh_instance in &self.ground_tlas.bvh_instances {
+        //     for triangle in &bvh_instance.bvh.tris {
+        //         // Get triangle center from Vec3A (requires unsafe due to union)
+        //         let center = unsafe {
+        //             Vec3 {
+        //                 x: triangle.centroid.v.x,
+        //                 y: triangle.centroid.v.y,
+        //                 z: triangle.centroid.v.z,
+        //             }
+        //         };
 
-        // Visualize the ground mesh BVH.
-        if self.visualize_hash_grid
-            && let Some(collider) = self.ground_mesh.collider.as_ref()
-        {
-            renderer.render_bvh(collider, 2);
-        }
+        //         // Transform normal to world space
+        //         let normal_world = (triangle.plane.normal * bvh_instance.transform).as_normal();
+
+        //         // Draw normal as a line from triangle center
+        //         let normal_length = 0.5;
+        //         renderer.render_line(center, center + normal_world * normal_length, color::YELLOW);
+        //     }
+        // }
+
+        // Note: ground mesh BVH visualization removed since Simulation no longer owns ground_mesh
     }
 
     fn copy_to_state_vector(&self) -> StateVector<RigidBodySimulationState> {
@@ -334,12 +362,6 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
         // Applies impulses based on actual collisions at final positions.
-
-        // Clear static contacts from the last simulation tick.
-        for body_state in new_state.0.iter_mut() {
-            body_state.static_contacts.clear();
-        }
-
         resolve_plane_collisions(
             &self.static_plane_colliders,
             self.rigid_bodies.len(),
@@ -387,10 +409,11 @@ impl Simulation {
         //    (This modifies predicted_state's velocities with impulses)
         self.apply_corrective_impulses(h, derivative, original_state, &mut predicted_state);
 
-        // 4. Copy the velocity corrections back (but NOT position changes)
+        // 4. Copy the velocity corrections AND static contacts back (but NOT position changes)
         for (i, body) in state_with_new_velocities.0.iter_mut().enumerate() {
             body.linear_momentum = predicted_state.0[i].linear_momentum;
             body.angular_momentum = predicted_state.0[i].angular_momentum;
+            body.static_contacts = predicted_state.0[i].static_contacts;
         }
     }
 
@@ -402,14 +425,6 @@ impl Simulation {
         let mut predicted_contacts = vec![StaticContactList::default(); self.rigid_bodies.len()];
 
         for (body_index, body_state) in state.0.iter().enumerate() {
-            let body = &self.rigid_bodies[body_index];
-
-            // Get radius (minimum distance to surface)
-            let radius = match body.kind {
-                RigidBodyKind::Sphere(r) => r,
-                _ => continue, // Skip unsupported body types
-            };
-
             // Extrapolate position forward by timestep h
             let predicted_position = body_state.position + body_state.velocity() * h;
 
@@ -423,7 +438,6 @@ impl Simulation {
                 let contacts = collider.detect_static_contacts(
                     body_state, // Use current state for derivative (unused when check_forces=false)
                     &predicted_body_state,
-                    radius,
                     &RIGID_BODY_STATIC_PLANE_MATERIAL,
                     false, // check_forces: false for prediction
                 );
@@ -437,7 +451,6 @@ impl Simulation {
             let contacts = self.ground_tlas.detect_static_contacts(
                 body_state, // Use current state for derivative (unused when check_forces=false)
                 &predicted_body_state,
-                radius,
                 &RIGID_BODY_STATIC_PLANE_MATERIAL,
                 false, // check_forces: false for prediction
             );

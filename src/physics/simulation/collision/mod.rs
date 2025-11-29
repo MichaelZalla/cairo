@@ -82,7 +82,6 @@ pub trait StaticCollider {
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
-        radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
     ) -> StaticContactList<6>;
@@ -93,7 +92,7 @@ pub trait StaticCollider {
         &self,
         start_position: Vec3,
         end_position: Vec3,
-        radius: f32,
+        body_state: &RigidBodySimulationState,
     ) -> Vec<CollisionSurface>;
 
     /// Handles complete collisions for a single body, including:
@@ -712,7 +711,10 @@ pub fn remove_post_collision_momentum(
     body_derivative: &RigidBodySimulationState,
     body_state: &mut RigidBodySimulationState,
 ) {
-    let time_before_collision = h * collision_t;
+    // Clamp collision_t to [0, 1] to prevent negative time_after_collision
+    let collision_t_clamped = collision_t.clamp(0.0, 1.0);
+
+    let time_before_collision = h * collision_t_clamped;
     let time_after_collision = h - time_before_collision;
 
     let linear_acceleration = body_derivative.linear_momentum;
@@ -728,6 +730,65 @@ pub fn remove_post_collision_momentum(
 /// Returns `Some(CollisionResponse)` if a collision occurred.
 /// Returns `None` if no collision occurred or if the contact point is not
 /// moving into the plane.
+/// Calculates collision response WITHOUT rewinding momentum.
+/// Used by mesh collider which rewinds once for all surfaces before calling this.
+pub fn calculate_collision_response_no_rewind(
+    new_body_state: &RigidBodySimulationState,
+    surface: &CollisionSurface,
+    material: &PhysicsMaterial,
+    end_velocity_before_rewind: Vec3,
+) -> Option<CollisionResponse> {
+    println!("[CALC_RESPONSE] Called with collision_t={:.3}", surface.collision_t);
+
+    let end_position = new_body_state.position;
+
+    if surface.collision_t > 1.0 {
+        // Future collision, ignore for this tick
+        return None;
+    }
+
+    // For sphere contacts, recalculate contact point from end position
+    let contact_point_corrected = match new_body_state.kind {
+        RigidBodyKind::Sphere(_radius) => end_position - surface.normal * surface.minimum_distance,
+        _ => surface.contact_point,
+    };
+
+    let r_torque = end_position - contact_point_corrected;
+    let r_velocity = contact_point_corrected - end_position;
+
+    // Check threshold using PRE-rewind velocity (like PlaneCollider does)
+    let contact_point_velocity_before_rewind =
+        end_velocity_before_rewind + new_body_state.angular_velocity().cross(r_velocity);
+    
+    let incoming_speed = contact_point_velocity_before_rewind.dot(surface.normal);
+
+    println!("[INCOMING_SPEED] incoming_speed={:.3}, threshold={:.3}, will_create_response={}",
+             incoming_speed, -RESTING_SPEED_THRESHOLD, incoming_speed < -RESTING_SPEED_THRESHOLD);
+
+    if incoming_speed < -RESTING_SPEED_THRESHOLD {
+        // Calculate contact velocity using the already-rewound velocity for impulse calculation
+        let velocity_at_collision = new_body_state.velocity();
+
+        let contact_point_velocity =
+            velocity_at_collision + new_body_state.angular_velocity().cross(r_velocity);
+
+        Some(CollisionResponse {
+            impulse_data: get_rigid_body_plane_normal_impulse(
+                new_body_state,
+                surface.normal,
+                surface.contact_point,
+                contact_point_velocity,
+                r_velocity,
+                r_torque,
+                material,
+            ),
+            collision_time: surface.collision_t,
+        })
+    } else {
+        None
+    }
+}
+
 pub fn calculate_collision_response(
     h: f32,
     body_derivative: &RigidBodySimulationState,
@@ -759,16 +820,27 @@ pub fn calculate_collision_response(
     // For contact velocity, offset points FROM center TO contact
     let r_velocity = contact_point_corrected - end_position;
 
-    // Compute linear velocity of the contact point in world space
-    let contact_point_velocity =
+    // Compute linear velocity of the contact point in world space (using END velocity for initial check)
+    let contact_point_velocity_at_end =
         end_linear_velocity + new_body_state.angular_velocity().cross(r_velocity);
 
     // Check if contact point is moving into the surface
-    let incoming_speed = contact_point_velocity.dot(surface.normal);
+    let incoming_speed = contact_point_velocity_at_end.dot(surface.normal);
+
+    println!("[INCOMING_SPEED DEBUG] incoming_speed={:.3}, threshold={:.3}, will_apply_impulse={}",
+             incoming_speed, -RESTING_SPEED_THRESHOLD, incoming_speed < -RESTING_SPEED_THRESHOLD);
 
     if incoming_speed < -RESTING_SPEED_THRESHOLD {
+        println!("[COLLISION_T DEBUG] collision_t={:.3}, clamped={:.3}, incoming_speed={:.3}",
+                 surface.collision_t, surface.collision_t.clamp(0.0, 1.0), incoming_speed);
+
         // Remove momentum accumulated after collision
         remove_post_collision_momentum(h, surface.collision_t, body_derivative, new_body_state);
+
+        // BUG FIX: Recalculate contact_point_velocity AFTER rewinding to collision time
+        let velocity_at_collision = new_body_state.velocity();
+        let contact_point_velocity =
+            velocity_at_collision + new_body_state.angular_velocity().cross(r_velocity);
 
         // Calculate normal impulse
         Some(CollisionResponse {
@@ -811,8 +883,16 @@ pub fn apply_collision_impulses(
 
     let normal_impulse = normal * normal_impulse_magnitude;
 
+    let velocity_before = body_state.velocity();
+
     // Applies normal impulse to linear momentum.
     body_state.linear_momentum += normal_impulse;
+
+    let velocity_after = body_state.velocity();
+    println!("[APPLY_IMPULSE] impulse_mag={:.3}, vel_before=({:.3}, {:.3}, {:.3}), vel_after=({:.3}, {:.3}, {:.3})",
+             normal_impulse_magnitude,
+             velocity_before.x, velocity_before.y, velocity_before.z,
+             velocity_after.x, velocity_after.y, velocity_after.z);
 
     // Applies normal impulse to angular momentum.
     // Torque = r × impulse (must apply to the full impulse vector)
@@ -820,7 +900,11 @@ pub fn apply_collision_impulses(
 
     // Determines the body's new position, using both velocities.
     {
-        let time_before_collision = h * collision_t;
+        // @TODO How does this behave with multiple collisions (with same
+        // t-value)?
+        // Clamp collision_t to prevent negative time_after_collision
+        let collision_t_clamped = collision_t.clamp(0.0, 1.0);
+        let time_before_collision = h * collision_t_clamped;
         let time_after_collision = h - time_before_collision;
 
         body_state.position = {
@@ -861,4 +945,8 @@ pub fn apply_collision_impulses(
         // Applies tangent impulse to angular momentum.
         body_state.angular_momentum += torque_from_friction;
     }
+
+    let final_velocity = body_state.velocity();
+    println!("[APPLY_IMPULSE_FINAL] vel_after_friction=({:.3}, {:.3}, {:.3})",
+             final_velocity.x, final_velocity.y, final_velocity.z);
 }

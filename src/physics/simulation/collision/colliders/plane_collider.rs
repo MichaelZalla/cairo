@@ -43,10 +43,14 @@ impl StaticCollider for PlaneCollider {
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
-        radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
     ) -> contact::StaticContactList<6> {
+        let radius = match new_body_state.kind {
+            RigidBodyKind::Sphere(r) => r,
+            _ => panic!("Unsupported rigid body kind"),
+        };
+
         let normal = self.plane.normal;
 
         let signed_distance_to_plane = self.plane.get_signed_distance(&new_body_state.position);
@@ -89,8 +93,13 @@ impl StaticCollider for PlaneCollider {
         &self,
         start_position: Vec3,
         end_position: Vec3,
-        radius: f32,
+        body_state: &RigidBodySimulationState,
     ) -> Vec<CollisionSurface> {
+        let radius = match body_state.kind {
+            RigidBodyKind::Sphere(r) => r,
+            _ => panic!("Unsupported rigid body kind"),
+        };
+
         let normal = self.plane.normal;
 
         // Test for capsule-plane intersection
@@ -168,7 +177,6 @@ impl StaticCollider for PlaneCollider {
             self,
             body_derivative,
             new_body_state,
-            minimum_distance_to_plane,
             material,
         );
     }
@@ -185,13 +193,8 @@ fn calculate_plane_collision_response(
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
-    let radius = match new_body_state.kind {
-        RigidBodyKind::Sphere(radius) => radius,
-        _ => panic!("Unsupported rigid body kind!"),
-    };
-
     // Detect collisions using the trait method
-    let surfaces = plane_collider.detect_collisions(start_position, end_position, radius);
+    let surfaces = plane_collider.detect_collisions(start_position, end_position, new_body_state);
 
     // For plane, there should be at most one collision
     if let Some(surface) = surfaces.first() {
@@ -226,13 +229,11 @@ fn handle_static_contact_after_plane_collision(
     plane_collider: &PlaneCollider,
     body_derivative: &RigidBodySimulationState,
     body_state: &mut RigidBodySimulationState,
-    minimum_distance_to_plane: f32,
     material: &PhysicsMaterial,
 ) {
     let contacts = plane_collider.detect_static_contacts(
         body_derivative,
         body_state,
-        minimum_distance_to_plane,
         material,
         true, // Post-integration contact detection
     );
