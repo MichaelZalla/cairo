@@ -333,7 +333,7 @@ pub fn compute_contact_basis(
         }
     };
 
-    let bitangent = normal.cross(tangent);
+    let bitangent = normal.cross(tangent).as_normal();
 
     (tangent, bitangent)
 }
