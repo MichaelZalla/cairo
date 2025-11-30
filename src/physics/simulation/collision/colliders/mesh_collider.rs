@@ -11,7 +11,7 @@ use crate::{
         simulation::{
             collision::{self, CollisionResponse, CollisionSurface, StaticCollider},
             contact::{self, StaticContactList},
-            rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
+            rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
         },
     },
     vec::vec3::{self, Vec3},
@@ -21,14 +21,22 @@ use crate::{
 struct TriangleCollisionData<'a> {
     /// The triangle that was hit.
     triangle: &'a Triangle,
-    /// The triangle normal in world space.
-    triangle_normal_world: Vec3,
+    /// The collision point in world space.
+    collision_point_world: Vec3,
 }
 
-/// Helper function to extract triangle and world-space normal from a BVH
-/// collision.
-///
-/// Returns (triangle, world_normal) for the colliding triangle.
+/// Computes the collision point on a triangle using barycentric coordinates.
+fn compute_collision_point(barycentric: Vec3, triangle_vertices: (Vec3, Vec3, Vec3)) -> Vec3 {
+    let (v_a, v_b, v_c) = triangle_vertices;
+
+    let u = barycentric.x;
+    let v = barycentric.y;
+    let w = barycentric.z;
+
+    v_a * u + v_b * v + v_c * w
+}
+
+/// Extracts triangle collision data from a BVH collision.
 fn get_triangle_collision_data<'a>(
     tlas: &'a StaticTriangleTLAS,
     collision: &StaticBVHCollision,
@@ -39,15 +47,20 @@ fn get_triangle_collision_data<'a>(
     let triangle_index = collision.colliding_primitive;
     let triangle = &bvh_instance.bvh.tris[triangle_index];
 
-    // Get triangle normal in world space
-    let collision_normal_local_space = triangle.plane.normal;
+    // Get triangle vertices in local space
+    let triangle_vertices_local = bvh_instance.bvh.geometry.get_triangle_vertices(triangle);
 
-    let collision_normal_world_space =
-        (collision_normal_local_space * bvh_instance.transform).as_normal();
+    // Compute collision point in local space
+    let collision_point_local =
+        compute_collision_point(collision.barycentric, triangle_vertices_local);
+
+    // Transform collision point to world space
+    // @TODO Should this use the BVH's inverse transform?
+    let collision_point_world = collision_point_local * bvh_instance.transform;
 
     TriangleCollisionData {
         triangle,
-        triangle_normal_world: collision_normal_world_space,
+        collision_point_world,
     }
 }
 
@@ -73,13 +86,16 @@ impl StaticCollider for StaticTriangleTLAS {
 
         // Process all detected collisions
         for collision in capsule.segment.collisions.iter() {
+            let bvh_instance_index = collision.colliding_bvh_index;
+            let bvh_instance = &self.bvh_instances[bvh_instance_index];
+
             let collision_data = get_triangle_collision_data(self, collision);
 
-            let triangle = collision_data.triangle;
-            let normal = collision_data.triangle_normal_world;
+            let normal =
+                new_body_state.get_triangle_collision_normal(collision_data.triangle, bvh_instance);
 
             // Calculate signed distance to triangle plane
-            let signed_distance = triangle.plane.get_signed_distance(&position);
+            let signed_distance = collision_data.triangle.plane.get_signed_distance(&position);
 
             // Calculate motion tangents
             let body_velocity = new_body_state.velocity();
@@ -153,9 +169,24 @@ impl StaticCollider for StaticTriangleTLAS {
             for collision in capsule.segment.collisions.iter() {
                 // Only process collisions at the earliest t (within epsilon for floating point comparison)
                 if (collision.t - earliest_t).abs() < f32::EPSILON {
+                    // Calculate body position at collision time
+                    let body_position_at_collision =
+                        start_position + (end_position - start_position) * collision.t;
+
+                    let bvh_instance_index = collision.colliding_bvh_index;
+                    let bvh_instance = &self.bvh_instances[bvh_instance_index];
+
                     let collision_data = get_triangle_collision_data(self, collision);
 
-                    let normal = collision_data.triangle_normal_world;
+                    // Create a minimal rigid body state for computing the collision normal
+                    let temp_body_state = RigidBodySimulationState {
+                        kind: RigidBodyKind::Sphere(radius),
+                        position: body_position_at_collision,
+                        ..Default::default()
+                    };
+
+                    let normal = temp_body_state
+                        .get_triangle_collision_normal(collision_data.triangle, bvh_instance);
 
                     // Calculate collision point
                     let collision_point =
@@ -312,14 +343,19 @@ fn correct_mesh_penetration(
 
     // Process all detected collisions to correct penetration
     for collision in capsule.segment.collisions.iter() {
+        let bvh_instance_index = collision.colliding_bvh_index;
+        let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
+
         let collision_data = get_triangle_collision_data(tlas, collision);
 
-        let triangle = collision_data.triangle;
-        let normal = collision_data.triangle_normal_world;
+        let normal =
+            body_state.get_triangle_collision_normal(collision_data.triangle, bvh_instance);
 
         // Calculate signed distance from body to triangle plane
-        let signed_distance_from_body_to_plane =
-            triangle.plane.get_signed_distance(&body_state.position);
+        let signed_distance_from_body_to_plane = collision_data
+            .triangle
+            .plane
+            .get_signed_distance(&body_state.position);
 
         // If penetrating, push the body out
         if signed_distance_from_body_to_plane < radius {
