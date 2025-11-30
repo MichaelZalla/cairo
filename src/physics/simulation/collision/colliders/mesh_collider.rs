@@ -3,8 +3,11 @@ use crate::{
         accelerator::{
             static_triangle_bvh::StaticBVHCollision, static_triangle_tlas::StaticTriangleTLAS,
         },
-        intersect::medial_primitive::intersect_medial_primitive_tlas,
-        primitives::{capsule::Capsule, triangle::Triangle},
+        intersect::{TriangleIntersectionKind, medial_primitive::intersect_medial_primitive_tlas},
+        primitives::{
+            capsule::Capsule,
+            triangle::{Triangle, classify_intersection},
+        },
     },
     physics::{
         material::PhysicsMaterial,
@@ -23,6 +26,8 @@ struct TriangleCollisionData<'a> {
     triangle: &'a Triangle,
     /// The collision point in world space.
     collision_point_world: Vec3,
+    /// The type of collision (face, edge, or vertex).
+    collision_kind: TriangleIntersectionKind,
 }
 
 /// Computes the collision point on a triangle using barycentric coordinates.
@@ -47,6 +52,9 @@ fn get_triangle_collision_data<'a>(
     let triangle_index = collision.colliding_primitive;
     let triangle = &bvh_instance.bvh.tris[triangle_index];
 
+    // Classify the collision type based on barycentric coordinates
+    let collision_kind = classify_intersection(collision.barycentric);
+
     // Get triangle vertices in local space
     let triangle_vertices_local = bvh_instance.bvh.geometry.get_triangle_vertices(triangle);
 
@@ -61,6 +69,7 @@ fn get_triangle_collision_data<'a>(
     TriangleCollisionData {
         triangle,
         collision_point_world,
+        collision_kind,
     }
 }
 
@@ -91,8 +100,12 @@ impl StaticCollider for StaticTriangleTLAS {
 
             let collision_data = get_triangle_collision_data(self, collision);
 
-            let normal =
-                new_body_state.get_triangle_collision_normal(collision_data.triangle, bvh_instance);
+            let normal = new_body_state.get_triangle_collision_normal(
+                collision_data.triangle,
+                collision_data.collision_point_world,
+                &collision_data.collision_kind,
+                bvh_instance,
+            );
 
             // Calculate signed distance to triangle plane
             let signed_distance = collision_data.triangle.plane.get_signed_distance(&position);
@@ -185,16 +198,16 @@ impl StaticCollider for StaticTriangleTLAS {
                         ..Default::default()
                     };
 
-                    let normal = temp_body_state
-                        .get_triangle_collision_normal(collision_data.triangle, bvh_instance);
-
-                    // Calculate collision point
-                    let collision_point =
-                        start_position + (end_position - start_position) * collision.t;
+                    let normal = temp_body_state.get_triangle_collision_normal(
+                        collision_data.triangle,
+                        collision_data.collision_point_world,
+                        &collision_data.collision_kind,
+                        bvh_instance,
+                    );
 
                     surfaces.push(CollisionSurface {
                         normal,
-                        contact_point: collision_point,
+                        contact_point: collision_data.collision_point_world,
                         collision_t: collision.t,
                         minimum_distance: radius,
                     });
@@ -348,8 +361,12 @@ fn correct_mesh_penetration(
 
         let collision_data = get_triangle_collision_data(tlas, collision);
 
-        let normal =
-            body_state.get_triangle_collision_normal(collision_data.triangle, bvh_instance);
+        let normal = body_state.get_triangle_collision_normal(
+            collision_data.triangle,
+            collision_data.collision_point_world,
+            &collision_data.collision_kind,
+            bvh_instance,
+        );
 
         // Calculate signed distance from body to triangle plane
         let signed_distance_from_body_to_plane = collision_data

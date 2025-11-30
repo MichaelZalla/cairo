@@ -1,4 +1,7 @@
-use crate::vec::vec3::{Vec3, Vec3A};
+use crate::{
+    geometry::intersect::TriangleIntersectionKind,
+    vec::vec3::{Vec3, Vec3A},
+};
 
 use super::plane::Plane;
 
@@ -50,6 +53,44 @@ pub fn point_projects_onto_triangle(point: Vec3, triangle: &Triangle) -> Option<
     }
 
     Some(Vec3 { x: u, y: v, z: w })
+}
+
+/// Classifies an intersection point on a triangle based on barycentric coordinates.
+pub fn classify_intersection(barycentric: Vec3) -> TriangleIntersectionKind {
+    const EPSILON: f32 = 0.001;
+
+    let u = barycentric.x;
+    let v = barycentric.y;
+    let w = barycentric.z;
+
+    // Check if we're at a vertex (one coordinate is ~1.0)
+    if u >= 1.0 - EPSILON {
+        return TriangleIntersectionKind::Vertex; // Vertex A
+    }
+
+    if v >= 1.0 - EPSILON {
+        return TriangleIntersectionKind::Vertex; // Vertex B
+    }
+
+    if w >= 1.0 - EPSILON {
+        return TriangleIntersectionKind::Vertex; // Vertex C
+    }
+
+    // Check if we're on an edge (one coordinate is ~0.0)
+    if u <= EPSILON {
+        return TriangleIntersectionKind::Edge; // Edge BC (opposite vertex A)
+    }
+
+    if v <= EPSILON {
+        return TriangleIntersectionKind::Edge; // Edge CA (opposite vertex B)
+    }
+
+    if w <= EPSILON {
+        return TriangleIntersectionKind::Edge; // Edge AB (opposite vertex C)
+    }
+
+    // Otherwise, we're on the face interior
+    TriangleIntersectionKind::Face
 }
 
 impl Triangle {

@@ -1,6 +1,7 @@
 use crate::{
     geometry::{
         accelerator::static_triangle_bvh::StaticTriangleBVHInstance,
+        intersect::TriangleIntersectionKind,
         primitives::{
             aabb::{AABB, Bounded},
             triangle::Triangle,
@@ -243,13 +244,23 @@ impl RigidBodySimulationState {
     pub fn get_triangle_collision_normal(
         &self,
         triangle: &Triangle,
+        collision_point_world: Vec3,
+        collision_kind: &TriangleIntersectionKind,
         bvh_instance: &StaticTriangleBVHInstance,
     ) -> Vec3 {
         match self.kind {
             RigidBodyKind::Sphere(_radius) => {
-                let face_normal_local = triangle.plane.normal;
-
-                (face_normal_local * bvh_instance.transform).as_normal()
+                match collision_kind {
+                    TriangleIntersectionKind::Face => {
+                        // For face collisions, use the triangle's face normal
+                        let face_normal_local = triangle.plane.normal;
+                        (face_normal_local * bvh_instance.transform).as_normal()
+                    }
+                    TriangleIntersectionKind::Edge | TriangleIntersectionKind::Vertex => {
+                        // For edge/vertex collisions, normal points from collision point to sphere center
+                        (self.position - collision_point_world).as_normal()
+                    }
+                }
             }
             RigidBodyKind::Circle(_) => {
                 unimplemented!(
