@@ -82,7 +82,6 @@ pub trait StaticCollider {
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
-        radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
     ) -> StaticContactList<6>;
@@ -93,7 +92,7 @@ pub trait StaticCollider {
         &self,
         start_position: Vec3,
         end_position: Vec3,
-        radius: f32,
+        body_state: &RigidBodySimulationState,
     ) -> Vec<CollisionSurface>;
 
     /// Handles complete collisions for a single body, including:

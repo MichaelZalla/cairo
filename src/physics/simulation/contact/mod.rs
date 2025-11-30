@@ -351,20 +351,21 @@ pub fn get_static_contact(
     new_body_state: &RigidBodySimulationState,
     surface_normal: Vec3,
     signed_distance: f32,
-    minimum_distance: f32,
     body_motion_tangent: Option<Vec3>,
     contact_point_motion_tangent: Option<Vec3>,
     material: &PhysicsMaterial,
     check_forces: bool,
 ) -> Option<StaticContact> {
+    let radius = new_body_state.radius();
+
     // 1. Requires that the body be very close to the collider
-    if signed_distance > minimum_distance + CONTACT_DISTANCE_THRESHOLD {
+    if signed_distance > radius + CONTACT_DISTANCE_THRESHOLD {
         return None;
     }
 
     // 2. Requires that the contact point's speed along the normal be very small
     let body_velocity = new_body_state.velocity();
-    let contact_point = new_body_state.position - surface_normal * minimum_distance;
+    let contact_point = new_body_state.position - surface_normal * radius;
 
     let contact_point_velocity = compute_contact_point_velocity(
         body_velocity,

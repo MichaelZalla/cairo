@@ -11,7 +11,7 @@ use crate::{
         simulation::{
             collision::{self, CollisionResponse, CollisionSurface, StaticCollider},
             contact::{self, StaticContactList},
-            rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
+            rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
         },
     },
     vec::vec3::{self, Vec3},
@@ -45,11 +45,12 @@ impl StaticCollider for StaticTriangleTLAS {
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
-        radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
     ) -> StaticContactList<6> {
         let position = new_body_state.position;
+
+        let radius = new_body_state.radius();
 
         // Create a zero-length capsule at the position (sphere as degenerate capsule)
         let mut capsule = Capsule::new(position, position, radius);
@@ -102,7 +103,6 @@ impl StaticCollider for StaticTriangleTLAS {
                 new_body_state,
                 normal,
                 signed_distance,
-                radius,
                 body_motion_tangent,
                 contact_point_motion_tangent,
                 material,
@@ -119,8 +119,10 @@ impl StaticCollider for StaticTriangleTLAS {
         &self,
         start_position: Vec3,
         end_position: Vec3,
-        radius: f32,
+        body_state: &RigidBodySimulationState,
     ) -> Vec<CollisionSurface> {
+        let radius = body_state.radius();
+
         // Create capsule from start to end position
         let mut capsule = Capsule::new(start_position, end_position, radius);
 
@@ -164,11 +166,7 @@ impl StaticCollider for StaticTriangleTLAS {
         new_body_state: &mut RigidBodySimulationState,
         material: &PhysicsMaterial,
     ) {
-        // Get sphere radius
-        let radius = match new_body_state.kind {
-            RigidBodyKind::Sphere(r) => r,
-            _ => return,
-        };
+        let radius = new_body_state.radius();
 
         let start_position = current_body_state.position;
         let start_linear_velocity = current_body_state.velocity();
@@ -180,7 +178,6 @@ impl StaticCollider for StaticTriangleTLAS {
             current_body_state,
             new_body_state,
             self,
-            radius,
             material,
         );
 
@@ -202,13 +199,7 @@ impl StaticCollider for StaticTriangleTLAS {
         correct_mesh_penetration(new_body_state, self, radius);
 
         // Determines if the resulting body state constitutes a resting or sliding contact.
-        handle_static_contact_after_mesh_collision(
-            body_derivative,
-            new_body_state,
-            self,
-            radius,
-            material,
-        );
+        handle_static_contact_after_mesh_collision(body_derivative, new_body_state, self, material);
     }
 }
 
@@ -218,14 +209,13 @@ fn calculate_mesh_collision_responses(
     current_body_state: &RigidBodySimulationState,
     new_body_state: &mut RigidBodySimulationState,
     tlas: &StaticTriangleTLAS,
-    radius: f32,
     material: &PhysicsMaterial,
 ) -> Vec<CollisionResponse> {
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
     // Detect all collisions at the earliest time using the trait method
-    let surfaces = tlas.detect_collisions(start_position, end_position, radius);
+    let surfaces = tlas.detect_collisions(start_position, end_position, new_body_state);
 
     let mut collision_responses = vec![];
 
@@ -323,14 +313,12 @@ fn handle_static_contact_after_mesh_collision(
     body_derivative: &RigidBodySimulationState,
     body_state: &mut RigidBodySimulationState,
     tlas: &StaticTriangleTLAS,
-    radius: f32,
     material: &PhysicsMaterial,
 ) {
     // Detect all static contacts
     let contacts = tlas.detect_static_contacts(
         body_derivative,
         body_state,
-        radius,
         material,
         true, // Post-integration contact detection
     );

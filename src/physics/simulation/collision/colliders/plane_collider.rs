@@ -7,7 +7,7 @@ use crate::{
                 self, CollisionResponse, CollisionSurface, RESTING_SPEED_THRESHOLD, StaticCollider,
             },
             contact::{self, StaticContactKind},
-            rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
+            rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
         },
     },
     vec::vec3::{self, Vec3},
@@ -43,7 +43,6 @@ impl StaticCollider for PlaneCollider {
         &self,
         derivative: &RigidBodySimulationState,
         new_body_state: &RigidBodySimulationState,
-        radius: f32,
         material: &PhysicsMaterial,
         check_forces: bool,
     ) -> contact::StaticContactList<6> {
@@ -56,7 +55,7 @@ impl StaticCollider for PlaneCollider {
         let contact_point_velocity = contact::compute_contact_point_velocity(
             body_velocity,
             new_body_state.angular_velocity(),
-            new_body_state.position - normal * radius,
+            new_body_state.position - normal * new_body_state.radius(),
             new_body_state.position,
         );
 
@@ -73,7 +72,6 @@ impl StaticCollider for PlaneCollider {
             new_body_state,
             normal,
             signed_distance_to_plane,
-            radius,
             body_motion_tangent,
             contact_point_motion_tangent,
             material,
@@ -89,9 +87,10 @@ impl StaticCollider for PlaneCollider {
         &self,
         start_position: Vec3,
         end_position: Vec3,
-        radius: f32,
+        body_state: &RigidBodySimulationState,
     ) -> Vec<CollisionSurface> {
         let normal = self.plane.normal;
+        let radius = body_state.radius();
 
         // Test for capsule-plane intersection
         if let Some(intersection) =
@@ -131,10 +130,7 @@ impl StaticCollider for PlaneCollider {
         }
 
         // Determines a minimum distance that this body must maintain.
-        let minimum_distance_to_plane = match new_body_state.kind {
-            RigidBodyKind::Sphere(radius) => radius,
-            _ => panic!("Unsupported rigid body kind!"),
-        };
+        let radius = new_body_state.radius();
 
         // Calculate collision response data (if a collision occurred).
         let collision_response = calculate_plane_collision_response(
@@ -161,14 +157,13 @@ impl StaticCollider for PlaneCollider {
         }
 
         // If necessary, fixes up the body's position to maintain its minimum distance.
-        correct_plane_penetration(new_body_state, &self.plane, minimum_distance_to_plane);
+        correct_plane_penetration(new_body_state, &self.plane, radius);
 
         // Determines if the resulting body state constitutes a resting or sliding contact.
         handle_static_contact_after_plane_collision(
             self,
             body_derivative,
             new_body_state,
-            minimum_distance_to_plane,
             material,
         );
     }
@@ -185,13 +180,8 @@ fn calculate_plane_collision_response(
     let start_position = current_body_state.position;
     let end_position = new_body_state.position;
 
-    let radius = match new_body_state.kind {
-        RigidBodyKind::Sphere(radius) => radius,
-        _ => panic!("Unsupported rigid body kind!"),
-    };
-
     // Detect collisions using the trait method
-    let surfaces = plane_collider.detect_collisions(start_position, end_position, radius);
+    let surfaces = plane_collider.detect_collisions(start_position, end_position, new_body_state);
 
     // For plane, there should be at most one collision
     if let Some(surface) = surfaces.first() {
@@ -226,13 +216,11 @@ fn handle_static_contact_after_plane_collision(
     plane_collider: &PlaneCollider,
     body_derivative: &RigidBodySimulationState,
     body_state: &mut RigidBodySimulationState,
-    minimum_distance_to_plane: f32,
     material: &PhysicsMaterial,
 ) {
     let contacts = plane_collider.detect_static_contacts(
         body_derivative,
         body_state,
-        minimum_distance_to_plane,
         material,
         true, // Post-integration contact detection
     );

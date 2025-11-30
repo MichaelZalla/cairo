@@ -75,6 +75,13 @@ impl RigidBodySimulationState {
         self.orientation * 0.5 * spin
     }
 
+    pub fn radius(&self) -> f32 {
+        match self.kind {
+            RigidBodyKind::Circle(radius) => radius,
+            RigidBodyKind::Sphere(radius) => radius,
+        }
+    }
+
     pub fn accumulate_accelerations(
         &self,
         forces: &[Box<DynRigidBodyForce>],

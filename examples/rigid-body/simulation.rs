@@ -402,14 +402,6 @@ impl Simulation {
         let mut predicted_contacts = vec![StaticContactList::default(); self.rigid_bodies.len()];
 
         for (body_index, body_state) in state.0.iter().enumerate() {
-            let body = &self.rigid_bodies[body_index];
-
-            // Get radius (minimum distance to surface)
-            let radius = match body.kind {
-                RigidBodyKind::Sphere(r) => r,
-                _ => continue, // Skip unsupported body types
-            };
-
             // Extrapolate position forward by timestep h
             let predicted_position = body_state.position + body_state.velocity() * h;
 
@@ -423,7 +415,6 @@ impl Simulation {
                 let contacts = collider.detect_static_contacts(
                     body_state, // Use current state for derivative (unused when check_forces=false)
                     &predicted_body_state,
-                    radius,
                     &RIGID_BODY_STATIC_PLANE_MATERIAL,
                     false, // check_forces: false for prediction
                 );
@@ -437,7 +428,6 @@ impl Simulation {
             let contacts = self.ground_tlas.detect_static_contacts(
                 body_state, // Use current state for derivative (unused when check_forces=false)
                 &predicted_body_state,
-                radius,
                 &RIGID_BODY_STATIC_PLANE_MATERIAL,
                 false, // check_forces: false for prediction
             );

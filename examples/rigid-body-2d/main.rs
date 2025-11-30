@@ -178,9 +178,9 @@ fn main() -> Result<(), String> {
         if let Some(event) = &mouse_state.button_event {
             match (event.button, event.kind) {
                 (MouseButton::Left, MouseEventKind::Down) => {
-                    let circle = &simulation.rigid_bodies[0];
+                    let body = &simulation.rigid_bodies[0];
 
-                    let transform = &circle.transform;
+                    let transform = &body.transform;
 
                     let from = *cursor_world_space;
 
@@ -190,7 +190,7 @@ fn main() -> Result<(), String> {
 
                     let radius = match circle.kind {
                         RigidBodyKind::Circle(radius) => radius,
-                        _ => panic!(),
+                        RigidBodyKind::Sphere(radius) => radius,
                     };
 
                     if distance < radius {
