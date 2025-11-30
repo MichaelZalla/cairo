@@ -387,10 +387,11 @@ impl Simulation {
         //    (This modifies predicted_state's velocities with impulses)
         self.apply_corrective_impulses(h, derivative, original_state, &mut predicted_state);
 
-        // 4. Copy the velocity corrections back (but NOT position changes)
+        // 4. Copy back the velocity corrections and static contacts (not positions).
         for (i, body) in state_with_new_velocities.0.iter_mut().enumerate() {
             body.linear_momentum = predicted_state.0[i].linear_momentum;
             body.angular_momentum = predicted_state.0[i].angular_momentum;
+            body.static_contacts = predicted_state.0[i].static_contacts;
         }
     }
 
