@@ -17,14 +17,22 @@ use crate::{
     vec::vec3::{self, Vec3},
 };
 
+/// Result of analyzing a BVH collision against a triangle.
+struct TriangleCollisionData<'a> {
+    /// The triangle that was hit.
+    triangle: &'a Triangle,
+    /// The triangle normal in world space.
+    triangle_normal_world: Vec3,
+}
+
 /// Helper function to extract triangle and world-space normal from a BVH
 /// collision.
 ///
 /// Returns (triangle, world_normal) for the colliding triangle.
-fn get_collision_triangle_and_normal<'a>(
+fn get_triangle_collision_data<'a>(
     tlas: &'a StaticTriangleTLAS,
     collision: &StaticBVHCollision,
-) -> (&'a Triangle, Vec3) {
+) -> TriangleCollisionData<'a> {
     let bvh_instance_index = collision.colliding_bvh_index;
     let bvh_instance = &tlas.bvh_instances[bvh_instance_index];
 
@@ -37,7 +45,10 @@ fn get_collision_triangle_and_normal<'a>(
     let collision_normal_world_space =
         (collision_normal_local_space * bvh_instance.transform).as_normal();
 
-    (triangle, collision_normal_world_space)
+    TriangleCollisionData {
+        triangle,
+        triangle_normal_world: collision_normal_world_space,
+    }
 }
 
 impl StaticCollider for StaticTriangleTLAS {
@@ -62,7 +73,10 @@ impl StaticCollider for StaticTriangleTLAS {
 
         // Process all detected collisions
         for collision in capsule.segment.collisions.iter() {
-            let (triangle, normal) = get_collision_triangle_and_normal(self, collision);
+            let collision_data = get_triangle_collision_data(self, collision);
+
+            let triangle = collision_data.triangle;
+            let normal = collision_data.triangle_normal_world;
 
             // Calculate signed distance to triangle plane
             let signed_distance = triangle.plane.get_signed_distance(&position);
@@ -139,7 +153,9 @@ impl StaticCollider for StaticTriangleTLAS {
             for collision in capsule.segment.collisions.iter() {
                 // Only process collisions at the earliest t (within epsilon for floating point comparison)
                 if (collision.t - earliest_t).abs() < f32::EPSILON {
-                    let (_triangle, normal) = get_collision_triangle_and_normal(self, collision);
+                    let collision_data = get_triangle_collision_data(self, collision);
+
+                    let normal = collision_data.triangle_normal_world;
 
                     // Calculate collision point
                     let collision_point =
@@ -296,7 +312,10 @@ fn correct_mesh_penetration(
 
     // Process all detected collisions to correct penetration
     for collision in capsule.segment.collisions.iter() {
-        let (triangle, normal) = get_collision_triangle_and_normal(tlas, collision);
+        let collision_data = get_triangle_collision_data(tlas, collision);
+
+        let triangle = collision_data.triangle;
+        let normal = collision_data.triangle_normal_world;
 
         // Calculate signed distance from body to triangle plane
         let signed_distance_from_body_to_plane =
