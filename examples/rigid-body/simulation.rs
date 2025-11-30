@@ -91,7 +91,12 @@ impl Simulation {
         self.tick_count += 1;
 
         // 1. Generate state vector from current rigid bodies
-        let state = self.copy_to_state_vector();
+        let mut state = self.copy_to_state_vector();
+
+        // Clear static contacts from the previous simulation tick
+        for body_state in state.0.iter_mut() {
+            body_state.static_contacts.clear();
+        }
 
         // 2. Predict contacts that will occur during this time step (Phase 1)
         let predicted_contacts = self.predict_contacts(&state, h);
@@ -334,11 +339,6 @@ impl Simulation {
         new_state: &mut StateVector<RigidBodySimulationState>,
     ) {
         // Applies impulses based on actual collisions at final positions.
-
-        // Clear static contacts from the last simulation tick.
-        for body_state in new_state.0.iter_mut() {
-            body_state.static_contacts.clear();
-        }
 
         resolve_plane_collisions(
             &self.static_plane_colliders,
