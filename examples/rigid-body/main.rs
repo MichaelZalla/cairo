@@ -30,9 +30,9 @@ pub mod make_test_simulation;
 pub mod plane_collider;
 pub mod simulation;
 
-type SimulationMakers = fn(&mut RandomSampler<1024>, &SceneContext) -> Simulation;
+type SimulationMaker = fn(&mut RandomSampler<1024>, &SceneContext) -> Simulation;
 
-const SIMULATION_MAKERS: [SimulationMakers; 3] = [
+const SIMULATION_MAKERS: [SimulationMaker; 3] = [
     make_test_simulation,
     make_terrain_simulation,
     make_obj_terrain_simulation,
