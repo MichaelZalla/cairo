@@ -161,24 +161,18 @@ impl StaticCollider for StaticTriangleTLAS {
                 position,
             );
 
-            let body_motion_tangent = {
-                let velocity_in_plane = body_velocity - normal * body_velocity.dot(normal);
-                if velocity_in_plane.mag_squared() > f32::EPSILON {
-                    Some(velocity_in_plane.as_normal())
-                } else {
-                    None
-                }
-            };
+            // Use triangle plane for motion tangent calculation (consistent with PlaneCollider)
+            let point_on_triangle = collision_data.collision_point_world;
+            let triangle_plane = &collision_data.triangle.plane;
 
-            let contact_point_motion_tangent = {
-                let velocity_in_plane =
-                    contact_point_velocity - normal * contact_point_velocity.dot(normal);
-                if velocity_in_plane.mag_squared() > f32::EPSILON {
-                    Some(velocity_in_plane.as_normal())
-                } else {
-                    None
-                }
-            };
+            let body_motion_tangent =
+                contact::compute_motion_tangent(point_on_triangle, body_velocity, triangle_plane);
+
+            let contact_point_motion_tangent = contact::compute_motion_tangent(
+                point_on_triangle,
+                contact_point_velocity,
+                triangle_plane,
+            );
 
             if let Some(contact) = contact::get_static_contact(
                 derivative,
