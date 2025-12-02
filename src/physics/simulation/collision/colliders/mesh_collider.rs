@@ -376,7 +376,10 @@ fn correct_mesh_penetration(
 
         // If penetrating, push the body out
         if signed_distance_from_body_to_plane < radius {
-            body_state.position += normal * (radius - signed_distance_from_body_to_plane);
+            let penetration_depth = radius - signed_distance_from_body_to_plane;
+            let correction = normal * penetration_depth;
+
+            body_state.position += correction;
         }
     }
 }
