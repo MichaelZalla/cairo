@@ -78,4 +78,25 @@ impl SceneResources {
     pub fn post_deserialize_non_mut(&self) {
         self._post_deserialize();
     }
+
+    pub fn clear(&self) {
+        self.ambient_light.borrow_mut().entries.clear();
+        self.cubemap_f32.borrow_mut().entries.clear();
+        self.cubemap_u8.borrow_mut().entries.clear();
+        self.cubemap_vec3.borrow_mut().entries.clear();
+        self.directional_light.borrow_mut().entries.clear();
+        self.environment.borrow_mut().entries.clear();
+        self.material.borrow_mut().entries.clear();
+        self.point_light.borrow_mut().entries.clear();
+        self.spot_light.borrow_mut().entries.clear();
+        self.texture_f32.borrow_mut().entries.clear();
+        self.texture_u8.borrow_mut().entries.clear();
+        self.texture_vec2.borrow_mut().entries.clear();
+        self.texture_vec3.borrow_mut().entries.clear();
+        self.camera.borrow_mut().entries.clear();
+        self.empty.borrow_mut().entries.clear();
+        self.entity.borrow_mut().entries.clear();
+        self.mesh.borrow_mut().entries.clear();
+        self.skybox.borrow_mut().entries.clear();
+    }
 }

@@ -345,6 +345,9 @@ fn reset_simulation(
     // Reset time accumulator
     state.time_accumulator = 0.0;
 
+    // Clear scene resource arenas to avoid accumulating resources on each reset
+    scene_context.resources.clear();
+
     // Rebuilds the scene with new simulation and ground mesh.
     let (new_scene, new_shader_context) = scene::make_scene(
         camera_aspect_ratio,
