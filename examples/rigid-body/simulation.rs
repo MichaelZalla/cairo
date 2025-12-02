@@ -28,7 +28,7 @@ use cairo::{
     render::Renderer,
     software_renderer::SoftwareRenderer,
     transform::quaternion::Quaternion,
-    vec::vec4::Vec4,
+    vec::{vec3::Vec3, vec4::Vec4},
 };
 
 use crate::{integration::system_dynamics_function, plane_collider::Renderable};
@@ -300,6 +300,28 @@ impl Simulation {
                 let collider = bvh_instance.bvh.as_ref();
 
                 renderer.render_bvh(collider, 2);
+
+                for triangle in &collider.tris {
+                    let triangle_center = unsafe {
+                        Vec3 {
+                            x: triangle.centroid.v.x,
+                            y: triangle.centroid.v.y,
+                            z: triangle.centroid.v.z,
+                        }
+                    };
+
+                    // Transform normal to world space
+                    let normal_world = (triangle.plane.normal * bvh_instance.transform).as_normal();
+
+                    // Draw normal as a line from triangle center
+                    let normal_length = 0.5;
+
+                    renderer.render_line(
+                        triangle_center,
+                        triangle_center + normal_world * normal_length,
+                        color::YELLOW,
+                    );
+                }
             }
         }
     }

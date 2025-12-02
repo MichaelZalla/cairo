@@ -57,14 +57,52 @@ pub fn make_sine_wave_terrain(
         vertex.y += (wave_x + wave_z) * amplitude;
     }
 
-    // Create new geometry with modified vertices
+    // Compute per-vertex normals by averaging face normals
+    let mut vertex_normals: Vec<Vec3> = vec![Vec3::default(); new_vertices.len()];
+    let mut vertex_face_counts: Vec<usize> = vec![0; new_vertices.len()];
+
+    // For each face, compute face normal and accumulate to vertex normals
+    for face in base_mesh.faces.iter() {
+        let v0 = new_vertices[face.vertices[0]];
+        let v1 = new_vertices[face.vertices[1]];
+        let v2 = new_vertices[face.vertices[2]];
+
+        // Compute face normal using cross product
+        let edge1 = v1 - v0;
+        let edge2 = v2 - v0;
+
+        let face_normal = edge1.cross(edge2).as_normal();
+
+        // Accumulate face normal to each vertex of the triangle
+        for &vertex_index in &face.vertices {
+            vertex_normals[vertex_index] += face_normal;
+            vertex_face_counts[vertex_index] += 1;
+        }
+    }
+
+    // Average the accumulated normals
+    for (i, normal) in vertex_normals.iter_mut().enumerate() {
+        if vertex_face_counts[i] > 0 {
+            *normal = (*normal / vertex_face_counts[i] as f32).as_normal();
+        }
+    }
+
+    // Update face normal indices to point to corresponding vertex normals
+    let mut new_faces = base_mesh.faces.clone();
+
+    for face in new_faces.iter_mut() {
+        // Each face vertex now uses its own vertex index for normals
+        face.normals = face.vertices;
+    }
+
+    // Create new geometry with modified vertices and normals
     let new_geometry = MeshGeometry {
         vertices: new_vertices.into_boxed_slice(),
-        normals: old_geometry.normals.clone(),
+        normals: vertex_normals.into_boxed_slice(),
         uvs: old_geometry.uvs.clone(),
     };
 
-    // Create new mesh with updated geometry
+    // Create new mesh with updated geometry and faces
     let mut new_mesh = Mesh {
         object_source: base_mesh.object_source.clone(),
         object_name: base_mesh.object_name.clone(),
@@ -72,7 +110,7 @@ pub fn make_sine_wave_terrain(
         material_source: base_mesh.material_source.clone(),
         material: base_mesh.material,
         geometry: Rc::new(new_geometry),
-        faces: base_mesh.faces.clone(),
+        faces: new_faces,
         aabb: base_mesh.aabb, // Temporary, will be recomputed
         collider: None,       // Will be rebuilt
     };
