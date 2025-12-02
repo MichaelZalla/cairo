@@ -8,7 +8,7 @@ use cairo::{
         static_triangle_tlas::StaticTriangleTLAS,
     },
     matrix::Mat4,
-    mesh::primitive::plane,
+    mesh::{Mesh, primitive::plane},
     physics::simulation::{
         collision::colliders::plane_collider::PlaneCollider,
         force::gravity::GRAVITY_RIGID_BODY_FORCE,
@@ -27,7 +27,7 @@ use crate::simulation::Simulation;
 pub fn make_test_simulation(
     _sampler: &mut RandomSampler<1024>,
     _scene_context: &SceneContext,
-) -> Simulation {
+) -> (Simulation, Option<Mesh>) {
     // Forces.
 
     let forces: Vec<Box<DynRigidBodyForce>> = vec![
@@ -379,12 +379,10 @@ pub fn make_test_simulation(
 
     // Create a triangle mesh ground with BVH
     // Step 1: Create a flat mesh
-    let mut ground_mesh = plane::generate(100.0, 100.0, 10, 10);
+    let ground_mesh = plane::generate(100.0, 100.0, 10, 10);
 
     // Step 2: Build and store the BVH on the mesh itself
     let ground_bvh = Rc::new(StaticTriangleBVH::new(&ground_mesh));
-
-    ground_mesh.collider = Some(ground_bvh.clone());
 
     // Step 3: Use the StaticTriangleBVH to instantiate a StaticTriangleBVHInstance
     let identity = Mat4::identity();
@@ -394,14 +392,15 @@ pub fn make_test_simulation(
     // Create TLAS with the ground mesh BVH instance
     let ground_tlas = StaticTriangleTLAS::new(vec![ground_bvh_instance]);
 
-    Simulation {
+    let simulation = Simulation {
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        ground_mesh,
         ground_tlas,
         hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), RADIUS * 2.0),
         visualize_hash_grid: false,
         tick_count: 0,
-    }
+    };
+
+    (simulation, Some(ground_mesh))
 }

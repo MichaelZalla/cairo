@@ -88,7 +88,7 @@ pub fn make_sine_wave_terrain(
 /// The function automatically determines spawn bounds based on the mesh's AABB,
 /// placing spheres within the horizontal (X, Z) bounds and above the mesh.
 pub fn make_simulation_from_mesh(
-    mut ground_mesh: Mesh,
+    ground_mesh: &Mesh,
     num_spheres: usize,
     sphere_radius: f32,
     sphere_mass: f32,
@@ -166,6 +166,7 @@ pub fn make_simulation_from_mesh(
 
     // Static plane colliders - safety net below terrain
     let safety_net_y = mesh_min.y - 20.0;
+
     let static_plane_colliders = vec![PlaneCollider::new(
         Vec3 {
             x: 0.0,
@@ -176,8 +177,7 @@ pub fn make_simulation_from_mesh(
     )];
 
     // Build BVH for the terrain
-    let ground_bvh = Rc::new(StaticTriangleBVH::new(&ground_mesh));
-    ground_mesh.collider = Some(ground_bvh.clone());
+    let ground_bvh = Rc::new(StaticTriangleBVH::new(ground_mesh));
 
     // Create TLAS with the terrain mesh
     let identity = Mat4::identity();
@@ -188,7 +188,6 @@ pub fn make_simulation_from_mesh(
         forces,
         rigid_bodies: spheres,
         static_plane_colliders,
-        ground_mesh,
         ground_tlas,
         hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), sphere_radius * 2.0),
         visualize_hash_grid: false,
@@ -200,7 +199,7 @@ pub fn make_simulation_from_mesh(
 pub fn make_terrain_simulation(
     sampler: &mut RandomSampler<1024>,
     _scene_context: &SceneContext,
-) -> Simulation {
+) -> (Simulation, Option<Mesh>) {
     // Create sine wave terrain mesh
     let ground_mesh = make_sine_wave_terrain(
         100.0, // width
@@ -212,14 +211,16 @@ pub fn make_terrain_simulation(
     );
 
     // Create simulation with 100 spheres
-    make_simulation_from_mesh(
-        ground_mesh,
+    let simulation = make_simulation_from_mesh(
+        &ground_mesh,
         100, // num_spheres
         1.0, // sphere_radius
         1.0, // sphere_mass
         0.4, // initial_velocity_probability (40% get velocity)
         sampler,
-    )
+    );
+
+    (simulation, Some(ground_mesh))
 }
 
 /// Creates a terrain simulation from an OBJ file.
@@ -229,7 +230,7 @@ pub fn make_terrain_simulation(
 pub fn make_obj_terrain_simulation(
     sampler: &mut RandomSampler<1024>,
     scene_context: &SceneContext,
-) -> Simulation {
+) -> (Simulation, Option<Mesh>) {
     let resources = &scene_context.resources;
 
     // Load mesh from OBJ file
@@ -248,5 +249,7 @@ pub fn make_obj_terrain_simulation(
     };
 
     // Create simulation with 100 spheres
-    make_simulation_from_mesh(level_mesh, 100, 1.0, 1.0, 0.4, sampler)
+    let simulation = make_simulation_from_mesh(&level_mesh, 100, 1.0, 1.0, 0.4, sampler);
+
+    (simulation, Some(level_mesh))
 }

@@ -108,7 +108,7 @@ bitflags! {
 
 impl Default for RigidBodyDebugFlags {
     fn default() -> Self {
-        RigidBodyDebugFlags::DRAW_VOLUME
+        Self::empty()
     }
 }
 
@@ -392,19 +392,19 @@ impl RigidBody {
                     },
                 );
 
-                // Contact point velocity
-                renderer.render_line(start, start + contact.contact_point_velocity, color::ORANGE);
+                // // Contact point velocity
+                // renderer.render_line(start, start + contact.contact_point_velocity, color::ORANGE);
 
-                // Contact point velocity (tangent)
-                renderer.render_line(
-                    start,
-                    start + contact.tangent,
-                    if let StaticContactKind::Resting = contact.kind {
-                        color::WHITE
-                    } else {
-                        color::RED
-                    },
-                );
+                // // Contact point velocity (tangent)
+                // renderer.render_line(
+                //     start,
+                //     start + contact.tangent,
+                //     if let StaticContactKind::Resting = contact.kind {
+                //         color::WHITE
+                //     } else {
+                //         color::RED
+                //     },
+                // );
 
                 // // Contact point velocity (bitangent)
                 // renderer.render_line(

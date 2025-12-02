@@ -10,8 +10,6 @@ use cairo::{
         intersect::intersect_moving_spheres,
         primitives::sphere::Sphere,
     },
-    matrix::Mat4,
-    mesh::Mesh,
     physics::{
         material::PhysicsMaterial,
         simulation::{
@@ -79,7 +77,6 @@ pub struct Simulation {
     pub forces: Vec<Box<DynRigidBodyForce>>,
     pub rigid_bodies: Vec<RigidBody>,
     pub static_plane_colliders: Vec<PlaneCollider>,
-    pub ground_mesh: Mesh,
     pub ground_tlas: StaticTriangleTLAS,
     pub hash_grid: HashGrid,
     pub visualize_hash_grid: bool,
@@ -270,28 +267,13 @@ impl Simulation {
         }
     }
 
-    pub fn render(&self, renderer: &mut SoftwareRenderer, sphere_mesh: Option<&Mesh>) {
+    pub fn render(&self, renderer: &mut SoftwareRenderer) {
         renderer.render_axes(None);
 
         // Render dynamic rigid bodies (spheres).
-        for sphere in &self.rigid_bodies {
-            match sphere_mesh {
-                Some(mesh) => {
-                    // Render rasterized sphere mesh for the rigid body.
-                    let transform_with_radius = match sphere.kind {
-                        RigidBodyKind::Sphere(radius) => {
-                            Mat4::scale_uniform(radius) * *sphere.transform.mat()
-                        }
-                        _ => *sphere.transform.mat(),
-                    };
-
-                    renderer.render_entity(&transform_with_radius, mesh, &None);
-                }
-                None => {
-                    // Renders a wireframe sphere.
-                    sphere.render(renderer);
-                }
-            }
+        for rigid_body in &self.rigid_bodies {
+            // Renders debug visuals for rigid body.
+            rigid_body.render(renderer);
         }
 
         // Visualize hash grid entries.
@@ -304,13 +286,10 @@ impl Simulation {
             collider.render(renderer);
         }
 
-        // Render the ground mesh
-        renderer.render_entity(&Mat4::identity(), &self.ground_mesh, &None);
-
         // Visualize the ground mesh BVH.
-        if self.visualize_hash_grid
-            && let Some(collider) = self.ground_mesh.collider.as_ref()
-        {
+        if self.visualize_hash_grid {
+            let collider = self.ground_tlas.bvh_instances[0].bvh.as_ref();
+
             renderer.render_bvh(collider, 2);
         }
     }

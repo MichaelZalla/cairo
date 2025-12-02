@@ -11,11 +11,18 @@ use cairo::{
     },
     buffer::framebuffer::Framebuffer,
     device::{game_controller::GameControllerState, keyboard::KeyboardState, mouse::MouseState},
-    mesh::primitive::sphere,
+    matrix::Mat4,
+    mesh::Mesh,
+    physics::simulation::rigid_body::RigidBodyKind,
     random::sampler::RandomSampler,
     render::{Renderer, options::RenderPassFlags},
-    scene::context::{SceneContext, utils::make_empty_scene},
+    scene::{
+        context::SceneContext,
+        node::{SceneNode, SceneNodeGlobalTraversalMethod},
+    },
+    shader::context::ShaderContext,
     software_renderer::SoftwareRenderer,
+    vec::vec3::Vec3,
 };
 
 use make_terrain_simulation::make_obj_terrain_simulation;
@@ -28,9 +35,10 @@ pub mod integration;
 pub mod make_terrain_simulation;
 pub mod make_test_simulation;
 pub mod plane_collider;
+pub mod scene;
 pub mod simulation;
 
-type SimulationMaker = fn(&mut RandomSampler<1024>, &SceneContext) -> Simulation;
+type SimulationMaker = fn(&mut RandomSampler<1024>, &SceneContext) -> (Simulation, Option<Mesh>);
 
 const SIMULATION_MAKERS: [SimulationMaker; 3] = [
     make_test_simulation,
@@ -44,7 +52,7 @@ const PHYSICS_TIMESTEP: f32 = 1.0 / 60.0; // 60 Hz physics
 struct DemoState {
     current_simulation_maker: usize,
     simulation: Simulation,
-    renderer: SoftwareRenderer,
+    renderer: Rc<RefCell<SoftwareRenderer>>,
     should_rasterize: bool,
     time_accumulator: f32,
 }
@@ -52,7 +60,7 @@ struct DemoState {
 fn main() -> Result<(), String> {
     let mut window_info = AppWindowInfo {
         title: "examples/rigid-body".to_string(),
-        window_resolution: resolution::RESOLUTION_640_BY_480,
+        window_resolution: resolution::RESOLUTION_640_BY_480 * 2.0,
         canvas_resolution: resolution::RESOLUTION_640_BY_480,
         relative_mouse_mode: false,
         ..Default::default()
@@ -66,41 +74,31 @@ fn main() -> Result<(), String> {
 
     let camera_aspect_ratio = framebuffer.width_over_height;
 
+    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+
     // Scene context
 
     let scene_context = SceneContext::default();
 
-    // Scene (camera)
+    // Simulation
+    let mut sampler: RandomSampler<1024> = {
+        let mut sampler: RandomSampler<1024> = Default::default();
 
-    let (scene, shader_context) = {
-        let resources = &scene_context.resources;
+        sampler.seed().unwrap();
 
-        let mut camera_arena = resources.camera.borrow_mut();
-        let mut environment_arena = resources.environment.borrow_mut();
-        let mut ambient_light_arena = resources.ambient_light.borrow_mut();
-        let mut directional_light_arena = resources.directional_light.borrow_mut();
-
-        let (scene, shader_context) = make_empty_scene(
-            &mut camera_arena,
-            camera_aspect_ratio,
-            &mut environment_arena,
-            &mut ambient_light_arena,
-            &mut directional_light_arena,
-        )?;
-
-        let active_camera_entry = camera_arena
-            .entries
-            .iter_mut()
-            .flatten()
-            .find(|e| e.item.is_active)
-            .unwrap();
-
-        let camera = &mut active_camera_entry.item;
-
-        camera.set_projection_z_far(1_000.0);
-
-        (scene, shader_context)
+        sampler
     };
+
+    let (simulation, ground_mesh_option) = SIMULATION_MAKERS[0](&mut sampler, &scene_context);
+
+    // Scene (camera and entities)
+
+    let (scene, shader_context) = scene::make_scene(
+        camera_aspect_ratio,
+        &scene_context,
+        &simulation,
+        ground_mesh_option.as_ref(),
+    )?;
 
     {
         let mut scenes = scene_context.scenes.borrow_mut();
@@ -112,36 +110,25 @@ fn main() -> Result<(), String> {
 
     let shader_context_rc = Rc::new(RefCell::new(shader_context));
 
-    // Generate sphere mesh for rasterized rendering
-    let sphere_mesh = sphere::generate(1.0, 16, 16);
-
     // Renderer
-    let mut renderer =
-        SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
+    let renderer_rc = {
+        let mut renderer =
+            SoftwareRenderer::new(shader_context_rc.clone(), scene_context.resources.clone());
 
-    renderer.options.draw_wireframe = true;
-    renderer.options.render_pass_flags ^= RenderPassFlags::RASTERIZATION;
+        renderer.options.draw_wireframe = true;
+        renderer.options.render_pass_flags ^= RenderPassFlags::RASTERIZATION;
+        renderer.options.draw_normals_scale = 1.5;
 
-    let framebuffer_rc = Rc::new(RefCell::new(framebuffer));
+        renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
 
-    renderer.bind_framebuffer(Some(framebuffer_rc.clone()));
-
-    // Simulation
-    let mut sampler: RandomSampler<1024> = {
-        let mut sampler: RandomSampler<1024> = Default::default();
-
-        sampler.seed().unwrap();
-
-        sampler
+        Rc::new(RefCell::new(renderer))
     };
-
-    let simulation = SIMULATION_MAKERS[0](&mut sampler, &scene_context);
 
     // Mutable demo state
     let demo_state = Rc::new(RefCell::new(DemoState {
         current_simulation_maker: 0,
         simulation,
-        renderer,
+        renderer: renderer_rc.clone(),
         should_rasterize: false,
         time_accumulator: 0.0,
     }));
@@ -150,27 +137,24 @@ fn main() -> Result<(), String> {
                                    _new_resolution: Option<Resolution>,
                                    canvas: &mut [u8]|
      -> Result<(), String> {
-        let mut state = demo_state.borrow_mut();
+        let state = demo_state.borrow();
 
-        // Split borrow to allow simultaneous access to simulation and renderer
-        let DemoState {
-            simulation,
-            renderer,
-            should_rasterize,
-            ..
-        } = &mut *state;
+        state.renderer.borrow_mut().begin_frame();
 
-        renderer.begin_frame();
+        // Render scene entities (spheres and ground) - provides wireframes and rasterization
+        {
+            let scenes = scene_context.scenes.borrow();
+            let renderer = state.renderer.as_ref();
 
-        let sphere_mesh_option = if *should_rasterize {
-            Some(&sphere_mesh)
-        } else {
-            None
-        };
+            if let Some(scene) = scenes.first() {
+                scene.render(&scene_context.resources, renderer, None)?;
+            }
+        }
 
-        simulation.render(renderer, sphere_mesh_option);
+        // Render debug visuals (axes, colliders, etc.)
+        state.simulation.render(&mut state.renderer.borrow_mut());
 
-        renderer.end_frame();
+        state.renderer.borrow_mut().end_frame();
 
         // Write out.
 
@@ -204,21 +188,21 @@ fn main() -> Result<(), String> {
 
         let resources = &scene_context.resources;
 
-        let mut scenes = scene_context.scenes.borrow_mut();
+        {
+            let mut scenes = scene_context.scenes.borrow_mut();
+            let scene = &mut scenes[0];
 
-        let scene = &mut scenes[0];
-
-        // Traverse the scene graph and update its nodes.
-
-        scene.update(
-            resources,
-            &mut shader_context_rc.borrow_mut(),
-            app,
-            mouse_state,
-            keyboard_state,
-            game_controller_state,
-            None,
-        )?;
+            // Traverses the scene graph and updates its nodes.
+            scene.update(
+                resources,
+                &mut shader_context_rc.borrow_mut(),
+                app,
+                mouse_state,
+                keyboard_state,
+                game_controller_state,
+                None,
+            )?;
+        }
 
         // Borrow demo state once for the entire update
         let mut state = demo_state.borrow_mut();
@@ -241,18 +225,28 @@ fn main() -> Result<(), String> {
                     }
                 }
                 Keycode::R => {
-                    reset_simulation(&mut state, &mut sampler, &scene_context);
+                    reset_simulation(
+                        &mut state,
+                        &mut sampler,
+                        &scene_context,
+                        camera_aspect_ratio,
+                        &shader_context_rc,
+                    );
                 }
                 Keycode::T => {
                     // Toggle rasterization mode
                     state.should_rasterize = !state.should_rasterize;
 
-                    state.renderer.options.draw_wireframe = !state.should_rasterize;
+                    let mut renderer = state.renderer.borrow_mut();
+
+                    renderer.options.draw_wireframe = !state.should_rasterize;
 
                     if state.should_rasterize {
-                        state.renderer.options.render_pass_flags |= RenderPassFlags::RASTERIZATION;
+                        renderer.options.render_pass_flags |= RenderPassFlags::RASTERIZATION;
+                        renderer.options.render_pass_flags |= RenderPassFlags::LIGHTING;
                     } else {
-                        state.renderer.options.render_pass_flags &= !RenderPassFlags::RASTERIZATION;
+                        renderer.options.render_pass_flags &= !RenderPassFlags::RASTERIZATION;
+                        renderer.options.render_pass_flags &= !RenderPassFlags::LIGHTING;
                     }
                 }
                 Keycode::Y => {
@@ -260,14 +254,20 @@ fn main() -> Result<(), String> {
                     state.current_simulation_maker =
                         (state.current_simulation_maker + 1) % SIMULATION_MAKERS.len();
 
-                    reset_simulation(&mut state, &mut sampler, &scene_context);
+                    reset_simulation(
+                        &mut state,
+                        &mut sampler,
+                        &scene_context,
+                        camera_aspect_ratio,
+                        &shader_context_rc,
+                    );
                 }
                 _ => (),
             }
         }
 
         // Updates renderer options.
-        state.renderer.update(keyboard_state);
+        state.renderer.borrow_mut().update(keyboard_state);
 
         // Run physics simulation with fixed timestep
         if h > 0.0 {
@@ -278,6 +278,40 @@ fn main() -> Result<(), String> {
             while state.time_accumulator >= PHYSICS_TIMESTEP {
                 state.simulation.tick(PHYSICS_TIMESTEP, uptime);
                 state.time_accumulator -= PHYSICS_TIMESTEP;
+            }
+
+            // Update entity transforms in the scene to match simulation state
+            let mut scenes = scene_context.scenes.borrow_mut();
+
+            if let Some(scene) = scenes.first_mut() {
+                // Update sphere entities by visiting the scene graph
+                for (index, rigid_body) in state.simulation.rigid_bodies.iter().enumerate() {
+                    let sphere_name = format!("sphere_{}", index);
+
+                    scene
+                        .root
+                        .visit_mut(
+                            SceneNodeGlobalTraversalMethod::DepthFirst,
+                            None,
+                            &mut |_depth: usize, _world_transform: Mat4, node: &mut SceneNode| {
+                                if node.name.as_ref() == Some(&sphere_name) {
+                                    // Update node's transform to match rigid body
+                                    node.get_transform_mut()
+                                        .set_translation(*rigid_body.transform.translation());
+
+                                    node.get_transform_mut()
+                                        .set_rotation(*rigid_body.transform.rotation());
+
+                                    // Scale based on radius
+                                    if let RigidBodyKind::Sphere(radius) = rigid_body.kind {
+                                        node.get_transform_mut().set_scale(Vec3::ones() * radius);
+                                    }
+                                }
+                                Ok(())
+                            },
+                        )
+                        .ok();
+                }
             }
         }
 
@@ -293,16 +327,42 @@ fn reset_simulation(
     state: &mut DemoState,
     sampler: &mut RandomSampler<1024>,
     scene_context: &SceneContext,
+    camera_aspect_ratio: f32,
+    shader_context_rc: &Rc<RefCell<ShaderContext>>,
 ) {
     // Reset simulation to its initial state (preserved debug flags).
     let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
 
     sampler.seed().unwrap();
 
-    state.simulation = SIMULATION_MAKERS[state.current_simulation_maker](sampler, scene_context);
+    let (simulation, ground_mesh_option) =
+        SIMULATION_MAKERS[state.current_simulation_maker](sampler, scene_context);
+
+    state.simulation = simulation;
 
     state.simulation.visualize_hash_grid = current_visualize_hash_grid;
 
     // Reset time accumulator
     state.time_accumulator = 0.0;
+
+    // Rebuilds the scene with new simulation and ground mesh.
+    let (new_scene, new_shader_context) = scene::make_scene(
+        camera_aspect_ratio,
+        scene_context,
+        &state.simulation,
+        ground_mesh_option.as_ref(),
+    )
+    .expect("Failed to rebuild scene");
+
+    // Replace the old scene with the new one
+    {
+        let mut scenes = scene_context.scenes.borrow_mut();
+
+        scenes.clear();
+
+        scenes.push(new_scene);
+    }
+
+    // Replace shader context since cameras/lights were recreated with new handles
+    *shader_context_rc.borrow_mut() = new_shader_context;
 }
