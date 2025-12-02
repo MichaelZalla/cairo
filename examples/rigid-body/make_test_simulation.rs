@@ -399,6 +399,7 @@ pub fn make_test_simulation(
         ground_tlas,
         hash_grid: HashGrid::new(HashGridInsertionStrategy::default(), RADIUS * 2.0),
         visualize_hash_grid: false,
+        visualize_bvh: false,
         tick_count: 0,
     };
 

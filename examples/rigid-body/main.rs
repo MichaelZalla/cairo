@@ -213,8 +213,9 @@ fn main() -> Result<(), String> {
             #[allow(clippy::single_match)]
             match *keycode {
                 Keycode::G => {
-                    // Toggles hash grid visualization.
+                    // Toggles hash grid and BVH visualizations.
                     state.simulation.visualize_hash_grid = !state.simulation.visualize_hash_grid;
+                    state.simulation.visualize_bvh = !state.simulation.visualize_bvh;
                 }
                 Keycode::U => {
                     // Pushes bodies in contact away from their collider.
@@ -332,6 +333,7 @@ fn reset_simulation(
 ) {
     // Reset simulation to its initial state (preserved debug flags).
     let current_visualize_hash_grid = state.simulation.visualize_hash_grid;
+    let current_visualize_bvh = state.simulation.visualize_bvh;
 
     sampler.seed().unwrap();
 
@@ -341,6 +343,7 @@ fn reset_simulation(
     state.simulation = simulation;
 
     state.simulation.visualize_hash_grid = current_visualize_hash_grid;
+    state.simulation.visualize_bvh = current_visualize_bvh;
 
     // Reset time accumulator
     state.time_accumulator = 0.0;

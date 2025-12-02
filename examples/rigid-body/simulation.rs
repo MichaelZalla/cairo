@@ -80,6 +80,7 @@ pub struct Simulation {
     pub ground_tlas: StaticTriangleTLAS,
     pub hash_grid: HashGrid,
     pub visualize_hash_grid: bool,
+    pub visualize_bvh: bool,
     pub tick_count: u32,
 }
 
@@ -287,10 +288,12 @@ impl Simulation {
         }
 
         // Visualize the ground mesh BVH.
-        if self.visualize_hash_grid {
-            let collider = self.ground_tlas.bvh_instances[0].bvh.as_ref();
+        if self.visualize_bvh {
+            for bvh_instance in &self.ground_tlas.bvh_instances {
+                let collider = bvh_instance.bvh.as_ref();
 
-            renderer.render_bvh(collider, 2);
+                renderer.render_bvh(collider, 2);
+            }
         }
     }
 
