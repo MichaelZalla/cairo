@@ -758,12 +758,12 @@ pub fn calculate_collision_response(
     // For contact velocity, offset points FROM center TO contact
     let r_velocity = contact_point_corrected - end_position;
 
-    // Compute linear velocity of the contact point in world space
-    let contact_point_velocity =
+    // Computes the linear velocity of the contact point in world space.
+    let contact_point_velocity_at_end =
         end_linear_velocity + new_body_state.angular_velocity().cross(r_velocity);
 
     // Check if contact point is moving into the surface
-    let incoming_speed = contact_point_velocity.dot(surface.normal);
+    let incoming_speed = contact_point_velocity_at_end.dot(surface.normal);
 
     if incoming_speed < -RESTING_SPEED_THRESHOLD {
         // Remove momentum accumulated after collision
@@ -775,7 +775,7 @@ pub fn calculate_collision_response(
                 new_body_state,
                 surface.normal,
                 surface.contact_point,
-                contact_point_velocity,
+                contact_point_velocity_at_end,
                 r_velocity,
                 r_torque,
                 material,
