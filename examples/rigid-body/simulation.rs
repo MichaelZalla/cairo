@@ -118,8 +118,15 @@ impl Simulation {
         // 8. Rebuild spatial acceleration structure
         self.hash_grid.rebuild(final_state.0.iter());
 
-        // 9. (Safety net) Apply corrective impulses for any remaining collisions
-        self.apply_corrective_impulses(h, &derivative, &state, &mut final_state);
+        // 9. (Safety net) Apply corrective impulses for any remaining
+        // collisions (uses the corrected body velocities provided by the
+        // predictive pass).
+        self.apply_corrective_impulses(
+            h,
+            &derivative,
+            &state_with_new_velocities,
+            &mut final_state,
+        );
 
         // 10. Copy final state back to simulation
         self.apply_state_vector(&final_state);
