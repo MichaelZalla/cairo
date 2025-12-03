@@ -711,6 +711,8 @@ fn remove_post_collision_momentum(
     body_derivative: &RigidBodySimulationState,
     body_state: &mut RigidBodySimulationState,
 ) {
+    assert!(collision_t >= -f32::EPSILON && collision_t <= 1.0 + f32::EPSILON);
+
     let time_before_collision = h * collision_t;
     let time_after_collision = h - time_before_collision;
 
@@ -800,6 +802,8 @@ pub fn apply_collision_impulses(
     collision_t: f32,
     material: &PhysicsMaterial,
 ) {
+    assert!(collision_t >= -f32::EPSILON && collision_t <= 1.0 + f32::EPSILON);
+
     let normal = normal_impulse_data.normal;
     let normal_impulse_magnitude = normal_impulse_data.magnitude;
     let r_torque = normal_impulse_data.r;
