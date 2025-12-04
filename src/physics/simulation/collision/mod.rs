@@ -714,12 +714,8 @@ fn remove_post_collision_momentum(
     let time_before_collision = h * collision_t;
     let time_after_collision = h - time_before_collision;
 
-    let linear_acceleration = body_derivative.linear_momentum;
-    let mass = 1.0 / body_state.inverse_mass;
-
-    let accumulated_linear_velocity = linear_acceleration * time_after_collision;
-
-    body_state.linear_momentum -= accumulated_linear_velocity * mass;
+    body_state.linear_momentum -= body_derivative.linear_momentum * time_after_collision;
+    body_state.angular_momentum -= body_derivative.angular_momentum * time_after_collision;
 }
 
 /// Calculates collision response data if a collision is detected.
