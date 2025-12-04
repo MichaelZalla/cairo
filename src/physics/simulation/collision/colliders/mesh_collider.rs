@@ -14,7 +14,7 @@ use crate::{
         simulation::{
             collision::{self, CollisionResponse, CollisionSurface, StaticCollider},
             contact::{self, StaticContactList},
-            rigid_body::{RigidBodyKind, rigid_body_simulation_state::RigidBodySimulationState},
+            rigid_body::rigid_body_simulation_state::RigidBodySimulationState,
         },
     },
     vec::vec3::{self, Vec3},
@@ -70,6 +70,45 @@ fn get_triangle_collision_data<'a>(
         triangle,
         collision_point_world,
         collision_kind,
+    }
+}
+
+impl StaticTriangleTLAS {
+    fn make_collision_surface(
+        &self,
+        start_position: Vec3,
+        end_position: Vec3,
+        body_state: &RigidBodySimulationState,
+        collision: &StaticBVHCollision,
+    ) -> CollisionSurface {
+        let bvh_instance_index = collision.colliding_bvh_index;
+        let bvh_instance = &self.bvh_instances[bvh_instance_index];
+
+        // Calculate body position at collision time
+        let body_position_at_collision =
+            start_position + (end_position - start_position) * collision.t;
+
+        let collision_data = get_triangle_collision_data(self, collision);
+
+        // Create a minimal rigid body state for computing the collision normal
+        let temp_body_state = RigidBodySimulationState {
+            position: body_position_at_collision,
+            ..*body_state
+        };
+
+        let normal = temp_body_state.get_triangle_collision_normal(
+            collision_data.triangle,
+            collision_data.collision_point_world,
+            &collision_data.collision_kind,
+            bvh_instance,
+        );
+
+        CollisionSurface {
+            normal,
+            contact_point: collision_data.collision_point_world,
+            collision_t: collision.t,
+            minimum_distance: body_state.radius(),
+        }
     }
 }
 
@@ -182,35 +221,14 @@ impl StaticCollider for StaticTriangleTLAS {
             for collision in capsule.segment.collisions.iter() {
                 // Only process collisions at the earliest t (within epsilon for floating point comparison)
                 if (collision.t - earliest_t).abs() < f32::EPSILON {
-                    // Calculate body position at collision time
-                    let body_position_at_collision =
-                        start_position + (end_position - start_position) * collision.t;
-
-                    let bvh_instance_index = collision.colliding_bvh_index;
-                    let bvh_instance = &self.bvh_instances[bvh_instance_index];
-
-                    let collision_data = get_triangle_collision_data(self, collision);
-
-                    // Create a minimal rigid body state for computing the collision normal
-                    let temp_body_state = RigidBodySimulationState {
-                        kind: RigidBodyKind::Sphere(radius),
-                        position: body_position_at_collision,
-                        ..Default::default()
-                    };
-
-                    let normal = temp_body_state.get_triangle_collision_normal(
-                        collision_data.triangle,
-                        collision_data.collision_point_world,
-                        &collision_data.collision_kind,
-                        bvh_instance,
+                    let collision_surface = self.make_collision_surface(
+                        start_position,
+                        end_position,
+                        body_state,
+                        collision,
                     );
 
-                    surfaces.push(CollisionSurface {
-                        normal,
-                        contact_point: collision_data.collision_point_world,
-                        collision_t: collision.t,
-                        minimum_distance: radius,
-                    });
+                    surfaces.push(collision_surface);
                 }
             }
         }
