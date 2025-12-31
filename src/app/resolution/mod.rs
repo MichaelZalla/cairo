@@ -39,6 +39,10 @@ impl Resolution {
             height: size.1,
         }
     }
+
+    pub fn center(&self) -> (u32, u32) {
+        (self.width / 2, self.height / 2)
+    }
 }
 
 impl fmt::Display for Resolution {

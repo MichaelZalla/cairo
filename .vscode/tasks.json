@@ -455,6 +455,22 @@
       "group": {
         "kind": "build"
       },
+      "label": "Rust: cargo run --example pid-controller",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--example",
+        "pid-controller"
+      ]
+    },
+    {
+      "type": "shell",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build"
+      },
       "label": "Rust: cargo run --example point-shadows",
       "command": "cargo",
       "args": [
